@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { PaywallModal } from "@/components/PaywallModal";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -175,8 +177,18 @@ const salesScripts = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function SalesPage() {
+  const [showPaywall, setShowPaywall] = useState(false);
+
   return (
     <>
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        title="完整数据与深度分析"
+        description="登录后购买会员或单次付费即可查看完整内容"
+        type="single"
+      />
       {/* ====== Hero ====== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
         <div className="absolute inset-0 pointer-events-none">

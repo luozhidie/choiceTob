@@ -7,6 +7,7 @@ const footerSections = [
     links: [
       { label: "买手选品", href: "/buyer" },
       { label: "商品企划", href: "/planning" },
+      { label: "企划工具", href: "/planning-tool" },
       { label: "爆款货盘", href: "/hot-picks" },
       { label: "陈列搭配", href: "/display" },
     ],
@@ -17,7 +18,7 @@ const footerSections = [
       { label: "营销策划", href: "/marketing" },
       { label: "销售服务", href: "/sales" },
       { label: "VIP管理", href: "/vip" },
-      { label: "知识付费", href: "/education" },
+      { label: "智识培训", href: "/education" },
     ],
   },
   {

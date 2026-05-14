@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import AdBanner, { PopupAd } from "@/components/AdBanner";
 import {
   ChevronRight,
   TrendingUp,
@@ -16,6 +17,7 @@ import {
   ArrowRight,
   Quote,
   CheckCircle2,
+  FileText,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -49,6 +51,12 @@ const coreServices = [
     title: "商品企划",
     desc: "科学规划商品结构与节奏，融合品类规划与生命周期管理，实现利润最大化。",
     href: "/planning",
+  },
+  {
+    icon: FileText,
+    title: "企划工具",
+    desc: "智能生成个性化商品企划报告，输入关键信息即可获取完整企划方案。",
+    href: "/planning-tool",
   },
   {
     icon: BarChart3,
@@ -215,6 +223,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ====== Top Ad Banner ====== */}
+      <AdBanner position="top" />
 
       {/* ====== Core Business ====== */}
       <section className="py-20 lg:py-28 bg-white">
@@ -395,6 +406,99 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ====== Magazine Preview ====== */}
+      <section className="py-20 lg:py-28 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center max-w-2xl mx-auto mb-16"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={fadeUp}
+          >
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              时尚前沿
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              骆芷蝶时尚杂志
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              对标Vogue，汇聚全球时尚资讯、流行趋势与搭配灵感
+            </p>
+          </motion.div>
+
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            variants={stagger}
+          >
+            {[
+              {
+                tag: "流行趋势",
+                title: "2026春夏十大流行色：从数字薰衣草到珊瑚粉",
+                desc: "全球权威色彩机构发布最新流行色报告，提前掌握下一季色彩风向标",
+                date: "2026-05-10",
+              },
+              {
+                tag: "搭配灵感",
+                title: "法式慵懒风回归：如何穿出不费力的时髦感",
+                desc: "从巴黎街头到小红书爆款，法式风格持续霸榜，掌握核心搭配逻辑",
+                date: "2026-05-08",
+              },
+              {
+                tag: "行业洞察",
+                title: "可持续时尚崛起：环保面料成消费者新宠",
+                desc: "Z世代消费观念转变，环保认证成品牌溢价新支点，供应链如何应变",
+                date: "2026-05-05",
+              },
+            ].map((article, i) => (
+              <motion.div
+                key={article.title}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => (window.location.href = "/magazine")}
+              >
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 aspect-[4/3] flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow">
+                  <span className="text-6xl opacity-20">📖</span>
+                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent text-white text-xs font-semibold">
+                    {article.tag}
+                  </span>
+                </div>
+                <h3 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-2">
+                  {article.title}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                  {article.desc}
+                </p>
+                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+                  <span>📅</span>
+                  <span>{article.date}</span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            className="text-center mt-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={fadeUp}
+          >
+            <Link
+              href="/magazine"
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              浏览完整杂志
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ====== Testimonials ====== */}
       <section className="py-20 lg:py-28 bg-primary text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -485,6 +589,9 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ====== Popup Ad ====== */}
+      <PopupAd />
 
       {/* ====== Footer ====== */}
       <footer className="py-6 bg-muted/60 border-t border-gray-100">

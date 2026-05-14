@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { PaywallModal } from "@/components/PaywallModal";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -9,8 +11,6 @@ import {
   FileOutput,
   Activity,
   PieChart,
-  Palette,
-  Tag,
   FileText,
   CheckCircle2,
   Home,
@@ -53,44 +53,22 @@ const flowSteps = [
   },
 ];
 
-const productStructure = [
-  { type: "引流款", ratio: "15%", color: "bg-blue-500", desc: "低毛利高流量，吸引新客进店", width: "w-[15%]" },
-  { type: "利润款", ratio: "50%", color: "bg-accent", desc: "核心利润来源，保证经营健康", width: "w-[50%]" },
-  { type: "形象款", ratio: "20%", color: "bg-primary", desc: "品牌调性展示，提升品牌溢价", width: "w-[20%]" },
-  { type: "搭配款", ratio: "15%", color: "bg-emerald-500", desc: "提升连带率，拉高客单价", width: "w-[15%]" },
-];
-
-const stylePlanTable = [
-  { name: "少女型", traffic: "20%", profit: "45%", image: "20%", match: "15%" },
-  { name: "优雅型", traffic: "15%", profit: "55%", image: "15%", match: "15%" },
-  { name: "浪漫型", traffic: "10%", profit: "50%", image: "25%", match: "15%" },
-  { name: "少年型", traffic: "20%", profit: "45%", image: "15%", match: "20%" },
-  { name: "时尚型", traffic: "18%", profit: "48%", image: "18%", match: "16%" },
-  { name: "古典型", traffic: "12%", profit: "55%", image: "18%", match: "15%" },
-  { name: "自然型", traffic: "15%", profit: "50%", image: "15%", match: "20%" },
-  { name: "戏剧型", traffic: "10%", profit: "40%", image: "30%", match: "20%" },
-];
-
-const colorPlan = [
-  { type: "基础色", ratio: "40%", desc: "黑/白/灰/藏青等中性色，百搭实穿，保障基础销量", color: "bg-gray-600" },
-  { type: "主题色", ratio: "35%", desc: "当季主题色系，体现品牌风格定位与季节感", color: "bg-primary" },
-  { type: "点缀色", ratio: "15%", desc: "小面积亮色点缀，提升视觉层次与搭配丰富度", color: "bg-accent" },
-  { type: "流行色", ratio: "10%", desc: "当季潮流色彩，吸引眼球，展现品牌时尚度", color: "bg-rose-500" },
-];
-
-const priceBands = [
-  { band: "入门款", range: "99-199元", ratio: "20%", strategy: "低价引流，降低新客决策门槛", margin: "20-25%" },
-  { band: "主销款", range: "199-399元", ratio: "45%", strategy: "量价平衡，贡献核心销量与利润", margin: "35-45%" },
-  { band: "品质款", range: "399-699元", ratio: "25%", strategy: "提升品牌形象，拉高客单价", margin: "45-55%" },
-  { band: "旗舰款", range: "699元以上", ratio: "10%", strategy: "品牌标杆，彰显品牌实力与调性", margin: "55-65%" },
-];
-
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function PlanningPage() {
+  const [showPaywall, setShowPaywall] = useState(false);
+
   return (
     <>
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        title="完整数据与深度分析"
+        description="登录后购买会员或单次付费即可查看完整内容"
+        type="single"
+      />
+
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -185,371 +163,288 @@ export default function PlanningPage() {
         </div>
       </section>
 
-      {/* ====== Product Structure ====== */}
+      {/* ====== 商品结构规划 - 案例展示 ====== */}
       <section className="py-16 lg:py-24 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
+          <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              商品结构
+              案例展示
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              商品结构规划
+              商品结构规划案例
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              科学分配四大商品类型占比，实现引流与利润的最佳平衡
+              以下为部分案例展示，完整数据与深度分析仅对会员开放
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {productStructure.map((item, i) => (
-              <motion.div key={item.type} variants={fadeUp} custom={i}>
-                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                  <div className={`w-full h-3 rounded-full ${item.color} mb-6`} />
-                  <div className="text-4xl font-bold text-primary">{item.ratio}</div>
-                  <div className="mt-2 text-lg font-semibold text-primary">{item.type}</div>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Visual bar */}
-          <motion.div
-            className="mt-10 rounded-2xl bg-white p-6 shadow-sm border border-gray-100"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <h3 className="text-sm font-semibold text-muted-foreground mb-4">商品结构占比分布</h3>
-            <div className="flex h-8 rounded-full overflow-hidden">
-              <div className="bg-blue-500 flex items-center justify-center text-white text-xs font-medium" style={{ width: "15%" }}>
-                15%
-              </div>
-              <div className="bg-accent flex items-center justify-center text-white text-xs font-medium" style={{ width: "50%" }}>
-                50%
-              </div>
-              <div className="bg-primary flex items-center justify-center text-white text-xs font-medium" style={{ width: "20%" }}>
-                20%
-              </div>
-              <div className="bg-emerald-500 flex items-center justify-center text-white text-xs font-medium" style={{ width: "15%" }}>
-                15%
-              </div>
-            </div>
-            <div className="flex mt-3 gap-6 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-blue-500" /> 引流款</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> 利润款</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary" /> 形象款</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-emerald-500" /> 搭配款</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Style Planning Table ====== */}
-      <section className="py-16 lg:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              风格企划
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              八大风格企划商品结构
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              不同风格的商品结构差异化配置，精准匹配各风格客群消费特征
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={fadeUp}
-          >
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold">风格类型</th>
-                  <th className="px-6 py-4 text-center font-semibold">引流款</th>
-                  <th className="px-6 py-4 text-center font-semibold">利润款</th>
-                  <th className="px-6 py-4 text-center font-semibold">形象款</th>
-                  <th className="px-6 py-4 text-center font-semibold">搭配款</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stylePlanTable.map((row, i) => (
-                  <tr
-                    key={row.name}
-                    className={`border-b border-gray-50 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                    }`}
-                  >
-                    <td className="px-6 py-4 font-semibold text-primary whitespace-nowrap">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent" />
-                        {row.name}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">{row.traffic}</td>
-                    <td className="px-6 py-4 text-center font-semibold text-primary">{row.profit}</td>
-                    <td className="px-6 py-4 text-center">{row.image}</td>
-                    <td className="px-6 py-4 text-center">{row.match}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Color Planning Matrix ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              色彩企划
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              色彩企划矩阵
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              科学规划色彩结构，让每一季的色彩组合既实用又时尚
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {colorPlan.map((item, i) => (
-              <motion.div key={item.type} variants={fadeUp} custom={i}>
-                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                  <div className={`w-16 h-16 rounded-2xl ${item.color} mb-4 shadow-sm`} />
-                  <div className="text-3xl font-bold text-primary">{item.ratio}</div>
-                  <div className="mt-1 text-lg font-semibold text-primary">{item.type}</div>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Visual color bar */}
-          <motion.div
-            className="mt-10 rounded-2xl bg-white p-6 shadow-sm border border-gray-100"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <h3 className="text-sm font-semibold text-muted-foreground mb-4">色彩占比分布</h3>
-            <div className="flex h-8 rounded-full overflow-hidden">
-              <div className="bg-gray-600 flex items-center justify-center text-white text-xs font-medium" style={{ width: "40%" }}>
-                40% 基础色
-              </div>
-              <div className="bg-primary flex items-center justify-center text-white text-xs font-medium" style={{ width: "35%" }}>
-                35% 主题色
-              </div>
-              <div className="bg-accent flex items-center justify-center text-white text-xs font-medium" style={{ width: "15%" }}>
-                15%
-              </div>
-              <div className="bg-rose-500 flex items-center justify-center text-white text-xs font-medium" style={{ width: "10%" }}>
-                10%
-              </div>
-            </div>
-            <div className="flex mt-3 gap-6 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-gray-600" /> 基础色</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-primary" /> 主题色</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-accent" /> 点缀色</span>
-              <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-sm bg-rose-500" /> 流行色</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Price Band Planning ====== */}
-      <section className="py-16 lg:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              价格企划
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              价格带企划
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              四档价格带科学分布，覆盖不同消费层级，实现利润与流量的最优组合
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {priceBands.map((item, i) => (
-              <motion.div key={item.band} variants={fadeUp} custom={i}>
-                <div className="flex flex-col h-full p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-xs font-semibold text-accent uppercase tracking-wider">
-                      {item.band}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "快时尚品牌结构案例", desc: "少女+优雅型为主，引流款占比20%，利润款45%", color: "from-blue-100 to-blue-50" },
+              { title: "高端女装结构案例", desc: "优雅+古典型为主，形象款占比30%，提升品牌溢价", color: "from-green-100 to-green-50" },
+              { title: "潮牌结构案例", desc: "时尚+戏剧型为主，限量款策略，稀缺性驱动高毛利", color: "from-purple-100 to-purple-50" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                onClick={() => setShowPaywall(true)}
+                className="group cursor-pointer"
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-30">🖼️</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
                     </span>
-                    <span className="text-xs text-muted-foreground">{item.ratio}</span>
-                  </div>
-                  <div className="text-2xl font-bold text-primary">{item.range}</div>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-                    {item.strategy}
-                  </p>
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">毛利率</span>
-                      <span className="font-semibold text-accent">{item.margin}</span>
-                    </div>
                   </div>
                 </div>
-              </motion.div>
+                <h4 className="font-semibold text-primary">{item.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
+              </div>
             ))}
-          </motion.div>
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* ====== Quarterly Plan Template ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
+      {/* ====== 八大风格企划 - 案例展示 ====== */}
+      <section className="py-16 lg:py-24 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
+          <div className="text-center max-w-2xl mx-auto mb-14">
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              企划模板
+              案例展示
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              季度企划书模板
+              八大风格企划案例
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              标准化企划流程，一键生成季度企划书，让企划有据可循
+              以下为部分案例展示，完整数据与深度分析仅对会员开放
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div
-            className="max-w-3xl mx-auto"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeUp}
-          >
-            <div className="rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-              {/* Template header */}
-              <div className="bg-primary text-white px-8 py-6">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-6 h-6 text-accent" />
-                  <div>
-                    <h3 className="text-lg font-bold">2025年第三季度商品企划书</h3>
-                    <p className="text-white/60 text-sm mt-1">基于数据驱动的商品规划方案</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "少淑风格企划案例", desc: "少女+优雅型融合，20-35岁客群，均价300-500元", color: "from-pink-100 to-pink-50" },
+              { title: "职场风格企划案例", desc: "古典型为主，30-45岁客群，均价500-800元", color: "from-indigo-100 to-indigo-50" },
+              { title: "潮流风格企划案例", desc: "时尚+戏剧型融合，18-30岁客群，均价200-400元", color: "from-orange-100 to-orange-50" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                onClick={() => setShowPaywall(true)}
+                className="group cursor-pointer"
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-30">🖼️</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
                   </div>
                 </div>
+                <h4 className="font-semibold text-primary">{item.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
               </div>
+            ))}
+          </div>
 
-              {/* Template sections */}
-              <div className="p-8">
-                <div className="space-y-6">
-                  {[
-                    { title: "一、市场分析与趋势预判", items: ["行业趋势分析", "竞品动态监测", "消费者洞察报告"] },
-                    { title: "二、商品结构规划", items: ["品类结构占比", "风格结构分布", "价格带规划"] },
-                    { title: "三、色彩与面料企划", items: ["主题色系定义", "面料材质规划", "图案元素方向"] },
-                    { title: "四、上货节奏与波段规划", items: ["上新波段安排", "爆款追单计划", "促销节点配合"] },
-                    { title: "五、预算与采购计划", items: ["采购预算分配", "供应商对接方案", "交期与质检要求"] },
-                  ].map((section, i) => (
-                    <div key={section.title} className="flex items-start gap-4">
-                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/10 text-accent font-bold text-sm shrink-0">
-                        {i + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-primary">{section.title}</h4>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {section.items.map((item) => (
-                            <span
-                              key={item}
-                              className="inline-flex items-center px-3 py-1 rounded-full bg-gray-50 text-xs text-muted-foreground border border-gray-100"
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
 
-                <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-sm text-muted-foreground">
-                    完整企划书模板包含12个模块，50+数据分析维度
-                  </p>
-                  <Link
-                    href="/contact"
-                    className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:text-accent/80 transition-colors"
-                  >
-                    获取模板 <ArrowRight className="w-4 h-4" />
-                  </Link>
+      {/* ====== 色彩企划 - 案例展示 ====== */}
+      <section className="py-16 lg:py-24 bg-muted">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              案例展示
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              色彩企划案例
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              以下为部分案例展示，完整数据与深度分析仅对会员开放
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "春季色彩案例", desc: "莫兰迪色系为主，基础色40%，主题色35%", color: "from-green-100 to-green-50" },
+              { title: "夏季色彩案例", desc: "高饱和亮色为主，点缀色25%，流行色15%", color: "from-blue-100 to-blue-50" },
+              { title: "秋冬色彩案例", desc: "深色系为主，基础色50%，形象色30%", color: "from-purple-100 to-purple-50" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                onClick={() => setShowPaywall(true)}
+                className="group cursor-pointer"
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-30">🖼️</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
                 </div>
+                <h4 className="font-semibold text-primary">{item.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
               </div>
-            </div>
-          </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== 价格带企划 - 案例展示 ====== */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              案例展示
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              价格带企划案例
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              以下为部分案例展示，完整数据与深度分析仅对会员开放
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "快时尚价格案例", desc: "入门款30%，主销款40%，均价200-400元", color: "from-yellow-100 to-yellow-50" },
+              { title: "高端女装价格案例", desc: "品质款40%，旗舰款20%，均价500-1000元", color: "from-red-100 to-red-50" },
+              { title: "潮牌价格案例", desc: "限量款策略，高溢价，均价300-600元", color: "from-teal-100 to-teal-50" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                onClick={() => setShowPaywall(true)}
+                className="group cursor-pointer"
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-30">🖼️</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== 季度企划书 - 案例展示 ====== */}
+      <section className="py-16 lg:py-24 bg-muted">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              案例展示
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              季度企划书案例
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              以下为部分案例展示，完整数据与深度分析仅对会员开放
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { title: "Q1企划书案例", desc: "春季新品企划，少淑风格为主，均价300-500元", color: "from-blue-100 to-blue-50" },
+              { title: "Q2企划书案例", desc: "夏季新品企划，时尚浪漫为主，均价200-400元", color: "from-green-100 to-green-50" },
+              { title: "Q3企划书案例", desc: "秋冬新品企划，优雅古典型为主，均价500-800元", color: "from-purple-100 to-purple-50" },
+            ].map((item, i) => (
+              <div
+                key={item.title}
+                onClick={() => setShowPaywall(true)}
+                className="group cursor-pointer"
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-30">🖼️</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                  {item.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="text-center mt-12">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
       {/* ====== Login Prompt ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
-            <div className="max-w-xl mx-auto px-6">
-              <div className="text-3xl mb-3">🔒</div>
-              <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
-              <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
-              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-                登录管理后台
-              </a>
-            </div>
-          </div>
+      <section className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
+        <div className="max-w-xl mx-auto px-6">
+          <div className="text-3xl mb-3">🔒</div>
+          <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
+          <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
+          <button
+            onClick={() => setShowPaywall(true)}
+            className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+          >
+            登录查看完整内容
+          </button>
         </div>
       </section>
 

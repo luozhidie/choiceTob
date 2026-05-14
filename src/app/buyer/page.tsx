@@ -1,7 +1,9 @@
 "use client";
+import { useState } from "react";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { PaywallModal } from "@/components/PaywallModal";
 import {
   ChevronRight,
   Search,
@@ -141,8 +143,17 @@ const features = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function BuyerPage() {
+  const [showPaywall, setShowPaywall] = useState(false);
+
   return (
     <>
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        title="完整选品数据与八大风格体系"
+        description="登录后购买年度会员或单次付费即可查看完整选品数据、风格体系与供应链信息"
+        type="single"
+      />
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -235,7 +246,7 @@ export default function BuyerPage() {
         </div>
       </section>
 
-      {/* ====== Eight Styles Table ====== */}
+      {/* ====== Style Case Studies ====== */}
       <section className="py-16 lg:py-24 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -246,60 +257,69 @@ export default function BuyerPage() {
             variants={fadeUp}
           >
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              风格体系
+              风格体系案例
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              八大风格选品体系
+              八大风格选品案例展示
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              科学分类，精准匹配。基于个人风格基因的八大分类体系，让选品有据可依。
+              科学分类，精准匹配。以下是部分风格选品案例展示，完整数据与选品体系仅对会员开放
             </p>
           </motion.div>
 
+          {/* Case Study Grid - Image Placeholders */}
           <motion.div
-            className="overflow-x-auto rounded-2xl bg-white shadow-sm border border-gray-100"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
+            variants={stagger}
+          >
+            {[
+              { style: "少女型", label: "蓬蓬裙·马卡龙色系", color: "from-pink-100 to-pink-50" },
+              { style: "优雅型", label: "真丝衬衫·莫兰迪色", color: "from-teal-100 to-teal-50" },
+              { style: "时尚型", label: "不规则剪裁·撞色", color: "from-purple-100 to-purple-50" },
+              { style: "自然型", label: "棉麻材质·大地色", color: "from-amber-100 to-amber-50" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">👗</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            className="text-center mt-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold">风格类型</th>
-                  <th className="px-6 py-4 text-left font-semibold">核心特征</th>
-                  <th className="px-6 py-4 text-left font-semibold">适合方向</th>
-                  <th className="px-6 py-4 text-center font-semibold">市场热度</th>
-                </tr>
-              </thead>
-              <tbody>
-                {styleTable.map((row, i) => (
-                  <tr
-                    key={row.name}
-                    className={`border-b border-gray-50 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                    }`}
-                  >
-                    <td className="px-6 py-4 font-semibold text-primary whitespace-nowrap">
-                      <span className="inline-flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-accent" />
-                        {row.name}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-muted-foreground">{row.traits}</td>
-                    <td className="px-6 py-4 text-muted-foreground">{row.direction}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-flex items-center justify-center px-3 py-1 rounded-full bg-primary/10 text-primary font-semibold text-xs">
-                        {row.ratio}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              查看完整风格体系与选品数据
+              <ArrowRight className="w-4 h-4" />
+            </button>
           </motion.div>
         </div>
       </section>
+      {/* ====== Original Eight Styles Table REMOVED, replaced by case studies above ====== */}
 
       {/* ====== Platform Features ====== */}
       <section className="py-16 lg:py-24 bg-white">

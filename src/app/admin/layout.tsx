@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   TrendingUp,
   Lightbulb,
+  FileText,
   BarChart3,
   LayoutGrid,
   Megaphone,
@@ -15,6 +16,7 @@ import {
   Crown,
   Truck,
   GraduationCap,
+  BookOpen,
   LogOut,
   Menu,
   X,
@@ -25,13 +27,15 @@ const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "买手选品", href: "/admin/buyer", icon: TrendingUp },
   { label: "商品企划", href: "/admin/planning", icon: Lightbulb },
+  { label: "企划工具", href: "/planning-tool", icon: FileText },
   { label: "爆款货盘", href: "/admin/hot-picks", icon: BarChart3 },
   { label: "陈列搭配", href: "/admin/display", icon: LayoutGrid },
   { label: "营销策划", href: "/admin/marketing", icon: Megaphone },
   { label: "销售服务", href: "/admin/sales", icon: Headphones },
   { label: "VIP管理", href: "/admin/vip", icon: Crown },
   { label: "供应商中心", href: "/admin/supplier", icon: Truck },
-  { label: "知识付费", href: "/admin/education", icon: GraduationCap },
+  { label: "智识培训", href: "/admin/education", icon: GraduationCap },
+  { label: "时尚杂志管理", href: "/admin/magazine", icon: BookOpen },
 ];
 
 export default function AdminLayout({

@@ -1,4 +1,5 @@
 "use client";
+import { PaywallModal } from "@/components/PaywallModal";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -146,8 +147,18 @@ export default function SupplierPage() {
     setTimeout(() => setSubmitted(false), 3000);
   };
 
+  const [showPaywall, setShowPaywall] = useState(false);
+
   return (
     <>
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={() => setShowPaywall(false)}
+        title="完整数据与深度分析"
+        description="登录后购买会员或单次付费即可查看完整内容"
+        type="single"
+      />
       {/* Breadcrumb */}
       <div className="bg-muted border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
