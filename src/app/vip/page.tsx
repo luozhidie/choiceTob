@@ -9,26 +9,13 @@ import {
   Crown,
   Award,
   Gem,
-  ShoppingBag,
-  Sparkles,
-  Palette,
   CalendarDays,
-  RefreshCw,
-  Shirt,
-  UserCheck,
-  Star,
-  TrendingUp,
-  ArrowRight,
-  CheckCircle2,
-  Home,
-  Users,
-  AlertTriangle,
-  HeartHandshake,
-  Gift,
-  UserPlus,
   Clock,
-  BarChart3,
   Bell,
+  AlertTriangle,
+  UserCheck,
+  HeartHandshake,
+  Home,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -56,58 +43,18 @@ const vipTiers = [
     name: "V1 银卡会员",
     range: "年消费1-3万",
     color: "from-gray-300 to-gray-500",
-    textColor: "text-gray-600",
-    benefits: ["购物折扣95折", "新品优先选购", "季度搭配推荐", "生日专属礼遇"],
   },
   {
     icon: Crown,
     name: "V2 金卡会员",
     range: "年消费3-5万",
     color: "from-yellow-400 to-yellow-600",
-    textColor: "text-yellow-700",
-    benefits: ["购物折扣9折", "新品试穿优先", "专属搭配服务", "季度企划参与", "30天无忧包换", "衣橱整理服务"],
   },
   {
     icon: Gem,
     name: "V3 黑卡会员",
     range: "年消费5万+",
     color: "from-gray-800 to-gray-950",
-    textColor: "text-gray-900",
-    benefits: ["购物折扣85折", "新品首发试穿", "一对一搭配顾问", "季度企划定制", "60天无忧包换", "衣橱深度整理", "场合着装方案", "专属顾问1对1"],
-  },
-];
-
-const rightsComparison = [
-  { right: "购物折扣", v1: "95折", v2: "9折", v3: "85折" },
-  { right: "新品试穿", v1: "—", v2: "优先", v3: "首发" },
-  { right: "搭配服务", v1: "季度推荐", v2: "专属搭配", v3: "1对1顾问" },
-  { right: "季度企划", v1: "—", v2: "参与", v3: "定制" },
-  { right: "无忧包换", v1: "7天", v2: "30天", v3: "60天" },
-  { right: "衣橱整理", v1: "—", v2: "基础", v3: "深度" },
-  { right: "场合着装", v1: "—", v2: "—", v3: "完整方案" },
-  { right: "专属顾问", v1: "—", v2: "群组", v3: "1对1" },
-  { right: "生日礼遇", v1: "优惠券", v2: "专属礼品", v3: "限量定制礼" },
-  { right: "活动参与", v1: "普通", v2: "优先", v3: "VVIP专属" },
-];
-
-const annualTiers = [
-  {
-    amount: "5万",
-    returnRate: "退换5%",
-    discount: "2.8折",
-    extra: "季度搭配方案+优先选品",
-  },
-  {
-    amount: "10万",
-    returnRate: "退换10%",
-    discount: "2.8折",
-    extra: "年度衣橱整理+专属顾问",
-  },
-  {
-    amount: "30万",
-    returnRate: "退换20%",
-    discount: "2.6折",
-    extra: "全年度定制企划+买手陪跑",
   },
 ];
 
@@ -115,39 +62,18 @@ const operationRhythm = [
   {
     period: "年度",
     icon: CalendarDays,
-    items: [
-      "年初VIP等级评定与升级",
-      "年度VIP答谢会策划执行",
-      "年度消费数据复盘与权益优化",
-      "新年礼盒与专属年历寄送",
-    ],
+    summary: "等级评定、答谢会、数据复盘与权益优化",
   },
   {
     period: "月度",
     icon: Clock,
-    items: [
-      "月初：上月消费数据统计与积分结算",
-      "月中：新品预览+VIP专场日",
-      "月末：生日会员关怀+流失预警",
-      "每月2次搭配内容推送",
-    ],
+    summary: "数据统计、VIP专场、生日关怀与内容推送",
   },
   {
     period: "每日",
     icon: Bell,
-    items: [
-      "早安问候+当日穿搭建议",
-      "到店/线上咨询即时响应",
-      "会员动态关注与互动",
-      "消费记录与积分实时更新",
-    ],
+    summary: "穿搭建议、即时响应、会员互动与积分更新",
   },
-];
-
-const referralIncentives = [
-  { role: "推荐人", reward: "获200元无门槛券+次月双倍积分", condition: "被推荐人首次消费满1000元" },
-  { role: "被推荐人", reward: "首单9折+专属新人搭配服务", condition: "注册即享" },
-  { role: "双重达标奖", reward: "双方各获500元服务抵扣券", condition: "被推荐人3个月内消费满5000元" },
 ];
 
 const churnStrategies = [
@@ -155,22 +81,19 @@ const churnStrategies = [
     level: "预警期",
     icon: AlertTriangle,
     color: "text-yellow-600 bg-yellow-50",
-    trigger: "90天未消费",
-    action: "专属顾问主动联系，了解原因，发送专属优惠",
+    summary: "主动关怀，了解客户动态与需求",
   },
   {
     level: "流失期",
     icon: UserCheck,
     color: "text-orange-600 bg-orange-50",
-    trigger: "180天未消费",
-    action: "VIP总监亲自跟进，提供免费诊断+专属回归礼包",
+    summary: "深度跟进，提供专属回归支持",
   },
   {
     level: "挽回期",
     icon: HeartHandshake,
     color: "text-red-600 bg-red-50",
-    trigger: "365天未消费",
-    action: "线下拜访+定制方案+超值回归套餐，全力挽回",
+    summary: "全力挽回，定制化解决方案",
   },
 ];
 
@@ -190,6 +113,20 @@ export default function VipPage() {
         description="登录后购买会员或单次付费即可查看完整内容"
         type="single"
       />
+
+      {/* ====== Breadcrumb ====== */}
+      <nav className="bg-white border-b border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/" className="hover:text-primary/80 transition-colors flex items-center gap-1">
+              <Home className="w-4 h-4" /> 首页
+            </Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-primary font-medium">VIP管理</span>
+          </div>
+        </div>
+      </nav>
+
       {/* ====== Hero ====== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
         <div className="absolute inset-0 pointer-events-none">
@@ -198,14 +135,6 @@ export default function VipPage() {
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <nav className="flex items-center gap-2 text-sm text-white/60 mb-8">
-            <Link href="/" className="hover:text-white/80 transition-colors flex items-center gap-1">
-              <Home className="w-4 h-4" /> 首页
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-white/90">VIP管理</span>
-          </nav>
-
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-6">
               <Crown className="w-4 h-4" />
@@ -273,15 +202,8 @@ export default function VipPage() {
                       </div>
                     </div>
                   </div>
-                  <div className="p-6 flex-1">
-                    <ul className="space-y-3">
-                      {tier.benefits.map((b) => (
-                        <li key={b} className="flex items-center gap-2 text-sm text-gray-700">
-                          <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
-                          {b}
-                        </li>
-                      ))}
-                    </ul>
+                  <div className="p-6 flex-1 flex flex-col items-center justify-center text-center">
+                    <p className="text-muted-foreground text-sm">解锁更多尊享权益</p>
                   </div>
                 </div>
               </motion.div>
@@ -290,7 +212,7 @@ export default function VipPage() {
         </div>
       </section>
 
-      {/* ====== 权益对比详表 ====== */}
+      {/* ====== 权益对比案例展示 ====== */}
       <section className="py-20 lg:py-28 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -304,56 +226,59 @@ export default function VipPage() {
               Benefits Comparison
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              权益对比详表
+              权益对比案例展示
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              一目了然的权益对比，让客户清楚每一级的差异与价值。
+              各等级VIP权益对比一目了然，点击查看详细权益方案。
             </p>
           </motion.div>
 
           <motion.div
-            className="overflow-x-auto"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
-            variants={fadeUp}
+            variants={stagger}
           >
-            <table className="w-full min-w-[600px] border-collapse">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tl-xl">权益项目</th>
-                  <th className="px-6 py-4 text-center font-semibold text-sm">
-                    <span className="flex items-center justify-center gap-1"><Award className="w-4 h-4" /> V1银卡</span>
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold text-sm">
-                    <span className="flex items-center justify-center gap-1"><Crown className="w-4 h-4" /> V2金卡</span>
-                  </th>
-                  <th className="px-6 py-4 text-center font-semibold text-sm rounded-tr-xl">
-                    <span className="flex items-center justify-center gap-1"><Gem className="w-4 h-4" /> V3黑卡</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {rightsComparison.map((row, i) => (
-                  <tr
-                    key={row.right}
-                    className={`border-b border-gray-100 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-muted/50"
-                    }`}
-                  >
-                    <td className="px-6 py-4 font-medium text-gray-900">{row.right}</td>
-                    <td className="px-6 py-4 text-center text-sm text-muted-foreground">{row.v1}</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-700">{row.v2}</td>
-                    <td className="px-6 py-4 text-center text-sm font-medium text-accent">{row.v3}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {[
+              { style: "银卡权益案例", label: "入门尊享·基础折扣", color: "from-gray-100 to-gray-50" },
+              { style: "金卡权益案例", label: "进阶尊享·专属服务", color: "from-yellow-100 to-yellow-50" },
+              { style: "黑卡权益案例", label: "顶级尊享·一对一顾问", color: "from-slate-200 to-slate-100" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">&#x1F451;</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </motion.div>
+            ))}
           </motion.div>
+
+          <div className="text-center mt-10">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              查看完整权益方案
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* ====== 年度VIP货款阶梯 ====== */}
+      {/* ====== 年度阶梯案例展示 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -367,7 +292,7 @@ export default function VipPage() {
               Annual Tiers
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              年度VIP货款阶梯
+              年度VIP货款阶梯案例
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
               消费越高，回报越丰厚。阶梯式激励机制，驱动客户持续向上。
@@ -381,41 +306,41 @@ export default function VipPage() {
             viewport={{ once: true, amount: 0.1 }}
             variants={stagger}
           >
-            {annualTiers.map((tier, i) => (
-              <motion.div key={tier.amount} variants={fadeUp} custom={i}>
-                <div className="relative flex flex-col h-full p-8 rounded-2xl bg-white border-2 border-gray-100 shadow-sm hover:border-accent/40 transition-all duration-300">
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-accent text-white text-sm font-bold">
-                      年消费{tier.amount}
+            {[
+              { style: "5万阶梯案例", label: "基础激励·季度搭配方案", color: "from-blue-50 to-blue-25" },
+              { style: "10万阶梯案例", label: "进阶激励·专属顾问服务", color: "from-indigo-50 to-indigo-25" },
+              { style: "30万阶梯案例", label: "顶级激励·买手陪跑计划", color: "from-purple-50 to-purple-25" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">&#x1F4C8;</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
                     </span>
                   </div>
-                  <div className="mt-4 space-y-4">
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-muted">
-                      <RefreshCw className="w-5 h-5 text-accent" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">退换货额度</p>
-                        <p className="font-bold text-primary">{tier.returnRate}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-muted">
-                      <ShoppingBag className="w-5 h-5 text-accent" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">专属折扣</p>
-                        <p className="font-bold text-primary">{tier.discount}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-4 rounded-xl bg-muted">
-                      <Star className="w-5 h-5 text-accent" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">额外权益</p>
-                        <p className="font-bold text-primary text-sm">{tier.extra}</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
               </motion.div>
             ))}
           </motion.div>
+
+          <div className="text-center mt-10">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              查看完整阶梯方案
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -450,20 +375,13 @@ export default function VipPage() {
             {operationRhythm.map((rhythm, i) => (
               <motion.div key={rhythm.period} variants={fadeUp} custom={i}>
                 <div className="flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm">
-                  <div className="flex items-center gap-3 mb-6">
+                  <div className="flex items-center gap-3 mb-4">
                     <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/5 text-primary">
                       <rhythm.icon className="w-5 h-5" />
                     </div>
                     <h3 className="text-lg font-bold text-primary">{rhythm.period}清单</h3>
                   </div>
-                  <ul className="space-y-3 flex-1">
-                    {rhythm.items.map((item) => (
-                      <li key={item} className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
-                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{rhythm.summary}</p>
                 </div>
               </motion.div>
             ))}
@@ -471,7 +389,7 @@ export default function VipPage() {
         </div>
       </section>
 
-      {/* ====== 转介绍激励方案 ====== */}
+      {/* ====== 转介绍激励案例 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -485,7 +403,7 @@ export default function VipPage() {
               Referral Program
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              转介绍激励方案
+              转介绍激励案例
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
               以老带新，双向激励。让每一位VIP客户都成为品牌传播者。
@@ -493,45 +411,51 @@ export default function VipPage() {
           </motion.div>
 
           <motion.div
-            className="overflow-x-auto"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
-            variants={fadeUp}
+            variants={stagger}
           >
-            <table className="w-full min-w-[600px] border-collapse">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tl-xl">角色</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">奖励内容</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tr-xl">触发条件</th>
-                </tr>
-              </thead>
-              <tbody>
-                {referralIncentives.map((row, i) => (
-                  <tr
-                    key={row.role}
-                    className={`border-b border-gray-100 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-white" : "bg-muted/50"
-                    }`}
-                  >
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-2 font-semibold text-primary">
-                        <Gift className="w-4 h-4 text-accent" />
-                        {row.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{row.reward}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{row.condition}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {[
+              { style: "推荐人激励案例", label: "推荐有礼·专属奖励", color: "from-green-50 to-green-25" },
+              { style: "被推荐人案例", label: "新人专享·首单优惠", color: "from-teal-50 to-teal-25" },
+              { style: "双重达标案例", label: "双向激励·共赢回馈", color: "from-emerald-50 to-emerald-25" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">&#x1F381;</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </motion.div>
+            ))}
           </motion.div>
+
+          <div className="text-center mt-10">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              查看完整激励方案
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
-      {/* ====== 流失预警与挽回 ====== */}
+      {/* ====== 流失预警概述 ====== */}
       <section className="py-20 lg:py-28 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -545,7 +469,7 @@ export default function VipPage() {
               Churn Prevention
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              流失预警与挽回
+              流失预警概述
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
               三级预警机制，从预警到挽回，不放弃每一位VIP客户。
@@ -566,11 +490,7 @@ export default function VipPage() {
                     <strategy.icon className="w-4 h-4" />
                     {strategy.level}
                   </div>
-                  <div className="mb-4">
-                    <span className="text-sm text-muted-foreground">触发条件：</span>
-                    <span className="font-medium text-gray-900 ml-1">{strategy.trigger}</span>
-                  </div>
-                  <p className="text-sm text-gray-700 leading-relaxed flex-1">{strategy.action}</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed flex-1">{strategy.summary}</p>
                 </div>
               </motion.div>
             ))}
@@ -583,12 +503,16 @@ export default function VipPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
             <div className="max-w-xl mx-auto px-6">
-              <div className="text-3xl mb-3">🔒</div>
+              <div className="text-3xl mb-3">&#x1F512;</div>
               <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
               <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
-              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-                登录管理后台
-              </a>
+              <button
+                onClick={() => setShowPaywall(true)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                解锁完整内容
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
@@ -625,7 +549,7 @@ export default function VipPage() {
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
                 >
                   学习运营课程
-                  <ArrowRight className="w-5 h-5" />
+                  <ChevronRight className="w-5 h-5" />
                 </Link>
               </div>
             </div>

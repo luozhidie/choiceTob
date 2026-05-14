@@ -6,23 +6,19 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import {
   ChevronRight,
-  Calendar,
   Megaphone,
   Users,
   Clock,
-  Gift,
   Crown,
   Presentation,
   Share2,
-  BarChart3,
-  TrendingUp,
-  ArrowRight,
-  CheckCircle2,
-  Home,
   Target,
   Eye,
   MousePointerClick,
   ShoppingCart,
+  TrendingUp,
+  ArrowRight,
+  Home,
   Repeat,
 } from "lucide-react";
 
@@ -45,75 +41,52 @@ const stagger = {
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
 /* ------------------------------------------------------------------ */
-const calendarData = [
-  { month: "1月", theme: "新年焕新", event: "新春穿搭指南+满减活动", target: "复购率+25%" },
-  { month: "2月", theme: "情人节浪漫", event: "情侣搭配专题+限时礼盒", target: "客单价+30%" },
-  { month: "3月", theme: "女王节盛典", event: "女性主题搭配课+VIP专场", target: "新客+500" },
-  { month: "4月", theme: "春日焕型", event: "春季新品企划+搭配大赛", target: "连带率+20%" },
-  { month: "5月", theme: "母亲节感恩", event: "母女装搭配+礼品专区", target: "转介绍+15%" },
-  { month: "6月", theme: "年中大促", event: "618限时企划+老带新裂变", target: "GMV+50%" },
-  { month: "7月", theme: "盛夏派对", event: "度假穿搭+主题选品会", target: "新客+300" },
-  { month: "8月", theme: "秋装预售", event: "早秋预售+VIP优先购", target: "预售额+40%" },
-  { month: "9月", theme: "开学季风尚", event: "职场穿搭课+新人礼包", target: "复购率+20%" },
-  { month: "10月", theme: "金秋双节", event: "国庆专题+行业分享会", target: "GMV+35%" },
-  { month: "11月", theme: "双11狂欢", event: "全年最大力度+限时秒杀", target: "GMV+80%" },
-  { month: "12月", theme: "年终答谢", event: "VIP感恩宴+年度复盘", target: "续约率+30%" },
-];
-
 const activityTypes = [
   {
     icon: Crown,
     title: "VIP专场日",
     desc: "每月固定2-3场VIP专场，提前购、专属折扣、限量款优先选，强化尊贵感与归属感。",
-    metrics: "场均转化率35%+",
+    metrics: "转化效果显著",
   },
   {
     icon: Presentation,
     title: "主题搭配课",
     desc: "围绕季节/场合/风格开展线上搭配教学，输出专业内容的同时带动商品销售。",
-    metrics: "课程转化率20%+",
+    metrics: "课程转化优异",
   },
   {
     icon: Users,
     title: "老带新裂变",
     desc: "老客户推荐新客户双方享优惠，三级裂变机制，低成本高效获客。",
-    metrics: "单次裂变获客50+",
+    metrics: "获客效率出众",
   },
   {
     icon: Clock,
     title: "线上限时企划",
     desc: "48小时限时主题活动，制造紧迫感，快速引爆销量，适合清库存与推新品。",
-    metrics: "限时活动GMV提升60%",
+    metrics: "GMV提升明显",
   },
   {
     icon: Target,
     title: "B端选品会",
     desc: "定期组织线上/线下选品会，集中展示新品，高效促成批量采购决策。",
-    metrics: "单场成交额50万+",
+    metrics: "成交表现突出",
   },
   {
     icon: Share2,
     title: "行业分享会",
     desc: "邀请行业专家与成功客户分享经验，建立品牌专业形象，吸引潜在客户。",
-    metrics: "场均参与200+人",
+    metrics: "参与规模可观",
   },
 ];
 
-const contentMatrix = [
-  { platform: "微信公众号", type: "深度文章/行业报告", frequency: "每周3篇", goal: "品牌权威性建设", kpi: "阅读量10万+/月" },
-  { platform: "小红书", type: "穿搭笔记/种草图文", frequency: "每日1-2篇", goal: "精准获客引流", kpi: "笔记曝光50万+/月" },
-  { platform: "抖音/视频号", type: "短视频/直播切片", frequency: "每日1条+周1直播", goal: "流量获取与转化", kpi: "视频播放100万+/月" },
-  { platform: "社群/私域", type: "专属福利/搭配推荐", frequency: "每日3-5条", goal: "客户深度运营", kpi: "社群活跃度60%+" },
-  { platform: "官网/小程序", type: "活动页/专题页", frequency: "月度更新", goal: "品牌形象与转化", kpi: "转化率8%+" },
-];
-
 const trackingMetrics = [
-  { icon: Eye, label: "曝光量", desc: "各渠道活动触达人数，衡量品牌声量" },
-  { icon: MousePointerClick, label: "点击率", desc: "从曝光到点击的转化，评估内容吸引力" },
-  { icon: ShoppingCart, label: "转化率", desc: "从点击到购买的转化，衡量销售效率" },
-  { icon: BarChart3, label: "客单价", desc: "活动期间平均客单价变化，评估活动价值" },
-  { icon: Repeat, label: "复购率", desc: "活动后30天复购比例，衡量客户粘性" },
-  { icon: TrendingUp, label: "ROI", desc: "投入产出比，综合评估营销效果" },
+  { icon: Eye, label: "曝光量", desc: "衡量品牌触达范围" },
+  { icon: MousePointerClick, label: "点击率", desc: "评估内容吸引力" },
+  { icon: ShoppingCart, label: "转化率", desc: "衡量销售转化效率" },
+  { icon: TrendingUp, label: "客单价", desc: "评估活动价值提升" },
+  { icon: Repeat, label: "复购率", desc: "衡量客户粘性" },
+  { icon: TrendingUp, label: "ROI", desc: "综合评估营销效果" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -132,6 +105,18 @@ export default function MarketingPage() {
         description="登录后购买会员或单次付费即可查看完整内容"
         type="single"
       />
+
+      {/* ====== Breadcrumb ====== */}
+      <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
+            <Home className="w-4 h-4" /> 首页
+          </Link>
+          <ChevronRight className="w-4 h-4" />
+          <span className="text-primary">营销策划</span>
+        </div>
+      </nav>
+
       {/* ====== Hero ====== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
         <div className="absolute inset-0 pointer-events-none">
@@ -140,15 +125,6 @@ export default function MarketingPage() {
         </div>
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 text-sm text-white/60 mb-8">
-            <Link href="/" className="hover:text-white/80 transition-colors flex items-center gap-1">
-              <Home className="w-4 h-4" /> 首页
-            </Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-white/90">营销策划</span>
-          </nav>
-
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -180,7 +156,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ====== 年度营销日历 ====== */}
+      {/* ====== 四季营销案例展示 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -197,52 +173,53 @@ export default function MarketingPage() {
               年度营销日历
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              12个月全覆盖，月月有主题、有活动、有目标，确保营销节奏不中断。
+              按季度规划营销节奏，每一季都有核心主题与活动方案。
             </p>
           </motion.div>
 
           <motion.div
-            className="overflow-x-auto"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
-            variants={fadeUp}
+            variants={stagger}
           >
-            <table className="w-full min-w-[700px] border-collapse">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tl-xl">月份</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">营销主题</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">核心活动</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tr-xl">目标</th>
-                </tr>
-              </thead>
-              <tbody>
-                {calendarData.map((row, i) => (
-                  <tr
-                    key={row.month}
-                    className={`border-b border-gray-100 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-muted/50" : "bg-white"
-                    }`}
-                  >
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center gap-2 font-semibold text-primary">
-                        <Calendar className="w-4 h-4 text-accent" />
-                        {row.month}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-gray-900">{row.theme}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{row.event}</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
-                        {row.target}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {[
+              { style: "春季营销案例", label: "焕新主题·搭配指南", color: "from-green-100 to-green-50" },
+              { style: "夏季营销案例", label: "限时企划·裂变引流", color: "from-blue-100 to-blue-50" },
+              { style: "秋季营销案例", label: "新品预售·VIP专场", color: "from-amber-100 to-amber-50" },
+              { style: "冬季营销案例", label: "年终答谢·双11狂欢", color: "from-red-100 to-red-50" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">📊</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </motion.div>
+            ))}
           </motion.div>
+
+          <div className="mt-10 text-center">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              查看完整日历
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -294,7 +271,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ====== 内容营销矩阵 ====== */}
+      {/* ====== 内容营销案例展示 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -311,49 +288,52 @@ export default function MarketingPage() {
               内容营销矩阵
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              五大平台精准分发，内容驱动流量，流量带动转化。
+              多平台精准分发，内容驱动流量，流量带动转化。
             </p>
           </motion.div>
 
           <motion.div
-            className="overflow-x-auto"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
-            variants={fadeUp}
+            variants={stagger}
           >
-            <table className="w-full min-w-[800px] border-collapse">
-              <thead>
-                <tr className="bg-primary text-white">
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tl-xl">平台</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">内容类型</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">更新频率</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm">核心目标</th>
-                  <th className="px-6 py-4 text-left font-semibold text-sm rounded-tr-xl">考核KPI</th>
-                </tr>
-              </thead>
-              <tbody>
-                {contentMatrix.map((row, i) => (
-                  <tr
-                    key={row.platform}
-                    className={`border-b border-gray-100 hover:bg-accent/5 transition-colors ${
-                      i % 2 === 0 ? "bg-muted/50" : "bg-white"
-                    }`}
-                  >
-                    <td className="px-6 py-4 font-semibold text-primary">{row.platform}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{row.type}</td>
-                    <td className="px-6 py-4 text-sm text-muted-foreground">{row.frequency}</td>
-                    <td className="px-6 py-4 text-sm text-gray-700">{row.goal}</td>
-                    <td className="px-6 py-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent/10 text-accent text-sm font-medium">
-                        {row.kpi}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            {[
+              { style: "公众号+小红书", label: "深度内容·精准种草", color: "from-pink-100 to-pink-50" },
+              { style: "短视频+直播", label: "流量获取·高效转化", color: "from-purple-100 to-purple-50" },
+              { style: "社群+小程序", label: "私域运营·深度触达", color: "from-cyan-100 to-cyan-50" },
+            ].map((item, i) => (
+              <motion.div
+                key={item.style}
+                variants={fadeUp}
+                custom={i}
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
+              >
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">📱</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
+                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
+              </motion.div>
+            ))}
           </motion.div>
+
+          <div className="mt-10 text-center">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              查看完整方案
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -412,9 +392,13 @@ export default function MarketingPage() {
               <div className="text-3xl mb-3">🔒</div>
               <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
               <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
-              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-                登录管理后台
-              </a>
+              <button
+                onClick={() => setShowPaywall(true)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                立即解锁
+                <ChevronRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>

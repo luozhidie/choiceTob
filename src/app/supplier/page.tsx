@@ -7,12 +7,10 @@ import {
   ChevronRight,
   Home,
   Shield,
-  Award,
   FileCheck,
   Factory,
   Headphones,
   Landmark,
-  Star,
   Upload,
   ArrowRight,
   CheckCircle2,
@@ -44,27 +42,27 @@ const entryStandards = [
   {
     icon: FileCheck,
     title: "营业执照",
-    desc: "合法有效的企业营业执照，经营范围涵盖服装生产或销售",
+    desc: "合法有效的企业营业执照",
   },
   {
     icon: Shield,
     title: "质检报告",
-    desc: "提供近一年内第三方权威机构出具的产品质检合格报告",
+    desc: "第三方权威机构出具的质检合格报告",
   },
   {
     icon: Factory,
     title: "产能证明",
-    desc: "具备稳定的生产能力，年产能满足平台最低合作标准",
+    desc: "具备稳定的生产能力",
   },
   {
     icon: Headphones,
     title: "售后体系",
-    desc: "建立完善的售后服务体系，7天无理由退换，48小时响应",
+    desc: "完善的售后服务与响应机制",
   },
   {
     icon: Landmark,
     title: "保证金",
-    desc: "按分级缴纳相应金额的履约保证金，保障交易安全",
+    desc: "按分级缴纳履约保证金",
   },
 ];
 
@@ -77,13 +75,11 @@ const supplierLevels = [
     bgLight: "bg-amber-50",
     textColor: "text-amber-700",
     benefits: [
-      "优先展示与推荐权重",
-      "专属客户经理1对1服务",
-      "新品首发绿色通道",
-      "大促活动优先入选",
-      "平台数据看板权限",
+      "优先展示",
+      "专属服务",
+      "绿色通道",
     ],
-    threshold: "年供货额≥500万，综合评分≥90",
+    threshold: "高标准准入，综合评定优秀",
   },
   {
     level: "B",
@@ -96,9 +92,8 @@ const supplierLevels = [
       "常规展示位",
       "在线客服支持",
       "活动备选资格",
-      "基础数据报表",
     ],
-    threshold: "年供货额≥100万，综合评分≥75",
+    threshold: "基础准入，综合评定良好",
   },
   {
     level: "C",
@@ -112,19 +107,8 @@ const supplierLevels = [
       "自主运营后台",
       "待升级观察期",
     ],
-    threshold: "年供货额＜100万，综合评分≥60",
+    threshold: "待升级观察期",
   },
-];
-
-const supplierShowcase = [
-  { name: "锦程服饰", category: "女装/连衣裙", rating: 4.9 },
-  { name: "瑞丰纺织", category: "面料/真丝", rating: 4.8 },
-  { name: "华锦成衣", category: "女装/外套", rating: 4.7 },
-  { name: "锦瑟工坊", category: "女装/旗袍", rating: 4.9 },
-  { name: "优品针织", category: "针织/毛衣", rating: 4.6 },
-  { name: "雅致服饰", category: "女装/衬衫", rating: 4.8 },
-  { name: "尚品皮具", category: "配饰/皮包", rating: 4.5 },
-  { name: "丝路供应链", category: "女装/裤装", rating: 4.7 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -425,7 +409,7 @@ export default function SupplierPage() {
                       setForm({ ...form, brand: e.target.value })
                     }
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                    placeholder="请输入品牌名称（如有）"
+                    placeholder="请输入品牌名称(如有)"
                   />
                 </div>
                 <div>
@@ -439,7 +423,7 @@ export default function SupplierPage() {
                       setForm({ ...form, capacity: e.target.value })
                     }
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                    placeholder="如：50万件/年"
+                    placeholder="如: 50万件/年"
                   />
                 </div>
               </div>
@@ -475,7 +459,7 @@ export default function SupplierPage() {
                 >
                   <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
                   <span className="text-sm text-green-700">
-                    申请已提交成功！我们将在3个工作日内与您联系。
+                    申请已提交成功! 我们将在3个工作日内与您联系。
                   </span>
                 </motion.div>
               )}
@@ -484,7 +468,7 @@ export default function SupplierPage() {
         </div>
       </section>
 
-      {/* ====== Supplier Showcase ====== */}
+      {/* ====== Supplier Case Showcase ====== */}
       <section className="py-20 lg:py-28 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -495,13 +479,13 @@ export default function SupplierPage() {
             variants={fadeUp}
           >
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              优质伙伴
+              案例展示
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              已入驻供应商
+              供应商案例展示
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              众多优质供应商已入驻平台，覆盖全品类服装供应链资源。
+              覆盖全品类服装供应链资源，优质供应商持续入驻中。
             </p>
           </motion.div>
 
@@ -512,28 +496,42 @@ export default function SupplierPage() {
             viewport={{ once: true, amount: 0.1 }}
             variants={stagger}
           >
-            {supplierShowcase.map((s, i) => (
+            {[
+              { style: "女装供应商", label: "连衣裙·衬衫·外套", color: "from-pink-100 to-pink-50" },
+              { style: "面料供应商", label: "真丝·棉麻·针织", color: "from-blue-100 to-blue-50" },
+              { style: "配饰供应商", label: "皮包·首饰·丝巾", color: "from-amber-100 to-amber-50" },
+              { style: "综合供应商", label: "全品类·一站式", color: "from-green-100 to-green-50" },
+            ].map((item, i) => (
               <motion.div
-                key={s.name}
+                key={item.style}
                 variants={fadeUp}
                 custom={i}
-                className="group p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300"
+                className="group cursor-pointer"
+                onClick={() => setShowPaywall(true)}
               >
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center mb-4 group-hover:from-primary/20 group-hover:to-accent/20 transition-colors">
-                  <Building2 className="w-8 h-8 text-primary/60" />
+                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
+                  <div className="text-6xl opacity-40">🏭</div>
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                      查看详情
+                    </span>
+                  </div>
                 </div>
-                <h3 className="font-bold text-primary text-lg">{s.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{s.category}</p>
-                <div className="flex items-center gap-1 mt-3">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
-                  <span className="text-sm font-semibold text-primary">
-                    {s.rating}
-                  </span>
-                  <span className="text-xs text-muted-foreground ml-1">评分</span>
-                </div>
+                <h4 className="font-semibold text-primary">{item.style}</h4>
+                <p className="text-xs text-muted-foreground">{item.label}</p>
               </motion.div>
             ))}
           </motion.div>
+
+          <div className="mt-10 text-center">
+            <button
+              onClick={() => setShowPaywall(true)}
+              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+            >
+              查看完整供应商库
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -575,9 +573,12 @@ export default function SupplierPage() {
               <div className="text-3xl mb-3">🔒</div>
               <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
               <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
-              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
-                登录管理后台
-              </a>
+              <button
+                onClick={() => setShowPaywall(true)}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                查看完整内容
+              </button>
             </div>
           </div>
         </div>
