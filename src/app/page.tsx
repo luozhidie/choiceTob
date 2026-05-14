@@ -98,25 +98,25 @@ const dataTools = [
 ];
 
 const stats = [
-  { value: "5000+", label: "合作品牌" },
-  { value: "98%", label: "客户续约率" },
-  { value: "3x", label: "选品效率提升" },
-  { value: "50万+", label: "SKU覆盖" },
+  { value: "数千家", label: "合作品牌" },
+  { value: "行业领先", label: "客户续约率" },
+  { value: "显著提升", label: "选品效率提升" },
+  { value: "海量", label: "SKU覆盖" },
 ];
 
 const testimonials = [
   {
-    quote: "骆芷蝶智选的数据驱动选品方案，让我们的首单成功率提升了60%，库存周转天数缩短了30%，真正实现了从经验选品到科学选品的跨越。",
+    quote: "骆芷蝶智选的数据驱动选品方案，让我们的选品胜率大幅提升，库存周转效率显著改善，真正实现了从经验选品到科学选品的跨越。",
     name: "李晓燕",
     role: "某知名女装品牌 商品总监",
   },
   {
-    quote: "接入爆款货盘后，我们的上新速度提升了3倍，爆款命中率从15%提升到45%，供应链协同效率大幅提升。",
+    quote: "接入爆款货盘后，我们的上新速度明显加快，爆款命中率显著提高，供应链协同效率大幅提升。",
     name: "王志强",
     role: "某快时尚品牌 供应链负责人",
   },
   {
-    quote: "VIP管理模块帮助我们精准识别高价值客户，复购率提升了80%，会员贡献占比从35%增长到62%，效果远超预期。",
+    quote: "VIP管理模块帮助我们精准识别高价值客户，复购率大幅提升，会员贡献占比显著增长，效果远超预期。",
     name: "陈美琪",
     role: "某高端女装品牌 运营总监",
   },
@@ -343,9 +343,9 @@ export default function Home() {
               <ul className="mt-8 flex flex-col gap-4">
                 {[
                   "全网实时数据监测，覆盖主流电商平台与社交渠道",
-                  "AI驱动的趋势预测模型，提前30天预判爆款走向",
-                  "100+资深行业顾问，提供从策略到落地的全程陪伴",
-                  "与5000+优质供应商深度合作，源头资源直达",
+                  "AI驱动的趋势预测模型，提前预判爆款走向",
+                  "众多资深行业顾问，提供从策略到落地的全程陪伴",
+                  "与众多优质供应商深度合作，源头资源直达",
                 ].map((text) => (
                   <li key={text} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
@@ -371,10 +371,10 @@ export default function Home() {
               variants={stagger}
             >
               {[
-                { num: "10+", sub: "年行业深耕" },
-                { num: "50万+", sub: "SKU数据覆盖" },
-                { num: "200+", sub: "行业专家顾问" },
-                { num: "99.9%", sub: "系统可用性" },
+                { num: "十余年", sub: "行业深耕" },
+                { num: "海量", sub: "SKU数据覆盖" },
+                { num: "众多", sub: "行业专家顾问" },
+                { num: "高可用", sub: "系统稳定性" },
               ].map((item, i) => (
                 <motion.div
                   key={item.sub}
@@ -485,6 +485,16 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* ====== Footer ====== */}
+      <footer className="py-6 bg-muted/60 border-t border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} 骆芷蝶智选</p>
+          <Link href="/admin/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+            管理员登录
+          </Link>
+        </div>
+      </footer>
     </>
   );
 }

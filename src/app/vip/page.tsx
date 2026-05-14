@@ -566,6 +566,22 @@ export default function VipPage() {
         </div>
       </section>
 
+      {/* ====== Login Prompt ====== */}
+      <section className="py-20 lg:py-28 bg-muted">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
+            <div className="max-w-xl mx-auto px-6">
+              <div className="text-3xl mb-3">🔒</div>
+              <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
+              <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
+              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+                登录管理后台
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ====== CTA ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

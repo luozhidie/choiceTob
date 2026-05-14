@@ -63,49 +63,49 @@ const styleTable = [
     name: "少女型",
     traits: "甜美、俏皮、轻盈",
     direction: "蓬蓬裙、蝴蝶结、马卡龙色系",
-    ratio: "15%",
+    ratio: "中",
   },
   {
     name: "优雅型",
     traits: "精致、柔美、知性",
     direction: "真丝衬衫、A字裙、莫兰迪色系",
-    ratio: "18%",
+    ratio: "高",
   },
   {
     name: "浪漫型",
     traits: "华丽、性感、丰盈",
     direction: "蕾丝、荷叶边、酒红色系",
-    ratio: "12%",
+    ratio: "中",
   },
   {
     name: "少年型",
     traits: "利落、干练、中性",
     direction: "西装外套、直筒裤、黑白灰",
-    ratio: "10%",
+    ratio: "中",
   },
   {
     name: "时尚型",
     traits: "个性、前卫、多变",
     direction: "不规则剪裁、撞色、潮流款",
-    ratio: "15%",
+    ratio: "高",
   },
   {
     name: "古典型",
     traits: "端庄、稳重、高贵",
     direction: "套装、珍珠饰品、藏蓝色系",
-    ratio: "10%",
+    ratio: "中",
   },
   {
     name: "自然型",
     traits: "随性、洒脱、质朴",
     direction: "棉麻材质、宽松版型、大地色系",
-    ratio: "12%",
+    ratio: "中",
   },
   {
     name: "戏剧型",
     traits: "夸张、夺目、气场",
     direction: "大廓形、撞色拼接、亮面材质",
-    ratio: "8%",
+    ratio: "低",
   },
 ];
 
@@ -113,17 +113,17 @@ const features = [
   {
     icon: Package,
     title: "款式库",
-    desc: "50万+SKU实时更新，覆盖全品类全风格，支持多维度筛选与智能推荐。",
+    desc: "海量SKU实时更新，覆盖全品类全风格，支持多维度筛选与智能推荐。",
   },
   {
     icon: Store,
     title: "供应商库",
-    desc: "5000+优质供应商入驻，资质认证体系保障品质，产地直达降本增效。",
+    desc: "众多优质供应商入驻，资质认证体系保障品质，产地直达降本增效。",
   },
   {
     icon: TrendingUp,
     title: "爆品推荐",
-    desc: "AI驱动爆品预测模型，提前30天预判趋势，首单成功率提升60%。",
+    desc: "AI驱动爆品预测模型，提前预判趋势，首单成功率显著提升。",
   },
   {
     icon: Search,
@@ -269,7 +269,7 @@ export default function BuyerPage() {
                   <th className="px-6 py-4 text-left font-semibold">风格类型</th>
                   <th className="px-6 py-4 text-left font-semibold">核心特征</th>
                   <th className="px-6 py-4 text-left font-semibold">适合方向</th>
-                  <th className="px-6 py-4 text-center font-semibold">进货占比</th>
+                  <th className="px-6 py-4 text-center font-semibold">市场热度</th>
                 </tr>
               </thead>
               <tbody>
@@ -372,10 +372,10 @@ export default function BuyerPage() {
               </p>
               <ul className="mt-8 flex flex-col gap-4">
                 {[
-                  "首单成功率提升60%，选品胜率显著高于行业平均",
-                  "库存周转天数缩短30%，资金利用效率大幅提升",
-                  "供应商匹配效率提升3倍，从3天缩短至1天",
-                  "退换货率降低40%，客户满意度持续攀升",
+                  "首单成功率大幅提升，选品胜率显著高于行业平均",
+                  "库存周转天数显著缩短，资金利用效率大幅提升",
+                  "供应商匹配效率大幅提升，响应更加迅速",
+                  "退换货率显著降低，客户满意度持续攀升",
                 ].map((text) => (
                   <li key={text} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
@@ -393,10 +393,10 @@ export default function BuyerPage() {
               variants={stagger}
             >
               {[
-                { num: "60%", sub: "首单成功率提升" },
-                { num: "30%", sub: "库存周转天数缩短" },
-                { num: "3x", sub: "供应商匹配效率" },
-                { num: "40%", sub: "退换货率降低" },
+                { num: "大幅提升", sub: "首单成功率" },
+                { num: "显著缩短", sub: "库存周转天数" },
+                { num: "大幅提升", sub: "供应商匹配效率" },
+                { num: "显著降低", sub: "退换货率" },
               ].map((item, i) => (
                 <motion.div
                   key={item.sub}
@@ -411,6 +411,22 @@ export default function BuyerPage() {
                 </motion.div>
               ))}
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ====== Login Prompt ====== */}
+      <section className="py-16 lg:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
+            <div className="max-w-xl mx-auto px-6">
+              <div className="text-3xl mb-3">🔒</div>
+              <h3 className="text-lg font-bold text-primary">完整选品数据与分析报告</h3>
+              <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
+              <a href="/admin/login" className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+                登录管理后台
+              </a>
+            </div>
           </div>
         </div>
       </section>
