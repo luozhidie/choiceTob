@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PaywallModal } from "@/components/PaywallModal";
+import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -17,6 +19,7 @@ import {
   Crown,
   ArrowRight,
   Home,
+  Loader2,
   Users,
 } from "lucide-react";
 
@@ -37,7 +40,20 @@ const stagger = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Interfaces                                                         */
+/* ------------------------------------------------------------------ */
+interface SalesImage {
+  id: string;
+  sort_order: number;
+  title: string;
+  label: string;
+  image_url: string;
+  section: string;
+  is_published: boolean;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Static Data                                                        */
 /* ------------------------------------------------------------------ */
 const salesSteps = [
   {
@@ -121,6 +137,74 @@ const diagnosisDimensions = [
 /* ------------------------------------------------------------------ */
 export default function SalesPage() {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [serviceImages, setServiceImages] = useState<SalesImage[]>([]);
+  const [scriptsImages, setScriptsImages] = useState<SalesImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("sales_images")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching sales images:", error);
+    } else {
+      const all = data || [];
+      setServiceImages(all.filter((img) => img.section === "service"));
+      setScriptsImages(all.filter((img) => img.section === "scripts"));
+    }
+    setLoading(false);
+  };
+
+  const renderImageCard = (item: SalesImage, i: number) => (
+    <motion.div
+      key={item.id}
+      variants={fadeUp}
+      custom={i}
+      className="group cursor-pointer"
+      onClick={() => setShowPaywall(true)}
+    >
+      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
+            查看详情
+          </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h4 className="text-xl font-bold text-white">{item.title}</h4>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderLoading = () => (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+      <span className="text-muted-foreground">加载中...</span>
+    </div>
+  );
+
+  const renderEmpty = (sectionName: string) => (
+    <div className="text-center py-12 col-span-full">
+      <p className="text-muted-foreground">暂无{sectionName}数据</p>
+    </div>
+  );
 
   return (
     <>
@@ -341,38 +425,23 @@ export default function SalesPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "诊断报告案例", label: "6大维度全面分析", color: "from-blue-100 to-blue-50" },
-              { style: "选品方案案例", label: "数据驱动精准选品", color: "from-green-100 to-green-50" },
-              { style: "运营陪跑案例", label: "持续优化与落地支持", color: "from-purple-100 to-purple-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">📋</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {serviceImages.length > 0 ? (
+                serviceImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("服务包案例")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -406,39 +475,23 @@ export default function SalesPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "价格异议处理", label: "价值重构策略", color: "from-yellow-100 to-yellow-50" },
-              { style: "犹豫不决应对", label: "降低门槛策略", color: "from-blue-100 to-blue-50" },
-              { style: "连带推荐技巧", label: "提升客单价策略", color: "from-green-100 to-green-50" },
-              { style: "服务包推荐", label: "系统思维策略", color: "from-purple-100 to-purple-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">💬</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {scriptsImages.length > 0 ? (
+                scriptsImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("销售话术")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -464,6 +517,7 @@ export default function SalesPage() {
                 className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
               >
                 解锁完整内容
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -482,7 +536,6 @@ export default function SalesPage() {
           >
             <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-bold">
                 预约在线诊断
