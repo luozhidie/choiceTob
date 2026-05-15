@@ -245,11 +245,7 @@ export default function PlanningPage() {
                     </div>
                     {/* Content at bottom */}
                     <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
-                      <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{step.description}</p>
-                      <div className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium">
-                        查看详情 <ArrowRight className="w-3 h-3" />
-                      </div>
+                      <h3 className="text-xl font-bold text-white">{step.title}</h3>
                     </div>
                   </div>
                 </motion.div>
