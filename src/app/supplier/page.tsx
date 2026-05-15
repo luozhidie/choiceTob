@@ -1,6 +1,9 @@
 "use client";
 import { PaywallModal } from "@/components/PaywallModal";
 
+import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
+
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -16,8 +19,9 @@ import {
   CheckCircle2,
   Building2,
   Package,
+  Loader2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -36,7 +40,20 @@ const stagger = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Interfaces                                                         */
+/* ------------------------------------------------------------------ */
+interface SupplierImage {
+  id: string;
+  sort_order: number;
+  title: string;
+  label: string;
+  image_url: string;
+  section: string;
+  is_published: boolean;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Static Data                                                        */
 /* ------------------------------------------------------------------ */
 const entryStandards = [
   {
@@ -132,6 +149,73 @@ export default function SupplierPage() {
   };
 
   const [showPaywall, setShowPaywall] = useState(false);
+
+  // Dynamic supplier images
+  const [supplierImages, setSupplierImages] = useState<SupplierImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("supplier_images")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching supplier images:", error);
+    } else {
+      setSupplierImages(data || []);
+    }
+    setLoading(false);
+  };
+
+  const renderImageCard = (item: SupplierImage, i: number) => (
+    <motion.div
+      key={item.id}
+      variants={fadeUp}
+      custom={i}
+      className="group cursor-pointer"
+      onClick={() => setShowPaywall(true)}
+    >
+      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
+            查看详情
+          </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h4 className="text-xl font-bold text-white">{item.title}</h4>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderLoading = () => (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+      <span className="text-muted-foreground">加载中...</span>
+    </div>
+  );
+
+  const renderEmpty = () => (
+    <div className="text-center py-12 col-span-full">
+      <p className="text-muted-foreground">暂无供应商案例数据</p>
+    </div>
+  );
 
   return (
     <>
@@ -409,7 +493,7 @@ export default function SupplierPage() {
                       setForm({ ...form, brand: e.target.value })
                     }
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                    placeholder="请输入品牌名称(如有)"
+                    placeholder="请输入品牌名称（如有）"
                   />
                 </div>
                 <div>
@@ -423,7 +507,7 @@ export default function SupplierPage() {
                       setForm({ ...form, capacity: e.target.value })
                     }
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                    placeholder="如: 50万件/年"
+                    placeholder="如：50万件/年"
                   />
                 </div>
               </div>
@@ -459,7 +543,7 @@ export default function SupplierPage() {
                 >
                   <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
                   <span className="text-sm text-green-700">
-                    申请已提交成功! 我们将在3个工作日内与您联系。
+                    申请已提交成功！我们将在3个工作日内与您联系。
                   </span>
                 </motion.div>
               )}
@@ -489,39 +573,23 @@ export default function SupplierPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "女装供应商", label: "连衣裙·衬衫·外套", color: "from-pink-100 to-pink-50" },
-              { style: "面料供应商", label: "真丝·棉麻·针织", color: "from-blue-100 to-blue-50" },
-              { style: "配饰供应商", label: "皮包·首饰·丝巾", color: "from-amber-100 to-amber-50" },
-              { style: "综合供应商", label: "全品类·一站式", color: "from-green-100 to-green-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">🏭</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {supplierImages.length > 0 ? (
+                supplierImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty()
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
