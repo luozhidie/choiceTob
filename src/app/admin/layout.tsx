@@ -40,6 +40,7 @@ import {
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "色彩季型录入", href: "/admin/color-analysis", icon: Palette },
+  { label: "色彩季型对比", href: "/admin/color-compare", icon: Palette },
   { label: "客户管理", href: "/admin/customers", icon: Users },
   { label: "线索管理", href: "/admin/leads", icon: ClipboardList },
   { label: "风格测试记录", href: "/admin/style-test-results", icon: UserCircle },

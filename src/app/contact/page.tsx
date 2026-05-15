@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 import {
   ChevronRight,
   Home,
@@ -93,8 +94,23 @@ export default function ContactPage() {
   });
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const supabase = createClient();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      await supabase.from("leads").insert([
+        {
+          name: form.name.trim() || null,
+          phone: form.phone.trim() || null,
+          source: "contact_form",
+          interest: form.type || null,
+          notes: `邮箱: ${form.email || "无"} | 留言: ${form.message || "无"}`,
+        },
+      ]);
+    } catch (err) {
+      console.error("保存失败:", err);
+    }
     setSubmitted(true);
     setForm({ name: "", phone: "", email: "", type: "", message: "" });
     setTimeout(() => setSubmitted(false), 4000);

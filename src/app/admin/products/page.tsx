@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   Plus,
@@ -23,6 +24,7 @@ interface Product {
   price: number;
   original_price: number | null;
   category: string | null;
+  tags: string[] | null;
   is_published: boolean;
   stock: number;
   created_at: string;
@@ -158,7 +160,7 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <AnimatePrescence>
+      <AnimatePresence>
         {toast && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -169,7 +171,7 @@ export default function AdminProductsPage() {
             {toast.message}
           </motion.div>
         )}
-      </AnimatePrescence>
+      </AnimatePresence>
 
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

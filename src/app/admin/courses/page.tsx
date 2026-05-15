@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   Plus,
@@ -27,6 +28,7 @@ interface Course {
   category: string | null;
   level: string;
   duration_minutes: number | null;
+  content: string | null;
   is_published: boolean;
   created_at: string;
 }

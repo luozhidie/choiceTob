@@ -10,7 +10,7 @@ interface PaywallModalProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  type?: "annual" | "single" | "course" | "subscription" | "trend" | "style_test";
+  type?: "annual" | "single" | "course" | "subscription" | "trend" | "style_test" | "product";
 }
 
 export function PaywallModal({
@@ -77,6 +77,7 @@ export function PaywallModal({
       case "subscription": return "订阅流行资讯";
       case "trend": return "此趋势报告为付费内容";
       case "style_test": return "风格测试付费";
+      case "product": return "商品购买";
       case "annual": return "开通年度会员";
       default: return "此内容为付费内容";
     }
@@ -88,6 +89,7 @@ export function PaywallModal({
       case "subscription": return "订阅后可查看所有付费文章";
       case "trend": return "购买后即可查看完整的趋势报告";
       case "style_test": return "购买后即可获得2次测试机会，30天有效";
+      case "product": return "购买后安排发货";
       case "annual": return "开通会员后即可查看所有内容";
       default: return "登录后购买会员或单次付费即可查看完整内容";
     }
