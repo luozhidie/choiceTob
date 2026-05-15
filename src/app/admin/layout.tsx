@@ -39,11 +39,13 @@ import {
 
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "色彩季型录入", href: "/admin/color-analysis", icon: Palette },
   { label: "客户管理", href: "/admin/customers", icon: Users },
   { label: "线索管理", href: "/admin/leads", icon: ClipboardList },
   { label: "风格测试记录", href: "/admin/style-test-results", icon: UserCircle },
   { label: "测试码管理", href: "/admin/test-codes", icon: Key },
   { label: "交付方案", href: "/admin/deliveries", icon: Package },
+  { label: "订单管理", href: "/admin/orders", icon: FileText },
   { label: "课程管理", href: "/admin/courses", icon: Book },
   { label: "商品管理", href: "/admin/products", icon: ShoppingBag },
   { label: "买手选品", href: "/admin/buyer", icon: TrendingUp },

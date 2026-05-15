@@ -2,6 +2,8 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import AdBanner, { PopupAd } from "@/components/AdBanner";
 import {
   ChevronRight,
@@ -18,6 +20,10 @@ import {
   Quote,
   CheckCircle2,
   FileText,
+  Palette,
+  BookOpen,
+  ShoppingBag,
+  User,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -226,6 +232,119 @@ export default function Home() {
 
       {/* ====== Top Ad Banner ====== */}
       <AdBanner position="top" />
+
+      {/* ====== Hot Services ====== */}
+      <section className="py-16 lg:py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center max-w-2xl mx-auto mb-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={fadeUp}
+          >
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              热门服务
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              限时优惠，立即体验
+            </h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* 风格测试 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+            >
+              <Link
+                href="/style-test"
+                className="group block p-8 rounded-2xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:shadow-lg hover:border-accent/40 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-accent/10 text-accent mb-5 group-hover:bg-accent group-hover:text-white transition-colors">
+                  <User className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
+                  穿衣风格测试
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  AI智能分析你的专属风格，科学定位美学密码
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-2xl font-bold text-accent">¥99</span>
+                  <span className="text-sm text-muted-foreground line-through">¥199</span>
+                  <span className="text-xs px-2 py-0.5 bg-accent text-white rounded-full">可测2次</span>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                  立即测试 <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            </motion.div>
+
+            {/* 线上课程 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+            >
+              <Link
+                href="/courses"
+                className="group block p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 text-primary mb-5 group-hover:bg-primary group-hover:text-white transition-colors">
+                  <BookOpen className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
+                  线上课程
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  专业色彩形象课程，从入门到精通，助你掌握风格密码
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">免费+付费</span>
+                  <span className="text-xs text-muted-foreground">多门课程可选</span>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+                  浏览课程 <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            </motion.div>
+
+            {/* 精选好物 */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.3 }}
+            >
+              <Link
+                href="/shop"
+                className="group block p-8 rounded-2xl bg-gradient-to-br from-pink-50 to-pink-100/50 border border-pink-200/50 hover:shadow-lg hover:border-pink-300/50 transition-all duration-300"
+              >
+                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-pink-100 text-pink-500 mb-5 group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                  <ShoppingBag className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
+                  精选好物
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  色彩顾问推荐好物，助力你的风格提升之路
+                </p>
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-medium">精选推荐</span>
+                  <span className="text-xs text-muted-foreground">品质保障</span>
+                </div>
+                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-pink-500">
+                  去逛逛 <ArrowRight className="w-4 h-4" />
+                </span>
+              </Link>
+            </motion.div>
+          </div>
+        </div>
+      </section>
 
       {/* ====== Core Business ====== */}
       <section className="py-20 lg:py-28 bg-white">

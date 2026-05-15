@@ -7,6 +7,8 @@ import { Menu, X, ChevronRight, TrendingUp } from "lucide-react";
 const navItems = [
   { label: "首页", href: "/" },
   { label: "风格测试", href: "/style-test" },
+  { label: "线上课程", href: "/courses" },
+  { label: "精选好物", href: "/shop" },
   { label: "买手选品", href: "/buyer" },
   { label: "商品企划", href: "/planning" },
   { label: "爆款货盘", href: "/hot-picks" },
@@ -16,9 +18,6 @@ const navItems = [
   { label: "VIP管理", href: "/vip" },
   { label: "原创设计", href: "/designer" },
   { label: "一手货源", href: "/supplier" },
-  { label: "教学中心", href: "/education" },
-  { label: "流行资讯", href: "/magazine" },
-  { label: "服装趋势", href: "/fashion-trends" },
   { label: "联系我们", href: "/contact" },
 ];
 
