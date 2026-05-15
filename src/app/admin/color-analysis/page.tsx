@@ -15,108 +15,124 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// 12季色彩季型
+// 12季色彩季型（行业标准叫法）
 const colorSeasons = [
-  { value: "deep_autumn", label: "深秋型", group: "秋", desc: "深沉浓郁，暖色调为主" },
-  { value: "warm_autumn", label: "暖秋型", group: "秋", desc: "温暖醇厚，大地色系" },
-  { value: "soft_autumn", label: "柔秋型", group: "秋", desc: "柔和含蓄，低饱和暖色" },
-  { value: "deep_winter", label: "深冬型", group: "冬", desc: "深邃冷艳，高对比冷色" },
-  { value: "cool_winter", label: "冷冬型", group: "冬", desc: "冷冽纯净，蓝基调为主" },
-  { value: "clear_winter", label: "净冬型", group: "冬", desc: "清透鲜明，高饱和冷色" },
-  { value: "light_spring", label: "浅春型", group: "春", desc: "明亮清新，浅暖色调" },
-  { value: "warm_spring", label: "暖春型", group: "春", desc: "温暖明快，黄基调暖色" },
-  { value: "clear_spring", label: "净春型", group: "春", desc: "鲜艳透亮，高饱和暖色" },
-  { value: "light_summer", label: "浅夏型", group: "夏", desc: "柔和淡雅，浅冷色调" },
-  { value: "cool_summer", label: "冷夏型", group: "夏", desc: "清冷朦胧，蓝基调冷色" },
-  { value: "soft_summer", label: "柔夏型", group: "夏", desc: "沉静内敛，低饱和冷色" },
+  // 春季型（暖色调、高明度、高艳度）
+  { value: "light_warm", label: "浅暖型", group: "春", desc: "轻浅、明亮、暖色调", examples: "浅金黄、桃粉、象牙白" },
+  { value: "warm_bright", label: "暖亮型", group: "春", desc: "暖色调、轻浅、亮丽", examples: "珊瑚色、金黄、南蛇藤色" },
+  { value: "clear_warm", label: "净暖型", group: "春", desc: "明亮、艳丽、分明", examples: "亮粉、鲜绿、西瓜红" },
+  // 夏季型（冷色调、高明度、低艳度）
+  { value: "light_cool", label: "浅冷型", group: "夏", desc: "轻浅、柔和、淡雅", examples: "柔白、雾粉、奶柔色" },
+  { value: "soft_cool", label: "柔冷型", group: "夏", desc: "柔和淡雅、浅淡、冷色调", examples: "绿玉色、宝石蓝、灰玫瑰色" },
+  { value: "cool_soft", label: "冷柔型", group: "夏", desc: "冷色调、浅淡、柔和", examples: "玫瑰粉、石青色、玫瑰红" },
+  // 秋季型（暖色调、低明度、低艳度）
+  { value: "warm_soft", label: "暖柔型", group: "秋", desc: "暖色调、色泽浓重、中等深度", examples: "驼色、橄榄绿、砖红" },
+  { value: "soft_warm", label: "柔暖型", group: "秋", desc: "深厚、色泽饱和度低、暖色调", examples: "卡其、咖啡、铁锈红" },
+  { value: "deep_warm", label: "深暖型", group: "秋", desc: "浓郁、厚重", examples: "深棕、墨绿、酒红" },
+  // 冬季型（冷色调、低明度、高艳度）
+  { value: "clear_cool", label: "净冷型", group: "冬", desc: "艳丽明亮、深沉浓烈", examples: "纯黑、正红、电光蓝" },
+  { value: "cool_bright", label: "冷亮型", group: "冬", desc: "深沉、明亮、极端", examples: "黑白、藏蓝、冰粉" },
+  { value: "deep_cool", label: "深冷型", group: "冬", desc: "浓郁、艳丽、冷色调", examples: "纯白、深海军蓝、木莓红" },
 ];
 
-// 风格类型
-const styleTypes = [
-  { value: "shao_nv", label: "少女型", gender: "female" },
-  { value: "shao_nian", label: "少年型", gender: "female" },
-  { value: "you_ya", label: "优雅型", gender: "female" },
-  { value: "lang_man", label: "浪漫型", gender: "female" },
-  { value: "xi_ju", label: "戏剧型", gender: "both" },
-  { value: "gu_dian", label: "古典型", gender: "both" },
-  { value: "zi_ran", label: "自然型", gender: "both" },
-  { value: "qian_wei", label: "前卫型", gender: "both" },
-  { value: "shi_shang", label: "时尚型", gender: "male" },
+// 8大女士风格类型
+const femaleStyleTypes = [
+  { value: "shao_nv", label: "少女型", contour: "曲线型", size: "小版型", features: "可爱、迷糊、善良、天真", typical: "娃娃脸", styleRef: "甜美风、淑女风、日系风" },
+  { value: "you_ya", label: "优雅型", contour: "曲线型", size: "小版型", features: "小女人、温柔、妩媚、贤淑、雅致、内敛、文静", typical: "小女人味", styleRef: "通勤风、简约风、知性风" },
+  { value: "lang_man_f", label: "浪漫型", contour: "曲线型", size: "大版型", features: "大女人、成熟、性感、妖娆、有风情、华丽、双眼含情", typical: "青春期身型发育比同龄人早", styleRef: "名媛风、御姐风、复古风" },
+  { value: "shao_nian_f", label: "少年型", contour: "直线型", size: "小版型", features: "帅气、率真、清爽、古灵精怪、眉宇间有种英气", typical: "比同龄人要显年轻", styleRef: "中性风、简约风、街头风" },
+  { value: "shi_shang_f", label: "时尚型", contour: "直线型", size: "小版型", features: "个性、摩登、百变、特立独行、标新立异", typical: "没特点、可塑性强", styleRef: "街头风、潮牌风、设计师款" },
+  { value: "gu_dian_f", label: "古典型", contour: "直线型", size: "大版型", features: "贵气、稳重、端庄、上品、高贵、经典、规矩、不怒而威", typical: "八大女士风格中打扮正确最显气质", styleRef: "通勤风、职业风、简约风" },
+  { value: "zi_ran_f", label: "自然型", contour: "直线型", size: "大版型", features: "自然、潇洒、飘逸、大方、随意淳朴、有异域风情、亲切随和", typical: "视觉身高看起来比实际身高要矮", styleRef: "休闲风、森系风、棉麻风" },
+  { value: "xi_ju_f", label: "戏剧型", contour: "直线型", size: "大版型", features: "气派、夸张、醒目、张扬华丽、女王级别、视觉冲击力强、百变、有存在感", typical: "视觉身高看起来比实际身高要高", styleRef: "御姐风、名媛风、大牌风" },
+];
+
+// 5大男士风格类型
+const maleStyleTypes = [
+  { value: "xi_ju_m", label: "戏剧型", features: "气派、华丽、张扬、国王级别、有权威感、明显的男子气概、有存在感", typical: "视觉身高看起来比实际身高要高" },
+  { value: "zi_ran_m", label: "自然型", features: "潇洒随意、简洁大气、有男人味、亲切、随和、阳刚、有朝气", typical: "视觉身高看起来比实际身高要高矮" },
+  { value: "gu_dian_m", label: "古典型", features: "严谨、稳重、端正、中规中矩、正统、高级上品、含蓄大方、严肃、四平八稳", typical: "含蓄" },
+  { value: "lang_man_m", label: "浪漫型", features: "柔美、有才情、儒雅、温柔、阴柔、花哨、华丽", typical: "穿衣范围最广的男士风格" },
+  { value: "shi_shang_m", label: "时尚型", features: "年轻有活力、有个性、有创意、灵动、多变", typical: "男士风格中最显年轻" },
 ];
 
 // AI选品建议（根据色彩季型+风格生成）
 const aiRecommendations: Record<string, { colors: string[]; styles: string[]; fabrics: string[]; tips: string }> = {
-  deep_autumn: {
-    colors: ["酒红", "墨绿", "咖啡棕", "深金", "砖红", "橄榄绿"],
-    styles: ["大衣", "西装外套", "阔腿裤", "针织衫", "风衣"],
-    fabrics: ["羊绒", "丝绒", "皮革", "粗花呢", "真丝"],
-    tips: "深秋型适合浓郁深沉的色彩，搭配高对比度造型更显气场。避免浅淡柔和的色调。",
-  },
-  warm_autumn: {
-    colors: ["焦糖色", "暖橙", "芥末黄", "红棕", "苔绿", "奶油白"],
-    styles: ["针织开衫", "A字裙", "休闲西装", "长款衬衫", "百褶裙"],
-    fabrics: ["棉麻", "灯芯绒", "羊毛", "麂皮", "粗针织"],
-    tips: "暖秋型最适合大地色系，温暖醇厚的色调让你散发亲和力。避免冷蓝色调。",
-  },
-  soft_autumn: {
-    colors: ["米色", "驼色", "灰粉", "豆沙绿", "浅棕", "暖灰"],
-    styles: ["柔软毛衣", "半身裙", "衬衫裙", "休闲裤", "轻薄外套"],
-    fabrics: ["细针织", "雪纺", "柔软棉", "薄纱", "丝绵混纺"],
-    tips: "柔秋型适合低饱和暖色，柔和不刺眼。避免高对比度搭配和过于鲜艳的色彩。",
-  },
-  deep_winter: {
-    colors: ["纯黑", "深蓝", "酒红", "纯白", "玫红", "墨紫"],
-    styles: ["修身西装", "皮衣", "直筒裤", "高领毛衣", "连衣裙"],
-    fabrics: ["皮革", "真丝", "缎面", "精纺羊毛", "金属感面料"],
-    tips: "深冬型适合高对比度搭配，黑白对比或深色撞色效果出众。避免浑浊的中性色。",
-  },
-  cool_winter: {
-    colors: ["宝蓝", "冰蓝", "松石绿", "洋红", "纯白", "银灰"],
-    styles: ["西装套装", "铅笔裙", "衬衫", "大衣", "旗袍"],
-    fabrics: ["真丝", "缎面", "精纺羊毛", "雪纺", "亮面皮革"],
-    tips: "冷冬型适合冷艳清冽的色调，蓝基调的色彩最能衬托气质。避免暖黄基调。",
-  },
-  clear_winter: {
-    colors: ["正红", "宝蓝", "翠绿", "明黄", "纯白", "亮紫"],
-    styles: ["廓形外套", "亮色单品", "几何图案", "对比搭配", "剪裁利落的套装"],
-    fabrics: ["真丝缎面", "皮革", "金属感面料", "精细羊毛", "亮片"],
-    tips: "净冬型适合高饱和纯色，越鲜明越出众。避免灰调低饱和色彩。",
-  },
-  light_spring: {
-    colors: ["浅粉", "鹅黄", "天蓝", "浅绿", "珊瑚色", "奶油白"],
+  // 春季型
+  light_warm: {
+    colors: ["浅金黄", "桃粉", "象牙白", "浅杏", "鹅黄", "淡绿"],
     styles: ["雪纺衫", "短裙", "轻薄针织", "连衣裙", "小香风外套"],
     fabrics: ["雪纺", "真丝", "细棉", "轻薄针织", "蕾丝"],
-    tips: "浅春型适合明亮清新的浅色调，像春日花朵般温柔。避免深暗沉闷的色彩。",
+    tips: "浅暖型适合轻浅明亮的暖色调，像春日花朵般温柔。避免深暗沉闷的色彩。",
   },
-  warm_spring: {
-    colors: ["橙红", "金棕", "草绿", "杏色", "蜜桃粉", "暖白"],
+  warm_bright: {
+    colors: ["珊瑚色", "金黄", "南蛇藤色", "橙红", "草绿", "杏色"],
     styles: ["印花连衣裙", "短外套", "阔腿短裤", "荷叶边上衣", "针织衫"],
     fabrics: ["棉质", "亚麻", "细针织", "轻薄羊毛", "丝棉"],
-    tips: "暖春型适合温暖明快的黄基调色彩，活力四射。避免冷蓝基调和暗沉色。",
+    tips: "暖亮型适合温暖亮丽的暖色调，活力四射。避免冷蓝基调和暗沉色。",
   },
-  clear_spring: {
-    colors: ["正红", "亮橙", "翠绿", "明黄", "湖蓝", "暖白"],
+  clear_warm: {
+    colors: ["亮粉", "鲜绿", "西瓜红", "正红", "明黄", "暖白"],
     styles: ["亮色单品", "印花衬衫", "短裤套装", "撞色搭配", "活力运动风"],
     fabrics: ["丝光棉", "真丝", "精细针织", "亮面材质", "透气亚麻"],
-    tips: "净春型适合鲜艳明亮的纯色，像阳光一样耀眼。避免灰暗浑浊的色彩。",
+    tips: "净暖型适合鲜艳明亮的纯色，越鲜明越出众。避免灰暗浑浊的色彩。",
   },
-  light_summer: {
-    colors: ["薰衣草紫", "灰蓝", "玫瑰粉", "雾绿", "浅灰", "柔白"],
+  // 夏季型
+  light_cool: {
+    colors: ["柔白", "雾粉", "奶柔色", "薰衣草紫", "灰蓝", "浅灰"],
     styles: ["垂感衬衫", "百褶裙", "针织开衫", "阔腿裤", "飘逸连衣裙"],
     fabrics: ["雪纺", "真丝", "细针织", "薄纱", "柔软棉"],
-    tips: "浅夏型适合柔和淡雅的浅冷色调，如水彩画般温柔。避免浓烈深暗的色彩。",
+    tips: "浅冷型适合柔和淡雅的浅冷色调，如水彩画般温柔。避免浓烈深暗的色彩。",
   },
-  cool_summer: {
-    colors: ["灰蓝", "梅紫", "玫瑰粉", "薄荷绿", "冷灰", "柔白"],
+  soft_cool: {
+    colors: ["绿玉色", "宝石蓝", "灰玫瑰色", "梅紫", "薄荷绿", "冷灰"],
     styles: ["衬衫", "铅笔裙", "西装外套", "直筒裤", "简约连衣裙"],
     fabrics: ["精纺羊毛", "真丝", "棉混纺", "雪纺", "细针织"],
-    tips: "冷夏型适合清冷朦胧的蓝基调色彩，自带高级感。避免暖黄基调和大红大绿。",
+    tips: "柔冷型适合柔和淡雅的冷色调，自带高级感。避免暖黄基调和大红大绿。",
   },
-  soft_summer: {
-    colors: ["灰粉", "雾霾蓝", "灰紫", "鼠尾草绿", "灰棕", "米白"],
+  cool_soft: {
+    colors: ["玫瑰粉", "石青色", "玫瑰红", "灰粉", "雾霾蓝", "米白"],
     styles: ["基础款T恤", "休闲西装", "宽松毛衣", "直筒牛仔裤", "简约风衣"],
     fabrics: ["棉麻混纺", "水洗牛仔", "柔软针织", "磨毛面料", "轻薄羊毛"],
-    tips: "柔夏型适合低饱和冷色调，沉静内敛不张扬。避免高饱和亮色和高对比搭配。",
+    tips: "冷柔型适合冷色调中浅淡柔和的色彩，沉静内敛不张扬。避免高饱和亮色。",
+  },
+  // 秋季型
+  warm_soft: {
+    colors: ["驼色", "橄榄绿", "砖红", "焦糖色", "暖橙", "苔绿"],
+    styles: ["针织开衫", "A字裙", "休闲西装", "长款衬衫", "百褶裙"],
+    fabrics: ["棉麻", "灯芯绒", "羊毛", "麂皮", "粗针织"],
+    tips: "暖柔型适合暖色调中色泽浓重的色彩，温暖有亲和力。避免冷蓝色调。",
+  },
+  soft_warm: {
+    colors: ["卡其", "咖啡", "铁锈红", "米色", "深棕", "暖灰"],
+    styles: ["柔软毛衣", "半身裙", "衬衫裙", "休闲裤", "轻薄外套"],
+    fabrics: ["细针织", "雪纺", "柔软棉", "薄纱", "丝绵混纺"],
+    tips: "柔暖型适合深厚饱和度低的暖色调，低调内敛。避免高对比度搭配和过于鲜艳的色彩。",
+  },
+  deep_warm: {
+    colors: ["深棕", "墨绿", "酒红", "深金", "咖啡棕", "橄榄绿"],
+    styles: ["大衣", "西装外套", "阔腿裤", "针织衫", "风衣"],
+    fabrics: ["羊绒", "丝绒", "皮革", "粗花呢", "真丝"],
+    tips: "深暖型适合浓郁厚重的色彩，搭配高对比度造型更显气场。避免浅淡柔和的色调。",
+  },
+  // 冬季型
+  clear_cool: {
+    colors: ["纯黑", "正红", "电光蓝", "宝蓝", "翠绿", "亮紫"],
+    styles: ["廓形外套", "亮色单品", "几何图案", "对比搭配", "剪裁利落的套装"],
+    fabrics: ["真丝缎面", "皮革", "金属感面料", "精细羊毛", "亮片"],
+    tips: "净冷型适合艳丽明亮的深沉色彩，越鲜明越出众。避免灰调低饱和色彩。",
+  },
+  cool_bright: {
+    colors: ["黑白", "藏蓝", "冰粉", "宝蓝", "松石绿", "洋红"],
+    styles: ["修身西装", "皮衣", "直筒裤", "高领毛衣", "连衣裙"],
+    fabrics: ["皮革", "真丝", "缎面", "精纺羊毛", "金属感面料"],
+    tips: "冷亮型适合深沉明亮的极端色彩，高对比度搭配效果出众。避免浑浊的中性色。",
+  },
+  deep_cool: {
+    colors: ["纯白", "深海军蓝", "木莓红", "酒红", "玫红", "墨紫"],
+    styles: ["西装套装", "铅笔裙", "衬衫", "大衣", "旗袍"],
+    fabrics: ["真丝", "缎面", "精纺羊毛", "雪纺", "亮面皮革"],
+    tips: "深冷型适合浓郁艳丽的冷色调，冷艳高贵。避免暖黄基调。",
   },
 };
 
@@ -215,7 +231,8 @@ export default function ColorAnalysisPage() {
     const rec = aiRecommendations[form.color_season];
     if (!rec) return;
 
-    const styleLabel = styleTypes.find((s) => s.value === form.main_style)?.label || "";
+    const allStyles = [...femaleStyleTypes, ...maleStyleTypes];
+    const styleLabel = allStyles.find((s) => s.value === form.main_style)?.label || "";
     const deliveryTitle = `${form.customer_name} - ${season?.label}${styleLabel ? " + " + styleLabel : ""} 选品方案`;
 
     const deliveryData = {
@@ -283,9 +300,7 @@ export default function ColorAnalysisPage() {
   const selectedSeason = colorSeasons.find((s) => s.value === form.color_season);
   const recommendation = form.color_season ? aiRecommendations[form.color_season] : null;
 
-  const filteredStyles = styleTypes.filter(
-    (s) => s.gender === form.gender || s.gender === "both"
-  );
+  const filteredStyles = form.gender === "female" ? femaleStyleTypes : maleStyleTypes;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -391,8 +406,11 @@ export default function ColorAnalysisPage() {
                           <div className={`font-bold text-sm ${form.color_season === season.value ? "text-accent" : "text-primary"}`}>
                             {season.label}
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          <div className="text-xs text-muted-foreground mt-0.5">
                             {season.desc}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-0.5">
+                            {season.examples}
                           </div>
                         </button>
                       ))}
@@ -411,18 +429,28 @@ export default function ColorAnalysisPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">主风格</label>
-                <div className="flex flex-wrap gap-2">
-                  {filteredStyles.map((style) => (
+                <div className="grid grid-cols-2 gap-2">
+                  {filteredStyles.map((style: any) => (
                     <button
                       key={style.value}
                       onClick={() => setForm({ ...form, main_style: style.value })}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      className={`p-3 rounded-xl text-left transition-all ${
                         form.main_style === style.value
-                          ? "bg-accent text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-primary/10 hover:text-primary"
+                          ? "bg-accent/10 border-2 border-accent"
+                          : "bg-gray-50 border-2 border-transparent hover:border-primary/20"
                       }`}
                     >
-                      {style.label}
+                      <div className={`font-bold text-sm ${form.main_style === style.value ? "text-accent" : "text-primary"}`}>
+                        {style.label}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                        {style.features}
+                      </div>
+                      {style.styleRef && (
+                        <div className="text-xs text-gray-400 mt-0.5">
+                          {style.styleRef}
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -431,8 +459,8 @@ export default function ColorAnalysisPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">副风格（选填）</label>
                 <div className="flex flex-wrap gap-2">
                   {filteredStyles
-                    .filter((s) => s.value !== form.main_style)
-                    .map((style) => (
+                    .filter((s: any) => s.value !== form.main_style)
+                    .map((style: any) => (
                       <button
                         key={style.value}
                         onClick={() => setForm({ ...form, sub_style: form.sub_style === style.value ? "" : style.value })}
