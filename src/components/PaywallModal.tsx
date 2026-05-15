@@ -103,29 +103,24 @@ export function PaywallModal({
             </div>
 
             <div className="space-y-3">
-              {/* 年度会员 */}
+              {/* 风格测试套餐 */}
               <button
-                onClick={() => {
-                  // 暂时跳转到联系客服
-                  window.location.href = "/contact";
-                }}
+                onClick={() => setContactForm(true)}
                 className="w-full p-4 rounded-xl border-2 border-accent bg-accent/5 hover:bg-accent/10 transition-colors text-left"
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-primary">🌟 年度会员</span>
+                  <span className="font-bold text-primary">🎨 风格测试套餐</span>
                   <span className="text-xs bg-accent text-white px-2 py-0.5 rounded-full">
-                    最划算
+                    热门
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-accent">¥9,800<span className="text-sm font-normal">/年</span></div>
+                <div className="text-2xl font-bold text-accent">¥99</div>
                 <ul className="mt-3 space-y-1.5">
                   {[
-                    "全站内容无限查看",
-                    "AI商品企划报告生成",
-                    "爆款货盘实时更新",
-                    "陈列搭配方案下载",
-                    "营销策划模板库",
-                    "VIP管理工具",
+                    "可测2次（男士+女士）",
+                    "30天有效期内使用",
+                    "AI智能分析风格类型",
+                    "专属风格建议报告",
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-xs text-gray-600">
                       <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
@@ -134,24 +129,30 @@ export function PaywallModal({
                   ))}
                 </ul>
                 <div className="mt-4 text-center text-sm text-accent font-medium">
-                  联系客服开通 →
+                  立即购买 →
                 </div>
               </button>
 
-              {/* 单次付费 */}
+              {/* 年度会员 */}
               <button
-                onClick={() => setContactForm(true)}
-                className="w-full p-4 rounded-xl border border-gray-200 hover:border-accent/30 hover:bg-accent/5 transition-colors text-left"
+                onClick={() => {
+                  window.location.href = "/contact";
+                }}
+                className="w-full p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors text-left"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="font-bold text-primary">📄 单次付费</span>
+                  <span className="font-bold text-primary">🌟 年度会员</span>
+                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                    最划算
+                  </span>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  按需付费，查看单次报告或方案
+                <div className="text-2xl font-bold text-primary">¥9,800<span className="text-sm font-normal">/年</span></div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  全站内容无限查看，AI企划报告，爆款货盘，陈列方案等全部解锁
                 </p>
-                <p className="mt-2 text-sm text-accent font-medium">
-                  留下联系方式，客服将在1小时内联系您
-                </p>
+                <div className="mt-3 text-sm text-primary font-medium">
+                  联系客服开通 →
+                </div>
               </button>
 
               {/* 登录/注册 */}
@@ -173,10 +174,10 @@ export function PaywallModal({
         {contactForm && !submitted && (
           <>
             <div className="mb-6">
-              <div className="text-4xl mb-3">📞</div>
-              <h3 className="text-lg font-bold text-primary">留下联系方式</h3>
+              <div className="text-4xl mb-3">🎨</div>
+              <h3 className="text-lg font-bold text-primary">购买风格测试</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                客服将在1小时内联系您，为您开通服务
+                ¥99 / 2次测试机会，30天有效
               </p>
             </div>
 
@@ -221,19 +222,15 @@ export function PaywallModal({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  感兴趣的服务
+                  购买套餐
                 </label>
                 <select
                   value={formData.service}
                   onChange={(e) => setFormData({ ...formData, service: e.target.value })}
                   className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
                 >
-                  <option value="">请选择</option>
-                  <option value="企划报告">AI商品企划报告</option>
-                  <option value="爆款货盘">爆款货盘查看</option>
-                  <option value="陈列方案">陈列搭配方案</option>
-                  <option value="营销策划">营销策划方案</option>
-                  <option value="年度会员">年度会员咨询</option>
+                  <option value="风格测试套餐">风格测试套餐 ¥99/2次</option>
+                  <option value="年度会员">年度会员 ¥9,800/年</option>
                   <option value="其他">其他服务</option>
                 </select>
               </div>
@@ -262,7 +259,7 @@ export function PaywallModal({
                   type="submit"
                   className="flex-1 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
                 >
-                  提交
+                  提交购买
                 </button>
               </div>
             </form>
