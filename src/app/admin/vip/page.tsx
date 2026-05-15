@@ -1,126 +1,244 @@
 "use client";
 
-import { Crown, TrendingUp, Repeat, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
+  X,
+  Eye,
+  EyeOff,
+  Loader2,
+  Crown,
+} from "lucide-react";
 
-const metricCards = [
-  { title: "VIP客户数", value: "3,682", icon: Crown, color: "#1a365d" },
-  { title: "VIP贡献率", value: "62%", icon: TrendingUp, color: "#c9a84c" },
-  { title: "复购率", value: "82%", icon: Repeat, color: "#1a365d" },
-];
+interface VipTier {
+  id: string;
+  name: string;
+  price: number;
+  benefits: string;
+  is_published: boolean;
+  created_at: string;
+}
 
-const levelColors: Record<string, { backgroundColor: string; color: string }> = {
-  V3: { backgroundColor: "#c9a84c20", color: "#c9a84c" },
-  V2: { backgroundColor: "#1a365d15", color: "#1a365d" },
-  V1: { backgroundColor: "#9ca3af20", color: "#9ca3af" },
-};
+export default function AdminVipPage() {
+  const [tiers, setTiers] = useState<VipTier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingTier, setEditingTier] = useState<VipTier | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    price: 0,
+    benefits: "",
+    is_published: false,
+  });
+  const router = useRouter();
+  const supabase = createClient();
 
-const tableData = [
-  { name: "赵女士", level: "V3", annual: 286000, discount: "8折", repurchase: 28, lastPurchase: "2026-05-12" },
-  { name: "钱女士", level: "V3", annual: 235000, discount: "8折", repurchase: 24, lastPurchase: "2026-05-10" },
-  { name: "孙女士", level: "V3", annual: 198000, discount: "8折", repurchase: 22, lastPurchase: "2026-05-08" },
-  { name: "李女士", level: "V2", annual: 156000, discount: "85折", repurchase: 18, lastPurchase: "2026-05-06" },
-  { name: "周女士", level: "V2", annual: 128000, discount: "85折", repurchase: 15, lastPurchase: "2026-04-28" },
-  { name: "吴女士", level: "V2", annual: 96000, discount: "85折", repurchase: 12, lastPurchase: "2026-04-25" },
-  { name: "郑女士", level: "V1", annual: 58000, discount: "9折", repurchase: 8, lastPurchase: "2026-04-20" },
-  { name: "王女士", level: "V1", annual: 42000, discount: "9折", repurchase: 6, lastPurchase: "2026-04-15" },
-];
+  useEffect(() => {
+    checkUser();
+    fetchTiers();
+  }, []);
 
-export default function VipPage() {
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/admin/login");
+    }
+  };
+
+  const fetchTiers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("vip_tiers")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching tiers:", error);
+    } else {
+      setTiers(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingTier) {
+      const { error } = await supabase
+        .from("vip_tiers")
+        .update(formData)
+        .eq("id", editingTier.id);
+
+      if (error) {
+        alert("更新失败：" + error.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("vip_tiers")
+        .insert([formData]);
+
+      if (error) {
+        alert("创建失败：" + error.message);
+        return;
+      }
+    }
+
+    setShowModal(false);
+    setEditingTier(null);
+    setFormData({ name: "", price: 0, benefits: "", is_published: false });
+    fetchTiers();
+  };
+
+  const handleEdit = (tier: VipTier) => {
+    setEditingTier(tier);
+    setFormData({
+      name: tier.name,
+      price: tier.price || 0,
+      benefits: tier.benefits || "",
+      is_published: tier.is_published,
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("确定要删除这个VIP等级吗？")) return;
+
+    const { error } = await supabase
+      .from("vip_tiers")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("删除失败：" + error.message);
+      return;
+    }
+
+    fetchTiers();
+  };
+
+  const togglePublish = async (tier: VipTier) => {
+    const { error } = await supabase
+      .from("vip_tiers")
+      .update({ is_published: !tier.is_published })
+      .eq("id", tier.id);
+
+    if (error) {
+      alert("操作失败：" + error.message);
+      return;
+    }
+
+    fetchTiers();
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: "#1a365d" }}>
-          VIP管理
-        </h1>
-        <p className="text-gray-500 mt-1">管理VIP客户关系，提升客户忠诚度与复购表现</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {metricCards.map((card) => (
-          <div
-            key={card.title}
-            className="bg-white rounded-xl shadow-sm border p-5 flex items-center gap-4"
-          >
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${card.color}15` }}
-            >
-              <card.icon size={24} style={{ color: card.color }} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">{card.title}</p>
-              <p className="text-2xl font-bold" style={{ color: card.color }}>
-                {card.value}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="px-5 py-4 border-b">
-          <h2 className="font-semibold" style={{ color: "#1a365d" }}>
-            VIP客户数据
-          </h2>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">VIP管理</h1>
+          <p className="text-muted-foreground mt-1">管理VIP等级与权益</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <button
+          onClick={() => {
+            setEditingTier(null);
+            setFormData({ name: "", price: 0, benefits: "", is_published: false });
+            setShowModal(true);
+          }}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          新增等级
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      ) : tiers.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+          <Crown className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-muted-foreground">暂无VIP等级，点击"新增等级"开始设置</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-5 py-3 font-medium text-gray-600">客户名称</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">等级</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">年消费额</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">折扣率</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">复购次数</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">最近消费</th>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">等级名称</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">价格</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">权益</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
+                <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
               </tr>
             </thead>
-            <tbody>
-              {tableData.map((row) => (
-                <tr key={row.name} className="border-t hover:bg-gray-50">
-                  <td className="px-5 py-3 font-medium" style={{ color: "#1a365d" }}>
-                    {row.name}
+            <tbody className="divide-y divide-gray-100">
+              {tiers.map((tier) => (
+                <tr key={tier.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-primary">{tier.name}</td>
+                  <td className="px-6 py-4 text-sm">{tier.price > 0 ? `¥${tier.price}` : "免费"}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-xs truncate">{tier.benefits}</td>
+                  <td className="px-6 py-4">
+                    <button onClick={() => togglePublish(tier)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${tier.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
+                      {tier.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
+                    </button>
                   </td>
-                  <td className="px-5 py-3">
-                    <span
-                      className="px-2 py-0.5 rounded text-xs font-bold"
-                      style={levelColors[row.level]}
-                    >
-                      {row.level}
-                    </span>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => handleEdit(tier)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(tier.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </td>
-                  <td className="px-5 py-3 text-gray-600">¥{row.annual.toLocaleString()}</td>
-                  <td className="px-5 py-3">
-                    <span
-                      className="px-2 py-0.5 rounded text-xs font-medium"
-                      style={{ backgroundColor: "#c9a84c20", color: "#c9a84c" }}
-                    >
-                      {row.discount}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3 text-gray-600">{row.repurchase}次</td>
-                  <td className="px-5 py-3 text-gray-600">{row.lastPurchase}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
 
-      <div
-        className="rounded-xl border p-4 flex items-start gap-3"
-        style={{ backgroundColor: "#1a365d08", borderColor: "#1a365d20" }}
-      >
-        <Shield size={20} style={{ color: "#1a365d" }} className="mt-0.5 flex-shrink-0" />
-        <div>
-          <p className="font-medium text-sm" style={{ color: "#1a365d" }}>
-            安全提醒
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            VIP客户信息属于高度敏感的个人隐私数据，受《个人信息保护法》保护。严禁未经客户授权擅自使用、泄露或出售客户信息。
-          </p>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary">{editingTier ? "编辑等级" : "新增等级"}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">等级名称 <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：黄金会员" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">年费价格（元）</label>
+                <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0=免费" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">会员权益</label>
+                <textarea value={formData.benefits} onChange={(e) => setFormData({ ...formData, benefits: e.target.value })} rows={4} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入会员权益，用换行分隔" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
+                <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">取消</button>
+                <button type="submit" className="btn-primary flex items-center gap-2"><Save className="w-4 h-4" />{editingTier ? "保存修改" : "新增等级"}</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

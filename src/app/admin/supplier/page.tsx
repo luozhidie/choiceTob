@@ -1,133 +1,267 @@
 "use client";
 
-import { Building2, Award, Truck, Shield } from "lucide-react";
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Save,
+  X,
+  Eye,
+  EyeOff,
+  Loader2,
+  Truck,
+} from "lucide-react";
 
-const metricCards = [
-  { title: "合作供应商", value: "5,238", icon: Building2, color: "#1a365d" },
-  { title: "A级供应商", value: "1,862", icon: Award, color: "#c9a84c" },
-  { title: "准时交货率", value: "96.8%", icon: Truck, color: "#1a365d" },
-];
+interface Supplier {
+  id: string;
+  name: string;
+  level: string;
+  rating: number;
+  description: string;
+  is_published: boolean;
+  created_at: string;
+}
 
-const gradeColors: Record<string, { backgroundColor: string; color: string }> = {
-  A: { backgroundColor: "#c9a84c20", color: "#c9a84c" },
-  B: { backgroundColor: "#1a365d15", color: "#1a365d" },
-  C: { backgroundColor: "#9ca3af20", color: "#9ca3af" },
-};
+const levels = ["核心供应商", "优选供应商", "认证供应商", "观察供应商"];
 
-const statusColors: Record<string, { backgroundColor: string; color: string }> = {
-  合作中: { backgroundColor: "#22c55e20", color: "#22c55e" },
-  评估中: { backgroundColor: "#c9a84c20", color: "#c9a84c" },
-  待续约: { backgroundColor: "#1a365d15", color: "#1a365d" },
-  已终止: { backgroundColor: "#ef444420", color: "#ef4444" },
-};
+export default function AdminSupplierPage() {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    level: "认证供应商",
+    rating: 4.0,
+    description: "",
+    is_published: false,
+  });
+  const router = useRouter();
+  const supabase = createClient();
 
-const tableData = [
-  { name: "杭州丝语时装有限公司", category: "真丝/雪纺", grade: "A", capacity: 50000, years: 8, status: "合作中" },
-  { name: "广州风尚制衣厂", category: "裤装/牛仔", grade: "A", capacity: 80000, years: 12, status: "合作中" },
-  { name: "内蒙古雪莲绒业集团", category: "羊绒/毛衫", grade: "A", capacity: 30000, years: 6, status: "合作中" },
-  { name: "深圳名媛时装有限公司", category: "外套/套装", grade: "A", capacity: 45000, years: 5, status: "合作中" },
-  { name: "东莞雅织服饰有限公司", category: "针织/蕾丝", grade: "B", capacity: 60000, years: 4, status: "评估中" },
-  { name: "上海锦致服饰有限公司", category: "西装/职场", grade: "B", capacity: 35000, years: 3, status: "合作中" },
-  { name: "福建晋江纺织有限公司", category: "基础款/T恤", grade: "B", capacity: 120000, years: 7, status: "待续约" },
-  { name: "海南椰风工艺有限公司", category: "配饰/编织", grade: "C", capacity: 15000, years: 2, status: "评估中" },
-];
+  useEffect(() => {
+    checkUser();
+    fetchSuppliers();
+  }, []);
 
-export default function SupplierPage() {
+  const checkUser = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/admin/login");
+    }
+  };
+
+  const fetchSuppliers = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("suppliers")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching suppliers:", error);
+    } else {
+      setSuppliers(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (editingSupplier) {
+      const { error } = await supabase
+        .from("suppliers")
+        .update(formData)
+        .eq("id", editingSupplier.id);
+
+      if (error) {
+        alert("更新失败：" + error.message);
+        return;
+      }
+    } else {
+      const { error } = await supabase
+        .from("suppliers")
+        .insert([formData]);
+
+      if (error) {
+        alert("创建失败：" + error.message);
+        return;
+      }
+    }
+
+    setShowModal(false);
+    setEditingSupplier(null);
+    setFormData({ name: "", level: "认证供应商", rating: 4.0, description: "", is_published: false });
+    fetchSuppliers();
+  };
+
+  const handleEdit = (supplier: Supplier) => {
+    setEditingSupplier(supplier);
+    setFormData({
+      name: supplier.name,
+      level: supplier.level || "认证供应商",
+      rating: supplier.rating || 4.0,
+      description: supplier.description || "",
+      is_published: supplier.is_published,
+    });
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("确定要删除这个供应商吗？")) return;
+
+    const { error } = await supabase
+      .from("suppliers")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert("删除失败：" + error.message);
+      return;
+    }
+
+    fetchSuppliers();
+  };
+
+  const togglePublish = async (supplier: Supplier) => {
+    const { error } = await supabase
+      .from("suppliers")
+      .update({ is_published: !supplier.is_published })
+      .eq("id", supplier.id);
+
+    if (error) {
+      alert("操作失败：" + error.message);
+      return;
+    }
+
+    fetchSuppliers();
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold" style={{ color: "#1a365d" }}>
-          供应商中心管理
-        </h1>
-        <p className="text-gray-500 mt-1">管理供应商合作与评级，保障供应链质量与交货效率</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {metricCards.map((card) => (
-          <div
-            key={card.title}
-            className="bg-white rounded-xl shadow-sm border p-5 flex items-center gap-4"
-          >
-            <div
-              className="w-12 h-12 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${card.color}15` }}
-            >
-              <card.icon size={24} style={{ color: card.color }} />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">{card.title}</p>
-              <p className="text-2xl font-bold" style={{ color: card.color }}>
-                {card.value}
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="px-5 py-4 border-b">
-          <h2 className="font-semibold" style={{ color: "#1a365d" }}>
-            供应商数据明细
-          </h2>
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">供应商中心管理</h1>
+          <p className="text-muted-foreground mt-1">管理供应商资源</p>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <button
+          onClick={() => {
+            setEditingSupplier(null);
+            setFormData({ name: "", level: "认证供应商", rating: 4.0, description: "", is_published: false });
+            setShowModal(true);
+          }}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          新增供应商
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
+          <p className="text-muted-foreground">加载中...</p>
+        </div>
+      ) : suppliers.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+          <Truck className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-muted-foreground">暂无供应商，点击"新增供应商"开始录入</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+          <table className="w-full">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-5 py-3 font-medium text-gray-600">供应商名称</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">主营品类</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">评级</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">年产能</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">合作年限</th>
-                <th className="text-left px-5 py-3 font-medium text-gray-600">状态</th>
+              <tr className="bg-gray-50 border-b border-gray-100">
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">供应商名称</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">等级</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">评分</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
+                <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
               </tr>
             </thead>
-            <tbody>
-              {tableData.map((row) => (
-                <tr key={row.name} className="border-t hover:bg-gray-50">
-                  <td className="px-5 py-3 font-medium" style={{ color: "#1a365d" }}>
-                    {row.name}
+            <tbody className="divide-y divide-gray-100">
+              {suppliers.map((supplier) => (
+                <tr key={supplier.id} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-primary">{supplier.name}</td>
+                  <td className="px-6 py-4">
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      supplier.level === "核心供应商" ? "bg-red-100 text-red-700" :
+                      supplier.level === "优选供应商" ? "bg-amber-100 text-amber-700" :
+                      supplier.level === "认证供应商" ? "bg-blue-100 text-blue-700" :
+                      "bg-gray-100 text-gray-700"
+                    }`}>{supplier.level}</span>
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{row.category}</td>
-                  <td className="px-5 py-3">
-                    <span
-                      className="px-2 py-0.5 rounded text-xs font-bold"
-                      style={gradeColors[row.grade]}
-                    >
-                      {row.grade}级
-                    </span>
+                  <td className="px-6 py-4">
+                    <span className="text-sm font-medium text-accent">{supplier.rating}分</span>
                   </td>
-                  <td className="px-5 py-3 text-gray-600">{row.capacity.toLocaleString()}件</td>
-                  <td className="px-5 py-3 text-gray-600">{row.years}年</td>
-                  <td className="px-5 py-3">
-                    <span
-                      className="px-2 py-0.5 rounded text-xs font-medium"
-                      style={statusColors[row.status]}
-                    >
-                      {row.status}
-                    </span>
+                  <td className="px-6 py-4">
+                    <button onClick={() => togglePublish(supplier)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${supplier.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
+                      {supplier.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
+                    </button>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button onClick={() => handleEdit(supplier)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(supplier.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
 
-      <div
-        className="rounded-xl border p-4 flex items-start gap-3"
-        style={{ backgroundColor: "#1a365d08", borderColor: "#1a365d20" }}
-      >
-        <Shield size={20} style={{ color: "#1a365d" }} className="mt-0.5 flex-shrink-0" />
-        <div>
-          <p className="font-medium text-sm" style={{ color: "#1a365d" }}>
-            安全提醒
-          </p>
-          <p className="text-sm text-gray-500 mt-1">
-            供应商信息与评级数据属于核心商业机密，严禁向供应商或其他竞争对手透露。合作条款与产能数据仅限采购管理层查阅。
-          </p>
+      {showModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary">{editingSupplier ? "编辑供应商" : "新增供应商"}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">供应商名称 <span className="text-red-500">*</span></label>
+                <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="输入供应商名称" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">供应商等级</label>
+                <div className="flex flex-wrap gap-2">
+                  {levels.map((l) => (
+                    <button key={l} type="button" onClick={() => setFormData({ ...formData, level: l })} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.level === l ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{l}</button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">评分（0-5）</label>
+                <input type="number" min="0" max="5" step="0.1" value={formData.rating} onChange={(e) => setFormData({ ...formData, rating: parseFloat(e.target.value) || 0 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="4.0" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">供应商描述</label>
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={4} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入供应商描述" />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
+                <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">取消</button>
+                <button type="submit" className="btn-primary flex items-center gap-2"><Save className="w-4 h-4" />{editingSupplier ? "保存修改" : "新增供应商"}</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
