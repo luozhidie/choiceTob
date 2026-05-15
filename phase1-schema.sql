@@ -100,3 +100,12 @@ CREATE POLICY "Allow admin full access on test_codes"
   ON test_codes FOR ALL TO authenticated
   USING (auth.email() = 'luozhidie@live.cn')
   WITH CHECK (auth.email() = 'luozhidie@live.cn');
+
+CREATE POLICY "Allow public select test_codes"
+  ON test_codes FOR SELECT TO anon, authenticated
+  USING (true);
+
+CREATE POLICY "Allow public update test_codes used_attempts"
+  ON test_codes FOR UPDATE TO anon, authenticated
+  USING (true)
+  WITH CHECK (true);
