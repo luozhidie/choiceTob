@@ -214,10 +214,10 @@ export default function Home() {
                 className="text-center"
                 variants={fadeUp}
               >
-                <div className="text-3xl sm:text-4xl font-bold text-accent">
+                <div className="text-3xl sm:text-4xl font-bold text-white">
                   {s.value}
                 </div>
-                <div className="mt-1 text-sm text-white">{s.label}</div>
+                <div className="mt-1 text-sm text-pink-400">{s.label}</div>
               </motion.div>
             ))}
           </motion.div>
