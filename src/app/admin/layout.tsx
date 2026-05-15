@@ -21,6 +21,7 @@ import {
   ShoppingBag,
   Calendar,
   Sparkles,
+  ListOrdered,
   LogOut,
   Menu,
   X,
@@ -30,6 +31,7 @@ import {
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "买手选品", href: "/admin/buyer", icon: TrendingUp },
+  { label: "选品步骤", href: "/admin/buyer-steps", icon: ListOrdered },
   { label: "商品企划", href: "/admin/planning", icon: Lightbulb },
   { label: "企划工具", href: "/planning-tool", icon: FileText },
   { label: "爆款货盘", href: "/admin/hot-picks", icon: BarChart3 },

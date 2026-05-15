@@ -22,6 +22,7 @@ import {
   Eye,
   Flame,
   Star,
+  X,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -36,6 +37,17 @@ interface BuyerProduct {
   score: number;
   market_heat: string;
   image_url: string;
+  is_published: boolean;
+  created_at: string;
+}
+
+interface BuyerStep {
+  id: string;
+  step_number: number;
+  title: string;
+  description: string;
+  image_url: string;
+  detail_content: string;
   is_published: boolean;
   created_at: string;
 }
@@ -117,14 +129,18 @@ export default function BuyerPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [paywallTitle, setPaywallTitle] = useState("");
   const [products, setProducts] = useState<BuyerProduct[]>([]);
+  const [steps, setSteps] = useState<BuyerStep[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<BuyerProduct | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [selectedStep, setSelectedStep] = useState<BuyerStep | null>(null);
+  const [showStepDetail, setShowStepDetail] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
     fetchProducts();
+    fetchSteps();
   }, []);
 
   const fetchProducts = async () => {
@@ -144,10 +160,31 @@ export default function BuyerPage() {
     setLoading(false);
   };
 
+  const fetchSteps = async () => {
+    const { data, error } = await supabase
+      .from("buyer_steps")
+      .select("*")
+      .eq("is_published", true)
+      .order("step_number", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching steps:", error);
+    } else {
+      setSteps(data || []);
+    }
+  };
+
   const handleProductClick = (product: BuyerProduct) => {
     setSelectedProduct(product);
     setPaywallTitle(product.name);
     setShowPaywall(true);
+  };
+
+  const handleStepClick = (step: BuyerStep) => {
+    setSelectedStep(step);
+    if (step.detail_content) {
+      setShowStepDetail(true);
+    }
   };
 
   const getHeatColor = (heat: string) => {
@@ -418,7 +455,47 @@ export default function BuyerPage() {
         </div>
       </section>
 
-      {/* ====== Selection Flow ====== */}
+      {/* ====== Step Detail Modal ====== */}
+      {showStepDetail && selectedStep && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowStepDetail(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
+          >
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-accent text-white text-sm font-bold">
+                  {selectedStep.step_number}
+                </span>
+                <h3 className="text-lg font-bold text-primary">{selectedStep.title}</h3>
+              </div>
+              <button onClick={() => setShowStepDetail(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6">
+              {selectedStep.image_url && (
+                <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-6">
+                  <Image
+                    src={selectedStep.image_url}
+                    alt={selectedStep.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                {selectedStep.detail_content}
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* ====== Selection Flow (Dynamic Image Cards) ====== */}
       <section className="py-16 lg:py-24 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -439,35 +516,72 @@ export default function BuyerPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {steps.map((step, i) => (
-              <motion.div key={step.title} variants={fadeUp} custom={i} className="relative">
-                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
-                  <div className="flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4">
-                    <step.icon className="w-7 h-7" />
+          {steps.length > 0 ? (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {steps.map((step, i) => (
+                <motion.div
+                  key={step.id}
+                  variants={fadeUp}
+                  custom={i}
+                  className="relative group cursor-pointer"
+                  onClick={() => handleStepClick(step)}
+                >
+                  <div className="flex flex-col h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-accent/30 transition-all duration-300 overflow-hidden">
+                    {/* Step image */}
+                    <div className="relative aspect-[4/3] bg-gray-100">
+                      {step.image_url ? (
+                        <Image
+                          src={step.image_url}
+                          alt={step.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <Search className="w-10 h-10 text-gray-300" />
+                        </div>
+                      )}
+                      {/* Step number badge */}
+                      <div className="absolute -top-3 -right-1 md:static md:absolute md:top-3 md:left-3 w-7 h-7 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center z-10">
+                        {step.step_number}
+                      </div>
+                    </div>
+                    {/* Text content */}
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="text-lg font-bold text-primary group-hover:text-accent transition-colors">
+                        {step.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed flex-1">
+                        {step.description}
+                      </p>
+                      {step.detail_content && (
+                        <span className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium">
+                          查看详情 <ChevronRight className="w-3 h-3" />
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="absolute -top-3 -right-1 md:static md:mb-2 w-7 h-7 rounded-full bg-accent text-white text-xs font-bold flex items-center justify-center">
-                    {i + 1}
-                  </div>
-                  <h3 className="text-lg font-bold text-primary mt-2">{step.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                    {step.desc}
-                  </p>
-                </div>
-                {i < steps.length - 1 && (
-                  <div className="hidden md:flex absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
-                    <ArrowRight className="w-6 h-6 text-accent" />
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
+                  {/* Arrow between steps (md+) */}
+                  {i < steps.length - 1 && (
+                    <div className="hidden md:flex absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
+                      <ArrowRight className="w-6 h-6 text-accent" />
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+              <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">选品流程图片准备中，敬请期待</p>
+            </div>
+          )}
         </div>
       </section>
 
