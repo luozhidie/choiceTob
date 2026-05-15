@@ -77,3 +77,26 @@ CREATE POLICY "Allow admin full access on leads"
   ON leads FOR ALL TO authenticated
   USING (auth.email() = 'luozhidie@live.cn')
   WITH CHECK (auth.email() = 'luozhidie@live.cn');
+
+-- 4. 风格测试码表
+CREATE TABLE IF NOT EXISTS test_codes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text UNIQUE NOT NULL,
+  package_name text DEFAULT '风格测试套餐',
+  price integer DEFAULT 9900, -- 分，¥99
+  max_attempts integer DEFAULT 2,
+  used_attempts integer DEFAULT 0,
+  customer_name text,
+  customer_phone text,
+  customer_wechat text,
+  is_active boolean DEFAULT true,
+  note text,
+  created_at timestamp with time zone DEFAULT now()
+);
+
+ALTER TABLE test_codes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow admin full access on test_codes"
+  ON test_codes FOR ALL TO authenticated
+  USING (auth.email() = 'luozhidie@live.cn')
+  WITH CHECK (auth.email() = 'luozhidie@live.cn');

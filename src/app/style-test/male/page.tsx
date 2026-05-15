@@ -21,6 +21,14 @@ import {
 const { preferenceQuestion, questions, results } = maleTestConfig;
 
 export default function MaleStyleTestPage() {
+  // 测试码相关
+  const [testCode, setTestCode] = useState("");
+  const [codeVerified, setCodeVerified] = useState(false);
+  const [codeInfo, setCodeInfo] = useState<any>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
+  // 测试相关
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [preference, setPreference] = useState("");
   const [showResult, setShowResult] = useState(false);
@@ -35,19 +43,48 @@ export default function MaleStyleTestPage() {
   });
 
   const supabase = createClient();
-  const totalQuestions = questions.length + 1; // 18 + preference
+  const totalQuestions = questions.length + 1;
+
+  // 验证测试码
+  const handleVerifyCode = async () => {
+    if (!testCode.trim()) {
+      setVerifyError("请输入测试码");
+      return;
+    }
+    setVerifying(true);
+    setVerifyError("");
+    try {
+      const { data, error } = await supabase
+        .from("test_codes")
+        .select("*")
+        .eq("code", testCode.trim())
+        .single();
+      if (error || !data) {
+        setVerifyError("测试码无效，请重新输入");
+      } else if (!data.is_active) {
+        setVerifyError("该测试码已停用");
+      } else if (data.used_attempts >= data.max_attempts) {
+        setVerifyError("测试次数已用完");
+      } else {
+        setCodeVerified(true);
+        setCodeInfo(data);
+      }
+    } catch (err) {
+      setVerifyError("验证失败，请重试");
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const handleSelect = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
   const handleSubmit = async () => {
-    // Validate all questions answered
     const unanswered = questions.filter((q) => !answers[q.id]);
     if (unanswered.length > 0 || !preference) {
       const missingCount = unanswered.length + (preference ? 0 : 1);
       alert(`还有 ${missingCount} 道题未作答，请完成所有题目后提交`);
-      // Scroll to first unanswered
       const firstUnanswered = !preference
         ? "preference"
         : unanswered[0]?.id;
@@ -60,9 +97,7 @@ export default function MaleStyleTestPage() {
     }
 
     setSubmitting(true);
-
     try {
-      // Calculate result
       const styleName = calculateMaleResult(answers, preference);
       const result = results.find((r) => r.name === styleName) || results[0];
       setResultStyle(result);
@@ -71,14 +106,22 @@ export default function MaleStyleTestPage() {
       await supabase.from("style_test_results").insert([
         {
           gender: "male",
-          answers: answers,
-          preference: preference,
-          result_style: styleName,
+          answers,
+          preference,
+          main_style: styleName,
         },
       ]);
 
+      // Update test code used_attempts
+      if (codeInfo?.id) {
+        await supabase
+          .from("test_codes")
+          .update({ used_attempts: (codeInfo.used_attempts || 0) + 1 })
+          .eq("id", codeInfo.id);
+      }
+
       setShowResult(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("提交失败:", error);
       alert("提交失败，请重试");
     } finally {
@@ -96,7 +139,6 @@ export default function MaleStyleTestPage() {
       alert("请输入正确的手机号");
       return;
     }
-
     setSavingLead(true);
     try {
       await supabase.from("leads").insert([
@@ -105,11 +147,11 @@ export default function MaleStyleTestPage() {
           phone: leadForm.phone.trim(),
           wechat: leadForm.wechat.trim() || null,
           source: "male_style_test",
-          style_result: resultStyle?.name || "",
+          interest: resultStyle?.name || "",
         },
       ]);
       setLeadSubmitted(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error("留资失败:", error);
       alert("提交失败，请重试");
     } finally {
@@ -124,11 +166,70 @@ export default function MaleStyleTestPage() {
     setResultStyle(null);
     setLeadSubmitted(false);
     setLeadForm({ name: "", phone: "", wechat: "" });
+    if (codeInfo && codeInfo.used_attempts < codeInfo.max_attempts) {
+      // 还有次数，可以继续测试
+    } else {
+      // 次数用完，重置到测试码输入
+      setCodeVerified(false);
+      setCodeInfo(null);
+      setTestCode("");
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const answeredCount = Object.keys(answers).length + (preference ? 1 : 0);
 
+  // 未验证测试码：显示验证界面
+  if (!codeVerified) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <User className="w-8 h-8 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold text-primary mb-2">男士风格测试</h2>
+          <p className="text-sm text-muted-foreground mb-6">请输入测试码以开始测试</p>
+
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1.5">测试码</label>
+              <input
+                type="text"
+                value={testCode}
+                onChange={(e) => setTestCode(e.target.value.toUpperCase())}
+                placeholder="请输入测试码"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
+              />
+            </div>
+            {verifyError && (
+              <p className="text-sm text-red-500">{verifyError}</p>
+            )}
+            <button
+              onClick={handleVerifyCode}
+              disabled={verifying}
+              className="w-full btn-primary flex items-center justify-center gap-2 py-2.5"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  验证中...
+                </>
+              ) : (
+                "验证并测试"
+              )}
+            </button>
+            <p className="text-xs text-muted-foreground">
+              测试码格式：XXXX-XXXX-XXXX（如有-可省略）
+              <br />
+              购买请联系客服：13925997776 / vx: luozhidie666
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 已验证：显示测试界面
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
@@ -166,7 +267,7 @@ export default function MaleStyleTestPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-sm md:text-base text-white/80"
           >
-            共 {totalQuestions} 道题，约3分钟完成
+            共 {totalQuestions} 道题，约3分钟完成（剩余 {codeInfo.max_attempts - codeInfo.used_attempts} 次机会）
           </motion.p>
           {/* Progress Bar */}
           <motion.div
@@ -191,9 +292,8 @@ export default function MaleStyleTestPage() {
         </div>
       </div>
 
-      {/* Questions */}
+      {/* Preference Question */}
       <div className="container mx-auto px-4 py-8 md:py-12 max-w-3xl">
-        {/* Preference Question */}
         <motion.div
           id="question-preference"
           initial={{ opacity: 0, y: 20 }}
@@ -294,9 +394,7 @@ export default function MaleStyleTestPage() {
                     </span>
                     <span
                       className={`text-sm font-medium ${
-                        answers[question.id] === option.value
-                          ? "text-accent"
-                          : "text-gray-700"
+                        answers[question.id] === option.value ? "text-accent" : "text-gray-700"
                       }`}
                     >
                       {option.label}
@@ -424,7 +522,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, name: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm transition-colors"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="姓名 *"
                           />
                         </div>
@@ -439,7 +537,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, phone: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm transition-colors"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="手机号 *"
                           />
                         </div>
@@ -453,7 +551,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, wechat: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm transition-colors"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="微信号（选填）"
                           />
                         </div>
@@ -490,7 +588,7 @@ export default function MaleStyleTestPage() {
                 {/* Contact Info */}
                 <div className="border-t border-gray-100 pt-4 text-center">
                   <p className="text-xs text-gray-400 leading-relaxed">
-                    想获知准确结果可联系骆芷蝶CMB色彩形象顾问进行测试
+                    想获取准确结果可以联系骆芷蝶CMB色彩形象顾问进行测试。
                     <br />
                     Tel：13925997776 &nbsp; VX：luozhidie666
                   </p>
