@@ -41,6 +41,7 @@ const sidebarItems = [
   { label: "企划工具", href: "/planning-tool", icon: FileText },
   { label: "爆款货盘", href: "/admin/hot-picks", icon: BarChart3 },
   { label: "爆款图片", href: "/admin/hot-picks-images", icon: ImageIcon },
+  { label: "陈列图片", href: "/admin/display-images", icon: ImageIcon },
   { label: "陈列搭配", href: "/admin/display", icon: LayoutGrid },
   { label: "营销策划", href: "/admin/marketing", icon: Megaphone },
   { label: "销售服务", href: "/admin/sales", icon: Headphones },

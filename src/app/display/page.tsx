@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PaywallModal } from "@/components/PaywallModal";
+import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -14,6 +16,7 @@ import {
   Ruler,
   CheckCircle2,
   Home,
+  Loader2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -33,46 +36,93 @@ const stagger = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Interfaces                                                         */
 /* ------------------------------------------------------------------ */
-const optimizeSteps = [
-  {
-    step: 1,
-    title: "数据采集",
-    desc: "收集门店基础数据",
-    icon: Ruler,
-  },
-  {
-    step: 2,
-    title: "风格分区",
-    desc: "规划陈列分区与动线",
-    icon: LayoutGrid,
-  },
-  {
-    step: 3,
-    title: "搭配方案",
-    desc: "设计场景化搭配方案",
-    icon: Shirt,
-  },
-  {
-    step: 4,
-    title: "视觉陈列",
-    desc: "打造视觉焦点与场景陈列",
-    icon: Palette,
-  },
-  {
-    step: 5,
-    title: "数据复盘",
-    desc: "追踪效果并持续优化",
-    icon: Eye,
-  },
-];
+interface DisplayImage {
+  id: string;
+  sort_order: number;
+  title: string;
+  label: string;
+  image_url: string;
+  section: string;
+  is_published: boolean;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function DisplayPage() {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [styleImages, setStyleImages] = useState<DisplayImage[]>([]);
+  const [scenarioImages, setScenarioImages] = useState<DisplayImage[]>([]);
+  const [layoutImages, setLayoutImages] = useState<DisplayImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("display_images")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching display images:", error);
+    } else {
+      const all = data || [];
+      setStyleImages(all.filter((img) => img.section === "styles"));
+      setScenarioImages(all.filter((img) => img.section === "scenarios"));
+      setLayoutImages(all.filter((img) => img.section === "layouts"));
+    }
+    setLoading(false);
+  };
+
+  const renderImageCard = (item: DisplayImage, i: number) => (
+    <motion.div
+      key={item.id}
+      variants={fadeUp}
+      custom={i}
+      className="group cursor-pointer"
+      onClick={() => setShowPaywall(true)}
+    >
+      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
+            查看详情
+          </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h4 className="text-xl font-bold text-white">{item.title}</h4>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderLoading = () => (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+      <span className="text-muted-foreground">加载中...</span>
+    </div>
+  );
+
+  const renderEmpty = (sectionName: string) => (
+    <div className="text-center py-12 col-span-full">
+      <p className="text-muted-foreground">暂无{sectionName}数据</p>
+    </div>
+  );
 
   return (
     <>
@@ -116,7 +166,7 @@ export default function DisplayPage() {
               陈列搭配
             </h1>
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
-              基于八大风格体系的陈列分区与搭配方案，让每一寸空间都产生价值，
+              基于科学的陈列体系与搭配方案，让每一寸空间都产生价值，
               提升门店视觉体验与连带销售率。
             </p>
           </motion.div>
@@ -137,46 +187,30 @@ export default function DisplayPage() {
               陈列体系
             </span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              八大风格陈列案例
+              陈列案例展示
             </h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">
-              按风格基因分区陈列，让顾客一目了然找到心仪风格，提升购物效率与体验
+              科学分区与场景化陈列，提升门店视觉体验与销售转化
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "职场通勤", label: "优雅型·精致干练", color: "from-indigo-100 to-indigo-50" },
-              { style: "周末约会", label: "浪漫型·柔美甜蜜", color: "from-rose-100 to-rose-50" },
-              { style: "休闲出行", label: "自然型·随性舒适", color: "from-amber-100 to-amber-50" },
-              { style: "晚宴社交", label: "戏剧型·夺目气场", color: "from-purple-100 to-purple-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">👗</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {styleImages.length > 0 ? (
+                styleImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("陈列案例")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -211,39 +245,23 @@ export default function DisplayPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "职场通勤", label: "优雅型·精致干练", color: "from-indigo-100 to-indigo-50" },
-              { style: "周末约会", label: "浪漫型·柔美甜蜜", color: "from-rose-100 to-rose-50" },
-              { style: "休闲出行", label: "自然型·随性舒适", color: "from-amber-100 to-amber-50" },
-              { style: "晚宴社交", label: "戏剧型·夺目气场", color: "from-purple-100 to-purple-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">👗</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {scenarioImages.length > 0 ? (
+                scenarioImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("搭配方案")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -278,38 +296,23 @@ export default function DisplayPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "小型门店", label: "30-50㎡布局方案", color: "from-sky-100 to-sky-50" },
-              { style: "中型门店", label: "50-80㎡布局方案", color: "from-emerald-100 to-emerald-50" },
-              { style: "大型门店", label: "80-120㎡布局方案", color: "from-violet-100 to-violet-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">🏬</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl mx-auto"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {layoutImages.length > 0 ? (
+                layoutImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("门店布局")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -351,14 +354,20 @@ export default function DisplayPage() {
             viewport={{ once: true, amount: 0.1 }}
             variants={stagger}
           >
-            {optimizeSteps.map((item, i) => (
+            {[
+              { step: 1, title: "数据采集", desc: "收集门店基础数据", icon: Ruler },
+              { step: 2, title: "风格分区", desc: "规划陈列分区与动线", icon: LayoutGrid },
+              { step: 3, title: "搭配方案", desc: "设计场景化搭配方案", icon: Shirt },
+              { step: 4, title: "视觉陈列", desc: "打造视觉焦点与场景陈列", icon: Palette },
+              { step: 5, title: "数据复盘", desc: "追踪效果并持续优化", icon: Eye },
+            ].map((item, i) => (
               <motion.div key={item.title} variants={fadeUp} custom={i}>
                 <div className="group flex items-start gap-6 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
                   <div className="flex flex-col items-center gap-2 shrink-0">
                     <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary text-white font-bold text-lg">
                       {item.step}
                     </div>
-                    {i < optimizeSteps.length - 1 && (
+                    {i < 4 && (
                       <div className="w-0.5 h-8 bg-gray-200" />
                     )}
                   </div>
