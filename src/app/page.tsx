@@ -217,7 +217,7 @@ export default function Home() {
                 <div className="text-3xl sm:text-4xl font-bold text-white">
                   {s.value}
                 </div>
-                <div className="mt-1 text-sm text-pink-400">{s.label}</div>
+                <div className="mt-1 text-sm text-white/80">{s.label}</div>
               </motion.div>
             ))}
           </motion.div>
