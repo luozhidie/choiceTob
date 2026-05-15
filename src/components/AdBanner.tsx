@@ -69,9 +69,9 @@ export default function AdBanner({ position }: { position: AdBannerProps["positi
   };
 
   const bgGradients = {
-    top: "from-pink-600 to-pink-500",
-    sidebar: "from-pink-500/90 to-pink-400/70",
-    inline: "from-primary/90 to-pink-400/90",
+    top: "from-primary to-primary/80",
+    sidebar: "from-primary/90 to-primary/70",
+    inline: "from-primary/90 to-primary/80",
     footer: "from-gray-900 to-gray-800",
   };
 
@@ -87,7 +87,7 @@ export default function AdBanner({ position }: { position: AdBannerProps["positi
           </div>
 
           <div className="relative text-center px-4">
-            <div className="text-lg sm:text-xl font-bold text-white mb-1">
+            <div className="text-lg sm:text-xl font-bold text-pink-400 mb-1">
               {ad.title}
             </div>
             <div className="text-sm text-white/80">
