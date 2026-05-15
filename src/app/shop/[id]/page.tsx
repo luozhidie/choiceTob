@@ -7,6 +7,11 @@ import Link from "next/link";
 import { ArrowLeft, ShoppingBag, Check } from "lucide-react";
 import { PaywallModal } from "@/components/PaywallModal";
 import { motion } from "framer-motion";
+import {
+  CATEGORY_MAP,
+  SUBCATEGORY_MAP,
+  getCategoryPath,
+} from "@/lib/categories";
 
 interface Product {
   id: string;
@@ -17,17 +22,11 @@ interface Product {
   price: number;
   original_price: number | null;
   category: string | null;
+  subcategory: string | null;
   tags: string[] | null;
   is_published: boolean;
   stock: number;
 }
-
-const categoryMap: Record<string, string> = {
-  accessory: "配饰",
-  clothing: "服装",
-  tool: "工具",
-  book: "书籍",
-};
 
 export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
@@ -39,7 +38,8 @@ export default function ProductDetailPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const pathname =
+    typeof window !== "undefined" ? window.location.pathname : "";
   const productId = pathname.split("/").pop();
 
   useEffect(() => {
@@ -76,17 +76,45 @@ export default function ProductDetailPage() {
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
 
+  // 品类面包屑链接
+  const categoryLink = product.category
+    ? `/shop?category=${product.category}`
+    : "/shop";
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb */}
+      {/* Breadcrumb - 带品类路径 */}
       <div className="bg-white border-b border-gray-100">
         <div className="container mx-auto px-4 py-3">
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Link href="/" className="hover:text-primary">首页</Link>
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
+            <Link href="/" className="hover:text-primary">
+              首页
+            </Link>
             <span>/</span>
-            <Link href="/shop" className="hover:text-primary">精选好物</Link>
-            <span>/</span>
-            <span className="text-primary font-medium">{product.title}</span>
+            <Link href="/shop" className="hover:text-primary">
+              精选好物
+            </Link>
+            {product.category && (
+              <>
+                <span>/</span>
+                <Link href={categoryLink} className="hover:text-primary">
+                  {CATEGORY_MAP[product.category] || product.category}
+                </Link>
+              </>
+            )}
+            {product.subcategory && (
+              <>
+                <span>/</span>
+                <span className="text-gray-400">
+                  {SUBCATEGORY_MAP[product.subcategory] ||
+                    product.subcategory}
+                </span>
+              </>
+            )}
+            <span className="hidden sm:inline">/</span>
+            <span className="text-primary font-medium hidden sm:inline line-clamp-1 max-w-[200px]">
+              {product.title}
+            </span>
           </nav>
         </div>
       </div>
@@ -118,10 +146,18 @@ export default function ProductDetailPage() {
                     <button
                       key={i}
                       onClick={() => setCurrentImage(i)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${currentImage === i ? "border-accent" : "border-transparent"}`}
+                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                        currentImage === i
+                          ? "border-accent"
+                          : "border-transparent"
+                      }`}
                     >
                       {img ? (
-                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <img
+                          src={img}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                           <ShoppingBag className="w-4 h-4 text-gray-400" />
@@ -135,11 +171,23 @@ export default function ProductDetailPage() {
 
             {/* Info */}
             <div>
-              {product.category && (
-                <span className="inline-block text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium mb-3">
-                  {categoryMap[product.category] || product.category}
-                </span>
-              )}
+              {/* 品类标签 */}
+              <div className="flex items-center gap-2 mb-3">
+                {product.category && (
+                  <Link href={categoryLink}>
+                    <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors">
+                      {CATEGORY_MAP[product.category] || product.category}
+                    </span>
+                  </Link>
+                )}
+                {product.subcategory && (
+                  <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
+                    {SUBCATEGORY_MAP[product.subcategory] ||
+                      product.subcategory}
+                  </span>
+                )}
+              </div>
+
               <h1 className="text-2xl md:text-3xl font-bold text-primary mb-4">
                 {product.title}
               </h1>
@@ -154,17 +202,24 @@ export default function ProductDetailPage() {
                 <span className="text-3xl font-bold text-accent">
                   {formatPrice(product.price)}
                 </span>
-                {product.original_price && product.original_price > product.price && (
-                  <span className="text-lg text-gray-400 line-through mb-1">
-                    {formatPrice(product.original_price)}
-                  </span>
-                )}
+                {product.original_price &&
+                  product.original_price > product.price && (
+                    <span className="text-lg text-gray-400 line-through mb-1">
+                      {formatPrice(product.original_price)}
+                    </span>
+                  )}
               </div>
 
               {/* Stock */}
               <div className="mb-6">
-                <span className={`text-xs font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-                  {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
+                <span
+                  className={`text-xs font-medium ${
+                    product.stock > 0 ? "text-green-600" : "text-red-500"
+                  }`}
+                >
+                  {product.stock > 0
+                    ? `库存 ${product.stock} 件`
+                    : "暂时缺货"}
                 </span>
               </div>
 
@@ -172,7 +227,10 @@ export default function ProductDetailPage() {
               {product.tags && product.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                   {product.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                    <span
+                      key={tag}
+                      className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
+                    >
                       {tag}
                     </span>
                   ))}
@@ -191,6 +249,16 @@ export default function ProductDetailPage() {
               <p className="mt-2 text-xs text-center text-muted-foreground">
                 支付安全便捷，付款后安排发货
               </p>
+
+              {/* 同品类推荐入口 */}
+              {product.category && (
+                <Link
+                  href={categoryLink}
+                  className="mt-6 block text-center text-sm text-primary hover:text-accent transition-colors font-medium"
+                >
+                  查看更多「{CATEGORY_MAP[product.category]}」商品 →
+                </Link>
+              )}
             </div>
           </motion.div>
         </div>
