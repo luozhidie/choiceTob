@@ -1,8 +1,9 @@
 "use client";
-import { useState } from "react";
-
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 import { PaywallModal } from "@/components/PaywallModal";
 import {
   ChevronRight,
@@ -16,7 +17,28 @@ import {
   ArrowRight,
   CheckCircle2,
   Home,
+  Loader2,
+  Lock,
+  Eye,
+  Flame,
+  Star,
 } from "lucide-react";
+
+/* ------------------------------------------------------------------ */
+/*  Types                                                              */
+/* ------------------------------------------------------------------ */
+interface BuyerProduct {
+  id: string;
+  name: string;
+  style: string;
+  color: string;
+  price: number;
+  score: number;
+  market_heat: string;
+  image_url: string;
+  is_published: boolean;
+  created_at: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -35,7 +57,7 @@ const stagger = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Static Data                                                        */
 /* ------------------------------------------------------------------ */
 const steps = [
   {
@@ -46,7 +68,7 @@ const steps = [
   {
     icon: Sparkles,
     title: "风格匹配",
-    desc: "基于八大风格体系，将客户需求与风格基因深度匹配",
+    desc: "将客户需求与风格基因深度匹配，精准锁定目标品类",
   },
   {
     icon: Users,
@@ -57,57 +79,6 @@ const steps = [
     icon: Target,
     title: "精准推荐",
     desc: "生成个性化选品方案，从源头提升爆款命中率",
-  },
-];
-
-const styleTable = [
-  {
-    name: "少女型",
-    traits: "甜美、俏皮、轻盈",
-    direction: "蓬蓬裙、蝴蝶结、马卡龙色系",
-    ratio: "中",
-  },
-  {
-    name: "优雅型",
-    traits: "精致、柔美、知性",
-    direction: "真丝衬衫、A字裙、莫兰迪色系",
-    ratio: "高",
-  },
-  {
-    name: "浪漫型",
-    traits: "华丽、性感、丰盈",
-    direction: "蕾丝、荷叶边、酒红色系",
-    ratio: "中",
-  },
-  {
-    name: "少年型",
-    traits: "利落、干练、中性",
-    direction: "西装外套、直筒裤、黑白灰",
-    ratio: "中",
-  },
-  {
-    name: "时尚型",
-    traits: "个性、前卫、多变",
-    direction: "不规则剪裁、撞色、潮流款",
-    ratio: "高",
-  },
-  {
-    name: "古典型",
-    traits: "端庄、稳重、高贵",
-    direction: "套装、珍珠饰品、藏蓝色系",
-    ratio: "中",
-  },
-  {
-    name: "自然型",
-    traits: "随性、洒脱、质朴",
-    direction: "棉麻材质、宽松版型、大地色系",
-    ratio: "中",
-  },
-  {
-    name: "戏剧型",
-    traits: "夸张、夺目、气场",
-    direction: "大廓形、撞色拼接、亮面材质",
-    ratio: "低",
   },
 ];
 
@@ -144,16 +115,135 @@ const features = [
 /* ------------------------------------------------------------------ */
 export default function BuyerPage() {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [paywallTitle, setPaywallTitle] = useState("");
+  const [products, setProducts] = useState<BuyerProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<BuyerProduct | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("buyer_products")
+      .select("*")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (error) {
+      console.error("Error fetching products:", error);
+    } else {
+      setProducts(data || []);
+    }
+    setLoading(false);
+  };
+
+  const handleProductClick = (product: BuyerProduct) => {
+    setSelectedProduct(product);
+    setPaywallTitle(product.name);
+    setShowPaywall(true);
+  };
+
+  const getHeatColor = (heat: string) => {
+    switch (heat) {
+      case "高":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "中":
+        return "bg-amber-100 text-amber-700 border-amber-200";
+      default:
+        return "bg-green-100 text-green-700 border-green-200";
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "text-emerald-600";
+    if (score >= 80) return "text-accent";
+    if (score >= 70) return "text-amber-600";
+    return "text-gray-500";
+  };
 
   return (
     <>
       <PaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        title="完整选品数据与八大风格体系"
-        description="登录后购买年度会员或单次付费即可查看完整选品数据、风格体系与供应链信息"
+        title={paywallTitle || "精选选品案例"}
+        description="购买会员或单次付费即可查看完整选品数据、案例详情与供应链信息"
         type="single"
       />
+
+      {/* Preview Modal - shows blurred preview before paywall */}
+      {showPreview && selectedProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowPreview(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl"
+          >
+            <div className="relative aspect-[4/3]">
+              {selectedProduct.image_url ? (
+                <Image
+                  src={selectedProduct.image_url}
+                  alt={selectedProduct.name}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                  <Package className="w-16 h-16 text-gray-300" />
+                </div>
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <h3 className="text-xl font-bold text-white">{selectedProduct.name}</h3>
+                <p className="text-white/80 text-sm mt-1">{selectedProduct.style} · {selectedProduct.color}</p>
+              </div>
+              <button
+                onClick={() => setShowPreview(false)}
+                className="absolute top-3 right-3 p-2 bg-black/30 hover:bg-black/50 text-white rounded-full transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 rotate-90" />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-4">
+                <div className={`px-3 py-1 rounded-full text-xs font-medium border ${getHeatColor(selectedProduct.market_heat)}`}>
+                  <Flame className="w-3 h-3 inline mr-1" />
+                  热度 {selectedProduct.market_heat}
+                </div>
+                <div className={`text-sm font-medium ${getScoreColor(selectedProduct.score)}`}>
+                  <Star className="w-3.5 h-3.5 inline mr-1" />
+                  评分 {selectedProduct.score}
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                完整案例详情、供应商信息、价格分析与搭配建议仅对付费会员开放
+              </p>
+              <button
+                onClick={() => {
+                  setShowPreview(false);
+                  setShowPaywall(true);
+                }}
+                className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
+              >
+                <Lock className="w-4 h-4" />
+                解锁查看完整内容
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm text-muted-foreground">
@@ -186,15 +276,150 @@ export default function BuyerPage() {
               买手选品
             </h1>
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
-              基于八大风格体系与数据驱动的智能选品方案，帮助买手精准匹配客户需求与供应商资源，
+              数据驱动的智能选品方案，帮助买手精准匹配客户需求与供应商资源，
               从源头提升爆款命中率，降低库存风险，实现选品决策的科学化升级。
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* ====== Selection Flow ====== */}
+      {/* ====== Case Study Gallery (Dynamic from Supabase) ====== */}
       <section className="py-16 lg:py-24 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="text-center max-w-2xl mx-auto mb-14"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={fadeUp}
+          >
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              精选案例
+            </span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+              选品案例模板库
+            </h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">
+              海量精选选品案例，覆盖多风格多品类。购买会员后即可查看完整数据与供应链信息
+            </p>
+          </motion.div>
+
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+              <span className="text-muted-foreground">加载案例中...</span>
+            </div>
+          ) : products.length > 0 ? (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {products.map((product, i) => (
+                <motion.div
+                  key={product.id}
+                  variants={fadeUp}
+                  custom={i}
+                  className="group cursor-pointer"
+                  onClick={() => handleProductClick(product)}
+                >
+                  <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-gray-100 mb-3 shadow-sm group-hover:shadow-xl transition-all duration-300">
+                    {product.image_url ? (
+                      <Image
+                        src={product.image_url}
+                        alt={product.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <Package className="w-12 h-12 text-gray-300" />
+                      </div>
+                    )}
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 bg-white/20 backdrop-blur-sm text-white text-xs rounded-full">
+                          <Eye className="w-3 h-3 inline mr-1" />
+                          点击查看
+                        </span>
+                      </div>
+                    </div>
+                    {/* Lock badge */}
+                    <div className="absolute top-3 right-3 p-2 bg-black/40 backdrop-blur-sm rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    {/* Heat badge */}
+                    <div className="absolute top-3 left-3">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${getHeatColor(product.market_heat)} backdrop-blur-sm bg-opacity-90`}>
+                        <Flame className="w-3 h-3 mr-0.5" />
+                        {product.market_heat}热度
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-1">
+                    <h4 className="font-semibold text-primary group-hover:text-accent transition-colors line-clamp-1">
+                      {product.name}
+                    </h4>
+                    <div className="flex items-center justify-between mt-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        {product.style} · {product.color}
+                      </span>
+                      <span className={`text-xs font-medium ${getScoreColor(product.score)}`}>
+                        {product.score}分
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm font-bold text-primary">
+                        ¥{product.price}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Lock className="w-3 h-3" />
+                        会员专享
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <div className="text-center py-20 bg-muted/30 rounded-2xl border border-dashed border-gray-200">
+              <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-primary mb-2">案例模板库准备中</h3>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                精选选品案例正在整理上传中，敬请期待。您也可以联系客服了解最新选品动态。
+              </p>
+            </div>
+          )}
+
+          {products.length > 0 && (
+            <motion.div
+              className="text-center mt-12"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={fadeUp}
+            >
+              <button
+                onClick={() => {
+                  setPaywallTitle("完整选品案例库");
+                  setShowPaywall(true);
+                }}
+                className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+              >
+                查看更多选品案例
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* ====== Selection Flow ====== */}
+      <section className="py-16 lg:py-24 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-14"
@@ -245,81 +470,6 @@ export default function BuyerPage() {
           </motion.div>
         </div>
       </section>
-
-      {/* ====== Style Case Studies ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              风格体系案例
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              八大风格选品案例展示
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              科学分类，精准匹配。以下是部分风格选品案例展示，完整数据与选品体系仅对会员开放
-            </p>
-          </motion.div>
-
-          {/* Case Study Grid - Image Placeholders */}
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "少女型", label: "蓬蓬裙·马卡龙色系", color: "from-pink-100 to-pink-50" },
-              { style: "优雅型", label: "真丝衬衫·莫兰迪色", color: "from-teal-100 to-teal-50" },
-              { style: "时尚型", label: "不规则剪裁·撞色", color: "from-purple-100 to-purple-50" },
-              { style: "自然型", label: "棉麻材质·大地色", color: "from-amber-100 to-amber-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[3/4] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">👗</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            className="text-center mt-12"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-            >
-              查看完整风格体系与选品数据
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </motion.div>
-        </div>
-      </section>
-      {/* ====== Original Eight Styles Table REMOVED, replaced by case studies above ====== */}
 
       {/* ====== Platform Features ====== */}
       <section className="py-16 lg:py-24 bg-white">
