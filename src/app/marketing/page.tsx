@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PaywallModal } from "@/components/PaywallModal";
+import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -20,6 +22,7 @@ import {
   ArrowRight,
   Home,
   Repeat,
+  Loader2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -39,7 +42,20 @@ const stagger = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Data                                                               */
+/*  Interfaces                                                         */
+/* ------------------------------------------------------------------ */
+interface MarketingImage {
+  id: string;
+  sort_order: number;
+  title: string;
+  label: string;
+  image_url: string;
+  section: string;
+  is_published: boolean;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Static Data                                                        */
 /* ------------------------------------------------------------------ */
 const activityTypes = [
   {
@@ -94,6 +110,74 @@ const trackingMetrics = [
 /* ------------------------------------------------------------------ */
 export default function MarketingPage() {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [calendarImages, setCalendarImages] = useState<MarketingImage[]>([]);
+  const [contentImages, setContentImages] = useState<MarketingImage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("marketing_images")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching marketing images:", error);
+    } else {
+      const all = data || [];
+      setCalendarImages(all.filter((img) => img.section === "calendar"));
+      setContentImages(all.filter((img) => img.section === "content"));
+    }
+    setLoading(false);
+  };
+
+  const renderImageCard = (item: MarketingImage, i: number) => (
+    <motion.div
+      key={item.id}
+      variants={fadeUp}
+      custom={i}
+      className="group cursor-pointer"
+      onClick={() => setShowPaywall(true)}
+    >
+      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+        <Image
+          src={item.image_url}
+          alt={item.title}
+          fill
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
+            查看详情
+          </span>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 p-5">
+          <h4 className="text-xl font-bold text-white">{item.title}</h4>
+        </div>
+      </div>
+    </motion.div>
+  );
+
+  const renderLoading = () => (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+      <span className="text-muted-foreground">加载中...</span>
+    </div>
+  );
+
+  const renderEmpty = (sectionName: string) => (
+    <div className="text-center py-12 col-span-full">
+      <p className="text-muted-foreground">暂无{sectionName}数据</p>
+    </div>
+  );
 
   return (
     <>
@@ -156,7 +240,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ====== 四季营销案例展示 ====== */}
+      {/* ====== 年度营销日历 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -177,39 +261,23 @@ export default function MarketingPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "春季营销案例", label: "焕新主题·搭配指南", color: "from-green-100 to-green-50" },
-              { style: "夏季营销案例", label: "限时企划·裂变引流", color: "from-blue-100 to-blue-50" },
-              { style: "秋季营销案例", label: "新品预售·VIP专场", color: "from-amber-100 to-amber-50" },
-              { style: "冬季营销案例", label: "年终答谢·双11狂欢", color: "from-red-100 to-red-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">📊</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {calendarImages.length > 0 ? (
+                calendarImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("年度营销日历")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -271,7 +339,7 @@ export default function MarketingPage() {
         </div>
       </section>
 
-      {/* ====== 内容营销案例展示 ====== */}
+      {/* ====== 内容营销矩阵 ====== */}
       <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -292,38 +360,23 @@ export default function MarketingPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { style: "公众号+小红书", label: "深度内容·精准种草", color: "from-pink-100 to-pink-50" },
-              { style: "短视频+直播", label: "流量获取·高效转化", color: "from-purple-100 to-purple-50" },
-              { style: "社群+小程序", label: "私域运营·深度触达", color: "from-cyan-100 to-cyan-50" },
-            ].map((item, i) => (
-              <motion.div
-                key={item.style}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => setShowPaywall(true)}
-              >
-                <div className={`aspect-[4/3] rounded-xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-3 group-hover:shadow-lg transition-shadow overflow-hidden relative`}>
-                  <div className="text-6xl opacity-40">📱</div>
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                    <span className="px-4 py-2 bg-white/90 text-primary text-sm font-semibold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-                      查看详情
-                    </span>
-                  </div>
-                </div>
-                <h4 className="font-semibold text-primary">{item.style}</h4>
-                <p className="text-xs text-muted-foreground">{item.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {loading ? (
+            renderLoading()
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {contentImages.length > 0 ? (
+                contentImages.map((item, i) => renderImageCard(item, i))
+              ) : (
+                renderEmpty("内容营销矩阵")
+              )}
+            </motion.div>
+          )}
 
           <div className="mt-10 text-center">
             <button
@@ -385,7 +438,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ====== Login Prompt ====== */}
-      <section className="py-20 lg:py-28 bg-muted">
+      <section className="py-20 lg:py-28 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
             <div className="max-w-xl mx-auto px-6">
@@ -405,7 +458,7 @@ export default function MarketingPage() {
       </section>
 
       {/* ====== CTA ====== */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 px-8 sm:px-12 lg:px-20 py-14 sm:py-20 text-center text-white"
@@ -416,7 +469,6 @@ export default function MarketingPage() {
           >
             <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-
             <div className="relative">
               <h2 className="text-3xl sm:text-4xl font-bold">定制您的专属营销方案</h2>
               <p className="mt-4 text-white/80 max-w-xl mx-auto leading-relaxed">
