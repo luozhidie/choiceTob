@@ -13,6 +13,7 @@ interface FashionTrend {
   content: string;
   images: string[];
   date: string;
+  price: number;
   is_published: boolean;
   created_at: string;
 }
@@ -57,7 +58,9 @@ export default function FashionTrendsPage() {
   const handleTrendClick = (trend: FashionTrend) => {
     setSelectedTrend(trend);
     setCurrentImageIndex(0);
-    setShowPaywall(true);
+    if (trend.price > 0) {
+      setShowPaywall(true);
+    }
   };
 
   const nextImage = () => {
@@ -144,9 +147,20 @@ export default function FashionTrendsPage() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     <div className="absolute bottom-3 left-3 right-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent text-primary mb-2">
-                        {trend.category}
-                      </span>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent text-primary">
+                          {trend.category}
+                        </span>
+                        {trend.price > 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-amber-500 text-white">
+                            ¥{(trend.price / 100).toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-green-500 text-white">
+                            免费
+                          </span>
+                        )}
+                      </div>
                       <h3 className="font-bold text-white line-clamp-2">
                         {trend.title}
                       </h3>
@@ -189,8 +203,8 @@ export default function FashionTrendsPage() {
         </div>
       </section>
 
-      {/* Image Gallery Modal */}
-      {selectedTrend && (
+      {/* Image Gallery Modal - 仅免费趋势显示 */}
+      {selectedTrend && !showPaywall && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
           <div className="relative w-full max-w-6xl">
             {/* Close Button */}
@@ -277,10 +291,12 @@ export default function FashionTrendsPage() {
       )}
 
       {/* Paywall Modal */}
-      {showPaywall && (
+      {showPaywall && selectedTrend && (
         <PaywallModal
           isOpen={showPaywall}
           type="trend"
+          title={`"${selectedTrend.title}" 需付费查看`}
+          description={selectedTrend.price > 0 ? `支付 ¥${(selectedTrend.price / 100).toFixed(2)} 即可查看完整趋势报告` : "请联系客服开通权限"}
           onClose={() => setShowPaywall(false)}
         />
       )}

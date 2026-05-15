@@ -23,6 +23,7 @@ interface FashionTrend {
   content: string;
   images: string[];
   date: string;
+  price: number;
   is_published: boolean;
   created_at: string;
 }
@@ -40,6 +41,7 @@ export default function AdminFashionTrendsPage() {
     content: "",
     images: [] as string[],
     date: new Date().toISOString().split("T")[0],
+    price: 0,
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
@@ -152,6 +154,7 @@ export default function AdminFashionTrendsPage() {
       content: "",
       images: [],
       date: new Date().toISOString().split("T")[0],
+      price: 0,
       is_published: false,
     });
     fetchTrends();
@@ -165,6 +168,7 @@ export default function AdminFashionTrendsPage() {
       content: trend.content || "",
       images: trend.images || [],
       date: trend.date || new Date().toISOString().split("T")[0],
+      price: trend.price || 0,
       is_published: trend.is_published,
     });
     setShowModal(true);
@@ -217,6 +221,7 @@ export default function AdminFashionTrendsPage() {
               content: "",
               images: [],
               date: new Date().toISOString().split("T")[0],
+              price: 0,
               is_published: false,
             });
             setShowModal(true);
@@ -252,6 +257,9 @@ export default function AdminFashionTrendsPage() {
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   分类
+                </th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  价格
                 </th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   日期
@@ -292,6 +300,13 @@ export default function AdminFashionTrendsPage() {
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
                       {trend.category}
                     </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {trend.price === 0 ? (
+                      <span className="text-green-600 font-medium text-sm">免费</span>
+                    ) : (
+                      <span className="font-bold text-accent text-sm">¥{(trend.price / 100).toFixed(2)}</span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-sm text-muted-foreground">
                     {trend.date}
@@ -409,6 +424,50 @@ export default function AdminFashionTrendsPage() {
                   onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
                 />
+              </div>
+
+              {/* 价格设置 */}
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">
+                  价格设置
+                </label>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={formData.price === 0}
+                      onChange={() => setFormData({ ...formData, price: 0 })}
+                      className="w-4 h-4 text-accent focus:ring-accent"
+                    />
+                    <span className="text-sm">免费</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      checked={formData.price > 0}
+                      onChange={() => setFormData({ ...formData, price: 9900 })}
+                      className="w-4 h-4 text-accent focus:ring-accent"
+                    />
+                    <span className="text-sm">付费查看</span>
+                  </label>
+                  {formData.price > 0 && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">¥</span>
+                      <input
+                        type="number"
+                        value={formData.price / 100}
+                        onChange={(e) => setFormData({ ...formData, price: Math.round(parseFloat(e.target.value) || 0) * 100 })}
+                        min="0"
+                        step="0.01"
+                        className="w-24 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors text-sm"
+                        placeholder="0.00"
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  {formData.price === 0 ? "用户可免费查看此趋势报告" : `用户需支付 ¥${(formData.price / 100).toFixed(2)} 查看此报告`}
+                </p>
               </div>
 
               {/* 内容描述 */}
