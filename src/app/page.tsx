@@ -186,7 +186,7 @@ export default function Home() {
             >
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
+                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-pink-500 text-white font-semibold rounded-lg hover:bg-pink-600 transition-colors shadow-lg shadow-pink-500/20"
               >
                 预约演示
                 <ChevronRight className="w-5 h-5" />
