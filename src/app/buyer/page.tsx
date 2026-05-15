@@ -52,6 +52,16 @@ interface BuyerStep {
   created_at: string;
 }
 
+interface BuyerFeature {
+  id: string;
+  sort_order: number;
+  title: string;
+  description: string;
+  image_url: string;
+  is_published: boolean;
+  created_at: string;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
 /* ------------------------------------------------------------------ */
@@ -130,6 +140,7 @@ export default function BuyerPage() {
   const [paywallTitle, setPaywallTitle] = useState("");
   const [products, setProducts] = useState<BuyerProduct[]>([]);
   const [steps, setSteps] = useState<BuyerStep[]>([]);
+  const [features, setFeatures] = useState<BuyerFeature[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState<BuyerProduct | null>(null);
   const [showPreview, setShowPreview] = useState(false);
@@ -141,6 +152,7 @@ export default function BuyerPage() {
   useEffect(() => {
     fetchProducts();
     fetchSteps();
+    fetchFeatures();
   }, []);
 
   const fetchProducts = async () => {
@@ -171,6 +183,20 @@ export default function BuyerPage() {
       console.error("Error fetching steps:", error);
     } else {
       setSteps(data || []);
+    }
+  };
+
+  const fetchFeatures = async () => {
+    const { data, error } = await supabase
+      .from("buyer_features")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching features:", error);
+    } else {
+      setFeatures(data || []);
     }
   };
 
@@ -585,7 +611,7 @@ export default function BuyerPage() {
         </div>
       </section>
 
-      {/* ====== Platform Features ====== */}
+      {/* ====== Platform Features (Dynamic Image Cards) ====== */}
       <section className="py-16 lg:py-24 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
@@ -606,32 +632,82 @@ export default function BuyerPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {features.map((f, i) => (
-              <motion.div
-                key={f.title}
-                variants={fadeUp}
-                custom={i}
-                className="group flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300"
-              >
-                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
-                  <f.icon className="w-6 h-6" />
-                </div>
-                <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
-                  {f.title}
-                </h3>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-                  {f.desc}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
+          {features.length > 0 ? (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {features.map((f, i) => (
+                <motion.div
+                  key={f.id}
+                  variants={fadeUp}
+                  custom={i}
+                  className="group flex flex-col h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-accent/30 transition-all duration-300 overflow-hidden"
+                >
+                  {/* Feature image */}
+                  <div className="relative aspect-[16/10] bg-gray-100 overflow-hidden">
+                    {f.image_url ? (
+                      <Image
+                        src={f.image_url}
+                        alt={f.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                        <Package className="w-10 h-10 text-gray-300" />
+                      </div>
+                    )}
+                  </div>
+                  {/* Text content */}
+                  <div className="p-6 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold text-primary group-hover:text-accent transition-colors">
+                      {f.title}
+                    </h3>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
+                      {f.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {[
+                { title: "款式库", desc: "海量SKU实时更新，覆盖全品类全风格，支持多维度筛选与智能推荐。", icon: Package },
+                { title: "供应商库", desc: "众多优质供应商入驻，资质认证体系保障品质，产地直达降本增效。", icon: Store },
+                { title: "爆品推荐", desc: "AI驱动爆品预测模型，提前预判趋势，首单成功率显著提升。", icon: TrendingUp },
+                { title: "比价系统", desc: "全网实时比价，一键对比同款不同供应商报价，确保最优采购性价比。", icon: Search },
+                { title: "预销匹配", desc: "基于历史销售数据与客户画像，智能预测各款预售表现，降低库存风险。", icon: Target },
+              ].map((f, i) => (
+                <motion.div
+                  key={f.title}
+                  variants={fadeUp}
+                  custom={i}
+                  className="group flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300"
+                >
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+                    <f.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
+                    {f.title}
+                  </h3>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
+                    {f.desc}
+                  </p>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
 
