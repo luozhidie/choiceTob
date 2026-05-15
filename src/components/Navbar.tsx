@@ -13,6 +13,8 @@ const navItems = [
   { label: "营销策划", href: "/marketing" },
   { label: "销售服务", href: "/sales" },
   { label: "VIP管理", href: "/vip" },
+  { label: "设计师中心", href: "/designer" },
+  { label: "买手中心", href: "/buyer-center" },
   { label: "供应商中心", href: "/supplier" },
   { label: "教学中心", href: "/education" },
   { label: "流行资讯", href: "/magazine" },
