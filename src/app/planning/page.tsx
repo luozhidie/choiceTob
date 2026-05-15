@@ -243,24 +243,8 @@ export default function PlanningPage() {
                       </div>
                     </div>
                     {/* Text content */}
-                    <div className="p-6 flex-1 flex flex-col">
+                    <div className="p-6">
                       <h3 className="text-lg font-bold text-primary group-hover:text-accent transition-colors">{step.title}</h3>
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{step.description}</p>
-                      {step.items && step.items.length > 0 && (
-                        <ul className="mt-4 flex flex-col gap-2 flex-1">
-                          {step.items.slice(0, 4).map((item, idx) => (
-                            <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
-                              <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {step.detail_content && (
-                        <span className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium">
-                          查看详情 <ChevronRight className="w-3 h-3" />
-                        </span>
-                      )}
                     </div>
                   </div>
                 </motion.div>
