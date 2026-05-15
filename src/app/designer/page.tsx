@@ -52,7 +52,7 @@ export default function DesignerPage() {
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">设计师中心</h1>
             <p className="text-base md:text-lg text-white/80 leading-relaxed">
-              签约设计师开发设计，打包成套餐收费
+              专业设计师团队为您量身定制，从品牌定位到款式开发一站式解决
             </p>
           </div>
         </div>

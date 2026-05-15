@@ -52,7 +52,7 @@ export default function BuyerCenterPage() {
           <div className="max-w-3xl">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">买手中心</h1>
             <p className="text-base md:text-lg text-white/80 leading-relaxed">
-              招募买手找款采购，打包成套餐收费
+              资深买手全程陪跑，精准匹配爆款货源，助您快速打开市场
             </p>
           </div>
         </div>
