@@ -9,14 +9,14 @@ interface PaywallModalProps {
   onClose: () => void;
   title?: string;
   description?: string;
-  type?: "annual" | "single";
+  type?: "annual" | "single" | "course" | "subscription" | "trend";
 }
 
 export function PaywallModal({
   isOpen,
   onClose,
-  title = "此内容为付费内容",
-  description = "登录后购买会员或单次付费即可查看完整内容",
+  title,
+  description,
   type = "single",
 }: PaywallModalProps) {
   const [contactForm, setContactForm] = useState(false);
@@ -28,6 +28,37 @@ export function PaywallModal({
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+
+  // 根据 type 设置默认标题和描述
+  const getDefaultTitle = () => {
+    switch (type) {
+      case "course":
+        return "此课程为付费内容";
+      case "subscription":
+        return "订阅流行资讯";
+      case "trend":
+        return "此趋势报告为付费内容";
+      case "annual":
+        return "开通年度会员";
+      default:
+        return "此内容为付费内容";
+    }
+  };
+
+  const getDefaultDescription = () => {
+    switch (type) {
+      case "course":
+        return "购买后即可无限次观看此课程";
+      case "subscription":
+        return "订阅后可查看所有付费文章";
+      case "trend":
+        return "购买后即可查看完整的趋势报告";
+      case "annual":
+        return "开通会员后即可查看所有内容";
+      default:
+        return "登录后购买会员或单次付费即可查看完整内容";
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -59,9 +90,11 @@ export function PaywallModal({
           <>
             <div className="text-center mb-6">
               <div className="text-5xl mb-4">🔒</div>
-              <h3 className="text-xl font-bold text-primary">{title}</h3>
+              <h3 className="text-xl font-bold text-primary">
+                {title || getDefaultTitle()}
+              </h3>
               <p className="mt-2 text-sm text-muted-foreground">
-                {description}
+                {description || getDefaultDescription()}
               </p>
             </div>
 

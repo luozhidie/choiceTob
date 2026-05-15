@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronRight, TrendingUp } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -14,8 +14,9 @@ const navItems = [
   { label: "销售服务", href: "/sales" },
   { label: "VIP管理", href: "/vip" },
   { label: "供应商中心", href: "/supplier" },
-  { label: "智识培训", href: "/education" },
-  { label: "时尚杂志", href: "/magazine" },
+  { label: "教学中心", href: "/education" },
+  { label: "流行资讯", href: "/magazine" },
+  { label: "服装趋势", href: "/fashion-trends" },
   { label: "联系我们", href: "/contact" },
 ];
 

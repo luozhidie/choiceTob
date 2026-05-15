@@ -18,7 +18,7 @@ const footerSections = [
       { label: "营销策划", href: "/marketing" },
       { label: "销售服务", href: "/sales" },
       { label: "VIP管理", href: "/vip" },
-      { label: "智识培训", href: "/education" },
+      { label: "教学中心", href: "/education" },
     ],
   },
   {

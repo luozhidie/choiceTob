@@ -34,8 +34,9 @@ const sidebarItems = [
   { label: "销售服务", href: "/admin/sales", icon: Headphones },
   { label: "VIP管理", href: "/admin/vip", icon: Crown },
   { label: "供应商中心", href: "/admin/supplier", icon: Truck },
-  { label: "智识培训", href: "/admin/education", icon: GraduationCap },
-  { label: "时尚杂志管理", href: "/admin/magazine", icon: BookOpen },
+  { label: "教学中心", href: "/admin/education", icon: GraduationCap },
+  { label: "流行资讯管理", href: "/admin/magazine", icon: BookOpen },
+  { label: "服装趋势管理", href: "/admin/fashion-trends", icon: TrendingUp },
 ];
 
 export default function AdminLayout({
