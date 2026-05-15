@@ -542,10 +542,10 @@ export default function BuyerPage() {
               </p>
               <ul className="mt-8 flex flex-col gap-4">
                 {[
-                  "首单成功率大幅提升，选品胜率显著高于行业平均",
-                  "库存周转天数显著缩短，资金利用效率大幅提升",
-                  "供应商匹配效率大幅提升，响应更加迅速",
-                  "退换货率显著降低，客户满意度持续攀升",
+                  "首单成功率提升60%，选品胜率显著高于行业平均",
+                  "库存周转天数缩短30%，资金利用效率大幅提升",
+                  "供应商匹配效率提升3倍，从3天缩短至1天",
+                  "退换货率降低40%，客户满意度持续攀升",
                 ].map((text) => (
                   <li key={text} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
@@ -563,10 +563,10 @@ export default function BuyerPage() {
               variants={stagger}
             >
               {[
-                { num: "大幅提升", sub: "首单成功率" },
-                { num: "显著缩短", sub: "库存周转天数" },
-                { num: "大幅提升", sub: "供应商匹配效率" },
-                { num: "显著降低", sub: "退换货率" },
+                { num: "60%", sub: "首单成功率提升" },
+                { num: "30%", sub: "库存周转天数缩短" },
+                { num: "3x", sub: "供应商匹配效率" },
+                { num: "40%", sub: "退换货率降低" },
               ].map((item, i) => (
                 <motion.div
                   key={item.sub}
