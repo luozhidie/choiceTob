@@ -228,23 +228,28 @@ export default function PlanningPage() {
             >
               {steps.map((step, i) => (
                 <motion.div key={step.id} variants={fadeUp} custom={i} className="group cursor-pointer" onClick={() => handleStepClick(step)}>
-                  <div className="flex flex-col h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-accent/30 transition-all duration-300 overflow-hidden">
-                    {/* Step image */}
-                    <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
-                      {step.image_url ? (
-                        <Image src={step.image_url} alt={step.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                          <Database className="w-10 h-10 text-gray-300" />
-                        </div>
-                      )}
-                      <div className="absolute top-3 left-3">
-                        <span className="inline-flex items-center px-2.5 py-1 bg-accent text-white text-xs font-bold rounded-full">STEP {step.step_number}</span>
+                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
+                    {/* Background image */}
+                    {step.image_url ? (
+                      <Image src={step.image_url} alt={step.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                        <Database className="w-12 h-12 text-gray-400" />
                       </div>
+                    )}
+                    {/* Gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                    {/* Step number badge */}
+                    <div className="absolute top-4 left-4">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-accent/90 text-white text-sm font-bold backdrop-blur-sm">{step.step_number}</span>
                     </div>
-                    {/* Text content */}
-                    <div className="p-6">
-                      <h3 className="text-lg font-bold text-primary group-hover:text-accent transition-colors">{step.title}</h3>
+                    {/* Content at bottom */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <h3 className="text-xl font-bold text-white mb-2">{step.title}</h3>
+                      <p className="text-sm text-white/80 leading-relaxed line-clamp-2">{step.description}</p>
+                      <div className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium">
+                        查看详情 <ArrowRight className="w-3 h-3" />
+                      </div>
                     </div>
                   </div>
                 </motion.div>
