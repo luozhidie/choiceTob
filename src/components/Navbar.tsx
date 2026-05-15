@@ -6,6 +6,7 @@ import { Menu, X, ChevronRight, TrendingUp } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
+  { label: "风格测试", href: "/style-test" },
   { label: "买手选品", href: "/buyer" },
   { label: "商品企划", href: "/planning" },
   { label: "爆款货盘", href: "/hot-picks" },
