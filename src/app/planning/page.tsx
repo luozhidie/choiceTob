@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { createClient } from "@/lib/supabase/client";
 import { PaywallModal } from "@/components/PaywallModal";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -14,7 +16,22 @@ import {
   FileText,
   CheckCircle2,
   Home,
+  X,
+  Loader2,
 } from "lucide-react";
+
+interface PlanningStep {
+  id: string;
+  step_number: number;
+  title: string;
+  subtitle: string;
+  description: string;
+  image_url: string;
+  items: string[];
+  detail_content: string;
+  is_published: boolean;
+  created_at: string;
+}
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -35,7 +52,7 @@ const stagger = {
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
 /* ------------------------------------------------------------------ */
-const flowSteps = [
+const fallbackSteps = [
   {
     icon: Database,
     title: "数据输入",
@@ -58,6 +75,39 @@ const flowSteps = [
 /* ------------------------------------------------------------------ */
 export default function PlanningPage() {
   const [showPaywall, setShowPaywall] = useState(false);
+  const [steps, setSteps] = useState<PlanningStep[]>([]);
+  const [loadingSteps, setLoadingSteps] = useState(true);
+  const [selectedStep, setSelectedStep] = useState<PlanningStep | null>(null);
+  const [showStepDetail, setShowStepDetail] = useState(false);
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    fetchSteps();
+  }, []);
+
+  const fetchSteps = async () => {
+    setLoadingSteps(true);
+    const { data, error } = await supabase
+      .from("planning_steps")
+      .select("*")
+      .eq("is_published", true)
+      .order("step_number", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching steps:", error);
+    } else {
+      setSteps(data || []);
+    }
+    setLoadingSteps(false);
+  };
+
+  const handleStepClick = (step: PlanningStep) => {
+    setSelectedStep(step);
+    if (step.detail_content) {
+      setShowStepDetail(true);
+    }
+  };
 
   return (
     <>
@@ -68,6 +118,40 @@ export default function PlanningPage() {
         description="登录后购买会员或单次付费即可查看完整内容"
         type="single"
       />
+
+      {/* Step Detail Modal */}
+      {showStepDetail && selectedStep && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowStepDetail(false)} />
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center justify-center w-8 h-8 rounded-full bg-accent text-white text-sm font-bold">{selectedStep.step_number}</span>
+                <h3 className="text-lg font-bold text-primary">{selectedStep.title}</h3>
+              </div>
+              <button onClick={() => setShowStepDetail(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6">
+              {selectedStep.image_url && (
+                <div className="relative w-full aspect-[16/9] rounded-xl overflow-hidden mb-6">
+                  <Image src={selectedStep.image_url} alt={selectedStep.title} fill className="object-cover" />
+                </div>
+              )}
+              {selectedStep.items && selectedStep.items.length > 0 && (
+                <ul className="flex flex-col gap-2 mb-4">
+                  {selectedStep.items.map((item, idx) => (
+                    <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">{selectedStep.detail_content}</p>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">
@@ -129,37 +213,92 @@ export default function PlanningPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {flowSteps.map((step, i) => (
-              <motion.div key={step.title} variants={fadeUp} custom={i}>
-                <div className="flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary">
-                      <step.icon className="w-6 h-6" />
+          {loadingSteps ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
+              <span className="text-muted-foreground">加载中...</span>
+            </div>
+          ) : steps.length > 0 ? (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {steps.map((step, i) => (
+                <motion.div key={step.id} variants={fadeUp} custom={i} className="group cursor-pointer" onClick={() => handleStepClick(step)}>
+                  <div className="flex flex-col h-full rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-xl hover:border-accent/30 transition-all duration-300 overflow-hidden">
+                    {/* Step image */}
+                    <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
+                      {step.image_url ? (
+                        <Image src={step.image_url} alt={step.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                          <Database className="w-10 h-10 text-gray-300" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center px-2.5 py-1 bg-accent text-white text-xs font-bold rounded-full">STEP {step.step_number}</span>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-xs text-accent font-semibold">STEP {i + 1}</span>
-                      <h3 className="text-lg font-bold text-primary">{step.title}</h3>
+                    {/* Text content */}
+                    <div className="p-6 flex-1 flex flex-col">
+                      <h3 className="text-lg font-bold text-primary group-hover:text-accent transition-colors">{step.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                      {step.items && step.items.length > 0 && (
+                        <ul className="mt-4 flex flex-col gap-2 flex-1">
+                          {step.items.slice(0, 4).map((item, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                              {item}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {step.detail_content && (
+                        <span className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium">
+                          查看详情 <ChevronRight className="w-3 h-3" />
+                        </span>
+                      )}
                     </div>
                   </div>
-                  <ul className="flex flex-col gap-3">
-                    {step.items.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-3 gap-6"
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.1 }}
+              variants={stagger}
+            >
+              {fallbackSteps.map((step, i) => (
+                <motion.div key={step.title} variants={fadeUp} custom={i}>
+                  <div className="flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 text-primary">
+                        <step.icon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <span className="text-xs text-accent font-semibold">STEP {i + 1}</span>
+                        <h3 className="text-lg font-bold text-primary">{step.title}</h3>
+                      </div>
+                    </div>
+                    <ul className="flex flex-col gap-3">
+                      {step.items.map((item) => (
+                        <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <CheckCircle2 className="w-4 h-4 text-accent shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
         </div>
       </section>
 
