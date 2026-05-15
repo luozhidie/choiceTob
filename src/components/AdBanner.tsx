@@ -69,9 +69,9 @@ export default function AdBanner({ position }: { position: AdBannerProps["positi
   };
 
   const bgGradients = {
-    top: "from-primary to-primary/80",
-    sidebar: "from-accent/90 to-accent/70",
-    inline: "from-primary/90 to-accent/90",
+    top: "from-pink-600 to-pink-500",
+    sidebar: "from-pink-500/90 to-pink-400/70",
+    inline: "from-primary/90 to-pink-400/90",
     footer: "from-gray-900 to-gray-800",
   };
 
@@ -153,16 +153,16 @@ export function PopupAd() {
         </button>
 
         <div className="text-5xl mb-4">🎁</div>
-        <h3 className="text-xl font-bold text-primary mb-2">
+        <h3 className="text-xl font-bold text-pink-500 mb-2">
           限时优惠活动
         </h3>
-        <p className="text-muted-foreground leading-relaxed mb-6">
+        <p className="text-pink-400 leading-relaxed mb-6">
           新用户首单立减500元，附赠价值1000元买手选品诊断服务
         </p>
         <Link
           href="/contact"
           onClick={handleClose}
-          className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+          className="inline-flex items-center gap-2 px-8 py-3 bg-pink-500 text-white font-semibold rounded-lg hover:bg-pink-600 transition-colors"
         >
           立即咨询
           <ArrowRight className="w-4 h-4" />
