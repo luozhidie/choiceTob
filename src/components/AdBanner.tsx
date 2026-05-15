@@ -87,7 +87,7 @@ export default function AdBanner({ position }: { position: AdBannerProps["positi
           </div>
 
           <div className="relative text-center px-4">
-            <div className="text-lg sm:text-xl font-bold text-pink-400 mb-1">
+            <div className="text-lg sm:text-xl font-bold text-white mb-1">
               {ad.title}
             </div>
             <div className="text-sm text-white/80">
