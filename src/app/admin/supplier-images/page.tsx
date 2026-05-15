@@ -182,8 +182,8 @@ export default function AdminSupplierImagesPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-primary">供应商图片管理</h1>
-          <p className="text-muted-foreground mt-1">上传和管理供应商中心页面的图片展示内容</p>
+          <h1 className="text-2xl font-bold text-primary">一手货源图片管理</h1>
+          <p className="text-muted-foreground mt-1">上传和管理一手货源页面的图片展示内容</p>
         </div>
         <button
           onClick={() => {

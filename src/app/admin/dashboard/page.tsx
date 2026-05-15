@@ -43,7 +43,7 @@ const quickLinks = [
   { label: "营销策划", href: "/admin/marketing", icon: Megaphone, desc: "全渠道营销方案", table: "marketing_campaigns" },
   { label: "销售服务", href: "/admin/sales", icon: Headphones, desc: "销售赋能与培训", table: "sales_services" },
   { label: "VIP管理", href: "/admin/vip", icon: Crown, desc: "客户分层精细运营", table: "vip_tiers" },
-  { label: "供应商中心", href: "/admin/supplier", icon: Truck, desc: "供应商资源管理", table: "suppliers" },
+  { label: "一手货源", href: "/admin/supplier", icon: Truck, desc: "供应商资源管理", table: "suppliers" },
   { label: "教学中心", href: "/admin/education", icon: GraduationCap, desc: "课程内容管理", table: "courses" },
   { label: "流行资讯", href: "/admin/magazine", icon: BookOpen, desc: "资讯文章管理", table: "articles" },
 ];
@@ -176,7 +176,7 @@ export default function AdminDashboard() {
     const supplierCount = moduleCounts.find(m => m.table === "suppliers")?.count || 0;
     if (supplierCount === 0) {
       newSuggestions.push({
-        module: "供应商中心",
+        module: "一手货源",
         issue: "供应商资源库为空",
         suggestion: "建议录入核心供应商信息，建立供应链管理体系，保障货源稳定。",
         priority: "高",

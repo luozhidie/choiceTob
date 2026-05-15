@@ -50,7 +50,7 @@ export default function DesignerPage() {
       <section className="bg-primary text-white py-16 md:py-24">
         <div className="container mx-auto px-4">
           <div className="max-w-3xl">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">设计师中心</h1>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4 leading-tight">原创设计</h1>
             <p className="text-base md:text-lg text-white/80 leading-relaxed">
               专业设计师团队为您量身定制，从品牌定位到款式开发一站式解决
             </p>

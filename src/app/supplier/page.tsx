@@ -235,7 +235,7 @@ export default function SupplierPage() {
               <Home className="w-4 h-4" />
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span className="text-primary font-medium">供应商中心</span>
+            <span className="text-primary font-medium">一手货源</span>
           </nav>
         </div>
       </div>
@@ -255,10 +255,10 @@ export default function SupplierPage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-6">
               <Building2 className="w-4 h-4" />
-              优质供应商招募
+              优质货源直供
             </span>
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
-              供应商<span className="text-accent">中心</span>
+              一手<span className="text-accent">货源</span>
             </h1>
             <p className="mt-6 text-lg text-white/80 leading-relaxed">
               携手优质供应商，共建高效协同的服装供应链体系。

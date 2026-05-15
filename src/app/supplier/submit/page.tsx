@@ -210,7 +210,7 @@ export default function SupplierSubmitPage() {
               href="/supplier"
               className="hover:text-primary transition-colors"
             >
-              供应商中心
+              一手货源
             </Link>
             <ChevronRight className="w-3 h-3" />
             <span className="text-primary font-medium">提交商品</span>

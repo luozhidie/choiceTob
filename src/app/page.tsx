@@ -93,7 +93,7 @@ const dataTools = [
   },
   {
     icon: Truck,
-    title: "供应商中心",
+    title: "一手货源",
     desc: "优质供应商资源整合，全链路协同管理，从源头保障品质与交期。",
     href: "/supplier",
   },

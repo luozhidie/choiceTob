@@ -145,7 +145,7 @@ export default function AdminSupplierPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-primary">供应商中心管理</h1>
+          <h1 className="text-2xl font-bold text-primary">一手货源管理</h1>
           <p className="text-muted-foreground mt-1">管理供应商资源</p>
         </div>
         <button
