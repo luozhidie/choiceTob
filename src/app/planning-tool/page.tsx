@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
 import { PaywallModal } from "@/components/PaywallModal";
+import { createClient } from "@/lib/supabase/client";
 
 /* ==================== 选项数据 ==================== */
 
@@ -122,6 +123,23 @@ export default function PlanningToolPage() {
     setReport(mockReport);
     setGenerating(false);
     setStep(3);
+
+    // 自动保存报告到 planning_reports 表（后台可管理）
+    try {
+      const supabase = createClient();
+      await supabase.from("planning_reports").insert([{
+        title: `${mockReport.brandName} · ${mockReport.season}商品企划初稿`,
+        category: "AI智能初稿",
+        content: mockReport.summary,
+        images: [],
+        color_season: formData.colorPref || null,
+        style_type: formData.marketStyle || null,
+        is_published: false,  // 默认不公开，需管理员审核后发布
+        is_template: false,
+      }]);
+    } catch (saveErr) {
+      console.error("报告自动保存失败（不影响展示）:", saveErr);
+    }
   };
 
   /* 如果正在生成，显示动画 */
