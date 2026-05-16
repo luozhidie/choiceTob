@@ -12,10 +12,8 @@ const navItems = [
   { label: "商品企划", href: "/planning" },
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
-  { label: "销售服务", href: "/sales" },
   { label: "杂志", href: "/magazine" },
   { label: "时尚趋势", href: "/fashion-trends" },
-  { label: "VIP管理", href: "/vip" },
   { label: "原创设计", href: "/designer" },
   { label: "联系我们", href: "/contact" },
 ];
