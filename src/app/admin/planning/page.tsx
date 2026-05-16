@@ -4,16 +4,8 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Upload,
-  Save,
-  X,
-  Eye,
-  EyeOff,
-  Loader2,
-  Lightbulb,
+  Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
+  Loader2, Lightbulb, Star,
 } from "lucide-react";
 
 interface PlanningReport {
@@ -22,11 +14,40 @@ interface PlanningReport {
   category: string;
   content: string;
   images: string[];
+  color_season: string | null;
+  style_type: string | null;
   is_published: boolean;
+  is_template: boolean;
   created_at: string;
 }
 
-const categories = ["商品结构", "风格企划", "色彩企划", "价格带企划", "季度企划"];
+const categories = ["商品结构", "风格企划", "色彩企划", "价格带企划", "季度企划", "全案企划"];
+
+const COLOR_SEASONS = [
+  { value: "light_warm", label: "浅暖型" },
+  { value: "warm_bright", label: "暖亮型" },
+  { value: "clear_warm", label: "净暖型" },
+  { value: "light_cool", label: "浅冷型" },
+  { value: "soft_cool", label: "柔冷型" },
+  { value: "cool_soft", label: "冷柔型" },
+  { value: "warm_soft", label: "暖柔型" },
+  { value: "soft_warm", label: "柔暖型" },
+  { value: "deep_warm", label: "深暖型" },
+  { value: "clear_cool", label: "净冷型" },
+  { value: "cool_bright", label: "冷亮型" },
+  { value: "deep_cool", label: "深冷型" },
+];
+
+const STYLES = [
+  { value: "shao_nv", label: "少女型" },
+  { value: "you_ya", label: "优雅型" },
+  { value: "lang_man_f", label: "浪漫型" },
+  { value: "shao_nian_f", label: "少年型" },
+  { value: "shi_shang_f", label: "时尚型" },
+  { value: "gu_dian_f", label: "古典型" },
+  { value: "zi_ran_f", label: "自然型" },
+  { value: "xi_ju_f", label: "戏剧型" },
+];
 
 export default function AdminPlanningPage() {
   const [reports, setReports] = useState<PlanningReport[]>([]);
@@ -38,67 +59,43 @@ export default function AdminPlanningPage() {
     category: "商品结构",
     content: "",
     images: [] as string[],
+    color_season: "",
+    style_type: "",
     is_published: false,
+    is_template: false,
   });
   const [uploading, setUploading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => {
-    checkUser();
-    fetchReports();
-  }, []);
+  useEffect(() => { checkUser(); fetchReports(); }, []);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
+    if (!user) router.push("/admin/login");
   };
 
   const fetchReports = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("planning_reports")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching reports:", error);
-    } else {
-      setReports(data || []);
-    }
+    const { data, error } = await supabase.from("planning_reports").select("*").order("created_at", { ascending: false });
+    if (!error && data) setReports(data as PlanningReport[]);
     setLoading(false);
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-
     setUploading(true);
     const uploadedUrls: string[] = [];
-
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("planning-images")
-        .upload(fileName, file);
-
-      if (uploadError) {
-        alert(`上传失败：${uploadError.message}`);
-        continue;
-      }
-
-      const { data } = supabase.storage
-        .from("planning-images")
-        .getPublicUrl(fileName);
-
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from("planning-images").upload(fileName, file);
+      if (uploadError) { alert(`上传失败：${uploadError.message}`); continue; }
+      const { data } = supabase.storage.from("planning-images").getPublicUrl(fileName);
       uploadedUrls.push(data.publicUrl);
     }
-
     setFormData({ ...formData, images: [...formData.images, ...uploadedUrls] });
     setUploading(false);
   };
@@ -111,31 +108,23 @@ export default function AdminPlanningPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const payload = {
+      ...formData,
+      color_season: formData.color_season || null,
+      style_type: formData.style_type || null,
+    };
 
     if (editingReport) {
-      const { error } = await supabase
-        .from("planning_reports")
-        .update(formData)
-        .eq("id", editingReport.id);
-
-      if (error) {
-        alert("更新失败：" + error.message);
-        return;
-      }
+      const { error } = await supabase.from("planning_reports").update(payload).eq("id", editingReport.id);
+      if (error) { alert("更新失败：" + error.message); return; }
     } else {
-      const { error } = await supabase
-        .from("planning_reports")
-        .insert([formData]);
-
-      if (error) {
-        alert("创建失败：" + error.message);
-        return;
-      }
+      const { error } = await supabase.from("planning_reports").insert([payload]);
+      if (error) { alert("创建失败：" + error.message); return; }
     }
 
     setShowModal(false);
     setEditingReport(null);
-    setFormData({ title: "", category: "商品结构", content: "", images: [], is_published: false });
+    setFormData({ title: "", category: "商品结构", content: "", images: [], color_season: "", style_type: "", is_published: false, is_template: false });
     fetchReports();
   };
 
@@ -146,38 +135,30 @@ export default function AdminPlanningPage() {
       category: report.category || "商品结构",
       content: report.content || "",
       images: report.images || [],
+      color_season: report.color_season || "",
+      style_type: report.style_type || "",
       is_published: report.is_published,
+      is_template: report.is_template || false,
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个企划报告吗？")) return;
-
-    const { error } = await supabase
-      .from("planning_reports")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
-      return;
-    }
-
+    const { error } = await supabase.from("planning_reports").delete().eq("id", id);
+    if (error) { alert("删除失败：" + error.message); return; }
     fetchReports();
   };
 
   const togglePublish = async (report: PlanningReport) => {
-    const { error } = await supabase
-      .from("planning_reports")
-      .update({ is_published: !report.is_published })
-      .eq("id", report.id);
+    const { error } = await supabase.from("planning_reports").update({ is_published: !report.is_published }).eq("id", report.id);
+    if (error) { alert("操作失败：" + error.message); return; }
+    fetchReports();
+  };
 
-    if (error) {
-      alert("操作失败：" + error.message);
-      return;
-    }
-
+  const toggleTemplate = async (report: PlanningReport) => {
+    const { error } = await supabase.from("planning_reports").update({ is_template: !report.is_template }).eq("id", report.id);
+    if (error) { alert("操作失败：" + error.message); return; }
     fetchReports();
   };
 
@@ -186,12 +167,12 @@ export default function AdminPlanningPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-primary">商品企划管理</h1>
-          <p className="text-muted-foreground mt-1">上传和管理企划报告</p>
+          <p className="text-muted-foreground mt-1">管理企划报告和模板案例</p>
         </div>
         <button
           onClick={() => {
             setEditingReport(null);
-            setFormData({ title: "", category: "商品结构", content: "", images: [], is_published: false });
+            setFormData({ title: "", category: "商品结构", content: "", images: [], color_season: "", style_type: "", is_published: false, is_template: false });
             setShowModal(true);
           }}
           className="btn-primary flex items-center gap-2"
@@ -216,38 +197,60 @@ export default function AdminPlanningPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">图片</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">标题</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">分类</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">图片</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">标题</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">分类</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">色彩/风格</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">模板</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {reports.map((report) => (
                 <tr key={report.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     {report.images && report.images.length > 0 ? (
-                      <img src={report.images[0]} alt={report.title} className="w-16 h-12 object-cover rounded-lg" />
+                      <img src={report.images[0]} alt={report.title} className="w-14 h-10 object-cover rounded-lg" />
                     ) : (
-                      <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Lightbulb className="w-6 h-6 text-gray-400" />
+                      <div className="w-14 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <Lightbulb className="w-5 h-5 text-gray-400" />
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 font-medium text-primary max-w-xs truncate">{report.title}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">{report.category}</span>
+                  <td className="px-4 py-3 font-medium text-primary max-w-[200px] truncate text-sm">{report.title}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">{report.category}</span>
                   </td>
-                  <td className="px-6 py-4">
-                    <button onClick={() => togglePublish(report)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${report.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      {report.color_season && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {COLOR_SEASONS.find(c => c.value === report.color_season)?.label || report.color_season}
+                        </span>
+                      )}
+                      {report.style_type && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+                          {STYLES.find(s => s.value === report.style_type)?.label || report.style_type}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => toggleTemplate(report)} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${report.is_template ? "bg-amber-100 text-amber-800 hover:bg-amber-200" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                      <Star className="w-3 h-3" />
+                      {report.is_template ? "模板" : "普通"}
+                    </button>
+                  </td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => togglePublish(report)} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${report.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
                       {report.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
                     </button>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleEdit(report)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
-                      <button onClick={() => handleDelete(report.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => handleEdit(report)} className="p-1.5 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
+                      <button onClick={() => handleDelete(report.id)} className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -280,6 +283,27 @@ export default function AdminPlanningPage() {
                 </div>
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">色彩季型</label>
+                  <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                    <option value="">不指定</option>
+                    {COLOR_SEASONS.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">风格类型</label>
+                  <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                    <option value="">不指定</option>
+                    {STYLES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">内容描述</label>
                 <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} rows={4} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入企划内容描述" />
@@ -304,9 +328,15 @@ export default function AdminPlanningPage() {
                 </label>
               </div>
 
-              <div className="flex items-center gap-3">
-                <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
-                <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
+                  <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input type="checkbox" id="is_template" checked={formData.is_template} onChange={(e) => setFormData({ ...formData, is_template: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
+                  <label htmlFor="is_template" className="text-sm font-medium text-primary cursor-pointer">标记为模板案例</label>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
