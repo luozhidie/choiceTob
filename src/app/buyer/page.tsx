@@ -3,12 +3,11 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Search, SlidersHorizontal, X, TrendingUp } from "lucide-react";
+import { Search, X, TrendingUp, Truck, Star, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PaywallModal } from "@/components/PaywallModal";
 import { CATEGORY_MAP, SUBCATEGORY_MAP } from "@/lib/categories";
 
-// 风格选项（与色彩诊断保持一致）
 const STYLE_OPTIONS = [
   { value: "shao_nv", label: "少女型" },
   { value: "you_ya", label: "优雅型" },
@@ -20,7 +19,6 @@ const STYLE_OPTIONS = [
   { value: "xi_ju_f", label: "戏剧型" },
 ];
 
-// 色彩季型选项
 const COLOR_SEASONS = [
   { value: "light_warm", label: "浅暖型" },
   { value: "warm_bright", label: "暖亮型" },
@@ -44,65 +42,129 @@ const CATEGORY_OPTIONS = [
   { value: "pro_tool", label: "专业工具" },
 ];
 
-interface BuyerProduct {
+// 供应商类型
+interface Supplier {
   id: string;
-  title?: string;
-  name?: string;
-  description?: string | null;
-  cover_image?: string | null;
-  image_url?: string;
-  price: number;
-  original_price?: number | null;
-  category?: string | null;
-  subcategory?: string | null;
-  color_season?: string | null;
-  style_type?: string | null;
-  stock?: number;
-  tags?: string[] | null;
+  name: string;
+  level: string;
+  rating: number;
+  description: string;
   is_published: boolean;
+}
+
+// 合并后的商品类型
+interface MergedProduct {
+  id: string;
+  title: string;
+  description: string | null;
+  cover_image: string | null;
+  price: number;
+  original_price: number | null;
+  category: string | null;
+  subcategory: string | null;
+  color_season: string | null;
+  style_type: string | null;
+  stock: number;
+  is_published: boolean;
+  source: "platform" | "buyer"; // 平台自营 / 供应商货源
   created_at: string;
 }
 
 export default function BuyerPage() {
-  const [products, setProducts] = useState<BuyerProduct[]>([]);
+  const [allProducts, setAllProducts] = useState<MergedProduct[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
   const [activeStyle, setActiveStyle] = useState("");
   const [activeColor, setActiveColor] = useState("");
+  const [sourceFilter, setSourceFilter] = useState(""); // "" = 全部, "platform", "buyer"
   const [sortBy, setSortBy] = useState("sort_order");
   const [showPaywall, setShowPaywall] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<BuyerProduct | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<MergedProduct | null>(null);
   const [visible, setVisible] = useState(false);
 
   const supabase = createClient();
 
   useEffect(() => {
     setVisible(true);
-    fetchProducts();
+    fetchAllData();
   }, []);
 
-  const fetchProducts = async () => {
+  const fetchAllData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("buyer_products")
-      .select("*")
-      .eq("is_published", true)
-      .order("sort_order", { ascending: true });
-    if (!error && data) setProducts(data as BuyerProduct[]);
+    // 并行请求：buyer_products + products + suppliers
+    const [buyerRes, platformRes, supplierRes] = await Promise.all([
+      supabase.from("buyer_products").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
+      supabase.from("products").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
+      supabase.from("suppliers").select("*").eq("is_published", true).order("rating", { ascending: false }),
+    ]);
+
+    const merged: MergedProduct[] = [];
+
+    if (!buyerRes.error && buyerRes.data) {
+      buyerRes.data.forEach((p: any) => {
+        merged.push({
+          id: p.id,
+          title: p.title || p.name || "选品商品",
+          description: p.description,
+          cover_image: p.cover_image || p.image_url || null,
+          price: p.price || 0,
+          original_price: p.original_price || null,
+          category: p.category || null,
+          subcategory: p.subcategory || null,
+          color_season: p.color_season || null,
+          style_type: p.style_type || null,
+          stock: p.stock || 0,
+          is_published: p.is_published,
+          source: "buyer",
+          created_at: p.created_at,
+        });
+      });
+    }
+
+    if (!platformRes.error && platformRes.data) {
+      platformRes.data.forEach((p: any) => {
+        merged.push({
+          id: p.id,
+          title: p.title || "平台商品",
+          description: p.description,
+          cover_image: p.cover_image || null,
+          price: p.price || 0,
+          original_price: p.original_price || null,
+          category: p.category || null,
+          subcategory: p.subcategory || null,
+          color_season: null,
+          style_type: null,
+          stock: p.stock || 0,
+          is_published: p.is_published,
+          source: "platform",
+          created_at: p.created_at,
+        });
+      });
+    }
+
+    setAllProducts(merged);
+
+    if (!supplierRes.error && supplierRes.data) {
+      setSuppliers(supplierRes.data as Supplier[]);
+    }
+
     setLoading(false);
   };
 
   // 筛选 + 排序
   const filteredProducts = useMemo(() => {
-    let list = [...products];
+    let list = [...allProducts];
+
+    if (sourceFilter) {
+      list = list.filter((p) => p.source === sourceFilter);
+    }
 
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
       list = list.filter(
-        (p) =>
-          (p.title || p.name || "").toLowerCase().includes(kw) ||
-          (p.description || "").toLowerCase().includes(kw)
+        (p) => p.title.toLowerCase().includes(kw) || (p.description || "").toLowerCase().includes(kw)
       );
     }
 
@@ -110,11 +172,12 @@ export default function BuyerPage() {
       list = list.filter((p) => p.category === activeCategory);
     }
 
-    if (activeStyle) {
+    if (activeStyle && sourceFilter !== "platform") {
+      // 平台自营商品没有风格字段，仅在供应商货源中筛选
       list = list.filter((p) => p.style_type === activeStyle);
     }
 
-    if (activeColor) {
+    if (activeColor && sourceFilter !== "platform") {
       list = list.filter((p) => p.color_season === activeColor);
     }
 
@@ -122,26 +185,26 @@ export default function BuyerPage() {
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
 
     return list;
-  }, [products, searchTerm, activeCategory, activeStyle, activeColor, sortBy]);
+  }, [allProducts, searchTerm, activeCategory, activeStyle, activeColor, sourceFilter, sortBy]);
 
-  const handleBuy = (product: BuyerProduct) => {
+  const handleBuy = (product: MergedProduct) => {
     setSelectedProduct(product);
     setShowPaywall(true);
   };
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
-  const getImage = (p: BuyerProduct) => p.cover_image || p.image_url || null;
-  const getName = (p: BuyerProduct) => p.title || p.name || "选品商品";
+  const getImage = (p: MergedProduct) => p.cover_image;
 
   const clearFilters = () => {
     setSearchTerm("");
     setActiveCategory("");
     setActiveStyle("");
     setActiveColor("");
+    setSourceFilter("");
     setSortBy("sort_order");
   };
 
-  const hasActiveFilter = activeCategory || activeStyle || activeColor || sortBy !== "sort_order";
+  const hasActiveFilter = activeCategory || activeStyle || activeColor || sourceFilter || sortBy !== "sort_order";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -180,32 +243,56 @@ export default function BuyerPage() {
       {/* 筛选栏 */}
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="container mx-auto px-4 py-3">
-          {/* 品类 + 排序 */}
+          {/* 商品来源 + 品类 + 排序 */}
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            <button
-              onClick={() => setActiveCategory("")}
-              className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                !activeCategory ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"
-              }`}
-            >
-              全部
-            </button>
+            {/* 商品来源筛选 */}
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5 shrink-0">
+              <button
+                onClick={() => setSourceFilter("")}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  !sourceFilter ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                全部
+              </button>
+              <button
+                onClick={() => setSourceFilter(sourceFilter === "platform" ? "" : "platform")}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  sourceFilter === "platform" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                平台自营
+              </button>
+              <button
+                onClick={() => setSourceFilter(sourceFilter === "buyer" ? "" : "buyer")}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                  sourceFilter === "buyer" ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                供应商货源
+              </button>
+            </div>
+
+            <div className="w-px h-5 bg-gray-200 shrink-0" />
+
+            {/* 品类 */}
             {CATEGORY_OPTIONS.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setActiveCategory(activeCategory === cat.value ? "" : cat.value)}
-                className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
                   activeCategory === cat.value ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"
                 }`}
               >
                 {cat.label}
               </button>
             ))}
+
             <div className="ml-auto shrink-0 flex items-center gap-2">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none"
+                className="px-2 py-1 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none"
               >
                 <option value="sort_order">默认排序</option>
                 <option value="price_asc">价格从低到高</option>
@@ -215,40 +302,61 @@ export default function BuyerPage() {
           </div>
 
           {/* 风格筛选 */}
-          <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide">
-            <span className="text-xs text-gray-400 shrink-0">风格：</span>
-            {STYLE_OPTIONS.map((s) => (
-              <button
-                key={s.value}
-                onClick={() => setActiveStyle(activeStyle === s.value ? "" : s.value)}
-                className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                  activeStyle === s.value
-                    ? "bg-accent text-white"
-                    : "bg-gray-100 text-gray-500 hover:bg-gray-200"
-                }`}
+          <AnimatePresence>
+            {(!sourceFilter || sourceFilter === "buyer") && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {s.label}
-              </button>
-            ))}
-          </div>
+                <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide">
+                  <span className="text-xs text-gray-400 shrink-0">风格：</span>
+                  {STYLE_OPTIONS.map((s) => (
+                    <button
+                      key={s.value}
+                      onClick={() => setActiveStyle(activeStyle === s.value ? "" : s.value)}
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                        activeStyle === s.value
+                          ? "bg-accent text-white"
+                          : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      }`}
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* 色彩季型筛选 */}
-          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
-            <span className="text-xs text-gray-400 shrink-0">色彩：</span>
-            {COLOR_SEASONS.map((c) => (
-              <button
-                key={c.value}
-                onClick={() => setActiveColor(activeColor === c.value ? "" : c.value)}
-                className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
-                  activeColor === c.value
-                    ? "bg-primary text-white"
-                    : "bg-gray-50 text-gray-400 hover:bg-gray-100"
-                }`}
+          <AnimatePresence>
+            {(!sourceFilter || sourceFilter === "buyer") && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {c.label}
-              </button>
-            ))}
-          </div>
+                <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
+                  <span className="text-xs text-gray-400 shrink-0">色彩：</span>
+                  {COLOR_SEASONS.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setActiveColor(activeColor === c.value ? "" : c.value)}
+                      className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${
+                        activeColor === c.value
+                          ? "bg-primary text-white"
+                          : "bg-gray-50 text-gray-400 hover:bg-gray-100"
+                      }`}
+                    >
+                      {c.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </section>
 
@@ -257,6 +365,8 @@ export default function BuyerPage() {
         <div className="bg-amber-50 border-b border-amber-100">
           <div className="container mx-auto px-4 py-2 flex items-center justify-between">
             <p className="text-xs text-amber-700">
+              {sourceFilter === "platform" && "平台自营 "}
+              {sourceFilter === "buyer" && "供应商货源 "}
               {activeCategory && `品类"${CATEGORY_MAP[activeCategory] || activeCategory}" `}
               {activeStyle && `· 风格"${STYLE_OPTIONS.find(s => s.value === activeStyle)?.label}" `}
               {activeColor && `· 色彩"${COLOR_SEASONS.find(c => c.value === activeColor)?.label}" `}
@@ -292,6 +402,53 @@ export default function BuyerPage() {
         </div>
       </section>
 
+      {/* 推荐供应商 */}
+      {suppliers.length > 0 && (
+        <section className="py-8 bg-gray-50 border-b border-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Truck className="w-4 h-4 text-primary" />
+              <h3 className="text-sm font-bold text-primary">推荐供应商</h3>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {suppliers.map((s) => (
+                <div key={s.id} className="bg-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      s.level === "A" ? "bg-green-500" : s.level === "B" ? "bg-blue-500" : "bg-gray-400"
+                    }`} />
+                    <span className="text-xs font-medium text-primary">{s.name}</span>
+                  </div>
+                  <div className="flex items-center gap-1 mb-2">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-3 h-3 ${
+                          i < Math.round(s.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200"
+                        }`}
+                      />
+                    ))}
+                    <span className="text-xs text-gray-500 ml-1">{s.rating}</span>
+                  </div>
+                  {s.description && (
+                    <p className="text-xs text-gray-500 line-clamp-2">{s.description}</p>
+                  )}
+                  <div className="mt-2">
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                      s.level === "A" ? "bg-green-50 text-green-700" :
+                      s.level === "B" ? "bg-blue-50 text-blue-700" :
+                      "bg-gray-100 text-gray-500"
+                    }`}>
+                      {s.level}级供应商
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* 商品列表 */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
@@ -310,19 +467,25 @@ export default function BuyerPage() {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
               {filteredProducts.map((product, i) => (
                 <motion.div
-                  key={product.id}
+                  key={`${product.source}-${product.id}`}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.04, 0.4) }}
                 >
                   <div className="group bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-transparent hover:border-accent/30 h-full flex flex-col">
-                    <Link href={`/buyer/${product.id}`}>
-                      <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden">
+                    <Link href={product.source === "buyer" ? `/buyer/${product.id}` : `/shop/${product.id}`}>
+                      <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden relative">
                         {getImage(product) ? (
-                          <img src={getImage(product)!} alt={getName(product)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <img src={getImage(product)!} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                         ) : (
                           <TrendingUp className="w-10 h-10 text-primary/30" />
                         )}
+                        {/* 来源标签 */}
+                        <span className={`absolute top-2 left-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                          product.source === "platform" ? "bg-blue-500/90 text-white" : "bg-amber-500/90 text-white"
+                        }`}>
+                          {product.source === "platform" ? "自营" : "供应商"}
+                        </span>
                       </div>
                     </Link>
                     <div className="p-3 md:p-4 flex flex-col flex-1">
@@ -339,9 +502,9 @@ export default function BuyerPage() {
                           </span>
                         )}
                       </div>
-                      <Link href={`/buyer/${product.id}`}>
+                      <Link href={product.source === "buyer" ? `/buyer/${product.id}` : `/shop/${product.id}`}>
                         <h3 className="font-bold text-primary group-hover:text-accent transition-colors mt-1.5 line-clamp-2 text-sm md:text-base">
-                          {getName(product)}
+                          {product.title}
                         </h3>
                       </Link>
                       {product.description && (
@@ -372,8 +535,8 @@ export default function BuyerPage() {
         <PaywallModal
           isOpen={showPaywall}
           type="product"
-          title={getName(selectedProduct)}
-          description={`买手选品采购 - 请联系客服确认折扣价`}
+          title={selectedProduct.title}
+          description={`${selectedProduct.source === "platform" ? "平台自营" : "供应商货源"} · 请联系客服确认折扣价`}
           onClose={() => { setShowPaywall(false); setSelectedProduct(null); }}
         />
       )}
