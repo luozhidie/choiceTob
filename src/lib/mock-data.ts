@@ -16,14 +16,14 @@ export const COLOR_SEASONS = [
 ] as const;
 
 export const STYLE_TYPES = [
-  "少女型",
-  "优雅型",
-  "浪漫型",
-  "少年型",
-  "时尚型",
-  "古典型",
-  "自然型",
-  "戏剧型",
+  "甜美少女",
+  "法式优雅",
+  "浪漫女神",
+  "简约通勤",
+  "街头潮牌",
+  "轻奢极简",
+  "日系文艺",
+  "气场女王",
 ] as const;
 
 export const COLOR_SEASON_COLORS: Record<string, string> = {

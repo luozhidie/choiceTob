@@ -19,27 +19,23 @@ const CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }
 /* ==================== 静态数据 ==================== */
 
 const STYLE_OPTIONS = [
-  { value: "shao_nv", label: "少女型" },
-  { value: "you_ya", label: "优雅型" },
-  { value: "lang_man_f", label: "浪漫型" },
-  { value: "shao_nian_f", label: "少年型" },
-  { value: "shi_shang_f", label: "时尚型" },
-  { value: "gu_dian_f", label: "古典型" },
-  { value: "zi_ran_f", label: "自然型" },
-  { value: "xi_ju_f", label: "戏剧型" },
-];
-
-/* 用户端市场术语 —— 仅用于筛选器展示 */
-const USER_STYLE_OPTIONS = [
   { value: "shao_nv", label: "甜美少女" },
   { value: "you_ya", label: "法式优雅" },
-  { value: "lang_man_f", label: "浪漫女人味" },
+  { value: "lang_man_f", label: "浪漫女神" },
   { value: "shao_nian_f", label: "简约通勤" },
-  { value: "shi_shang_f", label: "时尚前卫" },
-  { value: "gu_dian_f", label: "经典名媛" },
-  { value: "zi_ran_f", label: "自然森系" },
-  { value: "xi_ju_f", label: "大气场" },
+  { value: "shi_shang_f", label: "街头潮牌" },
+  { value: "gu_dian_f", label: "轻奢极简" },
+  { value: "zi_ran_f", label: "日系文艺" },
+  { value: "xi_ju_f", label: "气场女王" },
+  { value: "xi_ju_m", label: "气场型男" },
+  { value: "zi_ran_m", label: "随性达人" },
+  { value: "gu_dian_m", label: "精英绅士" },
+  { value: "lang_man_m", label: "优雅先生" },
+  { value: "shi_shang_m", label: "潮流先锋" },
 ];
+
+/* 用户端市场术语 —— 仅用于筛选器展示（与STYLE_OPTIONS相同，保持一致性） */
+const USER_STYLE_OPTIONS = STYLE_OPTIONS;
 
 const COLOR_SEASONS = [
   { value: "light_warm", label: "浅暖型" },

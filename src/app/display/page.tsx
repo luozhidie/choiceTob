@@ -65,18 +65,21 @@ const DISPLAY_COLOR_TO_SEASONS: Record<string, string[]> = {
   monochrome: ["light_cool", "soft_cool", "cool_soft"],
 };
 
-/* ==================== 用户端市场术语：风格定位 ==================== */
+/* ==================== 用户端市场术语：风格定位（女士八大+男士五大） ==================== */
 const DISPLAY_STYLE_OPTIONS = [
-  { value: "minimal_commute", label: "简约通勤" },
-  { value: "french_elegant", label: "法式优雅" },
-  { value: "korean_fresh", label: "韩系清新" },
-  { value: "japanese_art", label: "日系文艺" },
-  { value: "retro_vintage", label: "复古港风" },
-  { value: "sport_casual", label: "运动休闲" },
-  { value: "luxury_minimal", label: "轻奢极简" },
-  { value: "street_trend", label: "街头潮牌" },
-  { value: "chinese_style", label: "新中式" },
-  { value: "bohemian", label: "波西米亚" },
+  { value: "shao_nv", label: "甜美少女" },
+  { value: "you_ya", label: "法式优雅" },
+  { value: "lang_man_f", label: "浪漫女神" },
+  { value: "shao_nian_f", label: "简约通勤" },
+  { value: "shi_shang_f", label: "街头潮牌" },
+  { value: "gu_dian_f", label: "轻奢极简" },
+  { value: "zi_ran_f", label: "日系文艺" },
+  { value: "xi_ju_f", label: "气场女王" },
+  { value: "xi_ju_m", label: "气场型男" },
+  { value: "zi_ran_m", label: "随性达人" },
+  { value: "gu_dian_m", label: "精英绅士" },
+  { value: "lang_man_m", label: "优雅先生" },
+  { value: "shi_shang_m", label: "潮流先锋" },
 ];
 
 /* ==================== 场景 ==================== */
@@ -190,23 +193,9 @@ export default function DisplayPage() {
       const matched = DISPLAY_COLOR_TO_SEASONS[filterUserColor];
       list = list.filter((i) => i.color_season && matched.includes(i.color_season));
     }
-    // 用户端风格筛选：映射到专业值
+    // 用户端风格筛选：直接用拼音key匹配数据库style_type
     if (filterUserStyle) {
-      // DISPLAY_STYLE_OPTIONS value 对应数据库 style_type 的映射
-      const styleMap: Record<string, string> = {
-        minimal_commute: "shao_nian_f",
-        french_elegant: "you_ya",
-        korean_fresh: "shao_nv",
-        japanese_art: "zi_ran_f",
-        retro_vintage: "xi_ju_f",
-        sport_casual: "shi_shang_f",
-        luxury_minimal: "gu_dian_f",
-        street_trend: "shi_shang_f",
-        chinese_style: "gu_dian_f",
-        bohemian: "zi_ran_f",
-      };
-      const targetType = styleMap[filterUserStyle];
-      if (targetType) list = list.filter((i) => i.style_type === targetType);
+      list = list.filter((i) => i.style_type === filterUserStyle);
     }
     if (filterScenario) list = list.filter((i) => i.scenario === filterScenario);
     if (searchTerm.trim()) {

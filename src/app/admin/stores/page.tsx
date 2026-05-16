@@ -89,16 +89,19 @@ const deliveryStatusMap: Record<string, { label: string; color: string }> = {
 
 /* ==================== 常量 ==================== */
 const STYLE_OPTIONS = [
-  { value: "minimal_commute", label: "简约通勤" },
-  { value: "french_elegant", label: "法式优雅" },
-  { value: "korean_fresh", label: "韩系清新" },
-  { value: "japanese_art", label: "日系文艺" },
-  { value: "retro_vintage", label: "复古港风" },
-  { value: "sport_casual", label: "运动休闲" },
-  { value: "luxury_minimal", label: "轻奢极简" },
-  { value: "street_trend", label: "街头潮牌" },
-  { value: "chinese_style", label: "新中式" },
-  { value: "bohemian", label: "波西米亚" },
+  { value: "shao_nv", label: "甜美少女", group: "女士八大风格" },
+  { value: "you_ya", label: "法式优雅", group: "女士八大风格" },
+  { value: "lang_man_f", label: "浪漫女神", group: "女士八大风格" },
+  { value: "shao_nian_f", label: "简约通勤", group: "女士八大风格" },
+  { value: "shi_shang_f", label: "街头潮牌", group: "女士八大风格" },
+  { value: "gu_dian_f", label: "轻奢极简", group: "女士八大风格" },
+  { value: "zi_ran_f", label: "日系文艺", group: "女士八大风格" },
+  { value: "xi_ju_f", label: "气场女王", group: "女士八大风格" },
+  { value: "xi_ju_m", label: "气场型男", group: "男士五大风格" },
+  { value: "zi_ran_m", label: "随性达人", group: "男士五大风格" },
+  { value: "gu_dian_m", label: "精英绅士", group: "男士五大风格" },
+  { value: "lang_man_m", label: "优雅先生", group: "男士五大风格" },
+  { value: "shi_shang_m", label: "潮流先锋", group: "男士五大风格" },
 ];
 
 const SHOP_SIZE_OPTIONS = ["30㎡以下", "30-50㎡", "50-80㎡", "80-120㎡", "120㎡以上"];
@@ -118,13 +121,13 @@ const COLOR_SEASON_LABELS: Record<string, string> = {
 };
 
 const STYLE_LABELS: Record<string, string> = {
+  // 女士八大风格
   shao_nv: "甜美少女", you_ya: "法式优雅", lang_man_f: "浪漫女神",
   shao_nian_f: "简约通勤", shi_shang_f: "街头潮牌", gu_dian_f: "轻奢极简",
   zi_ran_f: "日系文艺", xi_ju_f: "气场女王",
-  minimal_commute: "简约通勤", french_elegant: "法式优雅", korean_fresh: "韩系清新",
-  japanese_art: "日系文艺", retro_vintage: "复古港风", sport_casual: "运动休闲",
-  luxury_minimal: "轻奢极简", street_trend: "街头潮牌", chinese_style: "新中式",
-  bohemian: "波西米亚",
+  // 男士五大风格
+  xi_ju_m: "气场型男", zi_ran_m: "随性达人", gu_dian_m: "精英绅士",
+  lang_man_m: "优雅先生", shi_shang_m: "潮流先锋",
 };
 
 const PIE_COLORS = [
@@ -533,7 +536,7 @@ export default function StoresAdminPage() {
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">所在城市</label><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" placeholder="如：杭州" /></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">商圈/地段</label><input value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" placeholder="如：武林银泰" /></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">店铺面积</label><select value={form.shop_size} onChange={(e) => setForm({ ...form, shop_size: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{SHOP_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
-                    <div><label className="block text-xs font-medium text-gray-500 mb-1">风格定位</label><select value={form.style_position} onChange={(e) => setForm({ ...form, style_position: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{STYLE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
+                    <div><label className="block text-xs font-medium text-gray-500 mb-1">风格定位</label><select value={form.style_position} onChange={(e) => setForm({ ...form, style_position: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option><optgroup label="── 女士八大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "女士八大风格").map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</optgroup><optgroup label="── 男士五大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "男士五大风格").map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</optgroup></select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">目标年龄层</label><select value={form.target_age} onChange={(e) => setForm({ ...form, target_age: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{TARGET_AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}</select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">价格带</label><select value={form.price_range} onChange={(e) => setForm({ ...form, price_range: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{PRICE_RANGE_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}</select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">状态</label><select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">{STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>

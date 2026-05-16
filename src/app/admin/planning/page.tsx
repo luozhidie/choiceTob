@@ -35,18 +35,21 @@ const COLOR_PREFERENCES = [
   { value: "monochrome", label: "黑白极简" },
 ];
 
-/* 市场风格定位（前台用户选择 + 后台管理共用） */
+/* 市场风格定位（女士八大+男士五大） */
 const MARKET_STYLES = [
-  { value: "minimal_commute", label: "简约通勤" },
-  { value: "french_elegant", label: "法式优雅" },
-  { value: "korean_fresh", label: "韩系清新" },
-  { value: "japanese_art", label: "日系文艺" },
-  { value: "retro_vintage", label: "复古港风" },
-  { value: "sport_casual", label: "运动休闲" },
-  { value: "luxury_minimal", label: "轻奢极简" },
-  { value: "street_trend", label: "街头潮牌" },
-  { value: "chinese_style", label: "新中式" },
-  { value: "bohemian", label: "波西米亚" },
+  { value: "shao_nv", label: "甜美少女" },
+  { value: "you_ya", label: "法式优雅" },
+  { value: "lang_man_f", label: "浪漫女神" },
+  { value: "shao_nian_f", label: "简约通勤" },
+  { value: "shi_shang_f", label: "街头潮牌" },
+  { value: "gu_dian_f", label: "轻奢极简" },
+  { value: "zi_ran_f", label: "日系文艺" },
+  { value: "xi_ju_f", label: "气场女王" },
+  { value: "xi_ju_m", label: "气场型男" },
+  { value: "zi_ran_m", label: "随性达人" },
+  { value: "gu_dian_m", label: "精英绅士" },
+  { value: "lang_man_m", label: "优雅先生" },
+  { value: "shi_shang_m", label: "潮流先锋" },
 ];
 
 /* 12季色彩（仅后台管理内部标注用，用户端不展示） */
@@ -65,7 +68,7 @@ const COLOR_SEASONS_INTERNAL = [
   { value: "deep_cool", label: "深冷型（冬）" },
 ];
 
-/* 8大风格（仅后台管理内部标注用，用户端不展示） */
+/* 女士八大风格（内部标注） */
 const STYLES_INTERNAL = [
   { value: "shao_nv", label: "少女型" },
   { value: "you_ya", label: "优雅型" },
@@ -75,6 +78,15 @@ const STYLES_INTERNAL = [
   { value: "gu_dian_f", label: "古典型" },
   { value: "zi_ran_f", label: "自然型" },
   { value: "xi_ju_f", label: "戏剧型" },
+];
+
+/* 男士五大风格（内部标注） */
+const STYLES_INTERNAL_MALE = [
+  { value: "xi_ju_m", label: "戏剧型" },
+  { value: "zi_ran_m", label: "自然型" },
+  { value: "gu_dian_m", label: "古典型" },
+  { value: "lang_man_m", label: "浪漫型" },
+  { value: "shi_shang_m", label: "时尚型" },
 ];
 
 /* 统一查找标签：先匹配色系偏好/市场风格，再匹配内部色彩/风格 */
@@ -89,6 +101,7 @@ function getStyleLabel(value: string | null): string {
   if (!value) return "";
   return MARKET_STYLES.find(s => s.value === value)?.label
     || STYLES_INTERNAL.find(s => s.value === value)?.label
+    || STYLES_INTERNAL_MALE.find(s => s.value === value)?.label
     || value;
 }
 
@@ -355,13 +368,23 @@ export default function AdminPlanningPage() {
                 </label>
                 <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                   <option value="">不指定</option>
-                  <optgroup label="── 市场风格（用户端） ──">
-                    {MARKET_STYLES.map((s) => (
+                  <optgroup label="── 女士八大风格 ──">
+                    {MARKET_STYLES.filter(s => !s.value.endsWith("_m")).map((s) => (
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </optgroup>
-                  <optgroup label="── 8大风格（内部标注） ──">
+                  <optgroup label="── 男士五大风格 ──">
+                    {MARKET_STYLES.filter(s => s.value.endsWith("_m")).map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="── 女士专业术语（内部） ──">
                     {STYLES_INTERNAL.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="── 男士专业术语（内部） ──">
+                    {STYLES_INTERNAL_MALE.map((s) => (
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
                   </optgroup>

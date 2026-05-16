@@ -26,16 +26,19 @@ const COLOR_PREFERENCES = [
 ];
 
 const MARKET_STYLES = [
-  { value: "minimal_commute", label: "简约通勤" },
-  { value: "french_elegant", label: "法式优雅" },
-  { value: "korean_fresh", label: "韩系清新" },
-  { value: "japanese_art", label: "日系文艺" },
-  { value: "retro_vintage", label: "复古港风" },
-  { value: "sport_casual", label: "运动休闲" },
-  { value: "luxury_minimal", label: "轻奢极简" },
-  { value: "street_trend", label: "街头潮牌" },
-  { value: "chinese_style", label: "新中式" },
-  { value: "bohemian", label: "波西米亚" },
+  { value: "shao_nv", label: "甜美少女", group: "女士八大风格" },
+  { value: "you_ya", label: "法式优雅", group: "女士八大风格" },
+  { value: "lang_man_f", label: "浪漫女神", group: "女士八大风格" },
+  { value: "shao_nian_f", label: "简约通勤", group: "女士八大风格" },
+  { value: "shi_shang_f", label: "街头潮牌", group: "女士八大风格" },
+  { value: "gu_dian_f", label: "轻奢极简", group: "女士八大风格" },
+  { value: "zi_ran_f", label: "日系文艺", group: "女士八大风格" },
+  { value: "xi_ju_f", label: "气场女王", group: "女士八大风格" },
+  { value: "xi_ju_m", label: "气场型男", group: "男士五大风格" },
+  { value: "zi_ran_m", label: "随性达人", group: "男士五大风格" },
+  { value: "gu_dian_m", label: "精英绅士", group: "男士五大风格" },
+  { value: "lang_man_m", label: "优雅先生", group: "男士五大风格" },
+  { value: "shi_shang_m", label: "潮流先锋", group: "男士五大风格" },
 ];
 
 const PRICE_BANDS = [
@@ -149,8 +152,8 @@ export default function PlanningToolPage() {
         ],
         stylePlan: MARKET_STYLES.map((s) => ({
           style: s.label,
-          trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 9)}%`,
-          profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 9)}%`,
+          trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 12)}%`,
+          profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 12)}%`,
         })),
         productStructure: [
           { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引新客进店" },

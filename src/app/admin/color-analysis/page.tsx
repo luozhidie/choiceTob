@@ -35,25 +35,25 @@ const colorSeasons = [
   { value: "deep_cool", label: "深冷型", group: "冬", desc: "浓郁、艳丽、冷色调", examples: "纯白、深海军蓝、木莓红" },
 ];
 
-// 8大女士风格类型
+// 8大女士风格类型（专业术语 + 市场名标注）
 const femaleStyleTypes = [
-  { value: "shao_nv", label: "少女型", contour: "曲线型", size: "小版型", features: "可爱、迷糊、善良、天真", typical: "娃娃脸", styleRef: "甜美风、淑女风、日系风" },
-  { value: "you_ya", label: "优雅型", contour: "曲线型", size: "小版型", features: "小女人、温柔、妩媚、贤淑、雅致、内敛、文静", typical: "小女人味", styleRef: "通勤风、简约风、知性风" },
-  { value: "lang_man_f", label: "浪漫型", contour: "曲线型", size: "大版型", features: "大女人、成熟、性感、妖娆、有风情、华丽、双眼含情", typical: "青春期身型发育比同龄人早", styleRef: "名媛风、御姐风、复古风" },
-  { value: "shao_nian_f", label: "少年型", contour: "直线型", size: "小版型", features: "帅气、率真、清爽、古灵精怪、眉宇间有种英气", typical: "比同龄人要显年轻", styleRef: "中性风、简约风、街头风" },
-  { value: "shi_shang_f", label: "时尚型", contour: "直线型", size: "小版型", features: "个性、摩登、百变、特立独行、标新立异", typical: "没特点、可塑性强", styleRef: "街头风、潮牌风、设计师款" },
-  { value: "gu_dian_f", label: "古典型", contour: "直线型", size: "大版型", features: "贵气、稳重、端庄、上品、高贵、经典、规矩、不怒而威", typical: "八大女士风格中打扮正确最显气质", styleRef: "通勤风、职业风、简约风" },
-  { value: "zi_ran_f", label: "自然型", contour: "直线型", size: "大版型", features: "自然、潇洒、飘逸、大方、随意淳朴、有异域风情、亲切随和", typical: "视觉身高看起来比实际身高要矮", styleRef: "休闲风、森系风、棉麻风" },
-  { value: "xi_ju_f", label: "戏剧型", contour: "直线型", size: "大版型", features: "气派、夸张、醒目、张扬华丽、女王级别、视觉冲击力强、百变、有存在感", typical: "视觉身高看起来比实际身高要高", styleRef: "御姐风、名媛风、大牌风" },
+  { value: "shao_nv", label: "少女型", marketLabel: "甜美少女", contour: "曲线型", size: "小版型", features: "可爱、迷糊、善良、天真", typical: "娃娃脸", styleRef: "甜美风、淑女风、日系风" },
+  { value: "you_ya", label: "优雅型", marketLabel: "法式优雅", contour: "曲线型", size: "小版型", features: "小女人、温柔、妩媚、贤淑、雅致、内敛、文静", typical: "小女人味", styleRef: "通勤风、简约风、知性风" },
+  { value: "lang_man_f", label: "浪漫型", marketLabel: "浪漫女神", contour: "曲线型", size: "大版型", features: "大女人、成熟、性感、妖娆、有风情、华丽、双眼含情", typical: "青春期身型发育比同龄人早", styleRef: "名媛风、御姐风、复古风" },
+  { value: "shao_nian_f", label: "少年型", marketLabel: "简约通勤", contour: "直线型", size: "小版型", features: "帅气、率真、清爽、古灵精怪、眉宇间有种英气", typical: "比同龄人要显年轻", styleRef: "中性风、简约风、街头风" },
+  { value: "shi_shang_f", label: "时尚型", marketLabel: "街头潮牌", contour: "直线型", size: "小版型", features: "个性、摩登、百变、特立独行、标新立异", typical: "没特点、可塑性强", styleRef: "街头风、潮牌风、设计师款" },
+  { value: "gu_dian_f", label: "古典型", marketLabel: "轻奢极简", contour: "直线型", size: "大版型", features: "贵气、稳重、端庄、上品、高贵、经典、规矩、不怒而威", typical: "八大女士风格中打扮正确最显气质", styleRef: "通勤风、职业风、简约风" },
+  { value: "zi_ran_f", label: "自然型", marketLabel: "日系文艺", contour: "直线型", size: "大版型", features: "自然、潇洒、飘逸、大方、随意淳朴、有异域风情、亲切随和", typical: "视觉身高看起来比实际身高要矮", styleRef: "休闲风、森系风、棉麻风" },
+  { value: "xi_ju_f", label: "戏剧型", marketLabel: "气场女王", contour: "直线型", size: "大版型", features: "气派、夸张、醒目、张扬华丽、女王级别、视觉冲击力强、百变、有存在感", typical: "视觉身高看起来比实际身高要高", styleRef: "御姐风、名媛风、大牌风" },
 ];
 
-// 5大男士风格类型
+// 5大男士风格类型（专业术语 + 市场名标注）
 const maleStyleTypes = [
-  { value: "xi_ju_m", label: "戏剧型", features: "气派、华丽、张扬、国王级别、有权威感、明显的男子气概、有存在感", typical: "视觉身高看起来比实际身高要高" },
-  { value: "zi_ran_m", label: "自然型", features: "潇洒随意、简洁大气、有男人味、亲切、随和、阳刚、有朝气", typical: "视觉身高看起来比实际身高要高矮" },
-  { value: "gu_dian_m", label: "古典型", features: "严谨、稳重、端正、中规中矩、正统、高级上品、含蓄大方、严肃、四平八稳", typical: "含蓄" },
-  { value: "lang_man_m", label: "浪漫型", features: "柔美、有才情、儒雅、温柔、阴柔、花哨、华丽", typical: "穿衣范围最广的男士风格" },
-  { value: "shi_shang_m", label: "时尚型", features: "年轻有活力、有个性、有创意、灵动、多变", typical: "男士风格中最显年轻" },
+  { value: "xi_ju_m", label: "戏剧型", marketLabel: "气场型男", features: "气派、华丽、张扬、国王级别、有权威感、明显的男子气概、有存在感", typical: "视觉身高看起来比实际身高要高" },
+  { value: "zi_ran_m", label: "自然型", marketLabel: "随性达人", features: "潇洒随意、简洁大气、有男人味、亲切、随和、阳刚、有朝气", typical: "视觉身高看起来比实际身高要高矮" },
+  { value: "gu_dian_m", label: "古典型", marketLabel: "精英绅士", features: "严谨、稳重、端正、中规中矩、正统、高级上品、含蓄大方、严肃、四平八稳", typical: "含蓄" },
+  { value: "lang_man_m", label: "浪漫型", marketLabel: "优雅先生", features: "柔美、有才情、儒雅、温柔、阴柔、花哨、华丽", typical: "穿衣范围最广的男士风格" },
+  { value: "shi_shang_m", label: "时尚型", marketLabel: "潮流先锋", features: "年轻有活力、有个性、有创意、灵动、多变", typical: "男士风格中最显年轻" },
 ];
 
 // AI选品建议（根据色彩季型+风格生成）
@@ -444,6 +444,7 @@ export default function ColorAnalysisPage() {
                     >
                       <div className={`font-bold text-sm ${form.main_style === style.value ? "text-accent" : "text-primary"}`}>
                         {style.label}
+                        <span className="text-xs text-accent/70 font-normal ml-1">({style.marketLabel})</span>
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
                         {style.features}
@@ -472,7 +473,7 @@ export default function ColorAnalysisPage() {
                             : "bg-gray-50 text-gray-500 border border-transparent hover:bg-gray-100"
                         }`}
                       >
-                        {style.label}
+                        {style.label}<span className="text-accent/60 ml-0.5">·{style.marketLabel}</span>
                       </button>
                     ))}
                 </div>

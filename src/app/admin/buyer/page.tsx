@@ -37,9 +37,13 @@ interface BuyerProduct {
 }
 
 const STYLE_MAP: Record<string, string> = {
-  shao_nv: "少女型", you_ya: "优雅型", lang_man_f: "浪漫型",
-  shao_nian_f: "少年型", shi_shang_f: "时尚型", gu_dian_f: "古典型",
-  zi_ran_f: "自然型", xi_ju_f: "戏剧型",
+  // 女士八大风格
+  shao_nv: "甜美少女", you_ya: "法式优雅", lang_man_f: "浪漫女神",
+  shao_nian_f: "简约通勤", shi_shang_f: "街头潮牌", gu_dian_f: "轻奢极简",
+  zi_ran_f: "日系文艺", xi_ju_f: "气场女王",
+  // 男士五大风格
+  xi_ju_m: "气场型男", zi_ran_m: "随性达人", gu_dian_m: "精英绅士",
+  lang_man_m: "优雅先生", shi_shang_m: "潮流先锋",
 };
 
 const COLOR_MAP: Record<string, string> = {

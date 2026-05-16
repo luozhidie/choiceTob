@@ -634,7 +634,7 @@ export const FEMALE_STYLE_MARKET_MAP: Record<string, string> = {
   '戏剧型': '气场女王',
   '古典型': '轻奢极简',
   '自然型': '日系文艺',
-  '前卫型': '街头潮牌',
+  '时尚型': '街头潮牌',
 };
 
 /**
@@ -646,6 +646,19 @@ export const MALE_STYLE_MARKET_MAP: Record<string, string> = {
   '古典型': '精英绅士',
   '浪漫型': '优雅先生',
   '时尚型': '潮流先锋',
+};
+
+/**
+ * 风格Key → 市场名（统一映射，包含女士+男士）
+ */
+export const STYLE_KEY_MARKET_MAP: Record<string, string> = {
+  // 女士八大风格
+  shao_nv: '甜美少女', you_ya: '法式优雅', lang_man_f: '浪漫女神',
+  shao_nian_f: '简约通勤', shi_shang_f: '街头潮牌', gu_dian_f: '轻奢极简',
+  zi_ran_f: '日系文艺', xi_ju_f: '气场女王',
+  // 男士五大风格
+  xi_ju_m: '气场型男', zi_ran_m: '随性达人', gu_dian_m: '精英绅士',
+  lang_man_m: '优雅先生', shi_shang_m: '潮流先锋',
 };
 
 /**

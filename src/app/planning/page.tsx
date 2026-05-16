@@ -50,18 +50,21 @@ const PLAN_TYPES = [
   { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案", price: 99800 },
 ];
 
-/* ===================== 市场风格定位（用户友好的商业表达） ===================== */
+/* ===================== 市场风格定位（女士八大+男士五大） ===================== */
 const MARKET_STYLES = [
-  { value: "minimal_commute", label: "简约通勤", desc: "干练利落，适合职场" },
-  { value: "french_elegant", label: "法式优雅", desc: "浪漫精致，高级感" },
-  { value: "korean_fresh", label: "韩系清新", desc: "温柔甜美，减龄感" },
-  { value: "japanese_art", label: "日系文艺", desc: "自然随性，层次感" },
-  { value: "retro_vintage", label: "复古港风", desc: "经典怀旧，氛围感" },
-  { value: "sport_casual", label: "运动休闲", desc: "舒适活力，年轻化" },
-  { value: "luxury_minimal", label: "轻奢极简", desc: "低调奢华，品质感" },
-  { value: "street_trend", label: "街头潮牌", desc: "个性张扬，潮流感" },
-  { value: "chinese_style", label: "新中式", desc: "传统现代，东方美学" },
-  { value: "bohemian", label: "波西米亚", desc: "自由浪漫，异域风" },
+  { value: "shao_nv", label: "甜美少女", desc: "可爱、甜美、减龄" },
+  { value: "you_ya", label: "法式优雅", desc: "温柔、精致、高级感" },
+  { value: "lang_man_f", label: "浪漫女神", desc: "成熟、华丽、有风情" },
+  { value: "shao_nian_f", label: "简约通勤", desc: "帅气、率真、干练" },
+  { value: "shi_shang_f", label: "街头潮牌", desc: "个性、摩登、百变" },
+  { value: "gu_dian_f", label: "轻奢极简", desc: "端庄、贵气、上品" },
+  { value: "zi_ran_f", label: "日系文艺", desc: "随性、大方、飘逸" },
+  { value: "xi_ju_f", label: "气场女王", desc: "夸张、华丽、有存在感" },
+  { value: "xi_ju_m", label: "气场型男", desc: "气派、张扬、有权威感" },
+  { value: "zi_ran_m", label: "随性达人", desc: "潇洒、阳刚、有朝气" },
+  { value: "gu_dian_m", label: "精英绅士", desc: "严谨、端正、含蓄大方" },
+  { value: "lang_man_m", label: "优雅先生", desc: "儒雅、温柔、有才情" },
+  { value: "shi_shang_m", label: "潮流先锋", desc: "年轻、个性、有创意" },
 ];
 
 /* ===================== 色系偏好 ===================== */

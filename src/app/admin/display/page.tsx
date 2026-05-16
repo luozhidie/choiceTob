@@ -53,14 +53,19 @@ const COLOR_SEASONS = [
 ];
 
 const STYLES = [
-  { value: "shao_nv", label: "少女型" },
-  { value: "you_ya", label: "优雅型" },
-  { value: "lang_man_f", label: "浪漫型" },
-  { value: "shao_nian_f", label: "少年型" },
-  { value: "shi_shang_f", label: "时尚型" },
-  { value: "gu_dian_f", label: "古典型" },
-  { value: "zi_ran_f", label: "自然型" },
-  { value: "xi_ju_f", label: "戏剧型" },
+  { value: "shao_nv", label: "甜美少女" },
+  { value: "you_ya", label: "法式优雅" },
+  { value: "lang_man_f", label: "浪漫女神" },
+  { value: "shao_nian_f", label: "简约通勤" },
+  { value: "shi_shang_f", label: "街头潮牌" },
+  { value: "gu_dian_f", label: "轻奢极简" },
+  { value: "zi_ran_f", label: "日系文艺" },
+  { value: "xi_ju_f", label: "气场女王" },
+  { value: "xi_ju_m", label: "气场型男" },
+  { value: "zi_ran_m", label: "随性达人" },
+  { value: "gu_dian_m", label: "精英绅士" },
+  { value: "lang_man_m", label: "优雅先生" },
+  { value: "shi_shang_m", label: "潮流先锋" },
 ];
 
 export default function AdminDisplayPage() {
