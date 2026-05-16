@@ -188,6 +188,22 @@ export default function PlanningPage() {
       return;
     }
 
+    // Level 1 自动化：同步到客户档案（vip_customers）
+    if (createForm.contact_phone) {
+      try {
+        await supabase.rpc("upsert_customer_from_planning", {
+          p_name: createForm.brand_name || createForm.contact_phone,
+          p_phone: createForm.contact_phone,
+          p_company: createForm.brand_name || null,
+          p_color_season: createForm.color_pref || null,
+          p_style_type: createForm.market_style || null,
+          p_source: "planning_order",
+        });
+      } catch (syncErr) {
+        console.error("客户档案同步失败（不影响订单）:", syncErr);
+      }
+    }
+
     setSubmitted(true);
     setSubmitting(false);
   };

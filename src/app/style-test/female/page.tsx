@@ -136,6 +136,7 @@ export default function FemaleStyleTestPage() {
     }
     setSavingLead(true);
     try {
+      // 1. 写入线索表（leads）
       await supabase.from("leads").insert([
         {
           name: leadForm.name.trim(),
@@ -145,6 +146,17 @@ export default function FemaleStyleTestPage() {
           interest: resultStyle?.name || "",
         },
       ]);
+
+      // 2. 自动同步到客户档案（vip_customers）— Level 1 自动化
+      await supabase.rpc("upsert_customer_from_test", {
+        p_name: leadForm.name.trim(),
+        p_phone: leadForm.phone.trim(),
+        p_wechat: leadForm.wechat.trim() || null,
+        p_gender: "female",
+        p_main_style: resultStyle?.name || null,
+        p_source: "female_style_test",
+      });
+
       setLeadSubmitted(true);
     } catch (error: any) {
       console.error("留资失败:", error);
