@@ -13,7 +13,7 @@ import {
   ShoppingCart, Star, Info, Layers, Maximize2,
 } from "lucide-react";
 
-/* ===================== 色彩季型 ===================== */
+/* ==================== 色彩季型（后台专业，保留）=================== */
 const COLOR_SEASONS = [
   { value: "light_warm", label: "浅暖型", group: "春" },
   { value: "warm_bright", label: "暖亮型", group: "春" },
@@ -29,7 +29,7 @@ const COLOR_SEASONS = [
   { value: "deep_cool", label: "深冷型", group: "冬" },
 ];
 
-/* ===================== 风格类型 ===================== */
+/* ==================== 风格类型（后台专业，保留）=================== */
 const STYLES = [
   { value: "shao_nv", label: "少女型" },
   { value: "you_ya", label: "优雅型" },
@@ -41,7 +41,45 @@ const STYLES = [
   { value: "shao_nian_f", label: "少年型" },
 ];
 
-/* ===================== 场景 ===================== */
+/* ==================== 用户端市场术语：色彩偏好 ==================== */
+const DISPLAY_COLOR_OPTIONS = [
+  { value: "warm", label: "暖色系" },
+  { value: "cool", label: "冷色系" },
+  { value: "neutral", label: "中性色" },
+  { value: "morandi", label: "莫兰迪" },
+  { value: "earth", label: "大地色" },
+  { value: "pastel", label: "马卡龙" },
+  { value: "vintage", label: "复古色" },
+  { value: "monochrome", label: "黑白极简" },
+];
+
+/* 色彩偏好 → 12季型映射（用于筛选）*/
+const DISPLAY_COLOR_TO_SEASONS: Record<string, string[]> = {
+  warm: ["light_warm", "warm_bright", "clear_warm"],
+  cool: ["light_cool", "soft_cool", "cool_soft"],
+  neutral: ["warm_soft", "soft_warm"],
+  morandi: ["soft_cool", "warm_soft", "soft_warm"],
+  earth: ["deep_warm", "warm_soft", "soft_warm"],
+  pastel: ["light_warm", "light_cool"],
+  vintage: ["deep_warm", "deep_cool", "warm_bright"],
+  monochrome: ["light_cool", "soft_cool", "cool_soft"],
+};
+
+/* ==================== 用户端市场术语：风格定位 ==================== */
+const DISPLAY_STYLE_OPTIONS = [
+  { value: "minimal_commute", label: "简约通勤" },
+  { value: "french_elegant", label: "法式优雅" },
+  { value: "korean_fresh", label: "韩系清新" },
+  { value: "japanese_art", label: "日系文艺" },
+  { value: "retro_vintage", label: "复古港风" },
+  { value: "sport_casual", label: "运动休闲" },
+  { value: "luxury_minimal", label: "轻奢极简" },
+  { value: "street_trend", label: "街头潮牌" },
+  { value: "chinese_style", label: "新中式" },
+  { value: "bohemian", label: "波西米亚" },
+];
+
+/* ==================== 场景 ==================== */
 const SCENARIOS = [
   { value: "workplace", label: "职场通勤" },
   { value: "date", label: "周末约会" },
@@ -50,14 +88,14 @@ const SCENARIOS = [
   { value: "vacation", label: "度假旅行" },
 ];
 
-/* ===================== 陈列分类 ===================== */
+/* ==================== 陈列分类 ==================== */
 const DISPLAY_SECTIONS = [
   { value: "styles", label: "风格陈列", icon: Shirt, desc: "按风格类型分区陈列" },
   { value: "scenarios", label: "场景搭配", icon: LayoutGrid, desc: "场景化搭配推荐" },
   { value: "layouts", label: "门店布局", icon: Ruler, desc: "科学规划门店分区" },
 ];
 
-/* ===================== 接口 ===================== */
+/* ==================== 接口 ==================== */
 interface DisplayItem {
   id: string;
   sort_order: number;
@@ -84,7 +122,7 @@ interface ProductItem {
   style_type: string | null;
 }
 
-/* ===================== 动画 ===================== */
+/* ==================== 动画 ==================== */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number = 0) => ({
@@ -94,20 +132,23 @@ const fadeUp = {
 };
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 
-/* ===================== 页面 ===================== */
+/* ==================== 页面 ==================== */
 export default function DisplayPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [items, setItems] = useState<DisplayItem[]>([]);
   const [recommendProducts, setRecommendProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 筛选
-  const [activeSection, setActiveSection] = useState("styles");
+  // 筛选（专业值，用于实际过滤）
   const [filterColor, setFilterColor] = useState("");
   const [filterStyle, setFilterStyle] = useState("");
   const [filterScenario, setFilterScenario] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // 用户端市场术语筛选
+  const [filterUserColor, setFilterUserColor] = useState("");
+  const [filterUserStyle, setFilterUserStyle] = useState("");
 
   // 灯箱
   const [lightboxItem, setLightboxItem] = useState<DisplayItem | null>(null);
@@ -115,6 +156,9 @@ export default function DisplayPage() {
 
   // 收藏
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+
+  // 当前陈列分类
+  const [activeSection, setActiveSection] = useState("styles");
 
   const supabase = createClient();
 
@@ -138,8 +182,32 @@ export default function DisplayPage() {
   // 按分类筛选
   const filteredItems = useMemo(() => {
     let list = items.filter((i) => i.section === activeSection);
+    // 专业筛选（直接匹配数据库字段）
     if (filterColor) list = list.filter((i) => i.color_season === filterColor);
     if (filterStyle) list = list.filter((i) => i.style_type === filterStyle);
+    // 用户端市场术语筛选（映射后匹配）
+    if (filterUserColor && DISPLAY_COLOR_TO_SEASONS[filterUserColor]) {
+      const matched = DISPLAY_COLOR_TO_SEASONS[filterUserColor];
+      list = list.filter((i) => i.color_season && matched.includes(i.color_season));
+    }
+    // 用户端风格筛选：映射到专业值
+    if (filterUserStyle) {
+      // DISPLAY_STYLE_OPTIONS value 对应数据库 style_type 的映射
+      const styleMap: Record<string, string> = {
+        minimal_commute: "shao_nian_f",
+        french_elegant: "you_ya",
+        korean_fresh: "shao_nv",
+        japanese_art: "zi_ran_f",
+        retro_vintage: "xi_ju_f",
+        sport_casual: "shi_shang_f",
+        luxury_minimal: "gu_dian_f",
+        street_trend: "shi_shang_f",
+        chinese_style: "gu_dian_f",
+        bohemian: "zi_ran_f",
+      };
+      const targetType = styleMap[filterUserStyle];
+      if (targetType) list = list.filter((i) => i.style_type === targetType);
+    }
     if (filterScenario) list = list.filter((i) => i.scenario === filterScenario);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
@@ -148,9 +216,8 @@ export default function DisplayPage() {
       );
     }
     return list;
-  }, [items, activeSection, filterColor, filterStyle, filterScenario, searchTerm]);
+  }, [items, activeSection, filterColor, filterStyle, filterUserColor, filterUserStyle, filterScenario, searchTerm]);
 
-  // 灯箱导航
   const openLightbox = (item: DisplayItem) => {
     const idx = filteredItems.findIndex((i) => i.id === item.id);
     setLightboxItem(item);
@@ -174,9 +241,23 @@ export default function DisplayPage() {
   };
 
   const clearFilters = () => {
-    setFilterColor(""); setFilterStyle(""); setFilterScenario(""); setSearchTerm("");
+    setFilterColor(""); setFilterStyle(""); setFilterUserColor(""); setFilterUserStyle("");
+    setFilterScenario(""); setSearchTerm("");
   };
-  const hasFilter = filterColor || filterStyle || filterScenario || searchTerm;
+
+  const hasFilter = filterColor || filterStyle || filterUserColor || filterUserStyle || filterScenario || searchTerm;
+
+  // 当前筛选提示文字
+  const getFilterLabel = () => {
+    if (filterUserStyle) return DISPLAY_STYLE_OPTIONS.find(s => s.value === filterUserStyle)?.label || "";
+    if (filterStyle) return STYLES.find(s => s.value === filterStyle)?.label || "";
+    return "";
+  };
+  const getColorLabel = () => {
+    if (filterUserColor) return DISPLAY_COLOR_OPTIONS.find(c => c.value === filterUserColor)?.label || "";
+    if (filterColor) return COLOR_SEASONS.find(c => c.value === filterColor)?.label || "";
+    return "";
+  };
 
   return (
     <>
@@ -189,111 +270,75 @@ export default function DisplayPage() {
       />
 
       {/* 灯箱 */}
-      <AnimatePresence>
-        {lightboxItem && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <AnimatePresence mode="wait">
+        {lightboxItem && !showPaywall && (
+          <motion.div
+            key="display-lightbox"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setLightboxItem(null)} />
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-sm"
-              onClick={() => setLightboxItem(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className="relative max-w-5xl w-full mx-4"
-              onClick={(e) => e.stopPropagation()}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-6xl"
             >
               {/* 关闭按钮 */}
               <button
                 onClick={() => setLightboxItem(null)}
-                className="absolute -top-12 right-0 p-2 text-white/60 hover:text-white transition-colors"
+                className="absolute -top-12 right-0 text-white hover:text-accent transition-colors z-10"
               >
-                <X className="w-6 h-6" />
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
 
               {/* 主图 */}
-              <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-black">
-                {lightboxItem.image_url ? (
-                  <img src={lightboxItem.image_url} alt={lightboxItem.title} className="w-full h-full object-contain" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <LayoutGrid className="w-16 h-16 text-white/20" />
-                  </div>
-                )}
-                {/* 左右导航 */}
-                {filteredItems.length > 1 && (
-                  <>
-                    <button
-                      onClick={() => navigateLightbox("prev")}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5 text-white rotate-180" />
-                    </button>
-                    <button
-                      onClick={() => navigateLightbox("next")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-sm transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5 text-white" />
-                    </button>
-                  </>
-                )}
-                {/* 图片计数 */}
-                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/50 rounded-full text-xs text-white/80 backdrop-blur-sm">
-                  {lightboxIndex + 1} / {filteredItems.length}
+              {lightboxItem.image_url && (
+                <div className="relative aspect-[16/9] bg-black rounded-xl overflow-hidden">
+                  <img
+                    src={lightboxItem.image_url}
+                    alt={`${lightboxItem.title} - 图片${lightboxIndex + 1}`}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
-              </div>
+              )}
 
-              {/* 信息栏 */}
-              <div className="mt-4 bg-white/10 backdrop-blur-md rounded-xl p-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{lightboxItem.title}</h3>
-                    {lightboxItem.description && (
-                      <p className="mt-1 text-sm text-white/70">{lightboxItem.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      {lightboxItem.color_season && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-primary/80 text-white">
-                          {COLOR_SEASONS.find(c => c.value === lightboxItem.color_season)?.label || lightboxItem.color_season}
-                        </span>
-                      )}
-                      {lightboxItem.style_type && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-accent/80 text-white">
-                          {STYLES.find(s => s.value === lightboxItem.style_type)?.label || lightboxItem.style_type}
-                        </span>
-                      )}
-                      {lightboxItem.scenario && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-white/20 text-white">
-                          {SCENARIOS.find(s => s.value === lightboxItem.scenario)?.label || lightboxItem.scenario}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleFavorite(lightboxItem.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        favorites.has(lightboxItem.id)
-                          ? "bg-red-500/20 text-red-400"
-                          : "bg-white/10 text-white/60 hover:text-white"
-                      }`}
-                    >
-                      <Heart className={`w-5 h-5 ${favorites.has(lightboxItem.id) ? "fill-red-400" : ""}`} />
-                    </button>
-                    <button
-                      onClick={() => setShowPaywall(true)}
-                      className="px-4 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-                    >
-                      获取完整方案
-                    </button>
-                  </div>
+              {/* 标题与描述 */}
+              <div className="mt-6 text-white">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center px-3 py-1 bg-primary/80 text-white text-xs font-medium rounded-full">
+                    {lightboxItem.section === "styles" ? "风格陈列" : lightboxItem.section === "scenarios" ? "场景搭配" : "门店布局"}
+                  </span>
+                </div>
+                <h2 className="text-2xl font-bold">{lightboxItem.title}</h2>
+                {lightboxItem.description && (
+                  <p className="mt-3 text-white/80 leading-relaxed whitespace-pre-wrap">{lightboxItem.description}</p>
+                )}
+                {/* 专业标签（后台显示）*/}
+                <div className="flex items-center gap-2 mt-3 flex-wrap">
+                  {lightboxItem.color_season && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/20 text-white/90">
+                      {COLOR_SEASONS.find(c => c.value === lightboxItem.color_season)?.label || lightboxItem.color_season}
+                    </span>
+                  )}
+                  {lightboxItem.style_type && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/20 text-white/90">
+                      {STYLES.find(s => s.value === lightboxItem.style_type)?.label || lightboxItem.style_type}
+                    </span>
+                  )}
+                  {lightboxItem.scenario && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-white/90">
+                      {SCENARIOS.find(s => s.value === lightboxItem.scenario)?.label || lightboxItem.scenario}
+                    </span>
+                  )}
                 </div>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
 
@@ -301,8 +346,7 @@ export default function DisplayPage() {
       <nav className="bg-muted/60 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
-            <Home className="w-4 h-4" />
-            首页
+            <Home className="w-4 h-4" /> 首页
           </Link>
           <ChevronRight className="w-3.5 h-3.5" />
           <span className="text-primary font-medium">陈列搭配</span>
@@ -335,7 +379,7 @@ export default function DisplayPage() {
         </div>
       </section>
 
-      {/* ====== 三大陈列分区 Tab ====== */}
+      {/* ====== 陈列分类 Tab ====== */}
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1 py-3 overflow-x-auto">
@@ -344,7 +388,7 @@ export default function DisplayPage() {
                 key={sec.value}
                 onClick={() => { setActiveSection(sec.value); clearFilters(); }}
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap ${
-                  activeSection === sec.value ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"
+                  activeSection === sec.value ? "bg-primary text-white" : "text-gray-700 hover:bg-primary/5"
                 }`}
               >
                 <sec.icon className="w-4 h-4" />
@@ -360,14 +404,14 @@ export default function DisplayPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center gap-3">
             {/* 搜索 */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="搜索陈列案例..."
-                className="pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-44"
+                className="pl-9 pr-8 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-full"
               />
               {searchTerm && (
                 <button onClick={() => setSearchTerm("")} className="absolute right-2.5 top-1/2 -translate-y-1/2">
@@ -376,26 +420,26 @@ export default function DisplayPage() {
               )}
             </div>
 
-            {/* 色彩季型 */}
+            {/* 用户端色彩偏好 */}
             <select
-              value={filterColor}
-              onChange={(e) => setFilterColor(e.target.value)}
+              value={filterUserColor}
+              onChange={(e) => { setFilterUserColor(e.target.value); setFilterColor(""); }}
               className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="">全部色彩</option>
-              {COLOR_SEASONS.map((c) => (
-                <option key={c.value} value={c.value}>{c.group}·{c.label}</option>
+              {DISPLAY_COLOR_OPTIONS.map((c) => (
+                <option key={c.value} value={c.value}>{c.label}</option>
               ))}
             </select>
 
-            {/* 风格 */}
+            {/* 用户端风格定位 */}
             <select
-              value={filterStyle}
-              onChange={(e) => setFilterStyle(e.target.value)}
+              value={filterUserStyle}
+              onChange={(e) => { setFilterUserStyle(e.target.value); setFilterStyle(""); }}
               className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20"
             >
               <option value="">全部风格</option>
-              {STYLES.map((s) => (
+              {DISPLAY_STYLE_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
             </select>
@@ -440,23 +484,10 @@ export default function DisplayPage() {
 
           {/* 筛选提示 */}
           {hasFilter && (
-            <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
               <span>找到 {filteredItems.length} 个案例</span>
-              {filterColor && (
-                <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                  {COLOR_SEASONS.find(c => c.value === filterColor)?.label}
-                </span>
-              )}
-              {filterStyle && (
-                <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
-                  {STYLES.find(s => s.value === filterStyle)?.label}
-                </span>
-              )}
-              {filterScenario && (
-                <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                  {SCENARIOS.find(s => s.value === filterScenario)?.label}
-                </span>
-              )}
+              {getColorLabel() && <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">{getColorLabel()}</span>}
+              {getFilterLabel() && <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">{getFilterLabel()}</span>}
             </div>
           )}
         </div>
@@ -478,9 +509,8 @@ export default function DisplayPage() {
               </p>
             </div>
           ) : viewMode === "grid" ? (
-            /* 网格视图 */
             <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
               initial="hidden"
               animate="visible"
               variants={stagger}
@@ -498,7 +528,7 @@ export default function DisplayPage() {
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <LayoutGrid className="w-10 h-10 text-gray-300" />
+                        <LayoutGrid className="w-10 h-10 text-primary/30" />
                       </div>
                     )}
                     {/* 渐变遮罩 */}
@@ -526,22 +556,30 @@ export default function DisplayPage() {
                         </button>
                       </div>
                     </div>
-                    {/* 底部信息 */}
-                    <div className="absolute bottom-0 left-0 right-0 p-4">
-                      <h4 className="text-base font-bold text-white line-clamp-1">{item.title}</h4>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        {item.color_season && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white">
-                            {COLOR_SEASONS.find(c => c.value === item.color_season)?.label || item.color_season}
-                          </span>
-                        )}
-                        {item.style_type && (
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/60 text-white">
-                            {STYLES.find(s => s.value === item.style_type)?.label || item.style_type}
-                          </span>
-                        )}
-                      </div>
+                    {/* 底部标签 */}
+                    <div className="absolute bottom-3 left-3 flex gap-1 flex-wrap">
+                      {item.color_season && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/20 text-white">
+                          {COLOR_SEASONS.find(c => c.value === item.color_season)?.label || item.color_season}
+                        </span>
+                      )}
+                      {item.style_type && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/60 text-white">
+                          {STYLES.find(s => s.value === item.style_type)?.label || item.style_type}
+                        </span>
+                      )}
                     </div>
+                  </div>
+                  {/* 信息 */}
+                  <div className="p-4">
+                    <h4 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-2">
+                      {item.title}
+                    </h4>
+                    {item.description && (
+                      <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -555,7 +593,7 @@ export default function DisplayPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.05, 0.3) }}
-                  className="group flex gap-5 p-4 bg-white rounded-xl border border-gray-100 hover:border-accent/30 hover:shadow-lg transition-all duration-300 cursor-pointer"
+                  className="group flex gap-5 p-4 bg-white rounded-2xl border border-gray-100 hover:border-accent/30 hover:shadow-lg transition-all duration-300 cursor-pointer"
                   onClick={() => openLightbox(item)}
                 >
                   {/* 缩略图 */}
@@ -564,7 +602,7 @@ export default function DisplayPage() {
                       <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <LayoutGrid className="w-8 h-8 text-gray-300" />
+                        <LayoutGrid className="w-8 h-8 text-primary/30" />
                       </div>
                     )}
                   </div>
@@ -574,7 +612,7 @@ export default function DisplayPage() {
                     {item.description && (
                       <p className="text-sm text-muted-foreground mt-1.5 line-clamp-3">{item.description}</p>
                     )}
-                    <div className="flex items-center gap-2 mt-auto pt-3">
+                    <div className="flex items-center gap-2 mt-auto pt-3 flex-wrap">
                       {item.color_season && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
                           {COLOR_SEASONS.find(c => c.value === item.color_season)?.label || item.color_season}
@@ -654,7 +692,7 @@ export default function DisplayPage() {
       )}
 
       {/* ====== 陈列优化五步法 ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
+      <section className="py-16 lg:py-24 bg-muted/50">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-14"
@@ -692,14 +730,9 @@ export default function DisplayPage() {
                     </div>
                     {i < 4 && <div className="w-0.5 h-6 bg-gray-200" />}
                   </div>
-                  <div className="flex items-start gap-3 flex-1">
-                    <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-accent/10 text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-colors">
-                      <item.icon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-primary group-hover:text-accent transition-colors">{item.title}</h3>
-                      <p className="mt-0.5 text-sm text-muted-foreground">{item.desc}</p>
-                    </div>
+                  <div>
+                    <h3 className="font-bold text-primary group-hover:text-accent transition-colors">{item.title}</h3>
+                    <p className="mt-0.5 text-sm text-muted-foreground">{item.desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -721,23 +754,25 @@ export default function DisplayPage() {
             <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
             <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold">预约陈列诊断</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold">
+                掌握前沿趋势
+              </h2>
               <p className="mt-4 text-white/80 max-w-xl mx-auto leading-relaxed">
-                专业陈列顾问团队上门诊断，基于色彩季型与风格数据，为您定制专属陈列优化方案
+                从色彩预测到款式解读，全面把握下一季流行方向
               </p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/contact"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                 >
-                  预约陈列诊断
+                  咨询趋势报告
                   <ChevronRight className="w-5 h-5" />
                 </Link>
                 <Link
-                  href="/buyer"
+                  href="/magazine"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
                 >
-                  了解选品服务
+                  浏览杂志文章
                   <ArrowRight className="w-5 h-5" />
                 </Link>
               </div>

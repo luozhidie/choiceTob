@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { maleTestConfig, calculateMaleResult } from "@/lib/style-test-data";
+import { maleTestConfig, calculateMaleResult, getMarketStyleName } from "@/lib/style-test-data";
 import type { StyleResult } from "@/lib/style-test-data";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -468,7 +468,7 @@ export default function MaleStyleTestPage() {
                   transition={{ delay: 0.3, type: "spring" }}
                   className="text-3xl md:text-4xl font-bold"
                 >
-                  {resultStyle.name}
+                  {getMarketStyleName(resultStyle.name, 'male')}
                 </motion.h2>
               </div>
 

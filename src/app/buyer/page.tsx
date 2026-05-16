@@ -11,9 +11,12 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PaywallModal } from "@/components/PaywallModal";
-import { CATEGORY_MAP, SUBCATEGORY_MAP } from "@/lib/categories";
+import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 
-/* ===================== 静态数据 ===================== */
+/* ==================== 品类选项（从 categories 派生）==================== */
+const CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
+
+/* ==================== 静态数据 ==================== */
 
 const STYLE_OPTIONS = [
   { value: "shao_nv", label: "少女型" },
@@ -24,6 +27,18 @@ const STYLE_OPTIONS = [
   { value: "gu_dian_f", label: "古典型" },
   { value: "zi_ran_f", label: "自然型" },
   { value: "xi_ju_f", label: "戏剧型" },
+];
+
+/* 用户端市场术语 —— 仅用于筛选器展示 */
+const USER_STYLE_OPTIONS = [
+  { value: "shao_nv", label: "甜美少女" },
+  { value: "you_ya", label: "法式优雅" },
+  { value: "lang_man_f", label: "浪漫女人味" },
+  { value: "shao_nian_f", label: "简约通勤" },
+  { value: "shi_shang_f", label: "时尚前卫" },
+  { value: "gu_dian_f", label: "经典名媛" },
+  { value: "zi_ran_f", label: "自然森系" },
+  { value: "xi_ju_f", label: "大气场" },
 ];
 
 const COLOR_SEASONS = [
@@ -40,6 +55,30 @@ const COLOR_SEASONS = [
   { value: "cool_bright", label: "冷亮型" },
   { value: "deep_cool", label: "深冷型" },
 ];
+
+/* 用户端色彩偏好 —— 仅用于筛选器展示 */
+const USER_COLOR_OPTIONS = [
+  { value: "warm", label: "暖色系" },
+  { value: "cool", label: "冷色系" },
+  { value: "neutral", label: "中性色" },
+  { value: "morandi", label: "莫兰迪" },
+  { value: "earth", label: "大地色" },
+  { value: "pastel", label: "马卡龙" },
+  { value: "vintage", label: "复古色" },
+  { value: "monochrome", label: "黑白极简" },
+];
+
+/* 色彩偏好 → 12季型映射（用于筛选） */
+const COLOR_PREF_TO_SEASONS: Record<string, string[]> = {
+  warm: ["light_warm", "warm_bright", "clear_warm"],
+  cool: ["light_cool", "soft_cool", "cool_soft"],
+  neutral: ["warm_soft", "soft_warm"],
+  morandi: ["soft_cool", "warm_soft", "soft_warm"],
+  earth: ["deep_warm", "warm_soft", "soft_warm"],
+  pastel: ["light_warm", "light_cool"],
+  vintage: ["deep_warm", "deep_cool", "warm_bright"],
+  monochrome: ["light_cool", "soft_cool", "cool_soft"],
+};
 
 // 供应商入驻标准
 const entryStandards = [
@@ -72,7 +111,7 @@ const supplierLevels = [
   },
 ];
 
-/* ===================== 动画 ===================== */
+/* ==================== 动画 ==================== */
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number = 0) => ({
@@ -82,7 +121,7 @@ const fadeUp = {
 };
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 
-/* ===================== 类型 ===================== */
+/* ==================== 类型 ==================== */
 interface MergedProduct {
   id: string; title: string; description: string | null;
   cover_image: string | null; price: number; original_price: number | null;
@@ -103,7 +142,7 @@ interface HotPick {
   is_published: boolean;
 }
 
-/* ===================== 页面 ===================== */
+/* ==================== 页面 ==================== */
 export default function BuyerPage() {
   const [allProducts, setAllProducts] = useState<MergedProduct[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -111,8 +150,12 @@ export default function BuyerPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("");
+  /* 专业筛选（后台级，保留）*/
   const [activeStyle, setActiveStyle] = useState("");
   const [activeColor, setActiveColor] = useState("");
+  /* 用户端市场术语筛选 */
+  const [activeUserStyle, setActiveUserStyle] = useState("");
+  const [activeUserColor, setActiveUserColor] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
   const [sortBy, setSortBy] = useState("sort_order");
   const [showPaywall, setShowPaywall] = useState(false);
@@ -164,29 +207,26 @@ export default function BuyerPage() {
     setLoading(false);
   };
 
-  // 只保留服装和配饰
-  const CATEGORY_OPTIONS = [
-    { value: "clothing", label: "服装" },
-    { value: "accessory", label: "配饰" },
-  ];
-
   const filteredProducts = useMemo(() => {
     let list = [...allProducts];
-    // 默认只显示服装和配饰
     list = list.filter((p) => p.category === "clothing" || p.category === "accessory");
-
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
       list = list.filter((p) => p.title.toLowerCase().includes(kw) || (p.description || "").toLowerCase().includes(kw));
     }
     if (activeCategory) list = list.filter((p) => p.category === activeCategory);
-    if (activeStyle && sourceFilter !== "platform") list = list.filter((p) => p.style_type === activeStyle);
-    if (activeColor && sourceFilter !== "platform") list = list.filter((p) => p.color_season === activeColor);
+    /* 用户端风格筛选：直接匹配 style_type */
+    if (activeUserStyle) list = list.filter((p) => p.style_type === activeUserStyle);
+    /* 用户端色彩偏好筛选：映射到多个 color_season */
+    if (activeUserColor && COLOR_PREF_TO_SEASONS[activeUserColor]) {
+      const matchedSeasons = COLOR_PREF_TO_SEASONS[activeUserColor];
+      list = list.filter((p) => p.color_season && matchedSeasons.includes(p.color_season));
+    }
     if (sortBy === "price_asc") list.sort((a, b) => a.price - b.price);
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
-  }, [allProducts, searchTerm, activeCategory, activeStyle, activeColor, sourceFilter, sortBy]);
+  }, [allProducts, searchTerm, activeCategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
   const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowPaywall(true); };
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
@@ -194,14 +234,25 @@ export default function BuyerPage() {
 
   const clearFilters = () => {
     setSearchTerm(""); setActiveCategory(""); setActiveStyle(""); setActiveColor("");
+    setActiveUserStyle(""); setActiveUserColor("");
     setSourceFilter(""); setSortBy("sort_order");
   };
-  const hasActiveFilter = activeCategory || activeStyle || activeColor || sourceFilter || sortBy !== "sort_order";
+  const hasActiveFilter = activeCategory || activeUserStyle || activeUserColor || sourceFilter || searchTerm || sortBy !== "sort_order";
 
   const handleSupplierSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);
+  };
+
+  /* 当前用户端筛选的 label 显示 */
+  const getActiveStyleLabel = () => {
+    if (!activeUserStyle) return "";
+    return USER_STYLE_OPTIONS.find(s => s.value === activeUserStyle)?.label || activeUserStyle;
+  };
+  const getActiveColorLabel = () => {
+    if (!activeUserColor) return "";
+    return USER_COLOR_OPTIONS.find(c => c.value === activeUserColor)?.label || activeUserColor;
   };
 
   return (
@@ -264,23 +315,25 @@ export default function BuyerPage() {
               </select>
             </div>
           </div>
+
+          {/* 用户端风格 + 色彩筛选器 */}
           <AnimatePresence>
             {(!sourceFilter || sourceFilter === "buyer") && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                 <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide">
                   <span className="text-xs text-gray-400 shrink-0">风格：</span>
-                  {STYLE_OPTIONS.map((s) => (
-                    <button key={s.value} onClick={() => setActiveStyle(activeStyle === s.value ? "" : s.value)}
-                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${activeStyle === s.value ? "bg-accent text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                  {USER_STYLE_OPTIONS.map((s) => (
+                    <button key={s.value} onClick={() => setActiveUserStyle(activeUserStyle === s.value ? "" : s.value)}
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors ${activeUserStyle === s.value ? "bg-accent text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
                       {s.label}
                     </button>
                   ))}
                 </div>
                 <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
                   <span className="text-xs text-gray-400 shrink-0">色彩：</span>
-                  {COLOR_SEASONS.map((c) => (
-                    <button key={c.value} onClick={() => setActiveColor(activeColor === c.value ? "" : c.value)}
-                      className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${activeColor === c.value ? "bg-primary text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}>
+                  {USER_COLOR_OPTIONS.map((c) => (
+                    <button key={c.value} onClick={() => setActiveUserColor(activeUserColor === c.value ? "" : c.value)}
+                      className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${activeUserColor === c.value ? "bg-primary text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}>
                       {c.label}
                     </button>
                   ))}
@@ -298,9 +351,9 @@ export default function BuyerPage() {
             <p className="text-xs text-amber-700">
               {sourceFilter === "platform" && "平台自营 "}
               {sourceFilter === "buyer" && "供应商货源 "}
-              {activeCategory && `品类"${CATEGORY_MAP[activeCategory] || activeCategory}" `}
-              {activeStyle && `· 风格"${STYLE_OPTIONS.find(s => s.value === activeStyle)?.label}" `}
-              {activeColor && `· 色彩"${COLOR_SEASONS.find(c => c.value === activeColor)?.label}" `}
+              {activeCategory && `品类"${CATEGORY_MAP[activeCategory] || activeCategory} `}
+              {activeUserStyle && `· 风格"${getActiveStyleLabel()} `}
+              {activeUserColor && `· 色彩"${getActiveColorLabel()} `}
               <span className="font-medium">（{filteredProducts.length} 件）</span>
             </p>
             <button onClick={clearFilters} className="text-xs text-amber-600 hover:text-amber-800 font-medium">清除筛选</button>
@@ -469,7 +522,7 @@ export default function BuyerPage() {
                       <p className="text-[10px] text-muted-foreground">{item.threshold}</p>
                     </div>
                   </div>
-                  <ul className="space-y-2 mt-4">
+                  <ul className="space-y-2">
                     {item.benefits.map((b) => (
                       <li key={b} className="flex items-start gap-2">
                         <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />

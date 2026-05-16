@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { femaleTestConfig, calculateFemaleResult } from "@/lib/style-test-data";
+import { femaleTestConfig, calculateFemaleResult, getMarketStyleName } from "@/lib/style-test-data";
 import type { StyleResult } from "@/lib/style-test-data";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -409,7 +409,7 @@ export default function FemaleStyleTestPage() {
                   transition={{ delay: 0.3, type: "spring" }}
                   className="text-3xl md:text-4xl font-bold"
                 >
-                  {resultStyle.name}
+                  {getMarketStyleName(resultStyle.name, 'female')}
                 </motion.h2>
               </div>
 

@@ -620,6 +620,42 @@ export const femaleTestConfig: FemaleTestConfig = {
   results: femaleResults,
 };
 
+// ==================== 用户端市场术语映射 ====================
+
+/**
+ * 女士专业风格名 → 用户端市场名
+ * 用户端展示市场名，后台保留专业名
+ */
+export const FEMALE_STYLE_MARKET_MAP: Record<string, string> = {
+  '少女型': '甜美少女',
+  '少年型': '简约通勤',
+  '优雅型': '法式优雅',
+  '浪漫型': '浪漫女神',
+  '戏剧型': '气场女王',
+  '古典型': '轻奢极简',
+  '自然型': '日系文艺',
+  '前卫型': '街头潮牌',
+};
+
+/**
+ * 男士专业风格名 → 用户端市场名
+ */
+export const MALE_STYLE_MARKET_MAP: Record<string, string> = {
+  '戏剧型': '气场型男',
+  '自然型': '随性达人',
+  '古典型': '精英绅士',
+  '浪漫型': '优雅先生',
+  '时尚型': '潮流先锋',
+};
+
+/**
+ * 将专业风格名转换为用户端市场名
+ */
+export function getMarketStyleName(professionalName: string, gender: 'male' | 'female'): string {
+  const map = gender === 'female' ? FEMALE_STYLE_MARKET_MAP : MALE_STYLE_MARKET_MAP;
+  return map[professionalName] || professionalName;
+}
+
 // ==================== 计算函数 ====================
 
 const MALE_STYLE_KEYS = ['A', 'B', 'C', 'D', 'E'] as const;
