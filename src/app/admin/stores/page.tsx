@@ -9,7 +9,7 @@ import {
   DollarSign, BarChart3, ShoppingCart, ArrowRight,
   ChevronRight, Home, Loader2, Phone, User,
   RefreshCw, ExternalLink, Package, CheckCircle2,
-  Clock, Lightbulb, LayoutGrid, FileText,
+  Clock, Lightbulb, LayoutGrid, FileText, Palette,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -121,13 +121,18 @@ const COLOR_SEASON_LABELS: Record<string, string> = {
 };
 
 const STYLE_LABELS: Record<string, string> = {
-  // 女士八大风格
+  // 女士八大风格（拼音key）
   shao_nv: "甜美少女", you_ya: "法式优雅", lang_man_f: "浪漫女神",
   shao_nian_f: "简约通勤", shi_shang_f: "街头潮牌", gu_dian_f: "轻奢极简",
   zi_ran_f: "日系文艺", xi_ju_f: "气场女王",
-  // 男士五大风格
+  // 男士五大风格（拼音key）
   xi_ju_m: "气场型男", zi_ran_m: "随性达人", gu_dian_m: "精英绅士",
   lang_man_m: "优雅先生", shi_shang_m: "潮流先锋",
+  // 旧英文key兼容（数据库历史数据）
+  minimal_commute: "简约通勤", french_elegant: "法式优雅", korean_fresh: "韩系清新",
+  japanese_art: "日系文艺", retro_vintage: "复古港风", sport_casual: "运动休闲",
+  luxury_minimal: "轻奢极简", street_trend: "街头潮牌", chinese_style: "新中式",
+  bohemian: "波西米亚",
 };
 
 const PIE_COLORS = [
@@ -610,12 +615,13 @@ export default function StoresAdminPage() {
 
               <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
                 {/* 基本信息卡片 */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
                   {[
                     { icon: Ruler, label: "面积", value: detailStore.shop_size },
                     { icon: UsersIcon, label: "年龄层", value: detailStore.target_age },
                     { icon: DollarSign, label: "价格带", value: detailStore.price_range },
                     { icon: Phone, label: "电话", value: detailStore.phone },
+                    { icon: Palette, label: "风格定位", value: detailStore.style_position ? (STYLE_LABELS[detailStore.style_position] || detailStore.style_position) : null },
                   ].map((item) => (
                     <div key={item.label} className="bg-muted/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><item.icon className="w-3 h-3" />{item.label}</div>
