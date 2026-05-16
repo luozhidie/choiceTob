@@ -29,7 +29,14 @@ interface VipCustomer {
   vip_level: string;
   notes: string;
   is_active: boolean;
+  store_id: string | null;
   created_at: string;
+}
+
+interface StoreOption {
+  id: string;
+  name: string;
+  city: string | null;
 }
 
 const COLOR_SEASONS = [
@@ -63,6 +70,7 @@ const emptyForm = {
   vip_level: "V1",
   notes: "",
   is_active: true,
+  store_id: "" as string,
 };
 
 export default function AdminCustomersPage() {
@@ -77,22 +85,30 @@ export default function AdminCustomersPage() {
   const [filterMainStyle, setFilterMainStyle] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [storeOptions, setStoreOptions] = useState<StoreOption[]>([]);
+  const [filterStore, setFilterStore] = useState("");
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     checkUser();
+    fetchStores();
   }, []);
 
   useEffect(() => {
     fetchCustomers();
-  }, [currentPage, searchQuery, filterVipLevel, filterColorSeason, filterMainStyle]);
+  }, [currentPage, searchQuery, filterVipLevel, filterColorSeason, filterMainStyle, filterStore]);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       router.push("/admin/login");
     }
+  };
+
+  const fetchStores = async () => {
+    const { data } = await supabase.from("stores").select("id, name, city").eq("status", "active").order("name");
+    if (data) setStoreOptions(data as StoreOption[]);
   };
 
   const fetchCustomers = async () => {
@@ -117,6 +133,9 @@ export default function AdminCustomersPage() {
     if (filterMainStyle) {
       query = query.eq("main_style", filterMainStyle);
     }
+    if (filterStore) {
+      query = query.eq("store_id", filterStore);
+    }
 
     const { data, error, count } = await query.range(from, to);
 
@@ -134,10 +153,12 @@ export default function AdminCustomersPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const submitData = { ...formData, store_id: formData.store_id || null };
+
     if (editingCustomer) {
       const { error } = await supabase
         .from("vip_customers")
-        .update(formData)
+        .update(submitData)
         .eq("id", editingCustomer.id);
 
       if (error) {
@@ -147,12 +168,17 @@ export default function AdminCustomersPage() {
     } else {
       const { error } = await supabase
         .from("vip_customers")
-        .insert([formData]);
+        .insert([submitData]);
 
       if (error) {
         alert("创建失败：" + error.message);
         return;
       }
+    }
+
+    // 刷新关联店铺的聚合统计
+    if (submitData.store_id) {
+      await supabase.rpc("refresh_store_member_stats", { p_store_id: submitData.store_id });
     }
 
     closeModal();
@@ -173,6 +199,7 @@ export default function AdminCustomersPage() {
       vip_level: customer.vip_level || "V1",
       notes: customer.notes || "",
       is_active: customer.is_active,
+      store_id: customer.store_id || "",
     });
     setShowModal(true);
   };
@@ -290,6 +317,16 @@ export default function AdminCustomersPage() {
               <option key={s} value={s}>{s}</option>
             ))}
           </select>
+          <select
+            value={filterStore}
+            onChange={(e) => { setFilterStore(e.target.value); setCurrentPage(1); }}
+            className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+          >
+            <option value="">全部店铺</option>
+            {storeOptions.map(s => (
+              <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -315,6 +352,7 @@ export default function AdminCustomersPage() {
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">手机号</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">微信</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">所属企业</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">所属店铺</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">性别</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">色彩季型</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">主风格</th>
@@ -330,6 +368,7 @@ export default function AdminCustomersPage() {
                       <td className="px-4 py-3 text-sm text-muted-foreground">{customer.phone || "-"}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">{customer.wechat || "-"}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">{customer.company || "-"}</td>
+                      <td className="px-4 py-3 text-sm">{customer.store_id ? (storeOptions.find(s => s.id === customer.store_id)?.name || customer.store_id) : "-"}</td>
                       <td className="px-4 py-3 text-sm">{customer.gender || "-"}</td>
                       <td className="px-4 py-3 text-sm">{customer.color_season || "-"}</td>
                       <td className="px-4 py-3 text-sm">{customer.main_style || "-"}</td>
@@ -446,6 +485,17 @@ export default function AdminCustomersPage() {
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">所属企业/店铺</label>
                   <input type="text" value={formData.company} onChange={(e) => setFormData({ ...formData, company: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="企业或店铺名称" />
+                </div>
+
+                {/* Store */}
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">关联店铺</label>
+                  <select value={formData.store_id} onChange={(e) => setFormData({ ...formData, store_id: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
+                    <option value="">未关联店铺</option>
+                    {storeOptions.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* VIP Level */}

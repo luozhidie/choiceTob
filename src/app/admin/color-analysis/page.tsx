@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Save,
@@ -146,12 +146,19 @@ export default function ColorAnalysisPage() {
     main_style: "",
     sub_style: "",
     notes: "",
+    store_id: "" as string,
   });
   const [saving, setSaving] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null }[]>([]);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    supabase.from("stores").select("id, name, city").eq("status", "active").order("name")
+      .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
+  }, []);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -165,37 +172,18 @@ export default function ColorAnalysisPage() {
     }
     setSaving(true);
     try {
-      // 1. 保存/更新 VIP 客户
-      const { data: existingCustomer } = await supabase
-        .from("vip_customers")
-        .select("id")
-        .eq("phone", form.customer_phone.trim())
-        .maybeSingle();
-
-      if (existingCustomer) {
-        await supabase
-          .from("vip_customers")
-          .update({
-            color_season: form.color_season || null,
-            main_style: form.main_style || null,
-            sub_style: form.sub_style || null,
-            notes: form.notes || null,
-          })
-          .eq("id", existingCustomer.id);
-      } else {
-        await supabase.from("vip_customers").insert([
-          {
-            name: form.customer_name.trim(),
-            phone: form.customer_phone.trim() || null,
-            wechat: form.customer_wechat.trim() || null,
-            gender: form.gender,
-            color_season: form.color_season || null,
-            main_style: form.main_style || null,
-            sub_style: form.sub_style || null,
-            notes: form.notes || null,
-          },
-        ]);
-      }
+      // 1. 使用 RPC 保存/更新 VIP 客户（带店铺关联+自动聚合刷新）
+      await supabase.rpc("upsert_customer_with_store", {
+        p_name: form.customer_name.trim(),
+        p_phone: form.customer_phone.trim() || null,
+        p_wechat: form.customer_wechat.trim() || null,
+        p_gender: form.gender,
+        p_color_season: form.color_season || null,
+        p_main_style: form.main_style || null,
+        p_company: null,
+        p_store_id: form.store_id || null,
+        p_source: "manual_color_analysis",
+      });
 
       // 2. 保存风格测试结果（manual source）
       if (form.color_season || form.main_style) {
@@ -213,7 +201,7 @@ export default function ColorAnalysisPage() {
         ]);
       }
 
-      showToast("success", "客户色彩数据已保存！");
+      showToast("success", form.store_id ? "客户色彩数据已保存，店铺聚合统计已更新！" : "客户色彩数据已保存！");
       if (form.color_season) {
         setShowResult(true);
       }
@@ -376,6 +364,20 @@ export default function ColorAnalysisPage() {
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="微信号"
                 />
+              </div>
+              {/* Store Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">关联店铺</label>
+                <select
+                  value={form.store_id}
+                  onChange={(e) => setForm({ ...form, store_id: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="">未关联店铺</option>
+                  {storeOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
