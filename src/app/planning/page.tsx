@@ -15,29 +15,29 @@ import {
 
 /* ===================== 12季色彩（仅案例模板筛选用） ===================== */
 const COLOR_SEASONS = [
-  { value: "light_warm", label: "浅暖型", group: "春" },
-  { value: "warm_bright", label: "暖亮型", group: "春" },
-  { value: "clear_warm", label: "净暖型", group: "春" },
-  { value: "light_cool", label: "浅冷型", group: "夏" },
-  { value: "soft_cool", label: "柔冷型", group: "夏" },
-  { value: "cool_soft", label: "冷柔型", group: "夏" },
-  { value: "warm_soft", label: "暖柔型", group: "秋" },
-  { value: "soft_warm", label: "柔暖型", group: "秋" },
-  { value: "deep_warm", label: "深暖型", group: "秋" },
-  { value: "clear_cool", label: "净冷型", group: "冬" },
-  { value: "cool_bright", label: "冷亮型", group: "冬" },
-  { value: "deep_cool", label: "深冷型", group: "冬" },
+  { value: "light_warm", label: "樱花粉", group: "春" },
+  { value: "warm_bright", label: "珊瑚橘", group: "春" },
+  { value: "clear_warm", label: "柠檬黄", group: "春" },
+  { value: "light_cool", label: "天空蓝", group: "夏" },
+  { value: "soft_cool", label: "薰衣草", group: "夏" },
+  { value: "cool_soft", label: "薄荷绿", group: "夏" },
+  { value: "warm_soft", label: "焦糖棕", group: "秋" },
+  { value: "soft_warm", label: "枫叶红", group: "秋" },
+  { value: "deep_warm", label: "酒红色", group: "秋" },
+  { value: "clear_cool", label: "宝石蓝", group: "冬" },
+  { value: "cool_bright", label: "银白色", group: "冬" },
+  { value: "deep_cool", label: "墨黑色", group: "冬" },
 ];
 
 const STYLES = [
-  { value: "shao_nv", label: "少女型" },
-  { value: "you_ya", label: "优雅型" },
-  { value: "lang_man_f", label: "浪漫型" },
-  { value: "shao_nian_f", label: "少年型" },
-  { value: "shi_shang_f", label: "时尚型" },
-  { value: "gu_dian_f", label: "古典型" },
-  { value: "zi_ran_f", label: "自然型" },
-  { value: "xi_ju_f", label: "戏剧型" },
+  { value: "shao_nv", label: "甜美少女" },
+  { value: "you_ya", label: "法式优雅" },
+  { value: "lang_man_f", label: "浪漫女神" },
+  { value: "shao_nian_f", label: "简约通勤" },
+  { value: "shi_shang_f", label: "街头潮牌" },
+  { value: "gu_dian_f", label: "轻奢极简" },
+  { value: "zi_ran_f", label: "日系文艺" },
+  { value: "xi_ju_f", label: "气场女王" },
 ];
 
 /* ===================== 企划分类 ===================== */
