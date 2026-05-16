@@ -432,8 +432,8 @@ export default function PlanningToolPage() {
 
                 <div className="flex justify-end pt-4">
                   <button
-                    onClick={() => formData.brandName.trim() && setStep(2)}
-                    disabled={!formData.brandName.trim() || !formData.colorPref || !formData.marketStyle}
+                    onClick={handleGenerate}
+                    disabled={!formData.brandName.trim() || !formData.colorPref || !formData.marketStyle || generating}
                     className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                   >
                     生成企划初稿
