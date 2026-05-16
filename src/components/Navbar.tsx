@@ -2,16 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronRight, TrendingUp } from "lucide-react";
+import { Menu, X, ChevronRight } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
   { label: "风格测试", href: "/style-test" },
   { label: "线上课程", href: "/courses" },
-  { label: "精选好物", href: "/shop" },
   { label: "买手选品", href: "/buyer" },
   { label: "商品企划", href: "/planning" },
-  { label: "爆款货盘", href: "/hot-picks" },
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
   { label: "销售服务", href: "/sales" },

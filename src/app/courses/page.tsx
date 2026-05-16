@@ -25,6 +25,9 @@ const categoryMap: Record<string, string> = {
   styling: "搭配技巧",
   wardrobe: "衣橱管理",
   image: "形象提升",
+  color_tools: "色彩工具",
+  book: "书籍资料",
+  pro_tool: "专业工具",
 };
 
 const levelMap: Record<string, string> = {
@@ -102,6 +105,9 @@ export default function CoursesPage() {
               <option value="styling">搭配技巧</option>
               <option value="wardrobe">衣橱管理</option>
               <option value="image">形象提升</option>
+              <option value="color_tools">色彩工具</option>
+              <option value="book">书籍资料</option>
+              <option value="pro_tool">专业工具</option>
             </select>
             <select
               value={filterLevel}
