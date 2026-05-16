@@ -23,22 +23,50 @@ interface PlanningReport {
 
 const categories = ["商品结构", "风格企划", "色彩企划", "价格带企划", "季度企划", "全案企划"];
 
-const COLOR_SEASONS = [
-  { value: "light_warm", label: "浅暖型" },
-  { value: "warm_bright", label: "暖亮型" },
-  { value: "clear_warm", label: "净暖型" },
-  { value: "light_cool", label: "浅冷型" },
-  { value: "soft_cool", label: "柔冷型" },
-  { value: "cool_soft", label: "冷柔型" },
-  { value: "warm_soft", label: "暖柔型" },
-  { value: "soft_warm", label: "柔暖型" },
-  { value: "deep_warm", label: "深暖型" },
-  { value: "clear_cool", label: "净冷型" },
-  { value: "cool_bright", label: "冷亮型" },
-  { value: "deep_cool", label: "深冷型" },
+/* 色系偏好（前台用户选择 + 后台管理共用） */
+const COLOR_PREFERENCES = [
+  { value: "warm", label: "暖色系" },
+  { value: "cool", label: "冷色系" },
+  { value: "neutral", label: "中性色" },
+  { value: "morandi", label: "莫兰迪色系" },
+  { value: "earth", label: "大地色系" },
+  { value: "pastel", label: "马卡龙色系" },
+  { value: "vintage", label: "复古色系" },
+  { value: "monochrome", label: "黑白极简" },
 ];
 
-const STYLES = [
+/* 市场风格定位（前台用户选择 + 后台管理共用） */
+const MARKET_STYLES = [
+  { value: "minimal_commute", label: "简约通勤" },
+  { value: "french_elegant", label: "法式优雅" },
+  { value: "korean_fresh", label: "韩系清新" },
+  { value: "japanese_art", label: "日系文艺" },
+  { value: "retro_vintage", label: "复古港风" },
+  { value: "sport_casual", label: "运动休闲" },
+  { value: "luxury_minimal", label: "轻奢极简" },
+  { value: "street_trend", label: "街头潮牌" },
+  { value: "chinese_style", label: "新中式" },
+  { value: "bohemian", label: "波西米亚" },
+];
+
+/* 12季色彩（仅后台管理内部标注用，用户端不展示） */
+const COLOR_SEASONS_INTERNAL = [
+  { value: "light_warm", label: "浅暖型（春）" },
+  { value: "warm_bright", label: "暖亮型（春）" },
+  { value: "clear_warm", label: "净暖型（春）" },
+  { value: "light_cool", label: "浅冷型（夏）" },
+  { value: "soft_cool", label: "柔冷型（夏）" },
+  { value: "cool_soft", label: "冷柔型（夏）" },
+  { value: "warm_soft", label: "暖柔型（秋）" },
+  { value: "soft_warm", label: "柔暖型（秋）" },
+  { value: "deep_warm", label: "深暖型（秋）" },
+  { value: "clear_cool", label: "净冷型（冬）" },
+  { value: "cool_bright", label: "冷亮型（冬）" },
+  { value: "deep_cool", label: "深冷型（冬）" },
+];
+
+/* 8大风格（仅后台管理内部标注用，用户端不展示） */
+const STYLES_INTERNAL = [
   { value: "shao_nv", label: "少女型" },
   { value: "you_ya", label: "优雅型" },
   { value: "lang_man_f", label: "浪漫型" },
@@ -48,6 +76,21 @@ const STYLES = [
   { value: "zi_ran_f", label: "自然型" },
   { value: "xi_ju_f", label: "戏剧型" },
 ];
+
+/* 统一查找标签：先匹配色系偏好/市场风格，再匹配内部色彩/风格 */
+function getColorLabel(value: string | null): string {
+  if (!value) return "";
+  return COLOR_PREFERENCES.find(c => c.value === value)?.label
+    || COLOR_SEASONS_INTERNAL.find(c => c.value === value)?.label
+    || value;
+}
+
+function getStyleLabel(value: string | null): string {
+  if (!value) return "";
+  return MARKET_STYLES.find(s => s.value === value)?.label
+    || STYLES_INTERNAL.find(s => s.value === value)?.label
+    || value;
+}
 
 export default function AdminPlanningPage() {
   const [reports, setReports] = useState<PlanningReport[]>([]);
@@ -200,7 +243,7 @@ export default function AdminPlanningPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">图片</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">标题</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">分类</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">色彩/风格</th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">色系/风格</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">模板</th>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
@@ -226,12 +269,12 @@ export default function AdminPlanningPage() {
                     <div className="flex items-center gap-1">
                       {report.color_season && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
-                          {COLOR_SEASONS.find(c => c.value === report.color_season)?.label || report.color_season}
+                          {getColorLabel(report.color_season)}
                         </span>
                       )}
                       {report.style_type && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
-                          {STYLES.find(s => s.value === report.style_type)?.label || report.style_type}
+                          {getStyleLabel(report.style_type)}
                         </span>
                       )}
                     </div>
@@ -283,25 +326,46 @@ export default function AdminPlanningPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-2">色彩季型</label>
-                  <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
-                    <option value="">不指定</option>
-                    {COLOR_SEASONS.map((c) => (
+              {/* 色系偏好（用户端展示用） */}
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">
+                  色系偏好
+                  <span className="text-xs text-muted-foreground ml-2">（用户端展示）</span>
+                </label>
+                <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                  <option value="">不指定</option>
+                  <optgroup label="── 色系偏好（用户端） ──">
+                    {COLOR_PREFERENCES.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-2">风格类型</label>
-                  <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
-                    <option value="">不指定</option>
-                    {STYLES.map((s) => (
+                  </optgroup>
+                  <optgroup label="── 色彩季型（内部标注） ──">
+                    {COLOR_SEASONS_INTERNAL.map((c) => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* 市场风格定位（用户端展示用） */}
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">
+                  风格定位
+                  <span className="text-xs text-muted-foreground ml-2">（用户端展示）</span>
+                </label>
+                <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+                  <option value="">不指定</option>
+                  <optgroup label="── 市场风格（用户端） ──">
+                    {MARKET_STYLES.map((s) => (
                       <option key={s.value} value={s.value}>{s.label}</option>
                     ))}
-                  </select>
-                </div>
+                  </optgroup>
+                  <optgroup label="── 8大风格（内部标注） ──">
+                    {STYLES_INTERNAL.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </optgroup>
+                </select>
               </div>
 
               <div>
