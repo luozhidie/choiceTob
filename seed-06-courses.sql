@@ -1,0 +1,6 @@
+-- 6. 线上课程 courses
+INSERT INTO courses (title, description, cover_image, price, is_free, category, level, duration_minutes, content, is_published, sort_order) VALUES
+('CMB色彩诊断入门', '12季型理论+真人案例解析', 'https://images.unsplash.com/photo-1525909002-1b05e0c869d8?w=600&h=400&fit=crop', 9800, false, 'cmb_color', 'beginner', 120, '课程大纲：1)色彩基础 2)12季型体系 3)肤色诊断 4)季型配色 5)案例解析', true, 1),
+('服装店搭配技巧实战', '从单品到整套，快速搭配高转化造型', 'https://images.unsplash.com/photo-1558618047-f4b511c9d107?w=600&h=400&fit=crop', 12800, false, 'styling', 'intermediate', 180, '课程大纲：1)风格诊断回顾 2)单品属性分析 3)搭配层次 4)场景方案 5)档案管理', true, 2),
+('高效衣橱管理术', '建立精简高效衣橱体系', 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=600&h=400&fit=crop', 6800, false, 'wardrobe', 'beginner', 90, '课程大纲：1)衣橱诊断 2)基础趋势款配比 3)色彩衣橱 4)断舍离 5)维护更新', true, 3),
+('B端买手选品方法论', '系统化买手选品全流程', 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop', 19800, false, 'image', 'advanced', 240, '课程大纲：1)市场趋势 2)客户画像 3)供应商评估 4)利润率计算 5)库存优化', true, 4);

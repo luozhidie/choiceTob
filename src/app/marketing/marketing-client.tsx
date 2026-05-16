@@ -38,6 +38,9 @@ import {
   Bell,
   AlertTriangle,
   UserCheck,
+  Store,
+  BarChart3,
+  Palette,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -127,6 +130,16 @@ const diagnosisDimensions = [
   { title: "营销节奏", desc: "促销策略与渠道覆盖" },
   { title: "库存健康", desc: "周转与补货效率" },
   { title: "竞品对比", desc: "差异化定位建议" },
+];
+
+/* 店铺服务交付流程 */
+const storeServiceSteps = [
+  { icon: Eye, title: "店铺诊断", desc: "全面采集店铺经营数据，深度分析定位与客群" },
+  { icon: Palette, title: "会员测试", desc: "逐一为核心会员测试色彩季型与个人风格" },
+  { icon: BarChart3, title: "数据分析", desc: "聚合会员画像，洞察色彩与风格分布规律" },
+  { icon: PenTool, title: "商品企划", desc: "基于数据驱动，精准组货，差异化选品" },
+  { icon: Package, title: "方案交付", desc: "选品、陈列、企划全套方案落地交付" },
+  { icon: RefreshCw, title: "持续跟踪", desc: "定期复盘优化，确保方案持续产生价值" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -382,6 +395,63 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
               {serviceImages.length > 0 ? serviceImages.map((item, i) => renderImageCard(item, i)) : renderEmpty("服务包案例")}
             </motion.div>
           )}
+        </div>
+      </section>
+
+      {/* 店铺级服务交付 */}
+      <section className="py-16 lg:py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Store-Level Service</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">店铺级服务交付系统</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">不是一份报告，而是一套能让你服务客户、让客户营利的持续交付系统。以核心会员为根基，以数据为驱动，帮每一家店铺找到差异化竞争力。</p>
+          </motion.div>
+
+          {/* 核心理念 */}
+          <motion.div className="bg-gradient-to-br from-primary to-primary/80 rounded-3xl p-8 sm:p-12 text-white mb-12" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center"><Store className="w-6 h-6" /></div>
+              <h3 className="text-2xl font-bold">以店铺为单位，以会员为核心</h3>
+            </div>
+            <p className="text-white/80 leading-relaxed max-w-3xl">
+              当下市场供过于求，唯有精准定位核心会员需求，才能稳住店铺发展。我们通过逐一测试会员色彩季型与风格，
+              统计店铺会员画像分布，结合经营数据，为每一家店铺定制差异化的商品企划方案——让选品有数据支撑，让经营有方向指引。
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+              {[
+                { value: "色彩季型", desc: "精准匹配颜色偏好" },
+                { value: "风格画像", desc: "锁定面料剪裁图案" },
+                { value: "数据企划", desc: "差异化组货选品" },
+                { value: "持续交付", desc: "不止报告的闭环" },
+              ].map((item) => (
+                <div key={item.value} className="bg-white/10 rounded-xl p-4 text-center backdrop-blur-sm">
+                  <div className="text-lg font-bold">{item.value}</div>
+                  <div className="text-xs text-white/70 mt-1">{item.desc}</div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* 服务流程 */}
+          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {storeServiceSteps.map((item, i) => (
+              <motion.div key={item.title} variants={fadeUp} custom={i}>
+                <div className="group relative flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300">
+                  <div className="absolute top-6 right-6 text-5xl font-bold text-gray-100 group-hover:text-accent/10 transition-colors">0{i + 1}</div>
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent/10 group-hover:text-accent transition-colors"><item.icon className="w-6 h-6" /></div>
+                  <h3 className="mt-5 text-lg font-bold text-primary">{item.title}</h3>
+                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">{item.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* CTA */}
+          <motion.div className="text-center mt-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+            <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
+              咨询店铺服务 <ArrowRight className="w-5 h-5" />
+            </Link>
+          </motion.div>
         </div>
       </section>
     </>

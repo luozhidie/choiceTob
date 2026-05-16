@@ -8,7 +8,8 @@ import {
   MapPin, Ruler, Users as UsersIcon, TrendingUp,
   DollarSign, BarChart3, ShoppingCart, ArrowRight,
   ChevronRight, Home, Loader2, Phone, User,
-  RefreshCw, ExternalLink,
+  RefreshCw, ExternalLink, Package, CheckCircle2,
+  Clock, Lightbulb, LayoutGrid, FileText,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -48,6 +49,43 @@ interface VipCustomer {
   is_active: boolean;
   last_test_at: string | null;
 }
+
+interface DeliveryPlan {
+  id: string;
+  customer_name: string;
+  service_type: string;
+  title: string;
+  description: string | null;
+  status: string;
+  price: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/* 服务阶段 */
+const SERVICE_STAGES = [
+  { key: "diagnosis", label: "诊断", desc: "店铺信息录入", icon: Eye },
+  { key: "test", label: "测试", desc: "会员色彩/风格测试", icon: Clock },
+  { key: "analysis", label: "分析", desc: "聚合统计分析", icon: BarChart3 },
+  { key: "planning", label: "企划", desc: "商品企划方案", icon: Lightbulb },
+  { key: "delivery", label: "交付", desc: "方案交付确认", icon: Package },
+  { key: "tracking", label: "跟踪", desc: "持续跟踪服务", icon: CheckCircle2 },
+];
+
+/* 交付方案服务类型映射 */
+const serviceTypeMap: Record<string, { label: string; icon: typeof Package; color: string }> = {
+  select: { label: "选品方案", icon: Package, color: "text-blue-600 bg-blue-50" },
+  display: { label: "陈列方案", icon: LayoutGrid, color: "text-purple-600 bg-purple-50" },
+  planning: { label: "企划方案", icon: Lightbulb, color: "text-amber-600 bg-amber-50" },
+  full: { label: "全案服务", icon: CheckCircle2, color: "text-green-600 bg-green-50" },
+};
+
+const deliveryStatusMap: Record<string, { label: string; color: string }> = {
+  draft: { label: "草稿", color: "bg-gray-100 text-gray-600" },
+  in_progress: { label: "进行中", color: "bg-amber-50 text-amber-600" },
+  delivered: { label: "已交付", color: "bg-blue-50 text-blue-600" },
+  confirmed: { label: "已确认", color: "bg-green-50 text-green-600" },
+};
 
 /* ==================== 常量 ==================== */
 const STYLE_OPTIONS = [
@@ -109,6 +147,7 @@ export default function StoresAdminPage() {
   const [editingStore, setEditingStore] = useState<StoreType | null>(null);
   const [detailStore, setDetailStore] = useState<StoreType | null>(null);
   const [detailMembers, setDetailMembers] = useState<VipCustomer[]>([]);
+  const [detailDeliveries, setDetailDeliveries] = useState<DeliveryPlan[]>([]);
   const [detailLoading, setDetailLoading] = useState(false);
 
   /* 表单数据 */
@@ -205,9 +244,58 @@ export default function StoresAdminPage() {
   const openDetail = async (store: StoreType) => {
     setDetailStore(store);
     setDetailLoading(true);
-    const { data } = await supabase.from("vip_customers").select("*").eq("store_id", store.id).order("created_at", { ascending: false });
-    setDetailMembers((data || []) as VipCustomer[]);
+    const [membersRes, deliveriesRes] = await Promise.all([
+      supabase.from("vip_customers").select("*").eq("store_id", store.id).order("created_at", { ascending: false }),
+      supabase.from("delivery_plans").select("*").eq("store_id", store.id).order("created_at", { ascending: false }),
+    ]);
+    setDetailMembers((membersRes.data || []) as VipCustomer[]);
+    setDetailDeliveries((deliveriesRes.data || []) as DeliveryPlan[]);
     setDetailLoading(false);
+  };
+
+  /* 计算服务进度 */
+  const getServiceProgress = (store: StoreType, members: VipCustomer[], deliveries: DeliveryPlan[]) => {
+    const stages = SERVICE_STAGES.map((stage) => ({ ...stage, completed: false, active: false }));
+
+    // 诊断：店铺有基本信息
+    if (store.city || store.shop_size || store.style_position) {
+      stages[0].completed = true;
+    }
+
+    // 测试：有会员已测试色彩季型或风格
+    const testedMembers = members.filter((m) => m.color_season || m.main_style);
+    if (testedMembers.length > 0) {
+      stages[1].completed = true;
+    }
+
+    // 分析：聚合统计有数据
+    const stats = store.member_stats || {};
+    if (stats.tested_vip_count && stats.tested_vip_count > 0) {
+      stages[2].completed = true;
+    }
+
+    // 企划：有交付方案
+    if (deliveries.length > 0) {
+      stages[3].completed = true;
+    }
+
+    // 交付：有已交付或已确认的方案
+    if (deliveries.some((d) => d.status === "delivered" || d.status === "confirmed")) {
+      stages[4].completed = true;
+    }
+
+    // 跟踪：有已确认的方案
+    if (deliveries.some((d) => d.status === "confirmed")) {
+      stages[5].completed = true;
+    }
+
+    // 标记当前活跃阶段
+    const currentIdx = stages.findIndex((s) => !s.completed);
+    if (currentIdx >= 0) {
+      stages[currentIdx].active = true;
+    }
+
+    return stages;
   };
 
   /* 经营数据字段定义 */
@@ -567,6 +655,119 @@ export default function StoresAdminPage() {
                 <div>
                   <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><BarChart3 className="w-4 h-4 text-accent" />会员色彩/风格聚合统计</h4>
                   {renderMemberStatsCharts(detailStore)}
+                </div>
+
+                {/* 服务交付进度 */}
+                {(() => {
+                  const progress = getServiceProgress(detailStore, detailMembers, detailDeliveries);
+                  const completedCount = progress.filter((s) => s.completed).length;
+                  const progressPercent = Math.round((completedCount / progress.length) * 100);
+                  const activeStage = progress.find((s) => s.active);
+                  return (
+                    <div>
+                      <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><ArrowRight className="w-4 h-4 text-accent" />服务交付进度</h4>
+                      <div className="bg-muted/30 rounded-xl p-5">
+                        {/* 进度条 */}
+                        <div className="flex items-center justify-between mb-4">
+                          <span className="text-sm font-medium text-primary">整体进度 {progressPercent}%</span>
+                          {activeStage && (
+                            <span className="text-xs text-accent font-medium">当前阶段：{activeStage.label} — {activeStage.desc}</span>
+                          )}
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-5">
+                          <div className="bg-accent rounded-full h-2.5 transition-all duration-500" style={{ width: `${progressPercent}%` }} />
+                        </div>
+
+                        {/* 阶段节点 */}
+                        <div className="flex items-start justify-between gap-1">
+                          {progress.map((stage, i) => (
+                            <div key={stage.key} className="flex flex-col items-center flex-1">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all ${
+                                stage.completed ? "bg-accent border-accent text-white" :
+                                stage.active ? "bg-white border-accent text-accent animate-pulse" :
+                                "bg-white border-gray-200 text-gray-300"
+                              }`}>
+                                <stage.icon className="w-4 h-4" />
+                              </div>
+                              <span className={`text-[10px] mt-1.5 font-medium text-center ${
+                                stage.completed ? "text-accent" :
+                                stage.active ? "text-accent" :
+                                "text-gray-400"
+                              }`}>
+                                {stage.label}
+                              </span>
+                              {stage.completed && (
+                                <CheckCircle2 className="w-3 h-3 text-accent mt-0.5" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* 交付方案时间线 */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-primary flex items-center gap-2"><Package className="w-4 h-4 text-accent" />交付方案时间线</h4>
+                    <Link href="/admin/deliveries" className="text-xs text-accent hover:underline flex items-center gap-1">
+                      管理全部方案 <ChevronRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                  {detailDeliveries.length === 0 ? (
+                    <div className="bg-muted/30 rounded-xl p-8 text-center">
+                      <Package className="w-10 h-10 text-gray-200 mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground">暂无交付方案</p>
+                      <Link href="/admin/deliveries" className="text-xs text-accent hover:underline mt-2 inline-block">去创建第一个方案 →</Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {detailDeliveries.map((plan, idx) => {
+                        const typeInfo = serviceTypeMap[plan.service_type] || serviceTypeMap.select;
+                        const statusInfo = deliveryStatusMap[plan.status] || deliveryStatusMap.draft;
+                        const TypeIcon = typeInfo.icon;
+                        return (
+                          <div key={plan.id} className="flex gap-4 group">
+                            {/* 时间线竖线 */}
+                            <div className="flex flex-col items-center">
+                              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                                plan.status === "confirmed" ? "bg-green-100 text-green-600" :
+                                plan.status === "delivered" ? "bg-blue-100 text-blue-600" :
+                                plan.status === "in_progress" ? "bg-amber-100 text-amber-600" :
+                                "bg-gray-100 text-gray-400"
+                              }`}>
+                                <TypeIcon className="w-3.5 h-3.5" />
+                              </div>
+                              {idx < detailDeliveries.length - 1 && (
+                                <div className="w-0.5 flex-1 bg-gray-100 my-1" />
+                              )}
+                            </div>
+                            {/* 内容 */}
+                            <div className="flex-1 pb-4">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-primary">{plan.title}</span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${typeInfo.color}`}>
+                                  <TypeIcon className="w-2.5 h-2.5 inline mr-0.5" />{typeInfo.label}
+                                </span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${statusInfo.color}`}>
+                                  {statusInfo.label}
+                                </span>
+                              </div>
+                              {plan.description && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{plan.description}</p>
+                              )}
+                              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+                                <span>{plan.customer_name}</span>
+                                {plan.price && <span className="text-accent font-medium">¥{(plan.price / 100).toFixed(0)}</span>}
+                                <span>{new Date(plan.updated_at).toLocaleDateString("zh-CN")}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* 会员列表 */}
