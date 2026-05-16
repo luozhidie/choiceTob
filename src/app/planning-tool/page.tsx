@@ -78,49 +78,76 @@ export default function PlanningToolPage() {
   const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
   const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
 
-  /* 生成报告（Mock） */
+  /* 生成报告（AI + Mock fallback） */
   const handleGenerate = async () => {
     setGenerating(true);
-    await new Promise((r) => setTimeout(r, 2500));
 
     const styleLabel = getStyleLabel(formData.marketStyle);
     const colorLabel = getColorLabel(formData.colorPref);
 
-    const mockReport: PlanningReport = {
-      brandName: formData.brandName || "示例品牌",
-      season: formData.season,
-      summary: `基于${colorLabel}偏好和${styleLabel}定位，为${formData.brandName || "贵品牌"}量身定制的${formData.season}商品企划初稿。本企划结合市场趋势与品牌调性，可作为选品与铺货的参考框架。\n\n（提示：此为基础初稿，如需结合店铺实际数据定制完整方案，可申请人工企划服务）`,
-      colorPlan: [
-        { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"] },
-        { type: "主题色", ratio: "35%", colors: [colorLabel + "主调", "米白", "灰粉"] },
-        { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"] },
-        { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"] },
-      ],
-      stylePlan: MARKET_STYLES.map((s) => ({
-        style: s.label,
-        trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 9)}%`,
-        profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 9)}%`,
-      })),
-      productStructure: [
-        { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引新客进店" },
-        { type: "利润款", ratio: "50%", desc: "核心利润来源，保证经营健康" },
-        { type: "形象款", ratio: "20%", desc: "品牌调性展示，提升品牌溢价" },
-        { type: "搭配款", ratio: "15%", desc: "提升连带率，拉高客单价" },
-      ],
-      pricePlan: [
-        { band: "入门款", range: "99-199元", ratio: "20%", strategy: "低价引流，降低新客决策门槛" },
-        { band: "主销款", range: "199-399元", ratio: "45%", strategy: "量价平衡，贡献核心销量与利润" },
-        { band: "品质款", range: "399-699元", ratio: "25%", strategy: "提升品牌形象，拉高客单价" },
-        { band: "旗舰款", range: "699元+", ratio: "10%", strategy: "品牌标杆，彰显品牌实力与调性" },
-      ],
-      quartersPlan: [
-        { phase: "第一波段（上半月）", items: [`${styleLabel}风格商品结构规划`, `${colorLabel}色彩企划矩阵`, "价格带分布策略", "核心品类确定"] },
-        { phase: "第二波段（下半月）", items: ["爆款预测与选品参考", "门店陈列建议", "库存周转提示", "营销活动建议"] },
-        { phase: "第三波段（次月补充）", items: ["销售跟踪建议", "补货追单参考", "滞销款处理建议", "下一季企划预研"] },
-      ],
-    };
+    let report: PlanningReport;
 
-    setReport(mockReport);
+    try {
+      // 调用 API Route 生成（有 AI Key 时走 AI，否则走 Mock）
+      const res = await fetch("/api/generate-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandName: formData.brandName,
+          season: formData.season,
+          colorPref: formData.colorPref,
+          colorLabel,
+          marketStyle: formData.marketStyle,
+          styleLabel,
+          priceBand: formData.priceBand,
+          targetAge: formData.targetAge,
+          shopSize: formData.shopSize,
+          notes: formData.notes,
+        }),
+      });
+
+      if (!res.ok) throw new Error("API 请求失败");
+      const data = await res.json();
+      report = data.report as PlanningReport;
+    } catch (err) {
+      console.error("AI 生成失败，使用 Mock:", err);
+      // Fallback：本地 Mock
+      report = {
+        brandName: formData.brandName || "示例品牌",
+        season: formData.season,
+        summary: `基于${colorLabel}偏好和${styleLabel}定位，为${formData.brandName || "贵品牌"}量身定制的${formData.season}商品企划初稿。本企划结合市场趋势与品牌调性，可作为选品与铺货的参考框架。\n\n（提示：此为基础初稿，如需结合店铺实际数据定制完整方案，可申请人工企划服务）`,
+        colorPlan: [
+          { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"] },
+          { type: "主题色", ratio: "35%", colors: [colorLabel + "主调", "米白", "灰粉"] },
+          { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"] },
+          { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"] },
+        ],
+        stylePlan: MARKET_STYLES.map((s) => ({
+          style: s.label,
+          trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 9)}%`,
+          profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 9)}%`,
+        })),
+        productStructure: [
+          { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引新客进店" },
+          { type: "利润款", ratio: "50%", desc: "核心利润来源，保证经营健康" },
+          { type: "形象款", ratio: "20%", desc: "品牌调性展示，提升品牌溢价" },
+          { type: "搭配款", ratio: "15%", desc: "提升连带率，拉高客单价" },
+        ],
+        pricePlan: [
+          { band: "入门款", range: "99-199元", ratio: "20%", strategy: "低价引流，降低新客决策门槛" },
+          { band: "主销款", range: "199-399元", ratio: "45%", strategy: "量价平衡，贡献核心销量与利润" },
+          { band: "品质款", range: "399-699元", ratio: "25%", strategy: "提升品牌形象，拉高客单价" },
+          { band: "旗舰款", range: "699元+", ratio: "10%", strategy: "品牌标杆，彰显品牌实力与调性" },
+        ],
+        quartersPlan: [
+          { phase: "第一波段（上半月）", items: [`${styleLabel}风格商品结构规划`, `${colorLabel}色彩企划矩阵`, "价格带分布策略", "核心品类确定"] },
+          { phase: "第二波段（下半月）", items: ["爆款预测与选品参考", "门店陈列建议", "库存周转提示", "营销活动建议"] },
+          { phase: "第三波段（次月补充）", items: ["销售跟踪建议", "补货追单参考", "滞销款处理建议", "下一季企划预研"] },
+        ],
+      };
+    }
+
+    setReport(report);
     setGenerating(false);
     setStep(3);
 
@@ -128,13 +155,13 @@ export default function PlanningToolPage() {
     try {
       const supabase = createClient();
       await supabase.from("planning_reports").insert([{
-        title: `${mockReport.brandName} · ${mockReport.season}商品企划初稿`,
+        title: `${report.brandName} · ${report.season}商品企划初稿`,
         category: "AI智能初稿",
-        content: mockReport.summary,
+        content: report.summary,
         images: [],
         color_season: formData.colorPref || null,
         style_type: formData.marketStyle || null,
-        is_published: false,  // 默认不公开，需管理员审核后发布
+        is_published: false,
         is_template: false,
       }]);
     } catch (saveErr) {
