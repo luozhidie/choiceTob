@@ -81,7 +81,7 @@ export default function EducationPage() {
       />
 
       {/* 视频播放弹窗 */}
-      <AnimatePrescence mode="wait">
+      <AnimatePresence mode="wait">
         {selectedCourse && !selectedCourse.price && (
           <motion.div
             key="video-modal"
@@ -115,7 +115,7 @@ export default function EducationPage() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePrescence>
+      </AnimatePresence>
 
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">

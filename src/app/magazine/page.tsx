@@ -98,7 +98,7 @@ export default function MagazinePage() {
       />
 
       {/* 文章详情弹窗 */}
-      <AnimatePrescence mode="wait">
+      <AnimatePresence mode="wait">
         {selectedArticle && !selectedArticle.is_premium && (
           <motion.div
             key="article-detail"
@@ -130,7 +130,7 @@ export default function MagazinePage() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePrescence>
+      </AnimatePresence>
 
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">

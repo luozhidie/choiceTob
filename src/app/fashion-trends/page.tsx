@@ -94,7 +94,7 @@ export default function FashionTrendsPage() {
       />
 
       {/* 图片画廊弹窗 - 仅免费趋势显示 */}
-      <AnimatePrescence mode="wait">
+      <AnimatePresence mode="wait">
         {selectedTrend && !showPaywall && (
           <motion.div
             key="trend-gallery"
@@ -186,7 +186,7 @@ export default function FashionTrendsPage() {
             </motion.div>
           </motion.div>
         )}
-      </AnimatePrescence>
+      </AnimatePresence>
 
       {/* Breadcrumb */}
       <nav className="bg-muted/60 border-b border-gray-100">

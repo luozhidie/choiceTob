@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Home, X, Loader2, Palette, CheckCircle2,
-  ChevronRight, ArrowRight, Layers, Eye,
+  ChevronRight, ArrowRight, Layers, Eye, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { PaywallModal } from "@/components/PaywallModal";
