@@ -35,10 +35,12 @@ import {
   Menu,
   X,
   ChevronRight,
+  Store,
 } from "lucide-react";
 
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "店铺管理", href: "/admin/stores", icon: Store },
   { label: "色彩季型录入", href: "/admin/color-analysis", icon: Palette },
   { label: "色彩季型对比", href: "/admin/color-compare", icon: Palette },
   { label: "客户管理", href: "/admin/customers", icon: Users },
