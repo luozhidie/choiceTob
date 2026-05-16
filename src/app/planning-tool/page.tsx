@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Download, Eye, Sparkles, ChevronRight,
@@ -63,6 +63,8 @@ export default function PlanningToolPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [report, setReport] = useState<PlanningReport | null>(null);
+  const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null; style_position: string | null; target_age: string | null; price_range: string | null; shop_size: string | null }[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState("");
 
   const [formData, setFormData] = useState({
     brandName: "",
@@ -74,6 +76,28 @@ export default function PlanningToolPage() {
     shopSize: "",
     notes: "",
   });
+
+  const supabase = createClient();
+
+  useEffect(() => {
+    supabase.from("stores").select("id, name, city, style_position, target_age, price_range, shop_size").eq("status", "active").order("name")
+      .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
+  }, []);
+
+  const handleSelectStore = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    if (!storeId) return;
+    const store = storeOptions.find(s => s.id === storeId);
+    if (!store) return;
+    setFormData(f => ({
+      ...f,
+      brandName: f.brandName || store.name,
+      marketStyle: f.marketStyle || store.style_position || "",
+      targetAge: f.targetAge || store.target_age || "",
+      priceBand: f.priceBand || store.price_range || "199-399元",
+      shopSize: f.shopSize || store.shop_size || "",
+    }));
+  };
 
   const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
   const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
@@ -103,6 +127,7 @@ export default function PlanningToolPage() {
           targetAge: formData.targetAge,
           shopSize: formData.shopSize,
           notes: formData.notes,
+          storeId: selectedStoreId || undefined,
         }),
       });
 
@@ -300,6 +325,26 @@ export default function PlanningToolPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* 导入店铺数据 */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      导入店铺数据（可选）
+                    </label>
+                    <select
+                      value={selectedStoreId}
+                      onChange={(e) => handleSelectStore(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
+                    >
+                      <option value="">手动填写信息</option>
+                      {storeOptions.map((s) => (
+                        <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>
+                      ))}
+                    </select>
+                    {selectedStoreId && (
+                      <p className="mt-1.5 text-xs text-accent">已选择店铺，AI 将基于该店铺的经营数据与会员统计生成更精准的企划方案</p>
+                    )}
+                  </div>
+
                   {/* 品牌名称 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">

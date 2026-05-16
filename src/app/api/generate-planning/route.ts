@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/generate-planning
  * 调用 DeepSeek API 生成商品企划初稿
  *
+ * 支持 store_id：从 stores 表读取经营数据+会员聚合统计，注入 AI prompt
  * 支持的 provider: deepseek（默认）、openai
  * 环境变量: DEEPSEEK_API_KEY 或 OPENAI_API_KEY
  */
@@ -21,14 +23,27 @@ export async function POST(req: NextRequest) {
       targetAge,
       shopSize,
       notes,
+      storeId,
     } = body;
+
+    // ---- 如果传了 storeId，从数据库读取店铺数据 ----
+    let storeData: Record<string, any> | null = null;
+    let memberStats: Record<string, any> | null = null;
+
+    if (storeId) {
+      const supabase = await createClient();
+      const { data } = await supabase.from("stores").select("*").eq("id", storeId).single();
+      if (data) {
+        storeData = (data as any).business_data || {};
+        memberStats = (data as any).member_stats || {};
+      }
+    }
 
     // ---- 检查 API Key ----
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
     const openaiKey = process.env.OPENAI_API_KEY;
 
     if (!deepseekKey && !openaiKey) {
-      // 没有 API Key 时返回 fallback Mock（兼容无 Key 部署）
       return NextResponse.json({
         source: "mock",
         report: generateMockReport(brandName, season, colorLabel, styleLabel),
@@ -36,7 +51,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ---- 构建提示词 ----
-    const systemPrompt = `你是一位资深的时尚商品企划顾问，擅长为服装零售品牌制定季节性商品企划方案。请基于用户提供的品牌信息，生成一份结构化的商品企划初稿。
+    const systemPrompt = `你是一位资深的时尚商品企划顾问，擅长为服装零售品牌制定季节性商品企划方案。你的核心能力是基于店铺经营数据和核心会员画像，生成差异化的商品企划方案，帮助店铺在供过于求的市场中通过精准选品和会员服务获得竞争优势。
 
 你必须严格按照以下 JSON 格式输出，不要输出任何其他文字：
 {
@@ -63,8 +78,10 @@ export async function POST(req: NextRequest) {
   ]
 }`;
 
-    const userPrompt = `请为以下品牌生成${season}商品企划初稿：
+    // ---- 构建用户提示词 ----
+    let userPrompt = `请为以下品牌生成${season}商品企划初稿：
 
+【品牌基本信息】
 - 品牌名：${brandName || "未指定"}
 - 季节：${season}
 - 色系偏好：${colorLabel || "未指定"}
@@ -72,19 +89,63 @@ export async function POST(req: NextRequest) {
 - 主力价格带：${priceBand || "199-399元"}
 - 目标客群年龄段：${targetAge || "25-40岁"}
 - 店铺面积：${shopSize || "未指定"}
-- 补充说明：${notes || "无"}
+- 补充说明：${notes || "无"}`;
 
-要求：
-1. colorPlan 至少4组，比例加起来=100%
-2. stylePlan 列出主流风格定位，用户选择的风格占比最高
-3. productStructure 4类（引流款15%、利润款50%、形象款20%、搭配款15%）
-4. pricePlan 4个价格带，比例加起来=100%
+    // 如果有店铺经营数据，注入
+    if (storeData && Object.keys(storeData).length > 0) {
+      userPrompt += `
+
+【店铺经营数据】
+- 月租金：${storeData.monthly_rent ? `¥${storeData.monthly_rent}` : "未填写"}
+- 保本点：${storeData.break_even_point ? `¥${storeData.break_even_point}/月` : "未填写"}
+- 毛利率：${storeData.gross_margin_rate ? `${(storeData.gross_margin_rate * 100).toFixed(0)}%` : "未填写"}
+- 净利率：${storeData.net_margin_rate ? `${(storeData.net_margin_rate * 100).toFixed(0)}%` : "未填写"}
+- 月进店数：${storeData.foot_traffic || "未填写"}
+- 成交率：${storeData.conversion_rate ? `${(storeData.conversion_rate * 100).toFixed(0)}%` : "未填写"}
+- 连带率：${storeData.attach_rate || "未填写"}
+- 均件单价：${storeData.avg_item_price ? `¥${storeData.avg_item_price}` : "未填写"}
+- 月营业额：${storeData.monthly_revenue ? `¥${storeData.monthly_revenue}` : "未填写"}
+- 流量渠道：${storeData.traffic_channels?.length ? storeData.traffic_channels.join("、") : "未填写"}
+- 当前流行趋势：${storeData.current_trends?.length ? storeData.current_trends.join("、") : "未填写"}`;
+    }
+
+    // 如果有会员聚合统计，注入
+    if (memberStats && memberStats.tested_vip_count > 0) {
+      const colorDist = memberStats.color_season_distribution || {};
+      const styleDist = memberStats.style_distribution || {};
+      const COLOR_LABELS: Record<string, string> = {
+        light_warm: "浅暖春", warm_bright: "暖亮春", clear_warm: "净暖春",
+        light_cool: "浅冷夏", soft_cool: "柔冷夏", cool_soft: "冷柔夏",
+        warm_soft: "暖柔秋", soft_warm: "柔暖秋", deep_warm: "深暖秋",
+        clear_cool: "净冷冬", cool_bright: "冷亮冬", deep_cool: "深冷冬",
+      };
+
+      userPrompt += `
+
+【核心会员色彩季型分布】（已测试${memberStats.tested_vip_count}人，总VIP ${memberStats.total_vip_count}人）
+${Object.entries(colorDist).map(([key, val]: [string, any]) =>
+  `- ${COLOR_LABELS[key] || key}：${val.percentage}%（${val.count}人）`
+).join("\n")}
+
+【核心会员风格分布】
+${Object.entries(styleDist).map(([key, val]: [string, any]) =>
+  `- ${key}：${val.percentage}%（${val.count}人）`
+).join("\n")}`;
+    }
+
+    userPrompt += `
+
+【企划要求】
+1. colorPlan 至少4组，比例加起来=100%${memberStats?.tested_vip_count > 0 ? "。色彩占比应与会员色彩季型分布吻合，主力色系对应会员占比最高的季型" : ""}
+2. stylePlan 列出主流风格定位，用户选择的风格占比最高${memberStats?.tested_vip_count > 0 ? "。风格占比应与会员风格分布吻合" : ""}
+3. productStructure 4类（引流款15%、利润款50%、形象款20%、搭配款15%）${storeData?.conversion_rate ? "。结合成交率数据优化引流款和利润款比例" : ""}
+4. pricePlan 4个价格带，比例加起来=100%${storeData?.break_even_point ? "。价格带规划需确保覆盖保本点" : ""}${storeData?.gross_margin_rate ? "，考虑毛利率约束" : ""}
 5. quartersPlan 3个波段，每波4个事项
-6. 内容要具体、专业、可落地`;
+6. 内容要具体、专业、可落地${storeData ? "，基于店铺实际经营数据制定" : ""}`;
 
     // ---- 调用 AI API ----
     const useDeepseek = !!deepseekKey;
-    const apiKey = useDeepseek ? deepseekKey : openaiKey;
+    const apiKey = useDeepseek ? deepseekKey! : openaiKey!;
     const apiUrl = useDeepseek
       ? "https://api.deepseek.com/chat/completions"
       : "https://api.openai.com/v1/chat/completions";
@@ -103,7 +164,7 @@ export async function POST(req: NextRequest) {
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 3000,
+        max_tokens: 4000,
         response_format: { type: "json_object" },
       }),
     });
@@ -111,7 +172,6 @@ export async function POST(req: NextRequest) {
     if (!aiRes.ok) {
       const errText = await aiRes.text();
       console.error("AI API error:", aiRes.status, errText);
-      // API 失败时 fallback 到 Mock
       return NextResponse.json({
         source: "mock_fallback",
         report: generateMockReport(brandName, season, colorLabel, styleLabel),
@@ -121,7 +181,6 @@ export async function POST(req: NextRequest) {
     const aiData = await aiRes.json();
     const content = aiData.choices?.[0]?.message?.content || "";
 
-    // 解析 AI 返回的 JSON
     let report;
     try {
       report = JSON.parse(content);
