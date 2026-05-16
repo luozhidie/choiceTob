@@ -3,87 +3,102 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FileText,
-  Download,
-  Eye,
-  Sparkles,
-  ChevronRight,
-  CheckCircle2,
-  Loader2,
+  FileText, Download, Eye, Sparkles, ChevronRight,
+  CheckCircle2, Loader2, Wand2, ArrowRight,
 } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
 import { PaywallModal } from "@/components/PaywallModal";
 
-const seasons = ["春夏", "夏秋", "秋冬", "冬春"];
-const styleTypes = [
-  "少女型",
-  "优雅型",
-  "浪漫型",
-  "少年型",
-  "时尚型",
-  "古典型",
-  "自然型",
-  "戏剧型",
-];
-const colorSeasons = [
-  "春季型",
-  "夏季型",
-  "秋季型",
-  "冬季型",
-];
-const priceBands = [
-  "入门款（99-199元）",
-  "主销款（199-399元）",
-  "品质款（399-699元）",
-  "旗舰款（699元+）",
+/* ==================== 选项数据 ==================== */
+
+const SEASONS = ["春夏", "夏秋", "秋冬", "冬春"];
+
+const COLOR_PREFERENCES = [
+  { value: "warm", label: "暖色系", desc: "红/橙/黄/棕" },
+  { value: "cool", label: "冷色系", desc: "蓝/绿/紫/灰" },
+  { value: "neutral", label: "中性色", desc: "黑/白/灰/米/驼" },
+  { value: "morandi", label: "莫兰迪色系", desc: "低饱和高级灰调" },
+  { value: "earth", label: "大地色系", desc: "卡其/驼色/咖啡" },
+  { value: "pastel", label: "马卡龙色系", desc: "柔和粉彩调" },
+  { value: "vintage", label: "复古色系", desc: "酒红/墨绿/藏蓝" },
+  { value: "monochrome", label: "黑白极简", desc: "纯黑/纯白/黑白配" },
 ];
 
+const MARKET_STYLES = [
+  { value: "minimal_commute", label: "简约通勤" },
+  { value: "french_elegant", label: "法式优雅" },
+  { value: "korean_fresh", label: "韩系清新" },
+  { value: "japanese_art", label: "日系文艺" },
+  { value: "retro_vintage", label: "复古港风" },
+  { value: "sport_casual", label: "运动休闲" },
+  { value: "luxury_minimal", label: "轻奢极简" },
+  { value: "street_trend", label: "街头潮牌" },
+  { value: "chinese_style", label: "新中式" },
+  { value: "bohemian", label: "波西米亚" },
+];
+
+const PRICE_BANDS = [
+  "99-199元",
+  "199-399元",
+  "399-699元",
+  "699元+",
+];
+
+/* ==================== 类型 ==================== */
+interface PlanningReport {
+  brandName: string;
+  season: string;
+  summary: string;
+  colorPlan: { type: string; ratio: string; colors: string[] }[];
+  stylePlan: { style: string; trafficRatio: string; profitRatio: string }[];
+  productStructure: { type: string; ratio: string; desc: string }[];
+  pricePlan: { band: string; range: string; ratio: string; strategy: string }[];
+  quartersPlan: { phase: string; items: string[] }[];
+}
+
+/* ==================== 页面 ==================== */
 export default function PlanningToolPage() {
   const [step, setStep] = useState(1);
   const [showPaywall, setShowPaywall] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [report, setReport] = useState<null | PlanningReport>(null);
+  const [report, setReport] = useState<PlanningReport | null>(null);
+
   const [formData, setFormData] = useState({
     brandName: "",
     season: "春夏",
-    colorSeason: "春季型",
-    mainStyle: "优雅型",
-    priceBand: "主销款（199-399元）",
-    targetAge: "25-35岁",
-    brandPositioning: "",
-    customerProfile: "",
+    colorPref: "",
+    marketStyle: "",
+    priceBand: "199-399元",
+    targetAge: "",
+    shopSize: "",
+    notes: "",
   });
 
-  type PlanningReport = {
-    brandName: string;
-    season: string;
-    summary: string;
-    colorPlan: { type: string; ratio: string; colors: string[] }[];
-    stylePlan: { style: string; trafficRatio: string; profitRatio: string }[];
-    productStructure: { type: string; ratio: string; desc: string }[];
-    pricePlan: { band: string; range: string; ratio: string; strategy: string }[];
-    quartersPlan: { phase: string; items: string[] }[];
-  };
+  const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
+  const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
 
+  /* 生成报告（Mock） */
   const handleGenerate = async () => {
     setGenerating(true);
-    // MVP: 用faker逻辑生成本地报告
-    // 正式版：对接AI API
-    await new Promise((r) => setTimeout(r, 2000)); // 模拟2秒
+    await new Promise((r) => setTimeout(r, 2500));
+
+    const styleLabel = getStyleLabel(formData.marketStyle);
+    const colorLabel = getColorLabel(formData.colorPref);
 
     const mockReport: PlanningReport = {
       brandName: formData.brandName || "示例品牌",
       season: formData.season,
-      summary: `基于${formData.colorSeason}色彩季型和${formData.mainStyle}风格定位，为${formData.brandName || "贵品牌"}量身定制的${formData.season}商品企划方案。本企划充分结合市场趋势与品牌调性，实现科学选品与利润最大化。`,      colorPlan: [
+      summary: `基于${colorLabel}偏好和${styleLabel}定位，为${formData.brandName || "贵品牌"}量身定制的${formData.season}商品企划初稿。本企划结合市场趋势与品牌调性，可作为选品与铺货的参考框架。\n\n（提示：此为基础初稿，如需结合店铺实际数据定制完整方案，可申请人工企划服务）`,
+      colorPlan: [
         { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"] },
-        { type: "主题色", ratio: "35%", colors: ["雾霾蓝", "米白", "灰粉"] },
+        { type: "主题色", ratio: "35%", colors: [colorLabel + "主调", "米白", "灰粉"] },
         { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"] },
         { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"] },
       ],
-      stylePlan: styleTypes.map((s) => ({
-        style: s,
-        trafficRatio: s === formData.mainStyle ? "25%" : `${Math.round(75 / 7)}%`,
-        profitRatio: s === formData.mainStyle ? "55%" : `${Math.round(45 / 7)}%`,
+      stylePlan: MARKET_STYLES.map((s) => ({
+        style: s.label,
+        trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 9)}%`,
+        profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 9)}%`,
       })),
       productStructure: [
         { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引新客进店" },
@@ -98,9 +113,9 @@ export default function PlanningToolPage() {
         { band: "旗舰款", range: "699元+", ratio: "10%", strategy: "品牌标杆，彰显品牌实力与调性" },
       ],
       quartersPlan: [
-        { phase: "第一波段（上半月）", items: ["2021春夏流行趋势分析", `${formData.mainStyle}风格商品结构规划`, "色彩企划矩阵（${formData.colorSeason}）", "价格带分布策略"] },
-        { phase: "第二波段（下半月）", items: ["爆款预测与选品清单", "供应商匹配与议价方案", "库存周转计划", "营销活动配合"] },
-        { phase: "第三波段（次月补充）", items: ["销售数据跟踪与动态调整", "补货追单建议", "滞销款处理方案", "下一季企划预研"] },
+        { phase: "第一波段（上半月）", items: [`${styleLabel}风格商品结构规划`, `${colorLabel}色彩企划矩阵`, "价格带分布策略", "核心品类确定"] },
+        { phase: "第二波段（下半月）", items: ["爆款预测与选品参考", "门店陈列建议", "库存周转提示", "营销活动建议"] },
+        { phase: "第三波段（次月补充）", items: ["销售跟踪建议", "补货追单参考", "滞销款处理建议", "下一季企划预研"] },
       ],
     };
 
@@ -109,48 +124,103 @@ export default function PlanningToolPage() {
     setStep(3);
   };
 
+  /* 如果正在生成，显示动画 */
+  if (generating) {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-accent/10 mb-6">
+            <Loader2 className="w-10 h-10 text-accent animate-spin" />
+          </div>
+          <h2 className="text-2xl font-bold text-primary mb-2">正在生成企划初稿...</h2>
+          <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+            正在结合{getStyleLabel(formData.marketStyle)}风格定位与{getColorLabel(formData.colorPref)}色系偏好，生成个性化商品企划初稿
+          </p>
+          <div className="mt-8 max-w-sm mx-auto space-y-2 text-left">
+            {[
+              "分析市场趋势与竞品动态",
+              "匹配色系偏好与风格定位",
+              "规划商品结构与价格带分布",
+              "生成波段上新建议",
+              "输出初稿企划框架",
+            ].map((item, i) => (
+              <motion.div
+                key={item}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.5 }}
+                className="flex items-center gap-3 text-sm"
+              >
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${i < 4 ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-400"}`}>
+                  {i < 4 ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
+                </div>
+                <span className={i < 4 ? "text-primary font-medium" : "text-gray-400"}>{item}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+    );
+  }
+
   return (
     <>
       <PaywallModal
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
-        title="完整企划报告"
-        description="付费后可下载完整Word版企划报告（含12个模块、50+数据分析维度）"
+        title="完整Word报告"
+        description="付费后可下载完整Word版企划报告（含详细数据与分析）"
         type="single"
       />
 
-      {/* Hero */}
+      {/* ====== Hero ====== */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/3" />
         </div>
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-18">
           <motion.div
+            className="max-w-2xl"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
-              <FileText className="w-4 h-4" />
-              AI商品企划工具
+              <Sparkles className="w-4 h-4" />
+              AI 智能企划初稿生成器
             </span>
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              智能商品企划生成器
+            <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
+              快速生成企划初稿
             </h1>
-            <p className="mt-4 text-lg text-white/80 leading-relaxed max-w-2xl">
-              输入品牌关键信息，一键生成专业商品企划报告。基于色彩季型、风格定位与价格带策略，
-              结合市场趋势数据，输出科学、可落地的企划方案。
+            <p className="mt-3 text-white/80 leading-relaxed">
+              输入店铺定位信息，即时生成商品企划框架初稿，免费使用。如需定制完整方案，可同步申请人工企划服务。
             </p>
+            {/* 定位说明 */}
+            <div className="mt-6 inline-flex items-center gap-4 text-xs text-white/60">
+              <span className="flex items-center gap-1">
+                <Wand2 className="w-3.5 h-3.5" />
+                自助AI生成 · 即时出稿
+              </span>
+              <span className="flex items-center gap-1">
+                <FileText className="w-3.5 h-3.5" />
+                可作为人工企划的参考基础
+              </span>
+            </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Main Content */}
+      {/* ====== 主内容 ====== */}
       <section className="py-12 lg:py-16 bg-white">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          {/* Step Indicator */}
-          <div className="flex items-center justify-center gap-4 mb-12">
-            {["填写信息", "生成报告", "预览下载"].map((label, i) => (
+
+          {/* Step 指示器 */}
+          <div className="flex items-center justify-center gap-4 mb-10">
+            {["填写信息", "生成报告", "预览初稿"].map((label, i) => (
               <div key={label} className="flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -167,8 +237,8 @@ export default function PlanningToolPage() {
             ))}
           </div>
 
-          {/* Step 1: 填写表单 */}
           <AnimatePresence mode="wait">
+            {/* ====== Step 1: 填写信息 ====== */}
             {step === 1 && (
               <motion.div
                 key="step1"
@@ -178,16 +248,17 @@ export default function PlanningToolPage() {
                 className="space-y-6"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-primary">填写品牌信息</h2>
+                  <h2 className="text-2xl font-bold text-primary">填写店铺信息</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    请填写以下信息，系统将为您生成个性化的商品企划报告
+                    填写以下信息，AI将为您生成个性化的商品企划初稿
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* 品牌名称 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      品牌名称 <span className="text-red-500">*</span>
+                      品牌/店铺名称 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -195,10 +266,11 @@ export default function PlanningToolPage() {
                       value={formData.brandName}
                       onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                      placeholder="请输入品牌名称"
+                      placeholder="请输入品牌或店铺名称"
                     />
                   </div>
 
+                  {/* 目标季节 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       目标季节 <span className="text-red-500">*</span>
@@ -208,60 +280,86 @@ export default function PlanningToolPage() {
                       onChange={(e) => setFormData({ ...formData, season: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
                     >
-                      {seasons.map((s) => (
+                      {SEASONS.map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>
                   </div>
 
+                  {/* 色系偏好 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      客户色彩季型 <span className="text-red-500">*</span>
+                      色系偏好 <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      value={formData.colorSeason}
-                      onChange={(e) => setFormData({ ...formData, colorSeason: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
-                    >
-                      {colorSeasons.map((c) => (
-                        <option key={c} value={c}>{c}</option>
+                    <div className="grid grid-cols-2 gap-2">
+                      {COLOR_PREFERENCES.map((c) => (
+                        <button
+                          key={c.value}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, colorPref: f.colorPref === c.value ? "" : c.value }))}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border text-left ${
+                            formData.colorPref === c.value
+                              ? "bg-primary text-white border-primary"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                          }`}
+                        >
+                          <span className="block font-semibold">{c.label}</span>
+                          <span className={`text-[10px] ${formData.colorPref === c.value ? "text-white/70" : "text-muted-foreground"}`}>{c.desc}</span>
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
+                  {/* 市场风格定位 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      主风格定位 <span className="text-red-500">*</span>
+                      风格定位 <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      value={formData.mainStyle}
-                      onChange={(e) => setFormData({ ...formData, mainStyle: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
-                    >
-                      {styleTypes.map((s) => (
-                        <option key={s} value={s}>{s}</option>
+                    <div className="grid grid-cols-2 gap-2">
+                      {MARKET_STYLES.map((s) => (
+                        <button
+                          key={s.value}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, marketStyle: f.marketStyle === s.value ? "" : s.value }))}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                            formData.marketStyle === s.value
+                              ? "bg-accent text-white border-accent"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
+                  {/* 目标价格带 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       主价格带 <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      value={formData.priceBand}
-                      onChange={(e) => setFormData({ ...formData, priceBand: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
-                    >
-                      {priceBands.map((p) => (
-                        <option key={p} value={p}>{p}</option>
+                    <div className="flex flex-wrap gap-2">
+                      {PRICE_BANDS.map((p) => (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, priceBand: p }))}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                            formData.priceBand === p
+                              ? "bg-primary text-white border-primary"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                          }`}
+                        >
+                          ¥{p}
+                        </button>
                       ))}
-                    </select>
+                    </div>
                   </div>
 
+                  {/* 目标客群年龄 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      目标客群年龄
+                      目标客群年龄段
                     </label>
                     <input
                       type="text"
@@ -273,80 +371,34 @@ export default function PlanningToolPage() {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                {/* 补充说明 */}
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    品牌定位描述（可选）
+                    补充说明（可选）
                   </label>
                   <textarea
-                    value={formData.brandPositioning}
-                    onChange={(e) => setFormData({ ...formData, brandPositioning: e.target.value })}
+                    value={formData.notes}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     rows={3}
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
-                    placeholder="请描述您的品牌定位、风格主张等（选填）"
+                    placeholder="其他特殊需求或说明..."
                   />
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                <div className="flex justify-end pt-4">
                   <button
                     onClick={() => formData.brandName.trim() && setStep(2)}
-                    disabled={!formData.brandName.trim()}
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!formData.brandName.trim() || !formData.colorPref || !formData.marketStyle}
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                   >
-                    生成企划报告
-                    <ChevronRight className="w-4 h-4" />
+                    生成企划初稿
+                    <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Step 2: Generating */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-center py-20"
-              >
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-accent/10 mb-6">
-                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
-                </div>
-                <h2 className="text-2xl font-bold text-primary mb-2">正在生成企划报告...</h2>
-                <p className="text-muted-foreground max-w-md mx-auto">
-                  正在结合{formData.colorSeason}色彩季型与{formData.mainStyle}风格定位，
-                  生成个性化的商品企划方案，预计需要10-15秒。
-                </p>
-
-                {/* Progress Steps */}
-                <div className="mt-10 max-w-md mx-auto space-y-3 text-left">
-                  {[
-                    "分析市场趋势与竞品动态",
-                    "匹配色彩季型与风格定位",
-                    "规划商品结构与价格带分布",
-                    "生成波段上新计划",
-                    "输出完整企划报告",
-                  ].map((item, i) => (
-                    <motion.div
-                      key={item}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.5 }}
-                      className="flex items-center gap-3 text-sm"
-                    >
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
-                        i < 3 ? "bg-accent/20 text-accent" : "bg-gray-100 text-gray-400"
-                      }`}>
-                        {i < 3 ? <CheckCircle2 className="w-3.5 h-3.5" /> : null}
-                      </div>
-                      <span className={i < 3 ? "text-primary font-medium" : "text-gray-400"}>
-                        {item}
-                      </span>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-
-            {/* Step 3: Report Preview */}
+            {/* ====== Step 3: 报告预览 ====== */}
             {step === 3 && report && (
               <motion.div
                 key="step3"
@@ -354,35 +406,31 @@ export default function PlanningToolPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
+                {/* 头部 */}
                 <div className="text-center mb-8">
                   <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium mb-4">
                     <CheckCircle2 className="w-4 h-4" />
-                    企划报告已生成
+                    AI 初稿已生成
                   </div>
-                  <h2 className="text-2xl font-bold text-primary">{report.brandName} · {report.season}商品企划</h2>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-2xl mx-auto">
+                  <h2 className="text-2xl font-bold text-primary">{report.brandName} · {report.season}商品企划初稿</h2>
+                  <p className="mt-2 text-sm text-muted-foreground max-w-2xl mx-auto whitespace-pre-wrap leading-relaxed">
                     {report.summary}
                   </p>
                 </div>
 
-                {/* Color Plan */}
+                {/* 色彩企划矩阵 */}
                 <section className="bg-muted/30 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-primary mb-4">色彩企划矩阵</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {report.colorPlan.map((c) => (
                       <div key={c.type} className="bg-white rounded-xl p-4 shadow-sm">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-primary">{c.type}</span>
+                          <span className="font-semibold text-primary text-sm">{c.type}</span>
                           <span className="text-xs text-accent font-bold">{c.ratio}</span>
                         </div>
-                        <div className="flex gap-1.5">
+                        <div className="flex flex-wrap gap-1.5">
                           {c.colors.map((color) => (
-                            <span
-                              key={color}
-                              className="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-600"
-                            >
-                              {color}
-                            </span>
+                            <span key={color} className="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-600">{color}</span>
                           ))}
                         </div>
                       </div>
@@ -390,28 +438,28 @@ export default function PlanningToolPage() {
                   </div>
                 </section>
 
-                {/* Product Structure */}
+                {/* 商品结构规划 */}
                 <section className="bg-white rounded-2xl p-6 border border-gray-100">
                   <h3 className="text-lg font-bold text-primary mb-4">商品结构规划</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     {report.productStructure.map((p) => (
                       <div key={p.type} className="bg-muted/30 rounded-xl p-4">
                         <div className="text-2xl font-bold text-accent">{p.ratio}</div>
-                        <div className="font-semibold text-primary mt-1">{p.type}</div>
+                        <div className="font-semibold text-primary mt-1 text-sm">{p.type}</div>
                         <p className="text-xs text-muted-foreground mt-1.5">{p.desc}</p>
                       </div>
                     ))}
                   </div>
                 </section>
 
-                {/* Price Plan */}
+                {/* 价格带企划 */}
                 <section className="bg-muted/30 rounded-2xl p-6">
                   <h3 className="text-lg font-bold text-primary mb-4">价格带企划</h3>
                   <div className="space-y-3">
                     {report.pricePlan.map((p) => (
                       <div key={p.band} className="bg-white rounded-xl p-4 flex items-center justify-between shadow-sm">
                         <div>
-                          <div className="font-semibold text-primary">{p.band}</div>
+                          <div className="font-semibold text-primary text-sm">{p.band}</div>
                           <div className="text-xs text-muted-foreground mt-0.5">{p.strategy}</div>
                         </div>
                         <div className="text-right">
@@ -423,37 +471,100 @@ export default function PlanningToolPage() {
                   </div>
                 </section>
 
-                {/* Download CTA */}
-                <div className="text-center py-6">
-                  <button
-                    onClick={() => setShowPaywall(true)}
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
-                  >
-                    <Download className="w-4 h-4" />
-                    下载完整Word报告
-                  </button>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    付费后可下载完整版Word文档（含12个模块、50+数据分析维度）
-                  </p>
+                {/* 两条路径 CTA */}
+                <div className="grid md:grid-cols-2 gap-5 pt-4">
+                  {/* 路径1：升级完整企划 */}
+                  <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-accent/20">
+                    <h4 className="font-bold text-primary">需要完整企划方案？</h4>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                      初稿仅供参考，申请人工企划服务，结合您的店铺实际数据定制完整方案
+                    </p>
+                    <a
+                      href="/planning"
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                    >
+                      前往人工企划服务
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
+
+                  {/* 路径2：去选品 */}
+                  <div className="p-6 rounded-2xl bg-gradient-to-br from-accent/5 to-primary/5 border border-primary/20">
+                    <h4 className="font-bold text-primary">有方向了？直接选品</h4>
+                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                      根据初稿框架，直接跳转买手选品，按风格、色系筛选优质货源
+                    </p>
+                    <a
+                      href="/buyer"
+                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+                    >
+                      进入买手选品
+                      <ArrowRight className="w-4 h-4" />
+                    </a>
+                  </div>
                 </div>
 
-                <div className="flex justify-between">
+                {/* 底部操作 */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <button
                     onClick={() => { setStep(1); setReport(null); }}
-                    className="px-6 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                    className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                   >
                     重新生成
                   </button>
                   <button
                     onClick={() => setShowPaywall(true)}
-                    className="px-6 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                   >
-                    升级完整版
+                    <Download className="w-4 h-4" />
+                    下载完整Word报告
                   </button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+      </section>
+
+      {/* ====== 与人工企划的区别说明 ====== */}
+      <section className="py-12 bg-muted/50">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+          <h3 className="text-center text-lg font-bold text-primary mb-8">两种企划服务，如何选择？</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 border-2 border-accent/20">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-5 h-5 text-accent" />
+                <h4 className="font-bold text-primary">AI 快速初稿</h4>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">本页</span>
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />即时生成，免费使用</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />基于通用市场数据</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />框架型初稿，供参考</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载简化版报告</li>
+              </ul>
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <span className="text-lg font-bold text-accent">免费</span>
+              </div>
+            </div>
+            <div className="bg-white rounded-2xl p-6 border-2 border-primary/20">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-5 h-5 text-primary" />
+                <h4 className="font-bold text-primary">人工定制企划</h4>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">/planning</span>
+              </div>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />顾问对接，48小时出方案</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />结合店铺实际数据定制</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />完整方案，可落地执行</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />含后续跟踪与动态调整</li>
+              </ul>
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                <span className="text-lg font-bold text-primary">¥598</span>
+                <span className="text-xs text-muted-foreground">/次起</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
