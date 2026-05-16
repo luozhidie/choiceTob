@@ -65,7 +65,6 @@ const sidebarItems = [
   { label: "销售图片", href: "/admin/sales-images", icon: ImageIcon },
   { label: "VIP管理", href: "/admin/vip", icon: Crown },
   { label: "VIP加油包", href: "/admin/vip-addons", icon: Sparkles },
-  { label: "一手货源", href: "/admin/supplier", icon: Truck },
   { label: "原创设计", href: "/admin/designer", icon: Palette },
   { label: "沙龙活动", href: "/admin/salon", icon: Calendar },
   { label: "教学中心", href: "/admin/education", icon: GraduationCap },

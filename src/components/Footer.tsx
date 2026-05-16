@@ -24,7 +24,6 @@ const footerSections = [
   {
     title: "关于我们",
     links: [
-      { label: "一手货源", href: "/supplier" },
       { label: "联系我们", href: "/contact" },
       { label: "隐私政策", href: "#" },
       { label: "服务条款", href: "#" },

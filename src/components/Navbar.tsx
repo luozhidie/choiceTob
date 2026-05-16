@@ -17,7 +17,6 @@ const navItems = [
   { label: "销售服务", href: "/sales" },
   { label: "VIP管理", href: "/vip" },
   { label: "原创设计", href: "/designer" },
-  { label: "一手货源", href: "/supplier" },
   { label: "联系我们", href: "/contact" },
 ];
 
