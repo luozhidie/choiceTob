@@ -73,11 +73,25 @@ export const STYLE_PRO_MAP: Record<string, string> = {
   lang_man_m: "浪漫型", shi_shang_m: "时尚型",
 };
 
-/** 女士风格key集合 */
+/** 女士风格key集合（拼音key） */
 export const FEMALE_STYLE_KEYS: Set<string> = new Set(FEMALE_STYLES.map(s => s.value as string));
 
-/** 男士风格key集合 */
+/** 男士风格key集合（拼音key） */
 export const MALE_STYLE_KEYS: Set<string> = new Set(MALE_STYLES.map(s => s.value as string));
+
+/** 女士风格所有标识（拼音key + 市场名 + 专业术语） */
+export const FEMALE_STYLE_ALL_KEYS: Set<string> = new Set([
+  ...FEMALE_STYLES.map(s => s.value as string),
+  ...FEMALE_STYLES.map(s => s.label),
+  ...FEMALE_STYLES.map(s => s.proLabel),
+]);
+
+/** 男士风格所有标识（拼音key + 市场名 + 专业术语） */
+export const MALE_STYLE_ALL_KEYS: Set<string> = new Set([
+  ...MALE_STYLES.map(s => s.value as string),
+  ...MALE_STYLES.map(s => s.label),
+  ...MALE_STYLES.map(s => s.proLabel),
+]);
 
 /** 判断风格key属于哪个性别分组 */
 export function getStyleGroup(key: string): "女士八大风格" | "男士五大风格" | "" {
@@ -92,10 +106,16 @@ export function getStyleLabel(key: string | null | undefined): string {
   return STYLE_KEY_MAP[key] || key;
 }
 
+/** 市场名 → 专业术语 反向查找表 */
+const MARKET_TO_PRO_MAP: Record<string, string> = Object.fromEntries([
+  ...FEMALE_STYLES.map(s => [s.label, s.proLabel]),
+  ...MALE_STYLES.map(s => [s.label, s.proLabel]),
+]);
+
 /** 获取后端专业术语（后台管理/报告/文件使用） */
 export function getStyleProLabel(key: string | null | undefined): string {
   if (!key) return "";
-  return STYLE_PRO_MAP[key] || key;
+  return STYLE_PRO_MAP[key] || MARKET_TO_PRO_MAP[key] || key;
 }
 
 /** 获取带专业术语标注的展示名，如"淑女风（少女型）" */

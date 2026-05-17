@@ -446,11 +446,49 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
             ))}
           </motion.div>
 
+
+          {/* 三步启动入口：把展示变成转化 */}
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 mt-12">
+            <motion.div className="bg-white rounded-3xl shadow-lg border border-accent/10 p-8 sm:p-10" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
+              <div className="text-center mb-8">
+                <span className="text-accent font-bold text-sm tracking-widest uppercase">Start Now</span>
+                <h3 className="mt-3 text-2xl sm:text-3xl font-bold text-primary">开始你的店铺买手系统</h3>
+                <p className="mt-3 text-muted-foreground leading-relaxed">三步启动，让VIP数据变成选品决策依据</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                {[
+                  { step: "01", title: "录入店铺", desc: "填写店铺信息，逐一录入核心VIP会员，完成色彩季型与风格测试", href: "/admin/stores", cta: "前往店铺管理" },
+                  { step: "02", title: "生成企划", desc: "系统自动聚合会员画像，AI生成色彩/风格/品类/价格带完整企划方案", href: "/admin/store-buyer", cta: "打开买手决策" },
+                  { step: "03", title: "落地跟踪", desc: "按企划采购陈列，分区展示，定期复盘销售数据持续优化", href: "/admin/deliveries", cta: "查看交付方案" },
+                ].map((item, i) => (
+                  <motion.div key={item.step} variants={fadeUp} custom={i}>
+                    <Link href={item.href} className="group block">
+                      <div className="relative p-6 rounded-2xl bg-muted hover:bg-accent/5 border border-transparent hover:border-accent/20 transition-all duration-300 h-full">
+                        <div className="absolute -top-3 -left-3 w-8 h-8 rounded-lg bg-accent text-white text-sm font-bold flex items-center justify-center shadow-md">{item.step}</div>
+                        <h4 className="font-bold text-primary mb-2">{item.title}</h4>
+                        <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
+                        <div className="mt-4 flex items-center gap-1 text-xs font-semibold text-accent group-hover:gap-2 transition-all">
+                          {item.cta}<ArrowRight className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+
           {/* CTA */}
           <motion.div className="text-center mt-12" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
-              咨询店铺服务 <ArrowRight className="w-5 h-5" />
-            </Link>
+            <p className="text-muted-foreground mb-4">已有 <span className="font-bold text-accent">50+</span> 家店铺启动买手系统</p>
+            <div className="flex items-center justify-center gap-4">
+              <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
+                预约免费诊断 <ArrowRight className="w-5 h-5" />
+              </Link>
+              <Link href="/admin/stores" className="inline-flex items-center gap-2 px-8 py-3 border-2 border-accent text-accent font-semibold rounded-xl hover:bg-accent/5 transition-colors">
+                直接录入店铺 <Store className="w-5 h-5" />
+              </Link>
+            </div>
           </motion.div>
         </div>
       </section>

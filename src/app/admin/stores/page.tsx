@@ -16,7 +16,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, Legend, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, STYLE_PRO_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS, getColorSeasonFullLabel } from "@/lib/styles";
+import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, STYLE_PRO_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS, FEMALE_STYLE_ALL_KEYS, MALE_STYLE_ALL_KEYS, getColorSeasonFullLabel, getStyleProLabel } from "@/lib/styles";
 
 /* ==================== 类型 ==================== */
 interface StoreType {
@@ -323,18 +323,18 @@ export default function StoresAdminPage() {
 
     // 女士风格分布
     const femaleStyleData = Object.entries(styleDist)
-      .filter(([key]) => FEMALE_STYLE_KEYS.has(key))
+      .filter(([key]) => FEMALE_STYLE_ALL_KEYS.has(key))
       .map(([key, val]: [string, any]) => ({
-        name: STYLE_PRO_MAP[key] || key,
+        name: getStyleProLabel(key) || key,
         value: val.count,
         percentage: val.percentage,
       }));
 
     // 男士风格分布
     const maleStyleData = Object.entries(styleDist)
-      .filter(([key]) => MALE_STYLE_KEYS.has(key))
+      .filter(([key]) => MALE_STYLE_ALL_KEYS.has(key))
       .map(([key, val]: [string, any]) => ({
-        name: STYLE_PRO_MAP[key] || key,
+        name: getStyleProLabel(key) || key,
         value: val.count,
         percentage: val.percentage,
       }));
@@ -387,7 +387,7 @@ export default function StoresAdminPage() {
           {/* 女士八大风格分布 - 柱状图 */}
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <h4 className="font-bold text-primary mb-1">女士八大风格分布</h4>
-            <p className="text-[10px] text-muted-foreground mb-3">淑女风 · 知性风 · 名媛风 · 中性风 · 潮牌风 · 职业风 · 休闲风 · 大牌风</p>
+            <p className="text-[10px] text-muted-foreground mb-3">少女型 · 优雅型 · 浪漫型 · 少年型 · 时尚型 · 古典型 · 自然型 · 戏剧型</p>
             {femaleStyleData.length > 0 ? (
               <ResponsiveContainer width="100%" height={230}>
                 <BarChart data={femaleStyleData} layout="vertical" margin={{ left: 70 }}>
@@ -408,7 +408,7 @@ export default function StoresAdminPage() {
         {maleStyleData.length > 0 && (
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <h4 className="font-bold text-primary mb-1">男士五大风格分布</h4>
-            <p className="text-[10px] text-muted-foreground mb-3">气场型男 · 随性达人 · 精英绅士 · 优雅先生 · 潮流先锋</p>
+            <p className="text-[10px] text-muted-foreground mb-3">戏剧型 · 自然型 · 古典型 · 浪漫型 · 时尚型</p>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={maleStyleData} layout="vertical" margin={{ left: 70 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -482,7 +482,7 @@ export default function StoresAdminPage() {
 
                   {/* 信息行 */}
                   <div className="flex flex-wrap gap-2 mb-3 text-xs text-muted-foreground">
-                    {store.style_position && <span className="px-2 py-0.5 bg-primary/5 rounded-full">{STYLE_LABELS[store.style_position] || store.style_position}</span>}
+                    {store.style_position && <span className="px-2 py-0.5 bg-primary/5 rounded-full">{getStyleProLabel(store.style_position) || store.style_position}</span>}
                     {store.shop_size && <span className="flex items-center gap-1"><Ruler className="w-3 h-3" />{store.shop_size}</span>}
                     {store.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{store.phone}</span>}
                   </div>
@@ -602,7 +602,7 @@ export default function StoresAdminPage() {
                   <h3 className="font-bold text-lg text-primary">{detailStore.name}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {detailStore.city}{detailStore.district ? ` · ${detailStore.district}` : ""}
-                    {detailStore.style_position && ` · ${STYLE_LABELS[detailStore.style_position] || detailStore.style_position}`}
+                    {detailStore.style_position && ` · ${getStyleProLabel(detailStore.style_position) || detailStore.style_position}`}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -621,7 +621,7 @@ export default function StoresAdminPage() {
                     { icon: UsersIcon, label: "年龄层", value: detailStore.target_age },
                     { icon: DollarSign, label: "价格带", value: detailStore.price_range },
                     { icon: Phone, label: "电话", value: detailStore.phone },
-                    { icon: Palette, label: "风格定位", value: detailStore.style_position ? (STYLE_LABELS[detailStore.style_position] || detailStore.style_position) : null },
+                    { icon: Palette, label: "风格定位", value: detailStore.style_position ? (getStyleProLabel(detailStore.style_position) || detailStore.style_position) : null },
                   ].map((item) => (
                     <div key={item.label} className="bg-muted/30 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1"><item.icon className="w-3 h-3" />{item.label}</div>
@@ -806,7 +806,7 @@ export default function StoresAdminPage() {
                               <td className="py-2 px-3 text-muted-foreground">{m.phone || "-"}</td>
                               <td className="py-2 px-3">{m.gender === "female" ? "女" : m.gender === "male" ? "男" : "-"}</td>
                               <td className="py-2 px-3"><span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-xs rounded-full">{getColorSeasonFullLabel(m.color_season) || m.color_season || "未测试"}</span></td>
-                              <td className="py-2 px-3"><span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">{(m.main_style && STYLE_LABELS[m.main_style]) || m.main_style || "未测试"}</span></td>
+                              <td className="py-2 px-3"><span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">{(m.main_style && getStyleProLabel(m.main_style)) || m.main_style || "未测试"}</span></td>
                               <td className="py-2 px-3">{m.vip_level}</td>
                             </tr>
                           ))}
