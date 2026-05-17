@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { STYLE_KEY_MAP, FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -36,15 +37,7 @@ interface BuyerProduct {
   created_at: string;
 }
 
-const STYLE_MAP: Record<string, string> = {
-  // 女士八大风格
-  shao_nv: "甜美少女", you_ya: "法式优雅", lang_man_f: "浪漫女神",
-  shao_nian_f: "简约通勤", shi_shang_f: "街头潮牌", gu_dian_f: "轻奢极简",
-  zi_ran_f: "日系文艺", xi_ju_f: "气场女王",
-  // 男士五大风格
-  xi_ju_m: "气场型男", zi_ran_m: "随性达人", gu_dian_m: "精英绅士",
-  lang_man_m: "优雅先生", shi_shang_m: "潮流先锋",
-};
+const STYLE_MAP = STYLE_KEY_MAP;
 
 const COLOR_MAP: Record<string, string> = {
   light_warm: "浅暖型", warm_bright: "暖亮型", clear_warm: "净暖型",
@@ -331,7 +324,12 @@ export default function AdminBuyerPage() {
                   <select value={form.style_type} onChange={e => setForm(f => ({ ...f, style_type: e.target.value }))}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
                     <option value="">未设置</option>
-                    {Object.entries(STYLE_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    <optgroup label="── 女士八大风格 ──">
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </optgroup>
+                    <optgroup label="── 男士五大风格 ──">
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </optgroup>
                   </select>
                 </div>
               </div>

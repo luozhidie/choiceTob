@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { FEMALE_STYLES, MALE_STYLES, getStyleLabel } from "@/lib/styles";
 import {
   Trash2,
   X,
@@ -197,7 +198,18 @@ export default function AdminStyleTestResultsPage() {
           className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors text-sm"
         >
           <option value="">全部主风格</option>
-          {mainStyles.map((s) => (
+          <optgroup label="── 女士八大风格 ──">
+            {mainStyles.filter(s => FEMALE_STYLES.some(fs => fs.label === s || fs.value === s)).map((s) => (
+              <option key={s} value={s}>{getStyleLabel(s) || s}</option>
+            ))}
+          </optgroup>
+          <optgroup label="── 男士五大风格 ──">
+            {mainStyles.filter(s => MALE_STYLES.some(ms => ms.label === s || ms.value === s)).map((s) => (
+              <option key={s} value={s}>{getStyleLabel(s) || s}</option>
+            ))}
+          </optgroup>
+          {/* 其他未匹配的风格 */}
+          {mainStyles.filter(s => !FEMALE_STYLES.some(fs => fs.label === s || fs.value === s) && !MALE_STYLES.some(ms => ms.label === s || ms.value === s)).map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>

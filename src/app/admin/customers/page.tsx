@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { FEMALE_STYLES, MALE_STYLES, getStyleLabel, getStyleGroup } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -46,9 +47,8 @@ const COLOR_SEASONS = [
 ];
 
 const STYLE_TYPES = [
-  "甜美少女", "法式优雅", "浪漫女神", "简约通勤", "街头潮牌",
-  "轻奢极简", "日系文艺", "气场女王",
-  "气场型男", "随性达人", "精英绅士", "优雅先生", "潮流先锋",
+  ...FEMALE_STYLES.map(s => s.label),
+  ...MALE_STYLES.map(s => s.label),
 ];
 
 const VIP_LEVELS = [
@@ -314,9 +314,12 @@ export default function AdminCustomersPage() {
             className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
           >
             <option value="">全部风格类型</option>
-            {STYLE_TYPES.map(s => (
-              <option key={s} value={s}>{s}</option>
-            ))}
+            <optgroup label="── 女士八大风格 ──">
+              {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+            </optgroup>
+            <optgroup label="── 男士五大风格 ──">
+              {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+            </optgroup>
           </select>
           <select
             value={filterStore}
@@ -525,9 +528,12 @@ export default function AdminCustomersPage() {
                   <label className="block text-sm font-medium text-primary mb-2">主风格</label>
                   <select value={formData.main_style} onChange={(e) => setFormData({ ...formData, main_style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                     <option value="">请选择</option>
-                    {STYLE_TYPES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
+                    <optgroup label="── 女士八大风格 ──">
+                      {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                    </optgroup>
+                    <optgroup label="── 男士五大风格 ──">
+                      {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                    </optgroup>
                   </select>
                 </div>
               </div>
@@ -537,9 +543,12 @@ export default function AdminCustomersPage() {
                 <label className="block text-sm font-medium text-primary mb-2">副风格（选填）</label>
                 <select value={formData.sub_style} onChange={(e) => setFormData({ ...formData, sub_style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                   <option value="">请选择</option>
-                  {STYLE_TYPES.map(s => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
+                  <optgroup label="── 女士八大风格 ──">
+                    {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                  </optgroup>
+                  <optgroup label="── 男士五大风格 ──">
+                    {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                  </optgroup>
                 </select>
               </div>
 

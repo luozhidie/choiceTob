@@ -16,6 +16,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, Legend, ResponsiveContainer, CartesianGrid,
 } from "recharts";
+import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS } from "@/lib/styles";
 
 /* ==================== 类型 ==================== */
 interface StoreType {
@@ -89,19 +90,8 @@ const deliveryStatusMap: Record<string, { label: string; color: string }> = {
 
 /* ==================== 常量 ==================== */
 const STYLE_OPTIONS = [
-  { value: "shao_nv", label: "甜美少女", group: "女士八大风格" },
-  { value: "you_ya", label: "法式优雅", group: "女士八大风格" },
-  { value: "lang_man_f", label: "浪漫女神", group: "女士八大风格" },
-  { value: "shao_nian_f", label: "简约通勤", group: "女士八大风格" },
-  { value: "shi_shang_f", label: "街头潮牌", group: "女士八大风格" },
-  { value: "gu_dian_f", label: "轻奢极简", group: "女士八大风格" },
-  { value: "zi_ran_f", label: "日系文艺", group: "女士八大风格" },
-  { value: "xi_ju_f", label: "气场女王", group: "女士八大风格" },
-  { value: "xi_ju_m", label: "气场型男", group: "男士五大风格" },
-  { value: "zi_ran_m", label: "随性达人", group: "男士五大风格" },
-  { value: "gu_dian_m", label: "精英绅士", group: "男士五大风格" },
-  { value: "lang_man_m", label: "优雅先生", group: "男士五大风格" },
-  { value: "shi_shang_m", label: "潮流先锋", group: "男士五大风格" },
+  ...FEMALE_STYLES.map(s => ({ ...s, group: "女士八大风格" as const })),
+  ...MALE_STYLES.map(s => ({ ...s, group: "男士五大风格" as const })),
 ];
 
 const SHOP_SIZE_OPTIONS = ["30㎡以下", "30-50㎡", "50-80㎡", "80-120㎡", "120㎡以上"];
@@ -120,20 +110,7 @@ const COLOR_SEASON_LABELS: Record<string, string> = {
   clear_cool: "宝石蓝（净冷冬）", cool_bright: "银白色（冷亮冬）", deep_cool: "墨黑色（深冷冬）",
 };
 
-const STYLE_LABELS: Record<string, string> = {
-  // 女士八大风格（拼音key）
-  shao_nv: "甜美少女", you_ya: "法式优雅", lang_man_f: "浪漫女神",
-  shao_nian_f: "简约通勤", shi_shang_f: "街头潮牌", gu_dian_f: "轻奢极简",
-  zi_ran_f: "日系文艺", xi_ju_f: "气场女王",
-  // 男士五大风格（拼音key）
-  xi_ju_m: "气场型男", zi_ran_m: "随性达人", gu_dian_m: "精英绅士",
-  lang_man_m: "优雅先生", shi_shang_m: "潮流先锋",
-  // 旧英文key兼容（数据库历史数据）
-  minimal_commute: "简约通勤", french_elegant: "法式优雅", korean_fresh: "韩系清新",
-  japanese_art: "日系文艺", retro_vintage: "复古港风", sport_casual: "运动休闲",
-  luxury_minimal: "轻奢极简", street_trend: "街头潮牌", chinese_style: "新中式",
-  bohemian: "波西米亚",
-};
+const STYLE_LABELS = STYLE_KEY_MAP;
 
 const PIE_COLORS = [
   "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
@@ -351,11 +328,23 @@ export default function StoresAdminPage() {
       percentage: val.percentage,
     }));
 
-    const styleChartData = Object.entries(styleDist).map(([key, val]: [string, any]) => ({
-      name: STYLE_LABELS[key] || key,
-      value: val.count,
-      percentage: val.percentage,
-    }));
+    // 女士风格分布
+    const femaleStyleData = Object.entries(styleDist)
+      .filter(([key]) => FEMALE_STYLE_KEYS.has(key))
+      .map(([key, val]: [string, any]) => ({
+        name: STYLE_KEY_MAP[key] || key,
+        value: val.count,
+        percentage: val.percentage,
+      }));
+
+    // 男士风格分布
+    const maleStyleData = Object.entries(styleDist)
+      .filter(([key]) => MALE_STYLE_KEYS.has(key))
+      .map(([key, val]: [string, any]) => ({
+        name: STYLE_KEY_MAP[key] || key,
+        value: val.count,
+        percentage: val.percentage,
+      }));
 
     return (
       <div className="space-y-6">
@@ -402,24 +391,42 @@ export default function StoresAdminPage() {
             )}
           </div>
 
-          {/* 风格分布 - 柱状图 */}
+          {/* 女士八大风格分布 - 柱状图 */}
           <div className="bg-white rounded-xl border border-gray-100 p-5">
-            <h4 className="font-bold text-primary mb-4">风格分布</h4>
-            {styleChartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={styleChartData} layout="vertical" margin={{ left: 80 }}>
+            <h4 className="font-bold text-primary mb-1">女士八大风格分布</h4>
+            <p className="text-[10px] text-muted-foreground mb-3">甜美少女 · 法式优雅 · 浪漫女神 · 简约通勤 · 街头潮牌 · 轻奢极简 · 日系文艺 · 气场女王</p>
+            {femaleStyleData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={230}>
+                <BarChart data={femaleStyleData} layout="vertical" margin={{ left: 70 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis type="number" allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" width={75} tick={{ fontSize: 11 }} />
+                  <YAxis type="category" dataKey="name" width={65} tick={{ fontSize: 11 }} />
                   <Tooltip formatter={(value: any) => [`${value}人`, "数量"]} />
-                  <Bar dataKey="value" fill="#4ECDC4" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="value" fill="#FF6B6B" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-[260px] flex items-center justify-center text-sm text-muted-foreground">暂无测试数据</div>
+              <div className="h-[230px] flex items-center justify-center text-sm text-muted-foreground">暂无女士风格数据</div>
             )}
           </div>
         </div>
+
+        {/* 男士五大风格分布 */}
+        {maleStyleData.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-100 p-5">
+            <h4 className="font-bold text-primary mb-1">男士五大风格分布</h4>
+            <p className="text-[10px] text-muted-foreground mb-3">气场型男 · 随性达人 · 精英绅士 · 优雅先生 · 潮流先锋</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={maleStyleData} layout="vertical" margin={{ left: 70 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" allowDecimals={false} />
+                <YAxis type="category" dataKey="name" width={65} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(value: any) => [`${value}人`, "数量"]} />
+                <Bar dataKey="value" fill="#45B7D1" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
     );
   };

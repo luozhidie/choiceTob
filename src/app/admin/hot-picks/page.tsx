@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -271,7 +272,15 @@ export default function AdminHotPicksPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">风格</label>
-                  <input type="text" value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：法式优雅" />
+                  <select value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
+                    <option value="">请选择</option>
+                    <optgroup label="── 女士八大风格 ──">
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.label}>{s.label}</option>)}
+                    </optgroup>
+                    <optgroup label="── 男士五大风格 ──">
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.label}>{s.label}</option>)}
+                    </optgroup>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">价格（元）</label>

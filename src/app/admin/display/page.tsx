@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import { ALL_STYLES, STYLE_KEY_MAP, getStyleLabel, FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
   Loader2, LayoutGrid,
@@ -52,21 +53,7 @@ const COLOR_SEASONS = [
   { value: "deep_cool", label: "深冷型" },
 ];
 
-const STYLES = [
-  { value: "shao_nv", label: "甜美少女" },
-  { value: "you_ya", label: "法式优雅" },
-  { value: "lang_man_f", label: "浪漫女神" },
-  { value: "shao_nian_f", label: "简约通勤" },
-  { value: "shi_shang_f", label: "街头潮牌" },
-  { value: "gu_dian_f", label: "轻奢极简" },
-  { value: "zi_ran_f", label: "日系文艺" },
-  { value: "xi_ju_f", label: "气场女王" },
-  { value: "xi_ju_m", label: "气场型男" },
-  { value: "zi_ran_m", label: "随性达人" },
-  { value: "gu_dian_m", label: "精英绅士" },
-  { value: "lang_man_m", label: "优雅先生" },
-  { value: "shi_shang_m", label: "潮流先锋" },
-];
+const STYLES = ALL_STYLES;
 
 export default function AdminDisplayPage() {
   const [displays, setDisplays] = useState<Display[]>([]);
@@ -332,9 +319,12 @@ export default function AdminDisplayPage() {
                   <label className="block text-sm font-medium text-primary mb-2">风格类型</label>
                   <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                     <option value="">不指定</option>
-                    {STYLES.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
+                    <optgroup label="── 女士八大风格 ──">
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </optgroup>
+                    <optgroup label="── 男士五大风格 ──">
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                    </optgroup>
                   </select>
                 </div>
               </div>
