@@ -41,6 +41,7 @@ import {
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
   { label: "店铺管理", href: "/admin/stores", icon: Store },
+  { label: "店铺买手决策", href: "/admin/store-buyer", icon: TrendingUp },
   { label: "色彩季型录入", href: "/admin/color-analysis", icon: Palette },
   { label: "色彩季型对比", href: "/admin/color-compare", icon: Palette },
   { label: "客户管理", href: "/admin/customers", icon: Users },
