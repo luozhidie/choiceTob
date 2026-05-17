@@ -367,7 +367,7 @@ export default function AdminHotPicksImagesPage() {
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
-                  placeholder="如：法式优雅"
+                  placeholder="如：知性风"
                 />
               </div>
 

@@ -37,14 +37,14 @@ const COLOR_PREFERENCES = [
 
 /* 市场风格定位（女士八大+男士五大） */
 const MARKET_STYLES = [
-  { value: "shao_nv", label: "甜美少女" },
-  { value: "you_ya", label: "法式优雅" },
-  { value: "lang_man_f", label: "浪漫女神" },
-  { value: "shao_nian_f", label: "简约通勤" },
-  { value: "shi_shang_f", label: "街头潮牌" },
-  { value: "gu_dian_f", label: "轻奢极简" },
-  { value: "zi_ran_f", label: "日系文艺" },
-  { value: "xi_ju_f", label: "气场女王" },
+  { value: "shao_nv", label: "淑女风" },
+  { value: "you_ya", label: "知性风" },
+  { value: "lang_man_f", label: "名媛风" },
+  { value: "shao_nian_f", label: "中性风" },
+  { value: "shi_shang_f", label: "潮牌风" },
+  { value: "gu_dian_f", label: "职业风" },
+  { value: "zi_ran_f", label: "休闲风" },
+  { value: "xi_ju_f", label: "大牌风" },
   { value: "xi_ju_m", label: "气场型男" },
   { value: "zi_ran_m", label: "随性达人" },
   { value: "gu_dian_m", label: "精英绅士" },

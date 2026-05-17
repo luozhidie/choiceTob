@@ -394,7 +394,7 @@ export default function StoresAdminPage() {
           {/* 女士八大风格分布 - 柱状图 */}
           <div className="bg-white rounded-xl border border-gray-100 p-5">
             <h4 className="font-bold text-primary mb-1">女士八大风格分布</h4>
-            <p className="text-[10px] text-muted-foreground mb-3">甜美少女 · 法式优雅 · 浪漫女神 · 简约通勤 · 街头潮牌 · 轻奢极简 · 日系文艺 · 气场女王</p>
+            <p className="text-[10px] text-muted-foreground mb-3">淑女风 · 知性风 · 名媛风 · 中性风 · 潮牌风 · 职业风 · 休闲风 · 大牌风</p>
             {femaleStyleData.length > 0 ? (
               <ResponsiveContainer width="100%" height={230}>
                 <BarChart data={femaleStyleData} layout="vertical" margin={{ left: 70 }}>

@@ -26,14 +26,14 @@ const COLOR_PREFERENCES = [
 ];
 
 const MARKET_STYLES = [
-  { value: "shao_nv", label: "甜美少女", group: "女士八大风格" },
-  { value: "you_ya", label: "法式优雅", group: "女士八大风格" },
-  { value: "lang_man_f", label: "浪漫女神", group: "女士八大风格" },
-  { value: "shao_nian_f", label: "简约通勤", group: "女士八大风格" },
-  { value: "shi_shang_f", label: "街头潮牌", group: "女士八大风格" },
-  { value: "gu_dian_f", label: "轻奢极简", group: "女士八大风格" },
-  { value: "zi_ran_f", label: "日系文艺", group: "女士八大风格" },
-  { value: "xi_ju_f", label: "气场女王", group: "女士八大风格" },
+  { value: "shao_nv", label: "淑女风", group: "女士八大风格" },
+  { value: "you_ya", label: "知性风", group: "女士八大风格" },
+  { value: "lang_man_f", label: "名媛风", group: "女士八大风格" },
+  { value: "shao_nian_f", label: "中性风", group: "女士八大风格" },
+  { value: "shi_shang_f", label: "潮牌风", group: "女士八大风格" },
+  { value: "gu_dian_f", label: "职业风", group: "女士八大风格" },
+  { value: "zi_ran_f", label: "休闲风", group: "女士八大风格" },
+  { value: "xi_ju_f", label: "大牌风", group: "女士八大风格" },
   { value: "xi_ju_m", label: "气场型男", group: "男士五大风格" },
   { value: "zi_ran_m", label: "随性达人", group: "男士五大风格" },
   { value: "gu_dian_m", label: "精英绅士", group: "男士五大风格" },

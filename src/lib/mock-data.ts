@@ -16,14 +16,14 @@ export const COLOR_SEASONS = [
 ] as const;
 
 export const STYLE_TYPES = [
-  "甜美少女",
-  "法式优雅",
-  "浪漫女神",
-  "简约通勤",
-  "街头潮牌",
-  "轻奢极简",
-  "日系文艺",
-  "气场女王",
+  "淑女风",
+  "知性风",
+  "名媛风",
+  "中性风",
+  "潮牌风",
+  "职业风",
+  "休闲风",
+  "大牌风",
 ] as const;
 
 export const COLOR_SEASON_COLORS: Record<string, string> = {
@@ -101,7 +101,7 @@ export const products: Product[] = [
       sizes: ["XS", "S", "M", "L"],
     },
     description:
-      "多层网纱蓬蓬裙摆，内衬缎面顺滑舒适。高腰设计拉长腿部比例，搭配简约上衣即可打造甜美少女感。",
+      "多层网纱蓬蓬裙摆，内衬缎面顺滑舒适。高腰设计拉长腿部比例，搭配简约上衣即可打造淑女风感。",
     supplier_id: "s003",
     is_hot: false,
   },

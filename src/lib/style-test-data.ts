@@ -627,14 +627,14 @@ export const femaleTestConfig: FemaleTestConfig = {
  * 用户端展示市场名，后台保留专业名
  */
 export const FEMALE_STYLE_MARKET_MAP: Record<string, string> = {
-  '少女型': '甜美少女',
-  '少年型': '简约通勤',
-  '优雅型': '法式优雅',
-  '浪漫型': '浪漫女神',
-  '戏剧型': '气场女王',
-  '古典型': '轻奢极简',
-  '自然型': '日系文艺',
-  '时尚型': '街头潮牌',
+  '少女型': '淑女风',
+  '少年型': '中性风',
+  '优雅型': '知性风',
+  '浪漫型': '名媛风',
+  '戏剧型': '大牌风',
+  '古典型': '职业风',
+  '自然型': '休闲风',
+  '时尚型': '潮牌风',
 };
 
 /**
@@ -653,9 +653,9 @@ export const MALE_STYLE_MARKET_MAP: Record<string, string> = {
  */
 export const STYLE_KEY_MARKET_MAP: Record<string, string> = {
   // 女士八大风格
-  shao_nv: '甜美少女', you_ya: '法式优雅', lang_man_f: '浪漫女神',
-  shao_nian_f: '简约通勤', shi_shang_f: '街头潮牌', gu_dian_f: '轻奢极简',
-  zi_ran_f: '日系文艺', xi_ju_f: '气场女王',
+  shao_nv: '淑女风', you_ya: '知性风', lang_man_f: '名媛风',
+  shao_nian_f: '中性风', shi_shang_f: '潮牌风', gu_dian_f: '职业风',
+  zi_ran_f: '休闲风', xi_ju_f: '大牌风',
   // 男士五大风格
   xi_ju_m: '气场型男', zi_ran_m: '随性达人', gu_dian_m: '精英绅士',
   lang_man_m: '优雅先生', shi_shang_m: '潮流先锋',

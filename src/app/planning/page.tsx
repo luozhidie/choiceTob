@@ -30,14 +30,14 @@ const COLOR_SEASONS = [
 ];
 
 const STYLES = [
-  { value: "shao_nv", label: "甜美少女" },
-  { value: "you_ya", label: "法式优雅" },
-  { value: "lang_man_f", label: "浪漫女神" },
-  { value: "shao_nian_f", label: "简约通勤" },
-  { value: "shi_shang_f", label: "街头潮牌" },
-  { value: "gu_dian_f", label: "轻奢极简" },
-  { value: "zi_ran_f", label: "日系文艺" },
-  { value: "xi_ju_f", label: "气场女王" },
+  { value: "shao_nv", label: "淑女风" },
+  { value: "you_ya", label: "知性风" },
+  { value: "lang_man_f", label: "名媛风" },
+  { value: "shao_nian_f", label: "中性风" },
+  { value: "shi_shang_f", label: "潮牌风" },
+  { value: "gu_dian_f", label: "职业风" },
+  { value: "zi_ran_f", label: "休闲风" },
+  { value: "xi_ju_f", label: "大牌风" },
 ];
 
 /* ===================== 企划分类 ===================== */
@@ -52,14 +52,14 @@ const PLAN_TYPES = [
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
 const MARKET_STYLES = [
-  { value: "shao_nv", label: "甜美少女", desc: "可爱、甜美、减龄" },
-  { value: "you_ya", label: "法式优雅", desc: "温柔、精致、高级感" },
-  { value: "lang_man_f", label: "浪漫女神", desc: "成熟、华丽、有风情" },
-  { value: "shao_nian_f", label: "简约通勤", desc: "帅气、率真、干练" },
-  { value: "shi_shang_f", label: "街头潮牌", desc: "个性、摩登、百变" },
-  { value: "gu_dian_f", label: "轻奢极简", desc: "端庄、贵气、上品" },
-  { value: "zi_ran_f", label: "日系文艺", desc: "随性、大方、飘逸" },
-  { value: "xi_ju_f", label: "气场女王", desc: "夸张、华丽、有存在感" },
+  { value: "shao_nv", label: "淑女风", desc: "可爱、甜美、减龄" },
+  { value: "you_ya", label: "知性风", desc: "温柔、精致、高级感" },
+  { value: "lang_man_f", label: "名媛风", desc: "成熟、华丽、有风情" },
+  { value: "shao_nian_f", label: "中性风", desc: "帅气、率真、干练" },
+  { value: "shi_shang_f", label: "潮牌风", desc: "个性、摩登、百变" },
+  { value: "gu_dian_f", label: "职业风", desc: "端庄、贵气、上品" },
+  { value: "zi_ran_f", label: "休闲风", desc: "随性、大方、飘逸" },
+  { value: "xi_ju_f", label: "大牌风", desc: "夸张、华丽、有存在感" },
   { value: "xi_ju_m", label: "气场型男", desc: "气派、张扬、有权威感" },
   { value: "zi_ran_m", label: "随性达人", desc: "潇洒、阳刚、有朝气" },
   { value: "gu_dian_m", label: "精英绅士", desc: "严谨、端正、含蓄大方" },
