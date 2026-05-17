@@ -206,6 +206,8 @@ export const COLOR_SEASON_NORMALIZE_MAP: Record<string, string> = {
   // 非标准名 → 最近似标准key
   "浅秋": "warm_soft", "浅冬": "clear_cool", "柔春": "light_warm",
   "深春": "warm_bright", "柔冬": "cool_bright",
+  // monochrome（黑白型）→ 深冷型（最接近）
+  "monochrome": "deep_cool",
 };
 
 /** 12季色彩代表性颜色（用于UI展示） */
