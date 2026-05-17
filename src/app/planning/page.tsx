@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { COLOR_SEASONS_PRO, ALL_STYLES } from "@/lib/styles";
 import { PaywallModal } from "@/components/PaywallModal";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -14,31 +15,13 @@ import {
 } from "lucide-react";
 
 /* ===================== 12季色彩（仅案例模板筛选用） ===================== */
-const COLOR_SEASONS = [
-  { value: "light_warm", label: "樱花粉", group: "春" },
-  { value: "warm_bright", label: "珊瑚橘", group: "春" },
-  { value: "clear_warm", label: "柠檬黄", group: "春" },
-  { value: "light_cool", label: "天空蓝", group: "夏" },
-  { value: "soft_cool", label: "薰衣草", group: "夏" },
-  { value: "cool_soft", label: "薄荷绿", group: "夏" },
-  { value: "warm_soft", label: "焦糖棕", group: "秋" },
-  { value: "soft_warm", label: "枫叶红", group: "秋" },
-  { value: "deep_warm", label: "酒红色", group: "秋" },
-  { value: "clear_cool", label: "宝石蓝", group: "冬" },
-  { value: "cool_bright", label: "银白色", group: "冬" },
-  { value: "deep_cool", label: "墨黑色", group: "冬" },
-];
+const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
+  value: c.value,
+  label: c.marketLabel,
+  group: c.group,
+}));
 
-const STYLES = [
-  { value: "shao_nv", label: "淑女风" },
-  { value: "you_ya", label: "知性风" },
-  { value: "lang_man_f", label: "名媛风" },
-  { value: "shao_nian_f", label: "中性风" },
-  { value: "shi_shang_f", label: "潮牌风" },
-  { value: "gu_dian_f", label: "职业风" },
-  { value: "zi_ran_f", label: "休闲风" },
-  { value: "xi_ju_f", label: "大牌风" },
-];
+const STYLES = ALL_STYLES.map(s => ({ value: s.value, label: s.label }));
 
 /* ===================== 企划分类 ===================== */
 const PLAN_TYPES = [

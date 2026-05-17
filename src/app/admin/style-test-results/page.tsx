@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { FEMALE_STYLES, MALE_STYLES, getStyleLabel } from "@/lib/styles";
+import { FEMALE_STYLES, MALE_STYLES, getStyleProLabel } from "@/lib/styles";
 import {
   Trash2,
   X,
@@ -200,12 +200,12 @@ export default function AdminStyleTestResultsPage() {
           <option value="">全部主风格</option>
           <optgroup label="── 女士八大风格 ──">
             {mainStyles.filter(s => FEMALE_STYLES.some(fs => fs.label === s || fs.value === s)).map((s) => (
-              <option key={s} value={s}>{getStyleLabel(s) || s}</option>
+              <option key={s} value={s}>{getStyleProLabel(s) || s}</option>
             ))}
           </optgroup>
           <optgroup label="── 男士五大风格 ──">
             {mainStyles.filter(s => MALE_STYLES.some(ms => ms.label === s || ms.value === s)).map((s) => (
-              <option key={s} value={s}>{getStyleLabel(s) || s}</option>
+              <option key={s} value={s}>{getStyleProLabel(s) || s}</option>
             ))}
           </optgroup>
           {/* 其他未匹配的风格 */}
@@ -252,8 +252,8 @@ export default function AdminStyleTestResultsPage() {
                           {GENDER_MAP[result.gender] || result.gender}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-primary">{result.main_style || "-"}</td>
-                      <td className="px-4 py-3 text-sm">{result.sub_style || "-"}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-primary">{getStyleProLabel(result.main_style) || result.main_style || "-"}</td>
+                      <td className="px-4 py-3 text-sm">{getStyleProLabel(result.sub_style) || result.sub_style || "-"}</td>
                       <td className="px-4 py-3 text-sm">{result.name || "-"}</td>
                       <td className="px-4 py-3 text-sm">{result.phone || "-"}</td>
                       <td className="px-4 py-3 text-sm">{result.wechat || "-"}</td>
@@ -336,11 +336,11 @@ export default function AdminStyleTestResultsPage() {
                 </div>
                 <div>
                   <span className="text-sm text-muted-foreground">主风格</span>
-                  <p className="font-medium text-primary">{detailResult.main_style || "-"}</p>
+                  <p className="font-medium text-primary">{getStyleProLabel(detailResult.main_style) || detailResult.main_style || "-"}</p>
                 </div>
                 <div>
                   <span className="text-sm text-muted-foreground">副风格</span>
-                  <p className="font-medium text-primary">{detailResult.sub_style || "-"}</p>
+                  <p className="font-medium text-primary">{getStyleProLabel(detailResult.sub_style) || detailResult.sub_style || "-"}</p>
                 </div>
               </div>
 

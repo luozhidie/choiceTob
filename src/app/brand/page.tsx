@@ -14,6 +14,7 @@ import {
   Eye,
   Layers,
 } from "lucide-react";
+import { COLOR_SEASONS_PRO, COLOR_SEASON_COLORS, FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -43,123 +44,61 @@ const brandColors = [
   { name: "文字辅色", hex: "#64748b", usage: "辅助说明文字、次要信息" },
 ];
 
-const colorSeasonSystem = [
-  {
-    season: "春季型",
-    desc: "明亮、清新、温暖，如春日花园般的色彩",
-    types: [
-      { name: "浅春型", color: "#FADADD", desc: "浅淡明亮，活泼轻盈" },
-      { name: "暖春型", color: "#FFD966", desc: "温暖明亮，生机勃勃" },
-      { name: "净春型", color: "#FF8C69", desc: "鲜明纯净，充满活力" },
-    ],
-  },
-  {
-    season: "夏季型",
-    desc: "柔和、淡雅、清凉，如盛夏海滨般的色彩",
-    types: [
-      { name: "浅夏型", color: "#B0C4DE", desc: "浅淡柔和，清爽怡人" },
-      { name: "冷夏型", color: "#8FA5C0", desc: "清凉沉静，优雅知性" },
-      { name: "柔夏型", color: "#9EB1B9", desc: "柔和谐调，温婉含蓄" },
-    ],
-  },
-  {
-    season: "秋季型",
-    desc: "浓郁、醇厚、温暖，如秋日森林般的色彩",
-    types: [
-      { name: "深秋型", color: "#8B4513", desc: "深沉浓郁，稳重大气" },
-      { name: "暖秋型", color: "#CD853F", desc: "温暖醇厚，成熟优雅" },
-      { name: "柔秋型", color: "#C4A882", desc: "柔和温润，内敛雅致" },
-    ],
-  },
-  {
-    season: "冬季型",
-    desc: "鲜明、冷艳、强烈，如冬日雪原般的色彩",
-    types: [
-      { name: "深冬型", color: "#1a365d", desc: "深沉冷峻，权威尊贵" },
-      { name: "冷冬型", color: "#4169E1", desc: "鲜明冷冽，干净利落" },
-      { name: "净冬型", color: "#C0C0C0", desc: "纯净分明，高贵冷艳" },
-    ],
-  },
-];
+const colorSeasonSystem = ["春", "夏", "秋", "冬"].map(group => {
+  const seasonNames: Record<string, string> = { 春: "春季型", 夏: "夏季型", 秋: "秋季型", 冬: "冬季型" };
+  const seasonDescs: Record<string, string> = {
+    春: "明亮、清新、温暖，如春日花园般的色彩",
+    夏: "柔和、淡雅、清凉，如盛夏海滨般的色彩",
+    秋: "浓郁、醇厚、温暖，如秋日森林般的色彩",
+    冬: "鲜明、冷艳、强烈，如冬日雪原般的色彩",
+  };
+  return {
+    season: seasonNames[group],
+    desc: seasonDescs[group],
+    types: COLOR_SEASONS_PRO.filter(c => c.group === group).map(c => ({
+      name: c.marketLabel,
+      color: COLOR_SEASON_COLORS[c.value] || "#ccc",
+      desc: `${c.label}，${c.marketLabel}色系`,
+    })),
+  };
+});
 
-const femaleStyles = [
-  {
-    name: "少女型",
-    traits: "甜美、俏皮、轻盈",
-    direction: "蓬蓬裙、蝴蝶结、马卡龙色系",
-    icon: "🎀",
-  },
-  {
-    name: "优雅型",
-    traits: "精致、柔美、知性",
-    direction: "真丝衬衫、A字裙、莫兰迪色系",
-    icon: "🌸",
-  },
-  {
-    name: "浪漫型",
-    traits: "华丽、性感、丰盈",
-    direction: "蕾丝、荷叶边、酒红色系",
-    icon: "🌹",
-  },
-  {
-    name: "少年型",
-    traits: "利落、干练、中性",
-    direction: "西装外套、直筒裤、黑白灰",
-    icon: "⚡",
-  },
-  {
-    name: "时尚型",
-    traits: "个性、前卫、多变",
-    direction: "不规则剪裁、撞色、潮流款",
-    icon: "✨",
-  },
-  {
-    name: "古典型",
-    traits: "端庄、稳重、高贵",
-    direction: "套装、珍珠饰品、藏蓝色系",
-    icon: "💎",
-  },
-  {
-    name: "自然型",
-    traits: "随性、洒脱、质朴",
-    direction: "棉麻材质、宽松版型、大地色系",
-    icon: "🌿",
-  },
-  {
-    name: "戏剧型",
-    traits: "夸张、夺目、气场",
-    direction: "大廓形、撞色拼接、亮面材质",
-    icon: "🎭",
-  },
-];
+const styleDisplayInfo: Record<string, { traits: string; direction: string; icon?: string }> = {
+  // Female
+  shao_nv: { traits: "甜美、俏皮、轻盈", direction: "蓬蓬裙、蝴蝶结、马卡龙色系", icon: "🎀" },
+  you_ya: { traits: "精致、柔美、知性", direction: "真丝衬衫、A字裙、莫兰迪色系", icon: "🌸" },
+  lang_man_f: { traits: "华丽、性感、丰盈", direction: "蕾丝、荷叶边、酒红色系", icon: "🌹" },
+  shao_nian_f: { traits: "利落、干练、中性", direction: "西装外套、直筒裤、黑白灰", icon: "⚡" },
+  shi_shang_f: { traits: "个性、前卫、多变", direction: "不规则剪裁、撞色、潮流款", icon: "✨" },
+  gu_dian_f: { traits: "端庄、稳重、高贵", direction: "套装、珍珠饰品、藏蓝色系", icon: "💎" },
+  zi_ran_f: { traits: "随性、洒脱、质朴", direction: "棉麻材质、宽松版型、大地色系", icon: "🌿" },
+  xi_ju_f: { traits: "夸张、夺目、气场", direction: "大廓形、撞色拼接、亮面材质", icon: "🎭" },
+  // Male
+  xi_ju_m: { traits: "强烈、醒目、气场强大", direction: "大格纹、深色系、醒目配饰" },
+  zi_ran_m: { traits: "随性、洒脱、质朴", direction: "棉麻质地、大地色系、宽松舒适" },
+  gu_dian_m: { traits: "端庄、稳重、严谨", direction: "精纺西装、深色系、品质感" },
+  lang_man_m: { traits: "精致、温和、优雅", direction: "丝绒材质、暖色系、精致剪裁" },
+  shi_shang_m: { traits: "前卫、个性、潮流", direction: "设计感单品、撞色搭配、潮流元素" },
+};
 
-const maleStyles = [
-  {
-    name: "戏剧型",
-    traits: "强烈、醒目、气场强大",
-    direction: "大格纹、深色系、醒目配饰",
-  },
-  {
-    name: "自然型",
-    traits: "随性、洒脱、质朴",
-    direction: "棉麻质地、大地色系、宽松舒适",
-  },
-  {
-    name: "古典型",
-    traits: "端庄、稳重、严谨",
-    direction: "精纺西装、深色系、品质感",
-  },
-  {
-    name: "浪漫型",
-    traits: "精致、温和、优雅",
-    direction: "丝绒材质、暖色系、精致剪裁",
-  },
-  {
-    name: "时尚型",
-    traits: "前卫、个性、潮流",
-    direction: "设计感单品、撞色搭配、潮流元素",
-  },
-];
+const femaleStyles = FEMALE_STYLES.map(s => {
+  const info = styleDisplayInfo[s.value];
+  return {
+    name: s.label,
+    traits: info?.traits ?? "",
+    direction: info?.direction ?? "",
+    ...(info?.icon ? { icon: info.icon } : {}),
+  };
+});
+
+const maleStyles = MALE_STYLES.map(s => {
+  const info = styleDisplayInfo[s.value];
+  return {
+    name: s.label,
+    traits: info?.traits ?? "",
+    direction: info?.direction ?? "",
+  };
+});
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */

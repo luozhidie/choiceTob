@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
+import { FEMALE_STYLES, MALE_STYLES, getStyleProLabel } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -228,7 +228,7 @@ export default function AdminHotPicksPage() {
                     )}
                   </td>
                   <td className="px-6 py-4 font-medium text-primary">{pick.name}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{pick.style}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{getStyleProLabel(pick.style) || pick.style}</td>
                   <td className="px-6 py-4 text-sm">¥{pick.price}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
@@ -275,10 +275,10 @@ export default function AdminHotPicksPage() {
                   <select value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                     <option value="">请选择</option>
                     <optgroup label="── 女士八大风格 ──">
-                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.label}>{s.label}</option>)}
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                     <optgroup label="── 男士五大风格 ──">
-                      {MALE_STYLES.map(s => <option key={s.value} value={s.label}>{s.label}</option>)}
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                   </select>
                 </div>

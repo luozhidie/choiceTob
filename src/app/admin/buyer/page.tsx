@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { STYLE_KEY_MAP, FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
+import { STYLE_KEY_MAP, FEMALE_STYLES, MALE_STYLES, COLOR_SEASON_PRO_MAP, COLOR_SEASONS_PRO, getColorSeasonLabel, getStyleProLabel, getColorSeasonProLabel } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -39,12 +39,8 @@ interface BuyerProduct {
 
 const STYLE_MAP = STYLE_KEY_MAP;
 
-const COLOR_MAP: Record<string, string> = {
-  light_warm: "浅暖型", warm_bright: "暖亮型", clear_warm: "净暖型",
-  light_cool: "浅冷型", soft_cool: "柔冷型", cool_soft: "冷柔型",
-  warm_soft: "暖柔型", soft_warm: "柔暖型", deep_warm: "深暖型",
-  clear_cool: "净冷型", cool_bright: "冷亮型", deep_cool: "深冷型",
-};
+const COLOR_MAP = COLOR_SEASON_PRO_MAP;
+const COLOR_SEASONS = COLOR_SEASONS_PRO;
 
 export default function AdminBuyerPage() {
   const [products, setProducts] = useState<BuyerProduct[]>([]);
@@ -245,8 +241,8 @@ export default function AdminBuyerPage() {
                         {p.subcategory && <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-accent/10 text-accent w-fit">{SUBCATEGORY_MAP[p.subcategory] || p.subcategory}</span>}
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-xs text-muted-foreground">{p.style_type ? STYLE_MAP[p.style_type] || p.style_type : "—"}</td>
-                    <td className="px-5 py-3 text-xs text-muted-foreground">{p.color_season ? COLOR_MAP[p.color_season] || p.color_season : "—"}</td>
+                    <td className="px-5 py-3 text-xs text-muted-foreground">{p.style_type ? getStyleProLabel(p.style_type) || p.style_type : "—"}</td>
+                    <td className="px-5 py-3 text-xs text-muted-foreground">{p.color_season ? getColorSeasonProLabel(p.color_season) || p.color_season : "—"}</td>
                     <td className="px-5 py-3 font-medium text-accent">¥{(p.price / 100).toFixed(0)}</td>
                     <td className="px-5 py-3">
                       <span className={`text-xs font-medium ${p.stock ? "text-green-600" : "text-red-500"}`}>
@@ -315,8 +311,14 @@ export default function AdminBuyerPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">色彩季型</label>
                   <select value={form.color_season} onChange={e => setForm(f => ({ ...f, color_season: e.target.value }))}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-                    <option value="">未设置</option>
-                    {Object.entries(COLOR_MAP).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                    <option value="">全部色彩季型</option>
+                    {["春", "夏", "秋", "冬"].map(group => (
+                      <optgroup key={group} label={`${group}季型`}>
+                        {COLOR_SEASONS_PRO.filter(c => c.group === group).map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -324,11 +326,11 @@ export default function AdminBuyerPage() {
                   <select value={form.style_type} onChange={e => setForm(f => ({ ...f, style_type: e.target.value }))}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
                     <option value="">未设置</option>
-                    <optgroup label="── 女士八大风格 ──">
-                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      <optgroup label="── 女士八大风格 ──">
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                     <optgroup label="── 男士五大风格 ──">
-                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                   </select>
                 </div>

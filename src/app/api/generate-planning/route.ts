@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { COLOR_SEASONS_PRO } from "@/lib/styles";
 
 /**
  * POST /api/generate-planning
@@ -113,12 +114,9 @@ export async function POST(req: NextRequest) {
     if (memberStats && memberStats.tested_vip_count > 0) {
       const colorDist = memberStats.color_season_distribution || {};
       const styleDist = memberStats.style_distribution || {};
-      const COLOR_LABELS: Record<string, string> = {
-        light_warm: "浅暖春", warm_bright: "暖亮春", clear_warm: "净暖春",
-        light_cool: "浅冷夏", soft_cool: "柔冷夏", cool_soft: "冷柔夏",
-        warm_soft: "暖柔秋", soft_warm: "柔暖秋", deep_warm: "深暖秋",
-        clear_cool: "净冷冬", cool_bright: "冷亮冬", deep_cool: "深冷冬",
-      };
+      const COLOR_LABELS: Record<string, string> = Object.fromEntries(
+        [...COLOR_SEASONS_PRO].map(c => [c.value, `${c.label.replace(/型$/, '')}${c.group}`])
+      );
 
       userPrompt += `
 

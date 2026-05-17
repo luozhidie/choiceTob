@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PaywallModal } from "@/components/PaywallModal";
+import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 
 /* ==================== 品类选项（从 categories 派生）==================== */
@@ -18,39 +19,15 @@ const CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }
 
 /* ==================== 静态数据 ==================== */
 
-const STYLE_OPTIONS = [
-  { value: "shao_nv", label: "淑女风" },
-  { value: "you_ya", label: "知性风" },
-  { value: "lang_man_f", label: "名媛风" },
-  { value: "shao_nian_f", label: "中性风" },
-  { value: "shi_shang_f", label: "潮牌风" },
-  { value: "gu_dian_f", label: "职业风" },
-  { value: "zi_ran_f", label: "休闲风" },
-  { value: "xi_ju_f", label: "大牌风" },
-  { value: "xi_ju_m", label: "气场型男" },
-  { value: "zi_ran_m", label: "随性达人" },
-  { value: "gu_dian_m", label: "精英绅士" },
-  { value: "lang_man_m", label: "优雅先生" },
-  { value: "shi_shang_m", label: "潮流先锋" },
-];
+const STYLE_OPTIONS = ALL_STYLES.map(s => ({ value: s.value, label: s.label }));
 
 /* 用户端市场术语 —— 仅用于筛选器展示（与STYLE_OPTIONS相同，保持一致性） */
 const USER_STYLE_OPTIONS = STYLE_OPTIONS;
 
-const COLOR_SEASONS = [
-  { value: "light_warm", label: "浅暖型" },
-  { value: "warm_bright", label: "暖亮型" },
-  { value: "clear_warm", label: "净暖型" },
-  { value: "light_cool", label: "浅冷型" },
-  { value: "soft_cool", label: "柔冷型" },
-  { value: "cool_soft", label: "冷柔型" },
-  { value: "warm_soft", label: "暖柔型" },
-  { value: "soft_warm", label: "柔暖型" },
-  { value: "deep_warm", label: "深暖型" },
-  { value: "clear_cool", label: "净冷型" },
-  { value: "cool_bright", label: "冷亮型" },
-  { value: "deep_cool", label: "深冷型" },
-];
+const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
+  value: c.value,
+  label: c.marketLabel,
+}));
 
 /* 用户端色彩偏好 —— 仅用于筛选器展示 */
 const USER_COLOR_OPTIONS = [

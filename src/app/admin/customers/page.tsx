@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { FEMALE_STYLES, MALE_STYLES, getStyleLabel, getStyleGroup } from "@/lib/styles";
+import { FEMALE_STYLES, MALE_STYLES, getStyleLabel, getStyleGroup, COLOR_SEASONS_PRO, getColorSeasonLabel, getStyleProLabel, getColorSeasonProLabel, normalizeColorSeasonKey } from "@/lib/styles";
 import {
   Plus,
   Pencil,
@@ -40,11 +40,7 @@ interface StoreOption {
   city: string | null;
 }
 
-const COLOR_SEASONS = [
-  "深秋", "浅秋", "净秋", "柔秋",
-  "深春", "浅春", "净春", "柔春",
-  "深冬", "浅冬", "净冬", "柔冬",
-];
+const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => c.value as string);
 
 const STYLE_TYPES = [
   ...FEMALE_STYLES.map(s => s.label),
@@ -194,7 +190,7 @@ export default function AdminCustomersPage() {
       wechat: customer.wechat || "",
       company: customer.company || "",
       gender: customer.gender || "女",
-      color_season: customer.color_season || "",
+      color_season: normalizeColorSeasonKey(customer.color_season) || customer.color_season || "",
       main_style: customer.main_style || "",
       sub_style: customer.sub_style || "",
       vip_level: customer.vip_level || "V1",
@@ -304,8 +300,12 @@ export default function AdminCustomersPage() {
             className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
           >
             <option value="">全部色彩季型</option>
-            {COLOR_SEASONS.map(s => (
-              <option key={s} value={s}>{s}</option>
+            {["春", "夏", "秋", "冬"].map(group => (
+              <optgroup key={group} label={`── ${group}季型 ──`}>
+                {COLOR_SEASONS_PRO.filter(c => c.group === group).map(c => (
+                  <option key={c.value} value={c.value}>{c.label}</option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <select
@@ -315,10 +315,10 @@ export default function AdminCustomersPage() {
           >
             <option value="">全部风格类型</option>
             <optgroup label="── 女士八大风格 ──">
-              {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+              {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
             </optgroup>
             <optgroup label="── 男士五大风格 ──">
-              {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+              {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
             </optgroup>
           </select>
           <select
@@ -374,8 +374,8 @@ export default function AdminCustomersPage() {
                       <td className="px-4 py-3 text-sm text-muted-foreground">{customer.company || "-"}</td>
                       <td className="px-4 py-3 text-sm">{customer.store_id ? (storeOptions.find(s => s.id === customer.store_id)?.name || customer.store_id) : "-"}</td>
                       <td className="px-4 py-3 text-sm">{customer.gender || "-"}</td>
-                      <td className="px-4 py-3 text-sm">{customer.color_season || "-"}</td>
-                      <td className="px-4 py-3 text-sm">{customer.main_style || "-"}</td>
+                      <td className="px-4 py-3 text-sm">{customer.color_season ? getColorSeasonProLabel(customer.color_season) : "-"}</td>
+                      <td className="px-4 py-3 text-sm">{getStyleProLabel(customer.main_style) || customer.main_style || "-"}</td>
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getVipLevelBadge(customer.vip_level)}`}>
                           {getVipLevelLabel(customer.vip_level)}
@@ -517,8 +517,12 @@ export default function AdminCustomersPage() {
                   <label className="block text-sm font-medium text-primary mb-2">色彩季型</label>
                   <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                     <option value="">请选择</option>
-                    {COLOR_SEASONS.map(s => (
-                      <option key={s} value={s}>{s}</option>
+                    {["春", "夏", "秋", "冬"].map(group => (
+                      <optgroup key={group} label={`── ${group}季型 ──`}>
+                        {COLOR_SEASONS_PRO.filter(c => c.group === group).map(c => (
+                          <option key={c.value} value={c.value}>{c.label}</option>
+                        ))}
+                      </optgroup>
                     ))}
                   </select>
                 </div>
@@ -529,10 +533,10 @@ export default function AdminCustomersPage() {
                   <select value={formData.main_style} onChange={(e) => setFormData({ ...formData, main_style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                     <option value="">请选择</option>
                     <optgroup label="── 女士八大风格 ──">
-                      {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                     <optgroup label="── 男士五大风格 ──">
-                      {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                   </select>
                 </div>
@@ -544,10 +548,10 @@ export default function AdminCustomersPage() {
                 <select value={formData.sub_style} onChange={(e) => setFormData({ ...formData, sub_style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
                   <option value="">请选择</option>
                   <optgroup label="── 女士八大风格 ──">
-                    {FEMALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                    {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                   </optgroup>
                   <optgroup label="── 男士五大风格 ──">
-                    {MALE_STYLES.map(s => <option key={s.label} value={s.label}>{s.label}</option>)}
+                    {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                   </optgroup>
                 </select>
               </div>

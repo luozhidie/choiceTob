@@ -13,6 +13,7 @@ import {
   Package,
 } from "lucide-react";
 import { useState, useRef } from "react";
+import { COLOR_SEASONS_PRO, COLOR_SEASON_COLORS, ALL_STYLES } from "@/lib/styles";
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -29,56 +30,16 @@ const fadeUp = {
 /* ------------------------------------------------------------------ */
 /*  Data                                                               */
 /* ------------------------------------------------------------------ */
-const colorSeasons = [
-  {
-    group: "春季型",
-    sub: [
-      { name: "浅春型", color: "#FADADD", textColor: "#8B4560" },
-      { name: "暖春型", color: "#FFD966", textColor: "#7A6020" },
-      { name: "净春型", color: "#FF8C69", textColor: "#6B2A1A" },
-    ],
-  },
-  {
-    group: "夏季型",
-    sub: [
-      { name: "浅夏型", color: "#B0C4DE", textColor: "#2E4A6E" },
-      { name: "冷夏型", color: "#8FA5C0", textColor: "#1E3050" },
-      { name: "柔夏型", color: "#9EB1B9", textColor: "#2A3E45" },
-    ],
-  },
-  {
-    group: "秋季型",
-    sub: [
-      { name: "深秋型", color: "#8B4513", textColor: "#FFFFFF" },
-      { name: "暖秋型", color: "#CD853F", textColor: "#3E2210" },
-      { name: "柔秋型", color: "#C4A882", textColor: "#3E2E1A" },
-    ],
-  },
-  {
-    group: "冬季型",
-    sub: [
-      { name: "深冬型", color: "#1a365d", textColor: "#FFFFFF" },
-      { name: "冷冬型", color: "#4169E1", textColor: "#FFFFFF" },
-      { name: "净冬型", color: "#E0E0E0", textColor: "#333333" },
-    ],
-  },
-];
+const colorSeasons = ["春", "夏", "秋", "冬"].map(group => ({
+  group: `${group}季型`,
+  sub: COLOR_SEASONS_PRO.filter(c => c.group === group).map(c => ({
+    name: c.label,
+    color: COLOR_SEASON_COLORS[c.value] || "#ccc",
+    textColor: ["deep_warm", "deep_cool", "clear_cool"].includes(c.value) ? "#FFFFFF" : "#333333",
+  })),
+}));
 
-const styleTypes = [
-  "淑女风",
-  "知性风",
-  "名媛风",
-  "中性风",
-  "潮牌风",
-  "职业风",
-  "休闲风",
-  "大牌风",
-  "气场型男",
-  "随性达人",
-  "精英绅士",
-  "优雅先生",
-  "潮流先锋",
-];
+const styleTypes = ALL_STYLES.map(s => s.label);
 
 const fabricOptions = ["棉", "麻", "丝", "毛", "涤纶", "锦纶", "混纺", "其他"];
 const seasonOptions = ["春", "夏", "秋", "冬", "四季"];

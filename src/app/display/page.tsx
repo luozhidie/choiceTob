@@ -6,6 +6,7 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { COLOR_SEASONS_PRO, ALL_STYLES, STYLE_KEY_MAP } from "@/lib/styles";
 import {
   ChevronRight, ArrowRight, LayoutGrid, Eye, Shirt, Palette,
   Ruler, CheckCircle2, Home, Loader2, X, ZoomIn,
@@ -13,33 +14,15 @@ import {
   ShoppingCart, Star, Info, Layers, Maximize2,
 } from "lucide-react";
 
-/* ==================== 色彩季型（后台专业，保留）=================== */
-const COLOR_SEASONS = [
-  { value: "light_warm", label: "浅暖型", group: "春" },
-  { value: "warm_bright", label: "暖亮型", group: "春" },
-  { value: "clear_warm", label: "净暖型", group: "春" },
-  { value: "light_cool", label: "浅冷型", group: "夏" },
-  { value: "soft_cool", label: "柔冷型", group: "夏" },
-  { value: "cool_soft", label: "冷柔型", group: "夏" },
-  { value: "warm_soft", label: "暖柔型", group: "秋" },
-  { value: "soft_warm", label: "柔暖型", group: "秋" },
-  { value: "deep_warm", label: "深暖型", group: "秋" },
-  { value: "clear_cool", label: "净冷型", group: "冬" },
-  { value: "cool_bright", label: "冷亮型", group: "冬" },
-  { value: "deep_cool", label: "深冷型", group: "冬" },
-];
+/* ==================== 色彩季型（用户端通俗色系名）=================== */
+const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
+  value: c.value,
+  label: c.marketLabel,
+  group: c.group,
+}));
 
-/* ==================== 风格类型（后台专业，保留）=================== */
-const STYLES = [
-  { value: "shao_nv", label: "少女型" },
-  { value: "you_ya", label: "优雅型" },
-  { value: "lang_man_f", label: "浪漫型" },
-  { value: "shi_shang_f", label: "时尚型" },
-  { value: "gu_dian_f", label: "古典型" },
-  { value: "zi_ran_f", label: "自然型" },
-  { value: "xi_ju_f", label: "戏剧型" },
-  { value: "shao_nian_f", label: "少年型" },
-];
+/* ==================== 风格类型（用户端通俗风格名）=================== */
+const STYLES = ALL_STYLES.map(s => ({ value: s.value, label: s.label }));
 
 /* ==================== 用户端市场术语：色彩偏好 ==================== */
 const DISPLAY_COLOR_OPTIONS = [

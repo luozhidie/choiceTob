@@ -141,24 +141,93 @@ export const COLOR_SEASON_MARKET_MAP: Record<string, string> = {
   clear_cool: "宝石蓝", cool_bright: "银白色", deep_cool: "墨黑色",
 };
 
+/**
+ * 色彩季型 综合映射表（含所有旧key兼容）
+ * 旧中文key → 新通俗色系名
+ * 旧"形容词+季节"无后缀 key → 新通俗色系名
+ * 旧"形容词+季节型" key → 新通俗色系名
+ */
+export const COLOR_SEASON_KEY_MAP: Record<string, string> = {
+  // === 标准英文key → 通俗色系名 ===
+  light_warm: "樱花粉", warm_bright: "珊瑚橘", clear_warm: "柠檬黄",
+  light_cool: "天空蓝", soft_cool: "薰衣草", cool_soft: "薄荷绿",
+  warm_soft: "焦糖棕", soft_warm: "枫叶红", deep_warm: "酒红色",
+  clear_cool: "宝石蓝", cool_bright: "银白色", deep_cool: "墨黑色",
+  // === 旧中文key兼容（mock-data 中的"浅春""冷冬"等，无"型"后缀） ===
+  "浅春": "樱花粉", "暖春": "珊瑚橘", "净春": "柠檬黄",
+  "柔夏": "薰衣草", "冷夏": "天空蓝", "深夏": "薄荷绿",
+  "柔秋": "焦糖棕", "暖秋": "枫叶红", "净秋": "柠檬黄", "深秋": "酒红色",
+  "净冬": "宝石蓝", "冷冬": "银白色",
+  // === 旧"形容词+季节型"兼容（supplier/submit, brand 中的"浅春型"等） ===
+  "浅春型": "樱花粉", "暖春型": "珊瑚橘", "净春型": "柠檬黄",
+  "浅夏型": "天空蓝", "冷夏型": "薰衣草", "柔夏型": "薄荷绿",
+  "柔秋型": "焦糖棕", "暖秋型": "枫叶红", "深秋型": "酒红色",
+  "净冬型": "宝石蓝", "冷冬型": "银白色", "深冬型": "墨黑色",
+  // === 旧"形容词+季节+型"额外变体（customers 页面中的错误命名） ===
+  "浅秋": "焦糖棕", "浅冬": "宝石蓝", "柔春": "樱花粉",
+  "深春": "珊瑚橘", "柔冬": "银白色",
+};
+
+/**
+ * 色彩季型 旧key → 标准英文key 归一化映射
+ * 用于将数据库中的旧中文key转换为标准英文key
+ */
+export const COLOR_SEASON_NORMALIZE_MAP: Record<string, string> = {
+  // 旧中文key → 标准英文key
+  "浅春": "light_warm", "暖春": "warm_bright", "净春": "clear_warm",
+  "柔夏": "soft_cool", "冷夏": "light_cool", "深夏": "cool_soft",
+  "柔秋": "warm_soft", "暖秋": "soft_warm", "净秋": "clear_warm", "深秋": "deep_warm",
+  "净冬": "clear_cool", "冷冬": "cool_bright",
+  // 旧"型"后缀key → 标准英文key
+  "浅春型": "light_warm", "暖春型": "warm_bright", "净春型": "clear_warm",
+  "浅夏型": "light_cool", "冷夏型": "soft_cool", "柔夏型": "cool_soft",
+  "柔秋型": "warm_soft", "暖秋型": "soft_warm", "深秋型": "deep_warm",
+  "净冬型": "clear_cool", "冷冬型": "cool_bright", "深冬型": "deep_cool",
+  // 非标准名 → 最近似标准key
+  "浅秋": "warm_soft", "浅冬": "clear_cool", "柔春": "light_warm",
+  "深春": "warm_bright", "柔冬": "cool_bright",
+};
+
+/** 12季色彩代表性颜色（用于UI展示） */
+export const COLOR_SEASON_COLORS: Record<string, string> = {
+  light_warm: "#F9A8D4", warm_bright: "#FB923C", clear_warm: "#FDE047",
+  light_cool: "#93C5FD", soft_cool: "#A5B4FC", cool_soft: "#6EE7B7",
+  warm_soft: "#D4A574", soft_warm: "#F87171", deep_warm: "#92400E",
+  clear_cool: "#818CF8", cool_bright: "#E0E7FF", deep_cool: "#1E3A5F",
+};
+
+/** 色彩季型标准英文key集合 */
+export const COLOR_SEASON_KEYS: Set<string> = new Set(
+  COLOR_SEASONS_PRO.map(c => c.value as string)
+);
+
+/** 归一化色彩季型key（旧key → 标准英文key） */
+export function normalizeColorSeasonKey(key: string | null | undefined): string {
+  if (!key) return "";
+  if (COLOR_SEASON_KEYS.has(key)) return key;
+  return COLOR_SEASON_NORMALIZE_MAP[key] || key;
+}
+
 /** 获取色彩季型前端通俗名 */
 export function getColorSeasonLabel(key: string | null | undefined): string {
   if (!key) return "";
-  return COLOR_SEASON_MARKET_MAP[key] || COLOR_SEASON_PRO_MAP[key] || key;
+  return COLOR_SEASON_KEY_MAP[key] || COLOR_SEASON_MARKET_MAP[key] || COLOR_SEASON_PRO_MAP[key] || key;
 }
 
 /** 获取色彩季型后端专业术语 */
 export function getColorSeasonProLabel(key: string | null | undefined): string {
   if (!key) return "";
-  return COLOR_SEASON_PRO_MAP[key] || key;
+  const normalized = normalizeColorSeasonKey(key);
+  return COLOR_SEASON_PRO_MAP[normalized] || key;
 }
 
 /** 获取带专业术语的色彩季型展示名，如"樱花粉（浅暖春）" */
 export function getColorSeasonFullLabel(key: string | null | undefined): string {
   if (!key) return "";
-  const market = COLOR_SEASON_MARKET_MAP[key];
-  const pro = COLOR_SEASON_PRO_MAP[key];
-  const season = COLOR_SEASONS_PRO.find(c => c.value === key)?.group;
+  const normalized = normalizeColorSeasonKey(key);
+  const market = COLOR_SEASON_MARKET_MAP[normalized];
+  const pro = COLOR_SEASON_PRO_MAP[normalized];
+  const season = COLOR_SEASONS_PRO.find(c => c.value === normalized)?.group;
   if (market && pro && season) return `${market}（${pro}${season}）`;
   if (market && pro) return `${market}（${pro}）`;
   return market || pro || key;

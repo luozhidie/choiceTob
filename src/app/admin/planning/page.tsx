@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { COLOR_SEASONS_PRO, getColorSeasonProLabel, getStyleProLabel } from "@/lib/styles";
 import { useRouter } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
@@ -37,36 +38,26 @@ const COLOR_PREFERENCES = [
 
 /* 市场风格定位（女士八大+男士五大） */
 const MARKET_STYLES = [
-  { value: "shao_nv", label: "淑女风" },
-  { value: "you_ya", label: "知性风" },
-  { value: "lang_man_f", label: "名媛风" },
-  { value: "shao_nian_f", label: "中性风" },
-  { value: "shi_shang_f", label: "潮牌风" },
-  { value: "gu_dian_f", label: "职业风" },
-  { value: "zi_ran_f", label: "休闲风" },
-  { value: "xi_ju_f", label: "大牌风" },
-  { value: "xi_ju_m", label: "气场型男" },
-  { value: "zi_ran_m", label: "随性达人" },
-  { value: "gu_dian_m", label: "精英绅士" },
-  { value: "lang_man_m", label: "优雅先生" },
-  { value: "shi_shang_m", label: "潮流先锋" },
+  { value: "shao_nv", label: "淑女风", proLabel: "少女型" },
+  { value: "you_ya", label: "知性风", proLabel: "优雅型" },
+  { value: "lang_man_f", label: "名媛风", proLabel: "浪漫型" },
+  { value: "shao_nian_f", label: "中性风", proLabel: "少年型" },
+  { value: "shi_shang_f", label: "潮牌风", proLabel: "时尚型" },
+  { value: "gu_dian_f", label: "职业风", proLabel: "古典型" },
+  { value: "zi_ran_f", label: "休闲风", proLabel: "自然型" },
+  { value: "xi_ju_f", label: "大牌风", proLabel: "戏剧型" },
+  { value: "xi_ju_m", label: "气场型男", proLabel: "戏剧型" },
+  { value: "zi_ran_m", label: "随性达人", proLabel: "自然型" },
+  { value: "gu_dian_m", label: "精英绅士", proLabel: "古典型" },
+  { value: "lang_man_m", label: "优雅先生", proLabel: "浪漫型" },
+  { value: "shi_shang_m", label: "潮流先锋", proLabel: "时尚型" },
 ];
 
 /* 12季色彩（仅后台管理内部标注用，用户端不展示） */
-const COLOR_SEASONS_INTERNAL = [
-  { value: "light_warm", label: "浅暖型（春）" },
-  { value: "warm_bright", label: "暖亮型（春）" },
-  { value: "clear_warm", label: "净暖型（春）" },
-  { value: "light_cool", label: "浅冷型（夏）" },
-  { value: "soft_cool", label: "柔冷型（夏）" },
-  { value: "cool_soft", label: "冷柔型（夏）" },
-  { value: "warm_soft", label: "暖柔型（秋）" },
-  { value: "soft_warm", label: "柔暖型（秋）" },
-  { value: "deep_warm", label: "深暖型（秋）" },
-  { value: "clear_cool", label: "净冷型（冬）" },
-  { value: "cool_bright", label: "冷亮型（冬）" },
-  { value: "deep_cool", label: "深冷型（冬）" },
-];
+const COLOR_SEASONS_INTERNAL = COLOR_SEASONS_PRO.map(c => ({
+  value: c.value,
+  label: `${c.label}（${c.group}）`,
+}));
 
 /* 女士八大风格（内部标注） */
 const STYLES_INTERNAL = [
@@ -93,13 +84,12 @@ const STYLES_INTERNAL_MALE = [
 function getColorLabel(value: string | null): string {
   if (!value) return "";
   return COLOR_PREFERENCES.find(c => c.value === value)?.label
-    || COLOR_SEASONS_INTERNAL.find(c => c.value === value)?.label
-    || value;
+    || getColorSeasonProLabel(value);
 }
 
 function getStyleLabel(value: string | null): string {
   if (!value) return "";
-  return MARKET_STYLES.find(s => s.value === value)?.label
+  return MARKET_STYLES.find(s => s.value === value)?.proLabel
     || STYLES_INTERNAL.find(s => s.value === value)?.label
     || STYLES_INTERNAL_MALE.find(s => s.value === value)?.label
     || value;
@@ -370,12 +360,12 @@ export default function AdminPlanningPage() {
                   <option value="">不指定</option>
                   <optgroup label="── 女士八大风格 ──">
                     {MARKET_STYLES.filter(s => !s.value.endsWith("_m")).map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
+                      <option key={s.value} value={s.value}>{s.proLabel}</option>
                     ))}
                   </optgroup>
                   <optgroup label="── 男士五大风格 ──">
                     {MARKET_STYLES.filter(s => s.value.endsWith("_m")).map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
+                      <option key={s.value} value={s.value}>{s.proLabel}</option>
                     ))}
                   </optgroup>
                   <optgroup label="── 女士专业术语（内部） ──">

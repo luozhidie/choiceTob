@@ -16,7 +16,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis,
   Tooltip, Legend, ResponsiveContainer, CartesianGrid,
 } from "recharts";
-import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS } from "@/lib/styles";
+import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, STYLE_PRO_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS, getColorSeasonFullLabel } from "@/lib/styles";
 
 /* ==================== 类型 ==================== */
 interface StoreType {
@@ -103,14 +103,7 @@ const STATUS_OPTIONS = [
   { value: "churned", label: "已流失", color: "bg-red-100 text-red-700" },
 ];
 
-const COLOR_SEASON_LABELS: Record<string, string> = {
-  light_warm: "樱花粉（浅暖春）", warm_bright: "珊瑚橘（暖亮春）", clear_warm: "柠檬黄（净暖春）",
-  light_cool: "天空蓝（浅冷夏）", soft_cool: "薰衣草（柔冷夏）", cool_soft: "薄荷绿（冷柔夏）",
-  warm_soft: "焦糖棕（暖柔秋）", soft_warm: "枫叶红（柔暖秋）", deep_warm: "酒红色（深暖秋）",
-  clear_cool: "宝石蓝（净冷冬）", cool_bright: "银白色（冷亮冬）", deep_cool: "墨黑色（深冷冬）",
-};
-
-const STYLE_LABELS = STYLE_KEY_MAP;
+const STYLE_LABELS = STYLE_PRO_MAP;
 
 const PIE_COLORS = [
   "#FF6B6B", "#4ECDC4", "#45B7D1", "#96CEB4", "#FFEAA7",
@@ -323,7 +316,7 @@ export default function StoresAdminPage() {
     const testedVip = stats.tested_vip_count || 0;
 
     const colorChartData = Object.entries(colorDist).map(([key, val]: [string, any]) => ({
-      name: COLOR_SEASON_LABELS[key] || key,
+      name: getColorSeasonFullLabel(key) || key,
       value: val.count,
       percentage: val.percentage,
     }));
@@ -332,7 +325,7 @@ export default function StoresAdminPage() {
     const femaleStyleData = Object.entries(styleDist)
       .filter(([key]) => FEMALE_STYLE_KEYS.has(key))
       .map(([key, val]: [string, any]) => ({
-        name: STYLE_KEY_MAP[key] || key,
+        name: STYLE_PRO_MAP[key] || key,
         value: val.count,
         percentage: val.percentage,
       }));
@@ -341,7 +334,7 @@ export default function StoresAdminPage() {
     const maleStyleData = Object.entries(styleDist)
       .filter(([key]) => MALE_STYLE_KEYS.has(key))
       .map(([key, val]: [string, any]) => ({
-        name: STYLE_KEY_MAP[key] || key,
+        name: STYLE_PRO_MAP[key] || key,
         value: val.count,
         percentage: val.percentage,
       }));
@@ -812,7 +805,7 @@ export default function StoresAdminPage() {
                               <td className="py-2 px-3 font-medium">{m.name}</td>
                               <td className="py-2 px-3 text-muted-foreground">{m.phone || "-"}</td>
                               <td className="py-2 px-3">{m.gender === "female" ? "女" : m.gender === "male" ? "男" : "-"}</td>
-                              <td className="py-2 px-3"><span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-xs rounded-full">{(m.color_season && COLOR_SEASON_LABELS[m.color_season]) || m.color_season || "未测试"}</span></td>
+                              <td className="py-2 px-3"><span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-xs rounded-full">{getColorSeasonFullLabel(m.color_season) || m.color_season || "未测试"}</span></td>
                               <td className="py-2 px-3"><span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">{(m.main_style && STYLE_LABELS[m.main_style]) || m.main_style || "未测试"}</span></td>
                               <td className="py-2 px-3">{m.vip_level}</td>
                             </tr>
