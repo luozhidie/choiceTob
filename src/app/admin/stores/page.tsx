@@ -9,7 +9,7 @@ import {
   DollarSign, BarChart3, ShoppingCart, ArrowRight,
   ChevronRight, Home, Loader2, Phone, User,
   RefreshCw, ExternalLink, Package, CheckCircle2,
-  Clock, Lightbulb, LayoutGrid, FileText, Palette,
+  Clock, Lightbulb, LayoutGrid, FileText, Palette, Download,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -46,9 +46,12 @@ interface VipCustomer {
   gender: string | null;
   color_season: string | null;
   main_style: string | null;
+  sub_style: string | null;
   vip_level: string;
+  wechat: string | null;
   is_active: boolean;
   last_test_at: string | null;
+  created_at: string;
 }
 
 interface DeliveryPlan {
@@ -87,6 +90,34 @@ const deliveryStatusMap: Record<string, { label: string; color: string }> = {
   delivered: { label: "已交付", color: "bg-blue-50 text-blue-600" },
   confirmed: { label: "已确认", color: "bg-green-50 text-green-600" },
 };
+
+/* ==================== CSV 导出 ==================== */
+function exportMembersToCSV(storeId: string, storeName: string, members: VipCustomer[]) {
+  if (members.length === 0) return;
+  const escapeCSV = (v: any) => `"${String(v ?? "").replace(/"/g, "\"\"")}"`;
+  const headers = ["姓名", "电话", "性别", "微信号", "色彩季型", "主风格", "副风格", "VIP等级", "录入时间"];
+  const rows = members.map((m) => [
+    escapeCSV(m.name),
+    escapeCSV(m.phone),
+    escapeCSV(m.gender === "female" ? "女" : m.gender === "male" ? "男" : ""),
+    escapeCSV(m.wechat),
+    escapeCSV(getColorSeasonFullLabel(m.color_season)),
+    escapeCSV(getStyleProLabel(m.main_style)),
+    escapeCSV(getStyleProLabel(m.sub_style)),
+    escapeCSV(m.vip_level),
+    escapeCSV(m.created_at ? new Date(m.created_at).toLocaleDateString("zh-CN") : ""),
+  ].join(","));
+
+  const BOM = "\uFEFF";
+  const csv = [headers.map(h => escapeCSV(h)).join(","), ...rows].join("\n");
+  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${storeName}_VIP会员_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 /* ==================== 常量 ==================== */
 const STYLE_OPTIONS = [
@@ -541,7 +572,7 @@ export default function StoresAdminPage() {
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">所在城市</label><input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" placeholder="如：杭州" /></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">商圈/地段</label><input value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" placeholder="如：武林银泰" /></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">店铺面积</label><select value={form.shop_size} onChange={(e) => setForm({ ...form, shop_size: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{SHOP_SIZE_OPTIONS.map((s) => <option key={s} value={s}>{s}</option>)}</select></div>
-                    <div><label className="block text-xs font-medium text-gray-500 mb-1">风格定位</label><select value={form.style_position} onChange={(e) => setForm({ ...form, style_position: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option><optgroup label="── 女士八大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "女士八大风格").map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</optgroup><optgroup label="── 男士五大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "男士五大风格").map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</optgroup></select></div>
+                    <div><label className="block text-xs font-medium text-gray-500 mb-1">风格定位</label><select value={form.style_position} onChange={(e) => setForm({ ...form, style_position: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option><optgroup label="── 女士八大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "女士八大风格").map((s) => <option key={s.value} value={s.value}>{s.proLabel}</option>)}</optgroup><optgroup label="── 男士五大风格 ──">{STYLE_OPTIONS.filter(s => s.group === "男士五大风格").map((s) => <option key={s.value} value={s.value}>{s.proLabel}</option>)}</optgroup></select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">目标年龄层</label><select value={form.target_age} onChange={(e) => setForm({ ...form, target_age: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{TARGET_AGE_OPTIONS.map((a) => <option key={a} value={a}>{a}</option>)}</select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">价格带</label><select value={form.price_range} onChange={(e) => setForm({ ...form, price_range: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white"><option value="">请选择</option>{PRICE_RANGE_OPTIONS.map((p) => <option key={p} value={p}>{p}</option>)}</select></div>
                     <div><label className="block text-xs font-medium text-gray-500 mb-1">状态</label><select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })} className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white">{STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}</select></div>
@@ -781,7 +812,16 @@ export default function StoresAdminPage() {
 
                 {/* 会员列表 */}
                 <div>
-                  <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><UsersIcon className="w-4 h-4 text-accent" />店铺会员列表</h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-bold text-primary flex items-center gap-2"><UsersIcon className="w-4 h-4 text-accent" />店铺会员列表</h4>
+                    {detailMembers.length > 0 && (
+                      <button onClick={() => exportMembersToCSV(detailStore.id, detailStore.name || "店铺", detailMembers)}
+                        className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-accent bg-accent/10 rounded-lg hover:bg-accent/20 transition-colors"
+                      >
+                        <Download className="w-3.5 h-3.5" />导出CSV
+                      </button>
+                    )}
+                  </div>
                   {detailLoading ? (
                     <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-accent mr-2" /><span className="text-sm text-muted-foreground">加载中...</span></div>
                   ) : detailMembers.length === 0 ? (
