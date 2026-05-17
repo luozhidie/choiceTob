@@ -147,6 +147,7 @@ export default function StoresAdminPage() {
   const supabase = createClient();
   const [stores, setStores] = useState<StoreType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [filterCity, setFilterCity] = useState("");
@@ -170,12 +171,19 @@ export default function StoresAdminPage() {
 
   const fetchStores = useCallback(async () => {
     setLoading(true);
-    let q = supabase.from("stores").select("*").order("created_at", { ascending: false });
-    if (filterStatus) q = q.eq("status", filterStatus);
-    if (filterCity) q = q.eq("city", filterCity);
-    const { data, error } = await q;
-    if (!error && data) setStores(data as StoreType[]);
-    setLoading(false);
+    setError(null);
+    try {
+      let q = supabase.from("stores").select("*").order("created_at", { ascending: false });
+      if (filterStatus) q = q.eq("status", filterStatus);
+      if (filterCity) q = q.eq("city", filterCity);
+      const { data, error } = await q;
+      if (error) throw error;
+      setStores(data as StoreType[]);
+    } catch (e: any) {
+      setError(e.message || "加载失败，请检查网络或刷新重试");
+    } finally {
+      setLoading(false);
+    }
   }, [filterStatus, filterCity]);
 
   useEffect(() => { fetchStores(); }, [fetchStores]);
@@ -488,11 +496,23 @@ export default function StoresAdminPage() {
         </select>
       </div>
 
+      {/* 错误提示 */}
+      {error && (
+        <div className="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <button onClick={fetchStores} className="mt-2 text-xs text-red-500 underline hover:no-underline">点击重试</button>
+        </div>
+      )}
+
       {/* 店铺列表 */}
       {loading ? (
         <div className="flex items-center justify-center py-16"><Loader2 className="w-8 h-8 animate-spin text-accent mr-3" /><span className="text-muted-foreground">加载中...</span></div>
       ) : filteredStores.length === 0 ? (
-        <div className="text-center py-16"><Store className="w-12 h-12 text-gray-200 mx-auto mb-3" /><p className="text-muted-foreground text-sm">暂无店铺数据</p></div>
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+          <Store className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">暂无店铺数据</p>
+          <p className="text-xs text-gray-400 mt-1">点击右上角「新增店铺」开始录入</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filteredStores.map((store) => {
@@ -825,7 +845,12 @@ export default function StoresAdminPage() {
                   {detailLoading ? (
                     <div className="flex items-center justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-accent mr-2" /><span className="text-sm text-muted-foreground">加载中...</span></div>
                   ) : detailMembers.length === 0 ? (
-                    <div className="text-center py-8 text-sm text-muted-foreground">暂无关联会员</div>
+                    <div className="text-center py-8">
+  <p className="text-sm text-muted-foreground">暂无关联会员</p>
+  <Link href="/admin/customers" className="inline-flex items-center gap-1 mt-2 text-xs text-accent hover:underline">
+    <UsersIcon className="w-3 h-3" />前往客户管理录入VIP
+  </Link>
+</div>
                   ) : (
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
