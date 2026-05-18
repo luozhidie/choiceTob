@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   BarChart3, Upload, Download, Plus, Trash2,
   Calendar, TrendingUp, TrendingDown, Minus,
+  RefreshCw,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -130,6 +131,27 @@ export default function SalesDataPage() {
     }))
   , [records]);
 
+  /* ── 同步库存 ───────────────── */
+  const syncInventory = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    // 取最近录入的销售件数
+    const recentUnits = records.reduce((s, r) => s + (r.sales_units || 0), 0);
+    const input = prompt(`当前录入的销售总件数为 ${recentUnits} 件。\n\n请输入需要同步到库存的件数：`, String(recentUnits));
+    if (!input || +input <= 0) return;
+    try {
+      const res = await fetch("/api/sales/sync-inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, totalSold: +input }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      alert(`✅ ${data.message}`);
+    } catch (e: any) {
+      alert("同步失败：" + e.message);
+    }
+  };
+
   /* ── 导入 Excel ─────────────（用 xlsx）── */
   const importExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
@@ -176,6 +198,9 @@ export default function SalesDataPage() {
             </label>
             <button onClick={() => { setEditing(null); setShowForm(true); }} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 flex items-center gap-2">
               <Plus className="w-4 h-4" /> 手工录入
+            </button>
+            <button onClick={syncInventory} className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" /> 同步库存
             </button>
           </div>
         </div>
