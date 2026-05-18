@@ -36,6 +36,7 @@ import {
   X,
   ChevronRight,
   Store,
+  FileDown,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -58,6 +59,7 @@ const sidebarItems = [
   { label: "商品企划", href: "/admin/planning", icon: Lightbulb },
   { label: "企划步骤", href: "/admin/planning-steps", icon: Workflow },
   { label: "企划工具", href: "/planning-tool", icon: FileText },
+  { label: "生成企划报告", href: "/admin/report", icon: FileDown },
   { label: "爆款货盘", href: "/admin/hot-picks", icon: BarChart3 },
   { label: "爆款图片", href: "/admin/hot-picks-images", icon: ImageIcon },
   { label: "陈列图片", href: "/admin/display-images", icon: ImageIcon },
