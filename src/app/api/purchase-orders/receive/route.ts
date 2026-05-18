@@ -37,25 +37,25 @@ export async function POST(req: NextRequest) {
 
   for (const item of items) {
     // 检查是否已有同款号库存
-    const { data: existing } = await supabase
+      const { data: existing } = await supabase
       .from("inventory")
       .select("id, stock_in_qty, current_stock, sales_qty")
-      .eq("store_id", order.store_id)
-      .eq("sku_code", item.sku_code)
-      .maybeSingle();
+        .eq("store_id", order.store_id)
+        .eq("sku_code", item.sku_code)
+        .eq("size", item.sizes || "均码")
+        .maybeSingle();
 
     if (existing) {
-      // 已有记录 → 增加库存
       const newStockIn = (existing.stock_in_qty || 0) + (item.quantity || 0);
       const newCurrent = (existing.current_stock || 0) + (item.quantity || 0);
       await supabase.from("inventory").update({
         stock_in_qty: newStockIn,
         current_stock: newCurrent,
+        unit_cost: item.cost_price || 0,
         updated_at: new Date().toISOString(),
       }).eq("id", existing.id);
       updated++;
     } else {
-      // 新记录 → 创建库存
       await supabase.from("inventory").insert({
         store_id: order.store_id,
         sku_code: item.sku_code,
@@ -63,6 +63,7 @@ export async function POST(req: NextRequest) {
         category: item.category,
         color: item.colors || "",
         size: item.sizes || "均码",
+        unit_cost: item.cost_price || 0,
         stock_in_qty: item.quantity || 0,
         current_stock: item.quantity || 0,
         sales_qty: 0,

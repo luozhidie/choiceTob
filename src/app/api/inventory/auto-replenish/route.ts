@@ -30,13 +30,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message: "当前无需补货的SKU" });
   }
 
-  const unitPrice = avgCostPrice || 150;
-
-  // ── 计算补货量 ──
-  // 基于销售速度计算：补货量 = 月均销量 × 2（补2个月的量）
   const replenishOrders = replenishItems.map((inv: any) => {
-    const monthlySales = inv.sales_qty > 0 ? Math.ceil(inv.sales_qty / 1) : 10; // 假设1个月
-    const reorderQty = Math.max(monthlySales * 2, 20); // 至少补20件
+    const monthlySales = inv.sales_qty > 0 ? Math.ceil(inv.sales_qty / 1) : 10;
+    const reorderQty = Math.max(monthlySales * 2, 20);
+    const unitPrice = inv.unit_cost || avgCostPrice || 150; // 优先用实际成本价
 
     return {
       store_id: storeId,

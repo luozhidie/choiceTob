@@ -148,7 +148,7 @@ export default function ProductPlanPage() {
           newMatrix[s][st.value] = {
             sku,
             pct,
-            budget: Math.round(sku * 500),
+            budget: Math.round(sku * 150), // 默认采购均价150元/件，可在结构规划中调整
           };
         });
       });
@@ -260,7 +260,7 @@ export default function ProductPlanPage() {
       const res = await fetch("/api/plan/generate-procurement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, season: "2026", supplier: "待确认", avgCostPrice: 150 }),
+        body: JSON.stringify({ storeId, season: "2026", supplier: "待确认", avgCostPrice: 0 }),
       });
       const data = await res.json();
       if (data.error) { alert(data.error); setGeneratingPO(false); return; }

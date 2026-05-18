@@ -17,11 +17,13 @@ interface InventoryItem {
   category: string;
   color: string;
   size: string;
+  unit_cost: number;
   stock_in_qty: number;
   current_stock: number;
   sales_qty: number;
   sell_through_pct?: number;
   turnover_days?: number;
+  stock_value?: number;
   status: "normal" | "low_stock" | "out_of_stock" | "overstock";
   restock_advice?: string;
 }
@@ -47,6 +49,7 @@ export default function InventoryPage() {
     category: "TX-T恤针织衫",
     color: "",
     size: "M",
+    unit_cost: "",
     stock_in_qty: "",
     current_stock: "",
     sales_qty: "",
@@ -120,6 +123,7 @@ export default function InventoryPage() {
       category: form.category,
       color: form.color,
       size: form.size,
+      unit_cost: +form.unit_cost || 0,
       stock_in_qty: +form.stock_in_qty || 0,
       current_stock: +form.current_stock || 0,
       sales_qty: +form.sales_qty || 0,
@@ -151,6 +155,7 @@ export default function InventoryPage() {
       category: "TX-T恤针织衫",
       color: "",
       size: "M",
+      unit_cost: "",
       stock_in_qty: "",
       current_stock: "",
       sales_qty: "",
@@ -173,7 +178,7 @@ export default function InventoryPage() {
     lowStock: items.filter(i => i.status === "low_stock").length,
     outOfStock: items.filter(i => i.status === "out_of_stock").length,
     overstock: items.filter(i => i.status === "overstock").length,
-    totalValue: items.reduce((s, i) => s + (i.current_stock * 100), 0),
+    totalValue: items.reduce((s, i) => s + (i.current_stock * (i.unit_cost || 0)), 0),
   };
 
   /* ── 一键补货 ── */
@@ -186,7 +191,7 @@ export default function InventoryPage() {
       const res = await fetch("/api/inventory/auto-replenish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ storeId, supplier: "待确认", avgCostPrice: 150 }),
+        body: JSON.stringify({ storeId, supplier: "待确认" }),
       });
       const data = await res.json();
       if (data.error) { alert(data.error); return; }
@@ -301,7 +306,11 @@ export default function InventoryPage() {
                     </select>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
+                  <div>
+                    <label className="text-xs text-gray-500">采购单价（元）</label>
+                    <input type="number" value={form.unit_cost} onChange={e => setForm({ ...form, unit_cost: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="成本价" />
+                  </div>
                   <div>
                     <label className="text-xs text-gray-500">入库数量</label>
                     <input type="number" value={form.stock_in_qty} onChange={e => setForm({ ...form, stock_in_qty: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
@@ -315,6 +324,11 @@ export default function InventoryPage() {
                     <input type="number" value={form.sales_qty} onChange={e => setForm({ ...form, sales_qty: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
                   </div>
                 </div>
+                {form.unit_cost && form.current_stock && (
+                  <div className="p-3 bg-green-50 rounded-lg text-sm text-green-700">
+                    💰 库存价值 = {form.current_stock} × ¥{form.unit_cost} = <strong>¥{(+form.current_stock * +form.unit_cost).toLocaleString()}</strong>
+                  </div>
+                )}
                 <div>
                   <label className="text-xs text-gray-500">补货建议（可选）</label>
                   <input type="text" value={form.restock_advice} onChange={e => setForm({ ...form, restock_advice: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="如：建议补货50件" />
@@ -336,12 +350,14 @@ export default function InventoryPage() {
                 <th className="p-3 text-left">款号</th>
                 <th className="p-3 text-left">品名</th>
                 <th className="p-3 text-left">品类/颜色/尺码</th>
+                <th className="p-3 text-right">成本价</th>
                 <th className="p-3 text-right">入库</th>
                 <th className="p-3 text-right">当前</th>
                 <th className="p-3 text-right">已售</th>
+                <th className="p-3 text-right">库存价值</th>
                 <th className="p-3 text-right">售罄率</th>
                 <th className="p-3 text-right">周转</th>
-                <th className="p-3 text-left">补货建议</th>
+                <th className="p-3 text-left">状态</th>
                 <th className="p-3 text-center">操作</th>
               </tr>
             </thead>
@@ -351,6 +367,7 @@ export default function InventoryPage() {
                   <td className="p-3 font-mono text-xs">{item.sku_code}</td>
                   <td className="p-3 font-semibold">{item.product_name}</td>
                   <td className="p-3 text-gray-500 text-xs">{item.category} · {item.color} · {item.size}</td>
+                  <td className="p-3 text-right text-gray-600">¥{item.unit_cost || 0}</td>
                   <td className="p-3 text-right">{item.stock_in_qty}</td>
                   <td className="p-3 text-right">
                     <span className={`font-bold ${
@@ -360,6 +377,9 @@ export default function InventoryPage() {
                     }`}>{item.current_stock}</span>
                   </td>
                   <td className="p-3 text-right text-gray-600">{item.sales_qty}</td>
+                  <td className="p-3 text-right font-semibold text-green-700">
+                    ¥{((item.current_stock || 0) * (item.unit_cost || 0)).toLocaleString()}
+                  </td>
                   <td className="p-3 text-right">
                     <span className={`${
                       (item.sell_through_pct || 0) > 0.8 ? "text-green-600" :
@@ -379,10 +399,10 @@ export default function InventoryPage() {
                     </span>
                   </td>
                   <td className="p-3 text-xs">
-                    {item.status === "out_of_stock" && <span className="text-red-600">❌ 断货，紧急补货</span>}
-                    {item.status === "low_stock" && <span className="text-orange-600">⚠️ 热销款，建议补货</span>}
-                    {item.status === "overstock" && <span className="text-purple-600">📦 滞销，考虑促销</span>}
-                    {item.status === "normal" && <span className="text-green-600">✅ 库存正常</span>}
+                    {item.status === "out_of_stock" && <span className="text-red-600">❌断货</span>}
+                    {item.status === "low_stock" && <span className="text-orange-600">⚠️不足</span>}
+                    {item.status === "overstock" && <span className="text-purple-600">📦滞销</span>}
+                    {item.status === "normal" && <span className="text-green-600">✅正常</span>}
                   </td>
                   <td className="p-3 text-center">
                     <button onClick={() => { setForm({
@@ -391,6 +411,7 @@ export default function InventoryPage() {
                       category: item.category,
                       color: item.color,
                       size: item.size,
+                      unit_cost: String(item.unit_cost || ""),
                       stock_in_qty: String(item.stock_in_qty),
                       current_stock: String(item.current_stock),
                       sales_qty: String(item.sales_qty),
@@ -405,7 +426,7 @@ export default function InventoryPage() {
                 </tr>
               ))}
               {filteredItems.length === 0 && (
-                <tr><td colSpan={10} className="p-8 text-center text-gray-400">暂无库存数据，点击「入库录入」开始</td></tr>
+                <tr><td colSpan={12} className="p-8 text-center text-gray-400">暂无库存数据，点击「入库录入」开始</td></tr>
               )}
             </tbody>
           </table>
@@ -427,7 +448,7 @@ export default function InventoryPage() {
             <ul className="text-sm text-green-700 space-y-1">
               <li>📊 <strong>售罄率：</strong> 已售 / 入库 × 100%，衡量款型受欢迎程度</li>
               <li>🔄 <strong>周转天数：</strong> 当前库存 / (月销/30)，衡量资金占用效率</li>
-              <li>💰 <strong>库存价值：</strong> 当前库存 × 假设均价100元（可自定义）</li>
+              <li>💰 <strong>库存价值：</strong> 当前库存 × 采购单价（真实成本）</li>
             </ul>
           </div>
         </div>
