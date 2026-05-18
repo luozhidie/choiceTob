@@ -254,3 +254,55 @@ export function getColorSeasonFullLabel(key: string | null | undefined): string 
   if (market && pro) return `${market}（${pro}）`;
   return market || pro || key;
 }
+
+/** 商品品类全表（编号 + 名称） */
+export const PRODUCT_CATEGORIES = [
+  { code: "TX",   label: "T恤针织衫" },
+  { code: "BQ",   label: "半身裙" },
+  { code: "KZ",   label: "裤装（仔裤/西裤/休闲裤/牛仔外套）" },
+  { code: "SZ",   label: "梭织上装（小衫/打底衫）" },
+  { code: "JJF",  label: "家居服" },
+  { code: "LQ",   label: "连衣裙" },
+  { code: "KL",   label: "夹克衫" },
+  { code: "DY",   label: "大衣" },
+  { code: "FY",   label: "风衣/外套/单西装" },
+  { code: "XZ",   label: "西装套装" },
+  { code: "PK",   label: "派克服（含内胆真毛）" },
+  { code: "PK2",  label: "派克服（不含内胆）" },
+  { code: "MF",   label: "棉服" },
+  { code: "YR",   label: "羽绒服（真毛领）" },
+  { code: "MS",   label: "毛衫（上衣/连衣裙）" },
+  { code: "TZ",   label: "套装（1套1-2件）" },
+  { code: "HF",   label: "汉服（1套3件）" },
+  { code: "WY",   label: "卫衣" },
+  { code: "FH",   label: "复合颗粒羽绒（仿皮毛/含帽真毛领）" },
+  { code: "MJ",   label: "马甲（羊绒/毛呢时尚款）" },
+  { code: "MJ2",  label: "马甲衬衣假两件（1套2件）" },
+  { code: "YJF",  label: "瑜伽服（1套3件）" },
+  { code: "NY",   label: "内衣（不含杯模）" },
+  { code: "XF",   label: "校服" },
+  { code: "ZY",   label: "职业装" },
+  { code: "WD",   label: "舞蹈服" },
+  { code: "HSLF", label: "礼服/香云纱" },
+  { code: "TZQP", label: "唐装/旗袍" },
+  { code: "WJ",   label: "围巾" },
+  { code: "YP",   label: "婴幼儿爬行服" },
+  { code: "YY",   label: "泳衣（1套2件）" },
+  { code: "LQF",  label: "篮球服（T恤+短裤）" },
+  { code: "CW",   label: "宠物服" },
+] as const;
+
+/** 品类选项（用于下拉选择，显示格式：编号-名称） */
+export const CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map(c => `${c.code}-${c.label}`);
+
+/** 根据编号获取品类名称 */
+export function getCategoryLabel(code: string): string {
+  const cat = PRODUCT_CATEGORIES.find(c => c.code === code);
+  return cat ? cat.label : code;
+}
+
+/** 从 "编号-名称" 格式中提取编号 */
+export function extractCategoryCode(display: string): string {
+  const idx = display.indexOf("-");
+  return idx > 0 ? display.slice(0, idx) : display;
+}

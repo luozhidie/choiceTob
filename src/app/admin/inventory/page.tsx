@@ -25,7 +25,7 @@ interface InventoryItem {
   restock_advice?: string;
 }
 
-const CATEGORY_OPTIONS = ["上装", "下装", "连衣裙", "外套", "配饰"];
+import { CATEGORY_OPTIONS } from "@/lib/styles";
 const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "均码"];
 
 export default function InventoryPage() {
@@ -42,7 +42,7 @@ export default function InventoryPage() {
   const [form, setForm] = useState({
     sku_code: "",
     product_name: "",
-    category: "上装",
+    category: "TX-T恤针织衫",
     color: "",
     size: "M",
     stock_in_qty: "",
@@ -146,7 +146,7 @@ export default function InventoryPage() {
     setForm({
       sku_code: "",
       product_name: "",
-      category: "上装",
+      category: "TX-T恤针织衫",
       color: "",
       size: "M",
       stock_in_qty: "",

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { COLOR_SEASONS_PRO, FEMALE_STYLES, MALE_STYLES } from "@/lib/styles";
+import { COLOR_SEASONS_PRO, FEMALE_STYLES, MALE_STYLES, PRODUCT_CATEGORIES } from "@/lib/styles";
 
 export async function POST(req: NextRequest) {
   const { storeId, season, supplier, avgCostPrice } = await req.json();
@@ -26,10 +26,10 @@ export async function POST(req: NextRequest) {
   const procurementItems: any[] = [];
   let seq = 1;
 
-  // 品类列表（默认）
+  // 品类列表
   const categories = items.length > 0
     ? items.map((i: any) => i.category)
-    : ["上装", "下装", "连衣裙", "外套", "配饰"];
+    : PRODUCT_CATEGORIES.map(c => `${c.code}-${c.label}`);
 
   // 遍历矩阵每个格子
   for (const [colorSeason, styles] of Object.entries(matrixData)) {

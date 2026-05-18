@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 4. 采购时间轴要覆盖完整季度（13周）
 5. 色彩参考12季色彩体系（英文key）：light_warm、warm_bright、clear_warm、light_cool、soft_cool、cool_soft、warm_soft、soft_warm、deep_warm、clear_cool、cool_bright、deep_cool
 6. 风格参考（英文key）：shao_nv、you_ya、lang_man_f、shao_nian_f、shi_shang_f、gu_dian_f、zi_ran_f、xi_ju_f
-7. 品类建议包含：上装、下装、连衣裙、外套、配饰
+7. 品类建议包含：T恤针织衫、半身裙、裤装、梭织上装、家居服、连衣裙、夹克衫、大衣、风衣/外套、西装套装、派克服、棉服、羽绒服、毛衫、套装、汉服、卫衣、复合颗粒羽绒、马甲、瑜伽服、内衣、校服、职业装、舞蹈服、礼服/香云纱、唐装/旗袍、围巾、婴幼儿爬行服、泳衣、篮球服、宠物服
 8. 价格带根据VIP消费能力给4个区间
 9. 只返回纯JSON，不要任何解释文字、不要 markdown 代码块标记`;
 

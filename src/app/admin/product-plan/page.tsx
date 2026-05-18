@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
-  getStyleProLabel,
+  getStyleProLabel, CATEGORY_OPTIONS,
 } from "@/lib/styles";
 import * as XLSX from "xlsx";
 
@@ -27,8 +27,8 @@ const ALL_STYLES: any[] = [
   ...MALE_STYLES.map((s) => ({ ...s, group: "男士" })),
 ];
 
-/* ── 品类选项 ─────────────────────────────── */
-const CATEGORY_OPTIONS = ["上装", "下装", "连衣裙", "外套", "配饰"];
+/* ── 品类选项（从 styles.ts 统一引入）── */
+// CATEGORY_OPTIONS 已从 @/lib/styles 引入
 
 /* ── 类型定义 ─────────────────────────────── */
 interface StructureItem {
@@ -61,11 +61,20 @@ export default function ProductPlanPage() {
 
   // ── 商品结构规划 ────────────────────────
   const [structure, setStructure] = useState<StructureItem[]>([
-    { category: "上装", pct: 30, sku: 50, margin: 60, sales: 150000, season: "春夏/秋冬" },
-    { category: "下装", pct: 20, sku: 30, margin: 55, sales: 100000, season: "全年" },
-    { category: "连衣裙", pct: 15, sku: 25, margin: 65, sales: 75000, season: "春夏" },
-    { category: "外套", pct: 20, sku: 20, margin: 70, sales: 100000, season: "秋冬" },
-    { category: "配饰", pct: 15, sku: 40, margin: 75, sales: 75000, season: "全年" },
+    { category: "TX-T恤针织衫", pct: 15, sku: 30, margin: 55, sales: 90000, season: "春夏/秋冬" },
+    { category: "DY-大衣", pct: 15, sku: 15, margin: 65, sales: 120000, season: "秋冬" },
+    { category: "YR-羽绒服（真毛领）", pct: 12, sku: 12, margin: 60, sales: 108000, season: "秋冬" },
+    { category: "KZ-裤装（仔裤/西裤/休闲裤/牛仔外套）", pct: 10, sku: 20, margin: 55, sales: 60000, season: "全年" },
+    { category: "LQ-连衣裙", pct: 8, sku: 15, margin: 65, sales: 50000, season: "春夏" },
+    { category: "FY-风衣/外套/单西装", pct: 10, sku: 10, margin: 65, sales: 70000, season: "秋冬" },
+    { category: "MS-毛衫（上衣/连衣裙）", pct: 8, sku: 15, margin: 60, sales: 48000, season: "秋冬" },
+    { category: "MF-棉服", pct: 5, sku: 8, margin: 55, sales: 35000, season: "秋冬" },
+    { category: "WY-卫衣", pct: 5, sku: 10, margin: 55, sales: 30000, season: "秋冬" },
+    { category: "SZ-梭织上装（小衫/打底衫）", pct: 4, sku: 10, margin: 60, sales: 24000, season: "全年" },
+    { category: "MJ-马甲（羊绒/毛呢时尚款）", pct: 3, sku: 8, margin: 60, sales: 20000, season: "秋冬" },
+    { category: "TZ-套装（1套1-2件）", pct: 2, sku: 5, margin: 65, sales: 15000, season: "全年" },
+    { category: "KL-夹克衫", pct: 2, sku: 5, margin: 60, sales: 12000, season: "秋冬" },
+    { category: "BQ-半身裙", pct: 1, sku: 7, margin: 60, sales: 8000, season: "春夏/秋冬" },
   ]);
 
   // ── 96 格矩阵数据 ────────────────────────
