@@ -9,8 +9,9 @@ import {
 } from "lucide-react";
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
-  getStyleProLabel, CATEGORY_OPTIONS,
+  getStyleProLabel,
 } from "@/lib/styles";
+import { useCategories } from "@/lib/useCategories";
 import * as XLSX from "xlsx";
 
 /* ── 12 季型 ─────────────────────────────── */
@@ -27,8 +28,7 @@ const ALL_STYLES: any[] = [
   ...MALE_STYLES.map((s) => ({ ...s, group: "男士" })),
 ];
 
-/* ── 品类选项（从 styles.ts 统一引入）── */
-// CATEGORY_OPTIONS 已从 @/lib/styles 引入
+/* ── 品类选项（从 useCategories hook 动态读取）── */
 
 /* ── 类型定义 ─────────────────────────────── */
 interface StructureItem {
@@ -54,6 +54,7 @@ interface WaveItem {
 
 export default function ProductPlanPage() {
   const supabase = createClient();
+  const { categories: categoryOptions } = useCategories();
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
@@ -336,7 +337,7 @@ export default function ProductPlanPage() {
                   <tr key={i} className="border-t border-gray-100">
                     <td className="p-3">
                       <select value={item.category} onChange={(e) => { const s = [...structure]; s[i].category = e.target.value; setStructure(s); }} className="px-2 py-1 border border-gray-200 rounded-lg text-sm">
-                        {CATEGORY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
+                        {categoryOptions.map((c) => <option key={c}>{c}</option>)}
                       </select>
                     </td>
                     <td className="p-3"><input type="number" value={item.pct} onChange={(e) => { const s = [...structure]; s[i].pct = +e.target.value; setStructure(s); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>

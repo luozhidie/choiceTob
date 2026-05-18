@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useCategories } from "@/lib/useCategories";
 import {
   Package, Plus, Trash2, Edit2, AlertTriangle,
   TrendingDown, TrendingUp, Minus, Search,
@@ -30,6 +31,7 @@ const SIZE_OPTIONS = ["XS", "S", "M", "L", "XL", "XXL", "均码"];
 
 export default function InventoryPage() {
   const supabase = createClient();
+  const { categories: categoryOptions } = useCategories();
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<any[]>([]);
   const [items, setItems] = useState<InventoryItem[]>([]);
@@ -285,7 +287,7 @@ export default function InventoryPage() {
                   <div>
                     <label className="text-xs text-gray-500">品类</label>
                     <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm">
-                      {CATEGORY_OPTIONS.map(c => <option key={c}>{c}</option>)}
+                      {categoryOptions.map(c => <option key={c}>{c}</option>)}
                     </select>
                   </div>
                   <div>
