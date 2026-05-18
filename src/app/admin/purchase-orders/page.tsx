@@ -160,6 +160,24 @@ export default function PurchaseOrdersPage() {
     loadOrders();
   };
 
+  /* ── 确认收货 → 自动入库 ── */
+  const receiveOrder = async (orderId: string) => {
+    if (!confirm("确认收货？将自动写入库存！")) return;
+    try {
+      const res = await fetch("/api/purchase-orders/receive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      alert(`✅ ${data.message}`);
+      loadOrders();
+    } catch (e: any) {
+      alert("收货入库失败：" + e.message);
+    }
+  };
+
   /* ── 重置表单 ──────────────── */
   const resetForm = () => {
     setForm({
@@ -431,6 +449,11 @@ export default function PurchaseOrdersPage() {
                       </span>
                     </td>
                     <td className="p-3 text-center">
+                      {(order.status === "shipped" || order.status === "confirmed") && (
+                        <button onClick={() => receiveOrder(order.id!)} className="text-green-600 hover:text-green-800 mr-3 text-xs font-semibold">
+                          <Package className="w-3.5 h-3.5 inline" /> 收货入库
+                        </button>
+                      )}
                       <button onClick={() => { setForm({
                         order_no: order.order_no,
                         supplier: order.supplier,

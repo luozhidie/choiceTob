@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   ShoppingBag, Download, Save, Calculator,
   Trash2, Plus, Layers, Calendar, BarChart3,
+  ShoppingCart,
 } from "lucide-react";
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
@@ -240,6 +241,26 @@ export default function ProductPlanPage() {
     setExporting(false);
   };
 
+  /* ── 一键生成采购清单 ─────────────────── */
+  const [generatingPO, setGeneratingPO] = useState(false);
+  const generateProcurement = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    setGeneratingPO(true);
+    try {
+      const res = await fetch("/api/plan/generate-procurement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, season: "2026", supplier: "待确认", avgCostPrice: 150 }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); setGeneratingPO(false); return; }
+      alert(`✅ ${data.message}\n\n共 ${data.orders?.length || 0} 张采购单\n总计 ${data.totalSku || 0} 件，¥${(data.totalAmount || 0).toLocaleString()}`);
+    } catch (e: any) {
+      alert("生成失败：" + e.message);
+    }
+    setGeneratingPO(false);
+  };
+
   /* ═══════════════════════════════════════════
        渲染
        ═══════════════════════════════════════════ */
@@ -275,6 +296,10 @@ export default function ProductPlanPage() {
             <button onClick={exportToExcel} disabled={exporting} className="px-4 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
               <Download className="w-4 h-4" />
               {exporting ? "导出中..." : "导出 Excel"}
+            </button>
+            <button onClick={generateProcurement} disabled={generatingPO || !storeId} className="px-4 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" />
+              {generatingPO ? "生成中..." : "一键生成采购清单"}
             </button>
           </div>
         </div>

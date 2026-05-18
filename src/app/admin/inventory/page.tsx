@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   Package, Plus, Trash2, Edit2, AlertTriangle,
   TrendingDown, TrendingUp, Minus, Search,
+  ShoppingCart,
 } from "lucide-react";
 
 interface InventoryItem {
@@ -170,7 +171,27 @@ export default function InventoryPage() {
     lowStock: items.filter(i => i.status === "low_stock").length,
     outOfStock: items.filter(i => i.status === "out_of_stock").length,
     overstock: items.filter(i => i.status === "overstock").length,
-    totalValue: items.reduce((s, i) => s + (i.current_stock * 100), 0), // 假设平均单价100
+    totalValue: items.reduce((s, i) => s + (i.current_stock * 100), 0),
+  };
+
+  /* ── 一键补货 ── */
+  const autoReplenish = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    const lowItems = items.filter(i => i.status === "low_stock" || i.status === "out_of_stock");
+    if (lowItems.length === 0) { alert("当前无需补货的SKU"); return; }
+    if (!confirm(`检测到 ${lowItems.length} 个需要补货的SKU，是否自动生成补货采购单？`)) return;
+    try {
+      const res = await fetch("/api/inventory/auto-replenish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, supplier: "待确认", avgCostPrice: 150 }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); return; }
+      alert(`✅ ${data.message}`);
+    } catch (e: any) {
+      alert("补货单生成失败：" + e.message);
+    }
   };
 
   /* ═════════════════════════════════════
@@ -192,6 +213,9 @@ export default function InventoryPage() {
             </select>
             <button onClick={() => { resetForm(); setEditing(null); setShowForm(true); }} className="px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 flex items-center gap-2">
               <Plus className="w-4 h-4" /> 入库录入
+            </button>
+            <button onClick={autoReplenish} className="px-5 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" /> 一键补货
             </button>
           </div>
         </div>
