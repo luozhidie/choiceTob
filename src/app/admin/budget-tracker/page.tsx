@@ -101,6 +101,7 @@ export default function BudgetTrackerPage() {
     totalBudget: items.reduce((s, it) => s + (it.budget_amount || 0), 0),
     totalActual: items.reduce((s, it) => s + (it.actual_amount || 0), 0),
     count: items.length,
+    totalVariance: 0 as number,
   };
   stats.totalVariance = stats.totalActual - stats.totalBudget;
 
