@@ -37,6 +37,8 @@ import {
   ChevronRight,
   Store,
   FileDown,
+  CheckSquare,
+  DollarSign,
 } from "lucide-react";
 
 const sidebarItems = [
@@ -72,6 +74,9 @@ const sidebarItems = [
   { label: "VIP加油包", href: "/admin/vip-addons", icon: Sparkles },
   { label: "原创设计", href: "/admin/designer", icon: Palette },
   { label: "沙龙活动", href: "/admin/salon", icon: Calendar },
+  { label: "内容日历", href: "/admin/content-calendar", icon: Calendar },
+  { label: "项目进度", href: "/admin/project-tracker", icon: CheckSquare },
+  { label: "预算与成本", href: "/admin/budget-tracker", icon: DollarSign },
   { label: "教学中心", href: "/admin/education", icon: GraduationCap },
   { label: "流行资讯管理", href: "/admin/magazine", icon: BookOpen },
   { label: "服装趋势管理", href: "/admin/fashion-trends", icon: TrendingUp },
