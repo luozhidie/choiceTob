@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { PaywallModal } from "@/components/PaywallModal";
+import { MagazineSubscribeModal } from "@/components/MagazineSubscribeModal";
 
 /* ==================== 动画 ==================== */
 const fadeUp = {
@@ -66,7 +67,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   /* ---- 共享 state ---- */
-  const [showPaywall, setShowPaywall] = useState(false);
+  const [showSubscribe, setShowSubscribe] = useState(false);
   const [paywallTitle, setPaywallTitle] = useState("");
   const [paywallDesc, setPaywallDesc] = useState("");
   const [paywallType, setPaywallType] = useState<"subscription" | "trend">("subscription");
@@ -101,10 +102,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
   const handleArticleClick = (article: Article) => {
     setSelectedArticle(article);
     if (article.is_premium) {
-      setPaywallTitle("完整文章阅读");
-      setPaywallDesc("付费订阅后即可阅读全部杂志文章");
-      setPaywallType("subscription");
-      setShowPaywall(true);
+      setShowSubscribe(true);
     }
   };
 
@@ -115,10 +113,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
     setSelectedTrend(trend);
     setCurrentImageIndex(0);
     if (trend.price > 0) {
-      setPaywallTitle(`${trend.title} 需付费查看`);
-      setPaywallDesc(`支付 ¥${(trend.price / 100).toFixed(2)} 即可查看完整趋势报告`);
-      setPaywallType("trend");
-      setShowPaywall(true);
+      setShowSubscribe(true);
     }
   };
 
@@ -130,7 +125,9 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
   /* ---- 渲染 ---- */
   return (
     <>
-      <PaywallModal isOpen={showPaywall} onClose={() => setShowPaywall(false)} title={paywallTitle} description={paywallDesc} type={paywallType} />
+      <MagazineSubscribeModal isOpen={showSubscribe} onClose={() => setShowSubscribe(false)} />
+
+      {/* 文章详情弹窗：付费文章不在这里显示，由MagazineSubscribeModal处理 */}
 
       {/* 文章详情弹窗 */}
       <AnimatePresence mode="wait">
@@ -152,7 +149,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
 
       {/* 趋势图片画廊弹窗 */}
       <AnimatePresence mode="wait">
-        {selectedTrend && !showPaywall && (
+        {selectedTrend && !showSubscribe && (
           <motion.div key="trend-gallery" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="absolute inset-0 bg-black/95 backdrop-blur-sm" onClick={() => setSelectedTrend(null)} />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-6xl">
@@ -220,7 +217,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
             {plans.length > 0 && (
               <div className="mt-8 flex flex-wrap gap-3">
                 {plans.map((plan) => (
-                  <button key={plan.id} onClick={() => { setPaywallTitle("完整文章阅读"); setPaywallDesc("付费订阅后即可阅读全部内容"); setPaywallType("subscription"); setShowPaywall(true); }}
+                  <button key={plan.id} onClick={() => setShowSubscribe(true)}
                     className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
                     {plan.name} ¥{(plan.price / 100).toFixed(0)}/{plan.duration_days === 30 ? "月" : "年"}
                   </button>
@@ -364,7 +361,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
               <h2 className="text-3xl sm:text-4xl font-bold">订阅完整内容</h2>
               <p className="mt-4 text-white/80 max-w-xl mx-auto leading-relaxed">解锁全部付费文章与趋势报告，掌握前沿时尚动态</p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button onClick={() => { setPaywallTitle("完整内容阅读"); setPaywallDesc("付费订阅后即可阅读全部内容"); setPaywallType("subscription"); setShowPaywall(true); }}
+                <button onClick={() => setShowSubscribe(true)}
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
                   查看订阅方案 <ChevronRight className="w-5 h-5" />
                 </button>
