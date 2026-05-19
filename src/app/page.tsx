@@ -230,43 +230,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 一手选品 CTA ====== */}
-      <section className="py-12 lg:py-16 bg-gradient-to-r from-primary to-primary/90 text-white relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[400px] h-[400px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="text-center md:text-left">
-              <h2 className="text-3xl sm:text-4xl font-bold">
-                一手选品 <span className="text-accent">·</span> 源头直供
-              </h2>
-              <p className="mt-3 text-lg text-white/80 max-w-xl">
-                优质服装配饰一手货源，按风格、色系精准筛选，充值会员享2.6折拿货
-              </p>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 shrink-0">
-              <Link
-                href="/buyer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-accent text-white font-bold text-lg rounded-xl hover:bg-accent/90 transition-colors shadow-lg shadow-accent/30"
-              >
-                <ShoppingBag className="w-6 h-6" />
-                进入一手选品
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/planning"
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 text-white font-semibold text-lg rounded-xl hover:bg-white/20 transition-colors border border-white/20"
-              >
-                商品企划
-                <ChevronRight className="w-5 h-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* ====== Top Ad Banner ====== */}
       <AdBanner position="top" />
 

@@ -6,12 +6,14 @@ import { Menu, X, ChevronRight } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
-  { label: "一手选品", href: "/buyer", highlight: true },
   { label: "风格测试", href: "/style-test" },
-  { label: "商品企划", href: "/planning" },
   { label: "线上课程", href: "/courses" },
+  { label: "买手选品", href: "/buyer" },
+  { label: "商品企划", href: "/planning" },
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
+  { label: "时尚博主", href: "/magazine" },
+  { label: "原创设计", href: "/designer" },
   { label: "联系我们", href: "/contact" },
 ];
 
@@ -43,11 +45,7 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                  (item as any).highlight
-                    ? "bg-accent text-white hover:bg-accent/90 shadow-sm"
-                    : "text-gray-700 hover:text-primary hover:bg-primary/5"
-                }`}
+                className="px-3 py-2 text-sm font-medium text-gray-700 hover:text-primary rounded-md hover:bg-primary/5 transition-colors whitespace-nowrap"
               >
                 {item.label}
               </Link>
@@ -88,11 +86,7 @@ export default function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-md transition-colors ${
-                    (item as any).highlight
-                      ? "bg-accent text-white hover:bg-accent/90"
-                      : "text-gray-700 hover:text-primary hover:bg-primary/5"
-                  }`}
+                  className="px-4 py-2.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-primary/5 rounded-md transition-colors"
                 >
                   {item.label}
                 </Link>

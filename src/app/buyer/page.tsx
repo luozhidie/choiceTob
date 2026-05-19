@@ -212,26 +212,46 @@ export default function BuyerPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ====== Hero ====== */}
+      {/* ====== Hero — 一手选品入口 ====== */}
       <section className="bg-gradient-to-br from-primary to-primary/80 text-white py-12 md:py-16">
         <div className={`container mx-auto px-4 transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-6 h-6" />
-            <h1 className="text-3xl md:text-4xl font-bold">买手选品</h1>
-          </div>
-          <p className="text-sm md:text-base text-white/80 max-w-2xl mb-6">
-            B端专属选品平台，按品类、风格、色彩精准选品，充值会员享专属拿货折扣
-          </p>
-          <div className="max-w-lg relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索商品名称、描述..."
-              className="w-full pl-11 pr-10 py-3 bg-white/15 border border-white/25 rounded-xl text-sm text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20" />
-            {searchTerm && (
-              <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          <div className="flex flex-col md:flex-row items-center gap-8">
+            <div className="flex-1">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-accent text-xs font-medium mb-4">
+                <Flame className="w-3.5 h-3.5" />
+                源头直供 · 一手货源
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold mb-3">一手选品</h1>
+              <p className="text-sm md:text-base text-white/80 max-w-xl mb-6">
+                优质服装配饰一手货源，按风格、色系精准筛选，充值会员享2.6折拿货
+              </p>
+              <div className="max-w-lg relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="搜索商品名称、描述..."
+                  className="w-full pl-11 pr-10 py-3 bg-white/15 border border-white/25 rounded-xl text-sm text-white placeholder-white/50 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white/30 focus:bg-white/20" />
+                {searchTerm && (
+                  <button onClick={() => setSearchTerm("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white">
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+            {/* 充值档位卡片 */}
+            <div className="flex gap-3 shrink-0">
+              {[
+                { amount: "5万", discount: "2.8折", ret: "退5%" },
+                { amount: "10万", discount: "2.8折", ret: "退10%" },
+                { amount: "30万", discount: "2.6折", ret: "退20%" },
+              ].map((tier) => (
+                <div key={tier.amount} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center min-w-[100px]">
+                  <div className="text-xl font-bold">{tier.amount}</div>
+                  <div className="text-xs text-white/60 mt-1">充值</div>
+                  <div className="mt-2 text-accent font-bold text-sm">{tier.discount}</div>
+                  <div className="text-[10px] text-white/50">{tier.ret}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -324,29 +344,6 @@ export default function BuyerPage() {
           </div>
         </div>
       )}
-
-      {/* ====== 充值档位 ====== */}
-      <section className="py-6 bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4">
-          <h3 className="text-sm font-bold text-primary mb-3">充值会员专属折扣</h3>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { amount: "5万", discount: "2.8折", ret: "退换5%" },
-              { amount: "10万", discount: "2.8折", ret: "退换10%" },
-              { amount: "30万", discount: "2.6折", ret: "退换20%" },
-            ].map((tier) => (
-              <div key={tier.amount} className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-xl p-4 text-center border border-primary/10">
-                <div className="text-2xl font-bold text-primary">{tier.amount}</div>
-                <div className="text-xs text-gray-500 mt-1">充值 ¥{tier.amount}</div>
-                <div className="mt-2 flex items-center justify-center gap-3 text-xs">
-                  <span className="text-accent font-bold">{tier.discount}</span>
-                  <span className="text-gray-400">{tier.ret}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* ====== 爆款货盘 ====== */}
       {hotPicks.length > 0 && (
