@@ -1,6 +1,7 @@
 /**
  * 商品品类体系配置
  * 主分类 + 子分类，用于前端展示和后台管理
+ * 对应数据库 categories 表
  */
 
 export interface CategoryDef {
@@ -29,6 +30,8 @@ export const CATEGORIES: CategoryDef[] = [
       { key: "outerwear", label: "外套" },
       { key: "dress", label: "连衣裙" },
       { key: "suit", label: "套装" },
+      { key: "underwear", label: "内衣" },
+      { key: "maternity", label: "母婴/家居服" },
     ],
   },
   {
@@ -39,6 +42,7 @@ export const CATEGORIES: CategoryDef[] = [
       { key: "jewelry", label: "首饰" },
       { key: "bag", label: "包袋" },
       { key: "hat", label: "帽饰" },
+      { key: "shoes", label: "鞋靴" },
     ],
   },
 ];
