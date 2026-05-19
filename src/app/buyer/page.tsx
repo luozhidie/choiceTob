@@ -198,6 +198,22 @@ export default function BuyerPage() {
     return dynamic;
   }, [allProducts]);
 
+  /* 当前主分类的子分类列表 */
+  const currentSubcategories = useMemo(() => {
+    if (!activeCategory) return [];
+    const cat = CATEGORIES.find(c => c.key === activeCategory);
+    if (cat) return cat.subcategories;
+    /* 自定义分类：从商品数据中提取子分类 */
+    const subs = new Set<string>();
+    allProducts.forEach(p => { if (p.category === activeCategory && p.subcategory) subs.add(p.subcategory); });
+    return [...subs].map(s => ({ key: s, label: SUBCATEGORY_MAP[s] || s }));
+  }, [activeCategory, allProducts]);
+
+  const [activeSubcategory, setActiveSubcategory] = useState("");
+
+  /* 切换主分类时重置子分类 */
+  useEffect(() => { setActiveSubcategory(""); }, [activeCategory]);
+
   const filteredProducts = useMemo(() => {
     let list = [...allProducts];
     /* 只显示有分类的商品，不再硬编码 clothing/accessory，支持用户自定义分类 */
@@ -208,6 +224,7 @@ export default function BuyerPage() {
       list = list.filter((p) => p.title.toLowerCase().includes(kw) || (p.description || "").toLowerCase().includes(kw));
     }
     if (activeCategory) list = list.filter((p) => p.category === activeCategory);
+    if (activeSubcategory) list = list.filter((p) => p.subcategory === activeSubcategory);
     /* 用户端风格筛选：直接匹配 style_type */
     if (activeUserStyle) list = list.filter((p) => p.style_type === activeUserStyle);
     /* 用户端色彩筛选：兼容通俗色系名(warm/cool) + 旧季型名(light_warm) */
@@ -218,18 +235,18 @@ export default function BuyerPage() {
     if (sortBy === "price_asc") list.sort((a, b) => a.price - b.price);
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
-  }, [allProducts, searchTerm, activeCategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
+  }, [allProducts, searchTerm, activeCategory, activeSubcategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
   const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowPaywall(true); };
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
   const getImage = (p: MergedProduct) => p.cover_image;
 
   const clearFilters = () => {
-    setSearchTerm(""); setActiveCategory(""); setActiveStyle(""); setActiveColor("");
+    setSearchTerm(""); setActiveCategory(""); setActiveSubcategory(""); setActiveStyle(""); setActiveColor("");
     setActiveUserStyle(""); setActiveUserColor("");
     setSourceFilter(""); setSortBy("sort_order");
   };
-  const hasActiveFilter = activeCategory || activeUserStyle || activeUserColor || sourceFilter || searchTerm || sortBy !== "sort_order";
+  const hasActiveFilter = activeCategory || activeSubcategory || activeUserStyle || activeUserColor || sourceFilter || searchTerm || sortBy !== "sort_order";
 
   const handleSupplierSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,6 +345,27 @@ export default function BuyerPage() {
             </div>
           </div>
 
+          {/* 子分类筛选（选中主分类后显示） */}
+          <AnimatePresence>
+            {activeCategory && currentSubcategories.length > 0 && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                <div className="flex items-center gap-2 mt-2 overflow-x-auto scrollbar-hide pb-1">
+                  <span className="text-xs text-gray-400 shrink-0">子分类：</span>
+                  <button onClick={() => setActiveSubcategory("")}
+                    className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${!activeSubcategory ? "bg-accent text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                    全部
+                  </button>
+                  {currentSubcategories.map((sub) => (
+                    <button key={sub.key} onClick={() => setActiveSubcategory(sub.key)}
+                      className={`shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-colors ${activeSubcategory === sub.key ? "bg-accent text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}>
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* 用户端风格 + 色彩筛选器 */}
           <AnimatePresence>
             {(!sourceFilter || sourceFilter === "buyer") && (
@@ -364,6 +402,7 @@ export default function BuyerPage() {
               {sourceFilter === "platform" && "平台自营 "}
               {sourceFilter === "buyer" && "供应商货源 "}
               {activeCategory && `品类"${CATEGORY_MAP[activeCategory] || activeCategory} `}
+              {activeSubcategory && `> ${SUBCATEGORY_MAP[activeSubcategory] || activeSubcategory} `}
               {activeUserStyle && `· 风格"${getActiveStyleLabel()} `}
               {activeUserColor && `· 色彩"${getActiveColorLabel()} `}
               <span className="font-medium">（{filteredProducts.length} 件）</span>
