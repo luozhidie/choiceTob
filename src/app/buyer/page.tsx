@@ -92,7 +92,7 @@ interface MergedProduct {
   cover_image: string | null; price: number; original_price: number | null;
   category: string | null; subcategory: string | null;
   color_season: string | null; style_type: string | null;
-  stock: number; is_published: boolean; source: "platform" | "buyer";
+  stock: number; is_published: boolean; source: "platform" | "buyer" | "supplier_submit";
   created_at: string;
 }
 
@@ -154,7 +154,9 @@ export default function BuyerPage() {
         original_price: p.original_price || null, category: p.category || null,
         subcategory: p.subcategory || null, color_season: p.color_season || null,
         style_type: p.style_type || null, stock: p.stock || 0,
-        is_published: p.is_published, source: "buyer", created_at: p.created_at,
+        is_published: p.is_published,
+        source: p.source === "supplier_submit" ? "supplier_submit" : "buyer",
+        created_at: p.created_at,
       }));
     }
     if (!platformRes.error && platformRes.data) {
@@ -183,10 +185,10 @@ export default function BuyerPage() {
     if (activeCategory) list = list.filter((p) => p.category === activeCategory);
     /* 用户端风格筛选：直接匹配 style_type */
     if (activeUserStyle) list = list.filter((p) => p.style_type === activeUserStyle);
-    /* 用户端色彩筛选：色系映射到具体季型 */
+    /* 用户端色彩筛选：兼容通俗色系名(warm/cool) + 旧季型名(light_warm) */
     if (activeUserColor && COLOR_SCHEME_TO_SEASONS[activeUserColor]) {
       const seasons = COLOR_SCHEME_TO_SEASONS[activeUserColor];
-      list = list.filter((p) => p.color_season && seasons.includes(p.color_season));
+      list = list.filter((p) => p.color_season && (seasons.includes(p.color_season) || p.color_season === activeUserColor));
     }
     if (sortBy === "price_asc") list.sort((a, b) => a.price - b.price);
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
