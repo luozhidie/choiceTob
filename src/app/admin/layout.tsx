@@ -44,6 +44,7 @@ import {
 
 const sidebarItems = [
   { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
+  { label: "市场需求统计", href: "/admin/market-demand", icon: TrendingUp },
   { label: "店铺管理", href: "/admin/stores", icon: Store },
   { label: "品类管理", href: "/admin/categories", icon: Tag },
   { label: "店铺买手决策", href: "/admin/store-buyer", icon: TrendingUp },

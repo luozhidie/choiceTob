@@ -192,6 +192,11 @@ export default function PlanningPage() {
 
     setSubmitted(true);
     setSubmitting(false);
+
+    // 3秒后自动跳转到买手选品
+    setTimeout(() => {
+      window.location.href = "/buyer";
+    }, 3000);
   };
 
   return (
@@ -733,7 +738,7 @@ export default function PlanningPage() {
                 </div>
               </section>
             ) : (
-              /* 提交成功 — 三条路径 */
+              /* 提交成功 — 自动跳转 + 两条路径 */
               <section className="py-16">
                 <div className="mx-auto max-w-4xl px-4">
                   <motion.div
@@ -748,78 +753,68 @@ export default function PlanningPage() {
                     <p className="mt-3 text-muted-foreground leading-relaxed max-w-lg mx-auto">
                       您的商品企划需求已成功提交。专业顾问将在48小时内与您联系，确认需求后开始制作企划方案。
                     </p>
+                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-accent/10 rounded-full">
+                      <Loader2 className="w-4 h-4 animate-spin text-accent" />
+                      <span className="text-sm text-accent font-medium">3秒后自动跳转到一手选品...</span>
+                    </div>
                   </motion.div>
 
-                  {/* 三条路径卡片 */}
+                  {/* 两条路径卡片 */}
                   <motion.div
-                    className="grid md:grid-cols-3 gap-5"
+                    className="grid md:grid-cols-2 gap-6"
                     initial="hidden"
                     animate="visible"
                     variants={stagger}
                   >
-                    {/* 路径1：等待出方案 */}
+                    {/* 路径1：跳转买手选品 */}
                     <motion.div variants={fadeUp} custom={0}>
-                      <div className="h-full p-6 rounded-2xl bg-white border-2 border-accent/20 shadow-sm hover:shadow-lg hover:border-accent/40 transition-all duration-300 text-center">
-                        <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                          <Wand2 className="w-6 h-6 text-accent" />
-                        </div>
-                        <h3 className="font-bold text-primary text-lg">等待出方案</h3>
-                        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                          顾问确认需求后，为您定制专属企划方案，包含商品结构、色彩搭配、价格策略等完整内容
-                        </p>
-                        <div className="mt-4 px-3 py-2 bg-amber-50 rounded-lg">
-                          <p className="text-xs text-amber-700">预计48小时内出初稿</p>
-                        </div>
-                      </div>
-                    </motion.div>
-
-                    {/* 路径2：直接联系我 */}
-                    <motion.div variants={fadeUp} custom={1}>
-                      <div className="h-full p-6 rounded-2xl bg-white border-2 border-primary/20 shadow-sm hover:shadow-lg hover:border-primary/40 transition-all duration-300 text-center">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                          <Phone className="w-6 h-6 text-primary" />
-                        </div>
-                        <h3 className="font-bold text-primary text-lg">直接联系我</h3>
-                        <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                          想更快沟通？直接联系我，一对一深度交流您的店铺需求
-                        </p>
-                        <a
-                          href="mailto:luozhidie@live.cn"
-                          className="mt-4 inline-flex items-center gap-2 px-5 py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                        >
-                          <MessageSquare className="w-4 h-4" />
-                          联系我
-                        </a>
-                      </div>
-                    </motion.div>
-
-                    {/* 路径3：跳转买手选品 */}
-                    <motion.div variants={fadeUp} custom={2}>
                       <Link href="/buyer" className="block h-full">
-                        <div className="h-full p-6 rounded-2xl bg-white border-2 border-gray-200 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300 text-center cursor-pointer">
-                          <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                            <ShoppingBag className="w-6 h-6 text-accent" />
+                        <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-accent/5 to-accent/10 border-2 border-accent/30 shadow-sm hover:shadow-lg hover:border-accent/50 transition-all duration-300 text-center cursor-pointer">
+                          <div className="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                            <ShoppingBag className="w-7 h-7 text-accent" />
                           </div>
-                          <h3 className="font-bold text-primary text-lg">去选品</h3>
+                          <h3 className="font-bold text-primary text-xl">进入一手选品</h3>
                           <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                            已经有方向了？直接跳转买手选品，按风格、色系、价格带筛选优质货源
+                            按您的风格和色系偏好，精准筛选优质服装配饰货源
                           </p>
-                          <span className="mt-4 inline-flex items-center gap-2 px-5 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors">
+                          <span className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                             进入买手选品 <ArrowRight className="w-4 h-4" />
                           </span>
                         </div>
                       </Link>
                     </motion.div>
+
+                    {/* 路径2：查看商品企划 */}
+                    <motion.div variants={fadeUp} custom={1}>
+                      <button
+                        onClick={() => { setSubmitted(false); setActiveTab("templates"); }}
+                        className="block w-full h-full text-left"
+                      >
+                        <div className="h-full p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border-2 border-primary/30 shadow-sm hover:shadow-lg hover:border-primary/50 transition-all duration-300 text-center cursor-pointer">
+                          <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                            <Wand2 className="w-7 h-7 text-primary" />
+                          </div>
+                          <h3 className="font-bold text-primary text-xl">查看企划案例</h3>
+                          <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                            浏览同风格、同色系的企划案例模板，获取更多灵感
+                          </p>
+                          <span className="mt-4 inline-flex items-center gap-2 px-6 py-3 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
+                            浏览企划案例 <ChevronRight className="w-4 h-4" />
+                          </span>
+                        </div>
+                      </button>
+                    </motion.div>
                   </motion.div>
 
-                  {/* 底部返回 */}
-                  <div className="mt-10 text-center">
-                    <button
-                      onClick={() => { setSubmitted(false); setActiveTab("templates"); }}
-                      className="text-sm text-primary hover:text-accent transition-colors"
+                  {/* 底部联系我 */}
+                  <div className="mt-8 text-center">
+                    <a
+                      href="mailto:luozhidie@live.cn"
+                      className="inline-flex items-center gap-2 text-sm text-primary hover:text-accent transition-colors"
                     >
-                      ← 返回查看企划案例
-                    </button>
+                      <Phone className="w-4 h-4" />
+                      或直接联系我，一对一深度沟通
+                    </a>
                   </div>
                 </div>
               </section>

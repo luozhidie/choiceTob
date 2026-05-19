@@ -21,16 +21,6 @@ export interface SubcategoryDef {
  */
 export const CATEGORIES: CategoryDef[] = [
   {
-    key: "color_tools",
-    label: "色彩工具",
-    subcategories: [
-      { key: "color_cloth", label: "色布套组" },
-      { key: "color_card", label: "色卡" },
-      { key: "diagnosis_tool", label: "诊断工具" },
-      { key: "test_prop", label: "测试道具" },
-    ],
-  },
-  {
     key: "clothing",
     label: "服装",
     subcategories: [
@@ -49,24 +39,6 @@ export const CATEGORIES: CategoryDef[] = [
       { key: "jewelry", label: "首饰" },
       { key: "bag", label: "包袋" },
       { key: "hat", label: "帽饰" },
-    ],
-  },
-  {
-    key: "book",
-    label: "书籍资料",
-    subcategories: [
-      { key: "color_theory", label: "色彩理论" },
-      { key: "style_matching", label: "风格搭配" },
-      { key: "industry_report", label: "行业报告" },
-    ],
-  },
-  {
-    key: "pro_tool",
-    label: "专业工具",
-    subcategories: [
-      { key: "display_prop", label: "陈列道具" },
-      { key: "display_rack", label: "展示架" },
-      { key: "lighting", label: "灯光设备" },
     ],
   },
 ];

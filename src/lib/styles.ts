@@ -131,18 +131,18 @@ export function getStyleFullLabel(key: string | null | undefined): string {
 
 /** 12季色彩（后端专业术语） */
 export const COLOR_SEASONS_PRO = [
-  { value: "light_warm", label: "浅暖型", group: "春", marketLabel: "樱花粉" },
+  { value: "light_warm", label: "浅暖型", group: "春", marketLabel: "奶茶色" },
   { value: "warm_bright", label: "暖亮型", group: "春", marketLabel: "珊瑚橘" },
-  { value: "clear_warm", label: "净暖型", group: "春", marketLabel: "柠檬黄" },
-  { value: "light_cool", label: "浅冷型", group: "夏", marketLabel: "天空蓝" },
-  { value: "soft_cool", label: "柔冷型", group: "夏", marketLabel: "薰衣草" },
+  { value: "clear_warm", label: "净暖型", group: "春", marketLabel: "鹅黄色" },
+  { value: "light_cool", label: "浅冷型", group: "夏", marketLabel: "雾霾蓝" },
+  { value: "soft_cool", label: "柔冷型", group: "夏", marketLabel: "灰紫色" },
   { value: "cool_soft", label: "冷柔型", group: "夏", marketLabel: "薄荷绿" },
-  { value: "warm_soft", label: "暖柔型", group: "秋", marketLabel: "焦糖棕" },
-  { value: "soft_warm", label: "柔暖型", group: "秋", marketLabel: "枫叶红" },
+  { value: "warm_soft", label: "暖柔型", group: "秋", marketLabel: "驼色" },
+  { value: "soft_warm", label: "柔暖型", group: "秋", marketLabel: "焦糖色" },
   { value: "deep_warm", label: "深暖型", group: "秋", marketLabel: "酒红色" },
-  { value: "clear_cool", label: "净冷型", group: "冬", marketLabel: "宝石蓝" },
-  { value: "cool_bright", label: "冷亮型", group: "冬", marketLabel: "银白色" },
-  { value: "deep_cool", label: "深冷型", group: "冬", marketLabel: "墨黑色" },
+  { value: "clear_cool", label: "净冷型", group: "冬", marketLabel: "藏蓝色" },
+  { value: "cool_bright", label: "冷亮型", group: "冬", marketLabel: "冰白色" },
+  { value: "deep_cool", label: "深冷型", group: "冬", marketLabel: "墨灰色" },
 ] as const;
 
 /** 色彩季型Key → 后端专业术语 */
@@ -155,10 +155,10 @@ export const COLOR_SEASON_PRO_MAP: Record<string, string> = {
 
 /** 色彩季型Key → 前端通俗色系名 */
 export const COLOR_SEASON_MARKET_MAP: Record<string, string> = {
-  light_warm: "樱花粉", warm_bright: "珊瑚橘", clear_warm: "柠檬黄",
-  light_cool: "天空蓝", soft_cool: "薰衣草", cool_soft: "薄荷绿",
-  warm_soft: "焦糖棕", soft_warm: "枫叶红", deep_warm: "酒红色",
-  clear_cool: "宝石蓝", cool_bright: "银白色", deep_cool: "墨黑色",
+  light_warm: "奶茶色", warm_bright: "珊瑚橘", clear_warm: "鹅黄色",
+  light_cool: "雾霾蓝", soft_cool: "灰紫色", cool_soft: "薄荷绿",
+  warm_soft: "驼色", soft_warm: "焦糖色", deep_warm: "酒红色",
+  clear_cool: "藏蓝色", cool_bright: "冰白色", deep_cool: "墨灰色",
 };
 
 /**
@@ -169,23 +169,27 @@ export const COLOR_SEASON_MARKET_MAP: Record<string, string> = {
  */
 export const COLOR_SEASON_KEY_MAP: Record<string, string> = {
   // === 标准英文key → 通俗色系名 ===
-  light_warm: "樱花粉", warm_bright: "珊瑚橘", clear_warm: "柠檬黄",
-  light_cool: "天空蓝", soft_cool: "薰衣草", cool_soft: "薄荷绿",
-  warm_soft: "焦糖棕", soft_warm: "枫叶红", deep_warm: "酒红色",
-  clear_cool: "宝石蓝", cool_bright: "银白色", deep_cool: "墨黑色",
+  light_warm: "奶茶色", warm_bright: "珊瑚橘", clear_warm: "鹅黄色",
+  light_cool: "雾霾蓝", soft_cool: "灰紫色", cool_soft: "薄荷绿",
+  warm_soft: "驼色", soft_warm: "焦糖色", deep_warm: "酒红色",
+  clear_cool: "藏蓝色", cool_bright: "冰白色", deep_cool: "墨灰色",
   // === 旧中文key兼容（mock-data 中的"浅春""冷冬"等，无"型"后缀） ===
-  "浅春": "樱花粉", "暖春": "珊瑚橘", "净春": "柠檬黄",
-  "柔夏": "薰衣草", "冷夏": "天空蓝", "深夏": "薄荷绿",
-  "柔秋": "焦糖棕", "暖秋": "枫叶红", "净秋": "柠檬黄", "深秋": "酒红色",
-  "净冬": "宝石蓝", "冷冬": "银白色",
+  "浅春": "奶茶色", "暖春": "珊瑚橘", "净春": "鹅黄色",
+  "柔夏": "灰紫色", "冷夏": "雾霾蓝", "深夏": "薄荷绿",
+  "柔秋": "驼色", "暖秋": "焦糖色", "净秋": "鹅黄色", "深秋": "酒红色",
+  "净冬": "藏蓝色", "冷冬": "冰白色",
   // === 旧"形容词+季节型"兼容（supplier/submit, brand 中的"浅春型"等） ===
-  "浅春型": "樱花粉", "暖春型": "珊瑚橘", "净春型": "柠檬黄",
-  "浅夏型": "天空蓝", "冷夏型": "薰衣草", "柔夏型": "薄荷绿",
-  "柔秋型": "焦糖棕", "暖秋型": "枫叶红", "深秋型": "酒红色",
-  "净冬型": "宝石蓝", "冷冬型": "银白色", "深冬型": "墨黑色",
+  "浅春型": "奶茶色", "暖春型": "珊瑚橘", "净春型": "鹅黄色",
+  "浅夏型": "雾霾蓝", "冷夏型": "灰紫色", "柔夏型": "薄荷绿",
+  "柔秋型": "驼色", "暖秋型": "焦糖色", "深秋型": "酒红色",
+  "净冬型": "藏蓝色", "冷冬型": "冰白色", "深冬型": "墨灰色",
   // === 旧"形容词+季节+型"额外变体（customers 页面中的错误命名） ===
-  "浅秋": "焦糖棕", "浅冬": "宝石蓝", "柔春": "樱花粉",
-  "深春": "珊瑚橘", "柔冬": "银白色",
+  "浅秋": "驼色", "浅冬": "藏蓝色", "柔春": "奶茶色",
+  "深春": "珊瑚橘", "柔冬": "冰白色",
+  // === 旧通俗名兼容（上一版 marketLabel） ===
+  "樱花粉": "奶茶色", "柠檬黄": "鹅黄色", "天空蓝": "雾霾蓝",
+  "薰衣草": "灰紫色", "焦糖棕": "驼色", "枫叶红": "焦糖色",
+  "宝石蓝": "藏蓝色", "银白色": "冰白色", "墨黑色": "墨灰色",
 };
 
 /**
