@@ -21,14 +21,14 @@ const fadeUp = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  6大色系（对应12色彩季型） */
+/*  6大色系 */
 const COLOR_FAMILIES = [
-  { value: "deep",    label: "深色系", color: "#2C3E50", desc: "深暖型/深冷型" },
-  { value: "light",   label: "浅色系", color: "#F5E6CC", desc: "浅暖型/浅冷型" },
-  { value: "cool",    label: "冷色系", color: "#85CDCA", desc: "冷柔型/柔冷型" },
-  { value: "warm",    label: "暖色系", color: "#E8A87C", desc: "暖亮型/暖柔型" },
-  { value: "clear",   label: "净色系", color: "#E74C3C", desc: "净暖型/净冷型" },
-  { value: "soft",    label: "柔色系", color: "#B39DBC", desc: "柔暖型/柔冷型" },
+  { value: "deep",    label: "深色系", color: "#2C3E50", desc: "沉稳大气，气场感强" },
+  { value: "light",   label: "浅色系", color: "#F5E6CC", desc: "清新柔和，轻盈优雅" },
+  { value: "cool",    label: "冷色系", color: "#85CDCA", desc: "清冷知性，高级质感" },
+  { value: "warm",    label: "暖色系", color: "#E8A87C", desc: "温暖明亮，活力亲和" },
+  { value: "clear",   label: "净色系", color: "#E74C3C", desc: "鲜明纯粹，视觉冲击" },
+  { value: "soft",    label: "柔色系", color: "#B39DBC", desc: "温柔内敛，低调雅致" },
 ];
 
 /*  品类选项（从 CATEGORIES 派生） */
