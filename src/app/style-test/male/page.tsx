@@ -28,6 +28,7 @@ export default function MaleStyleTestPage() {
   const [codeVerified, setCodeVerified] = useState(false);
   const [payConfirming, setPayConfirming] = useState(false);
   const [payError, setPayError] = useState("");
+  const [testCode, setTestCode] = useState("");
 
   // 测试相关
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -46,35 +47,41 @@ export default function MaleStyleTestPage() {
   const supabase = createClient();
   const totalQuestions = questions.length + 1;
 
-  // 微信扫码后确认支付 → 生成测试码 → 进入测试
-  const handlePayConfirm = async () => {
+  // 验证测试码 → 进入测试
+  const handleCodeVerify = async () => {
+    const code = testCode.trim().toUpperCase();
+    if (!code) {
+      setPayError("请输入测试码");
+      return;
+    }
     setPayConfirming(true);
     setPayError("");
     try {
-      // 1. 自动生成测试码
-      const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const part3 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const newCode = `${part1}-${part2}-${part3}`;
+      const { data, error } = await supabase
+        .from("test_codes")
+        .select("*")
+        .eq("code", code)
+        .eq("is_active", true)
+        .single();
 
-      // 2. 写入数据库
-      const { error } = await supabase.from("test_codes").insert([{
-        code: newCode,
-        package_name: "男士风格测试",
-        price: payAmount,
-        max_attempts: 2,
-        is_active: true,
-        note: "微信扫码自动生成",
-      }]);
+      if (error || !data) {
+        setPayError("测试码无效，请确认后重试");
+        return;
+      }
+      if (data.used_attempts >= data.max_attempts) {
+        setPayError("该测试码已用完，请联系客服获取新码");
+        return;
+      }
 
-      if (error) throw error;
-
-      // 3. 放行进入测试
+      // 验证通过，放行进入测试
       setCodeVerified(true);
-      // 把生成的码存一下（用于后续次数控制）
-      (window as any).__currentTestCode = { code: newCode, max_attempts: 2, used_attempts: 0 };
+      (window as any).__currentTestCode = {
+        code: data.code,
+        max_attempts: data.max_attempts,
+        used_attempts: data.used_attempts,
+      };
     } catch (err: any) {
-      setPayError("支付确认失败，请重试或联系客服");
+      setPayError("验证失败，请重试");
     } finally {
       setPayConfirming(false);
     }
@@ -203,7 +210,7 @@ export default function MaleStyleTestPage() {
           </div>
           <h2 className="text-2xl font-bold text-primary mb-2">男士风格测试</h2>
           <p className="text-sm text-muted-foreground mb-6">
-            微信扫码支付后即可开始测试（共 {totalQuestions} 道题）
+            微信扫码支付后，输入测试码即可开始测试（共 {totalQuestions} 道题）
           </p>
 
           {/* 价格 */}
@@ -223,29 +230,41 @@ export default function MaleStyleTestPage() {
             请使用微信扫描上方二维码付款
           </p>
 
-          {/* 支付确认 */}
+          {/* 测试码输入 */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={testCode}
+              onChange={(e) => setTestCode(e.target.value)}
+              placeholder="请输入付款后获取的测试码"
+              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent"
+              onKeyDown={(e) => e.key === "Enter" && handleCodeVerify()}
+            />
+          </div>
+
+          {/* 验证确认 */}
           {payError && (
             <p className="text-sm text-red-500 mb-3">{payError}</p>
           )}
           <button
-            onClick={handlePayConfirm}
-            disabled={payConfirming}
-            className="w-full btn-primary flex items-center justify-center gap-2 py-3"
+            onClick={handleCodeVerify}
+            disabled={payConfirming || !testCode.trim()}
+            className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-50"
           >
             {payConfirming ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                确认支付中...
+                验证中...
               </>
             ) : (
               <>
                 <QrCode className="w-4 h-4" />
-                我已支付，开始测试
+                验证测试码，开始测试
               </>
             )}
           </button>
           <p className="text-xs text-muted-foreground mt-3">
-            支付成功后点击按钮 · 自动生成测试码
+            扫码付款后客服将发放测试码 · 输入测试码验证后即可测试
             <br />
             客服微信：luozhidie666
           </p>

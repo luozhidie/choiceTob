@@ -1,122 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { User, UserRound, CreditCard, QrCode, Loader2, ChevronRight } from "lucide-react";
+import { User, UserRound, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 export default function StyleTestPage() {
   const [visible, setVisible] = useState(false);
-  const [payConfirming, setPayConfirming] = useState(false);
-  const [payError, setPayError] = useState("");
-  const [selectedGender, setSelectedGender] = useState<"male" | "female" | null>(null);
-
-  const supabase = createClient();
+  const router = useRouter();
 
   useEffect(() => {
     setVisible(true);
   }, []);
 
-  const handlePayConfirm = async (gender: "male" | "female") => {
-    setPayConfirming(true);
-    setPayError("");
-    try {
-      const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const part3 = Math.random().toString(36).substring(2, 6).toUpperCase();
-      const newCode = `${part1}-${part2}-${part3}`;
-
-      const { error } = await supabase.from("test_codes").insert([{
-        code: newCode,
-        package_name: gender === "male" ? "男士风格测试" : "女士风格测试",
-        price: 9900,
-        max_attempts: 2,
-        is_active: true,
-        note: "微信扫码自动生成",
-      }]);
-
-      if (error) throw error;
-
-      // 跳转到测试页面
-      window.location.href = `/style-test/${gender}`;
-    } catch (err: any) {
-      setPayError("支付确认失败，请重试或联系客服");
-    } finally {
-      setPayConfirming(false);
-    }
+  const handleSelectGender = (gender: "male" | "female") => {
+    router.push(`/style-test/${gender}`);
   };
 
-  // 选择了性别，显示支付页
-  if (selectedGender) {
-    const isMale = selectedGender === "male";
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center"
-        >
-          <button
-            onClick={() => setSelectedGender(null)}
-            className="text-xs text-gray-400 hover:text-gray-600 mb-4 inline-flex items-center gap-1"
-          >
-            ← 返回选择
-          </button>
-
-          <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-6 ${isMale ? "bg-primary/10" : "bg-accent/10"}`}>
-            {isMale ? <User className="w-8 h-8 text-primary" /> : <UserRound className="w-8 h-8 text-accent" />}
-          </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">
-            {isMale ? "男士" : "女士"}风格测试
-          </h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            微信扫码支付后即可开始测试
-          </p>
-
-          <div className="text-4xl font-bold text-accent mb-6">¥99</div>
-
-          <div className="bg-gray-100 rounded-xl p-4 mb-4 inline-block">
-            <img
-              src="/images/wechat-pay-qr.png"
-              alt="微信收款码"
-              className="w-48 h-48 mx-auto object-cover rounded-lg"
-            />
-          </div>
-          <p className="text-xs text-gray-400 mb-4">
-            请使用微信扫描上方二维码完成付款
-          </p>
-
-          {payError && (
-            <p className="text-sm text-red-500 mb-3">{payError}</p>
-          )}
-          <button
-            onClick={() => handlePayConfirm(selectedGender)}
-            disabled={payConfirming}
-            className="w-full bg-accent text-white flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold hover:bg-accent/90 transition-colors disabled:opacity-60"
-          >
-            {payConfirming ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                确认支付中...
-              </>
-            ) : (
-              <>
-                <QrCode className="w-4 h-4" />
-                我已支付，开始测试
-              </>
-            )}
-          </button>
-          <p className="text-xs text-muted-foreground mt-3">
-            支付成功后点击按钮 · 自动生成测试码
-            <br />
-            客服微信：luozhidie666
-          </p>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // 未选择性别：选择页面
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Hero */}
@@ -145,7 +45,7 @@ export default function StyleTestPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               className="bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all p-8 md:p-10 text-center border border-transparent hover:border-accent/30 h-full flex flex-col cursor-pointer"
-              onClick={() => setSelectedGender("male")}
+              onClick={() => handleSelectGender("male")}
             >
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
                 <User className="w-8 h-8 text-primary" />
@@ -167,7 +67,7 @@ export default function StyleTestPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
               className="bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all p-8 md:p-10 text-center border border-transparent hover:border-accent/30 h-full flex flex-col cursor-pointer"
-              onClick={() => setSelectedGender("female")}
+              onClick={() => handleSelectGender("female")}
             >
               <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-6">
                 <UserRound className="w-8 h-8 text-accent" />
