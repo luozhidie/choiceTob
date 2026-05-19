@@ -306,42 +306,61 @@ export default function SupplierSubmitPage() {
     }
     setSubmitting(true);
     try {
-      const urls = images.filter(i => i.url).map(i => i.url);
-      const { error } = await supabase.from("buyer_products").insert([{
-        title:           form.title.trim(),
-        description:     form.description.trim() || null,
-        product_code:    form.productCode.trim() || null,
-        brand:           form.brand.trim()       || null,
-        category:        form.category,
-        subcategory:     form.subcategory      || null,
-        color_season:   form.colorFamily,          // 存色系key
-        color_name:      form.colorName,             // 存具体颜色名
-        style_type:     form.styleGroup,           // 存风格分组
-        style_name:     form.styleName,            // 存具体风格名
-        price:           Math.round(Number(form.wholesalePrice) * 100),
-        wholesale_price: Math.round(Number(form.wholesalePrice) * 100),
-        original_price:  Math.round(Number(form.retailPrice)     * 100),
-        stock:           Number(form.stock),
-        images:          urls,
-        cover_image:     urls[0] || null,
-        fabrics:         form.fabrics,
-        seasons:         form.seasons,
-        occasions:       form.occasions,
-        fits:            form.fits,
+      // 使用原生 fetch 直接调 Supabase REST API，绕过 JS 客户端的 schema cache 检查
+      // （schema cache 可能未刷新，导致 "Could not find column" 错误）
+      const rowData = {
+        name:             form.title.trim(),           // name 列 NOT NULL，用 title 兜底
+        title:            form.title.trim(),
+        description:      form.description.trim() || null,
+        product_code:     form.productCode.trim() || null,
+        brand:            form.brand.trim()       || null,
+        category:         form.category,
+        subcategory:      form.subcategory       || null,
+        color_season:     form.colorFamily,
+        color_name:       form.colorName,
+        style_type:       form.styleGroup,
+        style_name:       form.styleName,
+        price:            Math.round(Number(form.wholesalePrice) * 100),
+        wholesale_price:  Math.round(Number(form.wholesalePrice) * 100),
+        original_price:   Math.round(Number(form.retailPrice)     * 100),
+        stock:            Number(form.stock),
+        images:           urls,
+        cover_image:      urls[0] || null,
+        fabrics:          form.fabrics,
+        seasons:          form.seasons,
+        occasions:        form.occasions,
+        fits:             form.fits,
         sizes:            form.sizes,
         elasticity:       form.elasticity     || null,
-        thickness:       form.thickness       || null,
-        lining:          form.lining          || null,
-        weight:           form.weight.trim()    || null,
-        supplier_name:   form.supplierName.trim(),
-        supplier_phone:  form.supplierPhone.trim(),
-        supplier_wechat: form.supplierWechat.trim() || null,
-        source:          "supplier_submit",
-        is_published:    false,
-        sort_order:      999,
-        tags:            [],
-      }]);
-      if (error) throw error;
+        thickness:        form.thickness      || null,
+        lining:           form.lining         || null,
+        weight:           form.weight.trim()  || null,
+        supplier_name:    form.supplierName.trim(),
+        supplier_phone:   form.supplierPhone.trim(),
+        supplier_wechat:  form.supplierWechat.trim() || null,
+        source:           "supplier_submit",
+        is_published:     false,
+        sort_order:       999,
+        tags:             [],
+      };
+
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const res = await fetch(`${supabaseUrl}/rest/v1/buyer_products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": supabaseKey,
+          "Authorization": `Bearer ${supabaseKey}`,
+          "Prefer": "return=minimal",
+        },
+        body: JSON.stringify(rowData),
+      });
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}));
+        throw new Error(errBody.message || `提交失败 (HTTP ${res.status})`);
+      }
       setShowToast(true);
       setTimeout(() => setShowToast(false), 5000);
       setImages([]);
