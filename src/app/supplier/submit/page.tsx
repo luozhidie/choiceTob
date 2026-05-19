@@ -552,19 +552,45 @@ export default function SupplierSubmitPage() {
                   </button>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {COLOR_FAMILIES.map(fam => (
-                    <button key={fam.value} type="button"
-                      onClick={()=>setForm({...form,colorFamily:fam.value,colorName:""})}
-                      className={`p-4 rounded-xl border-2 transition-all text-left ${
-                        form.colorFamily===fam.value ? "border-accent bg-accent/5 shadow-md" : "border-gray-200 hover:border-accent/30"
-                      }`}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="w-8 h-8 rounded-full shrink-0 border border-white shadow-sm" style={{backgroundColor:fam.color}} />
-                        <span className="font-bold text-primary">{fam.label}</span>
+                  {COLOR_FAMILIES.map(fam => {
+                    const familyColors = colorDefs.filter(c => c.family === fam.value);
+                    return (
+                      <div key={fam.value}
+                        className={`p-4 rounded-xl border-2 transition-all ${
+                          form.colorFamily===fam.value ? "border-accent bg-accent/5 shadow-md" : "border-gray-200 hover:border-accent/30"
+                        }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <button type="button"
+                            onClick={()=>setForm({...form,colorFamily:fam.value,colorName:""})}
+                            className="flex items-center gap-3 flex-1 text-left">
+                            <span className="w-8 h-8 rounded-full shrink-0 border border-white shadow-sm" style={{backgroundColor:fam.color}} />
+                            <span className="font-bold text-primary">{fam.label}</span>
+                          </button>
+                          <button type="button" onClick={()=>{setAddColorFamily(fam.value);setShowAddColor(true)}}
+                            className="text-xs text-accent hover:text-accent/70 font-medium flex items-center gap-0.5"
+                            title={`在${fam.label}下新增颜色`}>
+                            <span className="text-base leading-none">+</span>加色
+                          </button>
+                        </div>
+                        <p className="text-xs text-muted-foreground mb-2">{fam.desc}</p>
+                        {/* 色系下的颜色标签预览 */}
+                        {!loadingColors && familyColors.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {familyColors.slice(0,6).map(c => (
+                              <span key={c.id}
+                                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-gray-100 text-gray-600">
+                                {c.color_hex && <span className="inline-block w-2 h-2 rounded-full" style={{backgroundColor:c.color_hex}} />}
+                                {c.color_name}
+                              </span>
+                            ))}
+                            {familyColors.length > 6 && (
+                              <span className="text-[10px] text-muted-foreground">+{familyColors.length - 6}</span>
+                            )}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-muted-foreground">{fam.desc}</p>
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
                 {fieldError("colorFamily")}
               </div>
@@ -621,19 +647,47 @@ export default function SupplierSubmitPage() {
 
               {/* Step 1: 选分组 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-primary mb-3">选择风格分组</label>
-                <div className="flex flex-wrap gap-3">
-                  {styleGroups.map(g => (
-                    <button key={g} type="button"
-                      onClick={()=>setForm({...form,styleGroup:g,styleName:""})}
-                      className={`px-5 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
-                        form.styleGroup===g ? "bg-primary text-white border-primary shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-accent/50"
-                      }`}>{g}</button>
-                  ))}
-                  <button type="button" onClick={()=>setShowAddStyle(true)}
-                    className="px-5 py-3 rounded-xl text-sm font-medium border-2 border-dashed border-gray-300 text-gray-500 hover:border-accent/50 hover:text-accent transition-all">
-                    + 新增分组
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-primary">选择风格分组</label>
+                  <button type="button" onClick={()=>{setAddStyleGroup("");setShowAddStyle(true)}}
+                    className="text-xs text-accent font-medium hover:underline flex items-center gap-1">
+                    <span className="text-lg">+</span> 新增分组
                   </button>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {styleGroups.map(g => {
+                    const groupStyles = styleDefs.filter(s => s.group_label === g);
+                    return (
+                      <div key={g}
+                        className={`rounded-xl border-2 transition-all ${
+                          form.styleGroup===g ? "border-primary bg-primary/5 shadow-md" : "border-gray-200 hover:border-accent/30"
+                        }`}>
+                        <div className="flex items-center">
+                          <button type="button"
+                            onClick={()=>setForm({...form,styleGroup:g,styleName:""})}
+                            className={`px-5 py-3 text-sm font-medium rounded-l-xl ${
+                              form.styleGroup===g ? "bg-primary text-white" : "text-gray-600"
+                            }`}>{g}</button>
+                          <button type="button" onClick={()=>{setAddStyleGroup(g);setShowAddStyle(true)}}
+                            className="px-2 py-3 text-xs text-accent hover:text-accent/70 border-l border-gray-200"
+                            title={`在${g}下新增风格`}>
+                            +加风格
+                          </button>
+                        </div>
+                        {/* 分组下的风格预览 */}
+                        {!loadingStyles && groupStyles.length > 0 && (
+                          <div className="px-3 pb-2 flex flex-wrap gap-1">
+                            {groupStyles.slice(0,4).map(s => (
+                              <span key={s.id} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500">{s.style_name}</span>
+                            ))}
+                            {groupStyles.length > 4 && (
+                              <span className="text-[10px] text-muted-foreground">+{groupStyles.length-4}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {fieldError("styleGroup")}
               </div>
