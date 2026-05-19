@@ -23,11 +23,13 @@ import {
 const { preferenceQuestion, questions, results } = maleTestConfig;
 
 export default function MaleStyleTestPage() {
-  // 支付相关
-  const [payAmount] = useState(9900); // ¥99 定价
+  // 测试码相关
+  const [testCode, setTestCode] = useState("");
   const [codeVerified, setCodeVerified] = useState(false);
-  const [payConfirming, setPayConfirming] = useState(false);
-  const [payError, setPayError] = useState("");
+  const [codeInfo, setCodeInfo] = useState<any>(null);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [payAmount] = useState(9900); // ¥99 定价
 
   // 测试相关
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -37,6 +39,8 @@ export default function MaleStyleTestPage() {
   const [submitting, setSubmitting] = useState(false);
   const [savingLead, setSavingLead] = useState(false);
   const [leadSubmitted, setLeadSubmitted] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payVerified, setPayVerified] = useState(false);
   const [leadForm, setLeadForm] = useState({
     name: "",
     phone: "",
@@ -46,12 +50,11 @@ export default function MaleStyleTestPage() {
   const supabase = createClient();
   const totalQuestions = questions.length + 1;
 
-  // 微信扫码后确认支付 → 生成测试码 → 进入测试
-  const handlePayConfirm = async () => {
-    setPayConfirming(true);
-    setPayError("");
+  // 支付成功后自动生成测试码并放行
+  const handlePaySuccess = async () => {
+    setVerifying(true);
     try {
-      // 1. 自动生成测试码
+      // 1. 生成测试码
       const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
       const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
       const part3 = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -60,7 +63,7 @@ export default function MaleStyleTestPage() {
       // 2. 写入数据库
       const { error } = await supabase.from("test_codes").insert([{
         code: newCode,
-        package_name: "男士风格测试",
+        package_name: "风格测试套餐",
         price: payAmount,
         max_attempts: 2,
         is_active: true,
@@ -69,14 +72,30 @@ export default function MaleStyleTestPage() {
 
       if (error) throw error;
 
-      // 3. 放行进入测试
+      // 3. 自动放行
       setCodeVerified(true);
-      // 把生成的码存一下（用于后续次数控制）
-      (window as any).__currentTestCode = { code: newCode, max_attempts: 2, used_attempts: 0 };
+      setCodeInfo({ max_attempts: 2, used_attempts: 0 });
+      setTestCode(newCode);
     } catch (err: any) {
-      setPayError("支付确认失败，请重试或联系客服");
+      setVerifyError("支付确认失败，请联系客服");
     } finally {
-      setPayConfirming(false);
+      setVerifying(false);
+    }
+  };
+      if (error || !data) {
+        setVerifyError("测试码无效，请重新输入");
+      } else if (!data.is_active) {
+        setVerifyError("该测试码已停用");
+      } else if (data.used_attempts >= data.max_attempts) {
+        setVerifyError("测试次数已用完");
+      } else {
+        setCodeVerified(true);
+        setCodeInfo(data);
+      }
+    } catch (err) {
+      setVerifyError("验证失败，请重试");
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -106,6 +125,7 @@ export default function MaleStyleTestPage() {
       const result = results.find((r) => r.name === styleName) || results[0];
       setResultStyle(result);
 
+      // Save to Supabase style_test_results
       await supabase.from("style_test_results").insert([
         {
           gender: "male",
@@ -115,13 +135,12 @@ export default function MaleStyleTestPage() {
         },
       ]);
 
-      // 消耗测试次数
-      const codeData = (window as any).__currentTestCode;
-      if (codeData?.code) {
+      // Update test code used_attempts
+      if (codeInfo?.id) {
         await supabase
           .from("test_codes")
-          .update({ used_attempts: (codeData.used_attempts || 0) + 1 })
-          .eq("code", codeData.code);
+          .update({ used_attempts: (codeInfo.used_attempts || 0) + 1 })
+          .eq("id", codeInfo.id);
       }
 
       setShowResult(true);
@@ -145,6 +164,7 @@ export default function MaleStyleTestPage() {
     }
     setSavingLead(true);
     try {
+      // 1. 写入线索表（leads）
       await supabase.from("leads").insert([
         {
           name: leadForm.name.trim(),
@@ -155,6 +175,7 @@ export default function MaleStyleTestPage() {
         },
       ]);
 
+      // 2. 自动同步到客户档案（vip_customers）— Level 1 自动化
       await supabase.rpc("upsert_customer_from_test", {
         p_name: leadForm.name.trim(),
         p_phone: leadForm.phone.trim(),
@@ -180,81 +201,104 @@ export default function MaleStyleTestPage() {
     setResultStyle(null);
     setLeadSubmitted(false);
     setLeadForm({ name: "", phone: "", wechat: "" });
-    // 还有次数就继续，没有就回到支付页
-    const codeData = (window as any).__currentTestCode;
-    if (codeData && codeData.used_attempts < codeData.max_attempts) {
-      // 继续测试
+    if (codeInfo && codeInfo.used_attempts < codeInfo.max_attempts) {
+      // 还有次数，可以继续测试
     } else {
+      // 次数用完，重置到测试码输入
       setCodeVerified(false);
-      (window as any).__currentTestCode = null;
+      setCodeInfo(null);
+      setTestCode("");
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // 支付确认：扫码后点击「我已支付」
+  const handlePayConfirm = async () => {
+    setVerifying(true);
+    setVerifyError("");
+    try {
+      // 1. 生成测试码
+      const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const part3 = Math.random().toString(36).substring(2, 6).toUpperCase();
+      const newCode = `${part1}-${part2}-${part3}`;
+
+      // 2. 写入数据库
+      const { error } = await supabase.from("test_codes").insert([{
+        code: newCode,
+        package_name: "风格测试套餐",
+        price: payAmount,
+        max_attempts: 2,
+        is_active: true,
+        note: "微信扫码自动生成",
+      }]);
+
+      if (error) throw error;
+
+      // 3. 放行进入测试
+      setTestCode(newCode);
+      setCodeVerified(true);
+      setCodeInfo({ max_attempts: 2, used_attempts: 0 });
+    } catch (err: any) {
+      setVerifyError("支付确认失败，请联系客服");
+    } finally {
+      setVerifying(false);
+    }
+  };
+
   const answeredCount = Object.keys(answers).length + (preference ? 1 : 0);
 
-  // 未支付：显示微信扫码支付界面
+  // 未验证测试码：显示验证界面
   if (!codeVerified) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <CreditCard className="w-8 h-8 text-primary" />
+            <User className="w-8 h-8 text-primary" />
           </div>
           <h2 className="text-2xl font-bold text-primary mb-2">男士风格测试</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            微信扫码支付后即可开始测试（共 {totalQuestions} 道题）
-          </p>
+          <p className="text-sm text-muted-foreground mb-6">请输入测试码以开始测试</p>
 
-          {/* 价格 */}
-          <div className="text-4xl font-bold text-primary mb-6">
-            ¥{(payAmount / 100).toFixed(0)}
-          </div>
-
-          {/* 微信收款二维码 */}
-          <div className="bg-gray-100 rounded-xl p-4 mb-4 inline-block">
-            <img
-              src="/images/wechat-pay-qr.png"
-              alt="微信收款码"
-              className="w-48 h-48 mx-auto object-cover rounded-lg"
-            />
-          </div>
-          <p className="text-xs text-gray-400 mb-4">
-            请使用微信扫描上方二维码付款
-          </p>
-
-          {/* 支付确认 */}
-          {payError && (
-            <p className="text-sm text-red-500 mb-3">{payError}</p>
-          )}
-          <button
-            onClick={handlePayConfirm}
-            disabled={payConfirming}
-            className="w-full btn-primary flex items-center justify-center gap-2 py-3"
-          >
-            {payConfirming ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin" />
-                确认支付中...
-              </>
-            ) : (
-              <>
-                <QrCode className="w-4 h-4" />
-                我已支付，开始测试
-              </>
+          <div className="space-y-4 text-left">
+            <div>
+              <label className="block text-sm font-medium text-primary mb-1.5">测试码</label>
+              <input
+                type="text"
+                value={testCode}
+                onChange={(e) => setTestCode(e.target.value.toUpperCase())}
+                placeholder="请输入测试码"
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
+              />
+            </div>
+            {verifyError && (
+              <p className="text-sm text-red-500">{verifyError}</p>
             )}
-          </button>
-          <p className="text-xs text-muted-foreground mt-3">
-            支付成功后点击按钮 · 自动生成测试码
-            <br />
-            客服微信：luozhidie666
-          </p>
+            <button
+              onClick={handleVerifyCode}
+              disabled={verifying}
+              className="w-full btn-primary flex items-center justify-center gap-2 py-2.5"
+            >
+              {verifying ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  验证中...
+                </>
+              ) : (
+                "验证并测试"
+              )}
+            </button>
+            <p className="text-xs text-muted-foreground">
+              测试码格式：XXXX-XXXX-XXXX（如有-可省略）
+              <br />
+              购买请联系客服：13925997776 / vx: luozhidie666
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
-  // 已支付：显示测试界面
+  // 已验证：显示测试界面
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Breadcrumb */}
@@ -292,7 +336,7 @@ export default function MaleStyleTestPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-sm md:text-base text-white/80"
           >
-            共 {totalQuestions} 道题，约3分钟完成（最多可测 2 次）
+            共 {totalQuestions} 道题，约3分钟完成（剩余 {codeInfo.max_attempts - codeInfo.used_attempts} 次机会）
           </motion.p>
           {/* Progress Bar */}
           <motion.div
@@ -547,7 +591,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, name: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="姓名 *"
                           />
                         </div>
@@ -562,7 +606,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, phone: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="手机号 *"
                           />
                         </div>
@@ -576,7 +620,7 @@ export default function MaleStyleTestPage() {
                             onChange={(e) =>
                               setLeadForm({ ...leadForm, wechat: e.target.value })
                             }
-                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm"
+                            className="w-full pl-9 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm transition-colors"
                             placeholder="微信号（选填）"
                           />
                         </div>
@@ -584,7 +628,7 @@ export default function MaleStyleTestPage() {
                       <button
                         type="submit"
                         disabled={savingLead}
-                        className="w-full py-2.5 rounded-xl bg-accent text-white text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="w-full btn-accent py-2.5 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                       >
                         {savingLead ? (
                           <>
@@ -610,41 +654,127 @@ export default function MaleStyleTestPage() {
                   </button>
                 </div>
 
-                {/* Contact Info */}
-                <div className="border-t border-gray-100 pt-4 text-center">
-                  <p className="text-xs text-gray-400 leading-relaxed">
-                    想获取准确结果可以联系骆芷蝶CMB色彩形象顾问进行测试。
-                    <br />
-                    Tel：13925997776 &nbsp; 微信：luozhidie666
-                  </p>
-                </div>
-
                 {/* 微信支付登记入口 */}
                 <div className="border-t border-gray-100 pt-6 mt-4 text-center">
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-5">
                     <QrCode className="w-6 h-6 text-green-600 mx-auto mb-2" />
                     <h4 className="text-sm font-bold text-green-800 mb-1">色彩风格在线咨询</h4>
-                    <p className="text-xs text-green-700 mb-3">专业CMB色彩顾问一对一咨询</p>
+                    <p className="text-xs text-green-700 mb-3">专业CMB色彩顾问一对一咨询，付费后填写登记表</p>
                     <div className="text-2xl font-bold text-green-700 mb-3">¥800</div>
-                    <a
-                      href="https://f.wps.cn/g/fJ1Z7rJz/"
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      onClick={() => setShowPayModal(true)}
                       className="btn-accent inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold"
                     >
                       <QrCode className="w-4 h-4" />
                       微信扫码支付并登记
-                    </a>
+                    </button>
                     <p className="text-xs text-gray-400 mt-2">
                       支付后自动跳转登记表 · 专业咨询30分钟起
                     </p>
                   </div>
                 </div>
+
+                {/* Contact Info */}
+                <div className="border-t border-gray-100 pt-4 text-center">
+                  <p className="text-xs text-gray-400 leading-relaxed">
+                    想获取准确结果可以联系骆芷蝶CMB色彩形象顾问进行测试。
+                    <br />
+                    Tel：13925997776 &nbsp; VX：luozhidie666
+                  </p>
+                </div>
               </div>
             </motion.div>
           </motion.div>
         )}
-      </AnimatePresence>
-    </div>
-  );
-}
+
+        {/* 微信支付登记弹窗 */}
+        <AnimatePresence>
+          {showPayModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
+              onClick={(e) => { if (e.target === e.currentTarget) setShowPayModal(false); }}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white rounded-2xl max-w-sm w-full p-8 text-center"
+              >
+                {!payVerified ? (
+                  <>
+                    <QrCode className="w-10 h-10 text-green-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-800 mb-1">微信扫码支付</h3>
+                    <p className="text-sm text-gray-500 mb-4">色彩风格在线咨询 · ¥800</p>
+                    {/* 收款二维码图片 */}
+                    <div className="bg-gray-100 rounded-xl p-4 mb-4 inline-block">
+                      <img
+                        src="/images/wxpay-qr.png"
+                        alt="微信收款码"
+                        className="w-48 h-48 mx-auto object-cover rounded-lg"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <p className="text-xs text-gray-400 mt-2">请上传您的微信收款码至</p>
+                      <p className="text-xs text-gray-400">/public/images/uxpay-qr.png</p>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-4">支付完成后点击「我已支付」确认</p>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={() => setShowPayModal(false)}
+                        className="flex-1 py-2.5 rounded-xl border border-gray-200 text-sm"
+                      >取消</button>
+                      <button
+                        onClick={() => {
+                          setPayVerified(true);
+                        }}
+                        className="flex-1 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold"
+                      >我已支付</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-10 h-10 text-green-600 mx-auto mb-3" />
+                    <h3 className="text-lg font-bold text-gray-800 mb-1">支付成功！</h3>
+                    <p className="text-sm text-gray-500 mb-4">请填写以下信息完成登记</p>
+                    <form onSubmit={async (e) => {
+                      e.preventDefault();
+                      const formEl = e.target as HTMLFormElement;
+                      const formData = new FormData(formEl);
+                      const name = formData.get("name") as string;
+                      const phone = formData.get("phone") as string;
+                      if (!name || !phone) { alert("请填写姓名和手机号"); return; }
+                      await supabase.from("orders").insert([{
+                        customer_name: name,
+                        customer_phone: phone,
+                        amount: 80000,
+                        status: "paid",
+                        source: "style_test_male",
+                        note: `风格结果：${resultStyle?.name || ""}`,
+                      }]);
+                      setShowPayModal(false);
+                      setPayVerified(false);
+                      alert("登记成功！我们会尽快联系您。");
+                    }} className="space-y-3 text-left">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
+                        <input name="name" required defaultValue={leadForm.name} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">手机号 *</label>
+                        <input name="phone" type="tel" required defaultValue={leadForm.phone} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" />
+                      </div>
+                      <button type="submit" className="w-full py-2.5 rounded-xl bg-primary text-white text-sm font-semibold">
+                        提交登记
+                      </button>
+                    </form>
+                  </>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  }
