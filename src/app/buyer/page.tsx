@@ -29,29 +29,14 @@ const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
   label: c.marketLabel,
 }));
 
-/* 用户端色彩偏好 —— 仅用于筛选器展示 */
-const USER_COLOR_OPTIONS = [
-  { value: "warm", label: "暖色系" },
-  { value: "cool", label: "冷色系" },
-  { value: "neutral", label: "中性色" },
-  { value: "morandi", label: "莫兰迪" },
-  { value: "earth", label: "大地色" },
-  { value: "pastel", label: "马卡龙" },
-  { value: "vintage", label: "复古色" },
-  { value: "monochrome", label: "黑白极简" },
-];
+/* 用户端色彩选项 —— 12季型通俗色名，按春夏秋冬分组 */
+const USER_COLOR_OPTIONS = COLOR_SEASONS_PRO.map(c => ({
+  value: c.value,
+  label: c.marketLabel,
+  group: c.group,
+}));
 
-/* 色彩偏好 → 12季型映射（用于筛选） */
-const COLOR_PREF_TO_SEASONS: Record<string, string[]> = {
-  warm: ["light_warm", "warm_bright", "clear_warm"],
-  cool: ["light_cool", "soft_cool", "cool_soft"],
-  neutral: ["warm_soft", "soft_warm"],
-  morandi: ["soft_cool", "warm_soft", "soft_warm"],
-  earth: ["deep_warm", "warm_soft", "soft_warm"],
-  pastel: ["light_warm", "light_cool"],
-  vintage: ["deep_warm", "deep_cool", "warm_bright"],
-  monochrome: ["light_cool", "soft_cool", "cool_soft"],
-};
+/* 色系 → 直接匹配 color_season（不再需要间接映射） */
 
 // 供应商入驻标准
 const entryStandards = [
@@ -191,11 +176,8 @@ export default function BuyerPage() {
     if (activeCategory) list = list.filter((p) => p.category === activeCategory);
     /* 用户端风格筛选：直接匹配 style_type */
     if (activeUserStyle) list = list.filter((p) => p.style_type === activeUserStyle);
-    /* 用户端色彩偏好筛选：映射到多个 color_season */
-    if (activeUserColor && COLOR_PREF_TO_SEASONS[activeUserColor]) {
-      const matchedSeasons = COLOR_PREF_TO_SEASONS[activeUserColor];
-      list = list.filter((p) => p.color_season && matchedSeasons.includes(p.color_season));
-    }
+    /* 用户端色彩筛选：直接匹配 color_season */
+    if (activeUserColor) list = list.filter((p) => p.color_season === activeUserColor);
     if (sortBy === "price_asc") list.sort((a, b) => a.price - b.price);
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
@@ -302,14 +284,23 @@ export default function BuyerPage() {
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
-                  <span className="text-xs text-gray-400 shrink-0">色彩：</span>
-                  {USER_COLOR_OPTIONS.map((c) => (
-                    <button key={c.value} onClick={() => setActiveUserColor(activeUserColor === c.value ? "" : c.value)}
-                      className={`shrink-0 px-1.5 py-0.5 rounded-full text-[10px] font-medium transition-colors ${activeUserColor === c.value ? "bg-primary text-white" : "bg-gray-50 text-gray-400 hover:bg-gray-100"}`}>
-                      {c.label}
-                    </button>
-                  ))}
+                <div className="mt-2 space-y-1.5">
+                  {["春", "夏", "秋", "冬"].map((season) => {
+                    const seasonColors = USER_COLOR_OPTIONS.filter(c => c.group === season);
+                    if (seasonColors.length === 0) return null;
+                    const seasonEmoji = season === "春" ? "🌸" : season === "夏" ? "🌊" : season === "秋" ? "🍂" : "❄️";
+                    return (
+                      <div key={season} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+                        <span className="text-xs text-gray-400 shrink-0">{seasonEmoji}{season}：</span>
+                        {seasonColors.map((c) => (
+                          <button key={c.value} onClick={() => setActiveUserColor(activeUserColor === c.value ? "" : c.value)}
+                            className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors border ${activeUserColor === c.value ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:border-primary/30"}`}>
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
                 </div>
               </motion.div>
             )}

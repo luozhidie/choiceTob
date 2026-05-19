@@ -247,7 +247,7 @@ export function getColorSeasonProLabel(key: string | null | undefined): string {
   return COLOR_SEASON_PRO_MAP[normalized] || key;
 }
 
-/** 获取带专业术语的色彩季型展示名，如"樱花粉（浅暖春）" */
+/** 获取带专业术语的色彩季型展示名，如"奶茶色（浅暖春）" */
 export function getColorSeasonFullLabel(key: string | null | undefined): string {
   if (!key) return "";
   const normalized = normalizeColorSeasonKey(key);
