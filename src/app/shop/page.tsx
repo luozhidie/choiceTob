@@ -26,6 +26,7 @@ interface Product {
   tags: string[] | null;
   is_published: boolean;
   stock: number;
+  supplier_name?: string | null;
 }
 
 export default function ShopPage() {
@@ -60,14 +61,37 @@ export default function ShopPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    /* 同时查 products + buyer_products（source=supplier_submit） */
+    const { data: platformData, error: platformErr } = await supabase
       .from("products")
       .select("*")
       .eq("is_published", true)
       .order("sort_order", { ascending: true });
-    if (!error && data) {
-      setProducts(data as Product[]);
+    const { data: buyerData, error: buyerErr } = await supabase
+      .from("buyer_products")
+      .select("*")
+      .eq("is_published", true)
+      .order("sort_order", { ascending: true });
+    const merged: Product[] = [];
+    if (!platformErr && platformData) {
+      platformData.forEach((p: any) => merged.push({
+        id: p.id, title: p.title || "平台商品", description: p.description,
+        cover_image: p.cover_image || null, price: p.price || 0,
+        original_price: p.original_price || null, category: p.category || null,
+        subcategory: p.subcategory || null, tags: p.tags || null,
+        is_published: p.is_published, stock: p.stock || 0,
+      }));
     }
+    if (!buyerErr && buyerData) {
+      buyerData.forEach((p: any) => merged.push({
+        id: p.id, title: p.title || p.name || "选品商品", description: p.description,
+        cover_image: p.cover_image || null, price: p.price || 0,
+        original_price: p.original_price || null, category: p.category || null,
+        subcategory: p.subcategory || null, tags: p.tags || null,
+        is_published: p.is_published, stock: p.stock || 0,
+      }));
+    }
+    setProducts(merged);
     setLoading(false);
   };
 

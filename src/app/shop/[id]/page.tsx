@@ -26,6 +26,7 @@ interface Product {
   tags: string[] | null;
   is_published: boolean;
   stock: number;
+  supplier_name?: string | null;
 }
 
 export default function ProductDetailPage() {
@@ -49,17 +50,44 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async (id: string) => {
     setLoading(true);
+    /* 先查 products 表 */
     const { data, error } = await supabase
       .from("products")
       .select("*")
       .eq("id", id)
       .single();
-    if (error || !data) {
-      router.push("/shop");
+    if (!error && data) {
+      setProduct(data as Product);
+      setLoading(false);
       return;
     }
-    setProduct(data as Product);
-    setLoading(false);
+    /* 再查 buyer_products 表（供应商上传的商品）*/
+    const { data: bData, error: bError } = await supabase
+      .from("buyer_products")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (!bError && bData) {
+      /* 映射到 Product 接口 */
+      setProduct({
+        id: bData.id,
+        title: bData.title || bData.name || "选品商品",
+        description: bData.description,
+        cover_image: bData.cover_image || null,
+        images: bData.images || null,
+        price: bData.price || 0,
+        original_price: bData.original_price || null,
+        category: bData.category || null,
+        subcategory: bData.subcategory || null,
+        tags: bData.tags || null,
+        is_published: bData.is_published,
+        stock: bData.stock || 0,
+        supplier_name: bData.supplier_name || null,
+      } as Product);
+      setLoading(false);
+      return;
+    }
+    router.push("/shop");
   };
 
   if (loading || !product) {
@@ -75,6 +103,23 @@ export default function ProductDetailPage() {
     : [product.cover_image];
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+
+  /* 同供应商商品 */
+  const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
+  useEffect(() => {
+    if (!product?.supplier_name) { setSupplierProducts([]); return; }
+    const q = product.source === "platform" ? "products" : "buyer_products";
+    (async () => {
+      const { data } = await supabase
+        .from(q)
+        .select("*")
+        .eq("supplier_name", product.supplier_name)
+        .neq("id", product.id)
+        .eq("is_published", true)
+        .limit(8);
+      setSupplierProducts((data as Product[] | null) || []);
+    })();
+  }, [product]);
 
   // 品类面包屑链接
   const categoryLink = product.category
@@ -263,6 +308,44 @@ export default function ProductDetailPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* 该供应商其他商品 */}
+      {supplierProducts.length > 0 && (
+        <section className="py-12 border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-2 mb-6">
+              <Building2 className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-bold text-primary">
+                该供应商其他商品
+              </h2>
+              <span className="text-xs text-gray-400 ml-2">
+                {product.supplier_name}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+              {supplierProducts.map((p) => (
+                <Link key={p.id} href={`/shop/${p.id}`}>
+                  <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+                    <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+                      {p.cover_image ? (
+                        <img src={p.cover_image} alt={p.title} className="w-full h-full object-cover" />
+                      ) : (
+                        <ShoppingBag className="w-8 h-8 text-primary/30" />
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
+                      <p className="text-sm text-accent font-bold mt-1">
+                        {formatPrice(p.price)}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Paywall Modal */}
       {showPaywall && (
