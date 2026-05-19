@@ -14,8 +14,8 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 
-/* ==================== 品类选项（从 categories 派生）==================== */
-const CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
+/* ==================== 品类选项（静态兜底 + 动态合并）==================== */
+const STATIC_CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
 
 /* ==================== 静态数据 ==================== */
 
@@ -176,9 +176,23 @@ export default function BuyerPage() {
     setLoading(false);
   };
 
+  /* 动态品类选项：静态 + 从商品数据中提取的自定义分类 */
+  const categoryOptions = useMemo(() => {
+    const staticKeys = new Set(STATIC_CATEGORY_OPTIONS.map(c => c.value));
+    const dynamic: { value: string; label: string }[] = [...STATIC_CATEGORY_OPTIONS];
+    for (const p of allProducts) {
+      if (p.category && !staticKeys.has(p.category)) {
+        staticKeys.add(p.category);
+        dynamic.push({ value: p.category, label: CATEGORY_MAP[p.category] || p.category });
+      }
+    }
+    return dynamic;
+  }, [allProducts]);
+
   const filteredProducts = useMemo(() => {
     let list = [...allProducts];
-    list = list.filter((p) => p.category === "clothing" || p.category === "accessory");
+    /* 只显示有分类的商品，不再硬编码 clothing/accessory，支持用户自定义分类 */
+    list = list.filter((p) => !!p.category);
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
@@ -289,7 +303,7 @@ export default function BuyerPage() {
               </button>
             </div>
             <div className="w-px h-5 bg-gray-200 shrink-0" />
-            {CATEGORY_OPTIONS.map((cat) => (
+            {categoryOptions.map((cat) => (
               <button key={cat.value} onClick={() => setActiveCategory(activeCategory === cat.value ? "" : cat.value)}
                 className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${activeCategory === cat.value ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"}`}>
                 {cat.label}
