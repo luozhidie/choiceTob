@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { User, UserRound } from "lucide-react";
-import { PaywallModal } from "@/components/PaywallModal";
 
 export default function StyleTestPage() {
   const [visible, setVisible] = useState(false);
-  const [showPaywall, setShowPaywall] = useState(false);
 
   useEffect(() => {
     setVisible(true);
@@ -54,12 +52,12 @@ export default function StyleTestPage() {
                   <div className="mt-auto pt-4 border-t border-gray-100">
                     <div className="text-2xl font-bold text-accent mb-1">¥99</div>
                     <div className="text-xs text-muted-foreground mb-4">可测2次，有效期30天</div>
-                    <button
-                      onClick={() => setShowPaywall(true)}
-                      className="w-full btn-primary text-sm py-2.5"
+                    <Link
+                      href="/style-test/male"
+                      className="block w-full btn-primary text-sm py-2.5 text-center"
                     >
-                      购买测试
-                    </button>
+                      立即购买
+                    </Link>
                   </div>
               </div>
             </div>
@@ -83,12 +81,12 @@ export default function StyleTestPage() {
                   <div className="mt-auto pt-4 border-t border-gray-100">
                     <div className="text-2xl font-bold text-accent mb-1">¥99</div>
                     <div className="text-xs text-muted-foreground mb-4">可测2次，有效期30天</div>
-                    <button
-                      onClick={() => setShowPaywall(true)}
-                      className="w-full btn-primary text-sm py-2.5"
+                    <Link
+                      href="/style-test/female"
+                      className="block w-full btn-primary text-sm py-2.5 text-center"
                     >
-                      购买测试
-                    </button>
+                      立即购买
+                    </Link>
                   </div>
               </div>
             </div>
@@ -109,16 +107,6 @@ export default function StyleTestPage() {
           </p>
         </div>
       </section>
-      {/* Paywall Modal */}
-      {showPaywall && (
-        <PaywallModal
-          isOpen={showPaywall}
-          type="style_test"
-          title="风格测试 ¥99/2次"
-          description="支付后即可获得2次测试机会，30天有效"
-          onClose={() => setShowPaywall(false)}
-        />
-      )}
     </div>
   );
 }
