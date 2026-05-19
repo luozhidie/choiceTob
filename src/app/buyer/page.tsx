@@ -272,12 +272,12 @@ export default function BuyerPage() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="flex-1">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-accent text-xs font-medium mb-4">
-                <Flame className="w-3.5 h-3.5" />
-                源头直供 · 一手货源
+                <Package className="w-3.5 h-3.5" />
+                源头直供 · 精选好物
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold mb-3">一手选品</h1>
+              <h1 className="text-3xl md:text-4xl font-bold mb-3">买手选品</h1>
               <p className="text-sm md:text-base text-white/80 max-w-xl mb-6">
-                优质服装配饰一手货源，按风格、色系精准筛选，充值会员享2.6折拿货
+                精选优质货源，按风格、色系精准筛选，充值会员享折扣拿货
               </p>
               <div className="max-w-lg relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
@@ -511,6 +511,52 @@ export default function BuyerPage() {
           )}
         </div>
       </section>
+
+      {/* ====== 合作供应商 ====== */}
+      {suppliers.length > 0 && (
+        <section className="py-12 bg-white border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-2 mb-6">
+              <Building2 className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-bold text-primary">合作供应商</h2>
+              <span className="text-xs text-gray-400 ml-1">（{suppliers.length} 家）</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {suppliers.map((s, i) => (
+                <motion.div key={s.id} custom={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                  transition={{ delay: Math.min(i * 0.05, 0.3) }}>
+                  <Link href={`/buyer/${s.id}`}
+                    className="group block p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-accent/30 hover:shadow-md transition-all duration-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-primary group-hover:text-accent transition-colors">{s.name}</h3>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
+                            s.level === "A" ? "bg-green-50 text-green-700" : s.level === "B" ? "bg-blue-50 text-blue-700" : "bg-gray-100 text-gray-500"
+                          }`}>{s.level}级供应商</span>
+                        </div>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-300 group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, j) => (
+                        <Star key={j} className={`w-3 h-3 ${j < Math.round(s.rating) ? "text-amber-400 fill-amber-400" : "text-gray-200"}`} />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-1">{s.rating}</span>
+                    </div>
+                    {s.description && (
+                      <p className="text-xs text-gray-500 mt-2 line-clamp-1">{s.description}</p>
+                    )}
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ====== 供应商入驻板块 ====== */}
       <section className="py-16 bg-white border-t border-gray-100">

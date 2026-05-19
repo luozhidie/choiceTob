@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Building2 } from "lucide-react";
 import { PaywallModal } from "@/components/PaywallModal";
 import { motion } from "framer-motion";
 import {
@@ -27,6 +27,7 @@ interface Product {
   is_published: boolean;
   stock: number;
   supplier_name?: string | null;
+  source?: "platform" | "buyer" | "supplier_submit" | null;
 }
 
 export default function ProductDetailPage() {
