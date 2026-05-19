@@ -21,13 +21,14 @@ const fadeUp = {
 };
 
 /* ------------------------------------------------------------------ */
-/*  5大色系（固定） */
+/*  6大色系（对应12色彩季型） */
 const COLOR_FAMILIES = [
-  { value: "warm",       label: "暖色系", color: "#E8A87C", desc: "红/橙/黄基调" },
-  { value: "cool",       label: "冷色系", color: "#85CDCA", desc: "蓝/紫/绿基调" },
-  { value: "earth",      label: "大地色系", color: "#C4A882", desc: "棕/驼/卡其基调" },
-  { value: "deep",       label: "深色系",   color: "#2C3E50", desc: "黑/深蓝/深红基调" },
-  { value: "neutral",    label: "中性色系", color: "#95A5A6", desc: "灰/白/米/银基调" },
+  { value: "deep",    label: "深色系", color: "#2C3E50", desc: "深暖型/深冷型" },
+  { value: "light",   label: "浅色系", color: "#F5E6CC", desc: "浅暖型/浅冷型" },
+  { value: "cool",    label: "冷色系", color: "#85CDCA", desc: "冷柔型/柔冷型" },
+  { value: "warm",    label: "暖色系", color: "#E8A87C", desc: "暖亮型/暖柔型" },
+  { value: "clear",   label: "净色系", color: "#E74C3C", desc: "净暖型/净冷型" },
+  { value: "soft",    label: "柔色系", color: "#B39DBC", desc: "柔暖型/柔冷型" },
 ];
 
 /*  品类选项（从 CATEGORIES 派生） */

@@ -31,20 +31,22 @@ const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
 
 /* 用户端色彩选项 —— 通俗色系名 */
 const USER_COLOR_OPTIONS = [
-  { value: "warm", label: "暖色系" },
-  { value: "cool", label: "冷色系" },
-  { value: "earth", label: "大地色系" },
-  { value: "deep", label: "深色系" },
-  { value: "neutral", label: "中性色系" },
+  { value: "deep",  label: "深色系" },
+  { value: "light", label: "浅色系" },
+  { value: "cool",  label: "冷色系" },
+  { value: "warm",  label: "暖色系" },
+  { value: "clear", label: "净色系" },
+  { value: "soft",  label: "柔色系" },
 ];
 
 /* 用户端色彩筛选 —— 色系映射到具体季型 */
 const COLOR_SCHEME_TO_SEASONS: Record<string, string[]> = {
-  warm: ["light_warm", "warm_bright", "clear_warm"],
-  cool: ["light_cool", "soft_cool", "cool_soft"],
-  earth: ["warm_soft", "soft_warm", "deep_warm"],
-  deep: ["clear_cool", "deep_cool"],
-  neutral: ["cool_bright"],
+  deep:  ["deep_warm", "deep_cool"],
+  light: ["light_warm", "light_cool"],
+  cool:  ["cool_soft", "soft_cool"],
+  warm:  ["warm_bright", "warm_soft"],
+  clear: ["clear_warm", "clear_cool"],
+  soft:  ["soft_warm", "cool_bright"],
 };
 const entryStandards = [
   { icon: FileCheck, title: "营业执照", desc: "合法有效的企业营业执照，经营范围涵盖服装生产或销售" },
