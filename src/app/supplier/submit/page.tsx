@@ -181,6 +181,35 @@ export default function SupplierSubmitPage() {
     loadCatDefs();
   };
 
+  /* ========== 图片压缩 ========== */
+  const compressImage = (file: File, maxWidth: number, quality: number): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = document.createElement("img");
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(new File([blob], file.name.replace(/\.\w+$/, ".jpg"), { type: "image/jpeg" }));
+            } else {
+              resolve(file);
+            }
+          },
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   /* ========== 图片上传 ========== */
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -196,14 +225,29 @@ export default function SupplierSubmitPage() {
     const uploaded: { url: string; uploading: boolean }[] = [];
     for (const file of toUpload) {
       try {
-        const ext  = file.name.split(".").pop() || "jpg";
+        /* 如果图片超过 5MB，前端压缩后再上传 */
+        let fileToUpload = file;
+        if (file.size > 5 * 1024 * 1024) {
+          fileToUpload = await compressImage(file, 1920, 0.85);
+        }
+
+        const ext  = fileToUpload.name.split(".").pop() || "jpg";
         const name = `supplier-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("supplier-products").upload(name, file);
-        if (upErr) throw upErr;
-        const { data: { publicUrl } } = supabase.storage.from("supplier-products").getPublicUrl(name);
-        uploaded.push({ url: publicUrl, uploading: false });
-      } catch {
-        uploaded.push({ url: "", uploading: false });
+        const { error: upErr } = await supabase.storage.from("supplier-products").upload(name, fileToUpload);
+        if (upErr) {
+          console.error("上传失败:", upErr.message);
+          /* 如果 bucket 不存在或没权限，降级为本地预览 */
+          const localUrl = URL.createObjectURL(file);
+          uploaded.push({ url: localUrl, uploading: false });
+        } else {
+          const { data: { publicUrl } } = supabase.storage.from("supplier-products").getPublicUrl(name);
+          uploaded.push({ url: publicUrl, uploading: false });
+        }
+      } catch (err: any) {
+        console.error("图片处理失败:", err);
+        /* 降级：用本地预览 */
+        const localUrl = URL.createObjectURL(file);
+        uploaded.push({ url: localUrl, uploading: false });
       }
     }
 
