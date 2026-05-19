@@ -19,7 +19,29 @@ import {
   Clock,
   CheckCircle2,
   AlertCircle,
+  ArrowRightCircle,
+  Database,
+  AlertTriangle,
+  BarChart3,
+  PieChart,
+  Layers,
+  Package2,
+  TrendingDown,
+  Activity,
 } from "lucide-react";
+import {
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -29,6 +51,8 @@ const fadeUp = {
     transition: { duration: 0.4, delay: i * 0.05, ease: "easeOut" as const },
   }),
 };
+
+const CHART_COLORS = ["#6366f1", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#06b6d4", "#f97316", "#ef4444", "#84cc16", "#14b8a6"];
 
 interface DashboardData {
   customerCount: number;
@@ -50,6 +74,20 @@ interface DashboardData {
   publishedProductCount: number;
   recentLeads: any[];
   recentDeliveries: any[];
+  // 进销存相关
+  inventoryTotalValue: number;
+  inventorySellThroughRate: number;
+  lowStockCount: number;
+  categoryDistribution: { name: string; value: number }[];
+  stockStatusDistribution: { name: string; count: number }[];
+  // SPA闭环数据
+  spaCycleData: {
+    planning: number;
+    purchasing: number;
+    receiving: number;
+    sales: number;
+    replenishment: number;
+  };
 }
 
 export default function AdminDashboard() {
@@ -65,8 +103,15 @@ export default function AdminDashboard() {
     setLoading(true);
     try {
       const [
-        customers, leads, testResults, testCodes,
-        deliveries, orders, courses, products,
+        customers,
+        leads,
+        testResults,
+        testCodes,
+        deliveries,
+        orders,
+        courses,
+        products,
+        inventory,
       ] = await Promise.all([
         supabase.from("vip_customers").select("*", { count: "exact", head: true }),
         supabase.from("leads").select("*", { count: "exact" }).order("created_at", { ascending: false }),
@@ -76,12 +121,60 @@ export default function AdminDashboard() {
         supabase.from("orders").select("*"),
         supabase.from("courses").select("*", { count: "exact" }),
         supabase.from("products").select("*", { count: "exact" }),
+        supabase.from("inventory").select("*"),
       ]);
 
       const leadList = leads.data || [];
       const orderList = orders.data || [];
       const deliveryList = deliveries.data || [];
       const testCodeList = testCodes.data || [];
+      const inventoryList = inventory.data || [];
+
+      // 计算进销存数据
+      const inventoryTotalValue = inventoryList.reduce(
+        (sum: number, item: any) => sum + (item.current_stock || 0) * (item.unit_cost || 0),
+        0
+      );
+
+      const totalSalesQty = inventoryList.reduce((sum: number, item: any) => sum + (item.sales_qty || 0), 0);
+      const totalStockInQty = inventoryList.reduce((sum: number, item: any) => sum + (item.stock_in_qty || 0), 0);
+      const inventorySellThroughRate = totalStockInQty > 0 ? (totalSalesQty / totalStockInQty) * 100 : 0;
+
+      const lowStockCount = inventoryList.filter((item: any) => (item.current_stock || 0) < 5).length;
+
+      // 品类库存分布
+      const categoryMap = new Map<string, number>();
+      inventoryList.forEach((item: any) => {
+        const category = item.category || "未分类";
+        const value = (item.current_stock || 0) * (item.unit_cost || 0);
+        categoryMap.set(category, (categoryMap.get(category) || 0) + value);
+      });
+      const categoryDistribution = Array.from(categoryMap.entries()).map(([name, value]) => ({
+        name,
+        value: Math.round(value * 100) / 100,
+      }));
+
+      // 库存状态分布
+      const normalStock = inventoryList.filter((item: any) => (item.current_stock || 0) >= 20).length;
+      const lowStock = inventoryList.filter((item: any) => (item.current_stock || 0) >= 5 && (item.current_stock || 0) < 20).length;
+      const outOfStock = inventoryList.filter((item: any) => (item.current_stock || 0) === 0).length;
+      const slowMoving = inventoryList.filter((item: any) => (item.sales_qty || 0) === 0 && (item.current_stock || 0) > 0).length;
+
+      const stockStatusDistribution = [
+        { name: "正常库存", count: normalStock },
+        { name: "低库存", count: lowStock },
+        { name: "断货", count: outOfStock },
+        { name: "滞销", count: slowMoving },
+      ];
+
+      // SPA闭环数据（示例数据，实际应从相关表查询）
+      const spaCycleData = {
+        planning: products.data?.filter((p: any) => p.status === "planning").length || 0,
+        purchasing: products.data?.filter((p: any) => p.status === "purchasing").length || 0,
+        receiving: inventoryList.filter((item: any) => (item.current_stock || 0) > 0 && (item.stock_in_qty || 0) > 0).length,
+        sales: inventoryList.filter((item: any) => (item.sales_qty || 0) > 0).length,
+        replenishment: inventoryList.filter((item: any) => (item.current_stock || 0) < 10 && (item.sales_qty || 0) > 0).length,
+      };
 
       setData({
         customerCount: customers.count || 0,
@@ -103,6 +196,12 @@ export default function AdminDashboard() {
         publishedProductCount: (products.data || []).filter((p: any) => p.is_published).length,
         recentLeads: leadList.slice(0, 5),
         recentDeliveries: deliveryList.slice(0, 5),
+        inventoryTotalValue,
+        inventorySellThroughRate,
+        lowStockCount,
+        categoryDistribution,
+        stockStatusDistribution,
+        spaCycleData,
       });
     } catch (err) {
       console.error("Dashboard fetch error:", err);
@@ -110,7 +209,7 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  const formatPrice = (price: number) => price > 0 ? `¥${(price / 100).toFixed(0)}` : "¥0";
+  const formatPrice = (price: number) => `¥${price.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   if (loading || !data) {
     return (
@@ -124,9 +223,9 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       {/* Welcome */}
       <div>
-        <h1 className="text-2xl font-bold text-primary">数据概览</h1>
+        <h1 className="text-2xl font-bold text-primary">经营驾驶舱</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          骆芷蝶智选 · 服装供应链赋能平台 · 实时业务数据看板
+          骆芷蝶智选 · 服装供应链赋能平台 · 实时经营数据全景视图
         </p>
       </div>
 
@@ -155,6 +254,191 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {/* Inventory KPI Cards */}
+      <div>
+        <h2 className="text-lg font-bold text-primary mb-4">进销存关键指标</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-4">
+          {[
+            {
+              label: "库存总价值",
+              value: formatPrice(data.inventoryTotalValue),
+              icon: Database,
+              color: "bg-indigo-50 text-indigo-600",
+              href: "/admin/inventory",
+              desc: "当前库存总价值",
+            },
+            {
+              label: "售罄率",
+              value: `${data.inventorySellThroughRate.toFixed(1)}%`,
+              icon: TrendingUp,
+              color: "bg-emerald-50 text-emerald-600",
+              href: "/admin/inventory",
+              desc: "销售数量/入库数量",
+            },
+            {
+              label: "低库存预警",
+              value: data.lowStockCount,
+              icon: AlertTriangle,
+              color: "bg-rose-50 text-rose-600",
+              href: "/admin/inventory",
+              desc: "库存低于5件的商品",
+            },
+          ].map((item, i) => (
+            <motion.div key={item.label} variants={fadeUp} initial="hidden" animate="visible" custom={i}>
+              <Link href={item.href} className="block bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs text-muted-foreground font-medium">{item.label}</span>
+                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${item.color}`}>
+                    <item.icon className="w-4.5 h-4.5" />
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-primary">{item.value}</div>
+                <div className="text-xs text-muted-foreground mt-1">{item.desc}</div>
+              </Link>
+            </motion.div>
+          ))}
+        </div>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Distribution Pie Chart */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={0}>
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <PieChart className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-bold text-primary">品类库存分布</h3>
+            </div>
+            {data.categoryDistribution.length === 0 ? (
+              <div className="flex items-center justify-center h-[300px] text-sm text-muted-foreground">
+                暂无库存数据
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsPieChart>
+                  <Pie
+                    data={data.categoryDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }: any) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {data.categoryDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: any) => `¥${Number(value).toLocaleString()}`} />
+                  <Legend />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Stock Status Bar Chart */}
+        <motion.div variants={fadeUp} initial="hidden" animate="visible" custom={1}>
+          <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-6">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <h3 className="text-base font-bold text-primary">库存状态分布</h3>
+            </div>
+            {data.stockStatusDistribution.every((item) => item.count === 0) ? (
+              <div className="flex items-center justify-center h-[300px] text-sm text-muted-foreground">
+                暂无库存数据
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={300}>
+                <RechartsBarChart data={data.stockStatusDistribution}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="count" name="商品数量" radius={[8, 8, 0, 0]}>
+                    {data.stockStatusDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </RechartsBarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* SPA Business Cycle */}
+      <div>
+        <h2 className="text-lg font-bold text-primary mb-4">SPA业务闭环</h2>
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          custom={0}
+          className="bg-white rounded-2xl border border-gray-100 p-8 shadow-sm"
+        >
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            {[
+              {
+                label: "商品企划",
+                value: data.spaCycleData.planning,
+                icon: ClipboardList,
+                color: "from-primary to-primary/80",
+                ringColor: "ring-primary/30",
+              },
+              {
+                label: "采购下单",
+                value: data.spaCycleData.purchasing,
+                icon: ShoppingBag,
+                color: "from-accent to-accent/80",
+                ringColor: "ring-accent/30",
+              },
+              {
+                label: "收货入库",
+                value: data.spaCycleData.receiving,
+                icon: Package2,
+                color: "from-emerald-500 to-emerald-600",
+                ringColor: "ring-emerald-300",
+              },
+              {
+                label: "销售出库",
+                value: data.spaCycleData.sales,
+                icon: TrendingUp,
+                color: "from-blue-500 to-blue-600",
+                ringColor: "ring-blue-300",
+              },
+              {
+                label: "智能补货",
+                value: data.spaCycleData.replenishment,
+                icon: Activity,
+                color: "from-rose-500 to-rose-600",
+                ringColor: "ring-rose-300",
+              },
+            ].map((stage, i, arr) => (
+              <div key={stage.label} className="flex items-center gap-2">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={`w-24 h-24 rounded-2xl bg-gradient-to-br ${stage.color} ring-4 ${stage.ringColor} flex flex-col items-center justify-center text-white shadow-lg transition-transform hover:scale-105`}
+                  >
+                    <stage.icon className="w-8 h-8 mb-1" />
+                    <span className="text-2xl font-bold">{stage.value}</span>
+                  </div>
+                  <span className="text-xs font-bold text-primary mt-2">{stage.label}</span>
+                </div>
+                {i < arr.length - 1 && (
+                  <ArrowRightCircle className="w-8 h-8 text-primary/40 mx-1" />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="flex items-center justify-center mt-6 text-xs text-muted-foreground">
+            <ArrowRightCircle className="w-4 h-4 mr-2 text-accent" />
+            SPA闭环：商品企划 → 采购下单 → 收货入库 → 销售出库 → 智能补货 → 商品企划
+          </div>
+        </motion.div>
+      </div>
+
       {/* Business Flow Status */}
       <div>
         <h2 className="text-lg font-bold text-primary mb-4">业务流程状态</h2>
@@ -177,33 +461,6 @@ export default function AdminDashboard() {
               </Link>
             </motion.div>
           ))}
-        </div>
-      </div>
-
-      {/* Business Pipeline - Visual Flow */}
-      <div>
-        <h2 className="text-lg font-bold text-primary mb-4">业务漏斗</h2>
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <div className="flex items-center justify-between gap-2">
-            {[
-              { label: "线索", value: data.leadCount, color: "bg-red-400", w: "w-full" },
-              { label: "客户", value: data.customerCount, color: "bg-amber-400", w: "w-4/5" },
-              { label: "测试", value: data.testResultCount, color: "bg-blue-400", w: "w-3/5" },
-              { label: "方案", value: data.deliveryCount, color: "bg-purple-400", w: "w-2/5" },
-              { label: "交付", value: data.deliveredCount, color: "bg-green-400", w: "w-1/4" },
-            ].map((stage, i) => (
-              <div key={stage.label} className="flex-1 text-center">
-                <div className={`${stage.color} ${stage.w} mx-auto h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold mb-2`}>
-                  {stage.value}
-                </div>
-                <div className="text-xs text-muted-foreground font-medium">{stage.label}</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-center mt-4 text-xs text-muted-foreground">
-            <TrendingUp className="w-3.5 h-3.5 mr-1" />
-            线索 → 客户 → 色彩测试 → 生成交付方案 → 交付完成
-          </div>
         </div>
       </div>
 
