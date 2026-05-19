@@ -306,6 +306,7 @@ export default function SupplierSubmitPage() {
     }
     setSubmitting(true);
     try {
+      const urls = images.filter(i => i.url).map(i => i.url);
       // 使用原生 fetch 直接调 Supabase REST API，绕过 JS 客户端的 schema cache 检查
       // （schema cache 可能未刷新，导致 "Could not find column" 错误）
       const rowData = {
