@@ -141,16 +141,25 @@ export default function BuyerPage() {
 
   const fetchAllData = async () => {
     setLoading(true);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const headers: Record<string, string> = {
+      "apikey": supabaseKey,
+      "Authorization": `Bearer ${supabaseKey}`,
+    };
+
+    /* buyer_products 用原生 fetch 绕过 schema cache 问题 */
     const [buyerRes, platformRes, supplierRes, hotPickRes] = await Promise.all([
-      supabase.from("buyer_products").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
+      fetch(`${supabaseUrl}/rest/v1/buyer_products?is_published=eq.true&order=sort_order.asc&select=*`, { headers }).then(r => r.ok ? r.json() : []).catch(() => []),
       supabase.from("products").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
       supabase.from("suppliers").select("*").eq("is_published", true).order("rating", { ascending: false }),
       supabase.from("hot_picks").select("*").eq("is_published", true).order("sort_order", { ascending: true }).limit(8),
     ]);
 
     const merged: MergedProduct[] = [];
-    if (!buyerRes.error && buyerRes.data) {
-      buyerRes.data.forEach((p: any) => merged.push({
+    /* buyerRes 是原生 fetch 返回的数组 */
+    if (Array.isArray(buyerRes)) {
+      buyerRes.forEach((p: any) => merged.push({
         id: p.id, title: p.title || p.name || "选品商品", description: p.description,
         cover_image: p.cover_image || p.image_url || null, price: p.price || 0,
         original_price: p.original_price || null, category: p.category || null,

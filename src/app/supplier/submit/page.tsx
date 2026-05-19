@@ -182,6 +182,15 @@ export default function SupplierSubmitPage() {
   };
 
   /* ========== 图片压缩 ========== */
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
   const compressImage = (file: File, maxWidth: number, quality: number): Promise<File> => {
     return new Promise((resolve) => {
       const img = document.createElement("img");
@@ -233,21 +242,33 @@ export default function SupplierSubmitPage() {
 
         const ext  = fileToUpload.name.split(".").pop() || "jpg";
         const name = `supplier-${Date.now()}-${Math.random().toString(36).slice(2,6)}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("supplier-products").upload(name, fileToUpload);
-        if (upErr) {
-          console.error("上传失败:", upErr.message);
-          /* 如果 bucket 不存在或没权限，降级为本地预览 */
-          const localUrl = URL.createObjectURL(file);
-          uploaded.push({ url: localUrl, uploading: false });
+        /* 使用原生 fetch 调 Storage REST API，避免 JS 客户端 schema cache 问题 */
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/supplier-products/${name}`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${supabaseKey}`,
+            "apikey": supabaseKey,
+            "Content-Type": fileToUpload.type || "image/jpeg",
+          },
+          body: fileToUpload,
+        });
+        if (!uploadRes.ok) {
+          const errDetail = await uploadRes.text();
+          console.error("上传失败:", uploadRes.status, errDetail);
+          /* Storage 不可用时，转 base64 持久化（不会因刷新丢失） */
+          const b64 = await fileToBase64(fileToUpload);
+          uploaded.push({ url: b64, uploading: false });
         } else {
-          const { data: { publicUrl } } = supabase.storage.from("supplier-products").getPublicUrl(name);
+          const publicUrl = `${supabaseUrl}/storage/v1/object/public/supplier-products/${name}`;
           uploaded.push({ url: publicUrl, uploading: false });
         }
       } catch (err: any) {
         console.error("图片处理失败:", err);
-        /* 降级：用本地预览 */
-        const localUrl = URL.createObjectURL(file);
-        uploaded.push({ url: localUrl, uploading: false });
+        /* 降级：转 base64 持久化 */
+        const b64 = await fileToBase64(file);
+        uploaded.push({ url: b64, uploading: false });
       }
     }
 
