@@ -69,6 +69,10 @@ export default function SupplierSubmitPage() {
   const [addColorFamily, setAddColorFamily] = useState("");
   const [addColorName, setAddColorName]     = useState("");
   const [addColorHex, setAddColorHex]       = useState("");
+  const [showAddFamily, setShowAddFamily]    = useState(false);
+  const [addFamilyName, setAddFamilyName]   = useState("");
+  const [addFamilyKey, setAddFamilyKey]     = useState("");
+  const [addFamilyColor, setAddFamilyColor]  = useState("#999999");
 
   /*  风格定义（从数据库加载） */
   const [styleDefs, setStyleDefs]             = useState<StyleDef[]>([]);
@@ -76,6 +80,13 @@ export default function SupplierSubmitPage() {
   const [showAddStyle, setShowAddStyle]     = useState(false);
   const [addStyleGroup, setAddStyleGroup]   = useState("");
   const [addStyleName, setAddStyleName]     = useState("");
+
+  /*  品类定义（从数据库加载） */
+  const [catDefs, setCatDefs] = useState<{id:string;code:string;label:string;description:string;sort_order:number}[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+  const [showAddCat, setShowAddCat] = useState(false);
+  const [addCatCode, setAddCatCode] = useState("");
+  const [addCatLabel, setAddCatLabel] = useState("");
 
   /*  表单 */
   const [form, setForm] = useState({
@@ -96,6 +107,7 @@ export default function SupplierSubmitPage() {
   useEffect(() => {
     loadColorDefs();
     loadStyleDefs();
+    loadCatDefs();
   }, []);
 
   const loadColorDefs = async () => {
@@ -110,6 +122,13 @@ export default function SupplierSubmitPage() {
     const { data } = await supabase.from("style_definitions").select("*").eq("is_active", true).order("sort_order");
     setStyleDefs(data || []);
     setLoadingStyles(false);
+  };
+
+  const loadCatDefs = async () => {
+    setLoadingCats(true);
+    const { data } = await supabase.from("categories").select("*").order("sort_order");
+    setCatDefs(data || []);
+    setLoadingCats(false);
   };
 
   /* ========== 新增色彩 ========== */
@@ -136,6 +155,29 @@ export default function SupplierSubmitPage() {
     if (error) { alert("保存失败：" + error.message); return; }
     setAddStyleGroup(""); setAddStyleName(""); setShowAddStyle(false);
     loadStyleDefs();
+  };
+
+  /* ========== 新增色系 ========== */
+  const saveNewFamily = () => {
+    if (!addFamilyKey.trim() || !addFamilyName.trim()) { alert("请填写色系编号和名称"); return; }
+    const newFamily = { value: addFamilyKey.trim(), label: addFamilyName.trim(), color: addFamilyColor, desc: "" };
+    COLOR_FAMILIES.push(newFamily);
+    setAddFamilyKey(""); setAddFamilyName(""); setAddFamilyColor("#999999");
+    setShowAddFamily(false);
+  };
+
+  /* ========== 新增品类 ========== */
+  const saveNewCat = async () => {
+    if (!addCatCode.trim() || !addCatLabel.trim()) { alert("请填写品类编号和名称"); return; }
+    const { error } = await supabase.from("categories").insert({
+      code: addCatCode.trim().toUpperCase(),
+      label: addCatLabel.trim(),
+      description: "",
+      sort_order: catDefs.length + 1,
+    });
+    if (error) { alert("保存失败：" + error.message); return; }
+    setAddCatCode(""); setAddCatLabel(""); setShowAddCat(false);
+    loadCatDefs();
   };
 
   /* ========== 图片上传 ========== */
@@ -451,17 +493,27 @@ export default function SupplierSubmitPage() {
               <div className="space-y-6">
                 {/* 主分类 */}
                 <div>
-                  <label className="block text-sm font-medium text-primary mb-3">
-                    商品品类 <span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-primary">
+                      商品品类 <span className="text-red-500">*</span>
+                    </label>
+                    <button type="button" onClick={()=>setShowAddCat(true)}
+                      className="text-xs text-accent font-medium hover:underline flex items-center gap-1">
+                      <span className="text-lg">+</span> 新增品类
+                    </button>
+                  </div>
                   <div className="flex flex-wrap gap-3">
-                    {CATEGORY_OPTIONS.map(cat => (
-                      <button key={cat.value} type="button"
-                        onClick={()=>setForm({...form,category:cat.value,subcategory:""})}
-                        className={`px-5 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
-                          form.category===cat.value ? "bg-primary text-white border-primary shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-accent/50"
-                        }`}>{cat.label}</button>
-                    ))}
+                    {loadingCats ? (
+                      <span className="text-xs text-muted-foreground">加载中...</span>
+                    ) : (
+                      catDefs.map(cat => (
+                        <button key={cat.id} type="button"
+                          onClick={()=>setForm({...form,category:cat.code,subcategory:""})}
+                          className={`px-5 py-3 rounded-xl text-sm font-medium border-2 transition-all ${
+                            form.category===cat.code ? "bg-primary text-white border-primary shadow-md" : "bg-white text-gray-600 border-gray-200 hover:border-accent/50"
+                          }`}>{cat.label}</button>
+                      ))
+                    )}
                   </div>
                   {fieldError("category")}
                 </div>
@@ -492,7 +544,13 @@ export default function SupplierSubmitPage() {
 
               {/* Step 1: 选色系 */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-primary mb-3">选择色系</label>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-primary">选择色系</label>
+                  <button type="button" onClick={()=>setShowAddFamily(true)}
+                    className="text-xs text-accent font-medium hover:underline flex items-center gap-1">
+                    <span className="text-lg">+</span> 新增色系
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {COLOR_FAMILIES.map(fam => (
                     <button key={fam.value} type="button"
@@ -814,6 +872,71 @@ export default function SupplierSubmitPage() {
               <button type="button" onClick={()=>setShowAddStyle(false)}
                 className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm">取消</button>
               <button type="button" onClick={saveNewStyle}
+                className="flex-1 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold">保存</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 新增色系弹窗 ─── */}
+      {showAddFamily && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>setShowAddFamily(false)} />
+          <div className="relative bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-bold text-primary mb-4">新增色系</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">色系编号 *（英文，如 pastel）</label>
+                <input type="text" value={addFamilyKey} onChange={e=>setAddFamilyKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,''))}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-accent outline-none text-sm font-mono"
+                  placeholder="如：pastel" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">色系名称 *（中文，如 马卡龙色系）</label>
+                <input type="text" value={addFamilyName} onChange={e=>setAddFamilyName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-accent outline-none text-sm"
+                  placeholder="如：马卡龙色系" />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">代表色</label>
+                <input type="color" value={addFamilyColor} onChange={e=>setAddFamilyColor(e.target.value)}
+                  className="w-12 h-8 rounded border border-gray-200 cursor-pointer" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button type="button" onClick={()=>setShowAddFamily(false)}
+                className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm">取消</button>
+              <button type="button" onClick={saveNewFamily}
+                className="flex-1 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold">保存</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── 新增品类弹窗 ─── */}
+      {showAddCat && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={()=>setShowAddCat(false)} />
+          <div className="relative bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-bold text-primary mb-4">新增品类</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">品类编号 *（大写英文，如 SHOES）</label>
+                <input type="text" value={addCatCode} onChange={e=>setAddCatCode(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g,''))}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-accent outline-none text-sm font-mono"
+                  placeholder="如：SHOES" maxLength={10} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">品类名称 *（中文，如 鞋靴）</label>
+                <input type="text" value={addCatLabel} onChange={e=>setAddCatLabel(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-accent outline-none text-sm"
+                  placeholder="如：鞋靴" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button type="button" onClick={()=>setShowAddCat(false)}
+                className="flex-1 py-2.5 rounded-lg border border-gray-200 text-sm">取消</button>
+              <button type="button" onClick={saveNewCat}
                 className="flex-1 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold">保存</button>
             </div>
           </div>
