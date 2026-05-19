@@ -29,16 +29,23 @@ const COLOR_SEASONS = COLOR_SEASONS_PRO.map(c => ({
   label: c.marketLabel,
 }));
 
-/* 用户端色彩选项 —— 12季型通俗色名，按春夏秋冬分组 */
-const USER_COLOR_OPTIONS = COLOR_SEASONS_PRO.map(c => ({
-  value: c.value,
-  label: c.marketLabel,
-  group: c.group,
-}));
+/* 用户端色彩选项 —— 通俗色系名 */
+const USER_COLOR_OPTIONS = [
+  { value: "warm", label: "暖色系" },
+  { value: "cool", label: "冷色系" },
+  { value: "earth", label: "大地色系" },
+  { value: "deep", label: "深色系" },
+  { value: "neutral", label: "中性色系" },
+];
 
-/* 色系 → 直接匹配 color_season（不再需要间接映射） */
-
-// 供应商入驻标准
+/* 用户端色彩筛选 —— 色系映射到具体季型 */
+const COLOR_SCHEME_TO_SEASONS: Record<string, string[]> = {
+  warm: ["light_warm", "warm_bright", "clear_warm"],
+  cool: ["light_cool", "soft_cool", "cool_soft"],
+  earth: ["warm_soft", "soft_warm", "deep_warm"],
+  deep: ["clear_cool", "deep_cool"],
+  neutral: ["cool_bright"],
+};
 const entryStandards = [
   { icon: FileCheck, title: "营业执照", desc: "合法有效的企业营业执照，经营范围涵盖服装生产或销售" },
   { icon: Shield, title: "质检报告", desc: "提供近一年内第三方权威机构出具的产品质检合格报告" },
@@ -176,8 +183,11 @@ export default function BuyerPage() {
     if (activeCategory) list = list.filter((p) => p.category === activeCategory);
     /* 用户端风格筛选：直接匹配 style_type */
     if (activeUserStyle) list = list.filter((p) => p.style_type === activeUserStyle);
-    /* 用户端色彩筛选：直接匹配 color_season */
-    if (activeUserColor) list = list.filter((p) => p.color_season === activeUserColor);
+    /* 用户端色彩筛选：色系映射到具体季型 */
+    if (activeUserColor && COLOR_SCHEME_TO_SEASONS[activeUserColor]) {
+      const seasons = COLOR_SCHEME_TO_SEASONS[activeUserColor];
+      list = list.filter((p) => p.color_season && seasons.includes(p.color_season));
+    }
     if (sortBy === "price_asc") list.sort((a, b) => a.price - b.price);
     else if (sortBy === "price_desc") list.sort((a, b) => b.price - a.price);
     return list;
@@ -304,23 +314,14 @@ export default function BuyerPage() {
                     </button>
                   ))}
                 </div>
-                <div className="mt-2 space-y-1.5">
-                  {["春", "夏", "秋", "冬"].map((season) => {
-                    const seasonColors = USER_COLOR_OPTIONS.filter(c => c.group === season);
-                    if (seasonColors.length === 0) return null;
-                    const seasonEmoji = season === "春" ? "🌸" : season === "夏" ? "🌊" : season === "秋" ? "🍂" : "❄️";
-                    return (
-                      <div key={season} className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-                        <span className="text-xs text-gray-400 shrink-0">{seasonEmoji}{season}：</span>
-                        {seasonColors.map((c) => (
-                          <button key={c.value} onClick={() => setActiveUserColor(activeUserColor === c.value ? "" : c.value)}
-                            className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors border ${activeUserColor === c.value ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:border-primary/30"}`}>
-                            {c.label}
-                          </button>
-                        ))}
-                      </div>
-                    );
-                  })}
+                <div className="flex items-center gap-1.5 mt-2 overflow-x-auto scrollbar-hide pb-1">
+                  <span className="text-xs text-gray-400 shrink-0">色系：</span>
+                  {USER_COLOR_OPTIONS.map((c) => (
+                    <button key={c.value} onClick={() => setActiveUserColor(activeUserColor === c.value ? "" : c.value)}
+                      className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-medium transition-colors border ${activeUserColor === c.value ? "bg-primary text-white border-primary" : "bg-white text-gray-600 border-gray-200 hover:border-primary/30"}`}>
+                      {c.label}
+                    </button>
+                  ))}
                 </div>
               </motion.div>
             )}

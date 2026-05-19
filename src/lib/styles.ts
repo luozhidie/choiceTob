@@ -131,18 +131,18 @@ export function getStyleFullLabel(key: string | null | undefined): string {
 
 /** 12季色彩（后端专业术语） */
 export const COLOR_SEASONS_PRO = [
-  { value: "light_warm", label: "浅暖型", group: "春", marketLabel: "奶茶色" },
-  { value: "warm_bright", label: "暖亮型", group: "春", marketLabel: "珊瑚橘" },
-  { value: "clear_warm", label: "净暖型", group: "春", marketLabel: "鹅黄色" },
-  { value: "light_cool", label: "浅冷型", group: "夏", marketLabel: "雾霾蓝" },
-  { value: "soft_cool", label: "柔冷型", group: "夏", marketLabel: "灰紫色" },
-  { value: "cool_soft", label: "冷柔型", group: "夏", marketLabel: "薄荷绿" },
-  { value: "warm_soft", label: "暖柔型", group: "秋", marketLabel: "驼色" },
-  { value: "soft_warm", label: "柔暖型", group: "秋", marketLabel: "焦糖色" },
-  { value: "deep_warm", label: "深暖型", group: "秋", marketLabel: "酒红色" },
-  { value: "clear_cool", label: "净冷型", group: "冬", marketLabel: "藏蓝色" },
-  { value: "cool_bright", label: "冷亮型", group: "冬", marketLabel: "冰白色" },
-  { value: "deep_cool", label: "深冷型", group: "冬", marketLabel: "墨灰色" },
+  { value: "light_warm", label: "浅暖型", group: "暖色系", marketLabel: "暖色系" },
+  { value: "warm_bright", label: "暖亮型", group: "暖色系", marketLabel: "暖色系" },
+  { value: "clear_warm", label: "净暖型", group: "暖色系", marketLabel: "暖色系" },
+  { value: "light_cool", label: "浅冷型", group: "冷色系", marketLabel: "冷色系" },
+  { value: "soft_cool", label: "柔冷型", group: "冷色系", marketLabel: "冷色系" },
+  { value: "cool_soft", label: "冷柔型", group: "冷色系", marketLabel: "冷色系" },
+  { value: "warm_soft", label: "暖柔型", group: "大地色系", marketLabel: "大地色系" },
+  { value: "soft_warm", label: "柔暖型", group: "大地色系", marketLabel: "大地色系" },
+  { value: "deep_warm", label: "深暖型", group: "大地色系", marketLabel: "大地色系" },
+  { value: "clear_cool", label: "净冷型", group: "深色系", marketLabel: "深色系" },
+  { value: "cool_bright", label: "冷亮型", group: "中性色系", marketLabel: "中性色系" },
+  { value: "deep_cool", label: "深冷型", group: "深色系", marketLabel: "深色系" },
 ] as const;
 
 /** 色彩季型Key → 后端专业术语 */
@@ -155,10 +155,11 @@ export const COLOR_SEASON_PRO_MAP: Record<string, string> = {
 
 /** 色彩季型Key → 前端通俗色系名 */
 export const COLOR_SEASON_MARKET_MAP: Record<string, string> = {
-  light_warm: "奶茶色", warm_bright: "珊瑚橘", clear_warm: "鹅黄色",
-  light_cool: "雾霾蓝", soft_cool: "灰紫色", cool_soft: "薄荷绿",
-  warm_soft: "驼色", soft_warm: "焦糖色", deep_warm: "酒红色",
-  clear_cool: "藏蓝色", cool_bright: "冰白色", deep_cool: "墨灰色",
+  light_warm: "暖色系", warm_bright: "暖色系", clear_warm: "暖色系",
+  light_cool: "冷色系", soft_cool: "冷色系", cool_soft: "冷色系",
+  warm_soft: "大地色系", soft_warm: "大地色系", deep_warm: "大地色系",
+  clear_cool: "深色系", deep_cool: "深色系",
+  cool_bright: "中性色系",
 };
 
 /**
