@@ -51,50 +51,75 @@ export default function ProductDetailPage() {
 
   const fetchProduct = async (id: string) => {
     setLoading(true);
-    /* 先查 products 表 */
-    const { data, error } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (!error && data) {
-      setProduct(data as Product);
-      setLoading(false);
-      return;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    const headers: Record<string, string> = {
+      "apikey": supabaseKey,
+      "Authorization": `Bearer ${supabaseKey}`,
+    };
+    /* 先查 products 表（原生 fetch 绕过 schema cache） */
+    const platformRes = await fetch(
+      `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(id)}&select=*`,
+      { headers }
+    );
+    if (platformRes.ok) {
+      const data = await platformRes.json();
+      if (data && data.length > 0) {
+        const p = data[0];
+        setProduct({
+          id: p.id, title: p.title || "平台商品", description: p.description,
+          cover_image: p.cover_image || null, images: p.images || null,
+          price: p.price || 0, original_price: p.original_price || null,
+          category: p.category || null, subcategory: p.subcategory || null,
+          tags: p.tags || null, is_published: p.is_published,
+          stock: p.stock || 0,
+        } as Product);
+        setLoading(false);
+        return;
+      }
     }
     /* 再查 buyer_products 表（供应商上传的商品）*/
-    const { data: bData, error: bError } = await supabase
-      .from("buyer_products")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (!bError && bData) {
-      /* 映射到 Product 接口 */
-      setProduct({
-        id: bData.id,
-        title: bData.title || bData.name || "选品商品",
-        description: bData.description,
-        cover_image: bData.cover_image || null,
-        images: bData.images || null,
-        price: bData.price || 0,
-        original_price: bData.original_price || null,
-        category: bData.category || null,
-        subcategory: bData.subcategory || null,
-        tags: bData.tags || null,
-        is_published: bData.is_published,
-        stock: bData.stock || 0,
-        supplier_name: bData.supplier_name || null,
-      } as Product);
-      setLoading(false);
-      return;
+    const buyerRes = await fetch(
+      `${supabaseUrl}/rest/v1/buyer_products?id=eq.${encodeURIComponent(id)}&select=*`,
+      { headers }
+    );
+    if (buyerRes.ok) {
+      const data = await buyerRes.json();
+      if (data && data.length > 0) {
+        const p = data[0];
+        setProduct({
+          id: p.id, title: p.title || p.name || "选品商品", description: p.description,
+          cover_image: p.cover_image || null, images: p.images || null,
+          price: p.price || 0, original_price: p.original_price || null,
+          category: p.category || null, subcategory: p.subcategory || null,
+          tags: p.tags || null, is_published: p.is_published,
+          stock: p.stock || 0, supplier_name: p.supplier_name || null,
+        } as Product);
+        setLoading(false);
+        return;
+      }
     }
-    router.push("/shop");
+    /* 两个表都查不到：显示错误，不再跳转 */
+    setProduct(null);
+    setLoading(false);
   };
 
-  if (loading || !product) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+        <div className="text-lg text-gray-400">商品不存在或已下架</div>
+        <button onClick={() => router.push("/shop")}
+          className="text-sm text-primary hover:underline">
+          返回精选好物 →
+        </button>
       </div>
     );
   }
@@ -165,34 +190,64 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Product Detail */}
+      {/* Product Detail — 淘宝/1688 风格 */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12"
+            className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8"
           >
-            {/* Images */}
-            <div>
+            {/* 左侧缩略图（竖排）- 仅桌面端 */}
+            {allImages.length > 1 && (
+              <div className="hidden md:flex md:col-span-2 flex-col gap-2 order-1 md:order-1">
+                {allImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentImage(i)}
+                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                      currentImage === i
+                        ? "border-accent"
+                        : "border-transparent hover:border-gray-300"
+                    }`}
+                  >
+                    {img ? (
+                      <img
+                        src={img}
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <ShoppingBag className="w-4 h-4 text-gray-400" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* 中间大图 */}
+            <div className="md:col-span-7 order-2 md:order-2">
               <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center">
                 {allImages[currentImage] ? (
                   <img
                     src={allImages[currentImage]}
                     alt={product.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
                   />
                 ) : (
                   <ShoppingBag className="w-16 h-16 text-primary/30" />
                 )}
               </div>
+              {/* 移动端横排缩略图 */}
               {allImages.length > 1 && (
-                <div className="flex gap-2 mt-3">
+                <div className="flex md:hidden gap-2 mt-3">
                   {allImages.map((img, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentImage(i)}
-                      className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
                         currentImage === i
                           ? "border-accent"
                           : "border-transparent"
@@ -215,8 +270,8 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Info */}
-            <div>
+            {/* 右侧商品信息 */}
+            <div className="md:col-span-3 order-3 md:order-3">
               {/* 品类标签 */}
               <div className="flex items-center gap-2 mb-3">
                 {product.category && (
