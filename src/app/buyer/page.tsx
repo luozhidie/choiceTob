@@ -185,18 +185,8 @@ export default function BuyerPage() {
     setLoading(false);
   };
 
-  /* 动态品类选项：静态 + 从商品数据中提取的自定义分类 */
-  const categoryOptions = useMemo(() => {
-    const staticKeys = new Set(STATIC_CATEGORY_OPTIONS.map(c => c.value));
-    const dynamic: { value: string; label: string }[] = [...STATIC_CATEGORY_OPTIONS];
-    for (const p of allProducts) {
-      if (p.category && !staticKeys.has(p.category)) {
-        staticKeys.add(p.category);
-        dynamic.push({ value: p.category, label: CATEGORY_MAP[p.category] || p.category });
-      }
-    }
-    return dynamic;
-  }, [allProducts]);
+  /* 品类选项：只显示标准分类（服装/配饰），不再动态加入自定义分类 */
+  const categoryOptions = STATIC_CATEGORY_OPTIONS;
 
   /* 当前主分类的子分类列表 */
   const currentSubcategories = useMemo(() => {
@@ -218,8 +208,8 @@ export default function BuyerPage() {
     let list = [...allProducts];
     /* 排除色彩工具/书籍资料/专业工具（这些属于线上课程） */
     list = list.filter((p) => !["color_tools", "book", "pro_tool"].includes(p.category || ""));
-    /* 只显示有分类的商品 */
-    list = list.filter((p) => !!p.category);
+    /* 只显示标准分类（服装/配饰）的商品，过滤掉 TZQP 等自定义分类 */
+    list = list.filter((p) => p.category === "clothing" || p.category === "accessory");
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
