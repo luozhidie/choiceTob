@@ -321,17 +321,17 @@ export default function Home() {
               transition={{ delay: 0.3 }}
             >
               <Link
-                href="/shop"
+                href="/buyer"
                 className="group block p-8 rounded-2xl bg-gradient-to-br from-pink-50 to-pink-100/50 border border-pink-200/50 hover:shadow-lg hover:border-pink-300/50 transition-all duration-300"
               >
                 <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-pink-100 text-pink-500 mb-5 group-hover:bg-pink-500 group-hover:text-white transition-colors">
                   <ShoppingBag className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
-                  精选好物
+                  买手选品
                 </h3>
                 <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  色彩顾问推荐好物，助力你的风格提升之路
+                  精选优质货源，按风格、色系精准筛选
                 </p>
                 <div className="mt-4 flex items-center gap-2">
                   <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-medium">精选推荐</span>

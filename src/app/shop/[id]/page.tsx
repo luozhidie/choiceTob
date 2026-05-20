@@ -31,77 +31,143 @@ interface Product {
 }
 
 export default function ProductDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const productId = params.id as string;
+
+  // ✅ 所有 hooks 必须在组件顶层，不能在条件/return 之后
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPaywall, setShowPaywall] = useState(false);
   const [visible, setVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
+  const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
 
-  const supabase = createClient();
-  const router = useRouter();
-  const params = useParams();
-  const productId = params.id as string;
-
+  // 获取商品数据
   useEffect(() => {
     setVisible(true);
-    if (productId) fetchProduct(productId);
+    if (!productId) return;
+
+    let cancelled = false;
+
+    const fetchProduct = async () => {
+      setLoading(true);
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+      const headers: Record<string, string> = {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      };
+
+      // 先查 products 表（原生 fetch 绕过 schema cache）
+      try {
+        const platformRes = await fetch(
+          `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(productId)}&select=*`,
+          { headers }
+        );
+        if (platformRes.ok) {
+          const data = await platformRes.json();
+          if (data && data.length > 0 && !cancelled) {
+            const p = data[0];
+            setProduct({
+              id: p.id,
+              title: p.title || "平台商品",
+              description: p.description,
+              cover_image: p.cover_image || null,
+              images: p.images || null,
+              price: p.price || 0,
+              original_price: p.original_price || null,
+              category: p.category || null,
+              subcategory: p.subcategory || null,
+              tags: p.tags || null,
+              is_published: p.is_published,
+              stock: p.stock || 0,
+              source: "platform",
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("查询 products 表失败:", e);
+      }
+
+      // 再查 buyer_products 表（供应商上传的商品）
+      try {
+        const buyerRes = await fetch(
+          `${supabaseUrl}/rest/v1/buyer_products?id=eq.${encodeURIComponent(productId)}&select=*`,
+          { headers }
+        );
+        if (buyerRes.ok) {
+          const data = await buyerRes.json();
+          if (data && data.length > 0 && !cancelled) {
+            const p = data[0];
+            setProduct({
+              id: p.id,
+              title: p.title || p.name || "选品商品",
+              description: p.description,
+              cover_image: p.cover_image || null,
+              images: p.images || null,
+              price: p.price || 0,
+              original_price: p.original_price || null,
+              category: p.category || null,
+              subcategory: p.subcategory || null,
+              tags: p.tags || null,
+              is_published: p.is_published,
+              stock: p.stock || 0,
+              supplier_name: p.supplier_name || null,
+              source: p.source || "buyer",
+            });
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.error("查询 buyer_products 表失败:", e);
+      }
+
+      // 两个表都查不到
+      if (!cancelled) {
+        setProduct(null);
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+    return () => { cancelled = true; };
   }, [productId]);
 
-  const fetchProduct = async (id: string) => {
-    setLoading(true);
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-    const headers: Record<string, string> = {
-      "apikey": supabaseKey,
-      "Authorization": `Bearer ${supabaseKey}`,
-    };
-    /* 先查 products 表（原生 fetch 绕过 schema cache） */
-    const platformRes = await fetch(
-      `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(id)}&select=*`,
-      { headers }
-    );
-    if (platformRes.ok) {
-      const data = await platformRes.json();
-      if (data && data.length > 0) {
-        const p = data[0];
-        setProduct({
-          id: p.id, title: p.title || "平台商品", description: p.description,
-          cover_image: p.cover_image || null, images: p.images || null,
-          price: p.price || 0, original_price: p.original_price || null,
-          category: p.category || null, subcategory: p.subcategory || null,
-          tags: p.tags || null, is_published: p.is_published,
-          stock: p.stock || 0,
-        } as Product);
-        setLoading(false);
-        return;
-      }
+  // 获取同供应商商品
+  useEffect(() => {
+    if (!product?.supplier_name) {
+      setSupplierProducts([]);
+      return;
     }
-    /* 再查 buyer_products 表（供应商上传的商品）*/
-    const buyerRes = await fetch(
-      `${supabaseUrl}/rest/v1/buyer_products?id=eq.${encodeURIComponent(id)}&select=*`,
-      { headers }
-    );
-    if (buyerRes.ok) {
-      const data = await buyerRes.json();
-      if (data && data.length > 0) {
-        const p = data[0];
-        setProduct({
-          id: p.id, title: p.title || p.name || "选品商品", description: p.description,
-          cover_image: p.cover_image || null, images: p.images || null,
-          price: p.price || 0, original_price: p.original_price || null,
-          category: p.category || null, subcategory: p.subcategory || null,
-          tags: p.tags || null, is_published: p.is_published,
-          stock: p.stock || 0, supplier_name: p.supplier_name || null,
-        } as Product);
-        setLoading(false);
-        return;
-      }
-    }
-    /* 两个表都查不到：显示错误，不再跳转 */
-    setProduct(null);
-    setLoading(false);
-  };
 
+    let cancelled = false;
+    const supabase = createClient();
+
+    (async () => {
+      const tableName = product.source === "platform" ? "products" : "buyer_products";
+      const { data } = await supabase
+        .from(tableName)
+        .select("*")
+        .eq("supplier_name", product.supplier_name!)
+        .neq("id", product.id)
+        .eq("is_published", true)
+        .limit(8);
+
+      if (!cancelled) {
+        setSupplierProducts((data as Product[] | null) || []);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [product?.supplier_name, product?.id, product?.source]);
+
+  const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+
+  // ---- 加载中 ----
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -110,59 +176,39 @@ export default function ProductDetailPage() {
     );
   }
 
+  // ---- 商品不存在 ----
   if (!product) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
         <div className="text-lg text-gray-400">商品不存在或已下架</div>
-        <button onClick={() => router.push("/shop")}
-          className="text-sm text-primary hover:underline">
-          返回精选好物 →
+        <button
+          onClick={() => router.push("/buyer")}
+          className="text-sm text-primary hover:underline"
+        >
+          返回买手选品 →
         </button>
       </div>
     );
   }
 
+  // ---- 商品详情（1688 风格）----
   const allImages = product.images?.length
     ? [product.cover_image, ...product.images].filter(Boolean)
     : [product.cover_image];
 
-  const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
-
-  /* 同供应商商品 */
-  const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
-  useEffect(() => {
-    if (!product?.supplier_name) { setSupplierProducts([]); return; }
-    const q = product.source === "platform" ? "products" : "buyer_products";
-    (async () => {
-      const { data } = await supabase
-        .from(q)
-        .select("*")
-        .eq("supplier_name", product.supplier_name)
-        .neq("id", product.id)
-        .eq("is_published", true)
-        .limit(8);
-      setSupplierProducts((data as Product[] | null) || []);
-    })();
-  }, [product]);
-
-  // 品类面包屑链接
   const categoryLink = product.category
-    ? `/shop?category=${product.category}`
-    : "/shop";
+    ? `/buyer?category=${product.category}`
+    : "/buyer";
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Breadcrumb - 带品类路径 */}
+      {/* 面包屑 */}
       <div className="bg-white border-b border-gray-100">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
-            <Link href="/" className="hover:text-primary">
-              首页
-            </Link>
+            <Link href="/" className="hover:text-primary">首页</Link>
             <span>/</span>
-            <Link href="/shop" className="hover:text-primary">
-              精选好物
-            </Link>
+            <Link href="/buyer" className="hover:text-primary">买手选品</Link>
             {product.category && (
               <>
                 <span>/</span>
@@ -175,8 +221,7 @@ export default function ProductDetailPage() {
               <>
                 <span>/</span>
                 <span className="text-gray-400">
-                  {SUBCATEGORY_MAP[product.subcategory] ||
-                    product.subcategory}
+                  {SUBCATEGORY_MAP[product.subcategory] || product.subcategory}
                 </span>
               </>
             )}
@@ -188,7 +233,7 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Product Detail — 淘宝/1688 风格 */}
+      {/* 商品详情 — 1688 风格 */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">
           <motion.div
@@ -210,11 +255,7 @@ export default function ProductDetailPage() {
                     }`}
                   >
                     {img ? (
-                      <img
-                        src={img}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={img} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                         <ShoppingBag className="w-4 h-4 text-gray-400" />
@@ -226,11 +267,11 @@ export default function ProductDetailPage() {
             )}
 
             {/* 中间大图 */}
-            <div className="md:col-span-7 order-2 md:order-2">
+            <div className={allImages.length > 1 ? "md:col-span-7" : "md:col-span-9"} style={{ order: 2 }}>
               <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center">
                 {allImages[currentImage] ? (
                   <img
-                    src={allImages[currentImage]}
+                    src={allImages[currentImage]!}
                     alt={product.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
                   />
@@ -246,17 +287,11 @@ export default function ProductDetailPage() {
                       key={i}
                       onClick={() => setCurrentImage(i)}
                       className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
-                        currentImage === i
-                          ? "border-accent"
-                          : "border-transparent"
+                        currentImage === i ? "border-accent" : "border-transparent"
                       }`}
                     >
                       {img ? (
-                        <img
-                          src={img}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={img} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full bg-gray-100 flex items-center justify-center">
                           <ShoppingBag className="w-4 h-4 text-gray-400" />
@@ -269,7 +304,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* 右侧商品信息 */}
-            <div className="md:col-span-3 order-3 md:order-3">
+            <div className="md:col-span-3" style={{ order: 3 }}>
               {/* 品类标签 */}
               <div className="flex items-center gap-2 mb-3">
                 {product.category && (
@@ -281,8 +316,7 @@ export default function ProductDetailPage() {
                 )}
                 {product.subcategory && (
                   <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
-                    {SUBCATEGORY_MAP[product.subcategory] ||
-                      product.subcategory}
+                    {SUBCATEGORY_MAP[product.subcategory] || product.subcategory}
                   </span>
                 )}
               </div>
@@ -296,33 +330,30 @@ export default function ProductDetailPage() {
                 </p>
               )}
 
-              {/* Price */}
+              {/* 价格 */}
               <div className="flex items-end gap-2 mb-6">
                 <span className="text-3xl font-bold text-accent">
                   {formatPrice(product.price)}
                 </span>
-                {product.original_price &&
-                  product.original_price > product.price && (
-                    <span className="text-lg text-gray-400 line-through mb-1">
-                      {formatPrice(product.original_price)}
-                    </span>
-                  )}
+                {product.original_price && product.original_price > product.price && (
+                  <span className="text-lg text-gray-400 line-through mb-1">
+                    {formatPrice(product.original_price)}
+                  </span>
+                )}
               </div>
 
-              {/* Stock */}
+              {/* 库存 */}
               <div className="mb-6">
                 <span
                   className={`text-xs font-medium ${
                     product.stock > 0 ? "text-green-600" : "text-red-500"
                   }`}
                 >
-                  {product.stock > 0
-                    ? `库存 ${product.stock} 件`
-                    : "暂时缺货"}
+                  {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
                 </span>
               </div>
 
-              {/* Tags */}
+              {/* 标签 */}
               {product.tags && product.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                   {product.tags.map((tag) => (
@@ -336,7 +367,16 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* Buy Button */}
+              {/* 供应商信息 */}
+              {product.supplier_name && (
+                <div className="mb-6 p-3 bg-gray-50 rounded-lg flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-primary" />
+                  <span className="text-sm text-gray-600">供应商：</span>
+                  <span className="text-sm font-medium text-primary">{product.supplier_name}</span>
+                </div>
+              )}
+
+              {/* 购买按钮 */}
               <button
                 onClick={() => setShowPaywall(true)}
                 disabled={product.stock === 0}
@@ -349,7 +389,7 @@ export default function ProductDetailPage() {
                 支付安全便捷，付款后安排发货
               </p>
 
-              {/* 同品类推荐入口 */}
+              {/* 同品类推荐 */}
               {product.category && (
                 <Link
                   href={categoryLink}
@@ -363,18 +403,14 @@ export default function ProductDetailPage() {
         </div>
       </section>
 
-      {/* 该供应商其他商品 */}
+      {/* 同供应商商品 */}
       {supplierProducts.length > 0 && (
         <section className="py-12 border-t border-gray-100">
           <div className="container mx-auto px-4">
             <div className="flex items-center gap-2 mb-6">
               <Building2 className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold text-primary">
-                该供应商其他商品
-              </h2>
-              <span className="text-xs text-gray-400 ml-2">
-                {product.supplier_name}
-              </span>
+              <h2 className="text-xl font-bold text-primary">该供应商其他商品</h2>
+              <span className="text-xs text-gray-400 ml-2">{product.supplier_name}</span>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
               {supplierProducts.map((p) => (
@@ -389,9 +425,7 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="p-3">
                       <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-                      <p className="text-sm text-accent font-bold mt-1">
-                        {formatPrice(p.price)}
-                      </p>
+                      <p className="text-sm text-accent font-bold mt-1">{formatPrice(p.price)}</p>
                     </div>
                   </div>
                 </Link>
