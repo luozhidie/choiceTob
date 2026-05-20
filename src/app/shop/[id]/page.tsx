@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ShoppingBag, Check, Building2 } from "lucide-react";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -39,10 +39,8 @@ export default function ProductDetailPage() {
 
   const supabase = createClient();
   const router = useRouter();
-
-  const pathname =
-    typeof window !== "undefined" ? window.location.pathname : "";
-  const productId = pathname.split("/").pop();
+  const params = useParams();
+  const productId = params.id as string;
 
   useEffect(() => {
     setVisible(true);
