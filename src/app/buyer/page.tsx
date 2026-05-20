@@ -216,7 +216,9 @@ export default function BuyerPage() {
 
   const filteredProducts = useMemo(() => {
     let list = [...allProducts];
-    /* 只显示有分类的商品，不再硬编码 clothing/accessory，支持用户自定义分类 */
+    /* 排除色彩工具/书籍资料/专业工具（这些属于线上课程） */
+    list = list.filter((p) => !["color_tools", "book", "pro_tool"].includes(p.category || ""));
+    /* 只显示有分类的商品 */
     list = list.filter((p) => !!p.category);
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
@@ -463,7 +465,7 @@ export default function BuyerPage() {
                   initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: Math.min(i * 0.04, 0.4) }}>
                   <div className="group bg-white rounded-2xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden border border-transparent hover:border-accent/30 h-full flex flex-col">
-                    <Link href={product.source === "buyer" ? `/buyer/${product.id}` : `/shop/${product.id}`}>
+                    <Link href={`/shop/${product.id}`}>
                       <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center overflow-hidden relative">
                         {getImage(product) ? (
                           <img src={getImage(product)!} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -490,7 +492,7 @@ export default function BuyerPage() {
                           </span>
                         )}
                       </div>
-                      <Link href={product.source === "buyer" ? `/buyer/${product.id}` : `/shop/${product.id}`}>
+                      <Link href={`/shop/${product.id}`}>
                         <h3 className="font-bold text-primary group-hover:text-accent transition-colors mt-1.5 line-clamp-2 text-sm md:text-base">{product.title}</h3>
                       </Link>
                       {product.description && (
