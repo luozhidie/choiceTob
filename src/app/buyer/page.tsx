@@ -208,8 +208,8 @@ export default function BuyerPage() {
     let list = [...allProducts];
     /* 排除色彩工具/书籍资料/专业工具（这些属于线上课程） */
     list = list.filter((p) => !["color_tools", "book", "pro_tool"].includes(p.category || ""));
-    /* 只显示标准分类（服装/配饰）的商品，过滤掉 TZQP 等自定义分类 */
-    list = list.filter((p) => p.category === "clothing" || p.category === "accessory");
+    /* 只显示有分类的商品 */
+    list = list.filter((p) => !!p.category);
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
