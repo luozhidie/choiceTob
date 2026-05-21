@@ -712,15 +712,14 @@ export default function Home() {
       {/* ====== Popup Ad ====== */}
       <PopupAd />
 
-      {/* ====== Footer ====== */}
-      <footer className="py-6 bg-muted/60 border-t border-gray-100">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-          <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} 骆芷蝶智选</p>
+      {/* ====== Admin Login (Footer is in layout) ====== */}
+      <div className="py-4 bg-muted/60 border-t border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-end">
           <Link href="/admin/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             管理员登录
           </Link>
         </div>
-      </footer>
+      </div>
     </>
   );
 }

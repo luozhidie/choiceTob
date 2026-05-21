@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, CheckCircle2, Copy, MessageCircle, Phone } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -17,7 +17,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   if (!isOpen) return null;
 

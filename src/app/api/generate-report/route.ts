@@ -430,8 +430,8 @@ function buildEvaluationTable(evaluations: any[]) {
     new TableRow({
       children: [
         ev.sku_code || "—", ev.product_name || "—",
-        String(ev.score_design || 0), String(ev.score_quality || 0),
-        String(ev.score_price || 0), String(ev.score_wearability || 0),
+        String(ev.design_score || ev.score_design || 0), String(ev.quality_score || ev.score_quality || 0),
+        String(ev.price_score || ev.score_price || 0), String(ev.wearability_score || ev.score_wearability || 0),
         String(ev.total_score || 0), ev.decision || "—"
       ].map(v =>
         new TableCell({

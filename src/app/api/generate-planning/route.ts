@@ -145,7 +145,7 @@ ${Object.entries(styleDist).map(([key, val]: [string, any]) =>
     const useDeepseek = !!deepseekKey;
     const apiKey = useDeepseek ? deepseekKey! : openaiKey!;
     const apiUrl = useDeepseek
-      ? "https://api.deepseek.com/chat/completions"
+      ? "https://api.deepseek.com/v1/chat/completions"
       : "https://api.openai.com/v1/chat/completions";
     const model = useDeepseek ? "deepseek-chat" : "gpt-4o-mini";
 

@@ -158,6 +158,7 @@ CREATE TABLE IF NOT EXISTS inventory (
   turnover_days INTEGER,
   status TEXT DEFAULT 'normal',    -- normal/low_stock/out_of_stock
   restock_advice TEXT,
+  unit_cost NUMERIC(12,2) DEFAULT 0,  -- 单位成本
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -283,3 +284,11 @@ ALTER TABLE salon_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE content_calendar ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_tracker ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budget_tracker ENABLE ROW LEVEL SECURITY;
+
+-- Fix: Add unit_cost column to inventory if not exists
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'inventory' AND column_name = 'unit_cost') THEN
+    ALTER TABLE inventory ADD COLUMN unit_cost NUMERIC(12,2) DEFAULT 0;
+  END IF;
+END $$;
