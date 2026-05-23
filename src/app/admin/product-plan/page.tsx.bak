@@ -1,0 +1,1408 @@
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import { createClient } from "@/lib/supabase/client";
+import {
+  ShoppingBag, Download, Save, Calculator,
+  Trash2, Plus, Layers, Calendar, BarChart3,
+  ShoppingCart, TrendingUp, DollarSign, PieChart,
+  Target, RefreshCw, AlertTriangle, Sparkles,
+  FileText, Brain, Loader2, Palette,
+} from "lucide-react";
+import {
+  FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
+} from "@/lib/styles";
+import { useCategories } from "@/lib/useCategories";
+import * as XLSX from "xlsx";
+import {
+  PieChart as RePieChart, Pie, Cell, ResponsiveContainer,
+  Tooltip, Legend,
+} from "recharts";
+
+const SEASON_TYPES = [
+  "light_warm", "warm_bright", "clear_warm",
+  "light_cool", "soft_cool", "cool_soft",
+  "warm_soft", "soft_warm", "deep_warm",
+  "clear_cool", "cool_bright", "deep_cool",
+];
+
+const ALL_STYLES: any[] = [
+  ...FEMALE_STYLES.map((s) => ({ ...s, group: "女士" })),
+  ...MALE_STYLES.map((s) => ({ ...s, group: "男士" })),
+];
+
+interface StructureItem {
+  category: string;
+  pct: number;
+  sku: number;
+  margin: number;
+  sales: number;
+  season: string;
+}
+
+interface WaveItem {
+  wave: number;
+  date: string;
+  pct: number;
+  sku: number;
+  amount: number;
+  categories: string[];
+  seasonFocus: string[];
+  styleFocus: string[];
+  activity: string;
+}
+
+const PIE_COLORS = [
+  "#4F46E5", "#7C3AED", "#EC4899", "#EF4444", "#F59E0B",
+  "#10B981", "#06B6D4", "#3B82F6", "#8B5CF6", "#F472B6",
+  "#34D399", "#60A5FA", "#A78BFA", "#FB923C",
+];
+
+function heatColor(value: number, max: number): string {
+  if (max === 0) return "#f3f4f6";
+  const ratio = value / max;
+  if (ratio >= 0.8) return "#dcfce7";
+  if (ratio >= 0.5) return "#fef9c3";
+  if (ratio >= 0.2) return "#fee2e2";
+  return "#f3f4f6";
+}
+
+export default function ProductPlanPage() {
+  const supabase = createClient();
+  const { categories: categoryOptions } = useCategories();
+  const [storeId, setStoreId] = useState("");
+  const [stores, setStores] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"structure" | "matrix" | "waves">("structure");
+
+  const [structure, setStructure] = useState<StructureItem[]>([
+    { category: "TX-T恤针织衫", pct: 15, sku: 30, margin: 55, sales: 90000, season: "春夏/秋冬" },
+    { category: "DY-大衣", pct: 15, sku: 15, margin: 65, sales: 120000, season: "秋冬" },
+    { category: "YR-羽绒服", pct: 12, sku: 12, margin: 60, sales: 108000, season: "秋冬" },
+    { category: "KZ-裤装", pct: 10, sku: 20, margin: 55, sales: 60000, season: "全年" },
+    { category: "LQ-连衣裙", pct: 8, sku: 15, margin: 65, sales: 50000, season: "春夏" },
+    { category: "FY-风衣外套", pct: 10, sku: 10, margin: 65, sales: 70000, season: "秋冬" },
+    { category: "MS-毛衫", pct: 8, sku: 15, margin: 60, sales: 48000, season: "秋冬" },
+    { category: "MF-棉服", pct: 5, sku: 8, margin: 55, sales: 35000, season: "秋冬" },
+    { category: "WY-卫衣", pct: 5, sku: 10, margin: 55, sales: 30000, season: "秋冬" },
+    { category: "SZ-梭织上装", pct: 4, sku: 10, margin: 60, sales: 24000, season: "全年" },
+    { category: "MJ-马甲", pct: 3, sku: 8, margin: 60, sales: 20000, season: "秋冬" },
+    { category: "TZ-套装", pct: 2, sku: 5, margin: 65, sales: 15000, season: "全年" },
+    { category: "KL-夹克衫", pct: 2, sku: 5, margin: 60, sales: 12000, season: "秋冬" },
+    { category: "BQ-半身裙", pct: 1, sku: 7, margin: 60, sales: 8000, season: "春夏/秋冬" },
+  ]);
+
+  const [matrix, setMatrix] = useState<Record<string, any>>(() => {
+    const m: Record<string, any> = {};
+    SEASON_TYPES.forEach((s) => { m[s] = {}; ALL_STYLES.forEach((st) => { m[s][st.value] = { sku: 0, pct: 0, budget: 0 }; }); });
+    return m;
+  });
+
+  const [waves, setWaves] = useState<WaveItem[]>([
+    { wave: 1, date: "2月第1周", pct: 15, sku: 30, amount: 150000, categories: ["春装上衣","裙装"], seasonFocus: ["早春","春中"], styleFocus: ["优雅","浪漫"], activity: "春季新品发布" },
+    { wave: 2, date: "3月第1周", pct: 20, sku: 40, amount: 200000, categories: ["全套春装"], seasonFocus: ["春中","春末"], styleFocus: ["休闲","通勤"], activity: "女神节促销" },
+    { wave: 3, date: "4月第1周", pct: 25, sku: 50, amount: 250000, categories: ["春夏过渡"], seasonFocus: ["春末","初夏"], styleFocus: ["简约","优雅"], activity: "会员专享日" },
+    { wave: 4, date: "5月第1周", pct: 40, sku: 80, amount: 400000, categories: ["夏装全套"], seasonFocus: ["盛夏"], styleFocus: ["运动","前卫"], activity: "夏季焕新大促" },
+  ]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("stores").select("id, name").order("name");
+      setStores(data || []);
+      if (data && data.length > 0) setStoreId(data[0].id);
+    })();
+  }, []);
+
+  // ── 财务汇总 ──
+  const finance = useMemo(() => {
+    const totalSku = structure.reduce((s, i) => s + i.sku, 0);
+    const totalSales = structure.reduce((s, i) => s + i.sales, 0);
+    const avgMargin = structure.length > 0
+      ? structure.reduce((s, i) => s + i.margin * i.pct, 0) / structure.reduce((s, i) => s + i.pct, 0)
+      : 0;
+    const totalCost = structure.reduce((s, i) => s + i.sales * (1 - i.margin / 100), 0);
+    const totalProfit = totalSales - totalCost;
+    const totalBudget = structure.reduce((s, i) => s + i.sku * 150, 0);
+    const roi = totalCost > 0 ? ((totalProfit / totalCost) * 100) : 0;
+    const pctTotal = structure.reduce((s, i) => s + i.pct, 0);
+    const pctValid = Math.abs(pctTotal - 100) < 0.5;
+    return { totalSku, totalSales, avgMargin, totalCost, totalProfit, totalBudget, roi, pctTotal, pctValid };
+  }, [structure]);
+
+  // ── Pie data ──
+  const pieData = useMemo(() => {
+    const sorted = [...structure].sort((a, b) => b.pct - a.pct);
+    return sorted.map((item, i) => ({
+      name: item.category.split("-")[1] || item.category,
+      value: item.pct,
+      fill: PIE_COLORS[i % PIE_COLORS.length],
+    }));
+  }, [structure]);
+
+  // ── 自动填充 ──
+  const autoFillMatrix = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    setSaving(true);
+    try {
+      const { data: members } = await supabase
+        .from("vip_customers")
+        .select("color_season, main_style")
+        .eq("store_id", storeId)
+        .eq("is_active", true);
+
+      if (!members || members.length === 0) {
+        alert("该店铺暂无VIP数据，无法自动填充");
+        setSaving(false);
+        return;
+      }
+
+      const countMap: Record<string, Record<string, number>> = {};
+      SEASON_TYPES.forEach((s) => { countMap[s] = {}; ALL_STYLES.forEach((st) => { countMap[s][st.value] = 0; }); });
+      let total = 0;
+      members.forEach((m: any) => {
+        const s = m.color_season; const st = m.main_style;
+        if (s && st && countMap[s]) { countMap[s][st] = (countMap[s][st] || 0) + 1; total++; }
+      });
+
+      const totalSku = structure.reduce((sum, item) => sum + item.sku, 0) || 200;
+      const newMatrix = { ...matrix };
+      SEASON_TYPES.forEach((s) => {
+        ALL_STYLES.forEach((st) => {
+          const cnt = countMap[s]?.[st.value] || 0;
+          const pct = total > 0 ? Math.round((cnt / total) * 100) : 0;
+          const sku = Math.round((pct / 100) * totalSku);
+          newMatrix[s][st.value] = { sku, pct, budget: Math.round(sku * 150) };
+        });
+      });
+      setMatrix(newMatrix);
+      alert("✅ 96格矩阵已根据VIP数据自动填充！");
+    } catch (e: any) { alert("填充失败：" + e.message); }
+    setSaving(false);
+  };
+
+  // ── 优化结构 ──
+  const optimizeStructure = () => {
+    const totalSku = structure.reduce((s, i) => s + i.sku, 0);
+    const highMargin = structure.filter(i => i.margin >= 60);
+    const highMarginTotal = highMargin.reduce((s, i) => s + i.pct, 0);
+    if (highMarginTotal < 50) {
+      const sorted = [...structure].sort((a, b) => b.margin - a.margin);
+      const newStructure = sorted.map((item, i) => {
+        const basePct = item.margin >= 60 ? item.pct + 3 : item.pct - 2;
+        return { ...item, pct: Math.max(1, Math.min(20, basePct)), sku: Math.round(totalSku * Math.max(1, Math.min(20, basePct)) / 100) };
+      });
+      setStructure(newStructure);
+      alert("✅ 已优化：高毛利品类（≥60%）占比提升，低毛利品类缩减");
+    } else {
+      alert("当前结构已相对优化，建议手动微调");
+    }
+  };
+
+  // ── 保存 ──
+  const saveToDB = async () => {
+    if (!storeId) return;
+    setSaving(true);
+    try {
+      await supabase.from("product_structure_plan").upsert({
+        store_id: storeId, season: "全年", items: structure,
+        total_sku: structure.reduce((s, i) => s + i.sku, 0),
+        total_budget: structure.reduce((s, i) => s + i.sales, 0),
+      });
+      await supabase.from("product_matrix_plan").upsert({
+        store_id: storeId, season: "全年", matrix_data: matrix,
+        total_sku: structure.reduce((s, i) => s + i.sku, 0),
+      });
+      for (const w of waves) {
+        await supabase.from("wave_plan").upsert({
+          store_id: storeId, wave_number: w.wave, plan_date: w.date,
+          pct: w.pct, sku_count: w.sku, amount: w.amount,
+          core_categories: w.categories, season_focus: w.seasonFocus,
+          style_focus: w.styleFocus, marketing_activity: w.activity,
+        });
+      }
+      alert("✅ 保存成功！");
+    } catch (e: any) { alert("保存失败：" + e.message); }
+    setSaving(false);
+  };
+
+  // ── 导出 ──
+  const exportToExcel = async () => {
+    setExporting(true);
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // Sheet1: 财务摘要
+      const ws0 = XLSX.utils.aoa_to_sheet([
+        ["商品企划书", new Date().toISOString().slice(0, 10)],
+        ["店铺", stores.find(s => s.id === storeId)?.name || ""],
+        [],
+        ["指标", "数值"],
+        ["总SKU数", finance.totalSku],
+        ["总目标销售额", `¥${finance.totalSales.toLocaleString()}`],
+        ["平均毛利率", `${finance.avgMargin.toFixed(1)}%`],
+        ["总采购成本", `¥${Math.round(finance.totalCost).toLocaleString()}`],
+        ["预期毛利", `¥${Math.round(finance.totalProfit).toLocaleString()}`],
+        ["ROI", `${finance.roi.toFixed(1)}%`],
+        ["预估采购预算", `¥${finance.totalBudget.toLocaleString()}`],
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws0, "0.财务摘要");
+
+      // Sheet2: 商品结构
+      const ws1 = XLSX.utils.aoa_to_sheet([
+        ["序号","品类","占比%","SKU数","毛利率%","目标销售额","季节分布"],
+        ...structure.map((item, i) => [i+1, item.category, item.pct, item.sku, item.margin, `¥${item.sales.toLocaleString()}`, item.season]),
+      ]);
+      const wsc1 = [{ wch: 5 }, { wch: 25 }, { wch: 8 }, { wch: 8 }, { wch: 8 }, { wch: 15 }, { wch: 12 }];
+      ws1["!cols"] = wsc1;
+      XLSX.utils.book_append_sheet(wb, ws1, "1.商品结构规划");
+
+      // Sheet3: 96格矩阵
+      const header2 = ["季型\\风格", ...ALL_STYLES.map((s) => s.proLabel || s.label)];
+      const rows2 = SEASON_TYPES.map((s) => {
+        const season = COLOR_SEASONS_PRO.find((c) => c.value === s);
+        return [`${season?.label || s}`, ...ALL_STYLES.map((st) => matrix[s]?.[st.value]?.sku || 0)];
+      });
+      const ws2 = XLSX.utils.aoa_to_sheet([header2, ...rows2]);
+      XLSX.utils.book_append_sheet(wb, ws2, "2.96格商品矩阵-SKU");
+
+      // Sheet4: 波段计划
+      const ws3 = XLSX.utils.aoa_to_sheet([
+        ["波段","时间","占比%","SKU数","金额","核心品类","季型重点","风格重点","营销活动"],
+        ...waves.map((w) => [w.wave, w.date, w.pct, w.sku, `¥${w.amount.toLocaleString()}`, w.categories.join("、"), w.seasonFocus.join("、"), w.styleFocus.join("、"), w.activity]),
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws3, "3.上货波段计划");
+
+      const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `商品企划书_${stores.find(s => s.id === storeId)?.name || ""}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert("✅ Excel 已导出！");
+    } catch (e: any) { alert("导出失败：" + e.message); }
+    setExporting(false);
+  };
+
+  // ── 生成采购 ──
+  const [generatingPO, setGeneratingPO] = useState(false);
+  const generateProcurement = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    setGeneratingPO(true);
+    try {
+      const res = await fetch("/api/plan/generate-procurement", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ storeId, season: "2026", supplier: "待确认", avgCostPrice: 0 }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); setGeneratingPO(false); return; }
+      alert(`✅ 已生成 ${data.orders?.length || 0} 张采购单\n共 ${data.totalSku || 0} 件\n总计 ¥${(data.totalAmount || 0).toLocaleString()}`);
+    } catch (e: any) { alert("生成失败：" + e.message); }
+    setGeneratingPO(false);
+  };
+
+  // ── AI 生成参数 ──
+  const [planColorSeason, setPlanColorSeason] = useState("");
+  const [planStyle, setPlanStyle] = useState("");
+  const [planPriceBand, setPlanPriceBand] = useState("199-399元");
+  const [planTargetAge, setPlanTargetAge] = useState("25-40岁");
+  const [planSeason, setPlanSeason] = useState("2026夏季");
+  const [planNotes, setPlanNotes] = useState("");
+  const [showPlanForm, setShowPlanForm] = useState(false);
+
+  // ── AI 生成完整企划 ──
+  const [generatingPlan, setGeneratingPlan] = useState(false);
+  const [aiPlan, setAiPlan] = useState<any>(null);
+  const [planSource, setPlanSource] = useState<string>("");
+  const generatePlan = async () => {
+    if (!storeId) { alert("请先选择店铺"); return; }
+    setGeneratingPlan(true);
+    try {
+      const colorInfo = COLOR_SEASONS_PRO.find(c => c.value === planColorSeason);
+      const styleInfo = ALL_STYLES.find(s => s.value === planStyle);
+      const res = await fetch("/api/generate-planning", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId,
+          season: planSeason,
+          brandName: stores.find(s => s.id === storeId)?.name || "",
+          colorPref: planColorSeason,
+          colorLabel: colorInfo ? `${colorInfo.label.replace(/型$/, '')}${colorInfo.group}` : "",
+          marketStyle: planStyle,
+          styleLabel: styleInfo?.proLabel || styleInfo?.label || "",
+          priceBand: planPriceBand,
+          targetAge: planTargetAge,
+          shopSize: stores.find(s => s.id === storeId)?.shop_size || "",
+          notes: planNotes,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { alert(data.error); setGeneratingPlan(false); return; }
+      const report = data.report;
+      setAiPlan(report);
+      setPlanSource(data.source || "ai");
+      setShowPlanForm(false);
+
+      // 自动填充企划表结构
+      if (report.waves && report.waves.length > 0) {
+        setWaves(report.waves.map((w: any, i: number) => ({
+          wave: w.waveNumber || i + 1,
+          date: w.date || `第${i + 1}波`,
+          pct: Math.round(100 / report.waves.length),
+          sku: w.styles || 0,
+          amount: Math.round((w.styles || 0) * 200),
+          categories: w.categories?.map((c: any) => c.name) || ["T恤", "裤装"],
+          seasonFocus: w.colorFocus || [],
+          styleFocus: w.styleFocus || [],
+          activity: w.activity || "新品上市",
+        })));
+      }
+
+      alert(`${data.source === "ai" ? "AI" : "模拟数据"}企划书已生成！品牌：${report.brandName}\n共 ${report.totalStyles || 0} 款，${report.waves?.length || 0} 个波段`);
+    } catch (e: any) { alert("生成失败：" + e.message); }
+    setGeneratingPlan(false);
+  };
+
+  // ── 导出 Word 文档 ──
+  const exportToWord = async () => {
+    if (!aiPlan) { alert("请先生成AI企划"); return; }
+    setExporting(true);
+    try {
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+        HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
+        PageBreak } = await import("docx");
+
+      // ── Color name → hex mapping ──
+      const colorMap: Record<string, string> = {
+        "黑": "#1a1a2e", "白色": "#ffffff", "白": "#ffffff", "灰": "#808080", "藏青": "#1b3a5c",
+        "米白": "#f5f0e8", "灰粉": "#d4a5a5", "珊瑚橘": "#ff7f50", "丁香紫": "#c8a2c8",
+        "数字薰衣草": "#b57edc", "薄荷绿": "#98ff98", "蓝色": "#0066cc", "紫色": "#800080",
+        "粉色": "#ffb6c1", "橙色": "#ff8c00", "绿": "#00cc44", "红": "#cc0000",
+        "卡其": "#c3b091", "驼色": "#c19a6b", "军绿": "#4b5320", "酒红": "#722f37",
+        "鹅黄": "#fada5e", "天蓝": "#87ceeb", "烟灰": "#708090", "深蓝": "#00008b",
+        "浅蓝": "#add8e6", "裸粉": "#edc9af", "姜黄": "#d4a017", "墨绿": "#006400",
+      };
+      const getHex = (c: string) => colorMap[c] || "#cccccc";
+      const isLightColor = (hex: string) => {
+        const h = hex.replace("#", "");
+        const r = parseInt(h.substring(0, 2), 16);
+        const g = parseInt(h.substring(2, 4), 16);
+        const b = parseInt(h.substring(4, 6), 16);
+        return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+      };
+
+      // ── Shared styles ──
+      const INDIGO = "4F46E5";
+      const cellMargins = { top: 80, bottom: 80, left: 120, right: 120 };
+      const noBorder = { style: BorderStyle.NONE as any, size: 0, color: "FFFFFF" };
+      const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+      const thinBorder = { style: BorderStyle.SINGLE as any, size: 1, color: "CCCCCC" };
+      const thinBorders = { top: thinBorder, bottom: thinBorder, left: thinBorder, right: thinBorder };
+      const headerShading = { fill: INDIGO, type: ShadingType.CLEAR as any };
+      const altRowShading = { fill: "F8F9FF", type: ShadingType.CLEAR as any };
+
+      const headerCell = (text: string, width: number) =>
+        new TableCell({
+          borders: thinBorders, width: { size: width, type: WidthType.DXA as any },
+          margins: cellMargins, shading: headerShading,
+          children: [new Paragraph({ alignment: AlignmentType.CENTER as any, children: [new TextRun({ text, bold: true, color: "FFFFFF", font: "Microsoft YaHei", size: 20 })] })],
+        });
+
+      const dataCell = (text: string, width: number, shade = false) =>
+        new TableCell({
+          borders: thinBorders, width: { size: width, type: WidthType.DXA as any },
+          margins: cellMargins, shading: shade ? altRowShading : undefined,
+          children: [new Paragraph({ children: [new TextRun({ text: String(text), font: "Microsoft YaHei", size: 20 })] })],
+        });
+
+      const heading2 = (text: string) =>
+        new Paragraph({
+          heading: HeadingLevel.HEADING_2 as any,
+          spacing: { before: 360, after: 200 },
+          children: [new TextRun({ text, bold: true, font: "Microsoft YaHei", size: 28, color: INDIGO })],
+        });
+
+      const heading3 = (text: string) =>
+        new Paragraph({
+          heading: HeadingLevel.HEADING_3 as any,
+          spacing: { before: 240, after: 120 },
+          children: [new TextRun({ text, bold: true, font: "Microsoft YaHei", size: 24, color: "333333" })],
+        });
+
+      const metaLine = (label: string, value: string) =>
+        new Paragraph({
+          spacing: { after: 60 },
+          children: [
+            new TextRun({ text: `${label}：`, bold: true, font: "Microsoft YaHei", size: 20, color: INDIGO }),
+            new TextRun({ text: value || "", font: "Microsoft YaHei", size: 20, color: "444444" }),
+          ],
+        });
+
+      const pageBreakPara = () => new Paragraph({ children: [new PageBreak()] });
+
+      // ════════════════════════════════════════
+      // SECTION 1: COVER PAGE
+      // ════════════════════════════════════════
+      const coverChildren: any[] = [
+        new Paragraph({ spacing: { before: 3600 } }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          children: [new TextRun({ text: aiPlan.brandName || "", bold: true, font: "Microsoft YaHei", size: 72, color: INDIGO })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 120 },
+          children: [new TextRun({ text: aiPlan.brandEnglish || "", font: "Microsoft YaHei", size: 36, color: "888888" })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 600 },
+          children: [new TextRun({ text: `${aiPlan.season || ""} 商品企划书`, bold: true, font: "Microsoft YaHei", size: 44, color: "333333" })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 300 },
+          children: [new TextRun({ text: aiPlan.brandSlogan || "", italics: true, font: "Microsoft YaHei", size: 28, color: "999999" })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 1200 },
+          children: [new TextRun({ text: new Date().toISOString().slice(0, 10), font: "Microsoft YaHei", size: 22, color: "AAAAAA" })],
+        }),
+      ];
+
+      // ════════════════════════════════════════
+      // SECTION 2: TABLE OF CONTENTS
+      // ════════════════════════════════════════
+      const tocItems = [
+        "一、品牌定位",
+        "二、企划概要",
+        "三、色彩企划",
+        "四、波段上市计划",
+        "五、产品结构规划",
+        "六、价格梯度规划",
+        "七、开发时间安排",
+        "八、开发注意事项",
+      ];
+      const tocChildren: any[] = [
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { after: 400 },
+          children: [new TextRun({ text: "目  录", bold: true, font: "Microsoft YaHei", size: 36, color: INDIGO })],
+        }),
+        ...tocItems.map((item) =>
+          new Paragraph({
+            spacing: { after: 160 },
+            indent: { left: 1200 },
+            children: [new TextRun({ text: item, font: "Microsoft YaHei", size: 24, color: "333333" })],
+          })
+        ),
+      ];
+
+      // ════════════════════════════════════════
+      // SECTION 3: MAIN CONTENT
+      // ════════════════════════════════════════
+      const mainChildren: any[] = [];
+
+      // ── 一、品牌定位 ──
+      mainChildren.push(heading2("一、品牌定位"));
+      const positionRows = [
+        ["品牌名称", aiPlan.brandName],
+        ["品牌英文", aiPlan.brandEnglish || ""],
+        ["品牌口号", aiPlan.brandSlogan || ""],
+        ["目标客群", aiPlan.targetAudience || ""],
+        ["主消费群体", aiPlan.mainAudience || ""],
+        ["产品成本价位", aiPlan.priceRange || ""],
+        ["品牌理念", aiPlan.brandConcept || ""],
+        ["销售终端", aiPlan.salesChannels || ""],
+      ];
+      mainChildren.push(new Table({
+        width: { size: 9360, type: WidthType.DXA as any },
+        columnWidths: [2340, 7020],
+        rows: [
+          new TableRow({ children: [headerCell("项目", 2340), headerCell("内容", 7020)] }),
+          ...positionRows.map(([k, v], i) => new TableRow({
+            children: [
+              new TableCell({
+                borders: thinBorders, width: { size: 2340, type: WidthType.DXA as any },
+                margins: cellMargins, shading: { fill: "EEF0FF", type: ShadingType.CLEAR as any },
+                children: [new Paragraph({ children: [new TextRun({ text: k || "", bold: true, font: "Microsoft YaHei", size: 20, color: INDIGO })] })],
+              }),
+              dataCell(v || "", 7020, i % 2 === 1),
+            ],
+          })),
+        ],
+      }));
+
+      // ── 二、企划概要 ──
+      if (aiPlan.summary) {
+        mainChildren.push(heading2("二、企划概要"));
+        mainChildren.push(new Paragraph({
+          spacing: { after: 200 },
+          children: [new TextRun({ text: aiPlan.summary, font: "Microsoft YaHei", size: 21 })],
+        }));
+      }
+
+      // ── 三、色彩企划 ──
+      if (aiPlan.colorPlan?.length) {
+        mainChildren.push(heading2("三、色彩企划"));
+
+        // Color palette visualization: one swatch row per color group
+        for (const cg of aiPlan.colorPlan) {
+          const colors: string[] = cg.colors || [];
+          const typeLabel = `${cg.type || ""}（${cg.ratio || 0}%）`;
+          mainChildren.push(new Paragraph({
+            spacing: { before: 200, after: 100 },
+            children: [new TextRun({ text: typeLabel, bold: true, font: "Microsoft YaHei", size: 22, color: INDIGO })],
+          }));
+
+          if (colors.length > 0) {
+            const swatchWidth = Math.floor(9000 / colors.length);
+            mainChildren.push(new Table({
+              width: { size: 9360, type: WidthType.DXA as any },
+              columnWidths: colors.map(() => swatchWidth),
+              rows: [
+                // Row 1: color swatch cells
+                new TableRow({
+                  children: colors.map((c: string) => {
+                    const hex = getHex(c);
+                    const textColor = isLightColor(hex) ? "333333" : "FFFFFF";
+                    return new TableCell({
+                      borders: noBorders, width: { size: swatchWidth, type: WidthType.DXA as any },
+                      margins: { top: 60, bottom: 60, left: 40, right: 40 },
+                      shading: { fill: hex.replace("#", "").toUpperCase(), type: ShadingType.CLEAR as any },
+                      children: [new Paragraph({ alignment: AlignmentType.CENTER as any, children: [new TextRun({ text: " ", font: "Microsoft YaHei", size: 20 })] })],
+                    });
+                  }),
+                }),
+                // Row 2: color name labels
+                new TableRow({
+                  children: colors.map((c: string) => {
+                    const hex = getHex(c);
+                    const textColor = isLightColor(hex) ? "333333" : "FFFFFF";
+                    return new TableCell({
+                      borders: noBorders, width: { size: swatchWidth, type: WidthType.DXA as any },
+                      margins: { top: 40, bottom: 60, left: 40, right: 40 },
+                      shading: { fill: hex.replace("#", "").toUpperCase(), type: ShadingType.CLEAR as any },
+                      children: [new Paragraph({ alignment: AlignmentType.CENTER as any, children: [new TextRun({ text: c, font: "Microsoft YaHei", size: 16, color: textColor })] })],
+                    });
+                  }),
+                }),
+              ],
+            }));
+          }
+
+          if (cg.desc) {
+            mainChildren.push(new Paragraph({
+              spacing: { after: 120 },
+              children: [new TextRun({ text: cg.desc, font: "Microsoft YaHei", size: 19, color: "666666", italics: true })],
+            }));
+          }
+        }
+
+        // Summary table
+        mainChildren.push(new Paragraph({ spacing: { before: 200 } }));
+        mainChildren.push(new Table({
+          width: { size: 9360, type: WidthType.DXA as any }, columnWidths: [1500, 1000, 4360, 2500],
+          rows: [
+            new TableRow({ children: [headerCell("类型", 1500), headerCell("占比", 1000), headerCell("色彩", 4360), headerCell("说明", 2500)] }),
+            ...aiPlan.colorPlan.map((c: any, i: number) => new TableRow({
+              children: [dataCell(c.type, 1500, i % 2 === 1), dataCell(`${c.ratio}%`, 1000, i % 2 === 1), dataCell((c.colors || []).join("、"), 4360, i % 2 === 1), dataCell(c.desc || "", 2500, i % 2 === 1)],
+            })),
+          ],
+        }));
+      }
+
+      // ── 四、波段上市计划 ──
+      if (aiPlan.waves?.length) {
+        mainChildren.push(heading2("四、波段上市计划"));
+        for (const w of aiPlan.waves) {
+          mainChildren.push(heading3(`第${w.waveNumber}波：${w.theme}（${w.date}）`));
+
+          // Highlighted metadata before the category table
+          if (w.themeDesc) {
+            mainChildren.push(new Paragraph({
+              spacing: { after: 80 },
+              children: [new TextRun({ text: w.themeDesc, font: "Microsoft YaHei", size: 20, color: "555555" })],
+            }));
+          }
+          const metaItems: [string, string][] = [];
+          if (w.fabricFocus?.length) metaItems.push(["面料重点", w.fabricFocus.join("、")]);
+          if (w.craftFocus?.length) metaItems.push(["工艺重点", w.craftFocus.join("、")]);
+          if (w.accessories?.length) metaItems.push(["配饰重点", w.accessories.join("、")]);
+          if (w.colorFocus?.length) metaItems.push(["色彩重点", w.colorFocus.join("、")]);
+          if (w.styleFocus?.length) metaItems.push(["风格重点", w.styleFocus.join("、")]);
+          if (w.activity) metaItems.push(["营销活动", w.activity]);
+          for (const [label, val] of metaItems) {
+            mainChildren.push(metaLine(label, val));
+          }
+
+          if (w.categories?.length) {
+            mainChildren.push(new Paragraph({ spacing: { before: 80 }, children: [new TextRun({ text: "📷 图片参考：请将搜索「" + (w.theme || "") + " outfit 2026" 的款式图插入到此处", font: "Microsoft YaHei", size: 18, color: "6B21A8" })] }));
+            mainChildren.push(new Table({
+              width: { size: 9360, type: WidthType.DXA as any }, columnWidths: [2000, 1000, 6360],
+              rows: [
+                new TableRow({ children: [headerCell("品类", 2000), headerCell("款数", 1000), headerCell("具体款式", 6360)] }),
+                ...w.categories.map((cat: any, i: number) => new TableRow({
+                  children: [dataCell(cat.name, 2000, i % 2 === 1), dataCell(String(cat.styles || 0), 1000, i % 2 === 1), dataCell(cat.details || "", 6360, i % 2 === 1)],
+                })),
+              ],
+            }));
+          }
+        }
+      }
+
+      // ── 五、产品结构规划 ──
+      if (aiPlan.productStructure?.length) {
+        mainChildren.push(heading2("五、产品结构规划"));
+        mainChildren.push(new Table({
+          width: { size: 9360, type: WidthType.DXA as any }, columnWidths: [1500, 1000, 3360, 1500, 1400],
+          rows: [
+            new TableRow({ children: [headerCell("类型", 1500), headerCell("占比", 1000), headerCell("说明", 3360), headerCell("收益比", 1500), headerCell("销售比", 1400)] }),
+            ...aiPlan.productStructure.map((p: any, i: number) => new TableRow({
+              children: [dataCell(p.type, 1500, i % 2 === 1), dataCell(`${p.ratio}%`, 1000, i % 2 === 1), dataCell(p.desc || "", 3360, i % 2 === 1), dataCell(p.profitRatio || "", 1500, i % 2 === 1), dataCell(p.salesRatio || "", 1400, i % 2 === 1)],
+            })),
+          ],
+        }));
+      }
+
+      // ── 六、价格梯度规划 ──
+      if (aiPlan.priceTiers?.length) {
+        mainChildren.push(heading2("六、价格梯度规划"));
+        mainChildren.push(new Table({
+          width: { size: 9360, type: WidthType.DXA as any }, columnWidths: [1500, 2000, 1000, 1000, 3860],
+          rows: [
+            new TableRow({ children: [headerCell("等级", 1500), headerCell("成本范围", 2000), headerCell("占比", 1000), headerCell("款数", 1000), headerCell("说明", 3860)] }),
+            ...aiPlan.priceTiers.map((p: any, i: number) => new TableRow({
+              children: [dataCell(p.level, 1500, i % 2 === 1), dataCell(p.costRange || "", 2000, i % 2 === 1), dataCell(`${p.ratio}%`, 1000, i % 2 === 1), dataCell(p.styles || "", 1000, i % 2 === 1), dataCell(p.desc || "", 3860, i % 2 === 1)],
+            })),
+          ],
+        }));
+      }
+
+      // ── 七、开发时间安排 ──
+      if (aiPlan.timeline?.length) {
+        mainChildren.push(heading2("七、开发时间安排"));
+        mainChildren.push(new Table({
+          width: { size: 9360, type: WidthType.DXA as any }, columnWidths: [2000, 5360, 2000],
+          rows: [
+            new TableRow({ children: [headerCell("时间", 2000), headerCell("任务内容", 5360), headerCell("责任人", 2000)] }),
+            ...aiPlan.timeline.map((t: any, i: number) => new TableRow({
+              children: [dataCell(t.date, 2000, i % 2 === 1), dataCell(t.task, 5360, i % 2 === 1), dataCell(t.responsible || "", 2000, i % 2 === 1)],
+            })),
+          ],
+        }));
+      }
+
+      // ── 八、开发注意事项 ──
+      if (aiPlan.notes?.length) {
+        mainChildren.push(heading2("八、开发注意事项"));
+        for (const note of aiPlan.notes) {
+          mainChildren.push(new Paragraph({
+            spacing: { after: 80 },
+            children: [
+              new TextRun({ text: "• ", font: "Microsoft YaHei", size: 20, color: INDIGO, bold: true }),
+              new TextRun({ text: note, font: "Microsoft YaHei", size: 20 }),
+            ],
+          }));
+        }
+      }
+
+      // ════════════════════════════════════════
+      // SECTION 4: ENDING PAGE
+      // ════════════════════════════════════════
+      const endingChildren: any[] = [
+        new Paragraph({ spacing: { before: 4000 } }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          children: [new TextRun({ text: aiPlan.brandName || "", bold: true, font: "Microsoft YaHei", size: 48, color: INDIGO })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 120 },
+          children: [new TextRun({ text: aiPlan.brandEnglish || "", font: "Microsoft YaHei", size: 28, color: "888888" })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 400 },
+          children: [new TextRun({ text: `"${aiPlan.brandSlogan || ""}"`, italics: true, font: "Microsoft YaHei", size: 24, color: "AAAAAA" })],
+        }),
+        new Paragraph({
+          alignment: AlignmentType.CENTER as any,
+          spacing: { before: 600 },
+          children: [new TextRun({ text: `— ${aiPlan.season || ""} 商品企划书 —`, font: "Microsoft YaHei", size: 22, color: "BBBBBB" })],
+        }),
+      ];
+
+      // ════════════════════════════════════════
+      // BUILD DOCUMENT
+      // ════════════════════════════════════════
+      const doc = new Document({
+        styles: {
+          default: {
+            document: {
+              run: { font: "Microsoft YaHei", size: 21 },
+            },
+          },
+        },
+        sections: [
+          // Cover page
+          { properties: {}, children: coverChildren },
+          // TOC page
+          { properties: {}, children: tocChildren },
+          // Main content
+          { properties: {}, children: mainChildren },
+          // Ending page
+          { properties: {}, children: endingChildren },
+        ],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${aiPlan.brandName}_${aiPlan.season}商品企划书.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+      alert("✅ Word 文档已导出！");
+    } catch (e: any) { alert("导出Word失败：" + e.message); }
+    setExporting(false);
+  };
+
+  const structurePctTotal = structure.reduce((s, i) => s + i.pct, 0);
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-8xl mx-auto">
+        {/* ── 头部 ── */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">商品企划系统</h1>
+            <p className="text-sm text-gray-500 mt-1">基于VIP数据智能生成 · 96格商品矩阵 · 波段上货计划</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <select value={storeId} onChange={e => setStoreId(e.target.value)} className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm">
+              <option value="">选择店铺</option>
+              {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+            <button onClick={() => setShowPlanForm(!showPlanForm)} disabled={generatingPlan || !storeId} className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-lg shadow-purple-200">
+              <Brain className="w-4 h-4" /> AI生成完整企划
+            </button>
+            <button onClick={exportToWord} disabled={exporting || !aiPlan} className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-semibold hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+              <FileText className="w-4 h-4" /> {exporting ? "导出中..." : "导出Word"}
+            </button>
+            <button onClick={autoFillMatrix} disabled={saving || !storeId} className="px-4 py-2.5 bg-blue-100 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-200 disabled:opacity-50 flex items-center gap-2">
+              <Calculator className="w-4 h-4" /> {saving ? "填充中..." : "AI自动填充矩阵"}
+            </button>
+            <button onClick={optimizeStructure} className="px-4 py-2.5 bg-emerald-100 text-emerald-700 rounded-xl text-sm font-semibold hover:bg-emerald-200 flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" /> 结构优化
+            </button>
+            <button onClick={saveToDB} disabled={saving} className="px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+              <Save className="w-4 h-4" /> {saving ? "保存中..." : "保存"}
+            </button>
+            <button onClick={exportToExcel} disabled={exporting} className="px-4 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
+              <Download className="w-4 h-4" /> {exporting ? "导出中..." : "导出Excel"}
+            </button>
+            <button onClick={generateProcurement} disabled={generatingPO || !storeId} className="px-4 py-2.5 bg-purple-600 text-white rounded-xl text-sm font-semibold hover:bg-purple-700 disabled:opacity-50 flex items-center gap-2">
+              <ShoppingCart className="w-4 h-4" /> {generatingPO ? "生成中..." : "生成采购单"}
+            </button>
+          </div>
+        </div>
+
+        {/* ── AI 企划生成参数表单 ── */}
+        {showPlanForm && (
+          <div className="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6">
+            <h3 className="font-bold text-purple-800 mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5" /> AI企划生成参数</h3>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">季节</label>
+                <select value={planSeason} onChange={e => setPlanSeason(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="2026春季">2026春季</option>
+                  <option value="2026夏季">2026夏季</option>
+                  <option value="2026秋季">2026秋季</option>
+                  <option value="2026冬季">2026冬季</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">色系偏好</label>
+                <select value={planColorSeason} onChange={e => setPlanColorSeason(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="">不限 / 自动判断</option>
+                  {COLOR_SEASONS_PRO.map(c => (
+                    <option key={c.value} value={c.value}>{c.label.replace(/型$/, '')} {c.group}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">风格定位</label>
+                <select value={planStyle} onChange={e => setPlanStyle(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="">不限 / 自动判断</option>
+                  {ALL_STYLES.map(s => (
+                    <option key={s.value} value={s.value}>{s.proLabel || s.label}（{s.group}）</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">主力价格带</label>
+                <select value={planPriceBand} onChange={e => setPlanPriceBand(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="99-199元">99-199元（平价）</option>
+                  <option value="199-399元">199-399元（中端）</option>
+                  <option value="399-699元">399-699元（中高端）</option>
+                  <option value="699-1299元">699-1299元（高端）</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">目标客群年龄段</label>
+                <select value={planTargetAge} onChange={e => setPlanTargetAge(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white">
+                  <option value="18-25岁">18-25岁（Z世代）</option>
+                  <option value="25-35岁">25-35岁（新中产）</option>
+                  <option value="25-40岁">25-40岁（都市白领）</option>
+                  <option value="30-45岁">30-45岁（成熟女性）</option>
+                  <option value="35-50岁">35-50岁（高端消费）</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">补充说明</label>
+                <input type="text" value={planNotes} onChange={e => setPlanNotes(e.target.value)} placeholder="如：主打情侣装、偏运动风格..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white" />
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={generatePlan} disabled={generatingPlan || !storeId} className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-2 shadow-lg">
+                {generatingPlan ? <><Loader2 className="w-4 h-4 animate-spin" /> AI正在生成...</> : <><Brain className="w-4 h-4" /> 开始生成</>}
+              </button>
+              <button onClick={() => setShowPlanForm(false)} className="px-4 py-2.5 text-gray-500 hover:text-gray-700 text-sm">取消</button>
+              {!storeId && <span className="text-xs text-red-500">请先选择店铺</span>}
+            </div>
+          </div>
+        )}
+
+        {/* ── AI 企划报告预览 ── */}
+        {aiPlan && (
+          <div className="mb-6 space-y-6">
+            {/* 来源提示 */}
+            {planSource !== "ai" && (
+              <div className="bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" /> 当前为模拟数据（DeepSeek API 未连接），导出的报告仅供参考。请配置 DEEPSEEK_API_KEY 后重试。
+              </div>
+            )}
+
+            {/* 品牌定位卡片 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-indigo-600" /> 品牌定位
+              </h3>
+              <div className="grid grid-cols-4 gap-4 mb-4">
+                <div className="bg-indigo-50 rounded-xl p-4 border border-indigo-100">
+                  <div className="text-xs text-indigo-500 font-semibold mb-1">品牌名称</div>
+                  <div className="text-lg font-bold text-indigo-800">{aiPlan.brandName}</div>
+                  {aiPlan.brandEnglish && <div className="text-xs text-indigo-400 mt-0.5">{aiPlan.brandEnglish}</div>}
+                </div>
+                <div className="bg-purple-50 rounded-xl p-4 border border-purple-100">
+                  <div className="text-xs text-purple-500 font-semibold mb-1">品牌口号</div>
+                  <div className="text-sm font-semibold text-purple-800 italic">{aiPlan.brandSlogan || "—"}</div>
+                </div>
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <div className="text-xs text-blue-500 font-semibold mb-1">目标客群</div>
+                  <div className="text-sm font-semibold text-blue-800">{aiPlan.targetAudience || "—"}</div>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-100">
+                  <div className="text-xs text-emerald-500 font-semibold mb-1">成本价位</div>
+                  <div className="text-sm font-semibold text-emerald-800">{aiPlan.priceRange || "—"}</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <div className="text-xs text-gray-500 font-semibold mb-1">品牌定位</div>
+                  <div className="text-sm text-gray-700">{aiPlan.brandPositioning || "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 font-semibold mb-1">品牌使命</div>
+                  <div className="text-sm text-gray-700">{aiPlan.brandMission || "—"}</div>
+                </div>
+              </div>
+              {aiPlan.coreCompetitiveness?.length > 0 && (
+                <div>
+                  <div className="text-xs text-gray-500 font-semibold mb-2">核心竞争力</div>
+                  <div className="flex flex-wrap gap-2">
+                    {aiPlan.coreCompetitiveness.map((c: string, i: number) => (
+                      <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium border border-indigo-100">{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 色彩企划卡片 */}
+            {aiPlan.colorPlan?.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Palette className="w-5 h-5 text-indigo-600" /> 色彩企划
+                </h3>
+                <div className="grid grid-cols-4 gap-4">
+                  {aiPlan.colorPlan.map((cg: any, i: number) => (
+                    <div key={i} className="border border-gray-100 rounded-xl p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-gray-700">{cg.type}</span>
+                        <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">{cg.ratio}%</span>
+                      </div>
+                      <div className="flex gap-1.5 mb-2">
+                        {(cg.colors || []).map((c: string, ci: number) => {
+                          const colorMap: Record<string, string> = {
+                            "黑": "#1a1a2e", "白色": "#ffffff", "白": "#ffffff", "灰": "#808080", "藏青": "#1b3a5c",
+                            "米白": "#f5f0e8", "灰粉": "#d4a5a5", "珊瑚橘": "#ff7f50", "丁香紫": "#c8a2c8",
+                            "数字薰衣草": "#b57edc", "薄荷绿": "#98ff98", "蓝色": "#0066cc", "紫色": "#800080",
+                            "粉色": "#ffb6c1", "橙色": "#ff8c00", "绿": "#00cc44", "红": "#cc0000",
+                            "卡其": "#c3b091", "驼色": "#c19a6b", "军绿": "#4b5320", "酒红": "#722f37",
+                            "鹅黄": "#fada5e", "天蓝": "#87ceeb", "烟灰": "#708090", "深蓝": "#00008b",
+                            "浅蓝": "#add8e6", "裸粉": "#edc9af", "姜黄": "#d4a017", "墨绿": "#006400",
+                          };
+                          const hex = colorMap[c] || "#cccccc";
+                          const isLight = (() => {
+                            const h = hex.replace("#", "");
+                            const r = parseInt(h.substring(0, 2), 16);
+                            const g = parseInt(h.substring(2, 4), 16);
+                            const b = parseInt(h.substring(4, 6), 16);
+                            return (r * 299 + g * 587 + b * 114) / 1000 > 160;
+                          })();
+                          return (
+                            <div key={ci} className="flex flex-col items-center gap-1 flex-1">
+                              <div className="w-full h-8 rounded-lg border border-gray-200" style={{ backgroundColor: hex }} />
+                              <span className={`text-[10px] ${isLight ? "text-gray-600" : "text-gray-400"}`}>{c}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {cg.desc && <p className="text-xs text-gray-500 italic">{cg.desc}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 风格企划 + 产品结构 */}
+            <div className="grid grid-cols-2 gap-6">
+              {/* 风格企划 */}
+              {aiPlan.stylePlan?.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-base font-bold text-gray-800 mb-3">风格企划</h3>
+                  <div className="space-y-2">
+                    {aiPlan.stylePlan.map((s: any, i: number) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-700 w-20 truncate">{s.style}</span>
+                        <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-indigo-400 to-purple-500" style={{ width: `${s.ratio}%` }} />
+                        </div>
+                        <span className="text-xs font-semibold text-indigo-600 w-10 text-right">{s.ratio}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 产品结构 */}
+              {aiPlan.productStructure?.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-base font-bold text-gray-800 mb-3">产品结构</h3>
+                  <table className="w-full text-sm">
+                    <thead className="text-xs text-gray-500 border-b">
+                      <tr>
+                        <th className="pb-2 text-left">类型</th>
+                        <th className="pb-2 text-center">占比</th>
+                        <th className="pb-2 text-center">收益比</th>
+                        <th className="pb-2 text-center">销售比</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {aiPlan.productStructure.map((p: any, i: number) => (
+                        <tr key={i} className="border-b border-gray-50">
+                          <td className="py-2 font-medium">{p.type}</td>
+                          <td className="py-2 text-center"><span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full text-xs font-semibold">{p.ratio}%</span></td>
+                          <td className="py-2 text-center text-xs text-gray-600">{p.profitRatio || "—"}</td>
+                          <td className="py-2 text-center text-xs text-gray-600">{p.salesRatio || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* 价格梯度 */}
+            {aiPlan.priceTiers?.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-base font-bold text-gray-800 mb-3">价格梯度规划</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {aiPlan.priceTiers.map((t: any, i: number) => {
+                    const tierColors = ["from-emerald-400 to-teal-500", "from-blue-400 to-indigo-500", "from-purple-400 to-pink-500"];
+                    return (
+                      <div key={i} className="border border-gray-100 rounded-xl p-4 text-center">
+                        <div className={`mx-auto w-12 h-12 rounded-full bg-gradient-to-br ${tierColors[i % 3]} flex items-center justify-center mb-2`}>
+                          <span className="text-white font-bold text-sm">{t.ratio}%</span>
+                        </div>
+                        <div className="font-bold text-gray-800">{t.level}</div>
+                        <div className="text-xs text-gray-500 mt-1">{t.costRange || "—"}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{t.styles ? `${t.styles}款` : ""}</div>
+                        <div className="text-xs text-gray-600 mt-1">{t.desc || ""}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 波段上市详情 */}
+            {aiPlan.waves?.length > 0 && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-indigo-600" /> 波段上市计划
+                </h3>
+                <div className="space-y-6">
+                  {aiPlan.waves.map((w: any, i: number) => {
+                    const waveColors = ["border-blue-200 bg-blue-50/50", "border-purple-200 bg-purple-50/50", "border-emerald-200 bg-emerald-50/50", "border-amber-200 bg-amber-50/50"];
+                    return (
+                      <div key={i} className={`border ${waveColors[i % 4]} rounded-xl p-5`}>
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-base">第{w.waveNumber}波：{w.theme}</h4>
+                            <div className="text-xs text-gray-500 mt-0.5">{w.date} · {w.styles}款 · 占比{w.ratio}</div>
+                          </div>
+                          {w.activity && (
+                            <span className="px-3 py-1 bg-white border border-gray-200 rounded-full text-xs font-medium text-indigo-600">{w.activity}</span>
+                          )}
+                        </div>
+                        {w.themeDesc && <p className="text-sm text-gray-600 mb-3 leading-relaxed">{w.themeDesc}</p>}
+
+                        {/* 元数据标签 */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {w.colorFocus?.map((c: string, ci: number) => (
+                            <span key={ci} className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded text-xs">{c}</span>
+                          ))}
+                          {w.styleFocus?.map((s: string, si: number) => (
+                            <span key={si} className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded text-xs">{s}</span>
+                          ))}
+                          {w.fabricFocus?.map((f: string, fi: number) => (
+                            <span key={fi} className="px-2 py-0.5 bg-teal-100 text-teal-700 rounded text-xs">{f}</span>
+                          ))}
+                          {w.craftFocus?.map((c: string, ci: number) => (
+                            <span key={ci} className="px-2 py-0.5 bg-amber-100 text-amber-700 rounded text-xs">{c}</span>
+                          ))}
+                        </div>
+
+                        {/* 品类表格 */}
+                        {w.categories?.length > 0 && (
+                          <table className="w-full text-sm border-collapse">
+                            <thead>
+                              <tr className="text-xs text-gray-500 border-b border-gray-200">
+                                <th className="pb-2 text-left">品类</th>
+                                <th className="pb-2 text-center">款数</th>
+                                <th className="pb-2 text-left">具体款式</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {w.categories.map((cat: any, ci: number) => (
+                                <tr key={ci} className="border-b border-gray-50">
+                                  <td className="py-2 font-medium text-gray-700">{cat.name}</td>
+                                  <td className="py-2 text-center"><span className="bg-gray-100 px-2 py-0.5 rounded text-xs font-semibold">{cat.styles || 0}</span></td>
+                                  <td className="py-2 text-gray-600 text-xs">{cat.details || ""}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* 时间线 + 注意事项 */}
+            <div className="grid grid-cols-2 gap-6">
+              {aiPlan.timeline?.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-base font-bold text-gray-800 mb-3">开发时间安排</h3>
+                  <div className="space-y-3">
+                    {aiPlan.timeline.map((t: any, i: number) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="w-6 h-6 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5">{i + 1}</div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-800">{t.task}</div>
+                          <div className="text-xs text-gray-500">{t.date} · {t.responsible || ""}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {aiPlan.notes?.length > 0 && (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                  <h3 className="text-base font-bold text-gray-800 mb-3">开发注意事项</h3>
+                  <div className="space-y-2">
+                    {aiPlan.notes.map((n: string, i: number) => (
+                      <div key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <span className="text-indigo-500 font-bold flex-shrink-0">•</span>
+                        <span>{n}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── 财务摘要卡片 ── */}
+        {!finance.pctValid && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+            <AlertTriangle className="w-4 h-4" /> 结构占比合计为 {finance.pctTotal}%（应为100%），请调整
+          </div>
+        )}
+        <div className="grid grid-cols-6 gap-4 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+            <div className="flex items-center gap-2 text-gray-500 text-xs mb-1"><ShoppingBag className="w-3.5 h-3.5" />总SKU</div>
+            <div className="text-2xl font-bold text-gray-800">{finance.totalSku}</div>
+          </div>
+          <div className="bg-blue-50 rounded-2xl border border-blue-200 p-4">
+            <div className="flex items-center gap-2 text-blue-600 text-xs mb-1"><DollarSign className="w-3.5 h-3.5" />目标销售额</div>
+            <div className="text-2xl font-bold text-blue-700">¥{finance.totalSales.toLocaleString()}</div>
+          </div>
+          <div className="bg-green-50 rounded-2xl border border-green-200 p-4">
+            <div className="flex items-center gap-2 text-green-600 text-xs mb-1"><TrendingUp className="w-3.5 h-3.5" />平均毛利率</div>
+            <div className="text-2xl font-bold text-green-700">{finance.avgMargin.toFixed(1)}%</div>
+          </div>
+          <div className="bg-purple-50 rounded-2xl border border-purple-200 p-4">
+            <div className="flex items-center gap-2 text-purple-600 text-xs mb-1"><Target className="w-3.5 h-3.5" />预期毛利</div>
+            <div className="text-2xl font-bold text-purple-700">¥{Math.round(finance.totalProfit).toLocaleString()}</div>
+          </div>
+          <div className="bg-amber-50 rounded-2xl border border-amber-200 p-4">
+            <div className="flex items-center gap-2 text-amber-600 text-xs mb-1">采购预算</div>
+            <div className="text-2xl font-bold text-amber-700">¥{finance.totalBudget.toLocaleString()}</div>
+          </div>
+          <div className={finance.roi >= 80 ? "bg-emerald-50 rounded-2xl border border-emerald-200 p-4" : "bg-red-50 rounded-2xl border border-red-200 p-4"}>
+            <div className="flex items-center gap-2 text-xs mb-1"><BarChart3 className="w-3.5 h-3.5" />ROI</div>
+            <div className="text-2xl font-bold">{finance.roi.toFixed(1)}%</div>
+          </div>
+        </div>
+
+        {/* ── Tab 切换 ── */}
+        <div className="flex items-center gap-1 mb-6 bg-white rounded-xl border border-gray-100 p-1 w-fit">
+          {[
+            { key: "structure" as const, label: "结构规划", icon: Layers },
+            { key: "matrix" as const, label: "96格矩阵", icon: BarChart3 },
+            { key: "waves" as const, label: "波段计划", icon: Calendar },
+          ].map((tab) => (
+            <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+              className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === tab.key ? "bg-accent text-white" : "text-gray-600 hover:bg-gray-50"}`}>
+              <tab.icon className="w-4 h-4" /> {tab.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ══ Tab 1: 结构规划 ══ */}
+        {activeTab === "structure" && (
+          <div className="grid grid-cols-3 gap-6">
+            <div className="col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-600">
+                    <tr>
+                      <th className="p-3 text-left">品类</th>
+                      <th className="p-3 text-center">占比%</th>
+                      <th className="p-3 text-center">SKU</th>
+                      <th className="p-3 text-center">毛利率%</th>
+                      <th className="p-3 text-right">目标销售额</th>
+                      <th className="p-3 text-center">季节</th>
+                      <th className="p-3 text-center">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {structure.map((item, i) => (
+                      <tr key={i} className="border-t border-gray-100 hover:bg-gray-50">
+                        <td className="p-2">
+                          <select value={item.category} onChange={(e) => { const s = [...structure]; s[i].category = e.target.value; setStructure(s); }} className="w-full px-2 py-1 border border-gray-200 rounded-lg text-sm">
+                            {categoryOptions.map((c) => <option key={c}>{c}</option>)}
+                          </select>
+                        </td>
+                        <td className="p-2 text-center"><input type="number" value={item.pct} onChange={(e) => { const s = [...structure]; s[i].pct = +e.target.value; setStructure(s); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                        <td className="p-2 text-center"><input type="number" value={item.sku} onChange={(e) => { const s = [...structure]; s[i].sku = +e.target.value; setStructure(s); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                        <td className="p-2 text-center"><input type="number" value={item.margin} onChange={(e) => { const s = [...structure]; s[i].margin = +e.target.value; setStructure(s); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                        <td className="p-2"><input type="number" value={item.sales} onChange={(e) => { const s = [...structure]; s[i].sales = +e.target.value; setStructure(s); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm text-right" /></td>
+                        <td className="p-2 text-center"><input type="text" value={item.season} onChange={(e) => { const s = [...structure]; s[i].season = e.target.value; setStructure(s); }} className="w-24 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                        <td className="p-2 text-center">
+                          <button onClick={() => { const s = [...structure]; s.splice(i, 1); setStructure(s); }} className="text-red-400 hover:text-red-600"><Trash2 className="w-4 h-4" /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="bg-gray-50 font-semibold">
+                    <tr>
+                      <td className="p-3">合计</td>
+                      <td className={`p-3 text-center ${Math.abs(structurePctTotal - 100) > 0.5 ? "text-red-600" : "text-green-600"}`}>{structurePctTotal}%</td>
+                      <td className="p-3 text-center">{structure.reduce((s, i) => s + i.sku, 0)}</td>
+                      <td className="p-3 text-center">—</td>
+                      <td className="p-3 text-right">¥{structure.reduce((s, i) => s + i.sales, 0).toLocaleString()}</td>
+                      <td colSpan={2} className="p-3 text-center">
+                        <button onClick={() => setStructure([...structure, { category: "配饰", pct: 0, sku: 0, margin: 0, sales: 0, season: "全年" }])} className="text-blue-600 hover:text-blue-800 flex items-center gap-1 text-xs mx-auto">
+                          <Plus className="w-3 h-3" /> 添加
+                        </button>
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+            <div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                <h3 className="text-sm font-bold text-gray-700 mb-3 flex items-center gap-2"><PieChart className="w-4 h-4" />品类占比</h3>
+                <ResponsiveContainer width="100%" height={280}>
+                  <RePieChart>
+                    <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, value }) => `${name} ${value}%`}>
+                      {pieData.map((entry, i) => (<Cell key={i} fill={entry.fill} />))}
+                    </Pie>
+                    <Tooltip />
+                  </RePieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mt-4">
+                <h3 className="text-sm font-bold text-gray-700 mb-2">各品类毛利率</h3>
+                <div className="space-y-1.5">
+                  {[...structure].sort((a, b) => b.margin - a.margin).slice(0, 8).map((item, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs">
+                      <span className="w-20 truncate text-gray-600">{item.category.split("-")[1] || item.category}</span>
+                      <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-blue-500" style={{ width: `${item.margin}%` }} />
+                      </div>
+                      <span className="w-8 text-right font-semibold">{item.margin}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ Tab 2: 96格矩阵 ══ */}
+        {activeTab === "matrix" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 overflow-x-auto">
+            <p className="text-xs text-gray-400 mb-3">热力颜色：<span className="inline-block w-4 h-3 rounded bg-green-200" /> 高SKU <span className="inline-block w-4 h-3 rounded bg-yellow-200 ml-3" /> 中 <span className="inline-block w-4 h-3 rounded bg-red-200 ml-3" /> 低 <span className="inline-block w-4 h-3 rounded bg-gray-200 ml-3" /> 无</p>
+            <table className="w-full text-xs text-center border-collapse">
+              <thead>
+                <tr className="bg-gray-50">
+                  <th className="p-2 border border-gray-200 min-w-[80px]">季型 \ 风格</th>
+                  {ALL_STYLES.map((s) => (
+                    <th key={s.value} className="p-1.5 border border-gray-200 min-w-[80px]">
+                      <div className="font-semibold">{s.proLabel || s.label}</div>
+                      <div className="text-gray-400">{s.group}</div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {SEASON_TYPES.map((season) => {
+                  const seasonInfo = COLOR_SEASONS_PRO.find((c) => c.value === season);
+                  const maxSku = Math.max(...ALL_STYLES.map((st) => matrix[season]?.[st.value]?.sku || 0));
+                  return (
+                    <tr key={season}>
+                      <td className="p-2 border border-gray-200 font-semibold bg-gray-50 text-left whitespace-nowrap">
+                        {seasonInfo?.label} <span className="text-gray-400">{seasonInfo?.group}</span>
+                      </td>
+                      {ALL_STYLES.map((st) => {
+                        const cell = matrix[season]?.[st.value] || { sku: 0, pct: 0, budget: 0 };
+                        return (
+                          <td key={st.value} className="p-1 border border-gray-200" style={{ backgroundColor: heatColor(cell.sku, maxSku) }}>
+                            <div className="space-y-0.5">
+                              <input type="number" value={cell.sku} onChange={(e) => { const m = { ...matrix }; m[season][st.value] = { ...cell, sku: +e.target.value }; setMatrix(m); }} className="w-14 px-1 py-0.5 border border-gray-300 rounded text-xs text-center" placeholder="SKU" />
+                              <div className="text-gray-500">¥{cell.budget?.toLocaleString() || 0}</div>
+                            </div>
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ══ Tab 3: 波段计划 ══ */}
+        {activeTab === "waves" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 text-gray-600">
+                <tr>
+                  <th className="p-3 text-left">波段</th>
+                  <th className="p-3 text-left">时间</th>
+                  <th className="p-3 text-center">占比%</th>
+                  <th className="p-3 text-center">SKU数</th>
+                  <th className="p-3 text-right">金额</th>
+                  <th className="p-3 text-left">核心品类</th>
+                  <th className="p-3 text-left">季型重点</th>
+                  <th className="p-3 text-left">风格重点</th>
+                  <th className="p-3 text-left">营销活动</th>
+                </tr>
+              </thead>
+              <tbody>
+                {waves.map((w, i) => (
+                  <tr key={i} className="border-t border-gray-200 hover:bg-gray-50">
+                    <td className="p-3 font-semibold">第{w.wave}波</td>
+                    <td className="p-3"><input type="text" value={w.date} onChange={(e) => { const ws = [...waves]; ws[i].date = e.target.value; setWaves(ws); }} className="w-24 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3 text-center"><input type="number" value={w.pct} onChange={(e) => { const ws = [...waves]; ws[i].pct = +e.target.value; setWaves(ws); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                    <td className="p-3 text-center"><input type="number" value={w.sku} onChange={(e) => { const ws = [...waves]; ws[i].sku = +e.target.value; setWaves(ws); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center" /></td>
+                    <td className="p-3"><input type="number" value={w.amount} onChange={(e) => { const ws = [...waves]; ws[i].amount = +e.target.value; setWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm text-right" /></td>
+                    <td className="p-3"><input type="text" value={w.categories.join("、")} onChange={(e) => { const ws = [...waves]; ws[i].categories = e.target.value.split("、"); setWaves(ws); }} className="w-36 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.seasonFocus.join("、")} onChange={(e) => { const ws = [...waves]; ws[i].seasonFocus = e.target.value.split("、"); setWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.styleFocus.join("、")} onChange={(e) => { const ws = [...waves]; ws[i].styleFocus = e.target.value.split("、"); setWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.activity} onChange={(e) => { const ws = [...waves]; ws[i].activity = e.target.value; setWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="bg-gray-50 font-semibold">
+                <tr>
+                  <td colSpan={2} className="p-3">合计</td>
+                  <td className="p-3 text-center">{waves.reduce((s, w) => s + w.pct, 0)}%</td>
+                  <td className="p-3 text-center">{waves.reduce((s, w) => s + w.sku, 0)}</td>
+                  <td className="p-3 text-right">¥{waves.reduce((s, w) => s + w.amount, 0).toLocaleString()}</td>
+                  <td colSpan={4} />
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+
+        {/* ── 说明 ── */}
+        <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+          <h3 className="font-bold text-blue-800 mb-3">企划交付流程</h3>
+          <div className="grid grid-cols-5 gap-3 text-sm">
+            <div className="bg-white rounded-xl p-4 border border-blue-100 text-center">
+              <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2 font-bold text-sm">1</div>
+              <div className="font-semibold text-blue-800">选择店铺</div>
+              <div className="text-xs text-blue-600 mt-1">加载VIP数据</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100 text-center">
+              <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2 font-bold text-sm">2</div>
+              <div className="font-semibold text-blue-800">AI自动填充</div>
+              <div className="text-xs text-blue-600 mt-1">基于客户风格生成矩阵</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100 text-center">
+              <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2 font-bold text-sm">3</div>
+              <div className="font-semibold text-blue-800">结构优化</div>
+              <div className="text-xs text-blue-600 mt-1">自动平衡品类毛利</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100 text-center">
+              <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2 font-bold text-sm">4</div>
+              <div className="font-semibold text-blue-800">导出Excel</div>
+              <div className="text-xs text-blue-600 mt-1">专业企划书直接交付</div>
+            </div>
+            <div className="bg-white rounded-xl p-4 border border-blue-100 text-center">
+              <div className="w-8 h-8 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center mx-auto mb-2 font-bold text-sm">5</div>
+              <div className="font-semibold text-blue-800">生成采购单</div>
+              <div className="text-xs text-blue-600 mt-1">一键落地执行</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

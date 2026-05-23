@@ -5,7 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import {
   ShoppingBag, Download, Save, Calculator,
   Trash2, Plus, Layers, Calendar, BarChart3,
-  ShoppingCart,
+  ShoppingCart, Sparkles, FileText, Image,
+  Search, Loader2,
 } from "lucide-react";
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
@@ -52,6 +53,55 @@ interface WaveItem {
   activity: string;
 }
 
+/* ── AI 企划报告类型 ─────────────────────── */
+interface StylePlanItem {
+  mainStyle: string;
+  subStyle: string;
+  styleCombo: string;
+  gender: string;
+  occasions: string[];
+  vibe: string[];
+  trafficRatio: string;
+  profitRatio: string;
+}
+
+interface AIReport {
+  brandName: string;
+  season: string;
+  summary: string;
+  colorPlan: { type: string; ratio: string; colors: string[] }[];
+  stylePlan: StylePlanItem[];
+  productStructure: { type: string; ratio: string; desc: string }[];
+  pricePlan: { band: string; range: string; ratio: string; strategy: string }[];
+  quartersPlan: { phase: string; items: string[] }[];
+  imageKeywords?: {
+    colorImages: string[];
+    styleImages: string[];
+    waveImages: { wave: number; keywords: string[] }[];
+  };
+}
+
+/* ── Google 图片搜索链接生成 ── */
+const googleImageSearchUrl = (keyword: string) =>
+  `https://www.google.com/search?tbm=isch&q=${encodeURIComponent(keyword)}`;
+
+/* ── 关键词搜索链接组件 ── */
+function KeywordLink({ keyword, index }: { keyword: string; index?: number }) {
+  return (
+    <a
+      href={googleImageSearchUrl(keyword)}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-orange-300 rounded-lg text-xs text-orange-700 hover:bg-orange-50 hover:border-orange-400 transition-all shadow-sm"
+      title={`点击在 Google 图片搜索「${keyword}」`}
+    >
+      <Search className="w-3 h-3" />
+      {index !== undefined ? `${index + 1}. ` : ""}{keyword}
+      <span className="text-orange-400 ml-1">↗</span>
+    </a>
+  );
+}
+
 export default function ProductPlanPage() {
   const supabase = createClient();
   const { categories: categoryOptions } = useCategories();
@@ -59,6 +109,38 @@ export default function ProductPlanPage() {
   const [stores, setStores] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ai" | "manual">("ai");
+
+  // ── AI 生成相关状态 ──────────────────
+  const [aiForm, setAiForm] = useState({
+    brandName: "",
+    season: "2026夏季",
+    colorPref: "",
+    colorLabel: "",
+    marketStyle: "",
+    styleLabel: "",
+    priceBand: "199-399元",
+    targetAge: "25-40岁",
+    shopSize: "60-100㎡",
+    notes: "",
+  });
+  const [generating, setGenerating] = useState(false);
+  const [aiReport, setAiReport] = useState<AIReport | null>(null);
+  const [aiSource, setAiSource] = useState<string>("");
+  const [exportingWord, setExportingWord] = useState(false);
+  const [exportingKeywords, setExportingKeywords] = useState(false);
+
+  /* ── 色系选项 ─────────────────────── */
+  const COLOR_SEASON_OPTIONS: { value: string; label: string }[] = COLOR_SEASONS_PRO.map((c) => ({
+    value: String(c.value),
+    label: `${String(c.label)}（${String(c.group)}）`,
+  }));
+
+  /* ── 风格选项 ─────────────────────── */
+  const STYLE_OPTIONS: { value: string; label: string }[] = [
+    ...FEMALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（女士）` })),
+    ...MALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（男士）` })),
+  ];
 
   // ── 商品结构规划 ────────────────────────
   const [structure, setStructure] = useState<StructureItem[]>([
@@ -271,6 +353,171 @@ export default function ProductPlanPage() {
     setGeneratingPO(false);
   };
 
+  /* ── AI 生成企划报告 ─────────────────── */
+  const generateAIReport = async () => {
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...aiForm, storeId: storeId || undefined }),
+      });
+      const data = await res.json();
+      if (data.error) { alert("生成失败：" + data.error); setGenerating(false); return; }
+      setAiReport(data.report);
+      setAiSource(data.source === "ai" ? "AI 生成" : "示例数据");
+    } catch (e: any) { alert("请求失败：" + e.message); }
+    setGenerating(false);
+  };
+
+  /* ── 导出 Word（含图片关键词超链接）── */
+  const exportToWord = async () => {
+    if (!aiReport) { alert("请先生成企划报告"); return; }
+    setExportingWord(true);
+    try {
+      const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, ShadingType, PageBreak, ExternalHyperlink, ImageRun } = await import("docx");
+      const r = aiReport; const SEASON = r.season || "2026夏季"; const BRAND = r.brandName || "企划";
+      const h1 = (t: string) => new Paragraph({ children: [new TextRun({ text: t, bold: true, size: 36, font: "Microsoft YaHei" })], spacing: { before: 400, after: 200 } });
+      const h2 = (t: string) => new Paragraph({ children: [new TextRun({ text: t, bold: true, size: 28, font: "Microsoft YaHei", color: "1a56db" })], spacing: { before: 300, after: 150 } });
+      const body = (t: string) => new Paragraph({ children: [new TextRun({ text: t, size: 22, font: "Microsoft YaHei" })], spacing: { after: 80 } });
+      const el = () => new Paragraph({ children: [], spacing: { after: 100 } });
+
+      /* 获取图片 base64（双保险：先试 picsum，失败则用 placehold.co 关键词占位图） */
+      async function fetchImageBase64(keyword: string): Promise<{ base64: string; ext: string } | null> {
+        const fallbackUrl = `https://placehold.co/400x300/f0f0f0/444444?text=${encodeURIComponent(keyword.slice(0, 24))}`;
+        const tryFetch = async (url: string): Promise<{ base64: string; ext: string } | null> => {
+          try {
+            const res = await fetch(`/api/fetch-image?url=${encodeURIComponent(url)}&format=base64`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (!data.base64) return null;
+            const ext = data.contentType?.includes("png") ? "png" : "jpg";
+            return { base64: data.base64, ext };
+          } catch { return null; }
+        };
+        // 先尝试 picsum（随机风景图，视觉上比纯色占位图好）
+        const seed = keyword.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
+        const imgUrl = `https://picsum.photos/seed/${seed}/400/300`;
+        const result = await tryFetch(imgUrl);
+        if (result) return result;
+        // fallback：带关键词文字的占位图，确保 Word 里一定有图
+        return await tryFetch(fallbackUrl);
+      }
+
+      /* 图片块：尝试插入图片+超链接 */
+      async function imgBlock(kw: string, label: string): Promise<any[]> {
+        const result: any[] = [];
+        const img = await fetchImageBase64(kw);
+        if (img) {
+          const imgData = Uint8Array.from(atob(img.base64), (c) => c.charCodeAt(0));
+          result.push(new Paragraph({
+            children: [new ImageRun({
+              data: imgData,
+              type: img.ext === "png" ? "png" as any : "jpg" as any,
+              transformation: { width: 360, height: 270 },
+            })],
+            spacing: { before: 80, after: 40 },
+            alignment: AlignmentType.CENTER,
+          }));
+        }
+        result.push(new Paragraph({
+          children: [
+            new TextRun({ text: `🖼 ${label} — `, bold: true, size: 18, font: "Microsoft YaHei", color: "e74c3c" }),
+            new ExternalHyperlink({
+              children: [new TextRun({ text: kw, size: 18, font: "Microsoft YaHei", color: "2980b9" })],
+              link: googleImageSearchUrl(kw),
+            }),
+          ],
+          spacing: { before: 40, after: 80 },
+          alignment: AlignmentType.CENTER,
+        }));
+        return result;
+      }
+
+      const children: any[] = [];
+      children.push(el(), el(), el());
+      children.push(new Paragraph({ children: [new TextRun({ text: BRAND, bold: true, size: 56, font: "Microsoft YaHei" })], alignment: AlignmentType.CENTER }));
+      children.push(new Paragraph({ children: [new TextRun({ text: `${SEASON}商品企划书`, bold: true, size: 40, font: "Microsoft YaHei", color: "666666" })], alignment: AlignmentType.CENTER, spacing: { before: 200 } }));
+      children.push(el());
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+
+      children.push(h1("一、企划概要")); children.push(body(r.summary || "")); children.push(el());
+      if (r.imageKeywords?.styleImages?.length) children.push(...await imgBlock(r.imageKeywords.styleImages[0], "品牌风格形象图"));
+
+      children.push(h1("二、色彩企划方案"));
+      r.colorPlan?.forEach((cp) => { children.push(h2(`${cp.type}（${cp.ratio}）`)); children.push(body(`色彩：${(cp.colors || []).join("、")}`)); });
+      if (r.imageKeywords?.colorImages?.length) { children.push(el()); children.push(h2("色彩搭配参考图")); for (let ci = 0; ci < r.imageKeywords.colorImages.length; ci++) { children.push(...await imgBlock(r.imageKeywords.colorImages[ci], `色彩参考 ${ci + 1}`)); } }
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(h1("三、风格企划方案"));
+      (r.stylePlan || []).forEach((sp, i) => {
+        children.push(h2(`${i + 1}. ${sp.styleCombo}（${sp.gender}）`));
+        children.push(body(`主风格：${sp.mainStyle} ｜ 偏风格：${sp.subStyle}`));
+        children.push(body(`适用场合：${(sp.occasions || []).join("、")} ｜ 风情：${(sp.vibe || []).join("、")}`));
+        children.push(body(`引流占比：${sp.trafficRatio} ｜ 利润占比：${sp.profitRatio}`));
+        children.push(el());
+      });
+      if (r.imageKeywords?.styleImages?.length) { children.push(el()); children.push(h2("风格参考图")); for (let si = 0; si < r.imageKeywords.styleImages.length; si++) { children.push(...await imgBlock(r.imageKeywords.styleImages[si], `风格参考 ${si + 1}`)); } }
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(h1("四、商品结构规划"));
+      const structRows = [
+        new TableRow({ children: ["类型", "占比", "说明"].map((h) => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, size: 20, font: "Microsoft YaHei" })] })], shading: { type: ShadingType.SOLID, color: "1a56db" } })) }),
+        ...(r.productStructure || []).map((ps) => new TableRow({ children: [ps.type, ps.ratio, ps.desc].map((v) => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: v, size: 20, font: "Microsoft YaHei" })] })] })) })),
+      ];
+      children.push(new Table({ rows: structRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(h1("五、价格带规划"));
+      const priceRows = [
+        new TableRow({ children: ["价格带", "范围", "占比", "策略"].map((h) => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, size: 20, font: "Microsoft YaHei" })] })], shading: { type: ShadingType.SOLID, color: "1a56db" } })) }),
+        ...(r.pricePlan || []).map((pp) => new TableRow({ children: [pp.band, pp.range, pp.ratio, pp.strategy].map((v) => new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: v, size: 20, font: "Microsoft YaHei" })] })] })) })),
+      ];
+      children.push(new Table({ rows: priceRows, width: { size: 100, type: WidthType.PERCENTAGE } }));
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(h1("六、上货波段计划"));
+      for (let qi = 0; qi < (r.quartersPlan || []).length; qi++) {
+        const qp = r.quartersPlan![qi];
+        children.push(h2(qp.phase));
+        (qp.items || []).forEach((item: string, i: number) => children.push(body(`${i + 1}. ${item}`)));
+        if (r.imageKeywords?.waveImages?.[qi]) { const wk = r.imageKeywords.waveImages[qi]; children.push(el()); for (const kw of (wk.keywords || [])) { children.push(...await imgBlock(kw, `${qp.phase} 款式参考`)); } }
+      }
+
+      children.push(new Paragraph({ children: [new PageBreak()] }));
+      children.push(h1("附录：图片搜索关键词清单"));
+      children.push(body("以下蓝色关键词均为可点击超链接，按住 Ctrl 点击即可在浏览器中搜索图片。"));
+      if (r.imageKeywords) {
+        children.push(h2("色彩搭配参考")); (r.imageKeywords.colorImages || []).forEach((kw) => children.push(body(`  🔍 ${kw}`)));
+        children.push(h2("风格参考")); (r.imageKeywords.styleImages || []).forEach((kw) => children.push(body(`  🔍 ${kw}`)));
+        children.push(h2("波段款式参考")); (r.imageKeywords.waveImages || []).forEach((w) => children.push(body(`  波段${w.wave}：${(w.keywords || []).join(" / ")}`)));
+      }
+
+      const doc = new Document({ sections: [{ children }] });
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href = url; a.download = `${BRAND}_${SEASON}商品企划书.docx`; a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) { console.error(e); alert("导出Word失败：" + e.message); }
+    setExportingWord(false);
+  };
+
+  /* ── 导出关键词 CSV ─────────────────── */
+  const exportKeywordsCSV = () => {
+    if (!aiReport?.imageKeywords) { alert("无关键词"); return; }
+    setExportingKeywords(true);
+    const rows: string[][] = [["类别", "搜索关键词", "搜索平台"]];
+    (aiReport.imageKeywords.colorImages || []).forEach((kw) => rows.push(["色彩搭配", kw, "Google图片"]));
+    (aiReport.imageKeywords.styleImages || []).forEach((kw) => rows.push(["风格参考", kw, "Google图片"]));
+    (aiReport.imageKeywords.waveImages || []).forEach((w) => (w.keywords || []).forEach((kw) => rows.push([`波段${w.wave}`, kw, "Google图片"])));
+    const csv = rows.map((r) => r.map((c) => `"${c}"`).join(",")).join("\n");
+    const BOM = "\uFEFF"; const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob); const a = document.createElement("a");
+    a.href = url; a.download = `图片搜索关键词_${aiReport.brandName || "企划"}_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    setExportingKeywords(false);
+  };
+
   /* ═══════════════════════════════════════════
        渲染
        ═══════════════════════════════════════════ */
@@ -282,7 +529,7 @@ export default function ProductPlanPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">商品企划系统</h1>
-            <p className="text-sm text-gray-500 mt-1">96 格商品矩阵 · 基于 VIP 数据自动生成可落地的进货方案</p>
+            <p className="text-sm text-gray-500 mt-1">AI 生成专业企划 · Word 导出含图片关键词 · 96 格商品矩阵</p>
           </div>
           <div className="flex items-center gap-3">
             <select
@@ -295,6 +542,14 @@ export default function ProductPlanPage() {
                 <option key={s.id} value={s.id}>{s.name}</option>
               ))}
             </select>
+            <div className="flex gap-2">
+              <button onClick={() => setActiveTab("ai")} className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === "ai" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+                <Sparkles className="w-4 h-4" /> AI 企划生成
+              </button>
+              <button onClick={() => setActiveTab("manual")} className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === "manual" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+                <Calculator className="w-4 h-4" /> 手动规划
+              </button>
+            </div>
             <button onClick={autoFillMatrix} disabled={saving || !storeId} className="px-4 py-2.5 bg-blue-100 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-200 disabled:opacity-50 flex items-center gap-2">
               <Calculator className="w-4 h-4" />
               {saving ? "填充中..." : "AI 自动填充矩阵"}
@@ -314,6 +569,7 @@ export default function ProductPlanPage() {
           </div>
         </div>
 
+        {activeTab === "manual" && (<>
         {/* === 1. 商品结构规划 === */}
         <section className="mb-8">
           <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -505,8 +761,235 @@ export default function ProductPlanPage() {
             <li>点击「导出 Excel」→ 下载和 Supalema 模板一样格式的商品企划案，<strong>直接拿去进货</strong></li>
           </ol>
         </div>
+        </>)}
+
+        {activeTab === "ai" && (
+        <>
+          {/* === AI 参数表单 === */}
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-blue-600" /> AI 企划参数设置
+            </h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">品牌名称</label>
+                  <input type="text" value={aiForm.brandName} onChange={(e) => setAiForm({ ...aiForm, brandName: e.target.value })} placeholder="如：优雅女装馆" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">季节</label>
+                  <input type="text" list="season-options" value={aiForm.season} onChange={(e) => setAiForm({ ...aiForm, season: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="season-options">
+                    <option value="2026春季" />
+                    <option value="2026夏季" />
+                    <option value="2026秋冬" />
+                    <option value="2026冬季" />
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">色彩季型偏好</label>
+                  <input type="text" list="color-season-options" value={aiForm.colorLabel} onChange={(e) => {
+                    const opt = COLOR_SEASONS_PRO.find((c) => c.label === e.target.value);
+                    setAiForm({ ...aiForm, colorPref: opt?.value || "", colorLabel: e.target.value });
+                  }} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="color-season-options">
+                    {COLOR_SEASON_OPTIONS.map((o) => <option key={o.value} value={o.label} />)}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">市场风格定位</label>
+                  <input type="text" list="style-options" value={aiForm.styleLabel} onChange={(e) => {
+                    const opt = STYLE_OPTIONS.find((s) => s.label === e.target.value);
+                    setAiForm({ ...aiForm, marketStyle: opt?.value || "", styleLabel: e.target.value });
+                  }} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="style-options">
+                    {STYLE_OPTIONS.map((o) => <option key={o.value} value={o.label} />)}
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">价格带</label>
+                  <input type="text" list="price-options" value={aiForm.priceBand} onChange={(e) => setAiForm({ ...aiForm, priceBand: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="price-options">
+                    <option value="99-199元" />
+                    <option value="199-399元" />
+                    <option value="399-699元" />
+                    <option value="699-999元" />
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">目标年龄</label>
+                  <input type="text" list="age-options" value={aiForm.targetAge} onChange={(e) => setAiForm({ ...aiForm, targetAge: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="age-options">
+                    <option value="18-25岁" />
+                    <option value="25-35岁" />
+                    <option value="25-40岁" />
+                    <option value="35-45岁" />
+                    <option value="40-55岁" />
+                  </datalist>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">店铺面积</label>
+                  <input type="text" list="size-options" value={aiForm.shopSize} onChange={(e) => setAiForm({ ...aiForm, shopSize: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                  <datalist id="size-options">
+                    <option value="30-60㎡" />
+                    <option value="60-100㎡" />
+                    <option value="100-150㎡" />
+                    <option value="150-200㎡" />
+                  </datalist>
+                </div>
+                <div className="md:col-span-2 lg:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">补充说明（选填）</label>
+                  <input type="text" value={aiForm.notes} onChange={(e) => setAiForm({ ...aiForm, notes: e.target.value })} placeholder="如：主打真丝材质、避免过于休闲的款式" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" />
+                </div>
+              </div>
+              <div className="mt-6 flex items-center gap-3">
+                <button onClick={generateAIReport} disabled={generating} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl text-sm font-bold hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 flex items-center gap-2 shadow-lg">
+                  {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                  {generating ? "AI 生成中..." : "🚀 生成企划报告"}
+                </button>
+                {aiReport && (
+                  <>
+                    <button onClick={exportToWord} disabled={exportingWord} className="px-5 py-3 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 disabled:opacity-50 flex items-center gap-2">
+                      {exportingWord ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
+                      {exportingWord ? "导出中..." : "📄 导出 Word"}
+                    </button>
+                    <button onClick={exportKeywordsCSV} disabled={exportingKeywords} className="px-5 py-3 bg-orange-500 text-white rounded-xl text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2">
+                      {exportingKeywords ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                      {exportingKeywords ? "导出中..." : "📥 下载关键词 CSV"}
+                    </button>
+                  </>
+                )}
+              </div>
+              {aiSource && <p className="mt-3 text-xs text-gray-500">数据来源：{aiSource}</p>}
+            </div>
+          </section>
+
+          {/* === AI 报告展示 === */}
+          {aiReport && (
+          <section className="space-y-8">
+            {/* 色彩企划 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">🎨 色彩企划方案</h3>
+              <div className="space-y-4">
+                {aiReport.colorPlan?.map((cp, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3 mb-2">
+                      <span className="font-bold text-blue-700">{cp.type}</span>
+                      <span className="text-sm text-gray-500">（{cp.ratio}）</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(cp.colors || []).map((c, j) => (
+                        <span key={j} className="px-3 py-1 bg-gray-100 rounded-lg text-sm">{c}</span>
+                      ))}
+                    </div>
+                    {aiReport.imageKeywords?.colorImages?.[i] && (
+                      <div className="mt-3">
+                        <KeywordLink keyword={aiReport.imageKeywords.colorImages[i]} index={i} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 风格企划 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">✨ 风格企划方案</h3>
+              <div className="space-y-6">
+                {aiReport.stylePlan?.map((sp, i) => (
+                  <div key={i} className="border border-gray-200 rounded-xl p-4">
+                    <h4 className="font-bold text-gray-800 mb-2">{i + 1}. {sp.styleCombo}（{sp.gender}）</h4>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>主风格：{sp.mainStyle} ｜ 偏风格：{sp.subStyle}</p>
+                      <p>适用场合：{(sp.occasions || []).join("、")} ｜ 风情：{(sp.vibe || []).join("、")}</p>
+                      <p>引流占比：{sp.trafficRatio} ｜ 利润占比：{sp.profitRatio}</p>
+                    </div>
+                    {aiReport.imageKeywords?.styleImages?.[i] && (
+                      <div className="mt-3">
+                        <KeywordLink keyword={aiReport.imageKeywords.styleImages[i]} index={i} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 商品结构 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">📦 商品结构规划</h3>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="p-3 text-left">类型</th>
+                    <th className="p-3 text-left">占比</th>
+                    <th className="p-3 text-left">说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aiReport.productStructure?.map((ps, i) => (
+                    <tr key={i} className="border-t border-gray-100">
+                      <td className="p-3">{ps.type}</td>
+                      <td className="p-3">{ps.ratio}</td>
+                      <td className="p-3">{ps.desc}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 价格带 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">💰 价格带规划</h3>
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50 text-gray-600">
+                  <tr>
+                    <th className="p-3 text-left">价格带</th>
+                    <th className="p-3 text-left">范围</th>
+                    <th className="p-3 text-left">占比</th>
+                    <th className="p-3 text-left">策略</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {aiReport.pricePlan?.map((pp, i) => (
+                    <tr key={i} className="border-t border-gray-100">
+                      <td className="p-3">{pp.band}</td>
+                      <td className="p-3">{pp.range}</td>
+                      <td className="p-3">{pp.ratio}</td>
+                      <td className="p-3">{pp.strategy}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* 波段计划 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">📅 上货波段计划</h3>
+              {aiReport.quartersPlan?.map((qp, i) => (
+                <div key={i} className="mb-6 last:mb-0">
+                  <h4 className="font-semibold text-gray-700 mb-2">{qp.phase}</h4>
+                  <ul className="list-decimal list-inside text-sm text-gray-600 space-y-1">
+                    {(qp.items || []).map((item: string, j: number) => (
+                      <li key={j}>{item}</li>
+                    ))}
+                  </ul>
+                  {aiReport.imageKeywords?.waveImages?.[i] && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {aiReport.imageKeywords.waveImages[i].keywords?.map((kw: string, k: number) => (
+                        <KeywordLink key={k} keyword={kw} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+          )}
+        </>
+        )}
 
       </div>
     </div>
   );
 }
+

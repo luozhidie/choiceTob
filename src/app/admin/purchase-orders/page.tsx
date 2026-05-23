@@ -88,14 +88,16 @@ export default function PurchaseOrdersPage() {
 
   /* ── 加载采购订单 ───────────────── */
   const loadOrders = async () => {
-    const { data } = await supabase
+    let query = supabase
       .from("purchase_orders")
       .select("*")
       .order("order_date", { ascending: false });
+    if (storeId) query = query.eq("store_id", storeId);
+    const { data } = await query;
     setOrders(data || []);
   };
 
-  useEffect(() => { loadOrders(); }, []);
+  useEffect(() => { if (storeId) loadOrders(); }, [storeId]);
 
   /* ── 生成订单号 ──────────────── */
   const generateOrderNo = () => {
@@ -108,6 +110,7 @@ export default function PurchaseOrdersPage() {
   /* ── 保存订单 ───────────────── */
   const saveOrder = async () => {
     const payload = {
+      store_id: storeId || null,
       order_no: form.order_no || generateOrderNo(),
       supplier: form.supplier,
       total_amount: +form.total_amount || items.reduce((s, i) => s + i.total_price, 0),
@@ -128,8 +131,8 @@ export default function PurchaseOrdersPage() {
 
     // 保存订单明细到 purchase_order_items 表
     if (orderId && items.length > 0) {
-      // 先删除旧明细
-      await supabase.from("purchase_order_items").delete().eq("order_id", editing?.order_no);
+      // 先删除旧明细（用订单号匹配）
+      await supabase.from("purchase_order_items").delete().eq("order_id", payload.order_no);
       // 插入新明细
       for (const item of items) {
         await supabase.from("purchase_order_items").insert({

@@ -28,6 +28,7 @@ import {
   Package2,
   TrendingDown,
   Activity,
+  Store,
 } from "lucide-react";
 import {
   PieChart as RechartsPieChart,
@@ -93,11 +94,21 @@ interface DashboardData {
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [storeId, setStoreId] = useState("");
+  const [stores, setStores] = useState<any[]>([]);
   const supabase = createClient();
 
   useEffect(() => {
-    fetchDashboard();
+    (async () => {
+      const { data } = await supabase.from("stores").select("id, name").order("name");
+      setStores(data || []);
+      if (data?.[0]) setStoreId(data[0].id);
+    })();
   }, []);
+
+  useEffect(() => {
+    if (storeId) fetchDashboard();
+  }, [storeId]);
 
   const fetchDashboard = async () => {
     setLoading(true);
@@ -113,7 +124,7 @@ export default function AdminDashboard() {
         products,
         inventory,
       ] = await Promise.all([
-        supabase.from("vip_customers").select("*", { count: "exact", head: true }),
+        supabase.from("vip_customers").select("*", { count: "exact", head: true }).eq("store_id", storeId),
         supabase.from("leads").select("*", { count: "exact" }).order("created_at", { ascending: false }),
         supabase.from("style_test_results").select("*", { count: "exact", head: true }),
         supabase.from("test_codes").select("*"),
@@ -121,7 +132,7 @@ export default function AdminDashboard() {
         supabase.from("orders").select("*"),
         supabase.from("courses").select("*", { count: "exact" }),
         supabase.from("products").select("*", { count: "exact" }),
-        supabase.from("inventory").select("*"),
+        supabase.from("inventory").select("*").eq("store_id", storeId),
       ]);
 
       const leadList = leads.data || [];
@@ -221,6 +232,20 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-8">
+      {/* 店铺选择器 */}
+      <div className="flex items-center gap-3">
+        <Store className="w-5 h-5 text-gray-500" />
+        <select
+          value={storeId}
+          onChange={(e) => setStoreId(e.target.value)}
+          className="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm"
+        >
+          {stores.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </div>
+
       {/* Welcome */}
       <div>
         <h1 className="text-2xl font-bold text-primary">经营驾驶舱</h1>

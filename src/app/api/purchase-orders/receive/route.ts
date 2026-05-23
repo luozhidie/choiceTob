@@ -36,40 +36,90 @@ export async function POST(req: NextRequest) {
   let updated = 0;
 
   for (const item of items) {
-    // 检查是否已有同款号库存
+    // 尺码处理：sizes 可能是 "S,M,L,XL" 多尺码，需要拆分入库
+    const sizeList = (item.sizes || "均码")
+      .split(",")
+      .map((s: string) => s.trim())
+      .filter(Boolean);
+
+    if (sizeList.length <= 1) {
+      // 单尺码或均码：直接入库
+      const sz = sizeList[0] || "均码";
       const { data: existing } = await supabase
-      .from("inventory")
-      .select("id, stock_in_qty, current_stock, sales_qty")
+        .from("inventory")
+        .select("id, stock_in_qty, current_stock")
         .eq("store_id", order.store_id)
         .eq("sku_code", item.sku_code)
-        .eq("size", item.sizes || "均码")
+        .eq("size", sz)
         .maybeSingle();
 
-    if (existing) {
-      const newStockIn = (existing.stock_in_qty || 0) + (item.quantity || 0);
-      const newCurrent = (existing.current_stock || 0) + (item.quantity || 0);
-      await supabase.from("inventory").update({
-        stock_in_qty: newStockIn,
-        current_stock: newCurrent,
-        unit_cost: item.cost_price || 0,
-        updated_at: new Date().toISOString(),
-      }).eq("id", existing.id);
-      updated++;
+      if (existing) {
+        await supabase.from("inventory").update({
+          stock_in_qty: (existing.stock_in_qty || 0) + (item.quantity || 0),
+          current_stock: (existing.current_stock || 0) + (item.quantity || 0),
+          unit_cost: item.cost_price || 0,
+          updated_at: new Date().toISOString(),
+        }).eq("id", existing.id);
+        updated++;
+      } else {
+        await supabase.from("inventory").insert({
+          store_id: order.store_id,
+          sku_code: item.sku_code,
+          product_name: item.product_name,
+          category: item.category,
+          color: item.colors || "",
+          size: sz,
+          unit_cost: item.cost_price || 0,
+          stock_in_qty: item.quantity || 0,
+          current_stock: item.quantity || 0,
+          sales_qty: 0,
+          status: "normal",
+        });
+        inserted++;
+      }
     } else {
-      await supabase.from("inventory").insert({
-        store_id: order.store_id,
-        sku_code: item.sku_code,
-        product_name: item.product_name,
-        category: item.category,
-        color: item.colors || "",
-        size: item.sizes || "均码",
-        unit_cost: item.cost_price || 0,
-        stock_in_qty: item.quantity || 0,
-        current_stock: item.quantity || 0,
-        sales_qty: 0,
-        status: "normal",
-      });
-      inserted++;
+      // 多尺码：均匀分配数量
+      const qtyPerSize = Math.floor((item.quantity || 0) / sizeList.length);
+      const remainder = (item.quantity || 0) - qtyPerSize * sizeList.length;
+
+      for (let si = 0; si < sizeList.length; si++) {
+        const sz = sizeList[si];
+        const qty = qtyPerSize + (si === 0 ? remainder : 0);
+        if (qty <= 0) continue;
+
+        const { data: exSize } = await supabase
+          .from("inventory")
+          .select("id, stock_in_qty, current_stock")
+          .eq("store_id", order.store_id)
+          .eq("sku_code", item.sku_code)
+          .eq("size", sz)
+          .maybeSingle();
+
+        if (exSize) {
+          await supabase.from("inventory").update({
+            stock_in_qty: (exSize.stock_in_qty || 0) + qty,
+            current_stock: (exSize.current_stock || 0) + qty,
+            unit_cost: item.cost_price || 0,
+            updated_at: new Date().toISOString(),
+          }).eq("id", exSize.id);
+          updated++;
+        } else {
+          await supabase.from("inventory").insert({
+            store_id: order.store_id,
+            sku_code: item.sku_code,
+            product_name: item.product_name,
+            category: item.category,
+            color: item.colors || "",
+            size: sz,
+            unit_cost: item.cost_price || 0,
+            stock_in_qty: qty,
+            current_stock: qty,
+            sales_qty: 0,
+            status: "normal",
+          });
+          inserted++;
+        }
+      }
     }
   }
 

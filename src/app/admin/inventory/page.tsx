@@ -116,6 +116,27 @@ export default function InventoryPage() {
   /* ── 保存 ───────────────── */
   const saveItem = async () => {
     if (!storeId) return;
+    if (!form.sku_code || !form.product_name) {
+      alert("款号和品名为必填项");
+      return;
+    }
+    const curStock = +form.current_stock || 0;
+    const salesQty = +form.sales_qty || 0;
+    const stockInQty = +form.stock_in_qty || 0;
+    // 计算库存状态
+    let status: string = "normal";
+    if (curStock === 0) {
+      status = "out_of_stock";
+    } else {
+      const sellThrough = stockInQty > 0 ? salesQty / stockInQty : 0;
+      const turnover = salesQty > 0 ? Math.round(curStock / (salesQty / 30)) : 999;
+      if (sellThrough > 0.8 && curStock < 10) {
+        status = "low_stock";
+      } else if (turnover > 60 && curStock > 50) {
+        status = "overstock";
+      }
+    }
+
     const payload = {
       store_id: storeId,
       sku_code: form.sku_code,
@@ -124,16 +145,18 @@ export default function InventoryPage() {
       color: form.color,
       size: form.size,
       unit_cost: +form.unit_cost || 0,
-      stock_in_qty: +form.stock_in_qty || 0,
-      current_stock: +form.current_stock || 0,
-      sales_qty: +form.sales_qty || 0,
-      status: "normal",
+      stock_in_qty: stockInQty,
+      current_stock: curStock,
+      sales_qty: salesQty,
+      status,
     };
 
     if (editing?.id) {
-      await supabase.from("inventory").update(payload).eq("id", editing.id);
+      const { error } = await supabase.from("inventory").update(payload).eq("id", editing.id);
+      if (error) { alert("保存失败：" + error.message); return; }
     } else {
-      await supabase.from("inventory").insert(payload);
+      const { error } = await supabase.from("inventory").insert(payload);
+      if (error) { alert("保存失败：" + error.message); return; }
     }
     setShowForm(false); setEditing(null);
     resetForm();
@@ -143,7 +166,8 @@ export default function InventoryPage() {
   /* ── 删除 ───────────────── */
   const deleteItem = async (id: string) => {
     if (!confirm("确定删除这条库存记录？")) return;
-    await supabase.from("inventory").delete().eq("id", id);
+    const { error } = await supabase.from("inventory").delete().eq("id", id);
+    if (error) alert("删除失败：" + error.message);
     loadInventory();
   };
 

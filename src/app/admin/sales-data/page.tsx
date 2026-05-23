@@ -98,9 +98,9 @@ export default function SalesDataPage() {
       sales_units: +form.sales_units || 0,
       avg_price: +form.avg_price || 0,
       gross_margin_pct: +form.gross_margin_pct || 0,
-      comparison_last_week: wk ? ((+form.sales_amount - wk.sales_amount) / wk.sales_amount) : null,
-      comparison_last_month: mm ? ((+form.sales_amount - mm.sales_amount) / mm.sales_amount) : null,
-      comparison_last_year: yy ? ((+form.sales_amount - yy.sales_amount) / yy.sales_amount) : null,
+      comparison_last_week: wk && wk.sales_amount ? ((+form.sales_amount - wk.sales_amount) / wk.sales_amount) : null,
+      comparison_last_month: mm && mm.sales_amount ? ((+form.sales_amount - mm.sales_amount) / mm.sales_amount) : null,
+      comparison_last_year: yy && yy.sales_amount ? ((+form.sales_amount - yy.sales_amount) / yy.sales_amount) : null,
       notes: form.notes,
     };
 
@@ -155,13 +155,15 @@ export default function SalesDataPage() {
   /* ── 导入 Excel ─────────────（用 xlsx）── */
   const importExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    if (!storeId) { alert("请先选择店铺"); return; }
     const XLSX = await import("xlsx");
     const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json(ws);
+    let success = 0;
     for (const row of rows) {
       const r = row as any;
-      await supabase.from("weekly_sales_analysis").insert({
+      const { error } = await supabase.from("weekly_sales_analysis").insert({
         store_id: storeId,
         sale_date: r["日期"] || new Date().toISOString().slice(0, 10),
         period_type: "day",
@@ -170,8 +172,9 @@ export default function SalesDataPage() {
         avg_price: +r["客单价"] || 0,
         gross_margin_pct: +r["毛利率%"] || 0,
       });
+      if (!error) success++;
     }
-    alert(`导入了 ${rows.length} 条记录`);
+    alert(`成功导入 ${success}/${rows.length} 条记录`);
     loadRecords();
   };
 
