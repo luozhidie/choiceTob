@@ -10,7 +10,6 @@ import {
   ChevronRight, Home,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PaywallModal } from "@/components/PaywallModal";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 
@@ -125,7 +124,6 @@ export default function BuyerPage() {
   const [activeUserColor, setActiveUserColor] = useState("");
   const [sourceFilter, setSourceFilter] = useState("");
   const [sortBy, setSortBy] = useState("sort_order");
-  const [showPaywall, setShowPaywall] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MergedProduct | null>(null);
   const [visible, setVisible] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState(false);
@@ -704,14 +702,6 @@ export default function BuyerPage() {
           </div>
         </div>
       </section>
-
-      {/* Paywall */}
-      {showPaywall && selectedProduct && (
-        <PaywallModal isOpen={showPaywall} type="product"
-          title={selectedProduct.title}
-          description={`${selectedProduct.source === "platform" ? "平台自营" : "供应商货源"} · 请联系客服确认折扣价`}
-          onClose={() => { setShowPaywall(false); setSelectedProduct(null); }} />
-      )}
 
       {/* 商品详情弹窗 */}
       {showProductDetail && selectedProduct && (
