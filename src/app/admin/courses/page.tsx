@@ -23,6 +23,7 @@ interface Course {
   title: string;
   description: string | null;
   cover_image: string | null;
+  video_url: string | null;
   price: number;
   is_free: boolean;
   category: string | null;
@@ -60,6 +61,7 @@ export default function AdminCoursesPage() {
     title: "",
     description: "",
     cover_image: "",
+    video_url: "",
     price: "",
     is_free: false,
     category: "",
@@ -68,6 +70,7 @@ export default function AdminCoursesPage() {
     content: "",
     is_published: false,
   });
+  const [uploadingVideo, setUploadingVideo] = useState(false);
 
   const supabase = createClient();
 
@@ -94,6 +97,7 @@ export default function AdminCoursesPage() {
       title: "",
       description: "",
       cover_image: "",
+      video_url: "",
       price: "",
       is_free: false,
       category: "",
@@ -114,6 +118,7 @@ export default function AdminCoursesPage() {
       title: form.title.trim(),
       description: form.description.trim() || null,
       cover_image: form.cover_image.trim() || null,
+      video_url: form.video_url.trim() || null,
       price: form.is_free ? 0 : parseInt(form.price) * 100 || 0,
       is_free: form.is_free,
       category: form.category || null,
@@ -153,6 +158,7 @@ export default function AdminCoursesPage() {
       title: course.title,
       description: course.description || "",
       cover_image: course.cover_image || "",
+      video_url: course.video_url || "",
       price: course.price ? (course.price / 100).toString() : "",
       is_free: course.is_free,
       category: course.category || "",
@@ -387,6 +393,52 @@ export default function AdminCoursesPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">封面图URL</label>
                 <input type="text" value={form.cover_image} onChange={(e) => setForm({ ...form, cover_image: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20" placeholder="https://..." />
+              </div>
+              {/* 视频上传 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">课程视频</label>
+                {form.video_url ? (
+                  <div className="space-y-2">
+                    <video src={form.video_url} controls className="w-full h-40 rounded-lg bg-black" />
+                    <div className="flex gap-2">
+                      <input type="text" value={form.video_url} readOnly className="flex-1 px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500" />
+                      <button type="button" onClick={() => setForm({ ...form, video_url: "" })} className="px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg">移除</button>
+                    </div>
+                  </div>
+                ) : (
+                  <label className={`flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${uploadingVideo ? "border-primary bg-primary/5" : "border-gray-300 hover:border-primary/50 hover:bg-gray-50"}`}>
+                    <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 500 * 1024 * 1024) { alert("视频不能超过500MB"); return; }
+                      setUploadingVideo(true);
+                      try {
+                        const fileName = `courses/${Date.now()}_${file.name}`;
+                        const { data, error } = await supabase.storage.from("videos").upload(fileName, file, { upsert: true });
+                        if (error) throw error;
+                        const { data: urlData } = supabase.storage.from("videos").getPublicUrl(fileName);
+                        setForm({ ...form, video_url: urlData.publicUrl });
+                        showToast("success", "视频上传成功");
+                      } catch (err: any) {
+                        showToast("error", "上传失败：" + (err.message || "未知错误"));
+                      } finally {
+                        setUploadingVideo(false);
+                      }
+                    }} />
+                    {uploadingVideo ? (
+                      <div className="flex items-center gap-2 text-primary">
+                        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                        <span className="text-sm">上传中...</span>
+                      </div>
+                    ) : (
+                      <>
+                        <BookOpen className="w-6 h-6 text-gray-400 mb-1" />
+                        <span className="text-xs text-gray-500">点击上传视频（最大500MB）</span>
+                        <span className="text-[10px] text-gray-400 mt-0.5">支持 mp4, mov, avi 等格式</span>
+                      </>
+                    )}
+                  </label>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">课程描述</label>
