@@ -638,9 +638,9 @@ export default function ProductDetailPage() {
                   <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
                     <p className="text-sm font-medium text-gray-700 mb-1">2. 银行对公转账</p>
                     <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>户名：骆芷蝶（待补充）</p>
-                      <p>开户行：（待补充）</p>
-                      <p>账号：（待补充）</p>
+                      <p>户名：吴川市樟铺骆芷蝶教你好看穿搭小店</p>
+                      <p>开户行：中国工商银行（吴川支行）</p>
+                      <p>账号：2015021309200280877</p>
                     </div>
                     <p className="text-[10px] text-amber-600 mt-1">转账时请备注订单号：{currentOrderNo}</p>
                   </div>

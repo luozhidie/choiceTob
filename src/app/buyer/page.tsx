@@ -7,7 +7,7 @@ import {
   Search, X, TrendingUp, Truck, Star, CheckCircle2,
   FileCheck, Shield, Factory, Headphones, Landmark,
   Upload, ArrowRight, Building2, Package, Flame,
-  ChevronRight, Home, ShoppingBag,
+  ChevronRight, Home, ShoppingBag, Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
@@ -139,6 +139,8 @@ export default function BuyerPage() {
   const [currentOrderNo, setCurrentOrderNo] = useState<string>("");
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [showMemberTip, setShowMemberTip] = useState(false);
 
   // 供应商入驻表单
   const [supplierForm, setSupplierForm] = useState({
@@ -148,7 +150,15 @@ export default function BuyerPage() {
 
   const supabase = createClient();
 
-  useEffect(() => { setVisible(true); fetchAllData(); }, []);
+  useEffect(() => {
+    setVisible(true);
+    fetchAllData();
+    // 检查本地会员标记（简化版，后续对接真实登录系统）
+    try {
+      const m = localStorage.getItem("ct_member");
+      if (m === "1") setIsMember(true);
+    } catch { /* ignore */ }
+  }, []);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -388,6 +398,24 @@ export default function BuyerPage() {
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            {/* 会员切换 */}
+            <button
+              onClick={() => {
+                const next = !isMember;
+                setIsMember(next);
+                try { localStorage.setItem("ct_member", next ? "1" : "0"); } catch { /* ignore */ }
+              }}
+              className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                isMember
+                  ? "bg-amber-100 text-amber-700 border border-amber-200"
+                  : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
+              }`}
+            >
+              {isMember ? <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> : <Lock className="w-3 h-3" />}
+              {isMember ? "会员模式" : "非会员"}
+            </button>
+            <div className="w-px h-4 bg-gray-200 shrink-0" />
+
             <div className="flex items-center bg-gray-100 rounded-lg p-0.5 shrink-0">
               <button onClick={() => setSourceFilter("")}
                 className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${!sourceFilter ? "bg-white text-primary shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
@@ -571,25 +599,45 @@ export default function BuyerPage() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-1">{product.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                        <div className="flex flex-col">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
-                            {product.original_price && product.original_price > product.price && (
-                              <span className="text-[10px] md:text-xs text-gray-400 line-through">
-                                {formatPrice(product.original_price)}
+                        {isMember ? (
+                          <>
+                            <div className="flex flex-col">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
+                                {product.original_price && product.original_price > product.price && (
+                                  <span className="text-[10px] md:text-xs text-gray-400 line-through">
+                                    {formatPrice(product.original_price)}
+                                  </span>
+                                )}
+                              </div>
+                              {product.original_price && product.original_price > product.price && (
+                                <span className="text-[10px] text-accent/80 mt-0.5">
+                                  会员省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
+                                </span>
+                              )}
+                            </div>
+                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBuy(product); }}
+                              className="btn-accent text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium">
+                              下单
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-bold text-gray-400">¥???</span>
+                              <Link href="/members" onClick={(e) => e.stopPropagation()}>
+                                <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                                  会员查看批发价
+                                </span>
+                              </Link>
+                            </div>
+                            <Link href="/members" onClick={(e) => e.stopPropagation()}>
+                              <span className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
+                                开通会员
                               </span>
-                            )}
-                          </div>
-                          {product.original_price && product.original_price > product.price && (
-                            <span className="text-[10px] text-accent/80 mt-0.5">
-                              会员省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
-                            </span>
-                          )}
-                        </div>
-                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBuy(product); }}
-                          className="btn-accent text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium">
-                          下单
-                        </button>
+                            </Link>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -920,9 +968,9 @@ export default function BuyerPage() {
                 <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
                   <p className="text-sm font-medium text-gray-700 mb-1">2. 银行对公转账</p>
                   <div className="text-xs text-gray-600 space-y-0.5">
-                    <p>户名：骆芷蝶（待补充）</p>
-                    <p>开户行：（待补充）</p>
-                    <p>账号：（待补充）</p>
+                    <p>户名：吴川市樟铺骆芷蝶教你好看穿搭小店</p>
+                    <p>开户行：中国工商银行（吴川支行）</p>
+                    <p>账号：2015021309200280877</p>
                   </div>
                   <p className="text-[10px] text-amber-600 mt-1">转账时请备注订单号：{currentOrderNo}</p>
                 </div>
