@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Check, Building2 } from "lucide-react";
-import { PaywallModal } from "@/components/PaywallModal";
-import { motion } from "framer-motion";
+import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   CATEGORY_MAP,
   SUBCATEGORY_MAP,
@@ -38,10 +37,15 @@ export default function ProductDetailPage() {
   // ✅ 所有 hooks 必须在组件顶层，不能在条件/return 之后
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showPaywall, setShowPaywall] = useState(false);
   const [visible, setVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
+  // 采购意向
+  const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
+  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
+  const [purchaseNote, setPurchaseNote] = useState("");
+  const [purchaseContact, setPurchaseContact] = useState("");
+  const [purchaseSubmitted, setPurchaseSubmitted] = useState(false);
 
   // 获取商品数据
   useEffect(() => {
@@ -376,17 +380,17 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* 购买按钮 */}
+              {/* 采购意向按钮 */}
               <button
-                onClick={() => setShowPaywall(true)}
+                onClick={() => setShowPurchaseIntent(true)}
                 disabled={product.stock === 0}
                 className="w-full btn-accent py-3.5 rounded-xl text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <ShoppingBag className="w-5 h-5" />
-                立即购买
+                <Truck className="w-5 h-5" />
+                提交采购意向
               </button>
               <p className="mt-2 text-xs text-center text-muted-foreground">
-                支付安全便捷，付款后安排发货
+                提交意向后我们将尽快与您联系确认
               </p>
 
               {/* 同品类推荐 */}
@@ -435,16 +439,92 @@ export default function ProductDetailPage() {
         </section>
       )}
 
-      {/* Paywall Modal */}
-      {showPaywall && (
-        <PaywallModal
-          isOpen={showPaywall}
-          type="product"
-          title={product.title}
-          description={`¥${(product.price / 100).toFixed(0)} - 付款后安排发货`}
-          onClose={() => setShowPaywall(false)}
-        />
-      )}
+      {/* 采购意向弹窗 */}
+      <AnimatePresence>
+        {showPurchaseIntent && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => { if (!purchaseSubmitted) setShowPurchaseIntent(false); }}>
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
+              onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-gray-900">提交采购意向</h3>
+                {!purchaseSubmitted && (
+                  <button onClick={() => setShowPurchaseIntent(false)} className="text-gray-400 hover:text-gray-600">
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+
+              {purchaseSubmitted ? (
+                <div className="text-center py-8">
+                  <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                  <p className="text-gray-700 font-medium">采购意向已提交！</p>
+                  <p className="text-sm text-gray-500 mt-2">我们将在24小时内与您联系确认订单。</p>
+                </div>
+              ) : (
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const res = await fetch('/api/purchase-intents', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        product_id: product.id,
+                        product_title: product.title,
+                        product_price: product.price,
+                        quantity: purchaseQuantity,
+                        contact: purchaseContact,
+                        note: purchaseNote,
+                      }),
+                    });
+                    if (!res.ok) throw new Error('提交失败');
+                    setPurchaseSubmitted(true);
+                    setTimeout(() => { setShowPurchaseIntent(false); setPurchaseSubmitted(false); setPurchaseQuantity(1); setPurchaseNote(""); setPurchaseContact(""); }, 3000);
+                  } catch (err) {
+                    alert('提交失败，请稍后重试');
+                  }
+                }} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">商品</label>
+                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-600">
+                      {product.title} · ¥{(product.price / 100).toFixed(0)}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">采购数量 *</label>
+                    <input type="number" min={1} value={purchaseQuantity} onChange={(e) => setPurchaseQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
+                      required />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">联系方式 *</label>
+                    <input type="text" value={purchaseContact} onChange={(e) => setPurchaseContact(e.target.value)}
+                      placeholder="微信/手机/邮箱" 
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
+                      required />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">备注（选填）</label>
+                    <textarea value={purchaseNote} onChange={(e) => setPurchaseNote(e.target.value)}
+                      placeholder="尺码、颜色、收货地址等" rows={3}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none resize-none" />
+                  </div>
+
+                  <button type="submit"
+                    className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors">
+                    提交采购意向
+                  </button>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
