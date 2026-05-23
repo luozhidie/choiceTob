@@ -7,7 +7,7 @@ import {
   Search, X, TrendingUp, Truck, Star, CheckCircle2,
   FileCheck, Shield, Factory, Headphones, Landmark,
   Upload, ArrowRight, Building2, Package, Flame,
-  ChevronRight, Home,
+  ChevronRight, Home, ShoppingBag,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
@@ -131,7 +131,14 @@ export default function BuyerPage() {
   const [purchaseQuantity, setPurchaseQuantity] = useState(1);
   const [purchaseNote, setPurchaseNote] = useState("");
   const [purchaseContact, setPurchaseContact] = useState("");
+  const [purchaseAddress, setPurchaseAddress] = useState("");
   const [purchaseSubmitted, setPurchaseSubmitted] = useState(false);
+  const [paymentType, setPaymentType] = useState<"wechat" | "alipay">("wechat");
+  const [orderCreating, setOrderCreating] = useState(false);
+  const [paymentQR, setPaymentQR] = useState<{ url_qrcode: string; url: string } | null>(null);
+  const [currentOrderNo, setCurrentOrderNo] = useState<string>("");
+  const [paymentChecking, setPaymentChecking] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
 
   // 供应商入驻表单
   const [supplierForm, setSupplierForm] = useState({
@@ -234,9 +241,65 @@ export default function BuyerPage() {
   }, [allProducts, searchTerm, activeCategory, activeSubcategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
   const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowProductDetail(true); };
-  const handleCloseDetail = () => { setShowProductDetail(false); setSelectedProduct(null); };
+  const handleCloseDetail = () => { setShowProductDetail(false); setSelectedProduct(null); setPaymentQR(null); setCurrentOrderNo(""); setPaymentSuccess(false); };
   const handleOpenPurchase = () => { setShowProductDetail(false); setShowPurchaseIntent(true); };
-  const handleClosePurchase = () => { setShowPurchaseIntent(false); setPurchaseQuantity(1); setPurchaseNote(""); setPurchaseContact(""); };
+  const handleClosePurchase = () => { setShowPurchaseIntent(false); setPurchaseQuantity(1); setPurchaseNote(""); setPurchaseContact(""); setPurchaseAddress(""); setPaymentQR(null); setCurrentOrderNo(""); setPaymentSuccess(false); };
+
+  // 创建订单并发起支付
+  const handleCreateOrder = async () => {
+    if (!selectedProduct || !purchaseContact) return;
+    setOrderCreating(true);
+    try {
+      const res = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: selectedProduct.id,
+          product_title: selectedProduct.title,
+          product_price: selectedProduct.price,
+          quantity: purchaseQuantity,
+          contact: purchaseContact,
+          address: purchaseAddress,
+          note: purchaseNote,
+          payment_type: paymentType,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '创建订单失败');
+
+      if (data.payment) {
+        setPaymentQR(data.payment);
+        setCurrentOrderNo(data.order.order_no);
+      } else {
+        setPurchaseSubmitted(true);
+        setCurrentOrderNo(data.order.order_no);
+      }
+    } catch (err: any) {
+      alert(err.message || '创建订单失败，请稍后重试');
+    } finally {
+      setOrderCreating(false);
+    }
+  };
+
+  // 轮询支付状态
+  useEffect(() => {
+    if (!currentOrderNo || !paymentQR || paymentSuccess) return;
+    const interval = setInterval(async () => {
+      try {
+        setPaymentChecking(true);
+        const res = await fetch(`/api/orders/status?order_no=${currentOrderNo}`);
+        const data = await res.json();
+        if (data.is_paid) {
+          setPaymentSuccess(true);
+          setPaymentChecking(false);
+          clearInterval(interval);
+        }
+      } catch {
+        // 忽略轮询错误
+      }
+    }, 3000);
+    return () => { clearInterval(interval); setPaymentChecking(false); };
+  }, [currentOrderNo, paymentQR, paymentSuccess]);
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
   const getImage = (p: MergedProduct) => p.cover_image;
 
@@ -525,7 +588,7 @@ export default function BuyerPage() {
                         </div>
                         <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBuy(product); }}
                           className="btn-accent text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium">
-                          采购
+                          下单
                         </button>
                       </div>
                     </div>
@@ -796,8 +859,8 @@ export default function BuyerPage() {
                 </button>
                 <button onClick={handleOpenPurchase}
                   className="flex-1 py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
-                  <Truck className="w-4 h-4" />
-                  提交采购意向
+                  <ShoppingBag className="w-4 h-4" />
+                  立即下单
                 </button>
               </div>
             </div>
@@ -805,7 +868,7 @@ export default function BuyerPage() {
         </motion.div>
       )}
 
-      {/* 采购意向表单弹窗 */}
+      {/* 下单支付弹窗 */}
       {showPurchaseIntent && selectedProduct && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -813,74 +876,123 @@ export default function BuyerPage() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
             className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-primary">提交采购意向</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-primary">
+                {paymentSuccess ? "支付成功" : paymentQR ? "扫码支付" : "确认订单"}
+              </h3>
               <button onClick={handleClosePurchase} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {purchaseSubmitted ? (
+            {/* 支付成功 */}
+            {paymentSuccess ? (
               <div className="text-center py-8">
-                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
-                <p className="text-gray-700 font-medium">采购意向已提交！</p>
-                <p className="text-sm text-gray-500 mt-2">我们将在24小时内与您联系确认订单。</p>
+                <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                <p className="text-lg font-bold text-gray-800">支付成功！</p>
+                <p className="text-sm text-gray-500 mt-2">订单号：{currentOrderNo}</p>
+                <p className="text-sm text-gray-500 mt-1">我们将尽快安排发货，请保持联系方式畅通。</p>
+                <button onClick={handleClosePurchase}
+                  className="mt-6 px-8 py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent/90 transition-colors">
+                  完成
+                </button>
+              </div>
+            ) : paymentQR ? (
+              /* 扫码支付 */
+              <div className="text-center">
+                <div className="mb-4 p-4 bg-gray-50 rounded-xl">
+                  <p className="text-sm text-gray-600 mb-1">{selectedProduct.title}</p>
+                  <p className="text-2xl font-bold text-accent">
+                    ¥{((selectedProduct.price * purchaseQuantity) / 100).toFixed(0)}
+                    <span className="text-sm font-normal text-gray-400 ml-1">× {purchaseQuantity}件</span>
+                  </p>
+                </div>
+                <div className="flex justify-center mb-4">
+                  {paymentQR.url_qrcode ? (
+                    <img src={paymentQR.url_qrcode} alt="支付二维码" className="w-56 h-56 rounded-xl" />
+                  ) : (
+                    <div className="w-56 h-56 bg-gray-100 rounded-xl flex items-center justify-center">
+                      <a href={paymentQR.url} target="_blank" rel="noopener noreferrer"
+                        className="btn-accent text-sm px-6 py-2 rounded-lg">
+                        打开支付页面
+                      </a>
+                    </div>
+                  )}
+                </div>
+                <p className="text-sm text-gray-500">
+                  {paymentType === "wechat" ? "请使用微信扫码支付" : "请使用支付宝扫码支付"}
+                </p>
+                {paymentChecking && (
+                  <p className="text-xs text-gray-400 mt-2 animate-pulse">正在等待支付结果...</p>
+                )}
               </div>
             ) : (
-                <form onSubmit={async (e) => {
-                e.preventDefault();
-                try {
-                  const res = await fetch('/api/purchase-intents', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      product_id: selectedProduct.id,
-                      product_title: selectedProduct.title,
-                      product_price: selectedProduct.price,
-                      quantity: purchaseQuantity,
-                      contact: purchaseContact,
-                      note: purchaseNote,
-                    }),
-                  });
-                  if (!res.ok) throw new Error('提交失败');
-                  setPurchaseSubmitted(true);
-                  setTimeout(() => { handleClosePurchase(); setPurchaseSubmitted(false); }, 3000);
-                } catch (err) {
-                  alert('提交失败，请稍后重试');
-                }
-              }} className="space-y-4">
+              /* 订单确认表单 */
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateOrder(); }} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">商品</label>
                   <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-600">
-                    {selectedProduct.title} · {formatPrice(selectedProduct.price)}
+                    {selectedProduct.title} · {formatPrice(selectedProduct.price)}/件
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">采购数量 *</label>
-                  <input type="number" min={1} value={purchaseQuantity} onChange={(e) => setPurchaseQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                  <input type="number" min={1} value={purchaseQuantity}
+                    onChange={(e) => setPurchaseQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
                     required />
+                  <p className="text-xs text-accent mt-1">
+                    合计：¥{((selectedProduct.price * purchaseQuantity) / 100).toFixed(0)}
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">联系方式 *</label>
                   <input type="text" value={purchaseContact} onChange={(e) => setPurchaseContact(e.target.value)}
-                    placeholder="微信/手机/邮箱" 
+                    placeholder="手机号/微信号"
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
                     required />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">备注（选填）</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">收货地址</label>
+                  <input type="text" value={purchaseAddress} onChange={(e) => setPurchaseAddress(e.target.value)}
+                    placeholder="省/市/区/详细地址"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
                   <textarea value={purchaseNote} onChange={(e) => setPurchaseNote(e.target.value)}
-                    placeholder="尺码、颜色、收货地址等" rows={3}
+                    placeholder="尺码、颜色等要求" rows={2}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none resize-none" />
                 </div>
 
-                <button type="submit"
-                  className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors">
-                  提交采购意向
+                {/* 支付方式选择 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">支付方式</label>
+                  <div className="flex gap-3">
+                    <button type="button"
+                      onClick={() => setPaymentType("wechat")}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-colors ${
+                        paymentType === "wechat" ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-600"
+                      }`}>
+                      微信支付
+                    </button>
+                    <button type="button"
+                      onClick={() => setPaymentType("alipay")}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-colors ${
+                        paymentType === "alipay" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"
+                      }`}>
+                      支付宝
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={orderCreating}
+                  className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors disabled:opacity-50">
+                  {orderCreating ? "正在创建订单..." : `确认支付 ¥${((selectedProduct.price * purchaseQuantity) / 100).toFixed(0)}`}
                 </button>
               </form>
             )}

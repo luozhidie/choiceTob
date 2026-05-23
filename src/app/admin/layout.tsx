@@ -47,6 +47,7 @@ import {
   Target,
   MessageSquare,
   Palette as StyleIcon,
+  ShoppingBag,
 } from "lucide-react";
 
 /* ── 侧边栏分组配置 ── */
@@ -111,6 +112,7 @@ const sidebarGroups: SidebarGroup[] = [
     icon: Truck,
     items: [
       { label: "采购意向", href: "/admin/purchase-intents", icon: ClipboardList },
+      { label: "订单管理", href: "/admin/orders", icon: ShoppingBag },
       { label: "采购订单", href: "/admin/purchase-orders", icon: Truck },
       { label: "供应商管理", href: "/admin/supplier", icon: Package },
       { label: "供应商图片", href: "/admin/supplier-images", icon: ImagePlus },
