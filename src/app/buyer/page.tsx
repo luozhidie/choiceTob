@@ -497,7 +497,13 @@ export default function BuyerPage() {
                       )}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
                         <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
-                        <button onClick={() => handleBuy(product)}
+                          {product.original_price && product.original_price > product.price && (
+                            <span className="ml-1.5 text-[10px] md:text-xs text-gray-400 line-through">
+                              {formatPrice(product.original_price)}
+                            </span>
+                          )}
+                        </div>
+                        <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBuy(product); }}
                           className="btn-accent text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium">
                           采购
                         </button>

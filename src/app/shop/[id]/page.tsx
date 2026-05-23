@@ -39,6 +39,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
   // 采购意向
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
@@ -272,12 +273,15 @@ export default function ProductDetailPage() {
 
             {/* 中间大图 */}
             <div className={allImages.length > 1 ? "md:col-span-7" : "md:col-span-9"} style={{ order: 2 }}>
-              <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center">
+              <div
+                className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center group cursor-zoom-in"
+                onClick={() => setLightboxOpen(true)}
+              >
                 {allImages[currentImage] ? (
                   <img
                     src={allImages[currentImage]!}
                     alt={product.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-zoom-in"
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                   />
                 ) : (
                   <ShoppingBag className="w-16 h-16 text-primary/30" />
@@ -289,7 +293,7 @@ export default function ProductDetailPage() {
                   {allImages.map((img, i) => (
                     <button
                       key={i}
-                      onClick={() => setCurrentImage(i)}
+                      onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
                       className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
                         currentImage === i ? "border-accent" : "border-transparent"
                       }`}
@@ -305,6 +309,66 @@ export default function ProductDetailPage() {
                   ))}
                 </div>
               )}
+
+              {/* ⚡ Lightbox 放大查看 */}
+              <AnimatePresence>
+                {lightboxOpen && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+                    onClick={() => setLightboxOpen(false)}
+                  >
+                    {/* 关闭按钮 */}
+                    <button
+                      onClick={() => setLightboxOpen(false)}
+                      className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <X className="w-5 h-5 text-white" />
+                    </button>
+
+                    {/* 左箭头 */}
+                    {allImages.length > 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i - 1 + allImages.length) % allImages.length); }}
+                        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <ChevronLeft className="w-5 h-5 text-white" />
+                      </button>
+                    )}
+
+                    {/* 右箭头 */}
+                    {allImages.length > 1 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i + 1) % allImages.length); }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <ChevronRight className="w-5 h-5 text-white" />
+                      </button>
+                    )}
+
+                    {/* 放大后的图片 */}
+                    <motion.img
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: 1 }}
+                      exit={{ scale: 0.9 }}
+                      src={allImages[currentImage]!}
+                      alt={product.title}
+                      className="max-w-[90vw] max-h-[90vh] object-contain"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+
+                    {/* 图片计数器 */}
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+                        {currentImage + 1} / {allImages.length}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePrescence>
+            </div>
             </div>
 
             {/* 右侧商品信息 */}
@@ -356,6 +420,12 @@ export default function ProductDetailPage() {
                   {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
                 </span>
               </div>
+
+              {product.original_price && product.original_price > product.price && (
+                <div className="mt-1 p-2 bg-accent/5 rounded-lg text-xs text-accent">
+                  💎 开通会员享折扣价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
+                </div>
+              )}
 
               {/* 标签 */}
               {product.tags && product.tags.length > 0 && (
