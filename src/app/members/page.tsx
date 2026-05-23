@@ -114,50 +114,6 @@ export default function MembersPage() {
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-8">
 
         {/* ════════════════════════════════════════
-            A. 查看价格会员（付费开通）
-           ════════════════════════════════════════ */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <Eye className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-bold text-gray-900">查看价格会员</h2>
-          </div>
-          <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-            付费开通后，可查看平台所有商品的<strong>批发底价</strong>。不含拿货折扣，仅解锁价格查看权限。
-          </p>
-
-          <div className="space-y-3">
-            {VIEW_PRICE_PACKAGES.map((pkg) => (
-              <div
-                key={pkg.id}
-                onClick={() => handleBuy(pkg)}
-                className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
-                  pkg.tag ? "border-amber-300" : "border-gray-100 hover:border-primary/30"
-                }`}
-              >
-                {pkg.tag && (
-                  <span className={`absolute -top-2.5 right-4 ${pkg.tagColor} text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full`}>
-                    {pkg.tag}
-                  </span>
-                )}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-bold text-gray-900">{pkg.name}</h3>
-                    <p className="text-xs text-gray-500 mt-0.5">{pkg.desc}</p>
-                    <div className="flex items-baseline gap-2 mt-2">
-                      <span className="text-2xl font-bold text-amber-600">{formatPrice(pkg.price)}</span>
-                      {pkg.originalPrice > pkg.price && (
-                        <span className="text-sm text-gray-400 line-through">{formatPrice(pkg.originalPrice)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-300" />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ════════════════════════════════════════
             B. 充值货款折扣会员（预存折扣）
            ════════════════════════════════════════ */}
         <section>
@@ -212,6 +168,50 @@ export default function MembersPage() {
                       去选品
                     </span>
                   </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ════════════════════════════════════════
+            A. 查看价格会员（付费开通）
+           ════════════════════════════════════════ */}
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Eye className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-bold text-gray-900">查看价格会员</h2>
+          </div>
+          <p className="text-xs text-gray-500 mb-4 leading-relaxed">
+            付费开通后，可查看平台所有商品的<strong>批发底价</strong>。不含拿货折扣，仅解锁价格查看权限。
+          </p>
+
+          <div className="space-y-3">
+            {VIEW_PRICE_PACKAGES.map((pkg) => (
+              <div
+                key={pkg.id}
+                onClick={() => handleBuy(pkg)}
+                className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
+                  pkg.tag ? "border-amber-300" : "border-gray-100 hover:border-primary/30"
+                }`}
+              >
+                {pkg.tag && (
+                  <span className={`absolute -top-2.5 right-4 ${pkg.tagColor} text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full`}>
+                    {pkg.tag}
+                  </span>
+                )}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-bold text-gray-900">{pkg.name}</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">{pkg.desc}</p>
+                    <div className="flex items-baseline gap-2 mt-2">
+                      <span className="text-2xl font-bold text-amber-600">{formatPrice(pkg.price)}</span>
+                      {pkg.originalPrice > pkg.price && (
+                        <span className="text-sm text-gray-400 line-through">{formatPrice(pkg.originalPrice)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-gray-300" />
                 </div>
               </div>
             ))}

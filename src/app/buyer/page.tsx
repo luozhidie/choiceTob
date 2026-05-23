@@ -140,7 +140,7 @@ export default function BuyerPage() {
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [isMember, setIsMember] = useState(false);
-  const [showMemberTip, setShowMemberTip] = useState(false);
+  const [showMemberPrompt, setShowMemberPrompt] = useState(false);
 
   // 供应商入驻表单
   const [supplierForm, setSupplierForm] = useState({
@@ -624,19 +624,21 @@ export default function BuyerPage() {
                           </>
                         ) : (
                           <>
-                            <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setShowMemberPrompt(true); }}
+                              className="flex items-center gap-1.5"
+                            >
                               <span className="text-sm font-bold text-gray-400">¥???</span>
-                              <Link href="/members" onClick={(e) => e.stopPropagation()}>
-                                <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                                  付费查看批发价
-                                </span>
-                              </Link>
-                            </div>
-                            <Link href="/members" onClick={(e) => e.stopPropagation()}>
-                              <span className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                                开通查看价格
+                              <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
+                                付费查看批发价
                               </span>
-                            </Link>
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setShowMemberPrompt(true); }}
+                              className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                            >
+                              开通查看价格
+                            </button>
                           </>
                         )}
                       </div>
@@ -1058,6 +1060,42 @@ export default function BuyerPage() {
                 </button>
               </form>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* 查看价格充值提示弹窗 */}
+      {showMemberPrompt && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowMemberPrompt(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+            className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900">查看批发价</h3>
+              <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-sm text-gray-600 mb-4">开通查看价格会员，即可查看所有商品批发底价</p>
+            <div className="space-y-3">
+              <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
+                <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                  去开通会员
+                </span>
+              </Link>
+              <button
+                onClick={() => setShowMemberPrompt(false)}
+                className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
+              >
+                再看看
+              </button>
+            </div>
           </motion.div>
         </motion.div>
       )}

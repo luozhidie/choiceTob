@@ -54,6 +54,13 @@ export default function ProductDetailPage() {
   const [currentOrderNo, setCurrentOrderNo] = useState("");
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [isMember, setIsMember] = useState(false);
+  const [showMemberPrompt, setShowMemberPrompt] = useState(false);
+
+  // 检查会员状态
+  useEffect(() => {
+    try { const m = localStorage.getItem("ct_member"); if (m === "1") setIsMember(true); } catch { /* ignore */ }
+  }, []);
 
   // 获取商品数据
   useEffect(() => {
@@ -461,33 +468,47 @@ export default function ProductDetailPage() {
               )}
 
               {/* 价格 */}
-              <div className="mb-2">
-                <div className="flex items-end gap-2">
-                  <span className="text-3xl font-bold text-accent">
-                    {formatPrice(product.price)}
-                  </span>
-                  {product.original_price && product.original_price > product.price && (
-                    <span className="text-lg text-gray-400 line-through mb-1">
-                      {formatPrice(product.original_price)}
+              {isMember ? (
+                <div className="mb-2">
+                  <div className="flex items-end gap-2">
+                    <span className="text-3xl font-bold text-accent">
+                      {formatPrice(product.price)}
                     </span>
+                    {product.original_price && product.original_price > product.price && (
+                      <span className="text-lg text-gray-400 line-through mb-1">
+                        {formatPrice(product.original_price)}
+                      </span>
+                    )}
+                  </div>
+                  {product.original_price && product.original_price > product.price && (
+                    <div className="mt-1 text-xs text-accent">
+                      💎 会员价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
+                    </div>
                   )}
                 </div>
-                {product.original_price && product.original_price > product.price && (
-                  <div className="mt-1 text-xs text-accent">
-                    💎 会员价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
+              ) : (
+                <div className="mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-3xl font-bold text-gray-400">¥???</span>
+                    <button
+                      onClick={() => setShowMemberPrompt(true)}
+                      className="text-xs px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-medium"
+                    >
+                      付费查看批发价
+                    </button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
 
               {/* 会员开通入口 */}
               <div className="mb-6 p-3 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border border-accent/10">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-medium text-primary">开通会员享折扣拿货</p>
+                    <p className="text-xs font-medium text-primary">预存货款享折扣拿货</p>
                     <p className="text-[10px] text-gray-500 mt-0.5">充值5万享2.8折 · 充值30万享2.6折</p>
                   </div>
                   <Link href="/members" className="btn-accent text-xs px-3 py-1.5 rounded-lg font-medium">
-                    开通会员
+                    了解方案
                   </Link>
                 </div>
               </div>
@@ -727,6 +748,44 @@ export default function ProductDetailPage() {
                   </button>
                 </form>
               )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 查看价格充值提示弹窗 */}
+      <AnimatePresence>
+        {showMemberPrompt && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowMemberPrompt(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
+              className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">查看批发价</h3>
+                <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mb-4">开通查看价格会员，即可查看所有商品批发底价</p>
+              <div className="space-y-3">
+                <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
+                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                    去开通会员
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setShowMemberPrompt(false)}
+                  className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
+                >
+                  再看看
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}
