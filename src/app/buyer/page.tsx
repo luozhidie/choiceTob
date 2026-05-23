@@ -363,8 +363,9 @@ export default function BuyerPage() {
                 )}
               </div>
             </div>
-            {/* 充值档位卡片 — 原价 vs 会员价对比 */}
+            {/* 预存货款折扣档位 */}
             <div className="flex flex-col gap-3 shrink-0">
+              <p className="text-xs text-white/70 text-center">预存货款享折扣拿货</p>
               <div className="flex gap-3">
                 {[
                   { amount: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
@@ -377,7 +378,7 @@ export default function BuyerPage() {
                       : "bg-white/10 border-white/20"
                   }`}>
                     <div className="text-xl font-bold">{tier.amount}</div>
-                    <div className="text-xs text-white/60 mt-1">充值</div>
+                    <div className="text-xs text-white/60 mt-1">预存</div>
                     <div className="mt-2 text-accent font-bold text-sm">{tier.discount}</div>
                     <div className="text-[10px] text-white/50">{tier.ret}</div>
                     <div className="text-[10px] text-white/70 mt-1.5 pt-1.5 border-t border-white/10">{tier.example}</div>
@@ -387,7 +388,7 @@ export default function BuyerPage() {
               <Link href="/members"
                 className="btn-accent text-xs py-2 rounded-lg font-semibold text-center flex items-center justify-center gap-1.5">
                 <Star className="w-3.5 h-3.5" />
-                开通会员享折扣
+                了解货款折扣方案
               </Link>
             </div>
           </div>
@@ -627,13 +628,13 @@ export default function BuyerPage() {
                               <span className="text-sm font-bold text-gray-400">¥???</span>
                               <Link href="/members" onClick={(e) => e.stopPropagation()}>
                                 <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                                  会员查看批发价
+                                  付费查看批发价
                                 </span>
                               </Link>
                             </div>
                             <Link href="/members" onClick={(e) => e.stopPropagation()}>
                               <span className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">
-                                开通会员
+                                开通查看价格
                               </span>
                             </Link>
                           </>
