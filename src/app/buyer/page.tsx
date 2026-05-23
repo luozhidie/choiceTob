@@ -127,7 +127,12 @@ export default function BuyerPage() {
   const [sortBy, setSortBy] = useState("sort_order");
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MergedProduct | null>(null);
-  const [visible, setVisible] = useState(false);
+  const [showProductDetail, setShowProductDetail] = useState(false);
+  const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
+  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
+  const [purchaseNote, setPurchaseNote] = useState("");
+  const [purchaseContact, setPurchaseContact] = useState("");
+  const [purchaseSubmitted, setPurchaseSubmitted] = useState(false);
 
   // 供应商入驻表单
   const [supplierForm, setSupplierForm] = useState({
@@ -229,7 +234,10 @@ export default function BuyerPage() {
     return list;
   }, [allProducts, searchTerm, activeCategory, activeSubcategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
-  const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowPaywall(true); };
+  const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowProductDetail(true); };
+  const handleCloseDetail = () => { setShowProductDetail(false); setSelectedProduct(null); };
+  const handleOpenPurchase = () => { setShowProductDetail(false); setShowPurchaseIntent(true); };
+  const handleClosePurchase = () => { setShowPurchaseIntent(false); setPurchaseQuantity(1); setPurchaseNote(""); setPurchaseContact(""); };
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
   const getImage = (p: MergedProduct) => p.cover_image;
 
@@ -702,6 +710,162 @@ export default function BuyerPage() {
           title={selectedProduct.title}
           description={`${selectedProduct.source === "platform" ? "平台自营" : "供应商货源"} · 请联系客服确认折扣价`}
           onClose={() => { setShowPaywall(false); setSelectedProduct(null); }} />
+      )}
+
+      {/* 商品详情弹窗 */}
+      {showProductDetail && selectedProduct && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={handleCloseDetail}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}>
+            {/* 商品图片 */}
+            <div className="relative h-64 bg-gray-100 rounded-t-2xl overflow-hidden">
+              {getImage(selectedProduct) ? (
+                <img src={getImage(selectedProduct)!} alt={selectedProduct.title}
+                  className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">暂无图片</div>
+              )}
+              <button onClick={handleCloseDetail}
+                className="absolute top-4 right-4 w-8 h-8 bg-white/80 backdrop-blur rounded-full flex items-center justify-center hover:bg-white transition-colors">
+                <X className="w-4 h-4 text-gray-600" />
+              </button>
+            </div>
+
+            {/* 商品信息 */}
+            <div className="p-6">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-primary">{selectedProduct.title}</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {CATEGORY_MAP[selectedProduct.category || ""] || selectedProduct.category} · {selectedProduct.source === "platform" ? "平台自营" : "供应商货源"}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-accent">{formatPrice(selectedProduct.price)}</div>
+                  {selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price && (
+                    <div className="text-sm text-gray-400 line-through">{formatPrice(selectedProduct.original_price)}</div>
+                  )}
+                </div>
+              </div>
+
+              {selectedProduct.description && (
+                <p className="text-sm text-gray-600 mb-4 leading-relaxed">{selectedProduct.description}</p>
+              )}
+
+              <div className="grid grid-cols-2 gap-3 mb-6 text-sm">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <Package className="w-4 h-4" />
+                  <span>库存：{selectedProduct.stock} 件</span>
+                </div>
+                {selectedProduct.style_type && (
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Flame className="w-4 h-4" />
+                    <span>风格：{USER_STYLE_OPTIONS.find(s => s.value === selectedProduct.style_type)?.label || selectedProduct.style_type}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* 操作按钮 */}
+              <div className="flex gap-3">
+                <button onClick={handleCloseDetail}
+                  className="flex-1 py-3 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors">
+                  返回列表
+                </button>
+                <button onClick={handleOpenPurchase}
+                  className="flex-1 py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors flex items-center justify-center gap-2">
+                  <Truck className="w-4 h-4" />
+                  提交采购意向
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* 采购意向表单弹窗 */}
+      {showPurchaseIntent && selectedProduct && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={handleClosePurchase}>
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-primary">提交采购意向</h3>
+              <button onClick={handleClosePurchase} className="text-gray-400 hover:text-gray-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {purchaseSubmitted ? (
+              <div className="text-center py-8">
+                <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                <p className="text-gray-700 font-medium">采购意向已提交！</p>
+                <p className="text-sm text-gray-500 mt-2">我们将在24小时内与您联系确认订单。</p>
+              </div>
+            ) : (
+                <form onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await fetch('/api/purchase-intents', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      product_id: selectedProduct.id,
+                      product_title: selectedProduct.title,
+                      product_price: selectedProduct.price,
+                      quantity: purchaseQuantity,
+                      contact: purchaseContact,
+                      note: purchaseNote,
+                    }),
+                  });
+                  if (!res.ok) throw new Error('提交失败');
+                  setPurchaseSubmitted(true);
+                  setTimeout(() => { handleClosePurchase(); setPurchaseSubmitted(false); }, 3000);
+                } catch (err) {
+                  alert('提交失败，请稍后重试');
+                }
+              }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">商品</label>
+                  <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-600">
+                    {selectedProduct.title} · {formatPrice(selectedProduct.price)}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">采购数量 *</label>
+                  <input type="number" min={1} value={purchaseQuantity} onChange={(e) => setPurchaseQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
+                    required />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">联系方式 *</label>
+                  <input type="text" value={purchaseContact} onChange={(e) => setPurchaseContact(e.target.value)}
+                    placeholder="微信/手机/邮箱" 
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
+                    required />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">备注（选填）</label>
+                  <textarea value={purchaseNote} onChange={(e) => setPurchaseNote(e.target.value)}
+                    placeholder="尺码、颜色、收货地址等" rows={3}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none resize-none" />
+                </div>
+
+                <button type="submit"
+                  className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors">
+                  提交采购意向
+                </button>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
       )}
     </div>
   );

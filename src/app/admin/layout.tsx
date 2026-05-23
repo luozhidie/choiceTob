@@ -110,6 +110,7 @@ const sidebarGroups: SidebarGroup[] = [
     title: "采购 & 供应链",
     icon: Truck,
     items: [
+      { label: "采购意向", href: "/admin/purchase-intents", icon: ClipboardList },
       { label: "采购订单", href: "/admin/purchase-orders", icon: Truck },
       { label: "供应商管理", href: "/admin/supplier", icon: Package },
       { label: "供应商图片", href: "/admin/supplier-images", icon: ImagePlus },
