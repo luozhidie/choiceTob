@@ -290,20 +290,32 @@ export default function BuyerPage() {
                 )}
               </div>
             </div>
-            {/* 充值档位卡片 */}
-            <div className="flex gap-3 shrink-0">
-              {[
-                { amount: "5万", discount: "2.8折", ret: "退5%" },
-                { amount: "10万", discount: "2.8折", ret: "退10%" },
-                { amount: "30万", discount: "2.6折", ret: "退20%" },
-              ].map((tier) => (
-                <div key={tier.amount} className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4 text-center min-w-[100px]">
-                  <div className="text-xl font-bold">{tier.amount}</div>
-                  <div className="text-xs text-white/60 mt-1">充值</div>
-                  <div className="mt-2 text-accent font-bold text-sm">{tier.discount}</div>
-                  <div className="text-[10px] text-white/50">{tier.ret}</div>
-                </div>
-              ))}
+            {/* 充值档位卡片 — 原价 vs 会员价对比 */}
+            <div className="flex flex-col gap-3 shrink-0">
+              <div className="flex gap-3">
+                {[
+                  { amount: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
+                  { amount: "10万", discount: "2.8折", ret: "退10%", example: "原价¥100 → ¥28", highlight: false },
+                  { amount: "30万", discount: "2.6折", ret: "退20%", example: "原价¥100 → ¥26", highlight: true },
+                ].map((tier) => (
+                  <div key={tier.amount} className={`backdrop-blur-sm border rounded-xl p-4 text-center min-w-[100px] transition-all ${
+                    tier.highlight
+                      ? "bg-accent/20 border-accent/50 ring-1 ring-accent/30"
+                      : "bg-white/10 border-white/20"
+                  }`}>
+                    <div className="text-xl font-bold">{tier.amount}</div>
+                    <div className="text-xs text-white/60 mt-1">充值</div>
+                    <div className="mt-2 text-accent font-bold text-sm">{tier.discount}</div>
+                    <div className="text-[10px] text-white/50">{tier.ret}</div>
+                    <div className="text-[10px] text-white/70 mt-1.5 pt-1.5 border-t border-white/10">{tier.example}</div>
+                  </div>
+                ))}
+              </div>
+              <Link href="/members"
+                className="btn-accent text-xs py-2 rounded-lg font-semibold text-center flex items-center justify-center gap-1.5">
+                <Star className="w-3.5 h-3.5" />
+                开通会员享折扣
+              </Link>
             </div>
           </div>
         </div>
@@ -496,11 +508,18 @@ export default function BuyerPage() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-1">{product.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
+                            {product.original_price && product.original_price > product.price && (
+                              <span className="text-[10px] md:text-xs text-gray-400 line-through">
+                                {formatPrice(product.original_price)}
+                              </span>
+                            )}
+                          </div>
                           {product.original_price && product.original_price > product.price && (
-                            <span className="text-[10px] md:text-xs text-gray-400 line-through">
-                              {formatPrice(product.original_price)}
+                            <span className="text-[10px] text-accent/80 mt-0.5">
+                              会员省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
                             </span>
                           )}
                         </div>
@@ -744,7 +763,10 @@ export default function BuyerPage() {
                 <div className="text-right">
                   <div className="text-2xl font-bold text-accent">{formatPrice(selectedProduct.price)}</div>
                   {selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price && (
-                    <div className="text-sm text-gray-400 line-through">{formatPrice(selectedProduct.original_price)}</div>
+                    <>
+                      <div className="text-sm text-gray-400 line-through">{formatPrice(selectedProduct.original_price)}</div>
+                      <div className="text-xs text-accent/80 mt-0.5">会员省 ¥{((selectedProduct.original_price - selectedProduct.price) / 100).toFixed(0)}</div>
+                    </>
                   )}
                 </div>
               </div>

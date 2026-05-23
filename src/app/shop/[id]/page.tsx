@@ -398,15 +398,35 @@ export default function ProductDetailPage() {
               )}
 
               {/* 价格 */}
-              <div className="flex items-end gap-2 mb-6">
-                <span className="text-3xl font-bold text-accent">
-                  {formatPrice(product.price)}
-                </span>
-                {product.original_price && product.original_price > product.price && (
-                  <span className="text-lg text-gray-400 line-through mb-1">
-                    {formatPrice(product.original_price)}
+              <div className="mb-2">
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold text-accent">
+                    {formatPrice(product.price)}
                   </span>
+                  {product.original_price && product.original_price > product.price && (
+                    <span className="text-lg text-gray-400 line-through mb-1">
+                      {formatPrice(product.original_price)}
+                    </span>
+                  )}
+                </div>
+                {product.original_price && product.original_price > product.price && (
+                  <div className="mt-1 text-xs text-accent">
+                    💎 会员价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
+                  </div>
                 )}
+              </div>
+
+              {/* 会员开通入口 */}
+              <div className="mb-6 p-3 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border border-accent/10">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-medium text-primary">开通会员享折扣拿货</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">充值5万享2.8折 · 充值30万享2.6折</p>
+                  </div>
+                  <Link href="/members" className="btn-accent text-xs px-3 py-1.5 rounded-lg font-medium">
+                    开通会员
+                  </Link>
+                </div>
               </div>
 
               {/* 库存 */}
@@ -419,12 +439,6 @@ export default function ProductDetailPage() {
                   {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
                 </span>
               </div>
-
-              {product.original_price && product.original_price > product.price && (
-                <div className="mt-1 p-2 bg-accent/5 rounded-lg text-xs text-accent">
-                  💎 开通会员享折扣价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
-                </div>
-              )}
 
               {/* 标签 */}
               {product.tags && product.tags.length > 0 && (
