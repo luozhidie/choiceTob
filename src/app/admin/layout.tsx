@@ -47,7 +47,6 @@ import {
   Target,
   MessageSquare,
   Palette as StyleIcon,
-  ShoppingBag,
 } from "lucide-react";
 
 /* ── 侧边栏分组配置 ── */

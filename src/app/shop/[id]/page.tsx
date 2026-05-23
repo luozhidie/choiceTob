@@ -596,7 +596,7 @@ export default function ProductDetailPage() {
               onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
-                  {paymentSuccess ? "支付成功" : paymentQR ? "扫码支付" : "确认订单"}
+                  {paymentSuccess ? "支付成功" : paymentQR ? "请付款" : "确认订单"}
                 </h3>
                 <button onClick={() => setShowPurchaseIntent(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
@@ -616,7 +616,7 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
               ) : paymentQR ? (
-                /* 扫码支付 */
+                /* 线下付款 */
                 <div className="text-center">
                   <div className="mb-4 p-4 bg-gray-50 rounded-xl">
                     <p className="text-sm text-gray-600 mb-1">{product.title}</p>
@@ -625,24 +625,37 @@ export default function ProductDetailPage() {
                       <span className="text-sm font-normal text-gray-400 ml-1">× {purchaseQuantity}件</span>
                     </p>
                   </div>
-                  <div className="flex justify-center mb-4">
-                    {paymentQR.url_qrcode ? (
-                      <img src={paymentQR.url_qrcode} alt="支付二维码" className="w-56 h-56 rounded-xl" />
-                    ) : (
-                      <div className="w-56 h-56 bg-gray-100 rounded-xl flex items-center justify-center">
-                        <a href={paymentQR.url} target="_blank" rel="noopener noreferrer"
-                          className="btn-accent text-sm px-6 py-2 rounded-lg">
-                          打开支付页面
-                        </a>
-                      </div>
-                    )}
+
+                  {/* 微信收款码 */}
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2">1. 微信扫码付款</p>
+                    <div className="flex justify-center">
+                      <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-52 h-auto rounded-xl border border-gray-100" />
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-500">
-                    {paymentType === "wechat" ? "请使用微信扫码支付" : "请使用支付宝扫码支付"}
-                  </p>
-                  {paymentChecking && (
-                    <p className="text-xs text-gray-400 mt-2 animate-pulse">正在等待支付结果...</p>
-                  )}
+
+                  {/* 银行转账 */}
+                  <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
+                    <p className="text-sm font-medium text-gray-700 mb-1">2. 银行对公转账</p>
+                    <div className="text-xs text-gray-600 space-y-0.5">
+                      <p>户名：骆芷蝶（待补充）</p>
+                      <p>开户行：（待补充）</p>
+                      <p>账号：（待补充）</p>
+                    </div>
+                    <p className="text-[10px] text-amber-600 mt-1">转账时请备注订单号：{currentOrderNo}</p>
+                  </div>
+
+                  <div className="relative flex items-center gap-3 my-4">
+                    <div className="flex-1 h-px bg-gray-200" />
+                    <span className="text-xs text-gray-400">付款完成后</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+
+                  <button onClick={() => setPurchaseSubmitted(true)}
+                    className="w-full py-3 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors">
+                    我已付款，提交凭证
+                  </button>
+                  <p className="text-xs text-gray-400 mt-2">付款后请截图发给客服确认</p>
                 </div>
               ) : (
                 /* 订单确认表单 */

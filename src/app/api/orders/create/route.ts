@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createPayment, generateOrderNo } from "@/lib/payment";
+import { generateOrderNo } from "@/lib/payment";
 
 /**
  * POST /api/orders/create
- * 创建订单并获取支付二维码
+ * 创建订单（线下转账模式）
  */
 export async function POST(req: NextRequest) {
   try {
@@ -38,11 +38,8 @@ export async function POST(req: NextRequest) {
     }
 
     const orderNo = generateOrderNo();
-    const totalFeeYuan = (totalAmount / 100).toFixed(2);
-
     const supabase = await createClient();
 
-    // 写入订单
     const { data: order, error: dbError } = await supabase
       .from("orders")
       .insert({
@@ -66,53 +63,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // 调用虎皮椒支付
-    const appId = process.env.XUNHU_APPID!;
-    const appSecret = process.env.XUNHU_SECRET!;
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://colour-choice.art";
-
-    if (!appId || !appSecret) {
-      // 未配置支付密钥时，返回订单信息（测试模式）
-      console.warn("支付密钥未配置，订单已创建但未发起支付");
-      return NextResponse.json({
-        success: true,
-        order: order,
-        payment: null,
-        test_mode: true,
-        message: "支付未配置，请联系客服完成付款",
-      });
-    }
-
-    const paymentResult = await createPayment(
-      {
-        trade_order_id: orderNo,
-        total_fee: totalFeeYuan,
-        title: product_title || "骆芷蝶智选-商品采购",
-        notify_url: `${siteUrl}/api/orders/notify`,
-        return_url: `${siteUrl}/buyer?order=${orderNo}`,
-        type: payment_type,
-      },
-      appId,
-      appSecret
-    );
-
-    // 更新订单的支付信息
-    await supabase
-      .from("orders")
-      .update({
-        payment_url: paymentResult.url,
-        payment_qrcode: paymentResult.url_qrcode,
-      })
-      .eq("order_no", orderNo);
-
     return NextResponse.json({
       success: true,
       order: order,
-      payment: {
-        url_qrcode: paymentResult.url_qrcode,
-        url: paymentResult.url,
-        order_id: paymentResult.order_id,
-      },
+      payment: null,
+      offline_mode: true,
+      message: "订单已创建，请扫码或转账付款",
     });
   } catch (err: any) {
     console.error("创建订单失败:", err);
