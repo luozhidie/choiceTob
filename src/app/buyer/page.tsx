@@ -127,6 +127,7 @@ export default function BuyerPage() {
   const [sortBy, setSortBy] = useState("sort_order");
   const [showPaywall, setShowPaywall] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<MergedProduct | null>(null);
+  const [visible, setVisible] = useState(false);
   const [showProductDetail, setShowProductDetail] = useState(false);
   const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
   const [purchaseQuantity, setPurchaseQuantity] = useState(1);
