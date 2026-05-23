@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CATEGORY_MAP,
@@ -367,8 +367,7 @@ export default function ProductDetailPage() {
                     )}
                   </motion.div>
                 )}
-              </AnimatePrescence>
-            </div>
+              </AnimatePresence>
             </div>
 
             {/* 右侧商品信息 */}

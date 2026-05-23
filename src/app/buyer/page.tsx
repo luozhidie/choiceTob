@@ -496,9 +496,10 @@ export default function BuyerPage() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-1">{product.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                        <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-base md:text-lg font-bold text-accent">{formatPrice(product.price)}</span>
                           {product.original_price && product.original_price > product.price && (
-                            <span className="ml-1.5 text-[10px] md:text-xs text-gray-400 line-through">
+                            <span className="text-[10px] md:text-xs text-gray-400 line-through">
                               {formatPrice(product.original_price)}
                             </span>
                           )}
