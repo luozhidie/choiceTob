@@ -125,6 +125,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { label: "库存管理", href: "/admin/inventory", icon: Warehouse },
       { label: "销售数据", href: "/admin/sales-data", icon: Receipt },
+      { label: "门店经营数据", href: "/admin/store-reports", icon: BarChart3 },
       { label: "订单管理", href: "/admin/orders", icon: FileText },
       { label: "市场需求统计", href: "/admin/market-demand", icon: TrendingUp },
     ],
