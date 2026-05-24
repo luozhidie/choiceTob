@@ -209,27 +209,26 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="fashion-tag bg-white/10 text-gold border border-gold/30 backdrop-blur-sm mb-8 inline-flex items-center gap-2">
-                <Sparkles className="w-3 h-3" />
-                数据驱动 · 智选未来
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 mb-8 text-[13px] font-medium tracking-wide text-white/90">
+                ✨ 数据驱动 · 智选未来
               </span>
             </motion.div>
 
             <motion.h1
-              className="fashion-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.08] tracking-tight"
+              className="text-[2rem] leading-[1.25] sm:text-[2.75rem] sm:leading-[1.2] lg:text-[3.5rem] lg:leading-[1.15] xl:text-[4rem] xl:leading-[1.12] font-black tracking-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
               企划定品控方向
               <br />
-              供应链稳货源
+              <span className="inline-block mt-1">供应链稳货源</span>
               <br />
-              <span className="text-accent">落地赋能</span>提业绩
+              <span className="bg-gradient-to-r from-accent to-pink-300 bg-clip-text text-transparent">落地赋能</span>提业绩
             </motion.h1>
 
             <motion.p
-              className="mt-8 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl font-light"
+              className="mt-7 text-base sm:text-lg text-white/60 leading-relaxed max-w-lg"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -273,10 +272,10 @@ export default function Home() {
                 className="text-center"
                 variants={fadeUp}
               >
-                <div className="fashion-heading text-3xl sm:text-4xl font-bold text-white">
+                <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
                   {s.value}
                 </div>
-                <div className="mt-2 text-sm text-white/50 tracking-wider uppercase">
+                <div className="mt-2 text-xs sm:text-sm text-white/40 font-medium tracking-wider">
                   {s.label}
                 </div>
               </motion.div>
@@ -302,7 +301,7 @@ export default function Home() {
             <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               热门服务
             </span>
-            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
               限时优惠，立即体验
             </h2>
           </motion.div>
@@ -420,7 +419,7 @@ export default function Home() {
             <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
               核心业务
             </span>
-            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
               全链路数据驱动服务
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
@@ -471,7 +470,7 @@ export default function Home() {
             <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               增值工具
             </span>
-            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
               数据工具与专业服务
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
@@ -524,7 +523,7 @@ export default function Home() {
               <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
                 为什么选择我们
               </span>
-              <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary leading-tight">
+              <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight leading-tight">
                 行业深耕
                 <br />
                 数据驱动
@@ -574,7 +573,7 @@ export default function Home() {
                   variants={fadeUp}
                   custom={i}
                 >
-                  <span className="fashion-heading text-3xl sm:text-4xl font-bold text-primary">
+                  <span className="text-[1.75rem] sm:text-[2.25rem] font-black tracking-tight text-primary">
                     {item.num}
                   </span>
                   <span className="mt-2 text-sm text-muted-foreground text-center">
@@ -601,7 +600,7 @@ export default function Home() {
             <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               时尚前沿
             </span>
-            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
               骆芷蝶时尚杂志
             </h2>
             <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
@@ -706,7 +705,7 @@ export default function Home() {
             <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
               客户证言
             </span>
-            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold">
+            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight">
               他们正在使用骆芷蝶智选
             </h2>
             <p className="mt-5 text-white/60 leading-relaxed text-sm max-w-md mx-auto">
@@ -770,7 +769,7 @@ export default function Home() {
             )}
 
             <div className="relative">
-              <h2 className="fashion-heading text-3xl sm:text-4xl font-bold">
+              <h2 className="text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight">
                 开启数据驱动的智选之旅
               </h2>
               <p className="mt-5 text-white/70 max-w-lg mx-auto leading-relaxed text-sm">
