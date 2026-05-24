@@ -50,7 +50,7 @@ function LoginForm() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#1ab3a4]">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary">
               <span className="text-white font-bold text-xl">骆</span>
             </div>
             <div className="flex flex-col leading-tight">
@@ -84,7 +84,7 @@ function LoginForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="请输入邮箱"
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
               </div>
             </div>
@@ -101,7 +101,7 @@ function LoginForm() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="请输入密码"
                   required
-                  className="w-full pl-11 pr-11 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-11 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
                 <button
                   type="button"
@@ -125,7 +125,7 @@ function LoginForm() {
           <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
             <Link
               href="/register"
-              className="text-sm text-[#1ab3a4] hover:text-[#159e91] font-medium transition-colors"
+              className="text-sm text-primary hover:text-primary font-medium transition-colors"
             >
               还没有账号？去注册
             </Link>
@@ -146,7 +146,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-8 h-8 border-2 border-[#1ab3a4] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     }>
       <LoginForm />

@@ -63,7 +63,7 @@ export default function RegisterPage() {
           animate={{ opacity: 1, scale: 1 }}
         >
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-            <CheckCircle2 className="w-16 h-16 text-[#1ab3a4] mx-auto mb-4" />
+            <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
             <h2 className="text-xl font-bold text-[#0f4c3a] mb-2">注册成功！</h2>
             <p className="text-gray-500 text-sm mb-6">
               请前往您的邮箱查收验证邮件，点击链接激活账号后即可登录。
@@ -90,7 +90,7 @@ export default function RegisterPage() {
       >
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-[#1ab3a4]">
+            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary">
               <span className="text-white font-bold text-xl">骆</span>
             </div>
             <div className="flex flex-col leading-tight">
@@ -121,7 +121,7 @@ export default function RegisterPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="请输入邮箱"
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function RegisterPage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="您的姓名"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                   />
                 </div>
               </div>
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="手机号"
-                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                    className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                   />
                 </div>
               </div>
@@ -164,7 +164,7 @@ export default function RegisterPage() {
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
                   placeholder="您的店铺或公司名称"
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
               </div>
             </div>
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                   placeholder="至少6位字符"
                   required
                   minLength={6}
-                  className="w-full pl-11 pr-11 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-11 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
                 <button
                   type="button"
@@ -202,7 +202,7 @@ export default function RegisterPage() {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="再次输入密码"
                   required
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-[#1ab3a4] focus:ring-2 focus:ring-[#1ab3a4]/20 outline-none transition-all text-sm"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                 />
               </div>
             </div>
@@ -219,7 +219,7 @@ export default function RegisterPage() {
           <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-between">
             <Link
               href="/login"
-              className="text-sm text-[#1ab3a4] hover:text-[#159e91] font-medium transition-colors"
+              className="text-sm text-primary hover:text-primary font-medium transition-colors"
             >
               已有账号？去登录
             </Link>

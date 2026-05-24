@@ -1,31 +1,139 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* 时尚品牌调色板 */
+  --background: #faf8f6;
   --foreground: #1a1a2e;
-  --primary: #1ab3a4;
-  --accent: #ec4899;
-  --muted: #f0faf9;
-  --muted-foreground: #6b7280;
+  --primary: #2d1b2e;       /* 深炭灰紫 — 替代原来偏科技的青绿色 */
+  --primary-light: #4a3a4b;
+  --accent: #c44569;        /* 高级玫红 — 替代原来过于鲜艳的粉色 */
+  --accent-light: #f7e8ec;
+  --gold: #b8945a;          /* 暖金色点缀 */
+  --muted: #f5f2ef;
+  --muted-foreground: #8a7e7b;
+  --surface: #ffffff;
+  --border: #ede8e4;
+
+  /* 阴影系统 — 更柔和 */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-primary: var(--primary);
+  --color-primary-light: var(--primary-light);
   --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-gold: var(--gold);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-playfair), Georgia, "Times New Roman", serif;
   --font-mono: var(--font-geist-mono);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+/* 时尚卡片 */
+.fashion-card {
+  background: var(--surface);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fashion-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+  border-color: var(--accent);
+}
+
+/* 时尚按钮 */
+.btn-fashion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-fashion-primary {
+  background: var(--primary);
+  color: white;
+}
+.btn-fashion-primary:hover {
+  background: var(--primary-light);
+  box-shadow: 0 4px 20px rgba(45, 27, 46, 0.3);
+}
+.btn-fashion-accent {
+  background: var(--accent);
+  color: white;
+}
+.btn-fashion-accent:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 20px rgba(196, 69, 105, 0.3);
+}
+.btn-fashion-outline {
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  background: transparent;
+}
+.btn-fashion-outline:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* 标题样式 */
+.fashion-heading {
+  font-family: var(--font-serif);
+  letter-spacing: -0.01em;
+}
+
+/* 装饰线 */
+.accent-line {
+  width: 48px;
+  height: 3px;
+  background: var(--accent);
+  border-radius: 2px;
+}
+.gold-line {
+  width: 48px;
+  height: 2px;
+  background: var(--gold);
+  border-radius: 2px;
+}
+
+/* 渐变Hero背景 */
+.hero-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, #4a2a3e 40%, #3d2b3f 70%, var(--primary-light) 100%);
+}
+
+/* 标签 */
+.fashion-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }

@@ -17,29 +17,30 @@ import {
   Truck,
   GraduationCap,
   ArrowRight,
-  Quote,
+  Sparkles,
   CheckCircle2,
   FileText,
   Palette,
   BookOpen,
   ShoppingBag,
   User,
+  Star,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
 /* ------------------------------------------------------------------ */
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 40 },
   visible: (i: number = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, delay: i * 0.1, ease: "easeOut" as const },
+    transition: { duration: 0.6, delay: i * 0.08, ease: "easeOut" as const },
   }),
 };
 
 const stagger = {
-  visible: { transition: { staggerChildren: 0.08 } },
+  visible: { transition: { staggerChildren: 0.06 } },
 };
 
 /* ------------------------------------------------------------------ */
@@ -49,31 +50,31 @@ const coreServices = [
   {
     icon: TrendingUp,
     title: "买手选品",
-    desc: "基于大数据趋势分析与市场洞察，精准锁定爆款基因，从源头提升选品胜率。",
+    desc: "大数据趋势洞察 × 爆款基因锁定，源头提升选品胜率",
     href: "/buyer",
   },
   {
     icon: Lightbulb,
     title: "商品企划",
-    desc: "科学规划商品结构与节奏，融合品类规划与生命周期管理，实现利润最大化。",
+    desc: "科学品类规划 × 生命周期管理，最大化单品利润",
     href: "/planning",
   },
   {
     icon: FileText,
     title: "企划工具",
-    desc: "智能生成个性化商品企划报告，输入关键信息即可获取完整企划方案。",
+    desc: "输入关键词 → 智能生成完整企划方案",
     href: "/planning-tool",
   },
   {
     icon: BarChart3,
     title: "爆款货盘",
-    desc: "实时追踪全网热销数据，一键获取高转化爆款货源，抢占市场先机。",
+    desc: "全网热销实时追踪，一键锁定高转化货源",
     href: "/hot-picks",
   },
   {
     icon: LayoutGrid,
     title: "陈列搭配",
-    desc: "智能化陈列方案与搭配推荐，提升店铺视觉体验与连带销售率。",
+    desc: "智能陈列 × 场景搭配，拉动连带销售",
     href: "/display",
   },
 ];
@@ -82,57 +83,57 @@ const dataTools = [
   {
     icon: Megaphone,
     title: "营销策划",
-    desc: "全渠道营销方案智能生成，活动策略一键落地，流量与转化双提升。",
+    desc: "全渠道方案智能生成，流量转化双提升",
     href: "/marketing",
   },
   {
     icon: Headphones,
     title: "销售服务",
-    desc: "从培训到工具的全方位销售赋能体系，提升团队战斗力与客户满意度。",
+    desc: "培训+工具全方位赋能，提升团队战斗力",
     href: "/sales",
   },
   {
     icon: Crown,
     title: "VIP管理",
-    desc: "客户分层精细运营，智能推荐与专属权益体系，深度挖掘高价值客户终身价值。",
+    desc: "客户分层精细运营，挖掘高价值客户终身价值",
     href: "/vip",
   },
   {
     icon: Truck,
     title: "一手货源",
-    desc: "优质供应商资源整合，全链路协同管理，从源头保障品质与交期。",
+    desc: "优质供应商整合，源头保障品质与交期",
     href: "/supplier",
   },
   {
     icon: GraduationCap,
     title: "知识付费",
-    desc: "行业顶尖专家实战课程与案例解析，系统提升团队专业能力。",
+    desc: "行业专家实战课程，系统提升专业能力",
     href: "/education",
   },
 ];
 
 const stats = [
-  { value: "5000+", label: "合作品牌" },
+  { value: "5,000+", label: "合作品牌" },
   { value: "98%", label: "客户续约率" },
-  { value: "3x", label: "选品效率提升" },
+  { value: "3×", label: "选品效率提升" },
   { value: "50万+", label: "SKU覆盖" },
 ];
 
 const testimonials = [
   {
-    quote: "骆芷蝶智选的数据驱动选品方案，让我们的首单成功率提升了60%，库存周转天数缩短了30%，真正实现了从经验选品到科学选品的跨越。",
+    quote: "数据驱动选品让首单成功率提升了60%，库存周转缩短30天。从经验到科学的跨越，远超预期。",
     name: "李晓燕",
-    role: "某知名女装品牌 商品总监",
+    role: "知名女装品牌 商品总监",
   },
   {
-    quote: "接入爆款货盘后，我们的上新速度提升了3倍，爆款命中率从15%提升到45%，供应链协同效率大幅提升。",
+    quote: "接入爆款货盘后，上新速度提升3倍，爆款命中率从15%飙升至45%，供应链效率质的飞跃。",
     name: "王志强",
-    role: "某快时尚品牌 供应链负责人",
+    role: "快时尚品牌 供应链负责人",
   },
   {
-    quote: "VIP管理模块帮助我们精准识别高价值客户，复购率提升了80%，会员贡献占比从35%增长到62%，效果远超预期。",
+    quote: "VIP管理模块精准识别高价值客户，复购率提升80%，会员贡献占比从35%增长到62%。",
     name: "陈美琪",
-    role: "某高端女装品牌 运营总监",
+    role: "高端女装品牌 运营总监",
   },
 ];
 
@@ -143,65 +144,66 @@ export default function Home() {
   return (
     <>
       {/* ====== Hero ====== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
-        {/* Decorative bg elements */}
+      <section className="relative overflow-hidden hero-gradient text-white">
+        {/* Decorative */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/3" />
-          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-white/5 translate-y-1/3 -translate-x-1/4" />
+          <div className="absolute top-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-accent/8 blur-3xl" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-3xl" />
         </div>
 
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
           <div className="max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.6 }}
             >
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-6">
-                <TrendingUp className="w-4 h-4" />
-                数据驱动，智选未来
+              <span className="fashion-tag bg-white/10 text-gold border border-gold/30 backdrop-blur-sm mb-8 inline-flex items-center gap-2">
+                <Sparkles className="w-3 h-3" />
+                数据驱动 · 智选未来
               </span>
             </motion.div>
 
             <motion.h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight"
+              className="fashion-heading text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold leading-[1.08] tracking-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
-              服装供应链
-              <span className="text-accent">智选</span>
-              平台
+              企划定品控方向
+              <br />
+              供应链稳货源
+              <br />
+              <span className="text-accent">落地赋能</span>提业绩
             </motion.h1>
 
             <motion.p
-              className="mt-6 text-lg sm:text-xl text-white/80 leading-relaxed max-w-2xl"
+              className="mt-8 text-base sm:text-lg text-white/70 leading-relaxed max-w-xl font-light"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
-              从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营。
-              帮助品牌精准选品、科学企划、高效营销，实现从经验决策到数据决策的全面升级。
+              一站式帮门店管好货、做好店、赚稳钱
             </motion.p>
 
             <motion.div
               className="mt-10 flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
               <Link
                 href="/contact"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-[#1ab3a4] text-white font-semibold rounded-lg hover:bg-[#159e91] transition-colors shadow-lg shadow-[#1ab3a4]/20"
+                className="btn-fashion btn-fashion-accent shadow-lg shadow-accent/25"
               >
                 预约演示
                 <ChevronRight className="w-5 h-5" />
               </Link>
               <Link
                 href="/buyer"
-                className="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors backdrop-blur-sm border border-white/20"
+                className="btn-fashion border-1.5 border-white/25 text-white hover:bg-white/10"
               >
-                了解更多
+                探索产品
                 <ArrowRight className="w-5 h-5" />
               </Link>
             </motion.div>
@@ -209,7 +211,7 @@ export default function Home() {
 
           {/* Stats */}
           <motion.div
-            className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6"
+            className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8"
             initial="hidden"
             animate="visible"
             variants={stagger}
@@ -220,10 +222,12 @@ export default function Home() {
                 className="text-center"
                 variants={fadeUp}
               >
-                <div className="text-3xl sm:text-4xl font-bold text-white">
+                <div className="fashion-heading text-3xl sm:text-4xl font-bold text-white">
                   {s.value}
                 </div>
-                <div className="mt-1 text-sm text-white/80">{s.label}</div>
+                <div className="mt-2 text-sm text-white/50 tracking-wider uppercase">
+                  {s.label}
+                </div>
               </motion.div>
             ))}
           </motion.div>
@@ -234,141 +238,147 @@ export default function Home() {
       <AdBanner position="top" />
 
       {/* ====== Hot Services ====== */}
-      <section className="py-16 lg:py-20 bg-white">
+      <section className="py-20 lg:py-28 bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center max-w-2xl mx-auto mb-12"
+            className="text-center max-w-xl mx-auto mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+            <div className="accent-line mx-auto mb-5" />
+            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               热门服务
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
               限时优惠，立即体验
             </h2>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* 风格测试 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <Link
-                href="/style-test"
-                className="group block p-8 rounded-2xl bg-gradient-to-br from-accent/5 to-accent/10 border border-accent/20 hover:shadow-lg hover:border-accent/40 transition-all duration-300"
+            {[
+              {
+                href: "/style-test",
+                bg: "from-accent-light to-accent-light/40",
+                border: "border-accent/15 hover:border-accent/40",
+                iconBg: "bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white",
+                icon: User,
+                title: "穿衣风格测试",
+                desc: "AI智能分析专属风格，科学定位美学密码",
+                price: "¥99",
+                originPrice: "¥199",
+                tag: "可测2次",
+                cta: "立即测试",
+                ctaColor: "text-accent",
+              },
+              {
+                href: "/courses",
+                bg: "from-muted to-muted/40",
+                border: "border-border hover:border-primary/30",
+                iconBg: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white",
+                icon: BookOpen,
+                title: "线上课程",
+                desc: "专业色彩形象课程，从入门到精通",
+                extInfo: (
+                  <>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium">
+                      免费+付费
+                    </span>
+                    <span className="text-xs text-muted-foreground">多门课程可选</span>
+                  </>
+                ),
+                cta: "浏览课程",
+                ctaColor: "text-primary",
+              },
+              {
+                href: "/buyer",
+                bg: "from-pink-50 to-pink-50/40",
+                border: "border-pink-200/50 hover:border-pink-300/60",
+                iconBg: "bg-pink-100 text-pink-500 group-hover:bg-pink-500 group-hover:text-white",
+                icon: ShoppingBag,
+                title: "买手选品",
+                desc: "精选优质货源，按风格色系精准筛选",
+                extInfo: (
+                  <>
+                    <span className="text-xs px-2.5 py-1 rounded-full bg-pink-100 text-pink-500 font-medium">
+                      精选推荐
+                    </span>
+                    <span className="text-xs text-muted-foreground">品质保障</span>
+                  </>
+                ),
+                cta: "去逛逛",
+                ctaColor: "text-pink-500",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 + i * 0.1 }}
               >
-                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-accent/10 text-accent mb-5 group-hover:bg-accent group-hover:text-white transition-colors">
-                  <User className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
-                  穿衣风格测试
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  AI智能分析你的专属风格，科学定位美学密码
-                </p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="text-2xl font-bold text-accent">¥99</span>
-                  <span className="text-sm text-muted-foreground line-through">¥199</span>
-                  <span className="text-xs px-2 py-0.5 bg-accent text-white rounded-full">可测2次</span>
-                </div>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent">
-                  立即测试 <ArrowRight className="w-4 h-4" />
-                </span>
-              </Link>
-            </motion.div>
-
-            {/* 线上课程 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <Link
-                href="/courses"
-                className="group block p-8 rounded-2xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 hover:shadow-lg hover:border-primary/40 transition-all duration-300"
-              >
-                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-primary/10 text-primary mb-5 group-hover:bg-primary group-hover:text-white transition-colors">
-                  <BookOpen className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
-                  线上课程
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  专业色彩形象课程，从入门到精通，助你掌握风格密码
-                </p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded-full font-medium">免费+付费</span>
-                  <span className="text-xs text-muted-foreground">多门课程可选</span>
-                </div>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  浏览课程 <ArrowRight className="w-4 h-4" />
-                </span>
-              </Link>
-            </motion.div>
-
-            {/* 精选好物 */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 }}
-            >
-              <Link
-                href="/buyer"
-                className="group block p-8 rounded-2xl bg-gradient-to-br from-pink-50 to-pink-100/50 border border-pink-200/50 hover:shadow-lg hover:border-pink-300/50 transition-all duration-300"
-              >
-                <div className="flex items-center justify-center w-14 h-14 rounded-xl bg-pink-100 text-pink-500 mb-5 group-hover:bg-pink-500 group-hover:text-white transition-colors">
-                  <ShoppingBag className="w-7 h-7" />
-                </div>
-                <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
-                  买手选品
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                  精选优质货源，按风格、色系精准筛选
-                </p>
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="text-xs px-2 py-0.5 bg-pink-100 text-pink-500 rounded-full font-medium">精选推荐</span>
-                  <span className="text-xs text-muted-foreground">品质保障</span>
-                </div>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-pink-500">
-                  去逛逛 <ArrowRight className="w-4 h-4" />
-                </span>
-              </Link>
-            </motion.div>
+                <Link
+                  href={item.href}
+                  className={`group block p-8 rounded-2xl bg-gradient-to-br ${item.bg} border ${item.border} hover:shadow-lg transition-all duration-300`}
+                >
+                  <div
+                    className={`flex items-center justify-center w-14 h-14 rounded-xl ${item.iconBg} mb-6 transition-colors duration-300`}
+                  >
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">
+                    {item.desc}
+                  </p>
+                  <div className="mt-5 flex items-center gap-3">
+                    {item.price && (
+                      <>
+                        <span className="text-2xl font-bold text-accent">{item.price}</span>
+                        <span className="text-sm text-gray-300 line-through">{item.originPrice}</span>
+                        <span className="text-xs px-2 py-0.5 bg-accent text-white rounded-full">{item.tag}</span>
+                      </>
+                    )}
+                    {item.extInfo && (
+                      <div className="flex items-center gap-2">{item.extInfo}</div>
+                    )}
+                  </div>
+                  <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${item.ctaColor}`}>
+                    {item.cta} <ArrowRight className="w-4 h-4" />
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ====== Core Business ====== */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-xl mx-auto mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+            <div className="gold-line mx-auto mb-5" />
+            <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
               核心业务
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
               全链路数据驱动服务
             </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              覆盖服装行业从选品到销售的核心业务场景，以数据智能赋能每一个关键决策节点。
+            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
+              覆盖从选品到销售的核心场景，以数据智能赋能每一个决策节点
             </p>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
@@ -376,12 +386,9 @@ export default function Home() {
           >
             {coreServices.map((item, i) => (
               <motion.div key={item.title} variants={fadeUp} custom={i}>
-                <Link
-                  href={item.href}
-                  className="group flex flex-col h-full p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300"
-                >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent/10 group-hover:text-accent transition-colors">
-                    <item.icon className="w-6 h-6" />
+                <Link href={item.href} className="fashion-card group flex flex-col h-full p-8">
+                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                    <item.icon className="w-5 h-5" />
                   </div>
                   <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
                     {item.title}
@@ -389,7 +396,7 @@ export default function Home() {
                   <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
                     {item.desc}
                   </p>
-                  <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-accent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
                     了解详情 <ArrowRight className="w-4 h-4" />
                   </span>
                 </Link>
@@ -400,28 +407,29 @@ export default function Home() {
       </section>
 
       {/* ====== Data Tools ====== */}
-      <section className="py-20 lg:py-28 bg-muted">
+      <section className="py-20 lg:py-28 bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-xl mx-auto mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+            <div className="accent-line mx-auto mb-5" />
+            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               增值工具
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
               数据工具与专业服务
             </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              以数据为引擎，以服务为纽带，构建服装行业全场景赋能体系。
+            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
+              以数据为引擎，以服务为纽带，构建全场景赋能体系
             </p>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
@@ -431,9 +439,9 @@ export default function Home() {
               <motion.div key={item.title} variants={fadeUp} custom={i}>
                 <Link
                   href={item.href}
-                  className="group flex items-start gap-5 p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg hover:border-accent/30 transition-all duration-300"
+                  className="fashion-card group flex items-start gap-5 p-6"
                 >
-                  <div className="flex items-center justify-center w-11 h-11 rounded-lg bg-accent/10 text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-colors">
+                  <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
                     <item.icon className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -452,34 +460,37 @@ export default function Home() {
       </section>
 
       {/* ====== Why Choose Us ====== */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
             <motion.div
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true, amount: 0.3 }}
               variants={fadeUp}
             >
-              <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+              <div className="gold-line mb-5" />
+              <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
                 为什么选择我们
               </span>
-              <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-                行业深耕，数据驱动
+              <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary leading-tight">
+                行业深耕
+                <br />
+                数据驱动
               </h2>
-              <p className="mt-4 text-muted-foreground leading-relaxed">
+              <p className="mt-5 text-muted-foreground leading-relaxed">
                 十年服装行业深耕，结合前沿数据智能技术，打造真正懂行业的供应链智选平台。
               </p>
               <ul className="mt-8 flex flex-col gap-4">
                 {[
                   "全网实时数据监测，覆盖主流电商平台与社交渠道",
                   "AI驱动的趋势预测模型，提前30天预判爆款走向",
-                  "100+资深行业顾问，提供从策略到落地的全程陪伴",
-                  "与5000+优质供应商深度合作，源头资源直达",
+                  "100+资深行业顾问，提供策略到落地的全程陪伴",
+                  "5,000+优质供应商深度合作，源头资源直达",
                 ].map((text) => (
                   <li key={text} className="flex items-start gap-3">
                     <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-700 leading-relaxed">
+                    <span className="text-sm text-foreground/80 leading-relaxed">
                       {text}
                     </span>
                   </li>
@@ -487,7 +498,7 @@ export default function Home() {
               </ul>
               <Link
                 href="/contact"
-                className="mt-10 inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+                className="btn-fashion btn-fashion-accent mt-10"
               >
                 立即咨询 <ArrowRight className="w-4 h-4" />
               </Link>
@@ -508,11 +519,11 @@ export default function Home() {
               ].map((item, i) => (
                 <motion.div
                   key={item.sub}
-                  className="flex flex-col items-center justify-center p-8 rounded-2xl bg-muted"
+                  className="fashion-card flex flex-col items-center justify-center p-8"
                   variants={fadeUp}
                   custom={i}
                 >
-                  <span className="text-3xl sm:text-4xl font-bold text-primary">
+                  <span className="fashion-heading text-3xl sm:text-4xl font-bold text-primary">
                     {item.num}
                   </span>
                   <span className="mt-2 text-sm text-muted-foreground text-center">
@@ -526,22 +537,23 @@ export default function Home() {
       </section>
 
       {/* ====== Magazine Preview ====== */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-surface">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-xl mx-auto mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+            <div className="accent-line mx-auto mb-5" />
+            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
               时尚前沿
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold text-primary">
               骆芷蝶时尚杂志
             </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
+            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
               对标Vogue，汇聚全球时尚资讯、流行趋势与搭配灵感
             </p>
           </motion.div>
@@ -569,7 +581,7 @@ export default function Home() {
               {
                 tag: "行业洞察",
                 title: "可持续时尚崛起：环保面料成消费者新宠",
-                desc: "Z世代消费观念转变，环保认证成品牌溢价新支点，供应链如何应变",
+                desc: "Z世代消费观念转变，环保认证成品牌溢价新支点",
                 date: "2026-05-05",
               },
             ].map((article, i) => (
@@ -580,20 +592,20 @@ export default function Home() {
                 className="group cursor-pointer"
                 onClick={() => (window.location.href = "/magazine")}
               >
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 to-accent/10 aspect-[4/3] flex items-center justify-center mb-4 group-hover:shadow-lg transition-shadow">
-                  <span className="text-6xl opacity-20">📖</span>
-                  <span className="absolute top-4 left-4 px-3 py-1 rounded-full bg-accent text-white text-xs font-semibold">
+                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 aspect-[4/3] flex items-center justify-center mb-5 group-hover:shadow-md transition-shadow border border-border">
+                  <span className="fashion-heading text-7xl text-primary/10 select-none">M</span>
+                  <span className="absolute top-4 left-4 fashion-tag bg-accent text-white text-[10px]">
                     {article.tag}
                   </span>
                 </div>
-                <h3 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-2">
+                <h3 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-2 leading-snug">
                   {article.title}
                 </h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
                   {article.desc}
                 </p>
-                <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
-                  <span>📅</span>
+                <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="w-1 h-1 rounded-full bg-gold" />
                   <span>{article.date}</span>
                 </div>
               </motion.div>
@@ -609,7 +621,7 @@ export default function Home() {
           >
             <Link
               href="/magazine"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+              className="btn-fashion btn-fashion-outline"
             >
               浏览完整杂志
               <ArrowRight className="w-5 h-5" />
@@ -619,23 +631,24 @@ export default function Home() {
       </section>
 
       {/* ====== Testimonials ====== */}
-      <section className="py-20 lg:py-28 bg-primary text-white">
+      <section className="py-20 lg:py-28 hero-gradient text-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="text-center max-w-2xl mx-auto mb-16"
+            className="text-center max-w-xl mx-auto mb-16"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+            <div className="w-12 h-[2px] bg-gold/60 mx-auto mb-5" />
+            <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
               客户证言
             </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold">
+            <h2 className="fashion-heading mt-4 text-3xl sm:text-4xl font-bold">
               他们正在使用骆芷蝶智选
             </h2>
-            <p className="mt-4 text-white/70 leading-relaxed">
-              众多知名服装品牌的选择与信赖，数据驱动成效看得见。
+            <p className="mt-5 text-white/60 leading-relaxed text-sm max-w-md mx-auto">
+              众多知名服装品牌的选择与信赖
             </p>
           </motion.div>
 
@@ -649,17 +662,21 @@ export default function Home() {
             {testimonials.map((t, i) => (
               <motion.div
                 key={t.name}
-                className="flex flex-col p-8 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10"
+                className="flex flex-col p-8 rounded-2xl bg-white/[0.06] backdrop-blur-sm border border-white/10 hover:bg-white/[0.09] transition-colors"
                 variants={fadeUp}
                 custom={i}
               >
-                <Quote className="w-8 h-8 text-accent/60 mb-4 shrink-0" />
+                <div className="flex gap-0.5 mb-5">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-3.5 h-3.5 fill-gold text-gold" />
+                  ))}
+                </div>
                 <p className="text-white/80 leading-relaxed flex-1 text-sm">
-                  {t.quote}
+                  "{t.quote}"
                 </p>
-                <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="mt-6 pt-5 border-t border-white/10">
                   <div className="font-semibold text-sm">{t.name}</div>
-                  <div className="text-white/50 text-xs mt-1">{t.role}</div>
+                  <div className="text-white/40 text-xs mt-1">{t.role}</div>
                 </div>
               </motion.div>
             ))}
@@ -668,37 +685,36 @@ export default function Home() {
       </section>
 
       {/* ====== CTA ====== */}
-      <section className="py-20 lg:py-28 bg-white">
+      <section className="py-20 lg:py-28 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 px-8 sm:px-12 lg:px-20 py-14 sm:py-20 text-center text-white"
+            className="relative overflow-hidden rounded-3xl hero-gradient px-8 sm:px-12 lg:px-20 py-16 sm:py-20 text-center text-white"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            {/* Decorative */}
-            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/8 blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
 
             <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-bold">
+              <h2 className="fashion-heading text-3xl sm:text-4xl font-bold">
                 开启数据驱动的智选之旅
               </h2>
-              <p className="mt-4 text-white/80 max-w-xl mx-auto leading-relaxed">
-                立即预约演示，了解骆芷蝶智选如何助力您的品牌实现精准运营与高效增长。
+              <p className="mt-5 text-white/70 max-w-lg mx-auto leading-relaxed text-sm">
+                立即预约演示，了解骆芷蝶智选如何助力您的门店实现精准运营与高效增长
               </p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Link
                   href="/contact"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
+                  className="btn-fashion btn-fashion-accent shadow-lg shadow-accent/20"
                 >
                   预约免费演示
                   <ChevronRight className="w-5 h-5" />
                 </Link>
                 <Link
                   href="/buyer"
-                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
+                  className="btn-fashion border-1.5 border-white/25 text-white hover:bg-white/10"
                 >
                   探索产品功能
                   <ArrowRight className="w-5 h-5" />
@@ -709,11 +725,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== Popup Ad ====== */}
+      {/* ====== Popup Ad + Admin Link ====== */}
       <PopupAd />
 
-      {/* ====== Admin Login (Footer is in layout) ====== */}
-      <div className="py-4 bg-muted/60 border-t border-gray-100">
+      <div className="py-4 bg-background border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-end">
           <Link href="/admin/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             管理员登录

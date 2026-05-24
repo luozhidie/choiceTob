@@ -586,7 +586,7 @@ export default function ProductDetailPage() {
                 title: "职场通勤风",
                 scene: "上班/商务",
                 desc: `将「${product.title}」与简约西装外套、尖头高跟鞋搭配，干练又不失女性柔美。`,
-                colors: ["#2c3e50", "#ecf0f1", "#1ab3a4"],
+                colors: ["#2c3e50", "#ecf0f1", "#c44569"],
                 tips: "搭配金属质感配饰，提升精致度",
               },
               {
