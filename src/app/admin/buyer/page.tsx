@@ -27,6 +27,8 @@ interface BuyerProduct {
   image_url?: string;
   price: number;
   original_price?: number | null;
+  cost_price?: number | null;
+  supplier?: string | null;
   category?: string | null;
   subcategory?: string | null;
   color_season?: string | null;
@@ -57,6 +59,8 @@ export default function AdminBuyerPage() {
     style_type: "",
     price: "",
     original_price: "",
+    cost_price: "",
+    supplier: "",
     stock: "0",
     tags: "",
     image_url: "",
@@ -83,7 +87,7 @@ export default function AdminBuyerPage() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ title:"", description:"", category:"", subcategory:"", color_season:"", style_type:"", price:"", original_price:"", stock:"0", tags:"", image_url:"", is_published:false });
+    setForm({ title:"", description:"", category:"", subcategory:"", color_season:"", style_type:"", price:"", original_price:"", cost_price:"", supplier:"", stock:"0", tags:"", image_url:"", is_published:false });
     setShowModal(true);
   };
   const openEdit = (p: BuyerProduct) => {
@@ -97,6 +101,8 @@ export default function AdminBuyerPage() {
       style_type: p.style_type || "",
       price: ((p.price || 0) / 100).toString(),
       original_price: p.original_price ? (p.original_price / 100).toString() : "",
+      cost_price: p.cost_price ? (p.cost_price / 100).toString() : "",
+      supplier: p.supplier || "",
       stock: (p.stock || 0).toString(),
       tags: p.tags?.join(", ") || "",
       image_url: p.cover_image || p.image_url || "",
@@ -127,6 +133,8 @@ export default function AdminBuyerPage() {
       style_type: form.style_type || null,
       price: form.price ? parseInt(form.price) * 100 : 0,
       original_price: form.original_price ? parseInt(form.original_price) * 100 : null,
+      cost_price: form.cost_price ? parseInt(form.cost_price) * 100 : null,
+      supplier: form.supplier || null,
       stock: parseInt(form.stock) || 0,
       tags: form.tags ? form.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : null,
       cover_image: form.image_url || null,
@@ -217,6 +225,7 @@ export default function AdminBuyerPage() {
                   <th className="px-5 py-3">风格</th>
                   <th className="px-5 py-3">色彩</th>
                   <th className="px-5 py-3">售价</th>
+                  <th className="px-5 py-3">供货价</th>
                   <th className="px-5 py-3">库存</th>
                   <th className="px-5 py-3">状态</th>
                   <th className="px-5 py-3 text-right">操作</th>
@@ -244,6 +253,13 @@ export default function AdminBuyerPage() {
                     <td className="px-5 py-3 text-xs text-muted-foreground">{p.style_type ? getStyleProLabel(p.style_type) || p.style_type : "—"}</td>
                     <td className="px-5 py-3 text-xs text-muted-foreground">{p.color_season ? getColorSeasonProLabel(p.color_season) || p.color_season : "—"}</td>
                     <td className="px-5 py-3 font-medium text-accent">¥{(p.price / 100).toFixed(0)}</td>
+                    <td className="px-5 py-3">
+                      {p.cost_price ? (
+                        <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded">¥{(p.cost_price / 100).toFixed(0)}</span>
+                      ) : (
+                        <span className="text-xs text-gray-300">-</span>
+                      )}
+                    </td>
                     <td className="px-5 py-3">
                       <span className={`text-xs font-medium ${p.stock ? "text-green-600" : "text-red-500"}`}>
                         {p.stock ? ` ${p.stock}` : "缺货"}
@@ -345,6 +361,18 @@ export default function AdminBuyerPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">原价（元）</label>
                   <input type="number" value={form.original_price} onChange={e => setForm(f => ({ ...f, original_price: e.target.value }))}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="划线价" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">供货价（元）<span className="text-amber-500 ml-1 text-xs">VIP可见</span></label>
+                  <input type="number" value={form.cost_price} onChange={e => setForm(f => ({ ...f, cost_price: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm" placeholder="成本价" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">供应商</label>
+                  <input type="text" value={form.supplier} onChange={e => setForm(f => ({ ...f, supplier: e.target.value }))}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="如：广州某某服饰" />
                 </div>
               </div>
               <div>

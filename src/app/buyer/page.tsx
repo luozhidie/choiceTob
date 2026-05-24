@@ -92,6 +92,7 @@ const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 interface MergedProduct {
   id: string; title: string; description: string | null;
   cover_image: string | null; price: number; original_price: number | null;
+  cost_price: number | null; supplier: string | null;
   category: string | null; subcategory: string | null;
   color_season: string | null; style_type: string | null;
   stock: number; is_published: boolean; source: "platform" | "buyer" | "supplier_submit";
@@ -179,7 +180,8 @@ export default function BuyerPage() {
       buyerRes.forEach((p: any) => merged.push({
         id: p.id, title: p.title || p.name || "选品商品", description: p.description,
         cover_image: p.cover_image || p.image_url || null, price: p.price || 0,
-        original_price: p.original_price || null, category: p.category || null,
+        original_price: p.original_price || null, cost_price: p.cost_price || null,
+        supplier: p.supplier || null, category: p.category || null,
         subcategory: p.subcategory || null, color_season: p.color_season || null,
         style_type: p.style_type || null, stock: p.stock || 0,
         is_published: p.is_published,
@@ -191,7 +193,8 @@ export default function BuyerPage() {
       platformRes.data.forEach((p: any) => merged.push({
         id: p.id, title: p.title || "平台商品", description: p.description,
         cover_image: p.cover_image || null, price: p.price || 0,
-        original_price: p.original_price || null, category: p.category || null,
+        original_price: p.original_price || null, cost_price: null, supplier: null,
+        category: p.category || null,
         subcategory: p.subcategory || null, color_season: null, style_type: null,
         stock: p.stock || 0, is_published: p.is_published, source: "platform", created_at: p.created_at,
       }));
@@ -606,6 +609,12 @@ export default function BuyerPage() {
                                   </span>
                                 )}
                               </div>
+                              {product.cost_price && product.cost_price > 0 && (
+                                <span className="text-[10px] text-green-600 mt-0.5 font-medium">
+                                  🏷 供货价 ¥{(product.cost_price / 100).toFixed(0)}
+                                  {product.supplier && <span className="text-gray-400 ml-1">· {product.supplier}</span>}
+                                </span>
+                              )}
                               {product.original_price && product.original_price > product.price && (
                                 <span className="text-[10px] text-accent/80 mt-0.5">
                                   会员省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
