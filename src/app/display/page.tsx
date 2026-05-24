@@ -123,6 +123,7 @@ export default function DisplayPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [items, setItems] = useState<DisplayItem[]>([]);
   const [recommendProducts, setRecommendProducts] = useState<ProductItem[]>([]);
+  const [dailyLooks, setDailyLooks] = useState<{ id: string; title: string; colors: string[]; image_url: string | null; style: string; description: string }[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 筛选（专业值，用于实际过滤）
@@ -152,16 +153,27 @@ export default function DisplayPage() {
 
   const fetchAllData = async () => {
     setLoading(true);
-    const [displayRes, productRes] = await Promise.all([
+    const [displayRes, productRes, looksRes] = await Promise.all([
       supabase.from("display_images").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
       supabase.from("buyer_products").select("id, title, cover_image, price, category, subcategory, color_season, style_type")
         .eq("is_published", true)
         .order("sort_order", { ascending: true })
         .limit(8),
+      supabase.from("daily_looks").select("*").eq("is_published", true).order("sort_order", { ascending: true }).limit(8),
     ]);
 
     if (!displayRes.error && displayRes.data) setItems(displayRes.data as DisplayItem[]);
     if (!productRes.error && productRes.data) setRecommendProducts(productRes.data as ProductItem[]);
+    if (!looksRes.error && looksRes.data) {
+      setDailyLooks(looksRes.data.map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        colors: Array.isArray(d.colors) ? d.colors : JSON.parse(d.colors || "[]"),
+        image_url: d.image_url,
+        style: d.style,
+        description: d.description,
+      })));
+    }
     setLoading(false);
   };
 
@@ -360,27 +372,43 @@ export default function DisplayPage() {
             <span className="text-xs text-gray-400 ml-1">{new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })}</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              { name: "暖杏+咖啡", colors: ["#D4A574", "#8B6914", "#F5E6D3"], style: "温柔知性", desc: "适合职场通勤，显白提气色" },
-              { name: "雾霾蓝+白", colors: ["#6B8E9F", "#FFFFFF", "#B8D4E3"], style: "清新减龄", desc: "夏日清爽配色，视觉降温" },
-              { name: "酒红+黑", colors: ["#722F37", "#1A1A1A", "#C9A9A6"], style: "高级气场", desc: "晚宴社交首选，优雅大气" },
-              { name: "薄荷绿+米", colors: ["#98D8C8", "#F5F5DC", "#E8F5E9"], style: "自然休闲", desc: "周末出游，舒适又有型" },
-            ].map((combo) => (
-              <motion.div
-                key={combo.name}
-                whileHover={{ y: -2 }}
-                className="bg-gray-50 rounded-xl p-3 border border-gray-100 hover:border-accent/30 hover:shadow-sm transition-all cursor-pointer"
-              >
-                <div className="flex gap-1.5 mb-2">
-                  {combo.colors.map((c) => (
-                    <div key={c} className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
-                  ))}
-                </div>
-                <h3 className="text-sm font-bold text-primary">{combo.name}</h3>
-                <p className="text-xs text-accent font-medium mt-0.5">{combo.style}</p>
-                <p className="text-[11px] text-gray-500 mt-1">{combo.desc}</p>
-              </motion.div>
-            ))}
+            {dailyLooks.length === 0 ? (
+              // 默认加载中/空状态
+              <div className="col-span-full text-center py-6 text-sm text-gray-400">加载搭配灵感中...</div>
+            ) : (
+              dailyLooks.map((combo) => (
+                <motion.div
+                  key={combo.id}
+                  whileHover={{ y: -2 }}
+                  className="bg-gray-50 rounded-xl overflow-hidden border border-gray-100 hover:border-accent/30 hover:shadow-sm transition-all cursor-pointer"
+                >
+                  {/* 如果有实物照片就展示 */}
+                  {combo.image_url ? (
+                    <div className="relative aspect-[4/3] bg-gray-100">
+                      <img src={combo.image_url} alt={combo.title} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-1.5 right-1.5 flex gap-1">
+                        {combo.colors.map((c: string) => (
+                          <div key={c} className="w-4 h-4 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-3">
+                      <div className="flex gap-1.5 mb-2">
+                        {combo.colors.map((c: string) => (
+                          <div key={c} className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <div className={combo.image_url ? "p-3 pt-2" : "px-3 pb-3 -mt-1"}>
+                    <h3 className="text-sm font-bold text-primary">{combo.title}</h3>
+                    <p className="text-xs text-accent font-medium mt-0.5">{combo.style}</p>
+                    <p className="text-[11px] text-gray-500 mt-1">{combo.description}</p>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </section>

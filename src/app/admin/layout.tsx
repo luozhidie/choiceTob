@@ -96,6 +96,7 @@ const sidebarGroups: SidebarGroup[] = [
     icon: Lightbulb,
     items: [
       { label: "企划需求处理", href: "/admin/planning-requests", icon: ClipboardList },
+      { label: "企划订单管理", href: "/admin/planning-orders", icon: FileText },
       { label: "商品企划", href: "/admin/product-plan", icon: Lightbulb },
       { label: "生成企划报告", href: "/admin/report", icon: FileDown },
       { label: "商品管理", href: "/admin/products", icon: ShoppingBag },
@@ -134,6 +135,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { label: "陈列搭配", href: "/admin/display", icon: LayoutGrid },
       { label: "陈列图片", href: "/admin/display-images", icon: ImageIcon },
+      { label: "每日搭配", href: "/admin/daily-looks", icon: Palette },
     ],
   },
   {
@@ -172,6 +174,7 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { label: "教学中心", href: "/admin/education", icon: GraduationCap },
       { label: "课程管理", href: "/admin/courses", icon: Book },
+      { label: "课程购买记录", href: "/admin/course-purchases", icon: FileText },
       { label: "流行资讯", href: "/admin/magazine", icon: BookOpen },
       { label: "服装趋势", href: "/admin/fashion-trends", icon: TrendingUp },
     ],
