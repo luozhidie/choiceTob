@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -45,6 +45,7 @@ export default function CourseDetailPage() {
   const [visible, setVisible] = useState(false);
   const [copiedWechat, setCopiedWechat] = useState(false);
   const [copiedAlipay, setCopiedAlipay] = useState(false);
+  const autoPayShown = useRef(false);
 
   const supabase = createClient();
   const router = useRouter();
@@ -102,6 +103,18 @@ export default function CourseDetailPage() {
     }
   }, [authLoading, user, courseId, course, purchased]);
 
+  // 自动弹出购买弹窗：付费课程 + 未购买 + 已登录 + 页面加载完成
+  useEffect(() => {
+    if (!loading && !authLoading && course && !course.is_free && !purchased && user && !autoPayShown.current) {
+      const timer = setTimeout(() => {
+        setShowPayModal(true);
+        setPayStep("confirm");
+        autoPayShown.current = true;
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, authLoading, course, purchased, user]);
+
   const handlePurchaseClick = async () => {
     if (!user) {
       router.push(`/login?redirect=/courses/${courseId}`);
@@ -134,6 +147,12 @@ export default function CourseDetailPage() {
         console.error("购买记录创建失败:", error);
       } else {
         setPurchased(true);
+        // 购买成功后自动关闭弹窗并刷新页面
+        setTimeout(() => {
+          setShowPayModal(false);
+          setPayStep("confirm");
+          window.location.reload();
+        }, 1500);
       }
     } catch (err) {
       console.error("购买错误:", err);
