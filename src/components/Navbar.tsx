@@ -7,6 +7,7 @@ import { Menu, X, ChevronRight, User, LogOut } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
+  { label: "VIP会员", href: "/vip" },
   { label: "风格测试", href: "/style-test" },
   { label: "线上课程", href: "/courses" },
   { label: "买手选品", href: "/buyer" },
