@@ -25,12 +25,12 @@ const STYLES = ALL_STYLES.map(s => ({ value: s.value, label: s.label }));
 
 /* ===================== 企划分类 ===================== */
 const PLAN_TYPES = [
-  { value: "structure", label: "商品结构企划", icon: Layers, desc: "引流款/利润款/形象款比例规划", price: 59800 },
-  { value: "style", label: "风格企划", icon: Palette, desc: "基于风格类型的商品组合规划", price: 59800 },
-  { value: "color", label: "色彩企划", icon: Sparkles, desc: "基于色彩季型的色彩组合规划", price: 59800 },
-  { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 59800 },
-  { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 59800 },
-  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案", price: 99800 },
+  { value: "structure", label: "商品结构企划", icon: Layers, desc: "引流款/利润款/形象款比例规划", price: 990 },
+  { value: "style", label: "风格企划", icon: Palette, desc: "基于风格类型的商品组合规划", price: 990 },
+  { value: "color", label: "色彩企划", icon: Sparkles, desc: "基于色彩季型的色彩组合规划", price: 990 },
+  { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 990 },
+  { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 990 },
+  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案", price: 990 },
 ];
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
@@ -122,14 +122,18 @@ export default function PlanningPage() {
 
   const fetchReports = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("planning_reports")
-      .select("*")
-      .eq("is_published", true)
-      .order("created_at", { ascending: false });
-
-    if (!error && data) setReports(data as PlanningReport[]);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from("planning_reports")
+        .select("*")
+        .eq("is_published", true)
+        .order("created_at", { ascending: false });
+      if (!error && data) setReports(data as PlanningReport[]);
+    } catch (err) {
+      console.error("加载企划案例失败:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 筛选案例
@@ -145,53 +149,42 @@ export default function PlanningPage() {
     e.preventDefault();
     setSubmitting(true);
 
-    // 检查登录状态
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setShowPaywall(true);
-      setSubmitting(false);
-      return;
-    }
-
-    // 创建企划订单记录
-    const planType = PLAN_TYPES.find((p) => p.value === createForm.plan_type);
-    const { error } = await supabase.from("planning_orders").insert([{
-      user_id: user.id,
-      plan_type: createForm.plan_type,
-      color_season: createForm.color_pref || null,
-      style_type: createForm.market_style || null,
-      brand_name: createForm.brand_name || null,
-      target_age: createForm.target_age || null,
-      price_range: createForm.price_range || null,
-      notes: `店铺面积: ${createForm.shop_size || '未填写'}; 店铺位置: ${createForm.location || '未填写'}; 联系电话: ${createForm.contact_phone || '未填写'}; 补充说明: ${createForm.notes || '无'}` || null,
-      amount: planType?.price || 59800,
-      status: "pending",
-    }]);
-
-    if (error) {
-      alert("提交失败：" + error.message);
-      setSubmitting(false);
-      return;
-    }
-
-    // Level 1 自动化：同步到客户档案（vip_customers）
-    if (createForm.contact_phone) {
-      try {
-        await supabase.rpc("upsert_customer_from_planning", {
-          p_name: createForm.brand_name || createForm.contact_phone,
-          p_phone: createForm.contact_phone,
-          p_company: createForm.brand_name || null,
-          p_color_season: createForm.color_pref || null,
-          p_style_type: createForm.market_style || null,
-          p_source: "planning_order",
-        });
-      } catch (syncErr) {
-        console.error("客户档案同步失败（不影响订单）:", syncErr);
+    try {
+      // 检查登录状态
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setShowPaywall(true);
+        setSubmitting(false);
+        return;
       }
-    }
 
-    setSubmitted(true);
-    setSubmitting(false);
+      // 创建企划订单记录
+      const planType = PLAN_TYPES.find((p) => p.value === createForm.plan_type);
+      const { error } = await supabase.from("planning_orders").insert([{
+        user_id: user.id,
+        plan_type: createForm.plan_type,
+        color_season: createForm.color_pref || null,
+        style_type: createForm.market_style || null,
+        brand_name: createForm.brand_name || null,
+        target_age: createForm.target_age || null,
+        price_range: createForm.price_range || null,
+        notes: `店铺面积: ${createForm.shop_size || '未填写'}; 店铺位置: ${createForm.location || '未填写'}; 联系电话: ${createForm.contact_phone || '未填写'}; 补充说明: ${createForm.notes || '无'}` || null,
+        amount: 990,
+        status: "pending",
+      }]);
+
+      if (error) {
+        alert("提交失败：" + error.message);
+        setSubmitting(false);
+        return;
+      }
+
+      setSubmitted(true);
+    } catch (err: any) {
+      alert("提交失败：" + (err.message || "未知错误"));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
