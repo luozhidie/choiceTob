@@ -10,6 +10,7 @@ import {
   ChevronRight, Home, ShoppingBag, Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/auth-context";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 
@@ -139,7 +140,6 @@ export default function BuyerPage() {
   const [currentOrderNo, setCurrentOrderNo] = useState<string>("");
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [isMember, setIsMember] = useState(false);
   const [showMemberPrompt, setShowMemberPrompt] = useState(false);
 
   // 供应商入驻表单
@@ -149,15 +149,11 @@ export default function BuyerPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const supabase = createClient();
+  const { user, isMember } = useAuth();
 
   useEffect(() => {
     setVisible(true);
     fetchAllData();
-    // 检查本地会员标记（简化版，后续对接真实登录系统）
-    try {
-      const m = localStorage.getItem("ct_member");
-      if (m === "1") setIsMember(true);
-    } catch { /* ignore */ }
   }, []);
 
   const fetchAllData = async () => {
@@ -399,22 +395,21 @@ export default function BuyerPage() {
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
-            {/* 会员切换 */}
-            <button
-              onClick={() => {
-                const next = !isMember;
-                setIsMember(next);
-                try { localStorage.setItem("ct_member", next ? "1" : "0"); } catch { /* ignore */ }
-              }}
-              className={`shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
-                isMember
-                  ? "bg-amber-100 text-amber-700 border border-amber-200"
-                  : "bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200"
-              }`}
-            >
-              {isMember ? <Star className="w-3 h-3 fill-amber-500 text-amber-500" /> : <Lock className="w-3 h-3" />}
-              {isMember ? "会员模式" : "非会员"}
-            </button>
+            {/* 登录状态 */}
+            {user ? (
+              <span className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                {isMember ? "会员" : "已登录"}
+              </span>
+            ) : (
+              <Link
+                href="/login?redirect=/buyer"
+                className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-500 border border-gray-200 hover:bg-gray-200 transition-colors"
+              >
+                <Lock className="w-3 h-3" />
+                未登录
+              </Link>
+            )}
             <div className="w-px h-4 bg-gray-200 shrink-0" />
 
             <div className="flex items-center bg-gray-100 rounded-lg p-0.5 shrink-0">
@@ -1077,18 +1072,32 @@ export default function BuyerPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">查看批发价</h3>
+              <h3 className="text-lg font-bold text-gray-900">
+                {user ? "查看批发价" : "请先登录"}
+              </h3>
               <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mb-4">开通查看价格会员，即可查看所有商品批发底价</p>
+            <p className="text-sm text-gray-600 mb-4">
+              {user
+                ? "开通查看价格会员，即可查看所有商品批发底价"
+                : "登录后即可查看批发价格，或开通会员享受更多权益"}
+            </p>
             <div className="space-y-3">
-              <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
-                <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                  去开通会员
-                </span>
-              </Link>
+              {user ? (
+                <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
+                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                    去开通会员
+                  </span>
+                </Link>
+              ) : (
+                <Link href="/login?redirect=/buyer" onClick={() => setShowMemberPrompt(false)}>
+                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                    去登录
+                  </span>
+                </Link>
+              )}
               <button
                 onClick={() => setShowMemberPrompt(false)}
                 className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"

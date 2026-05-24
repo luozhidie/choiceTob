@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Download, Eye, Sparkles, ChevronRight,
-  CheckCircle2, Loader2, Wand2, ArrowRight,
+  CheckCircle2, Loader2, Wand2, ArrowRight, Store,
+  Ruler, MessageSquare, CreditCard, Check,
 } from "lucide-react";
 import AdBanner from "@/components/AdBanner";
 import { PaywallModal } from "@/components/PaywallModal";
@@ -48,6 +49,22 @@ const PRICE_BANDS = [
   "699元+",
 ];
 
+const STORE_TYPES = [
+  { value: "women", label: "女装店", desc: "专注女装品类" },
+  { value: "men", label: "男装店", desc: "专注男装品类" },
+  { value: "children", label: "童装店", desc: "专注童装品类" },
+  { value: "multi", label: "集合店", desc: "多品类综合经营" },
+  { value: "boutique", label: "买手店", desc: "设计师品牌/精品" },
+  { value: "online", label: "线上店铺", desc: "纯电商/直播" },
+];
+
+const STORE_SCALES = [
+  { value: "small", label: "小型店", desc: "30-50㎡，1-2人", range: "月销5-15万" },
+  { value: "medium", label: "中型店", desc: "50-100㎡，2-4人", range: "月销15-30万" },
+  { value: "large", label: "大型店", desc: "100-200㎡，4-6人", range: "月销30-60万" },
+  { value: "flagship", label: "旗舰店", desc: "200㎡+，6人以上", range: "月销60万+" },
+];
+
 /* ==================== 类型 ==================== */
 interface PlanningReport {
   brandName: string;
@@ -66,6 +83,7 @@ export default function PlanningToolPage() {
   const [showPaywall, setShowPaywall] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [report, setReport] = useState<PlanningReport | null>(null);
+  const [submitted, setSubmitted] = useState(false);
   const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null; style_position: string | null; target_age: string | null; price_range: string | null; shop_size: string | null }[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState("");
 
@@ -77,6 +95,10 @@ export default function PlanningToolPage() {
     priceBand: "199-399元",
     targetAge: "",
     shopSize: "",
+    storeType: "",
+    storeScale: "",
+    problems: "",
+    contact: "",
     notes: "",
   });
 
@@ -105,96 +127,35 @@ export default function PlanningToolPage() {
   const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
   const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
 
-  /* 生成报告（AI + Mock fallback） */
-  const handleGenerate = async () => {
+  /* 提交需求并进入支付 */
+  const handleSubmit = async () => {
     setGenerating(true);
 
-    const styleLabel = getStyleLabel(formData.marketStyle);
-    const colorLabel = getColorLabel(formData.colorPref);
-
-    let report: PlanningReport;
-
     try {
-      // 调用 API Route 生成（有 AI Key 时走 AI，否则走 Mock）
-      const res = await fetch("/api/generate-planning", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brandName: formData.brandName,
-          season: formData.season,
-          colorPref: formData.colorPref,
-          colorLabel,
-          marketStyle: formData.marketStyle,
-          styleLabel,
-          priceBand: formData.priceBand,
-          targetAge: formData.targetAge,
-          shopSize: formData.shopSize,
-          notes: formData.notes,
-          storeId: selectedStoreId || undefined,
-        }),
-      });
-
-      if (!res.ok) throw new Error("API 请求失败");
-      const data = await res.json();
-      report = data.report as PlanningReport;
-    } catch (err) {
-      console.error("AI 生成失败，使用 Mock:", err);
-      // Fallback：本地 Mock
-      report = {
-        brandName: formData.brandName || "示例品牌",
+      // 保存需求到 planning_requests 表
+      const { error } = await supabase.from("planning_requests").insert([{
+        store_type: formData.storeType,
+        store_scale: formData.storeScale,
+        style_preference: formData.marketStyle,
         season: formData.season,
-        summary: `基于${colorLabel}偏好和${styleLabel}定位，为${formData.brandName || "贵品牌"}量身定制的${formData.season}商品企划初稿。本企划结合市场趋势与品牌调性，可作为选品与铺货的参考框架。\n\n（提示：此为基础初稿，如需结合店铺实际数据定制完整方案，可申请人工企划服务）`,
-        colorPlan: [
-          { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"] },
-          { type: "主题色", ratio: "35%", colors: [colorLabel + "主调", "米白", "灰粉"] },
-          { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"] },
-          { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"] },
-        ],
-        stylePlan: MARKET_STYLES.map((s) => ({
-          style: s.label,
-          trafficRatio: s.value === formData.marketStyle ? "30%" : `${Math.round(70 / 12)}%`,
-          profitRatio: s.value === formData.marketStyle ? "60%" : `${Math.round(40 / 12)}%`,
-        })),
-        productStructure: [
-          { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引新客进店" },
-          { type: "利润款", ratio: "50%", desc: "核心利润来源，保证经营健康" },
-          { type: "形象款", ratio: "20%", desc: "品牌调性展示，提升品牌溢价" },
-          { type: "搭配款", ratio: "15%", desc: "提升连带率，拉高客单价" },
-        ],
-        pricePlan: [
-          { band: "入门款", range: "99-199元", ratio: "20%", strategy: "低价引流，降低新客决策门槛" },
-          { band: "主销款", range: "199-399元", ratio: "45%", strategy: "量价平衡，贡献核心销量与利润" },
-          { band: "品质款", range: "399-699元", ratio: "25%", strategy: "提升品牌形象，拉高客单价" },
-          { band: "旗舰款", range: "699元+", ratio: "10%", strategy: "品牌标杆，彰显品牌实力与调性" },
-        ],
-        quartersPlan: [
-          { phase: "第一波段（上半月）", items: [`${styleLabel}风格商品结构规划`, `${colorLabel}色彩企划矩阵`, "价格带分布策略", "核心品类确定"] },
-          { phase: "第二波段（下半月）", items: ["爆款预测与选品参考", "门店陈列建议", "库存周转提示", "营销活动建议"] },
-          { phase: "第三波段（次月补充）", items: ["销售跟踪建议", "补货追单参考", "滞销款处理建议", "下一季企划预研"] },
-        ],
-      };
-    }
-
-    setReport(report);
-    setGenerating(false);
-    setStep(3);
-
-    // 自动保存报告到 planning_reports 表（后台可管理）
-    try {
-      const supabase = createClient();
-      await supabase.from("planning_reports").insert([{
-        title: `${report.brandName} · ${report.season}商品企划初稿`,
-        category: "AI智能初稿",
-        content: report.summary,
-        images: [],
-        color_season: formData.colorPref || null,
-        style_type: formData.marketStyle || null,
-        is_published: false,
-        is_template: false,
+        budget_range: formData.priceBand,
+        contact: formData.contact,
       }]);
-    } catch (saveErr) {
-      console.error("报告自动保存失败（不影响展示）:", saveErr);
+
+      if (error) {
+        console.error("保存需求失败:", error);
+      }
+    } catch (err) {
+      console.error("提交失败:", err);
     }
+
+    setGenerating(false);
+    setStep(2);
+  };
+
+  const handlePay = async () => {
+    setSubmitted(true);
+    setStep(3);
   };
 
   /* 如果正在生成，显示动画 */
@@ -264,23 +225,23 @@ export default function PlanningToolPage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
               <Sparkles className="w-4 h-4" />
-              AI 智能企划初稿生成器
+              AI 智能企划报告
             </span>
             <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
-              快速生成企划初稿
+              定制您的专属企划报告
             </h1>
             <p className="mt-3 text-white/80 leading-relaxed">
-              输入店铺定位信息，即时生成商品企划框架初稿，免费使用。如需定制完整方案，可同步申请人工企划服务。
+              填写店铺信息，精准匹配类型+体量+风格，仅需 ¥9.9 获取完整商品企划报告，1-2个工作日交付。
             </p>
             {/* 定位说明 */}
             <div className="mt-6 inline-flex items-center gap-4 text-xs text-white/60">
               <span className="flex items-center gap-1">
                 <Wand2 className="w-3.5 h-3.5" />
-                自助AI生成 · 即时出稿
+                精准匹配 · 专业定制
               </span>
               <span className="flex items-center gap-1">
                 <FileText className="w-3.5 h-3.5" />
-                可作为人工企划的参考基础
+                完整报告 · 可落地执行
               </span>
             </div>
           </motion.div>
@@ -293,7 +254,7 @@ export default function PlanningToolPage() {
 
           {/* Step 指示器 */}
           <div className="flex items-center justify-center gap-4 mb-10">
-            {["填写信息", "生成报告", "预览初稿"].map((label, i) => (
+            {["填写需求", "确认支付", "提交成功"].map((label, i) => (
               <div key={label} className="flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -321,31 +282,64 @@ export default function PlanningToolPage() {
                 className="space-y-6"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-primary">填写店铺信息</h2>
+                  <h2 className="text-2xl font-bold text-primary">填写店铺需求</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    填写以下信息，AI将为您生成个性化的商品企划初稿
+                    精准匹配：类型 + 体量 + 风格，为您定制专属企划报告
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* 导入店铺数据 */}
-                  <div className="sm:col-span-2">
+                  {/* 店铺类型 */}
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      导入店铺数据（可选）
+                      <Store className="w-3.5 h-3.5 inline mr-1" />
+                      店铺类型 <span className="text-red-500">*</span>
                     </label>
-                    <select
-                      value={selectedStoreId}
-                      onChange={(e) => handleSelectStore(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
-                    >
-                      <option value="">手动填写信息</option>
-                      {storeOptions.map((s) => (
-                        <option key={s.id} value={s.id}>{s.name}{s.city ? ` (${s.city})` : ""}</option>
+                    <div className="grid grid-cols-2 gap-2">
+                      {STORE_TYPES.map((t) => (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, storeType: f.storeType === t.value ? "" : t.value }))}
+                          className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left ${
+                            formData.storeType === t.value
+                              ? "bg-primary text-white border-primary"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                          }`}
+                        >
+                          <span className="block font-semibold">{t.label}</span>
+                          <span className={`text-[10px] ${formData.storeType === t.value ? "text-white/70" : "text-muted-foreground"}`}>{t.desc}</span>
+                        </button>
                       ))}
-                    </select>
-                    {selectedStoreId && (
-                      <p className="mt-1.5 text-xs text-accent">已选择店铺，AI 将基于该店铺的经营数据与会员统计生成更精准的企划方案</p>
-                    )}
+                    </div>
+                  </div>
+
+                  {/* 店铺体量 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <Ruler className="w-3.5 h-3.5 inline mr-1" />
+                      店铺体量 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {STORE_SCALES.map((s) => (
+                        <button
+                          key={s.value}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, storeScale: f.storeScale === s.value ? "" : s.value }))}
+                          className={`w-full px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left flex items-center justify-between ${
+                            formData.storeScale === s.value
+                              ? "bg-accent text-white border-accent"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                          }`}
+                        >
+                          <div>
+                            <span className="block font-semibold">{s.label}</span>
+                            <span className={`text-[10px] ${formData.storeScale === s.value ? "text-white/70" : "text-muted-foreground"}`}>{s.desc}</span>
+                          </div>
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${formData.storeScale === s.value ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>{s.range}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {/* 品牌名称 */}
@@ -379,6 +373,29 @@ export default function PlanningToolPage() {
                     </select>
                   </div>
 
+                  {/* 风格定位 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      风格定位 <span className="text-red-500">*</span>
+                    </label>
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                      {MARKET_STYLES.map((s) => (
+                        <button
+                          key={s.value}
+                          type="button"
+                          onClick={() => setFormData(f => ({ ...f, marketStyle: f.marketStyle === s.value ? "" : s.value }))}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                            formData.marketStyle === s.value
+                              ? "bg-accent text-white border-accent"
+                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                          }`}
+                        >
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* 色系偏好 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -403,33 +420,10 @@ export default function PlanningToolPage() {
                     </div>
                   </div>
 
-                  {/* 市场风格定位 */}
+                  {/* 主价格带 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      风格定位 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {MARKET_STYLES.map((s) => (
-                        <button
-                          key={s.value}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, marketStyle: f.marketStyle === s.value ? "" : s.value }))}
-                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
-                            formData.marketStyle === s.value
-                              ? "bg-accent text-white border-accent"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 目标价格带 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      主价格带 <span className="text-red-500">*</span>
+                      主价格带
                     </label>
                     <div className="flex flex-wrap gap-2">
                       {PRICE_BANDS.map((p) => (
@@ -449,19 +443,34 @@ export default function PlanningToolPage() {
                     </div>
                   </div>
 
-                  {/* 目标客群年龄 */}
+                  {/* 联系方式 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      目标客群年龄段
+                      联系方式 <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
-                      value={formData.targetAge}
-                      onChange={(e) => setFormData({ ...formData, targetAge: e.target.value })}
+                      value={formData.contact}
+                      onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
                       className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                      placeholder="例如：25-35岁"
+                      placeholder="手机号或微信，用于接收报告"
                     />
                   </div>
+                </div>
+
+                {/* 当前遇到的问题 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
+                    当前遇到的问题（可选）
+                  </label>
+                  <textarea
+                    value={formData.problems}
+                    onChange={(e) => setFormData({ ...formData, problems: e.target.value })}
+                    rows={3}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
+                    placeholder="例如：库存积压、选品不准、陈列效果差、客流下降..."
+                  />
                 </div>
 
                 {/* 补充说明 */}
@@ -472,7 +481,7 @@ export default function PlanningToolPage() {
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={3}
+                    rows={2}
                     className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
                     placeholder="其他特殊需求或说明..."
                   />
@@ -480,138 +489,200 @@ export default function PlanningToolPage() {
 
                 <div className="flex justify-end pt-4">
                   <button
-                    onClick={handleGenerate}
-                    disabled={!formData.brandName.trim() || !formData.colorPref || !formData.marketStyle || generating}
+                    onClick={handleSubmit}
+                    disabled={!formData.brandName.trim() || !formData.storeType || !formData.storeScale || !formData.marketStyle || !formData.colorPref || !formData.contact.trim() || generating}
                     className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                   >
-                    生成企划初稿
+                    下一步：确认支付
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ====== Step 3: 报告预览 ====== */}
-            {step === 3 && report && (
+            {/* ====== Step 2: 确认支付 ====== */}
+            {step === 2 && (
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8"
+              >
+                <div className="text-center mb-8">
+                  <h2 className="text-2xl font-bold text-primary">确认需求并支付</h2>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    核对您的需求信息，支付 ¥9.9 后我们将为您生成专属企划报告
+                  </p>
+                </div>
+
+                {/* 需求确认卡片 */}
+                <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
+                  <h3 className="font-bold text-primary flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    需求信息
+                  </h3>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">店铺类型</span>
+                      <p className="font-medium text-primary">{STORE_TYPES.find(t => t.value === formData.storeType)?.label || formData.storeType}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">店铺体量</span>
+                      <p className="font-medium text-primary">{STORE_SCALES.find(s => s.value === formData.storeScale)?.label || formData.storeScale}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">品牌名称</span>
+                      <p className="font-medium text-primary">{formData.brandName}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">目标季节</span>
+                      <p className="font-medium text-primary">{formData.season}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">风格定位</span>
+                      <p className="font-medium text-primary">{getStyleLabel(formData.marketStyle)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">色系偏好</span>
+                      <p className="font-medium text-primary">{getColorLabel(formData.colorPref)}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">主价格带</span>
+                      <p className="font-medium text-primary">{formData.priceBand}</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">联系方式</span>
+                      <p className="font-medium text-primary">{formData.contact}</p>
+                    </div>
+                  </div>
+                  {formData.problems && (
+                    <div className="bg-white rounded-lg p-3">
+                      <span className="text-gray-400 text-xs">遇到的问题</span>
+                      <p className="font-medium text-primary text-sm mt-1">{formData.problems}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 支付卡片 */}
+                <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-6 border border-accent/20">
+                  <div className="flex items-center justify-between mb-4">
+                    <div>
+                      <h3 className="font-bold text-primary flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        支付金额
+                      </h3>
+                      <p className="text-sm text-muted-foreground mt-1">专属企划报告 · 精准匹配定制</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-3xl font-bold text-accent">¥9.9</span>
+                      <span className="text-sm text-gray-400 line-through ml-2">¥99</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-accent shrink-0" />
+                      <span>基于您的店铺类型、体量、风格精准匹配</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-accent shrink-0" />
+                      <span>1-2个工作日内生成并发送至您的联系方式</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Check className="w-4 h-4 text-accent shrink-0" />
+                      <span>包含色彩企划、商品结构、价格带、波段规划</span>
+                    </div>
+                  </div>
+
+                  {/* 支付方式 */}
+                  <div className="mt-6 p-4 bg-white rounded-xl">
+                    <p className="text-sm font-medium text-gray-700 mb-3">选择支付方式</p>
+                    <div className="flex gap-3">
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-medium text-sm">
+                        <span>微信支付</span>
+                      </button>
+                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50">
+                        <span>支付宝</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                    <p className="text-xs text-amber-700">💡 当前为线下收款模式：支付后请截图联系客服确认，我们将尽快为您安排报告生成。</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-4">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    返回修改
+                  </button>
+                  <button
+                    onClick={handlePay}
+                    className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
+                  >
+                    <CheckCircle2 className="w-5 h-5" />
+                    确认支付 ¥9.9
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* ====== Step 3: 提交成功 ====== */}
+            {step === 3 && (
               <motion.div
                 key="step3"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8"
               >
-                {/* 头部 */}
-                <div className="text-center mb-8">
-                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-green-50 text-green-700 text-sm font-medium mb-4">
-                    <CheckCircle2 className="w-4 h-4" />
-                    AI 初稿已生成
+                <div className="text-center py-8">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
+                    <CheckCircle2 className="w-10 h-10 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-primary">{report.brandName} · {report.season}商品企划初稿</h2>
-                  <p className="mt-2 text-sm text-muted-foreground max-w-2xl mx-auto whitespace-pre-wrap leading-relaxed">
-                    {report.summary}
+                  <h2 className="text-2xl font-bold text-primary mb-2">需求提交成功！</h2>
+                  <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
+                    您的企划报告需求已收到，我们将在 <span className="font-bold text-accent">1-2个工作日</span> 内完成报告并发送至您的联系方式：{formData.contact}
                   </p>
                 </div>
 
-                {/* 色彩企划矩阵 */}
-                <section className="bg-muted/30 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-primary mb-4">色彩企划矩阵</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {report.colorPlan.map((c) => (
-                      <div key={c.type} className="bg-white rounded-xl p-4 shadow-sm">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-primary text-sm">{c.type}</span>
-                          <span className="text-xs text-accent font-bold">{c.ratio}</span>
+                {/* 后续流程 */}
+                <div className="bg-gray-50 rounded-2xl p-6 max-w-lg mx-auto">
+                  <h3 className="font-bold text-primary mb-4 text-center">接下来会发生什么？</h3>
+                  <div className="space-y-4">
+                    {[
+                      { step: "1", title: "需求审核", desc: "专业顾问审核您的店铺信息与需求" },
+                      { step: "2", title: "报告生成", desc: "基于类型+体量+风格，AI+人工定制企划报告" },
+                      { step: "3", title: "报告交付", desc: "通过您预留的联系方式发送完整报告" },
+                    ].map((item, i) => (
+                      <div key={item.step} className="flex items-start gap-3">
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? "bg-accent text-white" : "bg-gray-200 text-gray-500"}`}>
+                          {item.step}
                         </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {c.colors.map((color) => (
-                            <span key={color} className="px-2 py-0.5 rounded bg-gray-100 text-xs text-gray-600">{color}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {/* 商品结构规划 */}
-                <section className="bg-white rounded-2xl p-6 border border-gray-100">
-                  <h3 className="text-lg font-bold text-primary mb-4">商品结构规划</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    {report.productStructure.map((p) => (
-                      <div key={p.type} className="bg-muted/30 rounded-xl p-4">
-                        <div className="text-2xl font-bold text-accent">{p.ratio}</div>
-                        <div className="font-semibold text-primary mt-1 text-sm">{p.type}</div>
-                        <p className="text-xs text-muted-foreground mt-1.5">{p.desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-
-                {/* 价格带企划 */}
-                <section className="bg-muted/30 rounded-2xl p-6">
-                  <h3 className="text-lg font-bold text-primary mb-4">价格带企划</h3>
-                  <div className="space-y-3">
-                    {report.pricePlan.map((p) => (
-                      <div key={p.band} className="bg-white rounded-xl p-4 flex items-center justify-between shadow-sm">
                         <div>
-                          <div className="font-semibold text-primary text-sm">{p.band}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">{p.strategy}</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-bold text-accent">{p.range}</div>
-                          <div className="text-xs text-muted-foreground">{p.ratio}</div>
+                          <p className="font-medium text-primary text-sm">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.desc}</p>
                         </div>
                       </div>
                     ))}
-                  </div>
-                </section>
-
-                {/* 两条路径 CTA */}
-                <div className="grid md:grid-cols-2 gap-5 pt-4">
-                  {/* 路径1：升级完整企划 */}
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 border border-accent/20">
-                    <h4 className="font-bold text-primary">需要完整企划方案？</h4>
-                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                      初稿仅供参考，申请人工企划服务，结合您的店铺实际数据定制完整方案
-                    </p>
-                    <a
-                      href="/planning"
-                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-                    >
-                      前往人工企划服务
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
-                  </div>
-
-                  {/* 路径2：去选品 */}
-                  <div className="p-6 rounded-2xl bg-gradient-to-br from-accent/5 to-primary/5 border border-primary/20">
-                    <h4 className="font-bold text-primary">有方向了？直接选品</h4>
-                    <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
-                      根据初稿框架，直接跳转买手选品，按风格、色系筛选优质货源
-                    </p>
-                    <a
-                      href="/buyer"
-                      className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-                    >
-                      进入买手选品
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
                   </div>
                 </div>
 
-                {/* 底部操作 */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-center gap-4 pt-4">
                   <button
-                    onClick={() => { setStep(1); setReport(null); }}
+                    onClick={() => { setStep(1); setSubmitted(false); setFormData({ brandName: "", season: "春夏", colorPref: "", marketStyle: "", priceBand: "199-399元", targetAge: "", shopSize: "", storeType: "", storeScale: "", problems: "", contact: "", notes: "" }); }}
                     className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
                   >
-                    重新生成
+                    再提交一个需求
                   </button>
-                  <button
-                    onClick={() => setShowPaywall(true)}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
+                  <a
+                    href="/buyer"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
                   >
-                    <Download className="w-4 h-4" />
-                    下载完整Word报告
-                  </button>
+                    先去逛逛选品
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
                 </div>
               </motion.div>
             )}
@@ -627,17 +698,18 @@ export default function PlanningToolPage() {
             <div className="bg-white rounded-2xl p-6 border-2 border-accent/20">
               <div className="flex items-center gap-2 mb-3">
                 <Sparkles className="w-5 h-5 text-accent" />
-                <h4 className="font-bold text-primary">AI 快速初稿</h4>
+                <h4 className="font-bold text-primary">AI 企划报告</h4>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">本页</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />即时生成，免费使用</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />基于通用市场数据</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />框架型初稿，供参考</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载简化版报告</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />精准匹配：类型+体量+风格</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />1-2个工作日交付完整报告</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />包含色彩/结构/价格/波段规划</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载Word/PDF完整版</li>
               </ul>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <span className="text-lg font-bold text-accent">免费</span>
+              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
+                <span className="text-lg font-bold text-accent">¥9.9</span>
+                <span className="text-xs text-muted-foreground line-through">¥99</span>
               </div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-primary/20">

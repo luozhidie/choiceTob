@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2, ChevronLeft, ChevronRight, Layers, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/auth-context";
 import {
   CATEGORY_MAP,
   SUBCATEGORY_MAP,
@@ -54,13 +55,9 @@ export default function ProductDetailPage() {
   const [currentOrderNo, setCurrentOrderNo] = useState("");
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [isMember, setIsMember] = useState(false);
   const [showMemberPrompt, setShowMemberPrompt] = useState(false);
 
-  // 检查会员状态
-  useEffect(() => {
-    try { const m = localStorage.getItem("ct_member"); if (m === "1") setIsMember(true); } catch { /* ignore */ }
-  }, []);
+  const { user, isMember } = useAuth();
 
   // 获取商品数据
   useEffect(() => {
@@ -574,6 +571,72 @@ export default function ProductDetailPage() {
         </div>
       </section>
 
+      {/* 一品三搭：搭配方案展示 */}
+      <section className="py-12 border-t border-gray-100 bg-gradient-to-b from-white to-gray-50/50">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Layers className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-bold text-primary">一品三搭 · 搭配灵感</h2>
+          </div>
+          <p className="text-sm text-gray-500 mb-6">一件单品，三种风格，提升连带率</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              {
+                title: "职场通勤风",
+                scene: "上班/商务",
+                desc: `将「${product.title}」与简约西装外套、尖头高跟鞋搭配，干练又不失女性柔美。`,
+                colors: ["#2c3e50", "#ecf0f1", "#1ab3a4"],
+                tips: "搭配金属质感配饰，提升精致度",
+              },
+              {
+                title: "周末休闲风",
+                scene: "约会/逛街",
+                desc: `「${product.title}」搭配牛仔外套与小白鞋，轻松打造减龄休闲感。`,
+                colors: ["#3498db", "#f39c12", "#e74c3c"],
+                tips: "叠戴细链项链，增加层次感",
+              },
+              {
+                title: "晚宴优雅风",
+                scene: "派对/晚宴",
+                desc: `「${product.title}」配上丝绸披肩与精致手包，瞬间提升高级感。`,
+                colors: ["#8e44ad", "#d4af37", "#c0392b"],
+                tips: "选择同色系耳环，整体更协调",
+              },
+            ].map((look, idx) => (
+              <motion.div
+                key={look.title}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1 }}
+                className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                {/* 搭配色块 */}
+                <div className="flex h-24">
+                  {look.colors.map((c) => (
+                    <div key={c} className="flex-1" style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                      {look.scene}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-primary mb-1">{look.title}</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed mb-3">{look.desc}</p>
+                  <div className="flex items-start gap-1.5 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                    <Star className="w-3.5 h-3.5 shrink-0 mt-0.5 fill-amber-500 text-amber-500" />
+                    <span>{look.tips}</span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* 同供应商商品 */}
       {supplierProducts.length > 0 && (
         <section className="py-12 border-t border-gray-100">
@@ -767,18 +830,32 @@ export default function ProductDetailPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">查看批发价</h3>
+                <h3 className="text-lg font-bold text-gray-900">
+                  {user ? "查看批发价" : "请先登录"}
+                </h3>
                 <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-sm text-gray-600 mb-4">开通查看价格会员，即可查看所有商品批发底价</p>
+              <p className="text-sm text-gray-600 mb-4">
+                {user
+                  ? "开通查看价格会员，即可查看所有商品批发底价"
+                  : "登录后即可查看批发价格，或开通会员享受更多权益"}
+              </p>
               <div className="space-y-3">
-                <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
-                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                    去开通会员
-                  </span>
-                </Link>
+                {user ? (
+                  <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
+                    <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                      去开通会员
+                    </span>
+                  </Link>
+                ) : (
+                  <Link href={`/login?redirect=/shop/${productId}`} onClick={() => setShowMemberPrompt(false)}>
+                    <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
+                      去登录
+                    </span>
+                  </Link>
+                )}
                 <button
                   onClick={() => setShowMemberPrompt(false)}
                   className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { Menu, X, ChevronRight, User, LogOut } from "lucide-react";
 
 const navItems = [
   { label: "首页", href: "/" },
@@ -19,6 +20,7 @@ const navItems = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -54,13 +56,40 @@ export default function Navbar() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Link
-              href="/contact"
-              className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
-            >
-              免费体验
-              <ChevronRight className="w-4 h-4" />
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/members"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  {profile?.full_name || user.email?.split("@")[0] || "用户"}
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  退出
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                >
+                  登录
+                </Link>
+                <Link
+                  href="/register"
+                  className="inline-flex items-center gap-1.5 px-5 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
+                >
+                  注册
+                  <ChevronRight className="w-4 h-4" />
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* Mobile hamburger */}
@@ -92,15 +121,40 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
-            <div className="mt-4 px-4">
-              <Link
-                href="/contact"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center justify-center gap-1.5 w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-              >
-                免费体验
-                <ChevronRight className="w-4 h-4" />
-              </Link>
+            <div className="mt-4 px-4 space-y-2">
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600">
+                    <User className="w-4 h-4" />
+                    {profile?.full_name || user.email?.split("@")[0] || "用户"}
+                  </div>
+                  <button
+                    onClick={() => { signOut(); setMobileOpen(false); }}
+                    className="flex items-center justify-center gap-1.5 w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    退出登录
+                  </button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/login"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-1.5 w-full py-2.5 border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    登录
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center justify-center gap-1.5 w-full py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+                  >
+                    注册
+                    <ChevronRight className="w-4 h-4" />
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

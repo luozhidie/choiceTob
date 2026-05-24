@@ -351,6 +351,40 @@ export default function DisplayPage() {
         </div>
       </section>
 
+      {/* ====== 每日色彩搭配推荐 ====== */}
+      <section className="py-8 bg-white border-b border-gray-100">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Palette className="w-5 h-5 text-accent" />
+            <h2 className="text-lg font-bold text-primary">每日色彩搭配灵感</h2>
+            <span className="text-xs text-gray-400 ml-1">{new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })}</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { name: "暖杏+咖啡", colors: ["#D4A574", "#8B6914", "#F5E6D3"], style: "温柔知性", desc: "适合职场通勤，显白提气色" },
+              { name: "雾霾蓝+白", colors: ["#6B8E9F", "#FFFFFF", "#B8D4E3"], style: "清新减龄", desc: "夏日清爽配色，视觉降温" },
+              { name: "酒红+黑", colors: ["#722F37", "#1A1A1A", "#C9A9A6"], style: "高级气场", desc: "晚宴社交首选，优雅大气" },
+              { name: "薄荷绿+米", colors: ["#98D8C8", "#F5F5DC", "#E8F5E9"], style: "自然休闲", desc: "周末出游，舒适又有型" },
+            ].map((combo) => (
+              <motion.div
+                key={combo.name}
+                whileHover={{ y: -2 }}
+                className="bg-gray-50 rounded-xl p-3 border border-gray-100 hover:border-accent/30 hover:shadow-sm transition-all cursor-pointer"
+              >
+                <div className="flex gap-1.5 mb-2">
+                  {combo.colors.map((c) => (
+                    <div key={c} className="w-6 h-6 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
+                  ))}
+                </div>
+                <h3 className="text-sm font-bold text-primary">{combo.name}</h3>
+                <p className="text-xs text-accent font-medium mt-0.5">{combo.style}</p>
+                <p className="text-[11px] text-gray-500 mt-1">{combo.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ====== 陈列分类 Tab ====== */}
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

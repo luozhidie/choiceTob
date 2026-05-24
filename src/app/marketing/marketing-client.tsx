@@ -142,6 +142,67 @@ const storeServiceSteps = [
   { icon: RefreshCw, title: "持续跟踪", desc: "定期复盘优化，确保方案持续产生价值" },
 ];
 
+/* 销售话术库 */
+const salesScripts = [
+  {
+    scene: "开场破冰",
+    tags: ["迎宾", "第一印象"],
+    scripts: [
+      "欢迎光临！我们刚到一批新款，有几件特别适合您的风格，我帮您推荐一下？",
+      "您好！今天想逛逛什么风格？我们最近上了一批很受欢迎的搭配套装。",
+    ],
+  },
+  {
+    scene: "需求挖掘",
+    tags: ["探需", "画像"],
+    scripts: [
+      "您平时穿衣更喜欢休闲还是偏正式一点的？这样我可以更精准地帮您挑。",
+      "请问您今天是有特定场合需要搭配，还是想日常更新一下衣橱？",
+    ],
+  },
+  {
+    scene: "产品介绍",
+    tags: ["卖点", "价值"],
+    scripts: [
+      "这件是我们这季的爆款，面料是XX材质，透气又亲肤，很多老顾客回购。",
+      "这个版型特别修饰身形，您看腰线这里的设计，视觉上能拉长比例。",
+    ],
+  },
+  {
+    scene: "异议处理",
+    tags: ["砍价", "犹豫"],
+    scripts: [
+      "理解您想对比一下，这件确实是我们性价比很高的款，而且今天有会员专属折扣。",
+      "如果您担心颜色，我们支持7天无理由退换，您可以先拿回家搭配试试看。",
+    ],
+  },
+  {
+    scene: "连带推荐",
+    tags: ["加购", "搭配"],
+    scripts: [
+      "这件上衣搭配那条阔腿裤特别好看，我帮您一起拿过来试试？",
+      "您选的这件外套，里面搭一件真丝吊带会更有层次感，我帮您找一下？",
+    ],
+  },
+  {
+    scene: "促成成交",
+    tags: ["逼单", "收尾"],
+    scripts: [
+      "这套搭配下来刚好满减，等于帮您省了XX元，今天带走特别划算。",
+      "这个尺码只剩最后两件了，我先帮您留着，您考虑好了随时找我。",
+    ],
+  },
+];
+
+/* VIP客户管理看板模拟数据 */
+const vipCustomerDemo = [
+  { name: "张女士", level: "V3 黑卡", spend: 86000, visits: 24, lastVisit: "3天前", tags: ["暖春型", "优雅风", "高客单"], rfm: "重要价值" },
+  { name: "李女士", level: "V2 金卡", spend: 42000, visits: 15, lastVisit: "1周前", tags: ["浅夏型", "淑女风", "复购高"], rfm: "重要发展" },
+  { name: "王女士", level: "V2 金卡", spend: 38000, visits: 12, lastVisit: "2周前", tags: ["深秋型", "职业风", "新品敏感"], rfm: "重要保持" },
+  { name: "陈女士", level: "V1 银卡", spend: 18000, visits: 8, lastVisit: "1月前", tags: ["净冬型", "潮牌风"], rfm: "重要挽留" },
+  { name: "赵女士", level: "V1 银卡", spend: 12000, visits: 6, lastVisit: "3周前", tags: ["柔夏型", "休闲风"], rfm: "一般价值" },
+];
+
 /* ------------------------------------------------------------------ */
 /*  静态数据 - VIP管理                                                  */
 /* ------------------------------------------------------------------ */
@@ -382,12 +443,47 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
         </div>
       </section>
 
-      {/* 服务包 + 话术库 */}
+      {/* 销售话术库 */}
       <section className="py-16 lg:py-20 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Service & Scripts</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">服务包与销售话术</h2>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Sales Scripts</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">实战销售话术库</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">覆盖全流程六大场景，即学即用，快速提升成交率与连带率。</p>
+          </motion.div>
+          <motion.div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {salesScripts.map((item, i) => (
+              <motion.div key={item.scene} variants={fadeUp} custom={i}>
+                <div className="h-full p-6 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h3 className="font-bold text-primary">{item.scene}</h3>
+                    <div className="flex gap-1">
+                      {item.tags.map((t) => (
+                        <span key={t} className="px-1.5 py-0.5 bg-accent/10 text-accent text-[10px] rounded-full">{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-2.5">
+                    {item.scripts.map((script, idx) => (
+                      <div key={idx} className="flex items-start gap-2 p-2.5 bg-gray-50 rounded-lg">
+                        <span className="shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">{idx + 1}</span>
+                        <p className="text-sm text-gray-700 leading-relaxed">{script}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* 服务包 */}
+      <section className="py-16 lg:py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Service Packages</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">服务包案例</h2>
             <p className="mt-4 text-muted-foreground leading-relaxed">从诊断到落地的完整解决方案，配合实战话术，高效成交。</p>
           </motion.div>
           {loading ? renderLoading() : (
@@ -549,8 +645,89 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
         </div>
       </section>
 
-      {/* VIP运营节奏 */}
+      {/* VIP客户管理看板 */}
       <section className="py-16 lg:py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">VIP Dashboard</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">店铺VIP客户管理</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">精准管理每一位终端消费VIP，标签化运营，提升复购与客单价。</p>
+          </motion.div>
+
+          {/* 统计卡片 */}
+          <motion.div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {[
+              { label: "VIP总数", value: "128", change: "+12%", color: "text-primary" },
+              { label: "本月消费", value: "¥18.6万", change: "+8%", color: "text-accent" },
+              { label: "复购率", value: "67%", change: "+5%", color: "text-green-600" },
+              { label: "客单价", value: "¥3,200", change: "+15%", color: "text-amber-600" },
+            ].map((stat, i) => (
+              <motion.div key={stat.label} variants={fadeUp} custom={i}>
+                <div className="p-5 rounded-2xl bg-gray-50 border border-gray-100">
+                  <p className="text-xs text-gray-500">{stat.label}</p>
+                  <p className={`text-2xl font-bold mt-1 ${stat.color}`}>{stat.value}</p>
+                  <p className="text-xs text-green-500 mt-1">{stat.change} 较上月</p>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* 客户列表 */}
+          <motion.div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={fadeUp}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-primary">核心VIP客户列表</h3>
+              <span className="text-xs text-gray-400">RFM模型自动分级</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 text-gray-500 text-xs">
+                    <th className="px-6 py-3 text-left font-medium">客户</th>
+                    <th className="px-6 py-3 text-left font-medium">等级</th>
+                    <th className="px-6 py-3 text-left font-medium">年消费</th>
+                    <th className="px-6 py-3 text-left font-medium">到店次数</th>
+                    <th className="px-6 py-3 text-left font-medium">最近到店</th>
+                    <th className="px-6 py-3 text-left font-medium">标签</th>
+                    <th className="px-6 py-3 text-left font-medium">RFM分级</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {vipCustomerDemo.map((c) => (
+                    <tr key={c.name} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-3.5 font-medium text-primary">{c.name}</td>
+                      <td className="px-6 py-3.5">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          c.level.includes("黑卡") ? "bg-gray-800 text-white" :
+                          c.level.includes("金卡") ? "bg-amber-100 text-amber-700" :
+                          "bg-gray-100 text-gray-600"
+                        }`}>{c.level}</span>
+                      </td>
+                      <td className="px-6 py-3.5 text-accent font-semibold">¥{(c.spend / 10000).toFixed(1)}万</td>
+                      <td className="px-6 py-3.5 text-gray-600">{c.visits}次</td>
+                      <td className="px-6 py-3.5 text-gray-500">{c.lastVisit}</td>
+                      <td className="px-6 py-3.5">
+                        <div className="flex flex-wrap gap-1">
+                          {c.tags.map((t) => (
+                            <span key={t} className="px-1.5 py-0.5 bg-primary/5 text-primary text-[10px] rounded-full">{t}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-3.5">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                          c.rfm.includes("重要") ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-500"
+                        }`}>{c.rfm}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* VIP运营节奏 */}
+      <section className="py-16 lg:py-20 bg-muted">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">Operation Rhythm</span>
