@@ -215,25 +215,23 @@ export default function Home() {
             </motion.div>
 
             <motion.h1
-              className="text-[2rem] leading-[1.25] sm:text-[2.75rem] sm:leading-[1.2] lg:text-[3.5rem] lg:leading-[1.15] xl:text-[4rem] xl:leading-[1.12] font-black tracking-tight"
+              className="text-[2.5rem] leading-[1.15] sm:text-[3.5rem] sm:leading-[1.12] lg:text-[4.5rem] lg:leading-[1.08] font-black tracking-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.1 }}
             >
-              企划定品控方向
-              <br />
-              <span className="inline-block mt-1">供应链稳货源</span>
-              <br />
-              <span className="bg-gradient-to-r from-accent to-pink-300 bg-clip-text text-transparent">落地赋能</span>提业绩
+              服装供应链
+              <br className="sm:hidden" />
+              <span className="text-accent">智选</span>平台
             </motion.h1>
 
             <motion.p
-              className="mt-7 text-base sm:text-lg text-white/60 leading-relaxed max-w-lg"
+              className="mt-6 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
             >
-              一站式帮门店管好货、做好店、赚稳钱
+              从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营，助力品牌精准选品、科学决策。
             </motion.p>
 
             <motion.div
