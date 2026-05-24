@@ -28,6 +28,39 @@ import {
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
+/*  站点图片类型
+/* ------------------------------------------------------------------ */
+interface SiteImageMap {
+  hero_bg: string | null;
+  magazine_1: string | null;
+  magazine_2: string | null;
+  magazine_3: string | null;
+  cta_bg: string | null;
+}
+
+const defaultSiteImages: SiteImageMap = {
+  hero_bg: null,
+  magazine_1: null,
+  magazine_2: null,
+  magazine_3: null,
+  cta_bg: null,
+};
+
+async function fetchSiteImages(): Promise<SiteImageMap> {
+  try {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("site_assets")
+      .select("key, image_url")
+      .in("key", ["hero_bg", "magazine_1", "magazine_2", "magazine_3", "cta_bg"]);
+    if (error || !data) return defaultSiteImages;
+    const map: SiteImageMap = { ...defaultSiteImages };
+    (data as any[]).forEach((a) => { if (a.key in map) (map as any)[a.key] = a.image_url; });
+    return map;
+  } catch { return defaultSiteImages; }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
 /* ------------------------------------------------------------------ */
 const fadeUp = {
@@ -141,15 +174,33 @@ const testimonials = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function Home() {
+  const [siteImages, setSiteImages] = useState<SiteImageMap>(defaultSiteImages);
+
+  useEffect(() => {
+    fetchSiteImages().then(setSiteImages);
+  }, []);
   return (
     <>
       {/* ====== Hero ====== */}
       <section className="relative overflow-hidden hero-gradient text-white">
-        {/* Decorative */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-accent/8 blur-3xl" />
-          <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-3xl" />
-        </div>
+        {/* 背景图片 */}
+        {siteImages.hero_bg && (
+          <div className="absolute inset-0 pointer-events-none">
+            <img
+              src={siteImages.hero_bg}
+              alt="Hero Background"
+              className="w-full h-full object-cover opacity-30"
+            />
+          </div>
+        )}
+
+        {/* Decorative (only show when no bg image) */}
+        {!siteImages.hero_bg && (
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-accent/8 blur-3xl" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-3xl" />
+          </div>
+        )}
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
           <div className="max-w-3xl">
@@ -571,18 +622,21 @@ export default function Home() {
                 title: "2026春夏十大流行色：从数字薰衣草到珊瑚粉",
                 desc: "全球权威色彩机构发布最新流行色报告，提前掌握下一季色彩风向标",
                 date: "2026-05-10",
+                imageKey: "magazine_1" as const,
               },
               {
                 tag: "搭配灵感",
                 title: "法式慵懒风回归：如何穿出不费力的时髦感",
                 desc: "从巴黎街头到小红书爆款，法式风格持续霸榜，掌握核心搭配逻辑",
                 date: "2026-05-08",
+                imageKey: "magazine_2" as const,
               },
               {
                 tag: "行业洞察",
                 title: "可持续时尚崛起：环保面料成消费者新宠",
                 desc: "Z世代消费观念转变，环保认证成品牌溢价新支点",
                 date: "2026-05-05",
+                imageKey: "magazine_3" as const,
               },
             ].map((article, i) => (
               <motion.div
@@ -592,8 +646,16 @@ export default function Home() {
                 className="group cursor-pointer"
                 onClick={() => (window.location.href = "/magazine")}
               >
-                <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 aspect-[4/3] flex items-center justify-center mb-5 group-hover:shadow-md transition-shadow border border-border">
-                  <span className="fashion-heading text-7xl text-primary/10 select-none">M</span>
+                <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 aspect-[4/3] flex items-center justify-center mb-5 group-hover:shadow-md transition-shadow border border-border ${!siteImages[article.imageKey] ? '' : 'p-0'}`}>
+                  {siteImages[article.imageKey] ? (
+                    <img
+                      src={siteImages[article.imageKey]!}
+                      alt={article.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="fashion-heading text-7xl text-primary/10 select-none">M</span>
+                  )}
                   <span className="absolute top-4 left-4 fashion-tag bg-accent text-white text-[10px]">
                     {article.tag}
                   </span>
@@ -688,14 +750,24 @@ export default function Home() {
       <section className="py-20 lg:py-28 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            className="relative overflow-hidden rounded-3xl hero-gradient px-8 sm:px-12 lg:px-20 py-16 sm:py-20 text-center text-white"
+            className={`relative overflow-hidden rounded-3xl hero-gradient px-8 sm:px-12 lg:px-20 py-16 sm:py-20 text-center text-white ${siteImages.cta_bg ? '' : ''}`}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
-            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/8 blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
+            {siteImages.cta_bg && (
+              <div className="absolute inset-0 pointer-events-none">
+                <img src={siteImages.cta_bg!} alt="" className="w-full h-full object-cover opacity-20" />
+              </div>
+            )}
+            {/* Decorative (only show when no bg image) */}
+            {!siteImages.cta_bg && (
+              <>
+                <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/8 blur-3xl pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
+              </>
+            )}
 
             <div className="relative">
               <h2 className="fashion-heading text-3xl sm:text-4xl font-bold">

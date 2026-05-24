@@ -68,6 +68,7 @@ const sidebarGroups: SidebarGroup[] = [
     icon: LayoutDashboard,
     items: [
       { label: "数据概览", href: "/admin/dashboard", icon: LayoutDashboard },
+      { label: "站点图片", href: "/admin/site-assets", icon: ImageIcon },
     ],
   },
   {
