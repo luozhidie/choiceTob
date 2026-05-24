@@ -95,6 +95,7 @@ const sidebarGroups: SidebarGroup[] = [
     title: "商品 & 企划",
     icon: Lightbulb,
     items: [
+      { label: "企划需求处理", href: "/admin/planning-requests", icon: ClipboardList },
       { label: "商品企划", href: "/admin/product-plan", icon: Lightbulb },
       { label: "生成企划报告", href: "/admin/report", icon: FileDown },
       { label: "商品管理", href: "/admin/products", icon: ShoppingBag },
