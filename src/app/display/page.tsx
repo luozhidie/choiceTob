@@ -153,28 +153,35 @@ export default function DisplayPage() {
 
   const fetchAllData = async () => {
     setLoading(true);
-    const [displayRes, productRes, looksRes] = await Promise.all([
-      supabase.from("display_images").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
-      supabase.from("buyer_products").select("id, title, cover_image, price, category, subcategory, color_season, style_type")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: true })
-        .limit(8),
-      supabase.from("daily_looks").select("*").eq("is_published", true).order("sort_order", { ascending: true }).limit(8),
-    ]);
+    try {
+      const [displayRes, productRes, looksRes] = await Promise.all([
+        supabase.from("display_images").select("*").eq("is_published", true).order("sort_order", { ascending: true }),
+        supabase.from("buyer_products").select("id, title, cover_image, price, category, subcategory, color_season, style_type")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true })
+          .limit(8),
+        supabase.from("daily_looks").select("*").eq("is_published", true).order("sort_order", { ascending: true }).limit(8),
+      ]);
 
-    if (!displayRes.error && displayRes.data) setItems(displayRes.data as DisplayItem[]);
-    if (!productRes.error && productRes.data) setRecommendProducts(productRes.data as ProductItem[]);
-    if (!looksRes.error && looksRes.data) {
-      setDailyLooks(looksRes.data.map((d: any) => ({
-        id: d.id,
-        title: d.title,
-        colors: Array.isArray(d.colors) ? d.colors : JSON.parse(d.colors || "[]"),
-        image_url: d.image_url,
-        style: d.style,
-        description: d.description,
-      })));
+      if (!displayRes.error && displayRes.data) setItems(displayRes.data as DisplayItem[]);
+      if (!productRes.error && productRes.data) setRecommendProducts(productRes.data as ProductItem[]);
+      if (!looksRes.error && looksRes.data) {
+        setDailyLooks(looksRes.data.map((d: any) => ({
+          id: d.id,
+          title: d.title,
+          colors: Array.isArray(d.colors) ? d.colors : JSON.parse(d.colors || "[]"),
+          image_url: d.image_url,
+          style: d.style,
+          description: d.description,
+        })));
+      } else if (looksRes.error) {
+        console.error("daily_looks 查询失败:", looksRes.error);
+      }
+    } catch (err) {
+      console.error("加载数据失败:", err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   // 按分类筛选
