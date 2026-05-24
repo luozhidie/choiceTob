@@ -134,12 +134,15 @@ export default function PlanningToolPage() {
     try {
       // 保存需求到 planning_requests 表
       const { error } = await supabase.from("planning_requests").insert([{
+        store_name: formData.brandName,
         store_type: formData.storeType,
         store_scale: formData.storeScale,
         style_preference: formData.marketStyle,
         season: formData.season,
         budget_range: formData.priceBand,
         contact: formData.contact,
+        problems: formData.problems || null,
+        notes: formData.notes || null,
       }]);
 
       if (error) {
