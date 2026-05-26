@@ -218,12 +218,15 @@ export default function FemaleStyleTestPage() {
           </div>
 
           {/* 微信收款二维码 */}
-          <div className="bg-gray-100 rounded-xl p-4 mb-4 inline-block">
-            <img
-              src="/images/wechat-pay-qr.png"
-              alt="微信收款码"
-              className="w-48 h-48 mx-auto object-cover rounded-lg"
-            />
+          <div className="mb-4 inline-block">
+            <div className="w-48 h-48 mx-auto rounded-xl overflow-hidden border-2 border-green-200 shadow-sm">
+              <img
+                src="/pay-wechat-qr.png"
+                alt="微信收款码"
+                className="w-full h-full object-contain"
+                onError={(e) => { const t = e.currentTarget; t.style.display = "none"; t.parentElement!.classList.add("bg-green-50", "flex", "items-center", "justify-center"); t.parentElement!.innerHTML = '<p class=\"text-xs text-green-600 text-center px-3\">📷<br/>请上传微信收款码<br/>pay-wechat-qr.png</p>'; }}
+              />
+            </div>
           </div>
           <p className="text-xs text-gray-400 mb-4">
             请使用微信扫描上方二维码付款

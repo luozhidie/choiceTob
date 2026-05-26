@@ -408,25 +408,27 @@ export default function DisplayPage() {
                   <div className="bg-gray-50 rounded-xl p-5 text-center mb-5">
                     {payMethod === "wechat" ? (
                       <>
-                        <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-3"><MessageCircle className="w-8 h-8 text-green-500" /></div>
-                        <p className="text-sm font-bold text-gray-700 mb-1">添加微信转账</p>
-                        <p className="text-xs text-muted-foreground mb-3">打开微信 → 添加好友 → 转账</p>
+                        <div className="w-40 h-40 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-green-200 shadow-sm">
+                          <img src="/pay-wechat-qr.png" alt="微信收款码" className="w-full h-full object-contain" onError={(e) => { const t = e.currentTarget; t.style.display = "none"; t.parentElement!.classList.add("bg-green-50", "flex", "items-center", "justify-center"); t.parentElement!.innerHTML = '<p class=\"text-xs text-green-600 text-center px-3\">📷<br/>请上传微信收款码<br/>pay-wechat-qr.png</p>'; }} />
+                        </div>
+                        <p className="text-sm font-bold text-gray-700 mb-1">微信扫码支付</p>
+                        <p className="text-xs text-muted-foreground mb-2">打开微信扫一扫 → 确认金额 → 支付</p>
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
                           <span className="text-sm font-mono font-bold text-green-700">luozhidie666</span>
-                          <button onClick={() => { navigator.clipboard.writeText("luozhidie666"); setCopiedAccount(true); setTimeout(()=>setCopiedAccount(false),2000); }} className="text-gray-400 hover:text-green-600">{copiedAccount?<Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</button>
+                          <button onClick={() => { navigator.clipboard.writeText("luozhidie666"); setCopiedAccount(true); setTimeout(() => setCopiedAccount(false), 2000); }} className="text-gray-400 hover:text-green-600">{copiedAccount ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</button>
                         </div>
-                        <div className="mt-4 w-36 h-36 mx-auto rounded-xl bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center"><p className="text-[10px] text-gray-400 text-center px-2">收款二维码<br/>（联系管理员配置）</p></div>
                       </>
                     ) : (
                       <>
-                        <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3"><Smartphone className="w-8 h-8 text-blue-500" /></div>
-                        <p className="text-sm font-bold text-gray-700 mb-1">支付宝转账</p>
-                        <p className="text-xs text-muted-foreground mb-3">打开支付宝 → 转账到该账号</p>
+                        <div className="w-40 h-40 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-blue-200 shadow-sm">
+                          <img src="/pay-alipay-qr.png" alt="支付宝收款码" className="w-full h-full object-contain" onError={(e) => { const t = e.currentTarget; t.style.display = "none"; t.parentElement!.classList.add("bg-blue-50", "flex", "items-center", "justify-center"); t.parentElement!.innerHTML = '<p class=\"text-xs text-blue-600 text-center px-3\">📷<br/>请上传支付宝收款码<br/>pay-alipay-qr.png</p>'; }} />
+                        </div>
+                        <p className="text-sm font-bold text-gray-700 mb-1">支付宝扫码支付</p>
+                        <p className="text-xs text-muted-foreground mb-2">打开支付宝扫一扫 → 确认金额 → 支付</p>
                         <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
                           <span className="text-sm font-mono font-bold text-blue-700">13925997776</span>
-                          <button onClick={() => { navigator.clipboard.writeText("13925997776"); setCopiedAccount(true); setTimeout(()=>setCopiedAccount(false),2000); }} className="text-gray-400 hover:text-blue-600">{copiedAccount?<Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</button>
+                          <button onClick={() => { navigator.clipboard.writeText("13925997776"); setCopiedAccount(true); setTimeout(() => setCopiedAccount(false), 2000); }} className="text-gray-400 hover:text-blue-600">{copiedAccount ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}</button>
                         </div>
-                        <div className="mt-4 w-36 h-36 mx-auto rounded-xl bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center"><p className="text-[10px] text-gray-400 text-center px-2">收款二维码<br/>（联系管理员配置）</p></div>
                       </>
                     )}
                   </div>
