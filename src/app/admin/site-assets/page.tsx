@@ -61,6 +61,22 @@ const ASSET_CONFIGS = [
     sizeHint: "1200 × 500",
     required: false,
   },
+  {
+    key: "pay_wechat_qr",
+    title: "💚 微信收款二维码",
+    desc: "微信收款码原始图片（打开微信 → 我 → 服务 → 收付款 → 收款码 → 保存图片），用于VIP/每日搭配/原创设计等支付弹窗",
+    icon: ImageIcon,
+    sizeHint: "正方形，建议 ≥ 500×500",
+    required: true,
+  },
+  {
+    key: "pay_alipay_qr",
+    title: "💙 支付宝收款二维码",
+    desc: "支付宝收款码原始图片（打开支付宝 → 收付款 → 收款 → 保存图片），用于VIP/每日搭配/原创设计等支付弹窗",
+    icon: ImageIcon,
+    sizeHint: "正方形，建议 ≥ 500×500",
+    required: true,
+  },
 ];
 
 export default function AdminSiteAssetsPage() {

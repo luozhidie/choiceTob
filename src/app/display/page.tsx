@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { PaywallModal } from "@/components/PaywallModal";
 import { motion, AnimatePresence } from "framer-motion";
+import PaymentQRCode from "@/components/PaymentQRCode";
 import Link from "next/link";
 import Image from "next/image";
 import { COLOR_SEASONS_PRO, ALL_STYLES, STYLE_KEY_MAP } from "@/lib/styles";
@@ -408,8 +409,8 @@ export default function DisplayPage() {
                   <div className="bg-gray-50 rounded-xl p-5 text-center mb-5">
                     {payMethod === "wechat" ? (
                       <>
-                        <div className="w-40 h-40 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-green-200 shadow-sm">
-                          <img src="/pay-wechat-qr.png" alt="微信收款码" className="w-full h-full object-contain" onError={(e) => { const t = e.currentTarget; t.style.display = "none"; t.parentElement!.classList.add("bg-green-50", "flex", "items-center", "justify-center"); t.parentElement!.innerHTML = '<p class=\"text-xs text-green-600 text-center px-3\">📷<br/>请上传微信收款码<br/>pay-wechat-qr.png</p>'; }} />
+                        <div className="w-40 h-40 mx-auto mb-3">
+                          <PaymentQRCode type="wechat" className="w-full h-full" />
                         </div>
                         <p className="text-sm font-bold text-gray-700 mb-1">微信扫码支付</p>
                         <p className="text-xs text-muted-foreground mb-2">打开微信扫一扫 → 确认金额 → 支付</p>
@@ -420,8 +421,8 @@ export default function DisplayPage() {
                       </>
                     ) : (
                       <>
-                        <div className="w-40 h-40 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-blue-200 shadow-sm">
-                          <img src="/pay-alipay-qr.png" alt="支付宝收款码" className="w-full h-full object-contain" onError={(e) => { const t = e.currentTarget; t.style.display = "none"; t.parentElement!.classList.add("bg-blue-50", "flex", "items-center", "justify-center"); t.parentElement!.innerHTML = '<p class=\"text-xs text-blue-600 text-center px-3\">📷<br/>请上传支付宝收款码<br/>pay-alipay-qr.png</p>'; }} />
+                        <div className="w-40 h-40 mx-auto mb-3">
+                          <PaymentQRCode type="alipay" className="w-full h-full" />
                         </div>
                         <p className="text-sm font-bold text-gray-700 mb-1">支付宝扫码支付</p>
                         <p className="text-xs text-muted-foreground mb-2">打开支付宝扫一扫 → 确认金额 → 支付</p>

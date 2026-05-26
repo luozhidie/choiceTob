@@ -11,6 +11,7 @@ import {
   ShieldCheck, Zap, Gift, HeadphonesIcon, AlertCircle, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import PaymentQRCode from "@/components/PaymentQRCode";
 
 interface Plan {
   id: string;
@@ -381,20 +382,9 @@ export default function VIPPage() {
                   <div className="bg-gray-50 rounded-xl p-5 text-center mb-5">
                     {payMethod === "wechat" ? (
                       <>
-                        {/* 微信收款二维码 — 请替换为真实收款码 */}
-                        <div className="w-44 h-44 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-green-200 shadow-sm">
-                          <img
-                            src="/pay-wechat-qr.png"
-                            alt="微信收款码"
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              const t = e.currentTarget;
-                              t.style.display = "none";
-                              t.parentElement!.classList.add("bg-green-50", "flex", "items-center", "justify-center");
-                              t.parentElement!.innerHTML =
-                                '<p class=\"text-xs text-green-600 text-center px-3\">📷<br/>请上传<br/>微信收款码<br/>pay-wechat-qr.png</p>';
-                            }}
-                          />
+                        {/* 微信收款二维码 */}
+                        <div className="w-44 h-44 mx-auto mb-3">
+                          <PaymentQRCode type="wechat" className="w-full h-full" />
                         </div>
                         <p className="text-sm font-bold text-gray-700 mb-1">微信扫码支付</p>
                         <p className="text-xs text-muted-foreground mb-2">打开微信扫一扫 → 确认金额 → 支付</p>
@@ -417,20 +407,9 @@ export default function VIPPage() {
                       </>
                     ) : (
                       <>
-                        {/* 支付宝收款二维码 — 请替换为真实收款码 */}
-                        <div className="w-44 h-44 mx-auto mb-3 rounded-xl overflow-hidden border-2 border-blue-200 shadow-sm">
-                          <img
-                            src="/pay-alipay-qr.png"
-                            alt="支付宝收款码"
-                            className="w-full h-full object-contain"
-                            onError={(e) => {
-                              const t = e.currentTarget;
-                              t.style.display = "none";
-                              t.parentElement!.classList.add("bg-blue-50", "flex", "items-center", "justify-center");
-                              t.parentElement!.innerHTML =
-                                '<p class=\"text-xs text-blue-600 text-center px-3\">📷<br/>请上传<br/>支付宝收款码<br/>pay-alipay-qr.png</p>';
-                            }}
-                          />
+                        {/* 支付宝收款二维码 */}
+                        <div className="w-44 h-44 mx-auto mb-3">
+                          <PaymentQRCode type="alipay" className="w-full h-full" />
                         </div>
                         <p className="text-sm font-bold text-gray-700 mb-1">支付宝扫码支付</p>
                         <p className="text-xs text-muted-foreground mb-2">打开支付宝扫一扫 → 确认金额 → 支付</p>
