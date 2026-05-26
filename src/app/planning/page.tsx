@@ -25,12 +25,12 @@ const STYLES = ALL_STYLES.map(s => ({ value: s.value, label: s.label }));
 
 /* ===================== 企划分类 ===================== */
 const PLAN_TYPES = [
-  { value: "structure", label: "商品结构企划", icon: Layers, desc: "引流款/利润款/形象款比例规划", price: 990 },
-  { value: "style", label: "风格企划", icon: Palette, desc: "基于风格类型的商品组合规划", price: 990 },
-  { value: "color", label: "色彩企划", icon: Sparkles, desc: "基于色彩季型的色彩组合规划", price: 990 },
-  { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 990 },
-  { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 990 },
-  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案", price: 990 },
+  { value: "structure", label: "商品结构企划", icon: Layers, desc: "引流款/利润款/形象款比例规划", price: 1200000, originalPrice: null },
+  { value: "style", label: "风格企划", icon: Palette, desc: "基于风格类型的商品组合规划", price: 800000, originalPrice: null },
+  { value: "color", label: "色彩企划", icon: Sparkles, desc: "基于色彩季型的色彩组合规划", price: 800000, originalPrice: null },
+  { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 1200000, originalPrice: null },
+  { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 1200000, originalPrice: null },
+  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案", price: 4980000, originalPrice: 7800000, discountLabel: "新客优惠价 ¥19,800" },
 ];
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
@@ -169,7 +169,7 @@ export default function PlanningPage() {
         target_age: createForm.target_age || null,
         price_range: createForm.price_range || null,
         notes: `店铺面积: ${createForm.shop_size || '未填写'}; 店铺位置: ${createForm.location || '未填写'}; 联系电话: ${createForm.contact_phone || '未填写'}; 补充说明: ${createForm.notes || '无'}` || null,
-        amount: 990,
+        amount: PLAN_TYPES.find(p => p.value === createForm.plan_type)?.price || 1200000,
         status: "pending",
       }]);
 
@@ -489,7 +489,14 @@ export default function PlanningPage() {
                                 <p className="text-xs text-muted-foreground mt-0.5">{plan.desc}</p>
                               </div>
                               <span className={`text-sm font-bold ${createForm.plan_type === plan.value ? "text-accent" : "text-primary"}`}>
-                                ¥{(plan.price / 100).toFixed(0)}
+                                {plan.originalPrice ? (
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-[10px] text-gray-400 line-through">¥{(plan.originalPrice / 100).toLocaleString()}</span>
+                                    <span>¥{(plan.price / 100).toLocaleString()}</span>
+                                  </div>
+                                ) : (
+                                  <>¥{(plan.price / 100).toLocaleString()}</>
+                                )}
                               </span>
                             </div>
                           </button>
@@ -688,18 +695,33 @@ export default function PlanningPage() {
                             <div className="flex items-center justify-between mb-4">
                               <div>
                                 <span className="text-sm text-muted-foreground">企划费用</span>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-2xl font-bold text-accent">
-                                    ¥{(PLAN_TYPES.find(p => p.value === createForm.plan_type)?.price || 59800) / 100}
-                                  </span>
-                                  <span className="text-xs text-muted-foreground">/次</span>
-                                </div>
+                                {(() => {
+                                  const selected = PLAN_TYPES.find(p => p.value === createForm.plan_type);
+                                  return (
+                                    <div className="flex items-center gap-2">
+                                      {selected?.originalPrice && (
+                                        <span className="text-sm text-gray-400 line-through">
+                                          ¥{(selected.originalPrice / 100).toLocaleString()}
+                                        </span>
+                                      )}
+                                      <span className="text-2xl font-bold text-accent">
+                                        ¥{((selected?.price || 1500000) / 100).toLocaleString()}
+                                        <span className="text-xs text-muted-foreground font-normal">/次</span>
+                                      </span>
+                                      {selected?.discountLabel && (
+                                        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                          {selected.discountLabel}
+                                        </span>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               <div className="text-right">
                                 <div className="flex items-center gap-1 text-xs text-amber-600">
-                                  <Zap className="w-3 h-3" /> 充值会员享专属折扣
+                                  <Zap className="w-3 h-3" /> VIP会员享专属折扣
                                 </div>
-                                <Link href="/buyer-center" className="text-xs text-primary hover:text-accent">了解充值档位 →</Link>
+                                <Link href="/vip" className="text-xs text-primary hover:text-accent">了解VIP权益 →</Link>
                               </div>
                             </div>
                             <button

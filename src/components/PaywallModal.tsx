@@ -130,9 +130,9 @@ export function PaywallModal({
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-bold text-primary">🎨 风格测试套餐</span>
-                  <span className="text-xs bg-accent text-white px-2 py-0.5 rounded-full">热门</span>
+                  <span className="text-xs bg-accent text-white px-2 py-0.5 rounded-full">VIP免费</span>
                 </div>
-                <div className="text-2xl font-bold text-accent">¥99</div>
+                <div className="text-2xl font-bold text-accent">¥99<span className="text-sm font-normal text-gray-400">/次</span></div>
                 <ul className="mt-3 space-y-1.5">
                   {["可测2次（男士+女士）", "30天有效期内使用", "AI智能分析风格类型", "专属风格建议报告"].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-xs text-gray-600">
@@ -184,7 +184,7 @@ export function PaywallModal({
               <div className="text-4xl mb-3">🎨</div>
               <h3 className="text-lg font-bold text-primary">购买{formData.service}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {formData.service === "风格测试套餐" ? "¥99 / 2次测试机会，30天有效" : "¥9,800 / 年，全站内容无限查看"}
+                {formData.service === "风格测试套餐" ? "¥99 / 次，VIP会员免费" : "¥9,800 / 年，全站内容无限查看"}
               </p>
             </div>
 
@@ -278,7 +278,7 @@ export function PaywallModal({
                   </button>
                 </div>
                 <p className="text-xs text-green-600">
-                  添加微信：<span className="font-mono font-medium">luozhidie666</span>，转账 <span className="font-bold">¥99</span>
+                  添加微信：<span className="font-mono font-medium">luozhidie666</span>，转账 <span className="font-bold">¥99</span>（VIP免费）
                 </p>
               </div>
 
@@ -300,7 +300,7 @@ export function PaywallModal({
                   </button>
                 </div>
                 <p className="text-xs text-blue-600">
-                  手机号：<span className="font-mono font-medium">13925997776</span>，转账 <span className="font-bold">¥99</span>
+                  手机号：<span className="font-mono font-medium">13925997776</span>，转账 <span className="font-bold">¥99</span>（VIP免费）
                 </p>
               </div>
 

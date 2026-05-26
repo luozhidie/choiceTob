@@ -30,7 +30,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
     setSaving(true);
     try {
       const planName = selectedPlan === "monthly" ? "月费会员" : "年费会员";
-      const planPrice = selectedPlan === "monthly" ? 9800 : 98000;
+      const planPrice = selectedPlan === "monthly" ? 13800 : 138000;
       await supabase.from("leads").insert([{
         name: formData.name.trim(),
         phone: formData.phone.trim(),
@@ -87,7 +87,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                   <span className="font-bold text-primary">📅 月费订阅</span>
                   <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">灵活</span>
                 </div>
-                <div className="text-2xl font-bold text-primary">¥98<span className="text-sm font-normal">/月</span></div>
+                <div className="text-2xl font-bold text-primary">¥138<span className="text-sm font-normal">/月</span></div>
                 <ul className="mt-3 space-y-1.5">
                   {["全站文章无限阅读", "趋势报告完整查看", "30天有效期", "优先客服响应"].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-xs text-gray-600">
@@ -109,8 +109,8 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                   <span className="font-bold text-primary">🎁 年费订阅</span>
                   <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full">最划算</span>
                 </div>
-                <div className="text-2xl font-bold text-accent">¥980<span className="text-sm font-normal">/年</span></div>
-                <p className="mt-1 text-xs text-muted-foreground line-through">原价 ¥1,176/年</p>
+                <div className="text-2xl font-bold text-accent">¥1,380<span className="text-sm font-normal">/年</span></div>
+                <p className="mt-1 text-xs text-muted-foreground line-through">原价 ¥1,656/年</p>
                 <ul className="mt-2 space-y-1.5">
                   {["全站文章无限阅读", "趋势报告完整查看", "365天有效期", "专属顾问1对1", "免费参加线上沙龙"].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-xs text-gray-600">
@@ -146,7 +146,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                 {selectedPlan === "yearly" ? "年费订阅" : "月费订阅"}
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {selectedPlan === "yearly" ? "¥980 / 年，全站内容无限查看" : "¥98 / 月，30天有效"}
+                {selectedPlan === "yearly" ? "¥1,380 / 年，全站内容无限查看" : "¥138 / 月，30天有效"}
               </p>
             </div>
 
@@ -156,7 +156,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                   {selectedPlan === "yearly" ? "年费会员" : "月费会员"}
                 </span>
                 <span className="font-bold text-primary">
-                  ¥{selectedPlan === "yearly" ? "980" : "98"}
+                  ¥{selectedPlan === "yearly" ? "1,380" : "138"}
                 </span>
               </div>
             </div>

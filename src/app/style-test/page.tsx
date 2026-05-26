@@ -4,16 +4,19 @@ import { useEffect, useState } from "react";
 import { User, UserRound, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
 
 export default function StyleTestPage() {
   const [visible, setVisible] = useState(false);
   const router = useRouter();
+  const { user, isMember } = useAuth();
 
   useEffect(() => {
     setVisible(true);
   }, []);
 
   const handleSelectGender = (gender: "male" | "female") => {
+    if (!user) { router.push(`/login?redirect=/style-test/${gender}`); return; }
     router.push(`/style-test/${gender}`);
   };
 
@@ -53,10 +56,13 @@ export default function StyleTestPage() {
               <h3 className="text-xl font-bold text-primary mb-2">男士风格测试</h3>
               <p className="text-sm text-muted-foreground mb-6">18道题，约3分钟</p>
               <div className="mt-auto pt-4 border-t border-gray-100">
-                <div className="text-2xl font-bold text-accent mb-1">¥99</div>
-                <div className="text-xs text-muted-foreground mb-4">可测2次 · 微信扫码支付</div>
+                {isMember ? (
+                  <><div className="text-lg font-bold text-green-600 mb-1">VIP免费</div><div className="text-xs text-muted-foreground mb-4">会员不限次测试</div></>
+                ) : (
+                  <><div className="text-2xl font-bold text-accent mb-1">¥99<span className="text-sm font-normal text-gray-400 ml-1">/次</span></div><div className="text-xs text-muted-foreground mb-4">非会员单次 · VIP免费</div></>
+                )}
                 <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
-                  立即购买 <ChevronRight className="w-4 h-4" />
+                  {isMember ? "立即测试" : "立即购买"} <ChevronRight className="w-4 h-4" />
                 </span>
               </div>
             </motion.div>
@@ -75,10 +81,13 @@ export default function StyleTestPage() {
               <h3 className="text-xl font-bold text-primary mb-2">女士风格测试</h3>
               <p className="text-sm text-muted-foreground mb-6">14道题，约2分钟</p>
               <div className="mt-auto pt-4 border-t border-gray-100">
-                <div className="text-2xl font-bold text-accent mb-1">¥99</div>
-                <div className="text-xs text-muted-foreground mb-4">可测2次 · 微信扫码支付</div>
+                {isMember ? (
+                  <><div className="text-lg font-bold text-green-600 mb-1">VIP免费</div><div className="text-xs text-muted-foreground mb-4">会员不限次测试</div></>
+                ) : (
+                  <><div className="text-2xl font-bold text-accent mb-1">¥99<span className="text-sm font-normal text-gray-400 ml-1">/次</span></div><div className="text-xs text-muted-foreground mb-4">非会员单次 · VIP免费</div></>
+                )}
                 <span className="inline-flex items-center gap-1 text-sm font-medium text-accent">
-                  立即购买 <ChevronRight className="w-4 h-4" />
+                  {isMember ? "立即测试" : "立即购买"} <ChevronRight className="w-4 h-4" />
                 </span>
               </div>
             </motion.div>

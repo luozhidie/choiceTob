@@ -234,7 +234,7 @@ export default function PlanningToolPage() {
               定制您的专属企划报告
             </h1>
             <p className="mt-3 text-white/80 leading-relaxed">
-              填写店铺信息，精准匹配类型+体量+风格，仅需 ¥9.9 获取完整商品企划报告，1-2个工作日交付。
+              填写店铺信息，精准匹配类型+体量+风格，仅需 ¥99 获取完整商品企划报告，1-2个工作日交付。
             </p>
             {/* 定位说明 */}
             <div className="mt-6 inline-flex items-center gap-4 text-xs text-white/60">
@@ -514,7 +514,7 @@ export default function PlanningToolPage() {
                 <div className="text-center mb-8">
                   <h2 className="text-2xl font-bold text-primary">确认需求并支付</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    核对您的需求信息，支付 ¥9.9 后我们将为您生成专属企划报告
+                    核对您的需求信息，支付 ¥99 后我们将为您生成专属企划报告
                   </p>
                 </div>
 
@@ -577,8 +577,8 @@ export default function PlanningToolPage() {
                       <p className="text-sm text-muted-foreground mt-1">专属企划报告 · 精准匹配定制</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-3xl font-bold text-accent">¥9.9</span>
-                      <span className="text-sm text-gray-400 line-through ml-2">¥99</span>
+                      <span className="text-3xl font-bold text-accent">¥99</span>
+                      <span className="text-sm text-gray-400 line-through ml-2">¥199</span>
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-muted-foreground">
@@ -626,7 +626,7 @@ export default function PlanningToolPage() {
                     className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                   >
                     <CheckCircle2 className="w-5 h-5" />
-                    确认支付 ¥9.9
+                    确认支付 ¥99
                   </button>
                 </div>
               </motion.div>
@@ -711,8 +711,8 @@ export default function PlanningToolPage() {
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载Word/PDF完整版</li>
               </ul>
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="text-lg font-bold text-accent">¥9.9</span>
-                <span className="text-xs text-muted-foreground line-through">¥99</span>
+                <span className="text-lg font-bold text-accent">¥99</span>
+                <span className="text-xs text-muted-foreground line-through">¥199</span>
               </div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-primary/20">

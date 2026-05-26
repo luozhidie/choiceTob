@@ -39,6 +39,7 @@ import {
   FileDown,
   CheckSquare,
   DollarSign,
+  CreditCard,
   Tag,
   Warehouse,
   Receipt,
@@ -84,6 +85,7 @@ const sidebarGroups: SidebarGroup[] = [
     title: "VIP 会员",
     icon: Crown,
     items: [
+      { label: "VIP 订单", href: "/admin/membership-orders", icon: CreditCard },
       { label: "VIP 管理", href: "/admin/vip", icon: Crown },
       { label: "VIP 加油包", href: "/admin/vip-addons", icon: Sparkles },
       { label: "色彩季型录入", href: "/admin/color-analysis", icon: Palette },

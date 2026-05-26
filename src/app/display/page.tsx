@@ -7,11 +7,14 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { COLOR_SEASONS_PRO, ALL_STYLES, STYLE_KEY_MAP } from "@/lib/styles";
+import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight, ArrowRight, LayoutGrid, Eye, Shirt, Palette,
   Ruler, CheckCircle2, Home, Loader2, X, ZoomIn,
   Filter, Search, Grid3X3, List, Heart, Share2,
   ShoppingCart, Star, Info, Layers, Maximize2,
+  Lock, MessageCircle, Smartphone, Copy, Check, Clock, CreditCard, Crown, Sparkles,
 } from "lucide-react";
 
 /* ==================== 色彩季型（用户端通俗色系名）=================== */
@@ -147,9 +150,77 @@ export default function DisplayPage() {
   // 当前陈列分类
   const [activeSection, setActiveSection] = useState("styles");
 
+  /* ── 每日搭配订阅付费 ── */
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payStep, setPayStep] = useState<"confirm" | "scan" | "pending">("confirm");
+  const [payMethod, setPayMethod] = useState<"wechat" | "alipay">("wechat");
+  const [selectedDailyPlan, setSelectedDailyPlan] = useState<"monthly" | "yearly">("yearly");
+  const [copiedAccount, setCopiedAccount] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [subLoading, setSubLoading] = useState(true);
+
+  const router = useRouter();
+  const { user, profile, loading: authLoading } = useAuth();
+
   const supabase = createClient();
 
   useEffect(() => { fetchAllData(); }, []);
+
+  /* ── 检查每日搭配订阅状态 ── */
+  useEffect(() => {
+    const checkSubscription = async () => {
+      setSubLoading(true);
+      if (!user) { setIsSubscribed(false); setSubLoading(false); return; }
+      try {
+        // VIP会员自动有权限（会员免费看搭配）
+        if (profile && profile.membership_type !== "none" && profile.membership_expires_at && new Date(profile.membership_expires_at) > new Date()) {
+          setIsSubscribed(true);
+          setSubLoading(false);
+          return;
+        }
+        // 检查 daily_looks 订单
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const { data } = await supabase
+          .from("membership_orders")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("plan_id", "daily_looks")
+          .eq("status", "confirmed")
+          .gte("confirmed_at", thirtyDaysAgo.toISOString())
+          .limit(1);
+        setIsSubscribed(!!data && data.length > 0);
+      } catch (err) {
+        setIsSubscribed(false);
+      } finally {
+        setSubLoading(false);
+      }
+    };
+    if (!authLoading) checkSubscription();
+  }, [user, authLoading, profile]);
+
+  /* ── 提交每日搭配付费订单 ── */
+  const handleDailyLooksSubmit = async () => {
+    if (!user) { router.push(`/login?redirect=/display`); return; }
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("membership_orders").insert([{
+        user_id: user.id,
+        plan_id: "daily_looks",
+        plan_name: selectedDailyPlan === "yearly" ? "每日搭配灵感·年度订阅" : "每日搭配灵感·月度订阅",
+        price: selectedDailyPlan === "yearly" ? 1198000 : 99900,
+        payment_method: payMethod,
+        status: "pending",
+      }]);
+      if (error) throw error;
+      setPayStep("pending");
+    } catch (err: any) {
+      alert("提交失败：" + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -252,13 +323,144 @@ export default function DisplayPage() {
 
   return (
     <>
+      {/* 原有登录paywall（保留兼容） */}
       <PaywallModal
-        isOpen={showPaywall}
+        isOpen={showPaywall && !user}
         onClose={() => setShowPaywall(false)}
         title="完整陈列方案"
         description="登录后购买会员或单次付费即可查看完整内容"
         type="single"
       />
+
+      {/* ── 每日搭配付费弹窗 ── */}
+      <AnimatePresence>
+        {showPayModal && user && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowPayModal(false); setPayStep("confirm"); }} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-2xl max-w-md w-full p-6 md:p-8 shadow-2xl max-h-[92vh] overflow-y-auto"
+            >
+              <button onClick={() => { setShowPayModal(false); setPayStep("confirm"); }}
+                className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+
+              {/* Step 1: 确认 */}
+              {payStep === "confirm" && (
+                <div>
+                  <div className="text-center mb-6">
+                    <div className="w-14 h-14 rounded-full bg-accent flex items-center justify-center mx-auto mb-4">
+                      <Palette className="w-7 h-7 text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-primary">解锁每日搭配灵感</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">VIP会员免费查看，非会员需订阅</p>
+                  </div>
+                  {/* 月/年选择 */}
+                  <div className="flex rounded-xl bg-gray-100 p-1 mb-5">
+                    <button onClick={() => setSelectedDailyPlan("yearly")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${selectedDailyPlan==="yearly"?"bg-white text-accent shadow-sm font-bold":"text-gray-500"}`}>年费 ¥11,980/年</button>
+                    <button onClick={() => setSelectedDailyPlan("monthly")} className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${selectedDailyPlan==="monthly"?"bg-white text-accent shadow-sm font-bold":"text-gray-500"}`}>月费 ¥999/月</button>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4 mb-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">套餐</span>
+                      <span className="text-sm font-bold text-primary">{selectedDailyPlan==="yearly"?"每日搭配·年度订阅":"每日搭配·月度订阅"}</span>
+                    </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-gray-600">有效期</span>
+                      <span className="text-sm text-gray-700">{selectedDailyPlan==="yearly"?"自开通起 1 年":"自开通起 30 天"}</span>
+                    </div>
+                    <div className="border-t border-gray-200 pt-3 mt-3 flex items-center justify-between">
+                      <span className="text-sm font-semibold text-gray-700">应付金额</span>
+                      <span className="text-2xl font-black text-accent">{selectedDailyPlan==="yearly"?"¥11,980":"¥999"}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 mb-6">
+                    {["每日更新搭配灵感完整查看", "色彩方案与单品推荐", "风格解析 + 搭配技巧"].map((f, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0" /> {f}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => { setShowPayModal(false); setPayStep("confirm"); }}
+                      className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">取消</button>
+                    <button onClick={() => setPayStep("scan")}
+                      className="flex-1 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:brightness-110 shadow-md">去支付</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: 扫码 */}
+              {payStep === "scan" && (
+                <div>
+                  <div className="text-center mb-5">
+                    <h3 className="text-lg font-bold text-primary">扫码支付</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">应付金额 <span className="text-xl font-black text-accent">{selectedDailyPlan==="yearly"?"¥11,980":"¥999"}</span></p>
+                  </div>
+                  <div className="flex rounded-xl bg-gray-100 p-1 mb-5">
+                    <button onClick={() => setPayMethod("wechat")} className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${payMethod==="wechat"?"bg-white text-green-600 shadow-sm":"text-gray-500"}`}><MessageCircle className="w-4 h-4" /> 微信支付</button>
+                    <button onClick={() => setPayMethod("alipay")} className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-1.5 ${payMethod==="alipay"?"bg-white text-blue-600 shadow-sm":"text-gray-500"}`}><Smartphone className="w-4 h-4" /> 支付宝</button>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-5 text-center mb-5">
+                    {payMethod === "wechat" ? (
+                      <>
+                        <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-3"><MessageCircle className="w-8 h-8 text-green-500" /></div>
+                        <p className="text-sm font-bold text-gray-700 mb-1">添加微信转账</p>
+                        <p className="text-xs text-muted-foreground mb-3">打开微信 → 添加好友 → 转账</p>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                          <span className="text-sm font-mono font-bold text-green-700">luozhidie666</span>
+                          <button onClick={() => { navigator.clipboard.writeText("luozhidie666"); setCopiedAccount(true); setTimeout(()=>setCopiedAccount(false),2000); }} className="text-gray-400 hover:text-green-600">{copiedAccount?<Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</button>
+                        </div>
+                        <div className="mt-4 w-36 h-36 mx-auto rounded-xl bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center"><p className="text-[10px] text-gray-400 text-center px-2">收款二维码<br/>（联系管理员配置）</p></div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3"><Smartphone className="w-8 h-8 text-blue-500" /></div>
+                        <p className="text-sm font-bold text-gray-700 mb-1">支付宝转账</p>
+                        <p className="text-xs text-muted-foreground mb-3">打开支付宝 → 转账到该账号</p>
+                        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200">
+                          <span className="text-sm font-mono font-bold text-blue-700">13925997776</span>
+                          <button onClick={() => { navigator.clipboard.writeText("13925997776"); setCopiedAccount(true); setTimeout(()=>setCopiedAccount(false),2000); }} className="text-gray-400 hover:text-blue-600">{copiedAccount?<Check className="w-3.5 h-3.5"/>:<Copy className="w-3.5 h-3.5"/>}</button>
+                        </div>
+                        <div className="mt-4 w-36 h-36 mx-auto rounded-xl bg-gray-200 border-2 border-dashed border-gray-300 flex items-center justify-center"><p className="text-[10px] text-gray-400 text-center px-2">收款二维码<br/>（联系管理员配置）</p></div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex gap-3">
+                    <button onClick={() => setPayStep("confirm")} className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50">上一步</button>
+                    <button onClick={handleDailyLooksSubmit} disabled={submitting} className="flex-1 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:brightness-110 shadow-md disabled:opacity-50 flex items-center justify-center gap-2">{submitting?<Loader2 className="w-4 h-4 animate-spin"/>:<CheckCircle2 className="w-4 h-4"/>} 我已支付</button>
+                  </div>
+                  <p className="mt-3 text-[11px] text-gray-400 text-center">支付完成后点击"我已支付"，24小时内确认后即刻生效</p>
+                </div>
+              )}
+
+              {/* Step 3: 待确认 */}
+              {payStep === "pending" && (
+                <div className="text-center py-6">
+                  <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4"><Clock className="w-7 h-7 text-amber-500" /></div>
+                  <h3 className="text-xl font-bold text-primary">支付已提交</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">您的每日搭配订阅订单已创建，等待后台确认</p>
+                  <div className="mt-4 bg-gray-50 rounded-xl p-4 text-left">
+                    <div className="flex justify-between mb-2"><span className="text-xs text-gray-500">套餐</span><span className="text-sm font-bold text-primary">{selectedDailyPlan==="yearly"?"每日搭配·年度订阅":"每日搭配·月度订阅"}</span></div>
+                    <div className="flex justify-between mb-2"><span className="text-xs text-gray-500">金额</span><span className="text-sm font-bold text-accent">{selectedDailyPlan==="yearly"?"¥11,980":"¥999"}</span></div>
+                    <div className="flex justify-between"><span className="text-xs text-gray-500">状态</span><span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full"><Clock className="w-3 h-3"/>待确认</span></div>
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    <button onClick={() => { setShowPayModal(false); window.location.reload(); }} className="w-full py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90">知道了，去逛逛</button>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                    <p className="text-xs text-gray-400">微信: luozhidie666 &nbsp; 支付宝: 13925997776</p>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* 灯箱 */}
       <AnimatePresence mode="wait">
@@ -370,15 +572,43 @@ export default function DisplayPage() {
         </div>
       </section>
 
-      {/* ====== 每日色彩搭配推荐 ====== */}
-      <section className="py-8 bg-white border-b border-gray-100">
+      {/* ====== 每日色彩搭配推荐（付费内容） ====== */}
+      <section className="py-8 bg-white border-b border-gray-100 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* 付费提示条 — 未订阅时显示 */}
+          {!subLoading && !isSubscribed && (
+            <motion.div initial={{ opacity:0, y:-10 }} animate={{ opacity:1, y:0 }} className="flex items-center justify-between mb-4 p-3 rounded-xl bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20">
+              <div className="flex items-center gap-2">
+                <Lock className="w-4 h-4 text-accent" />
+                <span className="text-sm font-semibold text-primary">每日搭配灵感 · 会员专享</span>
+                <span className="text-xs text-accent font-bold bg-accent/10 px-2 py-0.5 rounded-full">¥999/月 ¥11,980/年</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {user ? (
+                  <button onClick={() => setShowPayModal(true)} className="px-4 py-1.5 bg-accent text-white text-xs font-bold rounded-lg hover:brightness-110 transition-all shadow-sm flex items-center gap-1"><CreditCard className="w-3 h-3" /> 立即解锁</button>
+                ) : (
+                  <button onClick={() => router.push(`/login?redirect=/display`)} className="px-4 py-1.5 bg-primary text-white text-xs font-bold rounded-lg hover:bg-primary/90 transition-all shadow-sm flex items-center gap-1">登录解锁</button>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           <div className="flex items-center gap-2 mb-4">
             <Palette className="w-5 h-5 text-accent" />
             <h2 className="text-lg font-bold text-primary">每日色彩搭配灵感</h2>
             <span className="text-xs text-gray-400 ml-1">{new Date().toLocaleDateString("zh-CN", { month: "long", day: "numeric", weekday: "long" })}</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+          {/* 模糊遮罩层 — 未订阅时覆盖 */}
+          <div className={!subLoading && !isSubscribed ? "relative" : ""}>
+            {!subLoading && !isSubscribed && (
+              <div className="absolute inset-0 z-10 backdrop-blur-md bg-white/40 rounded-xl flex flex-col items-center justify-center cursor-pointer" onClick={() => user ? setShowPayModal(true) : router.push(`/login?redirect=/display`)}>
+                <Lock className="w-8 h-8 text-accent mb-2" />
+                <p className="text-sm font-bold text-primary">{user ? "订阅后查看完整搭配" : "登录后查看完整搭配"}</p>
+                <p className="text-xs text-muted-foreground mt-1">¥999/月 · ¥11,980/年 · VIP免费</p>
+              </div>
+            )}
+          <div className={`grid grid-cols-2 md:grid-cols-4 gap-3 ${!subLoading && !isSubscribed ? "blur-sm select-none pointer-events-none" : ""}`}>
             {dailyLooks.length === 0 ? (
               // 默认加载中/空状态
               <div className="col-span-full text-center py-6 text-sm text-gray-400">加载搭配灵感中...</div>
@@ -416,6 +646,7 @@ export default function DisplayPage() {
                 </motion.div>
               ))
             )}
+          </div>
           </div>
         </div>
       </section>

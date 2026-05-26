@@ -38,23 +38,24 @@ const contactCards = [
   {
     icon: Phone,
     label: "咨询热线",
-    value: "400-888-9527",
+    value: "13925997776",
     desc: "周一至周六 9:00-18:00",
     color: "bg-blue-50 text-primary",
   },
   {
     icon: Mail,
     label: "商务邮箱",
-    value: "biz@lzdzhixuan.com",
+    value: "luozhidie@live.cn",
     desc: "24小时内回复",
     color: "bg-amber-50 text-accent",
   },
   {
     icon: MessageCircle,
-    label: "微信客服",
-    value: "LZDZhixuan",
-    desc: "扫码添加专属客服",
+    label: "企业微信",
+    value: "扫码添加企业微信",
+    desc: "专属客服1对1服务",
     color: "bg-green-50 text-green-600",
+    isQrCode: true,
   },
   {
     icon: MapPin,
@@ -198,8 +199,18 @@ export default function ContactPage() {
                   <card.icon className="w-7 h-7" />
                 </div>
                 <h3 className="font-bold text-primary text-lg">{card.label}</h3>
-                <p className="mt-2 text-primary font-semibold">{card.value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{card.desc}</p>
+                {"isQrCode" in card ? (
+                  <div className="mt-3 flex justify-center">
+                    <div className="w-32 h-32 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+                      <p className="text-[10px] text-gray-400 text-center px-2">企业微信二维码<br/>（请联系管理员配置）</p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mt-2 text-primary font-semibold">{card.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{card.desc}</p>
+                  </>
+                )}
               </motion.div>
             ))}
           </motion.div>
@@ -416,11 +427,11 @@ export default function ContactPage() {
               </p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <a
-                  href="tel:4008889527"
+                  href="tel:13925997776"
                   className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                 >
                   <Phone className="w-5 h-5" />
-                  拨打热线 400-888-9527
+                  拨打热线 13925997776
                 </a>
               </div>
             </div>
