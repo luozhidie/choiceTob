@@ -3,10 +3,9 @@
 import { useState } from "react";
 import {
   Search, TrendingUp, BarChart3, Palette, Tag, DollarSign,
-  Shirt, Eye, Star, Zap, Download, Loader2, RefreshCw,
-  Filter, Plus, Trash2, ChevronDown, ChevronUp, Sparkles,
+  Shirt, Eye, Star, Download, Loader2, RefreshCw,
+  Filter, ChevronDown, ChevronUp, Sparkles, Globe, AlertCircle,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 /* ============ 类型定义 ============ */
 interface TrendItem {
@@ -17,148 +16,141 @@ interface TrendItem {
   price_range: string;
   colors: string[];
   style: string;
-  heat_score: number;     // 热度分 0-100
-  sales_volume: string;    // 销量描述
-  trend_type: "全网爆款" | "潜在爆款" | "爆款微调款" | "设计师款" | "原创款";
+  heat_score: number;
+  sales_volume: string;
+  trend_type: string;
   source_url: string;
   image_url: string;
   keywords: string[];
-  analysis?: string;
-  suggestion?: string;
-  created_at: string;
+  description: string;
 }
 
-/* ============ 平台选项 ============ */
-const platforms = [
-  { value: "taobao", label: "淘宝/天猫" },
-  { value: "jd", label: "京东" },
-  { value: "pdd", label: "拼多多" },
-  { value: "douyin", label: "抖音" },
-  { value: "xiaohongshu", label: "小红书" },
-  { value: "weibo", label: "微博" },
-  { value: "wechat", label: "微信" },
-  { value: "wholesale", label: "批发市场" },
-  { value: "buyer_store", label: "买手店" },
-  { value: "niche_brand", label: "小众品牌" },
-  { value: "luxury", label: "轻奢品牌" },
-  { value: "designer", label: "设计师品牌" },
+interface CrawlStats {
+  total: number;
+  byPlatform: Record<string, number>;
+  byType: Record<string, number>;
+  topStyles: [string, number][];
+  topColors: [string, number][];
+  avgHeat: number;
+}
+
+/* ============ 数据源选项 ============ */
+const sourceOptions = [
+  { value: "general", label: "搜索引擎聚合", icon: Globe },
+  { value: "taobao", label: "淘宝/天猫", icon: Tag },
+  { value: "xiaohongshu", label: "小红书", icon: Eye },
+  { value: "weibo", label: "微博", icon: TrendingUp },
+  { value: "1688", label: "1688批发", icon: DollarSign },
 ];
 
 const trendTypes = ["全网爆款", "潜在爆款", "爆款微调款", "设计师款", "原创款"];
 const categories = ["女装", "男装", "配饰", "鞋靴", "包袋"];
-const styles = ["休闲", "通勤", "法式", "韩系", "国潮", "极简", "复古", "甜美", "街头", "优雅", "运动"];
-
-/* ============ 模拟爆款数据 ============ */
-function generateMockData(keyword: string, count: number): TrendItem[] {
-  const results: TrendItem[] = [];
-  const colorSets = [
-    ["黑色", "白色", "灰色"],
-    ["米白", "卡其", "驼色"],
-    ["粉色", "蓝色", "绿色"],
-    ["红色", "酒红", "焦糖"],
-    ["藏青", "墨绿", "棕色"],
-  ];
-  const priceRanges = ["0-100", "100-300", "300-500", "500-1000", "1000+"];
-
-  for (let i = 0; i < count; i++) {
-    const heatScore = Math.floor(Math.random() * 60) + 40;
-    const trendType = heatScore >= 80 ? "全网爆款" : heatScore >= 65 ? "潜在爆款" : "爆款微调款";
-    results.push({
-      id: `trend_${Date.now()}_${i}`,
-      name: `${keyword}${["连衣裙", "西装外套", "针织衫", "衬衫", "阔腿裤", "风衣", "半裙", "卫衣", "马甲", "大衣"][i % 10]}`,
-      platform: platforms[i % platforms.length].value,
-      category: categories[i % categories.length],
-      price_range: priceRanges[i % priceRanges.length],
-      colors: colorSets[i % colorSets.length],
-      style: styles[i % styles.length],
-      heat_score: heatScore,
-      sales_volume: heatScore >= 80 ? "10万+" : heatScore >= 65 ? "1-10万" : "1000-1万",
-      trend_type: trendType,
-      source_url: "#",
-      image_url: "",
-      keywords: [keyword, styles[i % styles.length], trendType],
-      created_at: new Date().toISOString(),
-    });
-  }
-  return results.sort((a, b) => b.heat_score - a.heat_score);
-}
 
 /* ============ 主页面 ============ */
 export default function TrendCenterPage() {
   const [keyword, setKeyword] = useState("");
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<TrendItem[]>([]);
-  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [stats, setStats] = useState<CrawlStats | null>(null);
+  const [selectedSources, setSelectedSources] = useState<string[]>(["general", "taobao", "xiaohongshu", "1688"]);
   const [filterType, setFilterType] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
+  const [filterPlatform, setFilterPlatform] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string>("");
   const [savedItems, setSavedItems] = useState<TrendItem[]>([]);
   const [showSaved, setShowSaved] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [error, setError] = useState<string>("");
+  const [crawlLog, setCrawlLog] = useState<string[]>([]);
 
-  // 搜索爆款
+  const addLog = (msg: string) => setCrawlLog(prev => [`${new Date().toLocaleTimeString()} ${msg}`, ...prev].slice(0, 50));
+
+  const toggleSource = (value: string) => {
+    setSelectedSources(prev =>
+      prev.includes(value) ? prev.filter(s => s !== value) : [...prev, value]
+    );
+  };
+
+  // 真实爬取爆款数据
   const handleSearch = async () => {
     if (!keyword.trim()) return;
     setSearching(true);
     setAnalysisResult("");
+    setError("");
+    setResults([]);
+    setStats(null);
+    addLog(`开始采集关键词: "${keyword}"`);
+    addLog(`数据源: ${selectedSources.join(", ")}`);
 
-    // 模拟搜索延迟（实际生产中调用后端API）
-    await new Promise(r => setTimeout(r, 1500));
-    const mockData = generateMockData(keyword, 30);
-    setResults(mockData);
+    try {
+      const resp = await fetch("/api/trend/crawl", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keyword: keyword.trim(),
+          sources: selectedSources,
+        }),
+      });
+
+      const data = await resp.json();
+
+      if (data.error) {
+        setError(data.error);
+        addLog(`采集出错: ${data.error}`);
+      } else {
+        const items = (data.items || []).map((item: any, i: number) => ({
+          ...item,
+          id: `trend_${Date.now()}_${i}`,
+          category: item.category || keyword,
+        }));
+
+        setResults(items);
+        setStats(data.stats || null);
+        addLog(`采集完成: 共${items.length}条数据`);
+        addLog(`平台分布: ${JSON.stringify(data.stats?.byPlatform || {})}`);
+
+        if (items.length === 0) {
+          addLog("⚠ 未采集到数据，可能被反爬限制，建议切换数据源或关键词");
+        }
+      }
+    } catch (err: any) {
+      setError(`网络请求失败: ${err.message}`);
+      addLog(`请求失败: ${err.message}`);
+    }
+
     setSearching(false);
   };
 
-  // AI分析
+  // AI分析（调用DeepSeek）
   const handleAnalyze = async () => {
     if (results.length === 0) return;
     setAnalyzing(true);
+    setAnalysisResult("");
+    addLog("开始AI分析...");
 
-    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const resp = await fetch("/api/trend/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, items: results, stats }),
+      });
 
-    const topStyles = results.reduce((acc, r) => { acc[r.style] = (acc[r.style] || 0) + 1; return acc; }, {} as Record<string, number>);
-    const topColors = results.flatMap(r => r.colors).reduce((acc, c) => { acc[c] = (acc[c] || 0) + 1; return acc; }, {} as Record<string, number>);
-    const topCategories = results.reduce((acc, r) => { acc[r.category] = (acc[r.category] || 0) + 1; return acc; }, {} as Record<string, number>);
-    const avgHeat = Math.round(results.reduce((s, r) => s + r.heat_score, 0) / results.length);
+      const data = await resp.json();
+      if (data.error) {
+        setError(data.error);
+        addLog(`AI分析失败: ${data.error}`);
+      } else {
+        setAnalysisResult(data.analysis || "分析结果为空");
+        addLog("AI分析完成");
+      }
+    } catch (err: any) {
+      setError(`AI分析请求失败: ${err.message}`);
+      addLog(`AI分析失败: ${err.message}`);
+    }
 
-    const styleSorted = Object.entries(topStyles).sort((a, b) => b[1] - a[1]);
-    const colorSorted = Object.entries(topColors).sort((a, b) => b[1] - a[1]);
-    const catSorted = Object.entries(topCategories).sort((a, b) => b[1] - a[1]);
-
-    const analysis = `## 爆款分析报告 — "${keyword}"
-
-### 📊 整体热度
-- 平均热度指数：**${avgHeat}/100**
-- 全网爆款占比：**${results.filter(r => r.trend_type === "全网爆款").length}/${results.length}**
-- 潜在爆款占比：**${results.filter(r => r.trend_type === "潜在爆款").length}/${results.length}**
-
-### 🎨 热门风格排行
-${styleSorted.map(([s, c], i) => `${i + 1}. **${s}** — 出现${c}次`).join("\n")}
-
-### 🌈 热门颜色排行
-${colorSorted.slice(0, 8).map(([c, n], i) => `${i + 1}. **${c}** — 出现${n}次`).join("\n")}
-
-### 👗 品类分布
-${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
-
-### 💡 爆款微调建议
-1. **风格融合**：${styleSorted[0]?.[0]} + ${styleSorted[1]?.[0]} 跨风格混搭，打造差异化
-2. **颜色策略**：主色${colorSorted[0]?.[0]} + 点缀${colorSorted[2]?.[0]}，提升视觉冲击力
-3. **价格定位**：集中在${results[0]?.price_range}区间，符合大众消费预期
-4. **面料升级**：在爆款基础上提升面料质感，增加溢价空间
-5. **细节创新**：加入流行元素（如绑带、抽绳、不对称设计），增强辨识度
-
-### 🔥 下季预测
-- 风格方向：${styleSorted[0]?.[0]}持续走强，${styleSorted[2]?.[0]}有望成新趋势
-- 色彩趋势：${colorSorted[0]?.[0]}系仍为主流，${colorSorted[3]?.[0]}可能成为下一季黑马
-- 品类机会：${catSorted[0]?.[0]}赛道竞争激烈，${catSorted[1]?.[0]}存在蓝海空间`;
-
-    setAnalysisResult(analysis);
     setAnalyzing(false);
   };
 
-  // 收藏/取消收藏
   const toggleSave = (item: TrendItem) => {
     if (savedItems.find(s => s.id === item.id)) {
       setSavedItems(prev => prev.filter(s => s.id !== item.id));
@@ -167,12 +159,11 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
     }
   };
 
-  // 导出报告
   const handleExport = () => {
     const content = analysisResult || results.map(r =>
-      `${r.name}\t${r.platform}\t${r.category}\t${r.price_range}\t${r.colors.join("/")}\t${r.style}\t${r.heat_score}\t${r.trend_type}`
+      `${r.name}\t${r.platform}\t${r.category}\t${r.price_range}\t${r.colors.join("/")}\t${r.style}\t${r.heat_score}\t${r.trend_type}\t${r.source_url}`
     ).join("\n");
-    const headers = analysisResult ? "" : "名称\t平台\t品类\t价格区间\t颜色\t风格\t热度\t类型\n";
+    const headers = analysisResult ? "" : "名称\t平台\t品类\t价格区间\t颜色\t风格\t热度\t类型\t来源链接\n";
     const blob = new Blob(["\uFEFF" + headers + content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -182,14 +173,16 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
     URL.revokeObjectURL(url);
   };
 
-  // 筛选结果
   const filteredResults = results.filter(r => {
     if (filterType && r.trend_type !== filterType) return false;
-    if (filterCategory && r.category !== filterCategory) return false;
+    if (filterPlatform && r.platform !== filterPlatform) return false;
     return true;
   });
 
   const displayItems = showSaved ? savedItems : filteredResults;
+
+  // 平台列表（从结果中动态提取）
+  const platformList = [...new Set(results.map(r => r.platform))];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -201,7 +194,7 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
               <TrendingUp className="w-6 h-6 text-accent" />
               爆款数据中心
             </h1>
-            <p className="text-muted-foreground mt-1">大数据分析全网爆款趋势，智能推荐微调方案</p>
+            <p className="text-muted-foreground mt-1">真实互联网数据采集 + DeepSeek AI分析，挖掘全网爆款趋势</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -210,7 +203,7 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
             >
               已收藏 ({savedItems.length})
             </button>
-            <button onClick={handleExport} disabled={results.length === 0}
+            <button onClick={handleExport} disabled={results.length === 0 && !analysisResult}
               className="btn-secondary flex items-center gap-2">
               <Download className="w-4 h-4" /> 导出报告
             </button>
@@ -218,7 +211,7 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
         </div>
 
         {/* 统计卡片 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
           <div className="bg-white rounded-xl border border-gray-100 p-4">
             <div className="text-xs text-muted-foreground mb-1">采集数据</div>
             <div className="text-2xl font-bold text-primary">{results.length}</div>
@@ -232,10 +225,25 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
             <div className="text-2xl font-bold text-orange-500">{results.filter(r => r.trend_type === "潜在爆款").length}</div>
           </div>
           <div className="bg-white rounded-xl border border-gray-100 p-4">
-            <div className="text-xs text-muted-foreground mb-1">微调建议</div>
-            <div className="text-2xl font-bold text-blue-500">{results.filter(r => r.trend_type === "爆款微调款").length}</div>
+            <div className="text-xs text-muted-foreground mb-1">平均热度</div>
+            <div className="text-2xl font-bold text-blue-500">{stats?.avgHeat || 0}</div>
           </div>
         </div>
+
+        {/* 平台分布 */}
+        {stats && Object.keys(stats.byPlatform).length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+            <h3 className="text-sm font-bold text-primary mb-3">平台数据分布</h3>
+            <div className="flex flex-wrap gap-3">
+              {Object.entries(stats.byPlatform).sort((a, b) => b[1] - a[1]).map(([platform, count]) => (
+                <div key={platform} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg">
+                  <span className="text-sm font-medium text-primary">{platform}</span>
+                  <span className="text-xs text-accent font-bold">{count}条</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 搜索栏 */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 mb-6">
@@ -251,33 +259,76 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
                 className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm"
               />
             </div>
-            <select value={selectedPlatform} onChange={e => setSelectedPlatform(e.target.value)}
-              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-              <option value="">全部平台</option>
-              {platforms.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-            </select>
-            <button onClick={handleSearch} disabled={searching}
-              className="btn-primary flex items-center gap-2 px-6">
+            <button onClick={handleSearch} disabled={searching || selectedSources.length === 0}
+              className="btn-primary flex items-center gap-2 px-6 whitespace-nowrap">
               {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               {searching ? "采集中..." : "采集数据"}
             </button>
             <button onClick={handleAnalyze} disabled={analyzing || results.length === 0}
-              className="btn-secondary flex items-center gap-2 px-6 bg-accent/10 text-accent border-accent/20 hover:bg-accent/20">
+              className="btn-secondary flex items-center gap-2 px-6 bg-accent/10 text-accent border-accent/20 hover:bg-accent/20 whitespace-nowrap">
               {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
               {analyzing ? "分析中..." : "AI分析"}
             </button>
           </div>
 
+          {/* 数据源选择 */}
+          <div className="mt-4">
+            <div className="text-xs text-gray-500 mb-2">选择数据源（可多选）：</div>
+            <div className="flex flex-wrap gap-2">
+              {sourceOptions.map(src => (
+                <button
+                  key={src.value}
+                  onClick={() => toggleSource(src.value)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                    selectedSources.includes(src.value)
+                      ? "bg-accent/10 text-accent border border-accent/30"
+                      : "bg-gray-50 text-gray-500 border border-gray-200 hover:bg-gray-100"
+                  }`}
+                >
+                  <src.icon className="w-3 h-3" />
+                  {src.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* 快捷关键词 */}
           <div className="flex flex-wrap gap-2 mt-3">
-            {["女装", "连衣裙", "春季新款", "韩系", "法式", "国潮", "通勤", "小众设计"].map(kw => (
-              <button key={kw} onClick={() => { setKeyword(kw); }}
+            {["女装", "连衣裙", "春季新款", "韩系", "法式", "国潮", "通勤", "小众设计", "羽绒服", "西装"].map(kw => (
+              <button key={kw} onClick={() => setKeyword(kw)}
                 className="px-3 py-1 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-accent/10 hover:text-accent transition-colors">
                 {kw}
               </button>
             ))}
           </div>
         </div>
+
+        {/* 错误提示 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <div className="text-sm font-medium text-red-700">采集异常</div>
+              <div className="text-sm text-red-600 mt-1">{error}</div>
+              <div className="text-xs text-red-500 mt-2">
+                提示：部分平台有反爬机制，如未采集到数据，建议：1) 切换数据源 2) 更换关键词 3) 使用"搜索引擎聚合"
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 采集日志 */}
+        {crawlLog.length > 0 && (
+          <div className="bg-gray-900 rounded-xl p-4 mb-6 max-h-40 overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-medium text-green-400">采集日志</span>
+              <button onClick={() => setCrawlLog([])} className="text-xs text-gray-500 hover:text-gray-300">清空</button>
+            </div>
+            {crawlLog.map((log, i) => (
+              <div key={i} className="text-xs text-gray-400 font-mono leading-relaxed">{log}</div>
+            ))}
+          </div>
+        )}
 
         {/* 筛选 */}
         {results.length > 0 && (
@@ -287,13 +338,13 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
               <option value="">全部类型</option>
               {trendTypes.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
-            <select value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
+            <select value={filterPlatform} onChange={e => setFilterPlatform(e.target.value)}
               className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm">
-              <option value="">全部品类</option>
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
+              <option value="">全部平台</option>
+              {platformList.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
             <span className="text-sm text-gray-400 self-center">
-              共 {displayItems.length} 条数据
+              显示 {displayItems.length} / {results.length} 条
             </span>
           </div>
         )}
@@ -303,7 +354,8 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
           <div className="bg-white rounded-xl border border-accent/20 p-6 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-accent" />
-              <h2 className="text-lg font-bold text-primary">AI分析报告</h2>
+              <h2 className="text-lg font-bold text-primary">AI趋势分析报告</h2>
+              <span className="text-xs text-muted-foreground">（基于真实爬取数据分析）</span>
             </div>
             <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
               {analysisResult}
@@ -321,37 +373,50 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
                   onClick={() => setExpandedId(expandedId === item.id ? null : item.id)}
                 >
                   {/* 热度 */}
-                  <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg font-bold text-accent">{item.heat_score}</span>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    item.heat_score >= 80 ? "bg-red-50" :
+                    item.heat_score >= 60 ? "bg-orange-50" : "bg-blue-50"
+                  }`}>
+                    <span className={`text-lg font-bold ${
+                      item.heat_score >= 80 ? "text-red-500" :
+                      item.heat_score >= 60 ? "text-orange-500" : "text-blue-500"
+                    }`}>{item.heat_score}</span>
                   </div>
 
                   {/* 信息 */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-primary text-sm truncate">{item.name}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
                         item.trend_type === "全网爆款" ? "bg-red-100 text-red-700" :
                         item.trend_type === "潜在爆款" ? "bg-orange-100 text-orange-700" :
                         "bg-blue-100 text-blue-700"
                       }`}>
                         {item.trend_type}
                       </span>
+                      <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full flex-shrink-0">{item.platform}</span>
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
-                      <span className="flex items-center gap-1"><Tag className="w-3 h-3" />{item.category}</span>
-                      <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />¥{item.price_range}</span>
-                      <span className="flex items-center gap-1"><Palette className="w-3 h-3" />{item.colors.join("/")}</span>
-                      <span className="flex items-center gap-1"><Shirt className="w-3 h-3" />{item.style}</span>
-                      <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{item.sales_volume}</span>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 flex-wrap">
+                      {item.price_range && <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />¥{item.price_range}</span>}
+                      {item.colors.length > 0 && <span className="flex items-center gap-1"><Palette className="w-3 h-3" />{item.colors.join("/")}</span>}
+                      {item.style && <span className="flex items-center gap-1"><Shirt className="w-3 h-3" />{item.style}</span>}
+                      {item.sales_volume && <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{item.sales_volume}</span>}
                     </div>
                   </div>
 
                   {/* 操作 */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={(e) => { e.stopPropagation(); toggleSave(item); }}
                       className={`p-2 rounded-lg ${savedItems.find(s => s.id === item.id) ? "text-accent bg-accent/10" : "text-gray-400 hover:text-accent hover:bg-accent/10"}`}>
                       <Star className="w-4 h-4" />
                     </button>
+                    {item.source_url && item.source_url !== "#" && (
+                      <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                        onClick={e => e.stopPropagation()}
+                        className="p-2 rounded-lg text-gray-400 hover:text-blue-500 hover:bg-blue-50">
+                        <Globe className="w-4 h-4" />
+                      </a>
+                    )}
                     {expandedId === item.id ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
                   </div>
                 </div>
@@ -359,10 +424,13 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
                 {/* 展开详情 */}
                 {expandedId === item.id && (
                   <div className="border-t border-gray-100 p-4 bg-gray-50/50">
+                    {item.description && (
+                      <div className="mb-3 text-sm text-gray-600 line-clamp-3">{item.description}</div>
+                    )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                       <div>
                         <div className="text-gray-500 mb-1">平台来源</div>
-                        <div className="font-medium text-primary">{platforms.find(p => p.value === item.platform)?.label || item.platform}</div>
+                        <div className="font-medium text-primary">{item.platform}</div>
                       </div>
                       <div>
                         <div className="text-gray-500 mb-1">热度指数</div>
@@ -370,25 +438,26 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
                       </div>
                       <div>
                         <div className="text-gray-500 mb-1">价格区间</div>
-                        <div className="font-medium text-primary">¥{item.price_range}</div>
+                        <div className="font-medium text-primary">{item.price_range || "未知"}</div>
                       </div>
                       <div>
                         <div className="text-gray-500 mb-1">销量</div>
-                        <div className="font-medium text-primary">{item.sales_volume}</div>
+                        <div className="font-medium text-primary">{item.sales_volume || "未知"}</div>
                       </div>
                     </div>
-                    <div className="mt-3 text-sm">
-                      <div className="text-gray-500 mb-1">关键词标签</div>
-                      <div className="flex flex-wrap gap-1">
-                        {item.keywords.map((kw, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs">{kw}</span>
-                        ))}
+                    {item.keywords.length > 0 && (
+                      <div className="mt-3 text-sm">
+                        <div className="text-gray-500 mb-1">关键词</div>
+                        <div className="flex flex-wrap gap-1">
+                          {item.keywords.map((kw, i) => (
+                            <span key={i} className="px-2 py-0.5 bg-gray-200 text-gray-600 rounded text-xs">{kw}</span>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                    {item.trend_type === "爆款微调款" && (
-                      <div className="mt-3 bg-blue-50 rounded-lg p-3 text-sm">
-                        <div className="text-blue-700 font-medium mb-1">💡 微调建议</div>
-                        <div className="text-blue-600">在原有爆款基础上，调整配色为今年流行色，升级面料质感，加入不对称剪裁细节，可提升30%溢价空间</div>
+                    )}
+                    {item.image_url && (
+                      <div className="mt-3">
+                        <img src={item.image_url} alt={item.name} className="w-32 h-32 object-cover rounded-lg" />
                       </div>
                     )}
                   </div>
@@ -396,10 +465,11 @@ ${catSorted.map(([c, n], i) => `${i + 1}. **${c}** — ${n}款`).join("\n")}
               </div>
             ))}
           </div>
-        ) : !searching && (
+        ) : !searching && results.length === 0 && !error && (
           <div className="text-center py-16">
             <TrendingUp className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-muted-foreground">输入关键词开始采集爆款数据</p>
+            <p className="text-muted-foreground mb-2">输入关键词开始采集真实互联网爆款数据</p>
+            <p className="text-xs text-gray-400">数据来源：淘宝、小红书、微博、1688、搜索引擎聚合</p>
           </div>
         )}
       </div>

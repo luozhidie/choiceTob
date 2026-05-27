@@ -13,6 +13,8 @@ const navItems = [
   { label: "商品企划", href: "/planning" },
   { label: "设计稿", href: "/designer" },
   { label: "搭配稿", href: "/collocation" },
+  { label: "爆款样衣", href: "/hot-picks" },
+  { label: "合作模式", href: "/cooperation" },
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
   { label: "时尚博主", href: "/magazine" },
