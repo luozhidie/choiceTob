@@ -19,7 +19,8 @@ export async function POST(request: NextRequest) {
       : `${keyword}${city ? ' ' + city : ''}`;
 
     // 使用高德地图 POI 搜索 API（公开数据）
-    const amapKey = process.env.AMAP_API_KEY;
+    // 兼容两种环境变量命名：NEXT_PUBLIC_ 前缀（前端）和普通命名（服务端）
+    const amapKey = process.env.NEXT_PUBLIC_AMAP_API_KEY || process.env.AMAP_API_KEY;
     const results: any[] = [];
 
     if (amapKey) {
@@ -48,7 +49,8 @@ export async function POST(request: NextRequest) {
     }
 
     // 补充：百度地图 POI 搜索
-    const baiduKey = process.env.BAIDU_MAP_AK;
+    // 兼容两种环境变量命名
+    const baiduKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK || process.env.BAIDU_MAP_AK;
     if (baiduKey && results.length < 20) {
       try {
         const baiduUrl = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(searchTerm)}&region=${encodeURIComponent(city || '全国')}&output=json&page_size=20&page_num=${page - 1}&ak=${baiduKey}`;
