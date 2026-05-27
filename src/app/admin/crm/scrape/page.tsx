@@ -198,6 +198,7 @@ export default function CrmScrapePage() {
   const [parsedResults, setParsedResults] = useState<ParsedStore[]>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; failed: number; dups: number } | null>(null);
+  const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [editingStore, setEditingStore] = useState<ParsedStore | null>(null);
   const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", industry: "服装店" });
   const supabase = createClient();
@@ -309,8 +310,9 @@ export default function CrmScrapePage() {
   };
 
   const toggleSelectAll = () => {
-    const allSelected = parsedResults.every(r => r.selected);
-    setParsedResults(prev => prev.map(r => ({ ...r, selected: !allSelected })));
+    const ids = new Set(displayResults.map(r => r.id));
+    const allSelected = displayResults.every(r => r.selected);
+    setParsedResults(prev => prev.map(r => ids.has(r.id) ? { ...r, selected: !allSelected } : r));
   };
 
   const deleteItem = (id: string) => {
@@ -338,8 +340,9 @@ export default function CrmScrapePage() {
   };
 
   const selectedCount = parsedResults.filter(r => r.selected).length;
-  const validCount = parsedResults.filter(r => r.selected && r.parsed).length;
-  const invalidCount = parsedResults.filter(r => r.selected && !r.parsed).length;
+  const displayResults = showOnlyValid ? parsedResults.filter(r => r.parsed) : parsedResults;
+  const validCount = displayResults.filter(r => r.selected && r.parsed).length;
+  const invalidCount = displayResults.filter(r => r.selected && !r.parsed).length;
 
   return (
     <div>
@@ -443,12 +446,19 @@ export default function CrmScrapePage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="checkbox" checked={parsedResults.every(r => r.selected)}
+                <input type="checkbox" checked={displayResults.length > 0 && displayResults.every(r => r.selected)}
                   onChange={toggleSelectAll} className="w-4 h-4 accent-accent" />
-                <span>全选（{parsedResults.length}条）</span>
+                <span>全选（{displayResults.length}条）</span>
               </label>
               <span className="text-xs text-green-600">有效 {validCount}</span>
               {invalidCount > 0 && <span className="text-xs text-red-500">无效 {invalidCount}</span>}
+              {invalidCount > 0 && (
+                <label className="flex items-center gap-1.5 cursor-pointer text-xs ml-2">
+                  <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)}
+                    className="w-3.5 h-3.5 accent-accent" />
+                  <span className="text-gray-600">只看有电话</span>
+                </label>
+              )}
             </div>
             <button onClick={handleImport} disabled={importing || validCount === 0}
               className="btn-primary flex items-center gap-2 text-sm">
@@ -469,7 +479,7 @@ export default function CrmScrapePage() {
           )}
 
           <div className="space-y-2">
-            {parsedResults.map((r) => (
+            {displayResults.map((r) => (
               <div key={r.id} className={`rounded-xl border p-4 flex items-center gap-4 transition-colors ${
                 r.parsed ? (r.selected ? "bg-accent/5 border-accent/20" : "bg-white border-gray-100") : "bg-red-50/50 border-red-100"
               }`}>
