@@ -123,12 +123,20 @@ export default function CrmStoresPage() {
 
     const { data, error, count } = await query;
     if (!error && data) {
-      // 获取每个门店的联系人数、最近跟进、是否已加微信
       const storeIds = data.map(s => s.id);
+
+      if (storeIds.length === 0) {
+        setStores(data);
+        setTotal(count || 0);
+        setLoading(false);
+        return;
+      }
+
+      // 获取每个门店的联系人数、最近跟进、是否已加微信
       const [contactRes, followRes, wechatRes] = await Promise.all([
         supabase.from("crm_contacts").select("store_id").is("deleted_at", null).in("store_id", storeIds),
         supabase.from("crm_follow_ups").select("store_id, follow_time").in("store_id", storeIds).order("follow_time", { ascending: false }),
-        supabase.from("crm_contacts").select("store_id").eq("source", "wechat_add").is("deleted_at", null).in("store_id", storeIds),
+        supabase.from("crm_contacts").select("store_id").eq("wechat_status", "ADDED").is("deleted_at", null).in("store_id", storeIds),
       ]);
 
       const contactCounts: Record<string, number> = {};
