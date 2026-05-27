@@ -24,8 +24,8 @@ interface ParsedStore {
 
 const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行"];
 
-// ======== 高德 POI 搜索 ========
-async function searchAmapPoi(keyword: string, city: string, page: number = 1): Promise<ParsedStore[]> {
+// ======== 高德 POI 搜索（单页）========
+async function searchAmapPoiPage(keyword: string, city: string, page: number = 1): Promise<ParsedStore[]> {
   const apiKey = process.env.NEXT_PUBLIC_AMAP_API_KEY;
   if (!apiKey) throw new Error("未配置高德地图API密钥（NEXT_PUBLIC_AMAP_API_KEY）");
 
@@ -49,6 +49,18 @@ async function searchAmapPoi(keyword: string, city: string, page: number = 1): P
     parsed: !!poi.tel,
     rawLines: [poi.name, poi.address, poi.tel].filter(Boolean),
   }));
+}
+
+// ======== 高德 POI 搜索（多页，最多250条）========
+async function searchAmapPoi(keyword: string, city: string, maxPages: number = 5): Promise<ParsedStore[]> {
+  const allResults: ParsedStore[] = [];
+  for (let page = 1; page <= maxPages; page++) {
+    const results = await searchAmapPoiPage(keyword, city, page);
+    if (results.length === 0) break; // 没有更多数据
+    allResults.push(...results);
+    if (results.length < 50) break; // 最后一页
+  }
+  return allResults;
 }
 
 // ======== 百度 POI 搜索 ========
