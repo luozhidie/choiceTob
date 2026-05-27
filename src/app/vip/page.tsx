@@ -16,11 +16,13 @@ import PaymentQRCode from "@/components/PaymentQRCode";
 interface Plan {
   id: string;
   name: string;
-  price: number;
+  price: number; // 标准售价（分）
+  newCustomerPrice?: number; // 新客优惠价（分）
   originalPrice?: number;
   priceLabel: string;
   discountLabel?: string;
-  membershipType: "view_price" | "deposit_discount";
+  newCustomerLabel?: string;
+  membershipType: "view_price" | "deposit_discount" | "pro";
   icon: any;
   features: string[];
   highlight: boolean;
@@ -30,21 +32,46 @@ const plans: Plan[] = [
   {
     id: "basic",
     name: "基础VIP",
-    price: 980000,
-    originalPrice: 1280000,
-    priceLabel: "¥9,800/年",
-    discountLabel: "首年直降¥3,000",
+    price: 398000,
+    newCustomerPrice: 348000,
+    originalPrice: 448000,
+    priceLabel: "¥3,980/年",
+    discountLabel: "新客优惠¥500",
+    newCustomerLabel: "新客价 ¥3,480",
     membershipType: "view_price",
     icon: Eye,
     highlight: false,
     features: [
       "查看所有买手选品供货价",
-      "每日搭配灵感免费查看",
-      "风格测试不限次使用",
+      "每日搭配灵感9折优惠",
+      "线上风格测试工具不限次使用，非会员¥99/次",
       "线上课程8折优惠",
-      "企划工具报告 ¥99 购买权限",
-      "杂志订阅8折优惠",
+      "企划工具报告免费测，非会员¥99/次",
+      "爆款样衣9折优惠",
+      "杂志订阅9折优惠",
       "社群交流 + 月度直播",
+    ],
+  },
+  {
+    id: "pro",
+    name: "进阶VIP",
+    price: 1980000,
+    originalPrice: 2580000,
+    priceLabel: "¥19,800/年",
+    discountLabel: "首年直降¥6,000",
+    membershipType: "pro",
+    icon: Star,
+    highlight: false,
+    features: [
+      "基础VIP全部权益",
+      "爆款样衣8折优惠",
+      "每半年免费企划报告 ×1",
+      "专属1v1客服（微信/电话）",
+      "货款充值享阶梯折扣",
+      "线下到店诊断（1次/年，报销差旅）",
+      "新品优先拿货权",
+      "门店经营数据分析报告（季度）",
+      "VIP专属社群 + 直播",
     ],
   },
   {
@@ -58,13 +85,13 @@ const plans: Plan[] = [
     icon: Crown,
     highlight: true,
     features: [
-      "基础VIP全部权益",
-      "原创设计样板免费查看",
-      "每季度免费企划报告 ×1",
+      "基础VIP全部权益（搭配灵感、杂志订阅升级至7折）",
+      "爆款样衣7折优惠",
+      "每年免费企划报告 ×1",
       "专属1v1客服（微信/电话）",
       "货款充值享阶梯折扣",
       "线下到店诊断（1次/年，报销差旅）",
-      "新品优先拿货权 + 返点",
+      "新品优先拿货权",
       "门店经营数据分析报告",
       "VIP专属社群 + 私密直播",
     ],
@@ -149,6 +176,7 @@ export default function VIPPage() {
 
   const currentLabel =
     profile?.membership_type === "view_price" ? "基础VIP" :
+    profile?.membership_type === "pro" ? "进阶VIP" :
     profile?.membership_type === "deposit_discount" ? "高阶VIP" : "会员";
 
   return (
@@ -182,7 +210,7 @@ export default function VIPPage() {
       {/* Plans */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4 max-w-5xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-6">
             {plans.map((plan, idx) => (
               <motion.div
                 key={plan.id}

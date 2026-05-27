@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Lock, ArrowLeft, Clock, BookOpen, CheckCircle2, X, ShoppingBag, CreditCard, Play, Eye } from "lucide-react";
@@ -49,10 +49,10 @@ export default function CourseDetailPage() {
 
   const supabase = createClient();
   const router = useRouter();
+  const params = useParams();
   const { user, loading: authLoading } = useAuth();
 
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
-  const courseId = pathname.split("/").pop();
+  const courseId = params?.id as string;
 
   useEffect(() => {
     setVisible(true);

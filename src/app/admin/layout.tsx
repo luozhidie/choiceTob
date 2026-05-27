@@ -48,6 +48,12 @@ import {
   Target,
   MessageSquare,
   Palette as StyleIcon,
+  Building2,
+  Phone,
+  Bell,
+  Globe,
+  Upload,
+  MessageCircle,
 } from "lucide-react";
 
 /* ── 侧边栏分组配置 ── */
@@ -152,7 +158,7 @@ const sidebarGroups: SidebarGroup[] = [
       { label: "销售图片", href: "/admin/sales-images", icon: ImageIcon },
       { label: "内容日历", href: "/admin/content-calendar", icon: Calendar },
       { label: "沙龙活动", href: "/admin/salon", icon: Calendar },
-      { label: "原创设计", href: "/admin/designer", icon: Scissors },
+      { label: "原创爆款", href: "/admin/designer", icon: Scissors },
     ],
   },
   {
@@ -162,6 +168,20 @@ const sidebarGroups: SidebarGroup[] = [
       { label: "客户管理", href: "/admin/customers", icon: Users },
       { label: "线索管理", href: "/admin/leads", icon: ClipboardList },
       { label: "交付方案", href: "/admin/deliveries", icon: Package },
+    ],
+  },
+  {
+    title: "潜客管理",
+    icon: Building2,
+    items: [
+      { label: "门店信息", href: "/admin/crm/stores", icon: Building2 },
+      { label: "联系人管理", href: "/admin/crm/contacts", icon: Phone },
+      { label: "跟进记录", href: "/admin/crm/follow-ups", icon: ClipboardList },
+      { label: "加微信", href: "/admin/crm/wechat-add", icon: MessageCircle },
+      { label: "微信话术", href: "/admin/crm/wechat-templates", icon: MessageCircle },
+      { label: "门店采集", href: "/admin/crm/scrape", icon: Globe },
+      { label: "提醒中心", href: "/admin/crm/reminders", icon: Bell },
+      { label: "批量导入", href: "/admin/crm/import", icon: Upload },
     ],
   },
   {

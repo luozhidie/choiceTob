@@ -252,7 +252,7 @@ export default function SupplierDetailPage() {
                         {product.title}
                       </h3>
                       {product.description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-1">
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-3 flex-1 leading-relaxed">
                           {product.description}
                         </p>
                       )}
@@ -265,6 +265,9 @@ export default function SupplierDetailPage() {
                             {formatPrice(product.original_price)}
                           </span>
                         )}
+                      </div>
+                      <div className="mt-2 text-center">
+                        <span className="inline-block text-[11px] px-2 py-0.5 bg-primary/5 text-primary rounded-full">查看详情 →</span>
                       </div>
                     </div>
                   </Link>

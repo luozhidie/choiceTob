@@ -20,6 +20,7 @@ import {
 interface HotPick {
   id: string;
   name: string;
+  description: string | null;
   style: string;
   price: number;
   inventory: string;
@@ -35,6 +36,7 @@ export default function AdminHotPicksPage() {
   const [editingPick, setEditingPick] = useState<HotPick | null>(null);
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
     style: "",
     price: 0,
     inventory: "充足",
@@ -124,7 +126,7 @@ export default function AdminHotPicksPage() {
 
     setShowModal(false);
     setEditingPick(null);
-    setFormData({ name: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
+    setFormData({ name: "", description: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
     fetchHotPicks();
   };
 
@@ -132,6 +134,7 @@ export default function AdminHotPicksPage() {
     setEditingPick(pick);
     setFormData({
       name: pick.name,
+      description: pick.description || "",
       style: pick.style || "",
       price: pick.price || 0,
       inventory: pick.inventory || "充足",
@@ -181,7 +184,7 @@ export default function AdminHotPicksPage() {
         <button
           onClick={() => {
             setEditingPick(null);
-            setFormData({ name: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
+            setFormData({ name: "", description: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
             setShowModal(true);
           }}
           className="btn-primary flex items-center gap-2"
@@ -267,6 +270,11 @@ export default function AdminHotPicksPage() {
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">商品名称 <span className="text-red-500">*</span></label>
                 <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="输入商品名称" />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">商品详情</label>
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="填写商品详细信息、卖点描述..." />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

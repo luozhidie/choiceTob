@@ -14,6 +14,8 @@ import {
   Package,
   ChevronDown,
   X,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +31,7 @@ interface Product {
   title: string;
   description: string | null;
   cover_image: string | null;
+  images: string[] | null;
   price: number;
   original_price: number | null;
   category: string | null;
@@ -36,12 +39,14 @@ interface Product {
   tags: string[] | null;
   is_published: boolean;
   stock: number;
+  detail: string | null;
   created_at: string;
 }
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,6 +62,7 @@ export default function AdminProductsPage() {
     title: "",
     description: "",
     cover_image: "",
+    images: [] as string[],
     price: "",
     original_price: "",
     category: "",
@@ -64,6 +70,7 @@ export default function AdminProductsPage() {
     stock: "0",
     tags: "",
     is_published: false,
+    detail: "",
   });
 
   const supabase = createClient();
@@ -118,6 +125,7 @@ export default function AdminProductsPage() {
       title: "",
       description: "",
       cover_image: "",
+      images: [],
       price: "",
       original_price: "",
       category: "",
@@ -125,6 +133,7 @@ export default function AdminProductsPage() {
       stock: "0",
       tags: "",
       is_published: false,
+      detail: "",
     });
   };
 
@@ -138,6 +147,7 @@ export default function AdminProductsPage() {
       title: form.title.trim(),
       description: form.description.trim() || null,
       cover_image: form.cover_image.trim() || null,
+      images: form.images.length > 0 ? form.images : null,
       price: parseInt(form.price) * 100,
       original_price: form.original_price
         ? parseInt(form.original_price) * 100
@@ -152,6 +162,7 @@ export default function AdminProductsPage() {
             .filter(Boolean)
         : null,
       is_published: form.is_published,
+      detail: form.detail.trim() || null,
     };
 
     if (editingProduct) {
@@ -209,6 +220,7 @@ export default function AdminProductsPage() {
       title: product.title,
       description: product.description || "",
       cover_image: product.cover_image || "",
+      images: product.images || [],
       price: (product.price / 100).toString(),
       original_price: product.original_price
         ? (product.original_price / 100).toString()
@@ -218,8 +230,32 @@ export default function AdminProductsPage() {
       stock: product.stock.toString(),
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published,
+      detail: product.detail || "",
     });
     setShowForm(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { showToast("error", "图片不能超过5MB"); return; }
+    setUploading(true);
+    try {
+      const fileName = `products/${Date.now()}_${file.name}`;
+      const { error: upErr } = await supabase.storage.from("products").upload(fileName, file);
+      if (upErr) throw upErr;
+      const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
+      setForm(f => ({ ...f, images: [...f.images, urlData.publicUrl] }));
+      showToast("success", "图片上传成功");
+    } catch (err: any) {
+      showToast("error", "上传失败：" + (err.message || "请重试"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = (idx: number) => {
+    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
   };
 
   const filteredProducts = products.filter((p) => {
@@ -665,6 +701,7 @@ export default function AdminProductsPage() {
                   placeholder="0"
                 />
               </div>
+              {/* 封面图 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   封面图URL
@@ -679,6 +716,30 @@ export default function AdminProductsPage() {
                   placeholder="https://..."
                 />
               </div>
+
+              {/* 商品图片上传 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  商品图片
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {form.images.map((img, idx) => (
+                    <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden">
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => removeImage(idx)}
+                        className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-bl-lg flex items-center justify-center">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
+                    <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
+                  </label>
+                </div>
+              </div>
+
+              {/* 商品描述 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   商品描述
@@ -691,6 +752,22 @@ export default function AdminProductsPage() {
                   rows={2}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                   placeholder="简短描述..."
+                />
+              </div>
+
+              {/* 商品详情（富文本/长描述） */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  商品详情
+                </label>
+                <textarea
+                  value={form.detail}
+                  onChange={(e) =>
+                    setForm({ ...form, detail: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                  placeholder="填写商品详细信息、尺码表、材质说明等..."
                 />
               </div>
               <div>

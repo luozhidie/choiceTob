@@ -185,6 +185,9 @@ export default function HotPicksPage() {
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <h4 className="text-xl font-bold text-white">{item.title}</h4>
+                      {item.label && (
+                        <p className="text-sm text-white/70 mt-1 line-clamp-2">{item.label}</p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
@@ -328,6 +331,9 @@ export default function HotPicksPage() {
                     </div>
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <h4 className="text-xl font-bold text-white">{item.title}</h4>
+                      {item.label && (
+                        <p className="text-sm text-white/70 mt-1 line-clamp-2">{item.label}</p>
+                      )}
                     </div>
                   </div>
                 </motion.div>
