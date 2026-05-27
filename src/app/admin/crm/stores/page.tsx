@@ -206,26 +206,41 @@ export default function CrmStoresPage() {
     if (!wechatStore) return;
     const now = new Date().toISOString();
     const notes = wechatStore.notes ? wechatStore.notes + "\n已添加微信" : "已添加微信";
-    const { error: contactError } = await supabase.from("crm_contacts").insert([{
+
+    // 1. 创建联系人（用正确的字段名）
+    const { data: contactData, error: contactError } = await supabase.from("crm_contacts").insert([{
       store_id: wechatStore.id,
-      name: wechatStore.name,
+      name: wechatStore.owner_name || wechatStore.name,
       phone: wechatStore.owner_phone,
       wechat_id: wechatForm.wechat_id || null,
-      source: "wechat_add",
-      status: "active",
-    }]);
+      wechat_status: "ADDED",
+      wechat_added_at: now,
+      remark: wechatForm.remark || null,
+    }]).select("id");
     if (contactError) { alert("联系人创建失败：" + contactError.message); return; }
-    const { error: followError } = await supabase.from("crm_follow_ups").insert([{
-      store_id: wechatStore.id,
-      type: "wechat_add",
-      content: "已添加微信" + (wechatForm.remark ? "：" + wechatForm.remark : ""),
-      follow_time: now,
-    }]);
-    if (followError) { alert("跟进记录创建失败：" + followError.message); return; }
+
+    // 2. 创建跟进记录（contact_id 必填，method 不是 type）
+    const contactId = contactData?.[0]?.id;
+    if (contactId) {
+      const { error: followError } = await supabase.from("crm_follow_ups").insert([{
+        store_id: wechatStore.id,
+        contact_id: contactId,
+        method: "WECHAT",
+        content: "已添加微信" + (wechatForm.wechat_id ? "（" + wechatForm.wechat_id + "）" : "") + (wechatForm.remark ? " - " + wechatForm.remark : ""),
+        result: "POSITIVE",
+        follow_time: now,
+      }]);
+      if (followError) console.warn("跟进记录创建失败", followError);
+    }
+
+    // 3. 更新门店备注
     const { error: storeError } = await supabase.from("crm_stores").update({ notes }).eq("id", wechatStore.id);
-    if (storeError) { alert("门店备注更新失败：" + storeError.message); return; }
+    if (storeError) console.warn("门店备注更新失败", storeError);
+
+    alert("已标记「已加微信」并创建联系人！");
     setShowWechatModal(false);
     setWechatStore(null);
+    setWechatForm({ wechat_id: "", remark: "" });
     fetchStores();
   };
 
