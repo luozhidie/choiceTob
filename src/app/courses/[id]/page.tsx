@@ -61,16 +61,22 @@ export default function CourseDetailPage() {
 
   const fetchCourse = async (id: string) => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("courses")
-      .select("*")
-      .eq("id", id)
-      .single();
-    if (error || !data) {
+    try {
+      const { data, error } = await supabase
+        .from("courses")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error || !data) {
+        console.error("课程查询失败:", error);
+        router.push("/courses");
+        return;
+      }
+      setCourse(data as Course);
+    } catch (err) {
+      console.error("获取课程异常:", err);
       router.push("/courses");
-      return;
     }
-    setCourse(data as Course);
     setLoading(false);
 
     // Check if user has purchased via course_purchases table
@@ -254,7 +260,10 @@ export default function CourseDetailPage() {
               <video
                 src={course.video_url}
                 controls
+                playsInline
+                preload="metadata"
                 className="w-full h-full"
+                onError={(e) => console.warn("视频加载失败:", course.video_url)}
               />
             </motion.div>
           ) : !canWatch ? (
@@ -271,6 +280,8 @@ export default function CourseDetailPage() {
                       src={course.video_url}
                       className="w-full h-full object-cover blur-lg scale-105"
                       muted
+                      playsInline
+                      preload="metadata"
                     />
                     <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] flex items-center justify-center">
                       <div className="text-center">
