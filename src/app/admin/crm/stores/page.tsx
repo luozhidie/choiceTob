@@ -210,7 +210,7 @@ export default function CrmStoresPage() {
           owner_phone: cols[1] || "",
           address: cols[2] || "",
           owner_name: cols[3] || "",
-          industry: cols[4] || "服装",
+          industry: cols[4] || "其他",
           source: "import",
           status: "active",
         });
@@ -237,6 +237,30 @@ export default function CrmStoresPage() {
     URL.revokeObjectURL(url);
   };
 
+  // 导出当前筛选后的门店数据
+  const handleExport = () => {
+    if (stores.length === 0) { alert("没有可导出的数据"); return; }
+    const headers = ["店名", "手机号", "地址", "联系人", "行业", "来源", "状态", "备注"];
+    const rows = stores.map(s => [
+      s.name,
+      s.owner_phone,
+      s.address || "",
+      s.owner_name || "",
+      s.industry || "",
+      SOURCE_MAP[s.source] || s.source,
+      STATUS_MAP[s.status] || s.status,
+      s.notes || "",
+    ]);
+    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `门店名单_${new Date().toLocaleDateString("zh-CN")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const maskPhone = (phone: string) => {
     if (!phone || phone.length < 7) return phone;
     return phone.slice(0, 3) + "****" + phone.slice(-4);
@@ -250,6 +274,9 @@ export default function CrmStoresPage() {
           <p className="text-muted-foreground mt-1">管理B端服装门店客户，支持手动录入、批量导入和公开采集</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
+            <Download className="w-4 h-4" /> 导出名单
+          </button>
           <button onClick={() => setShowImportModal(true)} className="btn-secondary flex items-center gap-2">
             <Upload className="w-4 h-4" /> 批量导入
           </button>
@@ -346,7 +373,7 @@ export default function CrmStoresPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm"><Phone className="w-3 h-3 inline mr-1 text-muted-foreground" />{maskPhone(store.owner_phone)}</td>
+                      <td className="px-4 py-3 text-sm"><Phone className="w-3 h-3 inline mr-1 text-muted-foreground" />{store.owner_phone}</td>
                       <td className="px-4 py-3 text-sm">{store.owner_name || "-"}</td>
                       <td className="px-4 py-3 text-sm">{store.industry || "-"}</td>
                       <td className="px-4 py-3"><span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">{SOURCE_MAP[store.source] || store.source}</span></td>
