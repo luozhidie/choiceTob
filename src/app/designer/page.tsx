@@ -120,6 +120,104 @@ export default function DesignerPage() {
   const { user, isMember } = useAuth();
   const autoPayShown = useRef(false);
 
+  // Tab 切换状态
+  const [activeTab, setActiveTab] = useState<"buyer" | "original">("buyer");
+
+  // 买手样衣套餐
+  const buyerPackages = [
+    {
+      id: "buyer-monthly",
+      name: "月度套餐",
+      price: "¥998/月",
+      highlight: false,
+      description: "每月20款买手精选爆款样衣",
+      features: [
+        "数据爬虫+人工筛选全网爆款",
+        "每月20款精选爆款样衣",
+        "含爆款/潜在爆款/微调款分类",
+        "实时数据跟踪更新",
+      ],
+    },
+    {
+      id: "buyer-quarterly",
+      name: "季度套餐",
+      price: "¥2,688/季",
+      highlight: true,
+      description: "每季60款买手精选爆款样衣",
+      features: [
+        "数据爬虫+人工筛选全网爆款",
+        "每季60款精选爆款样衣",
+        "含爆款/潜在爆款/微调款分类",
+        "季度趋势分析报告",
+        "专属买手1对1服务",
+      ],
+    },
+    {
+      id: "buyer-yearly",
+      name: "年度套餐",
+      price: "¥9,880/年",
+      highlight: false,
+      description: "全年240款买手精选爆款样衣",
+      features: [
+        "数据爬虫+人工筛选全网爆款",
+        "全年240款精选爆款样衣",
+        "含爆款/潜在爆款/微调款分类",
+        "年度趋势分析报告",
+        "专属买手1对1服务",
+        "优先获取最新爆款信息",
+      ],
+    },
+  ];
+
+  // 原创设计套餐
+  const originalPackages = [
+    {
+      id: "original-single",
+      name: "单款设计",
+      price: "¥1,980/款",
+      highlight: false,
+      description: "含设计图+面料建议+工艺说明",
+      features: [
+        "设计师1对1沟通需求",
+        "原创设计图稿",
+        "面料建议方案",
+        "工艺说明文档",
+        "1次免费修改",
+      ],
+    },
+    {
+      id: "original-quarterly",
+      name: "季度套餐",
+      price: "¥9,980/季",
+      highlight: true,
+      description: "含10款原创设计+企划方案",
+      features: [
+        "季度企划方案定制",
+        "10款原创设计",
+        "每款含设计图+面料建议+工艺说明",
+        "季度趋势分析",
+        "3次免费修改",
+        "专属设计师对接",
+      ],
+    },
+    {
+      id: "original-yearly",
+      name: "年度套餐",
+      price: "¥39,800/年",
+      highlight: false,
+      description: "含40款原创设计+4季企划方案",
+      features: [
+        "4季企划方案定制",
+        "全年40款原创设计",
+        "每款含设计图+面料建议+工艺说明",
+        "年度趋势深度分析",
+        "无限次修改至满意",
+        "专属设计团队服务",
+        "优先排期与交付",
+      ],
+    },
+  ];
+
   useEffect(() => { fetchPackages(); }, []);
 
   // 加载作品数据（尝试从 designer_works 表读取，失败则用 mock 数据）
@@ -315,319 +413,352 @@ export default function DesignerPage() {
               爆款样衣
             </h1>
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
-              专业设计师团队为您量身定制，从品牌定位到款式开发一站式解决
+              大数据选款+专业设计，让每一款都是爆款
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* ====== 设计套餐 ====== */}
+      {/* ====== 套餐选择 ====== */}
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-12"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Design Service</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              选择设计套餐
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              从单款设计到整季开发，灵活满足不同品牌需求
-            </p>
-          </motion.div>
+          {/* Tab 切换 */}
+          <div className="flex justify-center mb-12">
+            <div className="inline-flex rounded-2xl bg-gray-100 p-1.5 gap-1">
+              <button
+                onClick={() => setActiveTab("buyer")}
+                className={`px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "buyer"
+                    ? "bg-primary text-white shadow-lg shadow-primary/20"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                买手样衣
+              </button>
+              <button
+                onClick={() => setActiveTab("original")}
+                className={`px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 ${
+                  activeTab === "original"
+                    ? "bg-accent text-white shadow-lg shadow-accent/20"
+                    : "text-gray-500 hover:text-gray-700"
+                }`}
+              >
+                原创设计
+              </button>
+            </div>
+          </div>
 
-          {loading ? (
-            <div className="text-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
-              <p className="text-muted-foreground">加载中...</p>
-            </div>
-          ) : packages.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">暂无套餐，敬请期待</p>
-            </div>
-          ) : (
+          {/* 买手样衣 Tab */}
+          {activeTab === "buyer" && (
             <motion.div
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
               initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
+              animate="visible"
               variants={stagger}
+              key="buyer"
             >
-              {packages.map((pkg, i) => (
+              {buyerPackages.map((pkg, i) => (
                 <motion.div
                   key={pkg.id}
                   variants={fadeUp}
                   custom={i}
                   className={`relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 ${
-                    i === 1 ? "border-accent" : "border-transparent hover:border-accent/30"
+                    pkg.highlight ? "border-primary" : "border-transparent hover:border-primary/30"
                   }`}
                 >
-                  {i === 1 && (
-                    <div className="absolute top-0 left-0 right-0 bg-accent text-white text-center text-sm font-bold py-1">
+                  {pkg.highlight && (
+                    <div className="absolute top-0 left-0 right-0 bg-primary text-white text-center text-sm font-bold py-1 z-10">
                       推荐
                     </div>
                   )}
 
-                  {/* 套餐封面 */}
-                  <div className={`relative aspect-[4/3] bg-gradient-to-br from-primary/10 to-accent/10 overflow-hidden ${i === 1 ? "mt-7" : ""}`}>
-                    {pkg.image_url ? (
-                      <img src={pkg.image_url} alt={pkg.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Palette className="w-12 h-12 text-primary/30" />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-6 md:p-8">
+                  <div className={`p-6 md:p-8 ${pkg.highlight ? "mt-7" : ""}`}>
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 text-accent">
-                        <Layers className="w-5 h-5" />
+                      <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 text-primary">
+                        <Shirt className="w-5 h-5" />
                       </div>
                       <h3 className="text-xl font-bold text-primary">{pkg.name}</h3>
                     </div>
 
                     <p className="text-sm text-muted-foreground mb-5 leading-relaxed">{pkg.description}</p>
 
-                    {pkg.features && (
-                      <ul className="space-y-2 mb-6">
-                        {pkg.features.split("\n").filter(f => f.trim()).map((feature, idx) => (
-                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
-                            <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                            {feature.trim()}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    <ul className="space-y-2 mb-6">
+                      {pkg.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                          <CheckCircle2 className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
 
-                    {/* 价格与购买 */}
-                    <div className="space-y-3 pt-5 border-t border-gray-100">
+                    <div className="pt-5 border-t border-gray-100">
                       <button
-                        onClick={() => handlePurchase(pkg, "individual")}
+                        onClick={() => setShowPaywall(true)}
                         className="w-full py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors shadow-sm"
                       >
-                        <span className="font-bold">¥{(pkg.price_individual / 100).toFixed(0)}</span>
-                        <span className="text-xs ml-1 font-normal">/单款</span>
+                        <span className="font-bold">{pkg.price}</span>
                       </button>
-                      {pkg.price_group > 0 && (
-                        <button
-                          onClick={() => handlePurchase(pkg, "group")}
-                          className="w-full py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
-                        >
-                          <Users className="w-4 h-4" />
-                          团体 ¥{(pkg.price_group / 100).toFixed(0)}
-                          <span className="text-xs font-normal">/3款起</span>
-                        </button>
-                      )}
                     </div>
                   </div>
                 </motion.div>
               ))}
             </motion.div>
           )}
-        </div>
-      </section>
 
-      {/* ====== 设计师作品集 ====== */}
-      <section className="py-12 md:py-16 bg-muted/50">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* 标题 */}
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-10"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Portfolio</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              设计师作品集
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              精选原创作品，涵盖女装、男装、配饰及定制系列
-            </p>
-          </motion.div>
-
-          {/* 付费状态横幅 */}
-          {user && !canViewWorks && !designAccessLoading && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-            >
-              <div className="bg-white rounded-2xl border border-accent/20 p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                    <Lock className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-primary">解锁全部设计师作品</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      付费后即可查看高清大图、设计细节与设计师资料
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleDesignPurchase}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:brightness-110 transition-all shadow-md shadow-accent/20 shrink-0"
-                >
-                  <Unlock className="w-4 h-4" />
-                  ¥999/月 · ¥9,980/年 解锁全部作品
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* 非登录用户 */}
-          {!user && (
-            <motion.div
-              className="mb-8"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Eye className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-primary">登录后查看设计师作品</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      注册/登录即可浏览作品预览
-                    </p>
-                  </div>
-                </div>
-                <Link
-                  href={`/login?redirect=/designer`}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all shadow-md shrink-0"
-                >
-                  登录后查看
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </div>
-            </motion.div>
-          )}
-
-          {/* 分类标签 */}
-          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-8">
-            {categories.map((cat) => {
-              const Icon = cat.icon;
-              const isActive = activeCategory === cat.key;
-              return (
-                <motion.button
-                  key={cat.key}
-                  onClick={() => setActiveCategory(cat.key)}
-                  className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                    isActive
-                      ? "bg-primary text-white shadow-md shadow-primary/20"
-                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
-                  }`}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Icon className="w-4 h-4" />
-                  {cat.label}
-                </motion.button>
-              );
-            })}
-          </div>
-
-          {/* 作品网格 */}
-          {worksLoading ? (
-            <div className="text-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
-              <p className="text-muted-foreground">加载作品...</p>
-            </div>
-          ) : (
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6"
-              key={activeCategory}
-              initial="hidden"
-              animate="visible"
-              variants={stagger}
-            >
-              {filteredWorks.map((work, i) => {
-                const isBlurred = !canViewWorks;
-                const Icon = categories.find((c) => c.key === work.category)?.icon || Tag;
-
-                return (
+          {/* 原创设计 Tab */}
+          {activeTab === "original" && (
+            <>
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+                initial="hidden"
+                animate="visible"
+                variants={stagger}
+                key="original"
+              >
+                {originalPackages.map((pkg, i) => (
                   <motion.div
-                    key={work.id}
+                    key={pkg.id}
                     variants={fadeUp}
                     custom={i}
-                    className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group"
-                    onMouseEnter={() => setHoveredWorkId(work.id)}
-                    onMouseLeave={() => setHoveredWorkId(null)}
+                    className={`relative bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border-2 ${
+                      pkg.highlight ? "border-accent" : "border-transparent hover:border-accent/30"
+                    }`}
                   >
-                    {/* 作品封面 */}
-                    <div className={`relative aspect-[3/4] overflow-hidden bg-gradient-to-br ${getCoverPlaceholder(work.category)}`}>
-                      {/* 图片占位 */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <Icon className="w-12 h-12 text-black/10" />
+                    {pkg.highlight && (
+                      <div className="absolute top-0 left-0 right-0 bg-accent text-white text-center text-sm font-bold py-1 z-10">
+                        推荐
                       </div>
+                    )}
 
-                      {/* 模糊效果 */}
-                      {isBlurred && (
-                        <div className="absolute inset-0 backdrop-blur-xl bg-white/40 z-10 flex items-center justify-center">
-                          <div className="text-center">
-                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                              <Lock className="w-5 h-5 text-primary/60" />
-                            </div>
-                            <p className="text-xs text-primary/60 font-medium">
-                              {user ? "付费解锁" : "登录查看"}
-                            </p>
-                          </div>
+                    <div className={`p-6 md:p-8 ${pkg.highlight ? "mt-7" : ""}`}>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 text-accent">
+                          <PenTool className="w-5 h-5" />
                         </div>
-                      )}
-
-                      {/* 悬停信息层 */}
-                      {canViewWorks && (
-                        <AnimatePresence>
-                          {hoveredWorkId === work.id && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 flex flex-col justify-end p-4"
-                            >
-                              <div className="flex flex-wrap gap-1.5 mb-2">
-                                {work.tags.map((tag) => (
-                                  <span key={tag} className="text-[10px] bg-white/90 text-primary px-2 py-0.5 rounded-full font-medium">
-                                    {tag}
-                                  </span>
-                                ))}
-                              </div>
-                              <p className="text-xs text-white/80">
-                                设计师：{work.designer}
-                              </p>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      )}
-                    </div>
-
-                    {/* 作品信息 */}
-                    <div className="p-4">
-                      <div className="flex items-start gap-2 mb-1.5">
-                        <span className="inline-flex items-center gap-1 text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
-                          <Tag className="w-3 h-3" />
-                          {categories.find((c) => c.key === work.category)?.label}
-                        </span>
+                        <h3 className="text-xl font-bold text-primary">{pkg.name}</h3>
                       </div>
-                      <h3 className="text-sm font-bold text-primary truncate">{work.title}</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {work.designer}
-                      </p>
+
+                      <p className="text-sm text-muted-foreground mb-5 leading-relaxed">{pkg.description}</p>
+
+                      <ul className="space-y-2 mb-6">
+                        {pkg.features.map((feature, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-gray-700">
+                            <CheckCircle2 className="w-4 h-4 text-accent shrink-0 mt-0.5" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+
+                      <div className="pt-5 border-t border-gray-100">
+                        <button
+                          onClick={() => setShowPaywall(true)}
+                          className="w-full py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
+                        >
+                          <span className="font-bold">{pkg.price}</span>
+                        </button>
+                      </div>
                     </div>
                   </motion.div>
-                );
-              })}
-            </motion.div>
+                ))}
+              </motion.div>
+
+              {/* 作品展示区域 */}
+              <div className="mt-16 pt-12 border-t border-gray-100">
+                <motion.div
+                  className="text-center max-w-2xl mx-auto mb-10"
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true, amount: 0.2 }}
+                  variants={fadeUp}
+                >
+                  <span className="text-accent font-semibold text-sm tracking-widest uppercase">Portfolio</span>
+                  <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+                    设计师作品集
+                  </h2>
+                  <p className="mt-4 text-muted-foreground leading-relaxed">
+                    精选原创作品，涵盖女装、男装、配饰及定制系列
+                  </p>
+                </motion.div>
+
+                {/* 付费状态横幅 */}
+                {user && !canViewWorks && !designAccessLoading && (
+                  <motion.div
+                    className="mb-8"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                  >
+                    <div className="bg-white rounded-2xl border border-accent/20 p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                          <Lock className="w-5 h-5 text-accent" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-primary">解锁全部设计师作品</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            付费后即可查看高清大图、设计细节与设计师资料
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleDesignPurchase}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-xl hover:brightness-110 transition-all shadow-md shadow-accent/20 shrink-0"
+                      >
+                        <Unlock className="w-4 h-4" />
+                        ¥999/月 · ¥9,980/年 解锁全部作品
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 非登录用户 */}
+                {!user && (
+                  <motion.div
+                    className="mb-8"
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <div className="bg-white rounded-2xl border border-gray-200 p-4 md:p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                          <Eye className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-primary">登录后查看设计师作品</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            注册/登录即可浏览作品预览
+                          </p>
+                        </div>
+                      </div>
+                      <Link
+                        href={`/login?redirect=/designer`}
+                        className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-all shadow-md shrink-0"
+                      >
+                        登录后查看
+                        <ArrowRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* 分类标签 */}
+                <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-8">
+                  {categories.map((cat) => {
+                    const Icon = cat.icon;
+                    const isActive = activeCategory === cat.key;
+                    return (
+                      <motion.button
+                        key={cat.key}
+                        onClick={() => setActiveCategory(cat.key)}
+                        className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                          isActive
+                            ? "bg-primary text-white shadow-md shadow-primary/20"
+                            : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-200"
+                        }`}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {cat.label}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* 作品网格 */}
+                {worksLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
+                    <p className="text-muted-foreground">加载作品...</p>
+                  </div>
+                ) : (
+                  <motion.div
+                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6"
+                    key={activeCategory}
+                    initial="hidden"
+                    animate="visible"
+                    variants={stagger}
+                  >
+                    {filteredWorks.map((work, i) => {
+                      const isBlurred = !canViewWorks;
+                      const Icon = categories.find((c) => c.key === work.category)?.icon || Tag;
+
+                      return (
+                        <motion.div
+                          key={work.id}
+                          variants={fadeUp}
+                          custom={i}
+                          className="relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 group"
+                          onMouseEnter={() => setHoveredWorkId(work.id)}
+                          onMouseLeave={() => setHoveredWorkId(null)}
+                        >
+                          {/* 作品封面 */}
+                          <div className={`relative aspect-[3/4] overflow-hidden bg-gradient-to-br ${getCoverPlaceholder(work.category)}`}>
+                            {/* 图片占位 */}
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <Icon className="w-12 h-12 text-black/10" />
+                            </div>
+
+                            {/* 模糊效果 */}
+                            {isBlurred && (
+                              <div className="absolute inset-0 backdrop-blur-xl bg-white/40 z-10 flex items-center justify-center">
+                                <div className="text-center">
+                                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                                    <Lock className="w-5 h-5 text-primary/60" />
+                                  </div>
+                                  <p className="text-xs text-primary/60 font-medium">
+                                    {user ? "付费解锁" : "登录查看"}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* 悬停信息层 */}
+                            {canViewWorks && (
+                              <AnimatePresence>
+                                {hoveredWorkId === work.id && (
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent z-10 flex flex-col justify-end p-4"
+                                  >
+                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                      {work.tags.map((tag) => (
+                                        <span key={tag} className="text-[10px] bg-white/90 text-primary px-2 py-0.5 rounded-full font-medium">
+                                          {tag}
+                                        </span>
+                                      ))}
+                                    </div>
+                                    <p className="text-xs text-white/80">
+                                      设计师：{work.designer}
+                                    </p>
+                                  </motion.div>
+                                )}
+                              </AnimatePresence>
+                            )}
+                          </div>
+
+                          {/* 作品信息 */}
+                          <div className="p-4">
+                            <div className="flex items-start gap-2 mb-1.5">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+                                <Tag className="w-3 h-3" />
+                                {categories.find((c) => c.key === work.category)?.label}
+                              </span>
+                            </div>
+                            <h3 className="text-sm font-bold text-primary truncate">{work.title}</h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {work.designer}
+                            </p>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </div>
+            </>
           )}
         </div>
       </section>
