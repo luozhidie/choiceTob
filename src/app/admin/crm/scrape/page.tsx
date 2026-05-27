@@ -284,7 +284,6 @@ export default function CrmScrapePage() {
         address: r.address || "",
         owner_phone: r.phone || "待补充",
         industry: r.industry,
-        city: r.city || city || "",
         source: mode === "api" ? "import" as const : "scrape" as const,
         source_detail: r.source_detail,
         status: "active" as const,
