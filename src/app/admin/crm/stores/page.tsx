@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   Plus, Pencil, Trash2, Save, X, Loader2, Search,
   ChevronLeft, ChevronRight, Phone, MapPin, Store as StoreIcon,
-  Upload, Download, Eye, Building2, Clock, Tag, Filter,
+  Upload, Download, Eye, Building2, Clock, Tag, Filter, CheckSquare, Square,
 } from "lucide-react";
 
 interface CrmStore {
@@ -89,6 +89,8 @@ export default function CrmStoresPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importText, setImportText] = useState("");
   const [importing, setImporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -181,6 +183,41 @@ export default function CrmStoresPage() {
     const { error } = await supabase.from("crm_stores").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) { alert("删除失败：" + error.message); return; }
     fetchStores();
+  };
+
+  // 批量删除
+  const handleBatchDelete = async () => {
+    if (selectedIds.size === 0) { alert("请至少选择一家门店"); return; }
+    if (!confirm(`确定要删除选中的 ${selectedIds.size} 家门店吗？此操作不可恢复！`)) return;
+    setBatchDeleting(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase
+      .from("crm_stores")
+      .update({ deleted_at: new Date().toISOString() })
+      .in("id", ids);
+    if (error) {
+      alert("批量删除失败：" + error.message);
+    } else {
+      setSelectedIds(new Set());
+      fetchStores();
+    }
+    setBatchDeleting(false);
+  };
+
+  // 选择框处理
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === stores.length && stores.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(stores.map(s => s.id)));
+    }
   };
 
   const addTag = () => {
@@ -295,6 +332,13 @@ export default function CrmStoresPage() {
           <p className="text-muted-foreground mt-1">管理B端服装门店客户，支持手动录入、批量导入和公开采集</p>
         </div>
         <div className="flex items-center gap-2">
+          {selectedIds.size > 0 && (
+            <button onClick={handleBatchDelete} disabled={batchDeleting}
+              className="btn-danger flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 border-red-200">
+              {batchDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+              批量删除 ({selectedIds.size})
+            </button>
+          )}
           <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
             <Download className="w-4 h-4" /> 导出名单
           </button>
@@ -371,6 +415,11 @@ export default function CrmStoresPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left px-4 py-3 w-10">
+                      <button onClick={toggleSelectAll} className="p-1 hover:bg-gray-200 rounded" title={selectedIds.size === stores.length && stores.length > 0 ? "取消全选" : "全选"}>
+                        {selectedIds.size === stores.length && stores.length > 0 ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4 text-gray-400" />}
+                      </button>
+                    </th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase">店名</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase">手机号</th>
                     <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase">联系人</th>
@@ -385,6 +434,11 @@ export default function CrmStoresPage() {
                 <tbody className="divide-y divide-gray-100">
                   {stores.map((store) => (
                     <tr key={store.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-4 py-3 w-10">
+                        <button onClick={() => toggleSelect(store.id)} className="p-1 hover:bg-gray-200 rounded">
+                          {selectedIds.has(store.id) ? <CheckSquare className="w-4 h-4 text-accent" /> : <Square className="w-4 h-4 text-gray-400" />}
+                        </button>
+                      </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-accent flex-shrink-0" />
