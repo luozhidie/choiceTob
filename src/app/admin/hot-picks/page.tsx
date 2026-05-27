@@ -1,254 +1,373 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { FEMALE_STYLES, MALE_STYLES, getStyleProLabel } from "@/lib/styles";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Upload,
-  Save,
-  X,
-  Eye,
-  EyeOff,
-  Loader2,
-  BarChart3,
-} from "lucide-react";
+import { useState, useMemo } from "react";
+import { Plus, Trash2, X, BarChart3, TrendingUp, Flame, Clock, Search } from "lucide-react";
+
+/* ==================== 类型 ==================== */
+type HotPickType = "全网爆款" | "潜在爆款" | "爆款微调款" | "设计师款" | "原创款";
+type SourceChannel = "电商平台" | "社交平台" | "批发市场" | "买手店" | "小众品牌" | "轻奢品牌";
 
 interface HotPick {
   id: string;
+  styleNumber: string;
   name: string;
-  description: string | null;
-  style: string;
   price: number;
-  inventory: string;
-  image_url: string;
-  is_published: boolean;
-  created_at: string;
+  colors: string;
+  style: string;
+  sourceChannel: SourceChannel;
+  hotPickType: HotPickType;
+  createdAt: string;
 }
 
-export default function AdminHotPicksPage() {
-  const [hotPicks, setHotPicks] = useState<HotPick[]>([]);
-  const [loading, setLoading] = useState(true);
+const HOT_PICK_TYPES: HotPickType[] = ["全网爆款", "潜在爆款", "爆款微调款", "设计师款", "原创款"];
+const SOURCE_CHANNELS: SourceChannel[] = ["电商平台", "社交平台", "批发市场", "买手店", "小众品牌", "轻奢品牌"];
+
+/* ==================== 模拟初始数据 ==================== */
+const INITIAL_DATA: HotPick[] = [
+  {
+    id: "1",
+    styleNumber: "JK-2024-001",
+    name: "法式复古连衣裙",
+    price: 399,
+    colors: "黑色、酒红、卡其",
+    style: "优雅型",
+    sourceChannel: "社交平台",
+    hotPickType: "全网爆款",
+    createdAt: "2025-01-10",
+  },
+  {
+    id: "2",
+    styleNumber: "JK-2024-002",
+    name: "新中式盘扣上衣",
+    price: 299,
+    colors: "月白、青黛",
+    style: "自然型",
+    sourceChannel: "电商平台",
+    hotPickType: "潜在爆款",
+    createdAt: "2025-01-12",
+  },
+  {
+    id: "3",
+    styleNumber: "JK-2024-003",
+    name: "廓形西装外套",
+    price: 699,
+    colors: "黑色、灰色",
+    style: "古典型",
+    sourceChannel: "轻奢品牌",
+    hotPickType: "设计师款",
+    createdAt: "2025-01-15",
+  },
+];
+
+/* ==================== 页面 ==================== */
+export default function AdminHotPicksDataPage() {
+  const [hotPicks, setHotPicks] = useState<HotPick[]>(INITIAL_DATA);
   const [showModal, setShowModal] = useState(false);
   const [editingPick, setEditingPick] = useState<HotPick | null>(null);
-  const [formData, setFormData] = useState({
+
+  /* 筛选 */
+  const [filterType, setFilterType] = useState<HotPickType | "">("");
+  const [filterChannel, setFilterChannel] = useState<SourceChannel | "">("");
+  const [search, setSearch] = useState("");
+
+  /* 表单 */
+  const [form, setForm] = useState({
+    styleNumber: "",
     name: "",
-    description: "",
-    style: "",
     price: 0,
-    inventory: "充足",
-    image_url: "",
-    is_published: false,
+    colors: "",
+    style: "",
+    sourceChannel: "" as SourceChannel | "",
+    hotPickType: "" as HotPickType | "",
   });
-  const [uploading, setUploading] = useState(false);
-  const router = useRouter();
-  const supabase = createClient();
 
-  useEffect(() => {
-    checkUser();
-    fetchHotPicks();
-  }, []);
+  /* 统计 */
+  const stats = useMemo(() => {
+    const total = hotPicks.length;
+    const hotAll = hotPicks.filter((h) => h.hotPickType === "全网爆款").length;
+    const hotPotential = hotPicks.filter((h) => h.hotPickType === "潜在爆款").length;
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekNew = hotPicks.filter((h) => new Date(h.createdAt) >= weekAgo).length;
+    return { total, hotAll, hotPotential, weekNew };
+  }, [hotPicks]);
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
-  };
-
-  const fetchHotPicks = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("hot_picks")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error fetching hot picks:", error);
-    } else {
-      setHotPicks(data || []);
-    }
-    setLoading(false);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploading(true);
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${Math.random()}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from("hot-picks-images")
-      .upload(fileName, file);
-
-    if (uploadError) {
-      alert("上传失败：" + uploadError.message);
-      setUploading(false);
-      return;
-    }
-
-    const { data } = supabase.storage
-      .from("hot-picks-images")
-      .getPublicUrl(fileName);
-
-    setFormData({ ...formData, image_url: data.publicUrl });
-    setUploading(false);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingPick) {
-      const { error } = await supabase
-        .from("hot_picks")
-        .update(formData)
-        .eq("id", editingPick.id);
-
-      if (error) {
-        alert("更新失败：" + error.message);
-        return;
+  /* 筛选后的数据 */
+  const filteredData = useMemo(() => {
+    return hotPicks.filter((h) => {
+      if (filterType && h.hotPickType !== filterType) return false;
+      if (filterChannel && h.sourceChannel !== filterChannel) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          h.styleNumber.toLowerCase().includes(q) ||
+          h.name.toLowerCase().includes(q) ||
+          h.style.toLowerCase().includes(q)
+        );
       }
-    } else {
-      const { error } = await supabase
-        .from("hot_picks")
-        .insert([formData]);
+      return true;
+    });
+  }, [hotPicks, filterType, filterChannel, search]);
 
-      if (error) {
-        alert("创建失败：" + error.message);
-        return;
-      }
-    }
-
-    setShowModal(false);
+  /* 打开新增 */
+  const openAdd = () => {
     setEditingPick(null);
-    setFormData({ name: "", description: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
-    fetchHotPicks();
-  };
-
-  const handleEdit = (pick: HotPick) => {
-    setEditingPick(pick);
-    setFormData({
-      name: pick.name,
-      description: pick.description || "",
-      style: pick.style || "",
-      price: pick.price || 0,
-      inventory: pick.inventory || "充足",
-      image_url: pick.image_url || "",
-      is_published: pick.is_published,
+    setForm({
+      styleNumber: "",
+      name: "",
+      price: 0,
+      colors: "",
+      style: "",
+      sourceChannel: "",
+      hotPickType: "",
     });
     setShowModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个爆款吗？")) return;
-
-    const { error } = await supabase
-      .from("hot_picks")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
-      return;
-    }
-
-    fetchHotPicks();
+  /* 打开编辑 */
+  const openEdit = (pick: HotPick) => {
+    setEditingPick(pick);
+    setForm({
+      styleNumber: pick.styleNumber,
+      name: pick.name,
+      price: pick.price,
+      colors: pick.colors,
+      style: pick.style,
+      sourceChannel: pick.sourceChannel,
+      hotPickType: pick.hotPickType,
+    });
+    setShowModal(true);
   };
 
-  const togglePublish = async (pick: HotPick) => {
-    const { error } = await supabase
-      .from("hot_picks")
-      .update({ is_published: !pick.is_published })
-      .eq("id", pick.id);
-
-    if (error) {
-      alert("操作失败：" + error.message);
+  /* 保存 */
+  const handleSave = () => {
+    if (!form.styleNumber.trim() || !form.name.trim()) {
+      alert("款号和名称不能为空");
       return;
     }
-
-    fetchHotPicks();
+    if (editingPick) {
+      setHotPicks((prev) =>
+        prev.map((h) =>
+          h.id === editingPick.id
+            ? {
+                ...h,
+                styleNumber: form.styleNumber,
+                name: form.name,
+                price: form.price,
+                colors: form.colors,
+                style: form.style,
+                sourceChannel: form.sourceChannel as SourceChannel,
+                hotPickType: form.hotPickType as HotPickType,
+              }
+            : h
+        )
+      );
+    } else {
+      const newPick: HotPick = {
+        id: Date.now().toString(),
+        styleNumber: form.styleNumber,
+        name: form.name,
+        price: form.price,
+        colors: form.colors,
+        style: form.style,
+        sourceChannel: form.sourceChannel as SourceChannel,
+        hotPickType: form.hotPickType as HotPickType,
+        createdAt: new Date().toISOString().slice(0, 10),
+      };
+      setHotPicks((prev) => [newPick, ...prev]);
+    }
+    setShowModal(false);
   };
 
+  /* 删除 */
+  const handleDelete = (id: string) => {
+    if (!confirm("确定要删除这条爆款记录吗？")) return;
+    setHotPicks((prev) => prev.filter((h) => h.id !== id));
+  };
+
+  /* 爆款类型标签颜色 */
+  const typeColorMap: Record<HotPickType, string> = {
+    "全网爆款": "bg-red-100 text-red-700",
+    "潜在爆款": "bg-amber-100 text-amber-700",
+    "爆款微调款": "bg-blue-100 text-blue-700",
+    "设计师款": "bg-purple-100 text-purple-700",
+    "原创款": "bg-green-100 text-green-700",
+  };
+
+  /* 来源渠道标签颜色 */
+  const channelColorMap: Record<SourceChannel, string> = {
+    "电商平台": "bg-orange-100 text-orange-700",
+    "社交平台": "bg-pink-100 text-pink-700",
+    "批发市场": "bg-gray-100 text-gray-700",
+    "买手店": "bg-indigo-100 text-indigo-700",
+    "小众品牌": "bg-teal-100 text-teal-700",
+    "轻奢品牌": "bg-yellow-100 text-yellow-700",
+  };
+
+  /* ==================== 渲染 ==================== */
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      {/* 页面标题 */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-primary">爆款货盘管理</h1>
-          <p className="text-muted-foreground mt-1">上传和管理爆款商品</p>
+          <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+            <Flame className="w-6 h-6 text-accent" /> 爆款数据中心
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">录入和分析爆款数据，驱动商品企划决策</p>
         </div>
         <button
-          onClick={() => {
-            setEditingPick(null);
-            setFormData({ name: "", description: "", style: "", price: 0, inventory: "充足", image_url: "", is_published: false });
-            setShowModal(true);
-          }}
-          className="btn-primary flex items-center gap-2"
+          onClick={openAdd}
+          className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-sm"
         >
-          <Plus className="w-4 h-4" />
-          新增爆款
+          <Plus className="w-4 h-4" /> 新增爆款
         </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
-          <p className="text-muted-foreground">加载中...</p>
+      {/* 统计卡片 */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-primary">{stats.total}</div>
+            <div className="text-xs text-muted-foreground">总爆款数</div>
+          </div>
         </div>
-      ) : hotPicks.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-          <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-muted-foreground">暂无爆款数据，点击"新增爆款"开始上传</p>
+        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
+            <Flame className="w-5 h-5 text-red-500" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-primary">{stats.hotAll}</div>
+            <div className="text-xs text-muted-foreground">全网爆款</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
+            <TrendingUp className="w-5 h-5 text-amber-500" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-primary">{stats.hotPotential}</div>
+            <div className="text-xs text-muted-foreground">潜在爆款</div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-gray-100 p-5 flex items-center gap-4">
+          <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
+            <Clock className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <div className="text-2xl font-bold text-primary">{stats.weekNew}</div>
+            <div className="text-xs text-muted-foreground">本周新增</div>
+          </div>
+        </div>
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-gray-100 p-4">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="搜索款号、名称、风格..."
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none"
+          />
+        </div>
+        <select
+          value={filterType}
+          onChange={(e) => setFilterType(e.target.value as HotPickType | "")}
+          className="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white min-w-[140px]"
+        >
+          <option value="">全部爆款类型</option>
+          {HOT_PICK_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+        <select
+          value={filterChannel}
+          onChange={(e) => setFilterChannel(e.target.value as SourceChannel | "")}
+          className="px-3 py-2 rounded-lg border border-gray-200 text-sm bg-white min-w-[140px]"
+        >
+          <option value="">全部来源渠道</option>
+          {SOURCE_CHANNELS.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        {(filterType || filterChannel || search) && (
+          <button
+            onClick={() => {
+              setFilterType("");
+              setFilterChannel("");
+              setSearch("");
+            }}
+            className="text-xs text-accent hover:underline"
+          >
+            清除筛选
+          </button>
+        )}
+      </div>
+
+      {/* 数据表格 */}
+      {filteredData.length === 0 ? (
+        <div className="text-center py-16 bg-white rounded-xl border border-gray-100">
+          <Flame className="w-12 h-12 text-gray-200 mx-auto mb-3" />
+          <p className="text-muted-foreground text-sm">暂无爆款数据</p>
+          <p className="text-xs text-gray-400 mt-1">点击右上角「新增爆款」开始录入</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">图片</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">款号</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">名称</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">风格</th>
                 <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">价格</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">库存</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">颜色</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">风格</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">来源渠道</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">爆款类型</th>
+                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">录入时间</th>
                 <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {hotPicks.map((pick) => (
+              {filteredData.map((pick) => (
                 <tr key={pick.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    {pick.image_url ? (
-                      <img src={pick.image_url} alt={pick.name} className="w-12 h-12 object-cover rounded-lg" />
-                    ) : (
-                      <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <BarChart3 className="w-5 h-5 text-gray-400" />
-                      </div>
-                    )}
-                  </td>
+                  <td className="px-6 py-4 font-mono text-sm font-medium text-primary">{pick.styleNumber}</td>
                   <td className="px-6 py-4 font-medium text-primary">{pick.name}</td>
-                  <td className="px-6 py-4 text-sm text-muted-foreground">{getStyleProLabel(pick.style) || pick.style}</td>
-                  <td className="px-6 py-4 text-sm">¥{pick.price}</td>
+                  <td className="px-6 py-4 text-sm">¥{pick.price.toLocaleString()}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground max-w-[120px] truncate">{pick.colors}</td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{pick.style}</td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                      pick.inventory === "充足" ? "bg-green-100 text-green-700" :
-                      pick.inventory === "紧张" ? "bg-amber-100 text-amber-700" :
-                      "bg-red-100 text-red-700"
-                    }`}>{pick.inventory}</span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${channelColorMap[pick.sourceChannel] || "bg-gray-100 text-gray-600"}`}>
+                      {pick.sourceChannel}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
-                    <button onClick={() => togglePublish(pick)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${pick.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
-                      {pick.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
-                    </button>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${typeColorMap[pick.hotPickType] || "bg-gray-100 text-gray-600"}`}>
+                      {pick.hotPickType}
+                    </span>
                   </td>
+                  <td className="px-6 py-4 text-sm text-muted-foreground">{pick.createdAt}</td>
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleEdit(pick)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
-                      <button onClick={() => handleDelete(pick.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
+                      <button
+                        onClick={() => openEdit(pick)}
+                        className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                        title="编辑"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(pick.id)}
+                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="删除"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -258,79 +377,126 @@ export default function AdminHotPicksPage() {
         </div>
       )}
 
+      {/* ==================== 新增/编辑弹窗 ==================== */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-primary">{editingPick ? "编辑爆款" : "新增爆款"}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-10 p-4 overflow-y-auto">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white rounded-2xl w-full max-w-2xl shadow-2xl mb-10">
+            {/* 头部 */}
+            <div className="sticky top-0 z-10 bg-white border-b border-gray-100 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+              <h3 className="font-bold text-lg text-primary">{editingPick ? "编辑爆款" : "新增爆款"}</h3>
+              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">商品名称 <span className="text-red-500">*</span></label>
-                <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="输入商品名称" />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">商品详情</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="填写商品详细信息、卖点描述..." />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 space-y-5">
+              {/* 款号 + 名称 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-primary mb-2">风格</label>
-                  <select value={formData.style} onChange={(e) => setFormData({ ...formData, style: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
+                  <label className="block text-sm font-medium text-primary mb-2">款号 <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.styleNumber}
+                    onChange={(e) => setForm({ ...form, styleNumber: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                    placeholder="如：JK-2024-001"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">名称 <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                    placeholder="输入商品名称"
+                  />
+                </div>
+              </div>
+
+              {/* 价格 + 颜色 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">价格（元）</label>
+                  <input
+                    type="number"
+                    value={form.price || ""}
+                    onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                    placeholder="0"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">颜色</label>
+                  <input
+                    type="text"
+                    value={form.colors}
+                    onChange={(e) => setForm({ ...form, colors: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                    placeholder="如：黑色、白色、卡其"
+                  />
+                </div>
+              </div>
+
+              {/* 风格 */}
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">风格</label>
+                <input
+                  type="text"
+                  value={form.style}
+                  onChange={(e) => setForm({ ...form, style: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                  placeholder="如：优雅型、自然型"
+                />
+              </div>
+
+              {/* 来源渠道 + 爆款类型 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">来源渠道</label>
+                  <select
+                    value={form.sourceChannel}
+                    onChange={(e) => setForm({ ...form, sourceChannel: e.target.value as SourceChannel | "" })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                  >
                     <option value="">请选择</option>
-                    <optgroup label="── 女士八大风格 ──">
-                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
-                    </optgroup>
-                    <optgroup label="── 男士五大风格 ──">
-                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
-                    </optgroup>
+                    {SOURCE_CHANNELS.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-primary mb-2">价格（元）</label>
-                  <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0" />
+                  <label className="block text-sm font-medium text-primary mb-2">爆款类型</label>
+                  <select
+                    value={form.hotPickType}
+                    onChange={(e) => setForm({ ...form, hotPickType: e.target.value as HotPickType | "" })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors"
+                  >
+                    <option value="">请选择</option>
+                    {HOT_PICK_TYPES.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">库存状态</label>
-                <div className="flex gap-3">
-                  {["充足", "紧张", "缺货"].map((status) => (
-                    <button key={status} type="button" onClick={() => setFormData({ ...formData, inventory: status })} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.inventory === status ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{status}</button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">商品图片</label>
-                {formData.image_url ? (
-                  <div className="relative inline-block">
-                    <img src={formData.image_url} alt="预览" className="w-32 h-32 object-cover rounded-lg" />
-                    <button type="button" onClick={() => setFormData({ ...formData, image_url: "" })} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"><X className="w-4 h-4" /></button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-32 h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                    <Upload className="w-6 h-6 text-gray-400 mb-1" />
-                    <span className="text-xs text-muted-foreground">{uploading ? "上传中..." : "上传图片"}</span>
-                    <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
-                  </label>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
-                <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
-              </div>
-
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">取消</button>
-                <button type="submit" className="btn-primary flex items-center gap-2"><Save className="w-4 h-4" />{editingPick ? "保存修改" : "新增爆款"}</button>
-              </div>
-            </form>
+            {/* 底部 */}
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 rounded-b-2xl flex justify-end gap-3">
+              <button
+                onClick={() => setShowModal(false)}
+                className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors flex items-center gap-2"
+              >
+                {editingPick ? "保存修改" : "新增爆款"}
+              </button>
+            </div>
           </div>
         </div>
       )}
