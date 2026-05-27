@@ -73,23 +73,23 @@ export default function CourseDetailPage() {
         return;
       }
       setCourse(data as Course);
+
+      // Check if user has purchased via course_purchases table
+      if (user && !data.is_free) {
+        const { data: purchaseData } = await supabase
+          .from("course_purchases")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("course_id", id)
+          .eq("status", "paid")
+          .maybeSingle();
+        if (purchaseData) setPurchased(true);
+      }
     } catch (err) {
       console.error("获取课程异常:", err);
       router.push("/courses");
     }
     setLoading(false);
-
-    // Check if user has purchased via course_purchases table
-    if (user && !data.is_free) {
-      const { data: purchaseData } = await supabase
-        .from("course_purchases")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("course_id", id)
-        .eq("status", "paid")
-        .maybeSingle();
-      if (purchaseData) setPurchased(true);
-    }
   };
 
   // Re-check purchase when auth loads
