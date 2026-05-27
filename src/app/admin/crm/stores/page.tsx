@@ -7,8 +7,9 @@ import Link from "next/link";
 import {
   Plus, Pencil, Trash2, Save, X, Loader2, Search,
   ChevronLeft, ChevronRight, Phone, MapPin, Store as StoreIcon,
-  Upload, Download, Eye, Building2, Clock, Tag, Filter, CheckSquare, Square,
+  Upload, Download, Eye, Building2, Clock, Tag, Filter, CheckSquare, Square, FileText,
 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 interface CrmStore {
   id: string;
@@ -91,6 +92,8 @@ export default function CrmStoresPage() {
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchDeleting, setBatchDeleting] = useState(false);
+  const [exportFormat, setExportFormat] = useState<"vcf" | "xlsx" | "txt">("vcf");
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const router = useRouter();
   const supabase = createClient();
 
@@ -319,14 +322,13 @@ export default function CrmStoresPage() {
     URL.revokeObjectURL(url);
   };
 
-  // 导出vCard通讯录（选中门店或全部）
-  const handleExportVCard = async () => {
+  // 导出通讯录（支持 vcf / xlsx / txt 三种格式）
+  const handleExportContacts = async () => {
     // 决定导出哪些：如果有选中就导出选中的，否则导出当前筛选结果
     let targetStores: CrmStore[];
     if (selectedIds.size > 0) {
       targetStores = stores.filter(s => selectedIds.has(s.id));
     } else {
-      // 导出全部（不分页）
       setLoading(true);
       let query = supabase
         .from("crm_stores")
@@ -347,29 +349,53 @@ export default function CrmStoresPage() {
       return;
     }
 
-    // 生成vCard 3.0格式
-    const vcards = targetStores.map(store => {
-      const lines = [
-        "BEGIN:VCARD",
-        "VERSION:3.0",
-        `FN:${store.name}`,
-        `TEL;TYPE=CELL:${store.owner_phone}`,
-      ];
-      if (store.address) lines.push(`ADR;TYPE=WORK:;;${store.address}`);
-      if (store.owner_name) lines.push(`NOTE:联系人: ${store.owner_name}`);
-      if (store.industry) lines.push(`CATEGORIES:${store.industry}`);
-      lines.push("END:VCARD");
-      return lines.join("\r\n");
-    });
+    const dateStr = new Date().toLocaleDateString("zh-CN");
 
-    const vcfContent = vcards.join("\r\n");
-    const blob = new Blob([vcfContent], { type: "text/vcard;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `门店通讯录_${new Date().toLocaleDateString("zh-CN")}_${targetStores.length}个.vcf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    if (exportFormat === "vcf") {
+      // vCard 2.1 格式（微信/手机兼容性更好）
+      const vcards = targetStores.map(store => {
+        const lines = [
+          "BEGIN:VCARD",
+          "VERSION:2.1",
+          `N:;${store.name};;;`,
+          `FN:${store.name}`,
+          `TEL;CELL:${store.owner_phone}`,
+        ];
+        if (store.address) lines.push(`ADR;WORK:;;${store.address};;;;`);
+        if (store.owner_name) lines.push(`NOTE:联系人:${store.owner_name}`);
+        lines.push("END:VCARD");
+        return lines.join("\r\n");
+      });
+      const vcfContent = vcards.join("\r\n");
+      const blob = new Blob([vcfContent], { type: "text/x-vcard;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `门店通讯录_${dateStr}_${targetStores.length}个.vcf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    else if (exportFormat === "xlsx") {
+      // Excel 格式（手机WPS/Excel打开，复制手机号到微信添加）
+      const headers = ["店名", "手机号", "地址", "联系人", "行业"];
+      const rows = targetStores.map(s => [s.name, s.owner_phone, s.address || "", s.owner_name || "", s.industry || ""]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "门店通讯录");
+      XLSX.writeFile(wb, `门店通讯录_${dateStr}_${targetStores.length}个.xlsx`);
+    }
+    else if (exportFormat === "txt") {
+      // 纯文本（一行一个手机号，方便微信搜索添加）
+      const lines = targetStores.map(s => `${s.owner_phone}\t${s.name}`);
+      const content = lines.join("\n");
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `手机号列表_${dateStr}_${targetStores.length}个.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   const maskPhone = (phone: string) => {
@@ -392,9 +418,38 @@ export default function CrmStoresPage() {
               批量删除 ({selectedIds.size})
             </button>
           )}
-          <button onClick={handleExportVCard} className="btn-secondary flex items-center gap-2">
-            <Phone className="w-4 h-4" /> 导出通讯录
-          </button>
+          {/* 导出通讯录（带格式选择） */}
+          <div className="relative">
+            <div className="flex">
+              <button onClick={handleExportContacts} className="btn-secondary flex items-center gap-2 rounded-r-none border-r-0">
+                <Phone className="w-4 h-4" />
+                导出通讯录
+                <span className="text-xs text-gray-400 ml-1">
+                  {exportFormat === "vcf" ? "(vCard)" : exportFormat === "xlsx" ? "(Excel)" : "(手机号)"}
+                </span>
+              </button>
+              <button onClick={() => setShowExportMenu(!showExportMenu)}
+                className="btn-secondary rounded-l-none px-2 border-l border-gray-200">
+                ▼
+              </button>
+            </div>
+            {showExportMenu && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 overflow-hidden">
+                <button onClick={() => { setExportFormat("vcf"); setShowExportMenu(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 ${exportFormat === "vcf" ? "bg-accent/5 text-accent font-medium" : ""}`}>
+                  📇 vCard (.vcf) — 导入手机通讯录
+                </button>
+                <button onClick={() => { setExportFormat("xlsx"); setShowExportMenu(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 ${exportFormat === "xlsx" ? "bg-accent/5 text-accent font-medium" : ""}`}>
+                  📊 Excel (.xlsx) — WPS打开复制
+                </button>
+                <button onClick={() => { setExportFormat("txt"); setShowExportMenu(false); }}
+                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50 ${exportFormat === "txt" ? "bg-accent/5 text-accent font-medium" : ""}`}>
+                  📝 纯文本 (.txt) — 一行一个手机号
+                </button>
+              </div>
+            )}
+          </div>
           <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
             <Download className="w-4 h-4" /> 导出名单
           </button>
