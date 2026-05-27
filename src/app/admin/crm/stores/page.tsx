@@ -274,7 +274,7 @@ export default function CrmStoresPage() {
     URL.revokeObjectURL(url);
   };
 
-  // 导出全部门店数据（不分页）
+  // 导出全部门店数据（不分页）CSV
   const handleExport = async () => {
     setLoading(true);
     let query = supabase
@@ -319,6 +319,59 @@ export default function CrmStoresPage() {
     URL.revokeObjectURL(url);
   };
 
+  // 导出vCard通讯录（选中门店或全部）
+  const handleExportVCard = async () => {
+    // 决定导出哪些：如果有选中就导出选中的，否则导出当前筛选结果
+    let targetStores: CrmStore[];
+    if (selectedIds.size > 0) {
+      targetStores = stores.filter(s => selectedIds.has(s.id));
+    } else {
+      // 导出全部（不分页）
+      setLoading(true);
+      let query = supabase
+        .from("crm_stores")
+        .select("*")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+      if (search) query = query.or(`name.ilike.%${search}%,owner_phone.ilike.%${search}%,owner_name.ilike.%${search}%,address.ilike.%${search}%`);
+      if (filterSource) query = query.eq("source", filterSource);
+      if (filterIndustry) query = query.eq("industry", filterIndustry);
+      if (filterStatus) query = query.eq("status", filterStatus);
+      const { data } = await query;
+      setLoading(false);
+      targetStores = data || [];
+    }
+
+    if (targetStores.length === 0) {
+      alert("没有可导出的门店");
+      return;
+    }
+
+    // 生成vCard 3.0格式
+    const vcards = targetStores.map(store => {
+      const lines = [
+        "BEGIN:VCARD",
+        "VERSION:3.0",
+        `FN:${store.name}`,
+        `TEL;TYPE=CELL:${store.owner_phone}`,
+      ];
+      if (store.address) lines.push(`ADR;TYPE=WORK:;;${store.address}`);
+      if (store.owner_name) lines.push(`NOTE:联系人: ${store.owner_name}`);
+      if (store.industry) lines.push(`CATEGORIES:${store.industry}`);
+      lines.push("END:VCARD");
+      return lines.join("\r\n");
+    });
+
+    const vcfContent = vcards.join("\r\n");
+    const blob = new Blob([vcfContent], { type: "text/vcard;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `门店通讯录_${new Date().toLocaleDateString("zh-CN")}_${targetStores.length}个.vcf`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const maskPhone = (phone: string) => {
     if (!phone || phone.length < 7) return phone;
     return phone.slice(0, 3) + "****" + phone.slice(-4);
@@ -339,6 +392,9 @@ export default function CrmStoresPage() {
               批量删除 ({selectedIds.size})
             </button>
           )}
+          <button onClick={handleExportVCard} className="btn-secondary flex items-center gap-2">
+            <Phone className="w-4 h-4" /> 导出通讯录
+          </button>
           <button onClick={handleExport} className="btn-secondary flex items-center gap-2">
             <Download className="w-4 h-4" /> 导出名单
           </button>
