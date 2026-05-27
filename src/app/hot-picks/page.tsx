@@ -1,103 +1,103 @@
 "use client";
-import { useState, useEffect } from "react";
-import { PaywallModal } from "@/components/PaywallModal";
-import { createClient } from "@/lib/supabase/client";
-import Image from "next/image";
 
-import { motion } from "framer-motion";
+import { useState } from "react";
 import Link from "next/link";
-import {
-  ChevronRight,
-  ArrowRight,
-  TrendingUp,
-  ShoppingCart,
-  Repeat,
-  ThumbsUp,
-  Home,
-  Flame,
-  Loader2,
-} from "lucide-react";
+import { Home, ChevronRight, ShoppingBag, Clock, Star, Diamond, Crown, Gem, Check, Info } from "lucide-react";
 
-/* ------------------------------------------------------------------ */
-/*  Animation helpers                                                  */
-/* ------------------------------------------------------------------ */
-const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: (i: number = 0) => ({
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, delay: i * 0.1, ease: "easeOut" as const },
-  }),
-};
+/* ============ 买手爆款样衣套餐 ============ */
+const buyerPackages = [
+  {
+    season: "春夏",
+    name: "买手爆款样衣·春夏套餐",
+    price: 39000,
+    count: 50,
+    unitPrice: 780,
+    period: "不超过12个月",
+    features: [
+      "买手总监亲自对接风格品类需求",
+      "3天内可看版选样衣",
+      "国内外加广杭两地市场流行趋势",
+      "每周定期提供最新爆款选择",
+      "前两季销售数据分析",
+      "相当于拥有50人以上的专业买手团队淘爆款",
+      "多·快·好·省",
+    ],
+    tag: "春夏特惠",
+  },
+  {
+    season: "秋冬",
+    name: "买手爆款样衣·秋冬套餐",
+    price: 69000,
+    count: 50,
+    unitPrice: 1380,
+    period: "不超过12个月",
+    features: [
+      "买手总监亲自对接风格品类需求",
+      "3天内可看版选样衣",
+      "国内外加广杭两地市场流行趋势",
+      "每周定期提供最新爆款选择",
+      "前两季销售数据分析",
+      "相当于拥有50人以上的专业买手团队淘爆款",
+      "多·快·好·省",
+    ],
+    tag: "秋冬特惠",
+  },
+];
 
-const stagger = {
-  visible: { transition: { staggerChildren: 0.08 } },
-};
+/* ============ 样衣租赁套餐 ============ */
+const rentalPackages = [
+  {
+    name: "体验套餐",
+    price: 54800,
+    count: 220,
+    period: "12个月",
+    periodMonths: 12,
+    icon: Star,
+    highlight: false,
+  },
+  {
+    name: "黄金套餐",
+    price: 88000,
+    count: 400,
+    period: "24个月",
+    periodMonths: 24,
+    icon: Diamond,
+    highlight: false,
+  },
+  {
+    name: "钻石套餐",
+    price: 168000,
+    count: 840,
+    period: "36个月",
+    periodMonths: 36,
+    icon: Gem,
+    highlight: true,
+  },
+  {
+    name: "至尊套餐",
+    price: 388000,
+    count: 2580,
+    period: "48个月",
+    periodMonths: 48,
+    icon: Crown,
+    highlight: false,
+  },
+];
 
-/* ------------------------------------------------------------------ */
-/*  Interfaces                                                         */
-/* ------------------------------------------------------------------ */
-interface HotPicksImage {
-  id: string;
-  sort_order: number;
-  title: string;
-  label: string;
-  image_url: string;
-  section: string;
-  is_published: boolean;
-}
-
-/* ------------------------------------------------------------------ */
-/*  Page                                                               */
-/* ------------------------------------------------------------------ */
+/* ============ 主页面 ============ */
 export default function HotPicksPage() {
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [styleImages, setStyleImages] = useState<HotPicksImage[]>([]);
-  const [trendImages, setTrendImages] = useState<HotPicksImage[]>([]);
-  const [loading, setLoading] = useState(true);
-  const supabase = createClient();
-
-  useEffect(() => {
-    fetchImages();
-  }, []);
-
-  const fetchImages = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("hot_picks_images")
-      .select("*")
-      .eq("is_published", true)
-      .order("sort_order", { ascending: true });
-
-    if (error) {
-      console.error("Error fetching hot picks images:", error);
-    } else {
-      const all = data || [];
-      setStyleImages(all.filter((img) => img.section === "styles"));
-      setTrendImages(all.filter((img) => img.section === "trends"));
-    }
-    setLoading(false);
-  };
+  const [activeTab, setActiveTab] = useState<"buyer" | "rental">("buyer");
 
   return (
-    <>
-      {/* Paywall Modal */}
-      <PaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        title="完整数据与深度分析"
-        description="登录后购买会员或单次付费即可查看完整内容"
-        type="single"
-      />
-      {/* Breadcrumb */}
+    <div className="min-h-screen bg-white">
+      {/* ====== Breadcrumb ====== */}
       <nav className="bg-muted/60 border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Link href="/" className="hover:text-primary transition-colors flex items-center gap-1">
-            <Home className="w-4 h-4" />
-            首页
+            <Home className="w-4 h-4" /> 首页
           </Link>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-primary font-medium">爆款货盘</span>
+          <span className="text-primary font-medium">爆款样衣</span>
         </div>
       </nav>
 
@@ -107,334 +107,215 @@ export default function HotPicksPage() {
           <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/3" />
         </div>
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <motion.div
-            className="max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
+          <div className="max-w-2xl">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
-              <Flame className="w-4 h-4" />
-              爆款直供，抢占先机
+              <ShoppingBag className="w-4 h-4" />
+              专业爆款样衣
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              爆款货盘
+              爆款样衣
             </h1>
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
-              实时追踪全网热销数据，精选当季爆款货源。从选品到上架一站式搞定，让您的店铺永远走在潮流前沿。
+              大数据选款 + 专业买手团队，为您提供市场最新爆款样衣
             </p>
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ====== Hot Style Cases ====== */}
-      <section className="py-16 lg:py-24 bg-white">
+      {/* ====== Tab切换 ====== */}
+      <section className="bg-white border-b border-gray-100">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              本季推荐
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              爆款风格案例展示
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              严选当季热销风格，覆盖多元风格体系，每一款都经过市场验证
-            </p>
-          </motion.div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
-              <span className="text-muted-foreground">加载中...</span>
-            </div>
-          ) : styleImages.length > 0 ? (
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
-              variants={stagger}
-            >
-              {styleImages.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  variants={fadeUp}
-                  custom={i}
-                  className="group cursor-pointer"
-                  onClick={() => setShowPaywall(true)}
-                >
-                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-                    <Image
-                      src={item.image_url}
-                      alt={item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
-                        查看详情
-                      </span>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <h4 className="text-xl font-bold text-white">{item.title}</h4>
-                      {item.label && (
-                        <p className="text-sm text-white/70 mt-1 line-clamp-2">{item.label}</p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">暂无推荐数据</p>
-            </div>
-          )}
-
-          <div className="mt-10 text-center">
+          <div className="flex gap-1 justify-center">
             <button
-              onClick={() => setShowPaywall(true)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+              onClick={() => setActiveTab("buyer")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "buyer"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
             >
-              查看完整数据
-              <ArrowRight className="w-4 h-4" />
+              买手爆款样衣
+            </button>
+            <button
+              onClick={() => setActiveTab("rental")}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === "rental"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              样衣租赁
             </button>
           </div>
         </div>
       </section>
 
-      {/* ====== Data Overview (Blurred) ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              数据看板
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              爆品数据看板
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              实时监控核心运营指标，用数据验证每一个选品决策
-            </p>
-          </motion.div>
+      {/* ====== 买手爆款样衣 ====== */}
+      {activeTab === "buyer" && (
+        <section className="py-12 md:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+                Buyer Sample
+              </span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+                买手爆款样衣套餐
+              </h2>
+              <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                50人+专业买手团队，为您淘遍全网爆款
+              </p>
+            </div>
 
-          <motion.div
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              { icon: ShoppingCart, num: "行业领先", sub: "动销率" },
-              { icon: ThumbsUp, num: "显著优于同行", sub: "好评率" },
-              { icon: Repeat, num: "持续攀升", sub: "复购率" },
-              { icon: TrendingUp, num: "高速增长", sub: "同比增速" },
-            ].map((stat, i) => (
-              <motion.div key={stat.sub} variants={fadeUp} custom={i}>
-                <div className="flex flex-col items-center text-center p-8 rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-accent/10 text-accent mb-4">
-                    <stat.icon className="w-6 h-6" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {buyerPackages.map((pkg, idx) => (
+                <div
+                  key={idx}
+                  className={`relative rounded-2xl border-2 p-8 transition-shadow hover:shadow-lg ${
+                    pkg.season === "春夏"
+                      ? "border-green-200 bg-green-50/30"
+                      : "border-orange-200 bg-orange-50/30"
+                  }`}
+                >
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-bold px-4 py-1.5 rounded-full ${
+                    pkg.season === "春夏" ? "bg-green-500" : "bg-orange-500"
+                  }`}>
+                    {pkg.tag}
                   </div>
-                  <div className="text-2xl sm:text-3xl font-bold text-primary">{stat.num}</div>
-                  <div className="mt-2 text-sm text-muted-foreground">{stat.sub}</div>
-                  <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-medium">
-                    <TrendingUp className="w-3 h-3" />
-                    持续向好
+
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-primary mb-2">{pkg.name}</h3>
+                    <div className="text-4xl font-bold text-accent mb-1">
+                      ¥{pkg.price.toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      {pkg.count}款 · 平均¥{pkg.unitPrice}/款 · {pkg.period}
+                    </div>
                   </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {pkg.features.map((f, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <button className="w-full py-3 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition-colors">
+                    立即咨询
+                  </button>
                 </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <div className="mt-10 text-center">
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-            >
-              查看完整数据
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== New Trend Preview ====== */}
-      <section className="py-16 lg:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-2xl mx-auto mb-14"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className="text-accent font-semibold text-sm tracking-widest uppercase">
-              新品趋势
-            </span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              新品趋势预览
-            </h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              提前锁定下一季趋势，抢先布局新品赛道
-            </p>
-          </motion.div>
-
-          {loading ? (
-            <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-8 h-8 animate-spin text-accent mr-3" />
-              <span className="text-muted-foreground">加载中...</span>
-            </div>
-          ) : trendImages.length > 0 ? (
-            <motion.div
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.1 }}
-              variants={stagger}
-            >
-              {trendImages.map((item, i) => (
-                <motion.div
-                  key={item.id}
-                  variants={fadeUp}
-                  custom={i}
-                  className="group cursor-pointer"
-                  onClick={() => setShowPaywall(true)}
-                >
-                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500">
-                    <Image
-                      src={item.image_url}
-                      alt={item.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <span className="px-5 py-2.5 bg-white/90 text-primary text-sm font-semibold rounded-lg backdrop-blur-sm">
-                        查看详情
-                      </span>
-                    </div>
-                    <div className="absolute bottom-0 left-0 right-0 p-5">
-                      <h4 className="text-xl font-bold text-white">{item.title}</h4>
-                      {item.label && (
-                        <p className="text-sm text-white/70 mt-1 line-clamp-2">{item.label}</p>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
               ))}
-            </motion.div>
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-muted-foreground">暂无趋势数据</p>
-            </div>
-          )}
-
-          <div className="mt-10 text-center">
-            <button
-              onClick={() => setShowPaywall(true)}
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-            >
-              查看完整数据
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== Login Prompt ====== */}
-      <section className="py-16 lg:py-24 bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="py-12 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl text-center">
-            <div className="max-w-xl mx-auto px-6">
-              <div className="text-3xl mb-3">🔒</div>
-              <h3 className="text-lg font-bold text-primary">完整数据与深度分析</h3>
-              <p className="mt-2 text-sm text-muted-foreground">详细商业数据、供应链信息与专业分析报告，仅对授权用户开放</p>
-              <button
-                onClick={() => setShowPaywall(true)}
-                className="mt-4 inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                解锁完整内容
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
-      {/* ====== Supplier CTA ====== */}
-      <section className="py-16 lg:py-24 bg-muted">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary to-primary/80 px-8 sm:px-12 lg:px-20 py-14 sm:py-20 text-white"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/10 -translate-y-1/2 translate-x-1/3 pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-white/5 translate-y-1/2 -translate-x-1/4 pointer-events-none" />
-            <div className="relative">
-              <div className="grid lg:grid-cols-2 gap-10 items-center">
+      {/* ====== 样衣租赁 ====== */}
+      {activeTab === "rental" && (
+        <section className="py-12 md:py-16">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <span className="text-accent font-semibold text-sm tracking-widest uppercase">
+                Sample Rental
+              </span>
+              <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
+                样衣租赁套餐
+              </h2>
+              <p className="mt-4 text-muted-foreground leading-relaxed max-w-2xl mx-auto">
+                海量爆款样衣库，随时挑选最新款，保持展厅不低于1000款样衣在线
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {rentalPackages.map((pkg, idx) => {
+                const Icon = pkg.icon;
+                return (
+                  <div
+                    key={idx}
+                    className={`relative rounded-2xl border-2 p-6 transition-shadow hover:shadow-lg ${
+                      pkg.highlight
+                        ? "border-accent bg-white shadow-md"
+                        : "border-gray-200 bg-white"
+                    }`}
+                  >
+                    {pkg.highlight && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-3 py-1 rounded-full">
+                        推荐
+                      </div>
+                    )}
+
+                    <div className="text-center">
+                      <div className={`w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-4 ${
+                        pkg.highlight ? "bg-accent/10" : "bg-gray-100"
+                      }`}>
+                        <Icon className={`w-6 h-6 ${pkg.highlight ? "text-accent" : "text-gray-500"}`} />
+                      </div>
+                      <h3 className="font-bold text-primary text-lg mb-2">{pkg.name}</h3>
+                      <div className={`text-3xl font-bold mb-1 ${pkg.highlight ? "text-accent" : "text-primary"}`}>
+                        ¥{pkg.price.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-500 mb-6">
+                        {pkg.count}款 · 有效期{pkg.period}
+                      </div>
+                    </div>
+
+                    <button className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                      pkg.highlight
+                        ? "bg-accent text-white hover:bg-accent/90"
+                        : "bg-gray-100 text-primary hover:bg-gray-200"
+                    }`}>
+                      立即咨询
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 样衣来源说明 */}
+            <div className="mt-12 bg-gray-50 rounded-2xl p-8 border border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <Info className="w-5 h-5 text-accent" />
+                <h3 className="font-semibold text-primary">样衣来源</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm text-gray-600">
                 <div>
-                  <h2 className="text-3xl sm:text-4xl font-bold">
-                    优质供应商入驻
-                  </h2>
-                  <p className="mt-4 text-white/80 leading-relaxed">
-                    我们正在寻找优质供应商合作伙伴。加入骆芷蝶智选供应商体系，触达众多品牌买手，
-                    共享平台流量与数据赋能，实现产销高效协同。
-                  </p>
-                  <div className="mt-8 flex flex-col sm:flex-row items-start gap-4">
-                    <Link
-                      href="/contact"
-                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
-                    >
-                      申请入驻
-                      <ChevronRight className="w-5 h-5" />
-                    </Link>
-                    <Link
-                      href="/buyer"
-                      className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20"
-                    >
-                      了解选品服务
-                      <ArrowRight className="w-5 h-5" />
-                    </Link>
-                  </div>
+                  <div className="font-semibold text-primary mb-2">1. 设计款样衣</div>
+                  <p>根据时尚资讯、最新资源、自主研发的新品样衣</p>
                 </div>
-
-                <div className="space-y-4">
-                  {[
-                    { label: "入驻品牌数", value: "众多" },
-                    { label: "月均订单量", value: "持续增长" },
-                    { label: "平均结算周期", value: "高效周转" },
-                    { label: "供应商满意度", value: "口碑优良" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between p-4 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10">
-                      <span className="text-white/70 text-sm">{item.label}</span>
-                      <span className="text-xl font-bold text-accent">{item.value}</span>
-                    </div>
-                  ))}
+                <div>
+                  <div className="font-semibold text-primary mb-2">2. 数据样衣</div>
+                  <p>智能科技大数据分析 + 人为筛选的全网爆款、潜在爆款、爆款微调款</p>
+                </div>
+                <div>
+                  <div className="font-semibold text-primary mb-2">3. 线下批发市场爆款样衣</div>
+                  <p>通过国内外知名买手全球采购，实时收集批发市场、买手店、小众品牌、轻奢品牌的爆款、设计师款和原创款</p>
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* ====== CTA ====== */}
+      <section className="py-12 md:py-16 bg-primary text-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+            需要爆款样衣服务？
+          </h2>
+          <p className="text-white/70 mb-8 max-w-xl mx-auto">
+            联系我们的买手团队，为您挑选最适合的爆款样衣
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link
+              href="/contact"
+              className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors"
+            >
+              立即咨询
+            </Link>
+          </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }
