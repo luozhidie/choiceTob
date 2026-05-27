@@ -158,7 +158,7 @@ const sidebarGroups: SidebarGroup[] = [
       { label: "销售图片", href: "/admin/sales-images", icon: ImageIcon },
       { label: "内容日历", href: "/admin/content-calendar", icon: Calendar },
       { label: "沙龙活动", href: "/admin/salon", icon: Calendar },
-      { label: "原创爆款", href: "/admin/designer", icon: Scissors },
+      { label: "爆款样衣", href: "/admin/designer", icon: Scissors },
     ],
   },
   {

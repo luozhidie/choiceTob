@@ -96,8 +96,8 @@ export default function AdminDesignerPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-primary">原创爆款管理</h1>
-          <p className="text-muted-foreground mt-1">管理原创爆款服务套餐</p>
+          <h1 className="text-2xl font-bold text-primary">爆款样衣管理</h1>
+          <p className="text-muted-foreground mt-1">管理爆款样衣服务套餐</p>
         </div>
         <button onClick={() => { setEditing(null); setFormData({ name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0 }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" />新增套餐

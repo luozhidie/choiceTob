@@ -240,7 +240,7 @@ export default function DesignerPage() {
         {
           user_id: user.id,
           plan_id: DESIGN_WORKS_PLAN_ID,
-          plan_name: selectedDesignPlan === "yearly" ? "原创爆款·年度订阅" : "原创爆款·月度订阅",
+          plan_name: selectedDesignPlan === "yearly" ? "爆款样衣·年度订阅" : "爆款样衣·月度订阅",
           price: selectedDesignPlan === "yearly" ? DESIGN_WORKS_YEARLY_PRICE : DESIGN_WORKS_MONTHLY_PRICE,
           payment_method: payMethod,
           status: "pending",
@@ -280,7 +280,7 @@ export default function DesignerPage() {
         isOpen={showPaywall}
         onClose={() => setShowPaywall(false)}
         title={`购买"${selectedPkg?.name}"套餐`}
-        description="联系客服完成购买后即可享受原创爆款服务"
+        description="联系客服完成购买后即可享受爆款样衣服务"
         type="single"
       />
 
@@ -291,7 +291,7 @@ export default function DesignerPage() {
             <Home className="w-4 h-4" /> 首页
           </Link>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-primary font-medium">原创爆款</span>
+          <span className="text-primary font-medium">爆款样衣</span>
         </div>
       </nav>
 
@@ -309,10 +309,10 @@ export default function DesignerPage() {
           >
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
               <Palette className="w-4 h-4" />
-              专业原创爆款
+              专业爆款样衣
             </span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-              原创爆款
+              爆款样衣
             </h1>
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
               专业设计师团队为您量身定制，从品牌定位到款式开发一站式解决
@@ -644,7 +644,7 @@ export default function DesignerPage() {
           >
             <span className="text-accent font-semibold text-sm tracking-widest uppercase">Workflow</span>
             <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">
-              原创爆款流程
+              爆款样衣流程
             </h2>
           </motion.div>
 
@@ -754,7 +754,7 @@ export default function DesignerPage() {
                   <div className="bg-gray-50 rounded-xl p-4 mb-5">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-600">套餐</span>
-                      <span className="text-sm font-bold text-primary">{selectedDesignPlan==="yearly"?"原创爆款·年度订阅":"原创爆款·月度订阅"}</span>
+                      <span className="text-sm font-bold text-primary">{selectedDesignPlan==="yearly"?"爆款样衣·年度订阅":"爆款样衣·月度订阅"}</span>
                     </div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm text-gray-600">有效期</span>
@@ -881,13 +881,13 @@ export default function DesignerPage() {
                   </div>
                   <h3 className="text-xl font-bold text-primary">支付已提交</h3>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    您的原创爆款作品解锁订单已创建，等待后台确认
+                    您的爆款样衣作品解锁订单已创建，等待后台确认
                   </p>
 
                   <div className="mt-5 bg-gray-50 rounded-xl p-4 text-left">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-gray-500">套餐</span>
-                      <span className="text-sm font-bold text-primary">原创爆款作品解锁</span>
+                      <span className="text-sm font-bold text-primary">爆款样衣作品解锁</span>
                     </div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs text-gray-500">支付金额</span>

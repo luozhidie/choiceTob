@@ -14,7 +14,7 @@ const navItems = [
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
   { label: "时尚博主", href: "/magazine" },
-  { label: "原创爆款", href: "/designer" },
+  { label: "爆款样衣", href: "/designer" },
   { label: "联系我们", href: "/contact" },
 ];
 
