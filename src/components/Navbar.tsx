@@ -11,10 +11,11 @@ const navItems = [
   { label: "线上课程", href: "/courses" },
   { label: "买手选品", href: "/buyer" },
   { label: "商品企划", href: "/planning" },
+  { label: "设计稿", href: "/designer" },
+  { label: "搭配稿", href: "/collocation" },
   { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
   { label: "时尚博主", href: "/magazine" },
-  { label: "爆款样衣", href: "/designer" },
   { label: "联系我们", href: "/contact" },
 ];
 
