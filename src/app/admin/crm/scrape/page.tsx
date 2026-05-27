@@ -37,18 +37,25 @@ async function searchAmapPoiPage(keyword: string, city: string, page: number = 1
     throw new Error(data.info || "高德地图搜索失败");
   }
 
-  return (data.pois || []).map((poi: any, idx: number) => ({
-    id: `amap_${poi.id || idx}`,
-    name: poi.name || "",
-    address: poi.address || "",
-    phone: poi.tel || "",
-    industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
-    city: poi.cityname || city,
-    source_detail: `高德地图POI - ${poi.type || ""}`,
-    selected: true,
-    parsed: !!poi.tel,
-    rawLines: [poi.name, poi.address, poi.tel].filter(Boolean),
-  }));
+  return (data.pois || []).map((poi: any, idx: number) => {
+    // tel 可能是数组，处理成字符串
+    const phoneRaw = poi.tel;
+    const phone = Array.isArray(phoneRaw) ? (phoneRaw[0] || "") : (phoneRaw || "");
+    // 地址拼接省市区+详细地址
+    const address = [poi.pname, poi.cityname, poi.adname, poi.address].filter(Boolean).join("");
+    return {
+      id: `amap_${poi.id || idx}`,
+      name: poi.name || "",
+      address,
+      phone,
+      industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
+      city: poi.cityname || city,
+      source_detail: `高德地图POI - ${poi.type || ""}`,
+      selected: true,
+      parsed: !!phone,
+      rawLines: [poi.name, address, phone].filter(Boolean),
+    };
+  });
 }
 
 // ======== 高德 POI 搜索（多页，最多250条）========
@@ -76,18 +83,23 @@ async function searchBaiduPoi(keyword: string, city: string, page: number = 0): 
     throw new Error(data.message || "百度地图搜索失败");
   }
 
-  return (data.results || []).map((poi: any, idx: number) => ({
-    id: `baidu_${poi.uid || idx}`,
-    name: poi.name || "",
-    address: poi.address || "",
-    phone: poi.telephone || "",
-    industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
-    city: poi.city || city,
-    source_detail: `百度地图POI - ${poi.tag || ""}`,
-    selected: true,
-    parsed: !!poi.telephone,
-    rawLines: [poi.name, poi.address, poi.telephone].filter(Boolean),
-  }));
+  return (data.results || []).map((poi: any, idx: number) => {
+    // telephone 可能是数组
+    const phoneRaw = poi.telephone;
+    const phone = Array.isArray(phoneRaw) ? (phoneRaw[0] || "") : (phoneRaw || "");
+    return {
+      id: `baidu_${poi.uid || idx}`,
+      name: poi.name || "",
+      address: poi.address || "",
+      phone,
+      industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
+      city: poi.city || city,
+      source_detail: `百度地图POI - ${poi.tag || ""}`,
+      selected: true,
+      parsed: !!phone,
+      rawLines: [poi.name, poi.address, phone].filter(Boolean),
+    };
+  });
 }
 
 // ======== 合并去重（按店名+地址）========
