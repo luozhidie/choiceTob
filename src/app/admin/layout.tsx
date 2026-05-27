@@ -116,6 +116,7 @@ const sidebarGroups: SidebarGroup[] = [
       { label: "选品功能", href: "/admin/buyer-features", icon: Layers },
       { label: "买手中心", href: "/admin/buyer-center", icon: Users },
       { label: "爆款数据中心", href: "/admin/trend-center", icon: TrendingUp },
+      { label: "货盘规划", href: "/admin/assortment", icon: Package },
     ],
   },
   {

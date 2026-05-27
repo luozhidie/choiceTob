@@ -340,6 +340,19 @@ export async function POST(req: NextRequest) {
     "colorImages": ["关键词1", "关键词2"],
     "styleImages": ["关键词1", "关键词2"],
     "waveImages": [{"wave": 1, "keywords": ["关键词1"]}]
+  },
+  "assortmentAdvice": {
+    "summary": "货盘配比概要（100字）",
+    "categoryDepth": [
+      {"category": "品类名", "skuCount": 5, "colorDepth": 3, "sizeDepth": 3, "reason": "原因"}
+    ],
+    "coreSkuList": [
+      {"name": "核心款名称", "category": "品类", "colors": ["色1","色2"], "priceRange": "价格", "expectedSellThrough": "预期动销率%", "reason": "为什么是核心款"}
+    ],
+    "avoidList": [
+      {"category": "品类", "reason": "为什么不建议铺货"}
+    ],
+    "stockStrategy": "库存策略建议（如：首单60%+追单40%，小批量多批次）"
   }
 }
 |JSON_END|`;
@@ -392,7 +405,13 @@ export async function POST(req: NextRequest) {
 5. quartersPlan 3个波段，每波4个事项
 6. imageKeywords 必须基于实际风格组合生成
 7. 内容要具体、专业、可落地
-${hasVip && hasMarket ? `8. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）` : ""}`;
+8. assortmentAdvice（货盘建议）是核心产出之一，必须包含：
+   - categoryDepth：每个品类的SKU数量、颜色深度、尺码深度，基于VIP客群规模和库存现状决定
+   - coreSkuList：列出8-12个核心款（占销量60%+的款），每款标注预期动销率和推荐理由
+   - avoidList：明确不建议铺货的品类和原因（如：VIP中该风格占比<5%、市场动销率低、库存已有大量积压）
+   - stockStrategy：首单/追单比例、补货触发条件
+   原则：宁可少SKU多深度，不要多SKU浅深度。核心款做足颜色和尺码，非核心款只做1-2色。
+${hasVip && hasMarket ? `9. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）` : ""}`;
 
     // 6. 调用AI API
     const useDeepseek = !!deepseekKey;
@@ -435,7 +454,16 @@ ${hasVip && hasMarket ? `8. 双数据源对齐原则（最重要）：色彩/风
       return NextResponse.json({ source: "mock_fallback", report: generateMockReport(brandName, season, colorLabel, styleLabel, priceBand) });
     }
 
-    return NextResponse.json({ source: "ai", report });
+    return NextResponse.json({
+      source: "ai",
+      report,
+      assortmentSummary: report.assortmentAdvice ? {
+        coreSkuCount: report.assortmentAdvice.coreSkuList?.length || 0,
+        avoidCount: report.assortmentAdvice.avoidList?.length || 0,
+        totalSkuCount: report.assortmentAdvice.categoryDepth?.reduce((s: number, c: any) => s + (c.skuCount || 0), 0) || 0,
+        stockStrategy: report.assortmentAdvice.stockStrategy || "",
+      } : null,
+    });
   } catch (err: any) {
     console.error("[generate-planning] API error:", err);
     return NextResponse.json({ error: err.message || "服务异常" }, { status: 500 });
