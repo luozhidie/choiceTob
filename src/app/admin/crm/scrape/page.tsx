@@ -261,38 +261,45 @@ export default function CrmScrapePage() {
     if (selected.length === 0) { alert("请至少选择一条有效数据"); return; }
     setImporting(true);
 
-    const { data: existing } = await supabase
-      .from("crm_stores")
-      .select("name")
-      .is("deleted_at", null)
-      .in("name", selected.map(r => r.name));
-    const existingNames = new Set((existing || []).map(e => e.name));
-    const newRecords = selected.filter(r => !existingNames.has(r.name));
-    const dupCount = selected.length - newRecords.length;
+    try {
+      // 查询已存在的店名（避免重复导入）
+      const selectedNames = selected.map(r => r.name);
+      const { data: existing } = await supabase
+        .from("crm_stores")
+        .select("name")
+        .in("name", selectedNames);
+      const existingNames = new Set((existing || []).map(e => e.name));
+      const newRecords = selected.filter(r => !existingNames.has(r.name));
+      const dupCount = selected.length - newRecords.length;
 
-    if (newRecords.length === 0) {
-      setImportResult({ success: 0, failed: 0, dups: dupCount });
-      setImporting(false);
-      return;
-    }
+      if (newRecords.length === 0) {
+        setImportResult({ success: 0, failed: 0, dups: dupCount });
+        setImporting(false);
+        return;
+      }
 
-    const records = newRecords.map(r => ({
-      name: r.name,
-      address: r.address || "",
-      owner_phone: r.phone || "待补充",
-      industry: r.industry,
-      city: r.city || city || "",
-      source: mode === "api" ? "api_scrape" as const : "scrape" as const,
-      source_detail: r.source_detail,
-      status: "active" as const,
-    }));
+      const records = newRecords.map(r => ({
+        name: r.name,
+        address: r.address || "",
+        owner_phone: r.phone || "待补充",
+        industry: r.industry,
+        city: r.city || city || "",
+        source: mode === "api" ? "import" as const : "scrape" as const,
+        source_detail: r.source_detail,
+        status: "active" as const,
+      }));
 
-    const { error } = await supabase.from("crm_stores").insert(records);
-    if (error) {
-      alert("导入失败：" + error.message);
-    } else {
-      setImportResult({ success: newRecords.length, failed: 0, dups: dupCount });
-      setParsedResults(prev => prev.filter(r => !r.selected || existingNames.has(r.name)));
+      const { error } = await supabase.from("crm_stores").insert(records);
+      if (error) {
+        console.error("导入失败:", error);
+        alert("导入失败：" + error.message);
+      } else {
+        setImportResult({ success: newRecords.length, failed: 0, dups: dupCount });
+        setParsedResults(prev => prev.filter(r => !r.selected || existingNames.has(r.name)));
+      }
+    } catch (e: any) {
+      console.error("导入异常:", e);
+      alert("导入异常：" + (e.message || "未知错误"));
     }
     setImporting(false);
   };
