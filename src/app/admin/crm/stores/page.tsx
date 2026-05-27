@@ -237,11 +237,32 @@ export default function CrmStoresPage() {
     URL.revokeObjectURL(url);
   };
 
-  // 导出当前筛选后的门店数据
-  const handleExport = () => {
-    if (stores.length === 0) { alert("没有可导出的数据"); return; }
+  // 导出全部门店数据（不分页）
+  const handleExport = async () => {
+    setLoading(true);
+    let query = supabase
+      .from("crm_stores")
+      .select("*")
+      .is("deleted_at", null)
+      .order("created_at", { ascending: false });
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,owner_phone.ilike.%${search}%,owner_name.ilike.%${search}%,address.ilike.%${search}%`);
+    }
+    if (filterSource) query = query.eq("source", filterSource);
+    if (filterIndustry) query = query.eq("industry", filterIndustry);
+    if (filterStatus) query = query.eq("status", filterStatus);
+
+    const { data, error } = await query;
+    setLoading(false);
+
+    if (error || !data || data.length === 0) {
+      alert("没有可导出的数据");
+      return;
+    }
+
     const headers = ["店名", "手机号", "地址", "联系人", "行业", "来源", "状态", "备注"];
-    const rows = stores.map(s => [
+    const rows = data.map((s: any) => [
       s.name,
       s.owner_phone,
       s.address || "",
@@ -251,12 +272,12 @@ export default function CrmStoresPage() {
       STATUS_MAP[s.status] || s.status,
       s.notes || "",
     ]);
-    const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
+    const csv = [headers.join(","), ...rows.map((r: any[]) => r.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(","))].join("\n");
     const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `门店名单_${new Date().toLocaleDateString("zh-CN")}.csv`;
+    a.download = `门店名单_${new Date().toLocaleDateString("zh-CN")}_${data.length}条.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -480,10 +501,11 @@ export default function CrmStoresPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">行业</label>
-                  <select value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm">
-                    {INDUSTRY_OPTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-                  </select>
+                  <input type="text" list="store-industry-list" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm" placeholder="输入或选择行业" />
+                  <datalist id="store-industry-list">
+                    {INDUSTRY_OPTIONS.map(i => <option key={i} value={i} />)}
+                  </datalist>
                 </div>
               </div>
               <div>

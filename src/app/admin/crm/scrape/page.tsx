@@ -22,7 +22,7 @@ interface ParsedStore {
   rawLines: string[];
 }
 
-const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行"];
+const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行", "美容院", "理发店", "餐饮店", "其他"];
 
 // ======== 高德 POI 搜索（单页）========
 async function searchAmapPoiPage(keyword: string, city: string, page: number = 1): Promise<ParsedStore[]> {
@@ -371,10 +371,11 @@ export default function CrmScrapePage() {
           {/* 粘贴模式 */}
           <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
-              <select value={industry} onChange={(e) => setIndustry(e.target.value)}
-                className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36">
-                {INDUSTRY_OPTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-              </select>
+              <input type="text" list="industry-list" value={industry} onChange={(e) => setIndustry(e.target.value)}
+                className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36" placeholder="行业" />
+              <datalist id="industry-list">
+                {INDUSTRY_OPTIONS.map(i => <option key={i} value={i} />)}
+              </datalist>
               <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
                 className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36" placeholder="城市（如杭州）" />
             </div>
@@ -409,10 +410,8 @@ export default function CrmScrapePage() {
         /* API 采集模式 */
         <div className="bg-white rounded-xl border border-gray-100 p-6 mb-6">
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
-            <select value={industry} onChange={(e) => setIndustry(e.target.value)}
-              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36">
-              {INDUSTRY_OPTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-            </select>
+            <input type="text" list="industry-list" value={industry} onChange={(e) => setIndustry(e.target.value)}
+              className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36" placeholder="行业" />
             <input type="text" value={city} onChange={(e) => setCity(e.target.value)}
               className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36" placeholder="城市（如杭州）" />
             <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
@@ -573,10 +572,8 @@ export default function CrmScrapePage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-primary mb-1">行业</label>
-                <select value={editForm.industry} onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })}
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm">
-                  {INDUSTRY_OPTIONS.map(i => <option key={i} value={i}>{i}</option>)}
-                </select>
+                <input type="text" list="industry-list" value={editForm.industry} onChange={(e) => setEditForm({ ...editForm, industry: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="输入或选择行业" />
               </div>
               <div className="flex items-center justify-end gap-3 pt-4">
                 <button onClick={() => setEditingStore(null)} className="btn-secondary text-sm">取消</button>
