@@ -25,11 +25,11 @@ interface ParsedStore {
 const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行"];
 
 // ======== 高德 POI 搜索 ========
-async function searchAmapPoi(keyword: string, city: string): Promise<ParsedStore[]> {
+async function searchAmapPoi(keyword: string, city: string, page: number = 1): Promise<ParsedStore[]> {
   const apiKey = process.env.NEXT_PUBLIC_AMAP_API_KEY;
   if (!apiKey) throw new Error("未配置高德地图API密钥（NEXT_PUBLIC_AMAP_API_KEY）");
 
-  const url = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city)}&output=json&key=${apiKey}&offset=20&page=1&extensions=base`;
+  const url = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city)}&output=json&key=${apiKey}&offset=50&page=${page}&extensions=base`;
   const res = await fetch(url);
   const data = await res.json();
 
@@ -52,11 +52,11 @@ async function searchAmapPoi(keyword: string, city: string): Promise<ParsedStore
 }
 
 // ======== 百度 POI 搜索 ========
-async function searchBaiduPoi(keyword: string, city: string): Promise<ParsedStore[]> {
+async function searchBaiduPoi(keyword: string, city: string, page: number = 0): Promise<ParsedStore[]> {
   const apiKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK;
   if (!apiKey) throw new Error("未配置百度地图API密钥（NEXT_PUBLIC_BAIDU_MAP_AK）");
 
-  const url = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(keyword)}&region=${encodeURIComponent(city)}&output=json&ak=${apiKey}`;
+  const url = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(keyword)}&region=${encodeURIComponent(city)}&output=json&ak=${apiKey}&page_size=50&page_num=${page}`;
   const res = await fetch(url);
   const data = await res.json();
 
@@ -76,6 +76,25 @@ async function searchBaiduPoi(keyword: string, city: string): Promise<ParsedStor
     parsed: !!poi.telephone,
     rawLines: [poi.name, poi.address, poi.telephone].filter(Boolean),
   }));
+}
+
+// ======== 合并去重（按店名+地址）========
+function mergeAndDedup(results: ParsedStore[]): ParsedStore[] {
+  const seen = new Map<string, ParsedStore>();
+  for (const r of results) {
+    const key = `${r.name}||${r.address}`.toLowerCase().replace(/\s+/g, "");
+    if (!seen.has(key)) {
+      seen.set(key, r);
+    }
+    // 如果已存在，优先保留有电话的
+    else {
+      const existing = seen.get(key)!;
+      if (!existing.parsed && r.parsed) {
+        seen.set(key, r);
+      }
+    }
+  }
+  return Array.from(seen.values());
 }
 
 // ======== 智能解析器（粘贴模式）========
@@ -183,17 +202,33 @@ export default function CrmScrapePage() {
     setImportResult(null);
 
     try {
-      // 优先用高德，失败则用百度
-      let results: ParsedStore[];
+      const allResults: ParsedStore[] = [];
+
+      // 1. 搜高德（最多50条）
       try {
-        results = await searchAmapPoi(keyword, city);
+        const amapResults = await searchAmapPoi(keyword, city);
+        allResults.push(...amapResults);
+        console.log(`高德返回 ${amapResults.length} 条`);
       } catch (e: any) {
-        console.warn("高德搜索失败，尝试百度：", e.message);
-        results = await searchBaiduPoi(keyword, city);
+        console.warn("高德搜索失败：", e.message);
       }
-      setParsedResults(results);
-      if (results.length === 0) {
+
+      // 2. 搜百度（最多50条，高德成功也搜，补充覆盖）
+      try {
+        const baiduResults = await searchBaiduPoi(keyword, city);
+        allResults.push(...baiduResults);
+        console.log(`百度返回 ${baiduResults.length} 条`);
+      } catch (e: any) {
+        console.warn("百度搜索失败：", e.message);
+      }
+
+      if (allResults.length === 0) {
         setSearchError("未找到结果，请尝试更换关键词或城市");
+      } else {
+        // 3. 合并去重（按店名+地址）
+        const merged = mergeAndDedup(allResults);
+        setParsedResults(merged);
+        console.log(`合并去重后 ${merged.length} 条`);
       }
     } catch (e: any) {
       setSearchError(e.message || "搜索失败");

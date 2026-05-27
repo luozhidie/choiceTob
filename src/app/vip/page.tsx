@@ -175,9 +175,9 @@ export default function VIPPage() {
     new Date(profile.membership_expires_at) > new Date();
 
   const currentLabel =
-    profile?.membership_type === "view_price" ? "基础VIP" :
-    profile?.membership_type === "pro" ? "进阶VIP" :
-    profile?.membership_type === "deposit_discount" ? "高阶VIP" : "会员";
+    (profile?.membership_type as string) === "view_price" ? "基础VIP" :
+    (profile?.membership_type as string) === "pro" ? "进阶VIP" :
+    (profile?.membership_type as string) === "deposit_discount" ? "高阶VIP" : "会员";
 
   return (
     <div className="min-h-screen bg-gray-50">
