@@ -7,7 +7,7 @@ import Link from "next/link";
 import {
   Plus, Pencil, Trash2, Save, X, Loader2, Search,
   ChevronLeft, ChevronRight, Phone, MapPin, Store as StoreIcon,
-  Upload, Download, Eye, Building2, Clock, Tag, Filter, CheckSquare, Square, FileText,
+  Upload, Download, Eye, Building2, Clock, Tag, Filter, CheckSquare, Square, FileText, MessageCircle,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -32,6 +32,7 @@ interface CrmStore {
   // 关联
   contact_count?: number;
   latest_follow_up_at?: string | null;
+  wechat_added?: boolean;
 }
 
 const SOURCE_MAP: Record<string, string> = {
@@ -94,6 +95,9 @@ export default function CrmStoresPage() {
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [exportFormat, setExportFormat] = useState<"vcf" | "xlsx" | "txt">("vcf");
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showWechatModal, setShowWechatModal] = useState(false);
+  const [wechatStore, setWechatStore] = useState<CrmStore | null>(null);
+  const [wechatForm, setWechatForm] = useState({ wechat_id: "", remark: "" });
   const router = useRouter();
   const supabase = createClient();
 
@@ -119,11 +123,12 @@ export default function CrmStoresPage() {
 
     const { data, error, count } = await query;
     if (!error && data) {
-      // 获取每个门店的联系人数和最近跟进
+      // 获取每个门店的联系人数、最近跟进、是否已加微信
       const storeIds = data.map(s => s.id);
-      const [contactRes, followRes] = await Promise.all([
+      const [contactRes, followRes, wechatRes] = await Promise.all([
         supabase.from("crm_contacts").select("store_id").is("deleted_at", null).in("store_id", storeIds),
         supabase.from("crm_follow_ups").select("store_id, follow_time").in("store_id", storeIds).order("follow_time", { ascending: false }),
+        supabase.from("crm_contacts").select("store_id").eq("source", "wechat_add").is("deleted_at", null).in("store_id", storeIds),
       ]);
 
       const contactCounts: Record<string, number> = {};
@@ -132,10 +137,13 @@ export default function CrmStoresPage() {
       const latestFollow: Record<string, string> = {};
       (followRes.data || []).forEach(f => { if (!latestFollow[f.store_id]) latestFollow[f.store_id] = f.follow_time; });
 
+      const wechatAddedIds = new Set((wechatRes.data || []).map((c: any) => c.store_id));
+
       const enriched = data.map(s => ({
         ...s,
         contact_count: contactCounts[s.id] || 0,
         latest_follow_up_at: latestFollow[s.id] || null,
+        wechat_added: wechatAddedIds.has(s.id),
       }));
       setStores(enriched);
       setTotal(count || 0);
@@ -185,6 +193,39 @@ export default function CrmStoresPage() {
     if (!confirm("确定要删除这家门店吗？")) return;
     const { error } = await supabase.from("crm_stores").update({ deleted_at: new Date().toISOString() }).eq("id", id);
     if (error) { alert("删除失败：" + error.message); return; }
+    fetchStores();
+  };
+
+  const handleWechatAdd = async (store: CrmStore) => {
+    setWechatStore(store);
+    setWechatForm({ wechat_id: "", remark: "" });
+    setShowWechatModal(true);
+  };
+
+  const submitWechatAdd = async () => {
+    if (!wechatStore) return;
+    const now = new Date().toISOString();
+    const notes = wechatStore.notes ? wechatStore.notes + "\n已添加微信" : "已添加微信";
+    const { error: contactError } = await supabase.from("crm_contacts").insert([{
+      store_id: wechatStore.id,
+      name: wechatStore.name,
+      phone: wechatStore.owner_phone,
+      wechat_id: wechatForm.wechat_id || null,
+      source: "wechat_add",
+      status: "active",
+    }]);
+    if (contactError) { alert("联系人创建失败：" + contactError.message); return; }
+    const { error: followError } = await supabase.from("crm_follow_ups").insert([{
+      store_id: wechatStore.id,
+      type: "wechat_add",
+      content: "已添加微信" + (wechatForm.remark ? "：" + wechatForm.remark : ""),
+      follow_time: now,
+    }]);
+    if (followError) { alert("跟进记录创建失败：" + followError.message); return; }
+    const { error: storeError } = await supabase.from("crm_stores").update({ notes }).eq("id", wechatStore.id);
+    if (storeError) { alert("门店备注更新失败：" + storeError.message); return; }
+    setShowWechatModal(false);
+    setWechatStore(null);
     fetchStores();
   };
 
@@ -571,6 +612,11 @@ export default function CrmStoresPage() {
                           <button onClick={() => setShowDetail(store)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg" title="详情"><Eye className="w-4 h-4" /></button>
                           <Link href={`/admin/crm/contacts?storeId=${store.id}`} className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg" title="联系人"><Phone className="w-4 h-4" /></Link>
                           <button onClick={() => handleEdit(store)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg" title="编辑"><Pencil className="w-4 h-4" /></button>
+                          {store.wechat_added ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800" title="已加微信">已加</span>
+                          ) : (
+                            <button onClick={() => handleWechatAdd(store)} className="p-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg" title="加微信"><MessageCircle className="w-4 h-4" /></button>
+                          )}
                           <button onClick={() => handleDelete(store.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg" title="删除"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </td>
@@ -768,6 +814,34 @@ export default function CrmStoresPage() {
                   {importing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                   {importing ? "导入中..." : "开始导入"}
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* 加微信弹窗 */}
+      {showWechatModal && wechatStore && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary">加微信 - {wechatStore.name}</h2>
+              <button onClick={() => setShowWechatModal(false)} className="p-2 hover:bg-gray-100 rounded-lg"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="text-sm text-muted-foreground">门店：{wechatStore.name} / {wechatStore.owner_phone}</div>
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">微信号 <span className="text-gray-400 text-xs">（选填）</span></label>
+                <input type="text" value={wechatForm.wechat_id} onChange={(e) => setWechatForm({ ...wechatForm, wechat_id: e.target.value })}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent text-sm" placeholder="请输入微信号" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">备注 <span className="text-gray-400 text-xs">（选填）</span></label>
+                <textarea value={wechatForm.remark} onChange={(e) => setWechatForm({ ...wechatForm, remark: e.target.value })} rows={3}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="备注信息（选填）" />
+              </div>
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
+                <button onClick={() => setShowWechatModal(false)} className="btn-secondary">取消</button>
+                <button onClick={submitWechatAdd} className="btn-primary flex items-center gap-2"><MessageCircle className="w-4 h-4" />确认添加</button>
               </div>
             </div>
           </div>
