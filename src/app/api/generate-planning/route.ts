@@ -9,6 +9,7 @@ async function fetchStoreInsights(storeId: string) {
 
   const storeData = (data as any)?.business_data || {};
   let memberStats: Record<string, any> = (data as any)?.member_stats || {};
+  const businessGoals: Record<string, any> = (data as any)?.business_goals || {};
 
   try {
     const { data: vipList } = await supabase
@@ -146,7 +147,7 @@ async function fetchStoreInsights(storeId: string) {
     console.error("[generate-planning] VIP数据查询失败:", e.message);
   }
 
-  return { storeData, memberStats };
+  return { storeData, memberStats, businessGoals };
 }
 
 /* ============ 辅助函数：构建VIP数据prompt段 ============ */
@@ -288,13 +289,15 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { brandName, season, colorPref, colorLabel, marketStyle, styleLabel, priceBand, targetAge, shopSize, notes, storeId } = body;
 
-    // 1. 获取店铺数据+VIP画像
+    // 1. 获取店铺数据+VIP画像+经营目标
     let storeData: Record<string, any> | null = null;
     let memberStats: Record<string, any> | null = null;
+    let businessGoals: Record<string, any> | null = null;
     if (storeId) {
       const insights = await fetchStoreInsights(storeId);
       storeData = insights.storeData;
       memberStats = insights.memberStats;
+      businessGoals = insights.businessGoals;
     }
 
     // 2. 采集市场数据
@@ -381,6 +384,29 @@ export async function POST(req: NextRequest) {
 - 连带率：${storeData.attach_rate || "未填写"}
 - 均件单价：${storeData.avg_item_price ? `¥${storeData.avg_item_price}` : "未填写"}
 - 月营业额：${storeData.monthly_revenue ? `¥${storeData.monthly_revenue}` : "未填写"}`;
+    }
+
+    // 注入经营目标约束
+    if (businessGoals && Object.keys(businessGoals).length > 0) {
+      userPrompt += `
+
+【经营目标与约束】（企划必须服务于这些目标，不得偏离）
+- 年度采购预算：¥${businessGoals.annual_budget || "未设定"}
+- 季度采购预算：¥${businessGoals.quarterly_budget || "未设定"}
+- 年度业绩目标：¥${businessGoals.annual_revenue_target || "未设定"}
+- 季度业绩目标：¥${businessGoals.quarterly_revenue_target || "未设定"}
+- 毛利率目标：${businessGoals.gross_margin_target ? (businessGoals.gross_margin_target * 100).toFixed(0) + "%" : "未设定"}
+- 净利率目标：${businessGoals.net_margin_target ? (businessGoals.net_margin_target * 100).toFixed(0) + "%" : "未设定"}
+- 售罄率目标：${businessGoals.sell_through_target ? (businessGoals.sell_through_target * 100).toFixed(0) + "%" : "未设定"}
+- 库存周转天数目标：${businessGoals.inventory_turnover_days || "未设定"}天
+- 连带率目标：${businessGoals.attachment_rate_target || "未设定"}
+
+⚠ 目标约束（必须遵守）：
+1. assortmentAdvice中SKU总数和采购金额不得超过季度采购预算
+2. pricePlan中利润款占比必须能支撑毛利率目标
+3. coreSkuList的预期售罄率必须达到售罄率目标
+4. avoidList要包含与营利目标冲突的品类（如低毛利且高库存积压的品类）
+5. stockStrategy要体现库存周转天数目标 — 首单比例根据周转目标调整`;
     }
 
     // 注入VIP画像数据

@@ -123,9 +123,10 @@ export async function GET(req: NextRequest) {
 
     // ===== 经营数据 =====
     if (sections.includes("business")) {
-      const { data: store } = await supabase.from("stores").select("business_data, member_stats").eq("id", storeId).single();
+      const { data: store } = await supabase.from("stores").select("business_data, member_stats, business_goals").eq("id", storeId).single();
       result.business = (store as any)?.business_data || {};
       result.memberStats = (store as any)?.member_stats || {};
+      result.goals = (store as any)?.business_goals || {};
     }
 
     // ===== 库存概览 =====

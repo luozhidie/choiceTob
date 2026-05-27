@@ -4,319 +4,489 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import {
-  Plus,
-  Pencil,
-  Trash2,
-  Upload,
-  Save,
-  X,
-  Eye,
-  EyeOff,
   Loader2,
   Megaphone,
+  Target,
+  Users,
+  Package,
+  TrendingUp,
+  DollarSign,
+  Calendar,
+  AlertTriangle,
+  ChevronDown,
+  ChevronRight,
+  Save,
+  Sparkles,
+  BarChart3,
 } from "lucide-react";
 
-interface MarketingCampaign {
+interface Store {
   id: string;
-  title: string;
-  season: string;
-  content: string;
-  images: string[];
-  is_published: boolean;
-  created_at: string;
+  name: string;
+  business_goals?: Record<string, any>;
 }
 
-const seasons = ["春季", "夏季", "秋季", "冬季", "全年"];
+const campaignTypes = [
+  { value: "VIP召回", label: "VIP召回", desc: "唤醒沉睡VIP，提升复购率" },
+  { value: "新品推广", label: "新品推广", desc: "新季新品上市推广" },
+  { value: "清仓促销", label: "清仓促销", desc: "消化滞销库存" },
+  { value: "节日营销", label: "节日营销", desc: "节日/纪念日主题营销" },
+  { value: "会员日", label: "会员日", desc: "VIP专属权益活动" },
+  { value: "综合营销", label: "综合营销", desc: "多目标综合方案" },
+];
 
-export default function AdminMarketingPage() {
-  const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<MarketingCampaign | null>(null);
-  const [formData, setFormData] = useState({
-    title: "",
-    season: "春季",
-    content: "",
-    images: [] as string[],
-    is_published: false,
-  });
-  const [uploading, setUploading] = useState(false);
+const seasons = ["春季", "夏季", "秋季", "冬季"];
+
+export default function AdminMarketingPlanPage() {
+  const [stores, setStores] = useState<Store[]>([]);
+  const [selectedStore, setSelectedStore] = useState("");
+  const [season, setSeason] = useState("夏季");
+  const [campaignType, setCampaignType] = useState("综合营销");
+  const [budget, setBudget] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<Record<string, any> | null>(null);
+  const [dataSources, setDataSources] = useState<Record<string, any> | null>(null);
+  const [storeGoals, setStoreGoals] = useState<Record<string, any> | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ budgetPlan: true, vipStrategies: true, timeline: true, productFocus: true });
+  const [savedCampaigns, setSavedCampaigns] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
   const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
     checkUser();
-    fetchCampaigns();
+    fetchStores();
+    fetchSavedCampaigns();
   }, []);
 
   const checkUser = async () => {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
+    if (!user) router.push("/admin/login");
   };
 
-  const fetchCampaigns = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
+  const fetchStores = async () => {
+    const { data } = await supabase.from("stores").select("id, name, business_goals").order("name");
+    if (data) setStores(data);
+  };
+
+  const fetchSavedCampaigns = async () => {
+    const { data } = await supabase
       .from("marketing_campaigns")
       .select("*")
-      .order("created_at", { ascending: false });
+      .not("ai_report", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setSavedCampaigns(data);
+  };
 
-    if (error) {
-      console.error("Error fetching campaigns:", error);
+  const handleStoreChange = (storeId: string) => {
+    setSelectedStore(storeId);
+    const store = stores.find(s => s.id === storeId);
+    if (store?.business_goals && Object.keys(store.business_goals).length > 0) {
+      setStoreGoals(store.business_goals);
     } else {
-      setCampaigns(data || []);
+      setStoreGoals(null);
     }
-    setLoading(false);
   };
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setUploading(true);
-    const uploadedUrls: string[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("marketing-images")
-        .upload(fileName, file);
-
-      if (uploadError) {
-        alert(`上传失败：${uploadError.message}`);
-        continue;
-      }
-
-      const { data } = supabase.storage
-        .from("marketing-images")
-        .getPublicUrl(fileName);
-
-      uploadedUrls.push(data.publicUrl);
-    }
-
-    setFormData({ ...formData, images: [...formData.images, ...uploadedUrls] });
-    setUploading(false);
+  const toggleSection = (key: string) => {
+    setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const removeImage = (index: number) => {
-    const newImages = [...formData.images];
-    newImages.splice(index, 1);
-    setFormData({ ...formData, images: newImages });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (editingCampaign) {
-      const { error } = await supabase
-        .from("marketing_campaigns")
-        .update(formData)
-        .eq("id", editingCampaign.id);
-
-      if (error) {
-        alert("更新失败：" + error.message);
-        return;
-      }
-    } else {
-      const { error } = await supabase
-        .from("marketing_campaigns")
-        .insert([formData]);
-
-      if (error) {
-        alert("创建失败：" + error.message);
-        return;
-      }
-    }
-
-    setShowModal(false);
-    setEditingCampaign(null);
-    setFormData({ title: "", season: "春季", content: "", images: [], is_published: false });
-    fetchCampaigns();
-  };
-
-  const handleEdit = (campaign: MarketingCampaign) => {
-    setEditingCampaign(campaign);
-    setFormData({
-      title: campaign.title,
-      season: campaign.season || "春季",
-      content: campaign.content || "",
-      images: campaign.images || [],
-      is_published: campaign.is_published,
-    });
-    setShowModal(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个营销方案吗？")) return;
-
-    const { error } = await supabase
-      .from("marketing_campaigns")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
+  const handleGenerate = async () => {
+    if (!selectedStore) {
+      alert("请选择店铺");
       return;
     }
+    setLoading(true);
+    setResult(null);
+    setDataSources(null);
 
-    fetchCampaigns();
+    try {
+      const resp = await fetch("/api/generate-marketing-plan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          storeId: selectedStore,
+          season,
+          campaignType,
+          budget: budget ? parseInt(budget) : undefined,
+          notes,
+        }),
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        alert(err.error || "生成失败");
+        return;
+      }
+
+      const data = await resp.json();
+      setResult(data.report);
+      setDataSources(data.dataSources);
+    } catch (err: any) {
+      alert("生成失败: " + err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const togglePublish = async (campaign: MarketingCampaign) => {
-    const { error } = await supabase
-      .from("marketing_campaigns")
-      .update({ is_published: !campaign.is_published })
-      .eq("id", campaign.id);
+  const handleSave = async () => {
+    if (!result || !selectedStore) return;
+
+    const { error } = await supabase.from("marketing_campaigns").insert([{
+      title: result.title || `${season}${campaignType}营销方案`,
+      season,
+      content: result.summary || "",
+      store_id: selectedStore,
+      campaign_type: campaignType,
+      budget_amount: result.budgetPlan?.totalBudget || 0,
+      expected_revenue: result.budgetPlan?.expectedRevenue || 0,
+      expected_roi: result.budgetPlan?.expectedROI || 0,
+      target_audience: result.targetAudience || {},
+      data_sources: dataSources || {},
+      ai_report: result,
+      is_published: false,
+    }]);
 
     if (error) {
-      alert("操作失败：" + error.message);
+      alert("保存失败: " + error.message);
       return;
     }
-
-    fetchCampaigns();
+    alert("方案已保存！");
+    fetchSavedCampaigns();
+    setActiveTab("saved");
   };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-primary">营销策划管理</h1>
-          <p className="text-muted-foreground mt-1">上传和管理营销方案</p>
+          <h1 className="text-2xl font-bold text-primary">营销策划</h1>
+          <p className="text-muted-foreground mt-1">基于VIP画像+市场趋势+经营目标的精准营销方案</p>
         </div>
+      </div>
+
+      {/* Tab切换 */}
+      <div className="flex gap-2 mb-6">
         <button
-          onClick={() => {
-            setEditingCampaign(null);
-            setFormData({ title: "", season: "春季", content: "", images: [], is_published: false });
-            setShowModal(true);
-          }}
-          className="btn-primary flex items-center gap-2"
+          onClick={() => setActiveTab("generate")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "generate" ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
         >
-          <Plus className="w-4 h-4" />
-          新增方案
+          <Sparkles className="w-4 h-4 inline mr-1" />AI生成方案
+        </button>
+        <button
+          onClick={() => setActiveTab("saved")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === "saved" ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+        >
+          <Save className="w-4 h-4 inline mr-1" />已保存方案 ({savedCampaigns.length})
         </button>
       </div>
 
-      {loading ? (
-        <div className="text-center py-12">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
-          <p className="text-muted-foreground">加载中...</p>
-        </div>
-      ) : campaigns.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
-          <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-          <p className="text-muted-foreground">暂无营销方案，点击"新增方案"开始上传</p>
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-100">
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">图片</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">标题</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">季节</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">状态</th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">操作</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {campaigns.map((campaign) => (
-                <tr key={campaign.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-6 py-4">
-                    {campaign.images && campaign.images.length > 0 ? (
-                      <img src={campaign.images[0]} alt={campaign.title} className="w-16 h-12 object-cover rounded-lg" />
-                    ) : (
-                      <div className="w-16 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <Megaphone className="w-6 h-6 text-gray-400" />
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-6 py-4 font-medium text-primary max-w-xs truncate">{campaign.title}</td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">{campaign.season}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button onClick={() => togglePublish(campaign)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${campaign.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
-                      {campaign.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => handleEdit(campaign)} className="p-2 text-gray-600 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors" title="编辑"><Pencil className="w-4 h-4" /></button>
-                      <button onClick={() => handleDelete(campaign.id)} className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="删除"><Trash2 className="w-4 h-4" /></button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-primary">{editingCampaign ? "编辑方案" : "新增方案"}</h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-5">
+      {activeTab === "generate" ? (
+        <div className="space-y-6">
+          {/* 输入区 */}
+          <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <h2 className="text-lg font-semibold text-primary mb-4">方案参数</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">方案标题 <span className="text-red-500">*</span></label>
-                <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="输入营销方案标题" />
+                <label className="block text-sm font-medium text-primary mb-2">选择店铺 <span className="text-red-500">*</span></label>
+                <select
+                  value={selectedStore}
+                  onChange={(e) => handleStoreChange(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                >
+                  <option value="">选择店铺</option>
+                  {stores.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">适用季节</label>
-                <div className="flex flex-wrap gap-2">
-                  {seasons.map((s) => (
-                    <button key={s} type="button" onClick={() => setFormData({ ...formData, season: s })} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${formData.season === s ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{s}</button>
+                <label className="block text-sm font-medium text-primary mb-2">季节</label>
+                <div className="flex gap-2">
+                  {seasons.map(s => (
+                    <button key={s} type="button" onClick={() => setSeason(s)} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${season === s ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>{s}</button>
                   ))}
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">方案内容</label>
-                <textarea value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} rows={4} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入营销方案内容" />
+                <label className="block text-sm font-medium text-primary mb-2">活动类型</label>
+                <div className="flex flex-wrap gap-2">
+                  {campaignTypes.map(ct => (
+                    <button key={ct.value} type="button" onClick={() => setCampaignType(ct.value)} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${campaignType === ct.value ? "bg-accent text-primary" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`} title={ct.desc}>{ct.label}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-primary mb-2">活动预算（元）</label>
+                <input
+                  type="number"
+                  value={budget}
+                  onChange={(e) => setBudget(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  placeholder="留空则按店铺目标自动计算"
+                />
+              </div>
+            </div>
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-primary mb-2">补充说明</label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none"
+                placeholder="如：即将到来的节日、特定活动需求等"
+              />
+            </div>
+
+            {/* 经营目标预览 */}
+            {storeGoals && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                <h3 className="text-sm font-semibold text-blue-800 mb-2 flex items-center gap-1"><Target className="w-4 h-4" />店铺经营目标</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                  {storeGoals.annual_revenue_target && <div><span className="text-blue-600">年度业绩：</span>¥{storeGoals.annual_revenue_target.toLocaleString()}</div>}
+                  {storeGoals.quarterly_revenue_target && <div><span className="text-blue-600">季度业绩：</span>¥{storeGoals.quarterly_revenue_target.toLocaleString()}</div>}
+                  {storeGoals.gross_margin_target && <div><span className="text-blue-600">毛利率目标：</span>{(storeGoals.gross_margin_target * 100).toFixed(0)}%</div>}
+                  {storeGoals.sell_through_target && <div><span className="text-blue-600">售罄率目标：</span>{(storeGoals.sell_through_target * 100).toFixed(0)}%</div>}
+                  {storeGoals.attachment_rate_target && <div><span className="text-blue-600">连带率目标：</span>{storeGoals.attachment_rate_target}</div>}
+                  {storeGoals.new_vip_target && <div><span className="text-blue-600">新增VIP：</span>{storeGoals.new_vip_target}人</div>}
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleGenerate}
+                disabled={loading || !selectedStore}
+                className="btn-primary flex items-center gap-2 disabled:opacity-50"
+              >
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" />生成中（约30秒）</> : <><Sparkles className="w-4 h-4" />生成营销方案</>}
+              </button>
+            </div>
+          </div>
+
+          {/* 数据源概览 */}
+          {dataSources && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                <Users className="w-5 h-5 mx-auto text-blue-500 mb-1" />
+                <div className="text-2xl font-bold text-primary">{dataSources.vipCount}</div>
+                <div className="text-xs text-muted-foreground">VIP客户</div>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                <TrendingUp className="w-5 h-5 mx-auto text-orange-500 mb-1" />
+                <div className="text-2xl font-bold text-primary">{dataSources.trendItems}</div>
+                <div className="text-xs text-muted-foreground">趋势数据</div>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                <Package className="w-5 h-5 mx-auto text-green-500 mb-1" />
+                <div className="text-2xl font-bold text-primary">{dataSources.inventorySKUs}</div>
+                <div className="text-xs text-muted-foreground">库存SKU</div>
+              </div>
+              <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+                <BarChart3 className="w-5 h-5 mx-auto text-purple-500 mb-1" />
+                <div className="text-2xl font-bold text-primary">{dataSources.inventorySellThrough}%</div>
+                <div className="text-xs text-muted-foreground">动销率</div>
+              </div>
+            </div>
+          )}
+
+          {/* 结果展示 */}
+          {result && (
+            <div className="space-y-4">
+              {/* 概要 */}
+              <div className="bg-white rounded-xl border border-gray-100 p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h2 className="text-xl font-bold text-primary">{result.title}</h2>
+                  <button onClick={handleSave} className="btn-secondary flex items-center gap-1 text-sm"><Save className="w-3.5 h-3.5" />保存方案</button>
+                </div>
+                <p className="text-gray-600">{result.summary}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-accent/10 text-accent rounded text-xs">{result.campaignType}</span>
+                  {result.budgetPlan?.expectedROI && <span className="px-2 py-1 bg-green-50 text-green-700 rounded text-xs">预期ROI: {result.budgetPlan.expectedROI}x</span>}
+                  {result.budgetPlan?.expectedRevenue && <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs">预期营收: ¥{result.budgetPlan.expectedRevenue?.toLocaleString()}</span>}
+                </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-primary mb-2">方案图片</label>
-                {formData.images.length > 0 && (
-                  <div className="grid grid-cols-4 gap-3 mb-4">
-                    {formData.images.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <img src={url} alt={`图片 ${index + 1}`} className="w-full h-24 object-cover rounded-lg" />
-                        <button type="button" onClick={() => removeImage(index)} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"><X className="w-3 h-3" /></button>
+              {/* 目标客群 */}
+              {result.targetAudience && (
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <h3 className="text-base font-semibold text-primary mb-3 flex items-center gap-2"><Users className="w-4 h-4 text-blue-500" />目标客群</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">{result.targetAudience.primarySegment}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {(result.targetAudience.colorSeasons || []).map((cs: string) => (
+                          <span key={cs} className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{cs}</span>
+                        ))}
+                        {(result.targetAudience.styles || []).map((st: string) => (
+                          <span key={st} className="px-2 py-0.5 bg-pink-50 text-pink-700 rounded text-xs">{st}</span>
+                        ))}
+                        {(result.targetAudience.spendingBands || []).map((sb: string) => (
+                          <span key={sb} className="px-2 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">{sb}</span>
+                        ))}
+                      </div>
+                    </div>
+                    {result.targetAudience.estimatedReach > 0 && (
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-accent">{result.targetAudience.estimatedReach}</div>
+                        <div className="text-xs text-muted-foreground">预计触达人数</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* 预算计划 */}
+              {result.budgetPlan && (
+                <CollapsibleSection title="预算计划" icon={DollarSign} color="green" expanded={expandedSections.budgetPlan} onToggle={() => toggleSection("budgetPlan")}>
+                  <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <div className="text-xl font-bold text-green-700">¥{(result.budgetPlan.totalBudget || 0).toLocaleString()}</div>
+                      <div className="text-xs text-green-600">总预算</div>
+                    </div>
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <div className="text-xl font-bold text-blue-700">¥{(result.budgetPlan.expectedRevenue || 0).toLocaleString()}</div>
+                      <div className="text-xs text-blue-600">预期营收</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <div className="text-xl font-bold text-purple-700">{result.budgetPlan.expectedROI || 0}x</div>
+                      <div className="text-xs text-purple-600">预期ROI</div>
+                    </div>
+                  </div>
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b border-gray-100"><th className="text-left py-2 text-muted-foreground">预算项</th><th className="text-right py-2 text-muted-foreground">金额</th><th className="text-right py-2 text-muted-foreground">占比</th><th className="text-left py-2 text-muted-foreground">原因</th></tr></thead>
+                    <tbody>
+                      {(result.budgetPlan.allocation || []).map((item: any, i: number) => (
+                        <tr key={i} className="border-b border-gray-50"><td className="py-2 font-medium">{item.item}</td><td className="text-right">¥{(item.amount || 0).toLocaleString()}</td><td className="text-right">{item.percentage}</td><td className="text-gray-600">{item.rationale}</td></tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CollapsibleSection>
+              )}
+
+              {/* VIP策略 */}
+              {result.vipStrategies && (
+                <CollapsibleSection title="VIP分层策略" icon={Users} color="purple" expanded={expandedSections.vipStrategies} onToggle={() => toggleSection("vipStrategies")}>
+                  <div className="space-y-3">
+                    {result.vipStrategies.map((vs: any, i: number) => (
+                      <div key={i} className="border border-gray-100 rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-semibold text-primary">{vs.segment}</span>
+                          <div className="flex gap-3 text-xs">
+                            {vs.expectedConversionRate && <span className="text-blue-600">转化率 {vs.expectedConversionRate}</span>}
+                            {vs.expectedRevenue && <span className="text-green-600">¥{vs.expectedRevenue?.toLocaleString()}</span>}
+                          </div>
+                        </div>
+                        <p className="text-sm text-gray-600 mb-1">{vs.strategy}</p>
                       </div>
                     ))}
                   </div>
-                )}
-                <label className="flex flex-col items-center justify-center w-full h-32 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors">
-                  <Upload className="w-8 h-8 text-gray-400 mb-2" />
-                  <span className="text-sm text-muted-foreground">{uploading ? "上传中..." : "点击上传图片（支持多张）"}</span>
-                  <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} className="hidden" />
-                </label>
-              </div>
+                </CollapsibleSection>
+              )}
 
-              <div className="flex items-center gap-3">
-                <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
-                <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
-              </div>
+              {/* 时间线 */}
+              {result.timeline && (
+                <CollapsibleSection title="执行时间线" icon={Calendar} color="blue" expanded={expandedSections.timeline} onToggle={() => toggleSection("timeline")}>
+                  <div className="space-y-3">
+                    {result.timeline.map((phase: any, i: number) => (
+                      <div key={i} className="border-l-3 border-accent pl-4 py-2">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-primary">{phase.phase}</span>
+                          <span className="text-xs text-muted-foreground">{phase.days}</span>
+                          {phase.budget > 0 && <span className="text-xs text-green-600">预算 ¥{phase.budget?.toLocaleString()}</span>}
+                        </div>
+                        <div className="text-sm text-gray-600 mb-1">{(phase.actions || []).join(" → ")}</div>
+                        {phase.kpis && <div className="text-xs text-accent">KPI: {(phase.kpis || []).join("、")}</div>}
+                      </div>
+                    ))}
+                  </div>
+                </CollapsibleSection>
+              )}
 
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-100">
-                <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">取消</button>
-                <button type="submit" className="btn-primary flex items-center gap-2"><Save className="w-4 h-4" />{editingCampaign ? "保存修改" : "新增方案"}</button>
+              {/* 推广品类 */}
+              {result.productFocus && (
+                <CollapsibleSection title="推广品类重点" icon={Package} color="orange" expanded={expandedSections.productFocus} onToggle={() => toggleSection("productFocus")}>
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b border-gray-100"><th className="text-left py-2 text-muted-foreground">品类</th><th className="text-left py-2 text-muted-foreground">策略</th><th className="text-left py-2 text-muted-foreground">原因</th><th className="text-center py-2 text-muted-foreground">优先级</th></tr></thead>
+                    <tbody>
+                      {result.productFocus.map((pf: any, i: number) => (
+                        <tr key={i} className="border-b border-gray-50">
+                          <td className="py-2 font-medium">{pf.category}</td>
+                          <td className="text-gray-600">{pf.strategy}</td>
+                          <td className="text-gray-500 text-xs">{pf.reason}</td>
+                          <td className="text-center"><span className={`px-2 py-0.5 rounded text-xs font-medium ${pf.priority === "高" ? "bg-red-50 text-red-700" : pf.priority === "中" ? "bg-yellow-50 text-yellow-700" : "bg-gray-50 text-gray-700"}`}>{pf.priority}</span></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </CollapsibleSection>
+              )}
+
+              {/* 风险 */}
+              {result.riskMitigation && result.riskMitigation.length > 0 && (
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <h3 className="text-base font-semibold text-primary mb-3 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-amber-500" />风险与应对</h3>
+                  <div className="space-y-2">
+                    {result.riskMitigation.map((r: any, i: number) => (
+                      <div key={i} className="flex items-start gap-3 p-3 bg-amber-50 rounded-lg">
+                        <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${r.probability === "高" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{r.probability}</span>
+                        <div><div className="text-sm font-medium text-amber-900">{r.risk}</div><div className="text-xs text-amber-700">{r.mitigation}</div></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* 已保存方案列表 */
+        <div className="space-y-4">
+          {savedCampaigns.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
+              <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-muted-foreground">暂无已保存的营销方案</p>
+            </div>
+          ) : (
+            savedCampaigns.map(campaign => (
+              <div key={campaign.id} className="bg-white rounded-xl border border-gray-100 p-5">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <h3 className="font-semibold text-primary">{campaign.title}</h3>
+                    <div className="flex gap-2 mt-1">
+                      {campaign.season && <span className="px-2 py-0.5 bg-accent/10 text-accent rounded text-xs">{campaign.season}</span>}
+                      {campaign.campaign_type && <span className="px-2 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{campaign.campaign_type}</span>}
+                      {campaign.budget_amount > 0 && <span className="px-2 py-0.5 bg-green-50 text-green-700 rounded text-xs">预算 ¥{campaign.budget_amount?.toLocaleString()}</span>}
+                    </div>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs ${campaign.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>{campaign.is_published ? "已发布" : "草稿"}</span>
+                </div>
+                {campaign.content && <p className="text-sm text-gray-600 mt-2">{campaign.content}</p>}
+                <div className="text-xs text-muted-foreground mt-2">{new Date(campaign.created_at).toLocaleDateString()}</div>
               </div>
-            </form>
-          </div>
+            ))
+          )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ============ 可折叠区域组件 ============ */
+function CollapsibleSection({ title, icon: Icon, color, expanded, onToggle, children }: {
+  title: string; icon: any; color: string; expanded: boolean; onToggle: () => void; children: React.ReactNode;
+}) {
+  const colorMap: Record<string, string> = {
+    blue: "text-blue-500", green: "text-green-500", purple: "text-purple-500", orange: "text-orange-500", red: "text-red-500",
+  };
+  return (
+    <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+      <button onClick={onToggle} className="w-full flex items-center justify-between p-5 hover:bg-gray-50 transition-colors">
+        <div className="flex items-center gap-2"><Icon className={`w-4 h-4 ${colorMap[color] || "text-gray-500"}`} /><span className="font-semibold text-primary">{title}</span></div>
+        {expanded ? <ChevronDown className="w-4 h-4 text-gray-400" /> : <ChevronRight className="w-4 h-4 text-gray-400" />}
+      </button>
+      {expanded && <div className="px-5 pb-5">{children}</div>}
     </div>
   );
 }

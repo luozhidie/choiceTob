@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     const vipInfo = insights.vip || {};
     const invInfo = insights.inventory || {};
     const bizInfo = insights.business || {};
+    const goalsInfo = insights.goals || {};
 
     // 构建提示词
     const prompt = `你是一位资深服装货盘规划师。请基于以下真实数据，为店铺生成${season}货盘规划方案。
@@ -118,6 +119,24 @@ ${bizInfo.avg_item_price ? `- 均件单价：¥${bizInfo.avg_item_price}` : ""}
 ${bizInfo.conversion_rate ? `- 成交率：${(bizInfo.conversion_rate * 100).toFixed(0)}%` : ""}
 ${bizInfo.attach_rate ? `- 连带率：${bizInfo.attach_rate}` : ""}
 ${budget ? `- 本季采购预算：¥${budget}` : ""}
+
+${Object.keys(goalsInfo).length > 0 ? `### 经营目标与约束（货盘必须服务于这些目标）
+- 年度采购预算：¥${goalsInfo.annual_budget || "未设定"}
+- 季度采购预算：¥${goalsInfo.quarterly_budget || "未设定"}
+- 年度业绩目标：¥${goalsInfo.annual_revenue_target || "未设定"}
+- 季度业绩目标：¥${goalsInfo.quarterly_revenue_target || "未设定"}
+- 毛利率目标：${goalsInfo.gross_margin_target ? (goalsInfo.gross_margin_target * 100).toFixed(0) + "%" : "未设定"}
+- 净利率目标：${goalsInfo.net_margin_target ? (goalsInfo.net_margin_target * 100).toFixed(0) + "%" : "未设定"}
+- 售罄率目标：${goalsInfo.sell_through_target ? (goalsInfo.sell_through_target * 100).toFixed(0) + "%" : "未设定"}
+- 库存周转天数目标：${goalsInfo.inventory_turnover_days || "未设定"}天
+- 连带率目标：${goalsInfo.attachment_rate_target || "未设定"}
+
+⚠ 目标约束（必须遵守）：
+1. 货盘总采购金额不得超过季度采购预算
+2. 利润款占比必须能支撑毛利率目标
+3. 预期售罄率必须达标 — 用此反推SKU数量和深度
+4. 库存周转天数目标决定首单/追单比例 — 周转目标越短首单比例越低
+5. avoidList必须包含与营利目标冲突的品类（低毛利且动销慢）` : ""}
 
 请输出JSON格式的货盘规划方案（在|JSON_START|和|JSON_END|之间）：
 

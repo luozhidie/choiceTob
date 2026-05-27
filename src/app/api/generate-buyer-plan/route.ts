@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
     let storeInsights: Record<string, any> = {};
     if (storeId) {
       try {
-        const resp = await fetch(`${baseUrl}/api/store/insights?storeId=${storeId}&sections=vip,inventory,sales`, {
+        const resp = await fetch(`${baseUrl}/api/store/insights?storeId=${storeId}&sections=vip,business,inventory,sales`, {
           signal: AbortSignal.timeout(12000),
         });
         if (resp.ok) storeInsights = await resp.json();
@@ -43,6 +43,9 @@ export async function POST(req: NextRequest) {
         console.error("[buyer-plan] 店铺洞察获取失败:", e);
       }
     }
+
+    // 1.5 获取经营目标
+    let businessGoals: Record<string, any> = storeInsights.goals || {};
 
     // 2. 获取爆款数据
     let trendItems: any[] = [];
@@ -121,6 +124,18 @@ VIP总数：${totalMembers}人
 【库存现状】${invSummary}
 
 【市场爆款数据】${trendSummary}
+
+${Object.keys(businessGoals).length > 0 ? `【经营目标与约束】（买手方案必须服务于这些目标）
+- 年度采购预算：¥${businessGoals.annual_budget || "未设定"}
+- 季度采购预算：¥${businessGoals.quarterly_budget || "未设定"}
+- 年度业绩目标：¥${businessGoals.annual_revenue_target || "未设定"}
+- 季度业绩目标：¥${businessGoals.quarterly_revenue_target || "未设定"}
+- 毛利率目标：${businessGoals.gross_margin_target ? (businessGoals.gross_margin_target * 100).toFixed(0) + "%" : "未设定"}
+- 售罄率目标：${businessGoals.sell_through_target ? (businessGoals.sell_through_target * 100).toFixed(0) + "%" : "未设定"}
+- 库存周转天数目标：${businessGoals.inventory_turnover_days || "未设定"}天
+- 连带率目标：${businessGoals.attachment_rate_target || "未设定"}
+
+⚠ 采购预算约束：totalBudget不得超过季度采购预算；kpiTargets必须对标以上目标值` : ""}
 
 请生成买手企划方案。核心要求：
 1. 色彩比例与VIP季型分布吻合
