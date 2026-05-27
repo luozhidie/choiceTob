@@ -238,10 +238,23 @@ export default function CrmScrapePage() {
       if (allResults.length === 0) {
         setSearchError("未找到结果，请尝试更换关键词或城市");
       } else {
-        // 3. 合并去重（按店名+地址）
-        const merged = mergeAndDedup(allResults);
+        // 3. 查询已存在的门店，过滤掉已采集过的
+        const allNames = [...new Set(allResults.map(r => r.name))];
+        const { data: existing } = await supabase
+          .from("crm_stores")
+          .select("name")
+          .in("name", allNames);
+        const existingNames = new Set((existing || []).map(e => e.name));
+        const filtered = allResults.filter(r => !existingNames.has(r.name));
+        const dupCount = allResults.length - filtered.length;
+
+        // 4. 合并去重（按店名+地址）
+        const merged = mergeAndDedup(filtered);
         setParsedResults(merged);
-        console.log(`合并去重后 ${merged.length} 条`);
+        console.log(`过滤已存在 ${dupCount} 条，剩余 ${merged.length} 条`);
+        if (merged.length === 0) {
+          setSearchError(`所有结果都已存在（${allResults.length} 条），无需重复采集`);
+        }
       }
     } catch (e: any) {
       setSearchError(e.message || "搜索失败");
