@@ -85,9 +85,9 @@ export default function AIAssistantPage() {
     }
   };
 
-  const saveConversations = (updated: Conversation[]) => {
+  const saveConversations = async (updated: Conversation[]) => {
     setConversations(updated);
-    const { data: { user } } = await supabase.auth.getUser() as any;
+    const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       localStorage.setItem(`ai_conversations_${user.id}`, JSON.stringify(updated));
     }

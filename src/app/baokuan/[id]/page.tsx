@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, externalLink, Download, Send, Sparkles } from "lucide-react";
+import { ArrowLeft, Download, Send, Sparkles } from "lucide-react";
 
 export default function BaoKuanAnalysisPage() {
   const params = useParams();
