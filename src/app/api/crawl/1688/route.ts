@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import cheerio from "cheerio";
+import * as cheerio from "cheerio";
 
 /**
  * 1688批发爬虫 API（真实版本）
