@@ -131,7 +131,7 @@ function analyzePriceRanges(prices: string[]): Array<{range: string; count: numb
   
   for (const priceStr of prices) {
     const num = parseInt(priceStr.replace(/[^\d]/g, ''));
-    if (!isNaN(num)) {
+    if (!Number.isNaN(num)) {
       for (const range of counts) {
         if (num >= range.min && num < range.max) {
           range.count++;
