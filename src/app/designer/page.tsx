@@ -278,15 +278,15 @@ export default function DesignerPage() {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                  <Link href="/contact"
+                    className={`block w-full py-2.5 rounded-xl text-sm font-semibold transition-colors text-center ${
                       tier.highlight
                         ? "bg-accent text-white hover:bg-accent/90"
                         : "bg-gray-100 text-primary hover:bg-gray-200"
                     }`}
                   >
                     咨询详情
-                  </button>
+                  </Link>
                 </div>
               ))}
             </div>
@@ -304,9 +304,9 @@ export default function DesignerPage() {
             联系我们的设计顾问，为您量身定制最适合的设计方案
           </p>
           <div className="flex justify-center gap-4">
-            <button className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors">
+            <Link href="/contact" className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors">
               立即咨询
-            </button>
+            </Link>
             <Link
               href="/contact"
               className="px-8 py-3 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"

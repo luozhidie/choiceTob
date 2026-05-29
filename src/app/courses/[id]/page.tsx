@@ -41,7 +41,8 @@ export default function CourseDetailPage() {
   const [loading, setLoading] = useState(true);
   const [purchased, setPurchased] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [payStep, setPayStep] = useState<"confirm" | "paying" | "success">("confirm");
+  const [payStep, setPayStep] = useState<"confirm" | "pending" | "success">("confirm");
+  const [contact, setContact] = useState("");
   const [visible, setVisible] = useState(false);
   const [copiedWechat, setCopiedWechat] = useState(false);
   const [copiedAlipay, setCopiedAlipay] = useState(false);
@@ -131,39 +132,33 @@ export default function CourseDetailPage() {
   };
 
   const handleConfirmPay = async () => {
-    setPayStep("paying");
-    // Record purchase in course_purchases table
+    if (!contact.trim()) {
+      alert("请填写您的手机号/微信号，方便客服联系您确认");
+      return;
+    }
     if (!course || !user) return;
+    setPayStep("pending");
     try {
       const { error } = await supabase.from("course_purchases").insert([
         {
           user_id: user.id,
           course_id: course.id,
           price: course.price,
-          status: "paid",
+          status: "pending",
+          contact: contact.trim(),
         },
       ]);
       if (error) {
-        // Duplicate purchase - already bought
         if (error.code === "23505") {
           setPurchased(true);
           setShowPayModal(false);
           return;
         }
         console.error("购买记录创建失败:", error);
-      } else {
-        setPurchased(true);
-        // 购买成功后自动关闭弹窗并刷新页面
-        setTimeout(() => {
-          setShowPayModal(false);
-          setPayStep("confirm");
-          window.location.reload();
-        }, 1500);
       }
     } catch (err) {
       console.error("购买错误:", err);
     }
-    setPayStep("success");
   };
 
   const handleClosePayModal = () => {
@@ -453,153 +448,92 @@ export default function CourseDetailPage() {
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Step 1: Confirm */}
+              {/* Step 1: Confirm - Show payment info */}
               {payStep === "confirm" && (
                 <div>
-                  <div className="text-center mb-6">
-                    <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                  <div className="text-center mb-5">
+                    <div className="w-14 h-14 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-3">
                       <ShoppingBag className="w-7 h-7 text-accent" />
                     </div>
-                    <h3 className="text-xl font-bold text-primary">确认购买课程</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">购买后可无限次观看</p>
+                    <h3 className="text-xl font-bold text-primary">购买课程</h3>
+                    <p className="mt-1 text-sm text-muted-foreground">扫码付款后提交凭证，客服确认后解锁课程</p>
                   </div>
 
-                  <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <div className="bg-gray-50 rounded-xl p-4 mb-4">
                     <div className="flex items-center gap-3">
                       {course.cover_image ? (
-                        <img src={course.cover_image} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                        <img src={course.cover_image} alt="" className="w-14 h-14 rounded-lg object-cover" />
                       ) : (
-                        <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
-                          <BookOpen className="w-6 h-6 text-primary/30" />
+                        <div className="w-14 h-14 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <BookOpen className="w-5 h-5 text-primary/30" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-primary truncate">{course.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {course.category && (
-                            <span className="text-xs px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                              {categoryMap[course.category]}
-                            </span>
-                          )}
-                          <span className="text-xs text-muted-foreground">
-                            {levelMap[course.level]}
-                          </span>
-                        </div>
+                        <p className="font-semibold text-primary text-sm truncate">{course.title}</p>
+                        <p className="text-xs text-muted-foreground">{levelMap[course.level]}</p>
                       </div>
                       <p className="text-xl font-bold text-accent shrink-0">¥{priceYuan}</p>
                     </div>
                   </div>
 
-                  <div className="space-y-2 mb-6">
-                    {[
-                      "购买后永久有效，不限观看次数",
-                      "支持手机、平板、电脑多端观看",
-                      "课程内容持续更新",
-                    ].map((item) => (
-                      <div key={item} className="flex items-center gap-2 text-sm text-gray-600">
-                        <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
-                        {item}
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleClosePayModal}
-                      className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      取消
-                    </button>
-                    <button
-                      onClick={handleConfirmPay}
-                      className="flex-1 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-md"
-                    >
-                      确认购买
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Paying */}
-              {payStep === "paying" && (
-                <div className="text-center py-8">
-                  <div className="animate-spin rounded-full h-10 w-10 border-3 border-accent border-t-transparent mx-auto mb-4" />
-                  <p className="text-sm text-muted-foreground">正在处理购买...</p>
-                </div>
-              )}
-
-              {/* Step 3: Success */}
-              {payStep === "success" && (
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                    <CheckCircle2 className="w-8 h-8 text-green-500" />
-                  </div>
-                  <h3 className="text-xl font-bold text-primary">购买成功！</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    课程已解锁，现在可以观看完整内容了
-                  </p>
-
-                  <div className="mt-6 space-y-3">
-                    <button
-                      onClick={() => {
-                        setShowPayModal(false);
-                        setPurchased(true);
-                      }}
-                      className="w-full py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Play className="w-4 h-4" />
-                      开始观看
-                    </button>
-                    <Link
-                      href="/courses"
-                      className="block w-full py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors text-center"
-                    >
-                      返回课程列表
-                    </Link>
-                  </div>
-
-                  {/* Offline payment info */}
-                  <div className="mt-6 pt-4 border-t border-gray-100">
-                    <p className="text-xs text-gray-400 mb-3">
-                      如需线下支付/对公转账，请联系客服
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="bg-green-50 rounded-lg p-3 text-left border border-green-100">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-xs">💬</span>
-                          <span className="text-xs font-bold text-green-700">微信</span>
-                        </div>
-                        <p className="text-[11px] text-green-600 font-mono">luozhidie666</p>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText("luozhidie666");
-                            setCopiedWechat(true);
-                            setTimeout(() => setCopiedWechat(false), 2000);
-                          }}
-                          className="mt-1 text-[10px] px-2 py-0.5 bg-green-500 text-white rounded hover:bg-green-600"
-                        >
-                          {copiedWechat ? "已复制" : "复制"}
-                        </button>
-                      </div>
-                      <div className="bg-blue-50 rounded-lg p-3 text-left border border-blue-100">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-xs">💙</span>
-                          <span className="text-xs font-bold text-blue-700">支付宝</span>
-                        </div>
-                        <p className="text-[11px] text-blue-600 font-mono">13925997776</p>
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText("13925997776");
-                            setCopiedAlipay(true);
-                            setTimeout(() => setCopiedAlipay(false), 2000);
-                          }}
-                          className="mt-1 text-[10px] px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        >
-                          {copiedAlipay ? "已复制" : "复制"}
-                        </button>
-                      </div>
+                  {/* Payment QR */}
+                  <div className="mb-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2 text-center">微信扫码付款</p>
+                    <div className="flex justify-center">
+                      <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-40 h-auto rounded-xl border" />
                     </div>
                   </div>
+
+                  {/* Bank transfer */}
+                  <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
+                    <p className="text-sm font-medium text-gray-700 mb-1">或银行转账</p>
+                    <div className="text-xs text-gray-600 space-y-0.5">
+                      <p>户名：吴川市樟铺骆芷蝶教你好看穿搭小店</p>
+                      <p>开户行：中国工商银行（吴川支行）</p>
+                      <p>账号：2015021309200280877</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <input
+                      type="text" value={contact} onChange={(e) => setContact(e.target.value)}
+                      placeholder="您的手机号/微信号"
+                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent outline-none"
+                    />
+                    <div className="flex gap-3">
+                      <button
+                        onClick={handleClosePayModal}
+                        className="flex-1 py-3 rounded-xl border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                      >
+                        取消
+                      </button>
+                      <button
+                        onClick={handleConfirmPay}
+                        className="flex-1 py-3 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-md"
+                      >
+                        我已付款，提交凭证
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Step 2: Pending */}
+              {payStep === "pending" && (
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                    <Clock className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-primary">提交成功！</h3>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    您的课程购买申请已提交，客服将在24小时内确认并开通
+                  </p>
+                  <button
+                    onClick={handleClosePayModal}
+                    className="mt-6 w-full py-3 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+                  >
+                    知道了
+                  </button>
                 </div>
               )}
             </motion.div>

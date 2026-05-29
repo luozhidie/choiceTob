@@ -136,9 +136,9 @@ export default function CollocationPage() {
                 <div className="text-sm text-gray-400 mb-6">
                   共{pkg.count}款 · 平均¥{pkg.unitPrice}/款 · {pkg.period}
                 </div>
-                <button className="w-full py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors">
+                <Link href="/contact" className="block w-full py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors text-center">
                   立即咨询
-                </button>
+                </Link>
               </div>
             ))}
           </div>
@@ -177,9 +177,9 @@ export default function CollocationPage() {
                 <div className="text-sm text-gray-400 mb-6">
                   共{pkg.count}款 · 平均¥{pkg.unitPrice}/款 · {pkg.period}
                 </div>
-                <button className="w-full py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
+                <Link href="/contact" className="block w-full py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
                   立即咨询
-                </button>
+                </Link>
               </div>
             ))}
           </div>

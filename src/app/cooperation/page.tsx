@@ -180,9 +180,9 @@ export default function CooperationPage() {
                     <div className="text-sm text-gray-600 bg-white/60 rounded-xl p-4">
                       {mode.suitable}
                     </div>
-                    <button className="w-full mt-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors">
+                    <Link href="/contact" className="block w-full mt-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
                       立即咨询
-                    </button>
+                    </Link>
                   </div>
                 </div>
               </div>

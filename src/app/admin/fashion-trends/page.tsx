@@ -93,7 +93,11 @@ export default function AdminFashionTrendsPage() {
         .upload(filePath, file);
 
       if (uploadError) {
-        alert(`上传失败：${uploadError.message}`);
+        if (uploadError.message.includes("bucket") || uploadError.message.includes("Bucket")) {
+          alert(`上传失败：trend-images 存储桶不存在。请在 Supabase Dashboard → Storage 中创建 'trend-images' bucket 并设置为 public。`);
+        } else {
+          alert(`上传失败：${uploadError.message}`);
+        }
         continue;
       }
 

@@ -46,7 +46,6 @@ const plans: Plan[] = [
       "每日搭配灵感9折优惠",
       "线上风格测试工具不限次使用，非会员¥99/次",
       "线上课程8折优惠",
-      "企划工具报告免费测，非会员¥99/次",
       "爆款样衣9折优惠",
       "杂志订阅9折优惠",
       "社群交流 + 月度直播",
@@ -55,9 +54,9 @@ const plans: Plan[] = [
   {
     id: "pro",
     name: "进阶VIP",
-    price: 1980000,
-    originalPrice: 2580000,
-    priceLabel: "¥19,800/年",
+    price: 1380000,
+    originalPrice: 1980000,
+    priceLabel: "¥13,800/年",
     discountLabel: "首年直降¥6,000",
     membershipType: "pro",
     icon: Star,
@@ -65,10 +64,10 @@ const plans: Plan[] = [
     features: [
       "基础VIP全部权益",
       "爆款样衣8折优惠",
-      "每半年免费企划报告 ×1",
+      "商品企划5折",
       "专属1v1客服（微信/电话）",
       "货款充值享阶梯折扣",
-      "线下到店诊断（1次/年，报销差旅）",
+      "线下到店诊断（1次/半年，报销差旅）",
       "新品优先拿货权",
       "门店经营数据分析报告（季度）",
       "VIP专属社群 + 直播",
@@ -89,7 +88,7 @@ const plans: Plan[] = [
       "每日搭配灵感7折优惠",
       "爆款样衣7折优惠",
       "杂志订阅7折优惠",
-      "每年免费企划报告 ×1",
+      "商品企划5折",
       "专属1v1客服（微信/电话）",
       "货款充值享阶梯折扣",
       "线下到店诊断（1次/年，报销差旅）",
@@ -209,8 +208,30 @@ export default function VIPPage() {
         </div>
       </section>
 
+      {/* 货款折扣会员入口 */}
+      <section className="py-6 md:py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <Link href="/members" className="block bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 md:p-6 hover:shadow-md transition-all">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
+                  <CreditCard className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-primary text-base">充值货款折扣会员</h3>
+                  <p className="text-sm text-gray-600 mt-0.5">预存货款享2.6-2.8折拿货 · 5万/10万/30万三档可选</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center gap-2 text-accent font-semibold text-sm shrink-0">
+                去了解 <ArrowRight className="w-4 h-4" />
+              </div>
+            </div>
+          </Link>
+        </div>
+      </section>
+
       {/* Plans */}
-      <section className="py-12 md:py-16">
+      <section className="pb-12 md:pb-16 pt-2">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-6">
             {plans.map((plan, idx) => (

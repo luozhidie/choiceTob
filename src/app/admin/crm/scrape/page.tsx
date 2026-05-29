@@ -22,97 +22,7 @@ interface ParsedStore {
   rawLines: string[];
 }
 
-const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行", "美容院", "理发店", "餐饮店", "其他"];
-
-// ======== fetch 带超时 ========
-async function fetchWithTimeout(url: string, timeoutMs: number = 8000): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    return res;
-  } catch (e: any) {
-    clearTimeout(timer);
-    if (e.name === "AbortError") throw new Error("请求超时");
-    throw e;
-  }
-}
-
-// ======== 高德 POI 搜索（单页）========
-async function searchAmapPoiPage(keyword: string, city: string, page: number = 1): Promise<ParsedStore[]> {
-  const apiKey = process.env.NEXT_PUBLIC_AMAP_API_KEY;
-  if (!apiKey) throw new Error("未配置高德地图API密钥（NEXT_PUBLIC_AMAP_API_KEY）");
-
-  const url = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(keyword)}&city=${encodeURIComponent(city)}&output=json&key=${apiKey}&offset=50&page=${page}&extensions=base`;
-  const res = await fetchWithTimeout(url, 8000);
-  const data = await res.json();
-
-  if (data.status !== "1") {
-    throw new Error(data.info || "高德地图搜索失败");
-  }
-
-  return (data.pois || []).map((poi: any, idx: number) => {
-    const phoneRaw = poi.tel;
-    const phone = Array.isArray(phoneRaw) ? (phoneRaw[0] || "") : (phoneRaw || "");
-    const address = [poi.pname, poi.cityname, poi.adname, poi.address].filter(Boolean).join("");
-    return {
-      id: `amap_${poi.id || idx}`,
-      name: poi.name || "",
-      address,
-      phone,
-      industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
-      city: poi.cityname || city,
-      source_detail: `高德地图POI - ${poi.type || ""}`,
-      selected: true,
-      parsed: !!phone,
-      rawLines: [poi.name, address, phone].filter(Boolean),
-    };
-  });
-}
-
-// ======== 高德 POI 搜索（多页，最多250条）========
-async function searchAmapPoi(keyword: string, city: string, maxPages: number = 5): Promise<ParsedStore[]> {
-  const allResults: ParsedStore[] = [];
-  for (let page = 1; page <= maxPages; page++) {
-    const results = await searchAmapPoiPage(keyword, city, page);
-    if (results.length === 0) break;
-    allResults.push(...results);
-    if (results.length < 50) break;
-  }
-  return allResults;
-}
-
-// ======== 百度 POI 搜索 ========
-async function searchBaiduPoi(keyword: string, city: string, page: number = 0): Promise<ParsedStore[]> {
-  const apiKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK;
-  if (!apiKey) throw new Error("未配置百度地图API密钥（NEXT_PUBLIC_BAIDU_MAP_AK）");
-
-  const url = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(keyword)}&region=${encodeURIComponent(city)}&output=json&ak=${apiKey}&page_size=50&page_num=${page}`;
-  const res = await fetchWithTimeout(url, 8000);
-  const data = await res.json();
-
-  if (data.status !== 0) {
-    throw new Error(data.message || "百度地图搜索失败");
-  }
-
-  return (data.results || []).map((poi: any, idx: number) => {
-    const phoneRaw = poi.telephone;
-    const phone = Array.isArray(phoneRaw) ? (phoneRaw[0] || "") : (phoneRaw || "");
-    return {
-      id: `baidu_${poi.uid || idx}`,
-      name: poi.name || "",
-      address: poi.address || "",
-      phone,
-      industry: keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他",
-      city: poi.city || city,
-      source_detail: `百度地图POI - ${poi.tag || ""}`,
-      selected: true,
-      parsed: !!phone,
-      rawLines: [poi.name, poi.address, phone].filter(Boolean),
-    };
-  });
-}
+const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行", "其他"];
 
 // ======== 合并去重（按店名+地址）========
 function mergeAndDedup(results: ParsedStore[]): ParsedStore[] {
@@ -225,65 +135,94 @@ export default function CrmScrapePage() {
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [editingStore, setEditingStore] = useState<ParsedStore | null>(null);
   const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", industry: "服装店" });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const supabase = createClient();
 
-  // API 搜索
-  const handleApiSearch = async () => {
+  // API 搜索（走后端路由，避免浏览器CORS）
+  const handleApiSearch = async (targetPage?: number) => {
     if (!keyword.trim() || !city.trim()) {
       alert("请填写城市和关键词");
       return;
     }
+    const currentPage = targetPage || page;
     setSearching(true);
     setSearchError(null);
-    setParsedResults([]);
+    if (currentPage === 1) {
+      setParsedResults([]);
+    }
     setImportResult(null);
 
     try {
-      // 高德 + 百度 并行请求，任一失败不影响另一个
-      const [amapRes, baiduRes] = await Promise.allSettled([
-        searchAmapPoi(keyword, city),
-        searchBaiduPoi(keyword, city),
-      ]);
+      const res = await fetch("/api/crm/scrape", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword, city, industry, page: currentPage }),
+      });
+      const data = await res.json();
 
-      const allResults: ParsedStore[] = [];
-      if (amapRes.status === "fulfilled") {
-        allResults.push(...amapRes.value);
-        console.log(`高德返回 ${amapRes.value.length} 条`);
-      } else {
-        console.warn("高德搜索失败：", amapRes.reason?.message);
-      }
-      if (baiduRes.status === "fulfilled") {
-        allResults.push(...baiduRes.value);
-        console.log(`百度返回 ${baiduRes.value.length} 条`);
-      } else {
-        console.warn("百度搜索失败：", baiduRes.reason?.message);
+      if (!res.ok || data.error) {
+        setSearchError(data.error || data.message || "搜索失败");
+        setSearching(false);
+        return;
       }
 
-      if (allResults.length === 0) {
-        const amapErr = amapRes.status === "rejected" ? amapRes.reason?.message : "";
-        const baiduErr = baiduRes.status === "rejected" ? baiduRes.reason?.message : "";
-        setSearchError(`未找到结果。${amapErr || ""} ${baiduErr || ""}`.trim() || "未找到结果，请尝试更换关键词或城市");
-      } else {
-        // 查询已存在的门店，过滤掉已采集过的
-        const allNames = [...new Set(allResults.map(r => r.name))];
-        const { data: existing } = await supabase
-          .from("crm_stores")
-          .select("name")
-          .in("name", allNames);
-        const existingNames = new Set((existing || []).map(e => e.name));
-        const filtered = allResults.filter(r => !existingNames.has(r.name));
-        const dupCount = allResults.length - filtered.length;
-
-        // 合并去重（按店名+地址）
-        const merged = mergeAndDedup(filtered);
-        setParsedResults(merged);
-        console.log(`过滤已存在 ${dupCount} 条，剩余 ${merged.length} 条`);
-        if (merged.length === 0) {
-          setSearchError(`所有结果都已存在（${allResults.length} 条），无需重复采集`);
+      if (!data.results || data.results.length === 0) {
+        if (currentPage === 1) {
+          setSearchError(data.message || "未找到结果，请尝试更换关键词或城市");
+        } else {
+          setHasMore(false);
         }
+        setSearching(false);
+        return;
       }
+
+      // 转换为 ParsedStore 格式
+      const newResults: ParsedStore[] = data.results.map((poi: any, idx: number) => ({
+        id: poi.id || `poi_${idx}_${currentPage}`,
+        name: poi.name || "",
+        address: poi.address || "",
+        phone: poi.phone || "",
+        industry: poi.industry || (keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他"),
+        city: poi.city || city,
+        source_detail: poi.source_detail || "地图POI",
+        selected: true,
+        parsed: !!(poi.phone || ""),
+        rawLines: [poi.name, poi.address, poi.phone].filter(Boolean),
+      }));
+
+      // 查询已存在的门店，过滤掉已采集过的
+      const allNames = [...new Set(newResults.map(r => r.name))];
+      const { data: existing } = await supabase
+        .from("crm_stores")
+        .select("name")
+        .in("name", allNames);
+      const existingNames = new Set((existing || []).map((e: any) => e.name));
+      const filtered = newResults.filter(r => !existingNames.has(r.name));
+      const dupCount = newResults.length - filtered.length;
+
+      // 合并去重（按店名+地址）
+      const merged = mergeAndDedup(filtered);
+      
+      setParsedResults(prev => {
+        const combined = [...prev, ...merged];
+        const seen = new Map<string, ParsedStore>();
+        for (const r of combined) {
+          const key = `${r.name}||${r.address}`.toLowerCase().replace(/\s+/g, "");
+          if (!seen.has(key)) seen.set(key, r);
+        }
+        return Array.from(seen.values());
+      });
+      
+      console.log(`第${currentPage}页：过滤已存在 ${dupCount} 条，新增 ${merged.length} 条`);
+      if (merged.length === 0 && currentPage === 1) {
+        setSearchError(`所有结果都已存在（${newResults.length} 条），无需重复采集`);
+      }
+      
+      setHasMore(data.results.length >= 20);
+      setPage(currentPage + 1);
     } catch (e: any) {
-      setSearchError(e.message || "搜索失败");
+      setSearchError(e.message || "搜索失败，请检查网络连接");
     } finally {
       setSearching(false);
     }
@@ -391,13 +330,13 @@ export default function CrmScrapePage() {
 
       {/* 模式切换 */}
       <div className="flex gap-3 mb-6">
-        <button onClick={() => { setMode("paste"); setParsedResults([]); setSearchError(null); }}
+        <button onClick={() => { setMode("paste"); setParsedResults([]); setSearchError(null); setPage(1); setHasMore(true); }}
           className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             mode === "paste" ? "bg-accent text-primary" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}>
           <Upload className="w-4 h-4 inline mr-2" />粘贴搜索结果
         </button>
-        <button onClick={() => { setMode("api"); setParsedResults([]); setSearchError(null); }}
+        <button onClick={() => { setMode("api"); setParsedResults([]); setSearchError(null); setPage(1); setHasMore(true); }}
           className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             mode === "api" ? "bg-accent text-primary" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}>
@@ -455,7 +394,7 @@ export default function CrmScrapePage() {
               className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm w-36" placeholder="城市（如杭州）" />
             <input type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
               className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="关键词（如女装店、轮胎专卖）" />
-            <button onClick={handleApiSearch} disabled={searching || !keyword.trim() || !city.trim()}
+            <button onClick={() => { setPage(1); setHasMore(true); handleApiSearch(1); }} disabled={searching || !keyword.trim() || !city.trim()}
               className="btn-primary flex items-center gap-2 px-6 whitespace-nowrap">
               {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               搜索
@@ -544,6 +483,20 @@ export default function CrmScrapePage() {
               </div>
             ))}
           </div>
+          
+          {/* 加载更多（仅API模式） */}
+          {mode === "api" && hasMore && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => handleApiSearch(page)}
+                disabled={searching}
+                className="px-6 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                {searching ? <Loader2 className="w-4 h-4 animate-spin inline mr-2" /> : null}
+                加载更多
+              </button>
+            </div>
+          )}
         </div>
       )}
 

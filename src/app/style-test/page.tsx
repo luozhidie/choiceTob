@@ -38,6 +38,31 @@ export default function StyleTestPage() {
         </div>
       </section>
 
+      {/* Color Style Survey */}
+      <section className="py-6 md:py-8">
+        <div className="container mx-auto px-4 max-w-3xl">
+          <a
+            href="https://f.wps.cn/g/5TqhzqbM"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/20 rounded-2xl p-6 hover:shadow-md transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-accent/15 flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="font-bold text-primary">色彩风格咨询问卷调研</h3>
+                <p className="text-sm text-muted-foreground mt-0.5">填写问卷，获取更精准的个人色彩与风格分析报告</p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-accent shrink-0" />
+            </div>
+          </a>
+        </div>
+      </section>
+
       {/* Gender Selection */}
       <section className="py-12 md:py-16">
         <div className="container mx-auto px-4">

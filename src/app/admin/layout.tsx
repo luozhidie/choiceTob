@@ -54,6 +54,7 @@ import {
   Globe,
   Upload,
   MessageCircle,
+  Database,
 } from "lucide-react";
 
 /* ── 侧边栏分组配置 ── */
@@ -109,6 +110,7 @@ const sidebarGroups: SidebarGroup[] = [
       { label: "商品企划", href: "/admin/product-plan", icon: Lightbulb },
       { label: "生成企划报告", href: "/admin/report", icon: FileDown },
       { label: "商品管理", href: "/admin/products", icon: ShoppingBag },
+      { label: "爆款样衣", href: "/admin/hot-products", icon: ShoppingBag },
       { label: "爆款货盘", href: "/admin/hot-picks", icon: BarChart3 },
       { label: "爆款图片", href: "/admin/hot-picks-images", icon: ImageIcon },
       { label: "买手选品", href: "/admin/buyer", icon: TrendingUp },
@@ -146,8 +148,10 @@ const sidebarGroups: SidebarGroup[] = [
     icon: LayoutGrid,
     items: [
       { label: "陈列搭配", href: "/admin/display", icon: LayoutGrid },
+      { label: "搭配方案", href: "/admin/collocation", icon: Layers },
       { label: "陈列图片", href: "/admin/display-images", icon: ImageIcon },
       { label: "每日搭配", href: "/admin/daily-looks", icon: Palette },
+      { label: "属性编码管理", href: "/admin/attribute-encoding", icon: Database },
     ],
   },
   {

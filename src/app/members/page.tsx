@@ -13,7 +13,7 @@ const VIEW_PRICE_PACKAGES = [
   {
     id: "trial",
     name: "14天体验卡",
-    price: 1000,     // ¥10
+    price: 1990,     // ¥19.9
     originalPrice: 9900,
     period: "14天",
     tag: "新人推荐",
@@ -51,7 +51,7 @@ const DEPOSIT_TIERS = [
   {
     amount: "5万",
     discount: "2.8折",
-    ret: "退5%",
+    ret: "退换5%",
     extra: "基础退换服务",
     color: "from-blue-400 to-blue-600",
     bg: "bg-blue-50",
@@ -60,7 +60,7 @@ const DEPOSIT_TIERS = [
   {
     amount: "10万",
     discount: "2.8折",
-    ret: "退10%",
+    ret: "退换10%",
     extra: "优先退换 + 专属顾问",
     color: "from-purple-400 to-purple-600",
     bg: "bg-purple-50",
@@ -69,7 +69,7 @@ const DEPOSIT_TIERS = [
   {
     amount: "30万",
     discount: "2.6折",
-    ret: "退20%",
+    ret: "退换20%",
     extra: "1对1企划顾问 + 免费课程",
     color: "from-amber-400 to-amber-600",
     bg: "bg-amber-50",
@@ -84,12 +84,25 @@ function formatPrice(price: number) {
 
 export default function MembersPage() {
   const [selectedPkg, setSelectedPkg] = useState<typeof VIEW_PRICE_PACKAGES[0] | null>(null);
+  const [selectedDeposit, setSelectedDeposit] = useState<typeof DEPOSIT_TIERS[0] | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [payMode, setPayMode] = useState<"view_price" | "deposit">("view_price");
   const [contact, setContact] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   const handleBuy = (pkg: typeof VIEW_PRICE_PACKAGES[0]) => {
     setSelectedPkg(pkg);
+    setSelectedDeposit(null);
+    setPayMode("view_price");
+    setShowPayModal(true);
+    setSubmitted(false);
+    setContact("");
+  };
+
+  const handleDepositBuy = (tier: typeof DEPOSIT_TIERS[0]) => {
+    setSelectedDeposit(tier);
+    setSelectedPkg(null);
+    setPayMode("deposit");
     setShowPayModal(true);
     setSubmitted(false);
     setContact("");
@@ -98,6 +111,7 @@ export default function MembersPage() {
   const handleClose = () => {
     setShowPayModal(false);
     setSelectedPkg(null);
+    setSelectedDeposit(null);
     setSubmitted(false);
   };
 
@@ -129,7 +143,8 @@ export default function MembersPage() {
             {DEPOSIT_TIERS.map((tier) => (
               <div
                 key={tier.amount}
-                className={`relative bg-white rounded-2xl border-2 p-4 ${
+                onClick={() => handleDepositBuy(tier)}
+                className={`relative bg-white rounded-2xl border-2 p-4 cursor-pointer transition-all hover:shadow-md ${
                   tier.recommended ? "border-amber-300" : "border-gray-100"
                 }`}
               >
@@ -163,11 +178,12 @@ export default function MembersPage() {
                       → {tier.discount === "2.6折" ? "¥26" : "¥28"}
                     </span>
                   </div>
-                  <Link href="/buyer">
-                    <span className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg font-medium">
-                      去选品
-                    </span>
-                  </Link>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDepositBuy(tier); }}
+                    className="text-xs px-3 py-1.5 bg-primary text-white rounded-lg font-medium"
+                  >
+                    去充值
+                  </button>
                 </div>
               </div>
             ))}
@@ -258,7 +274,7 @@ export default function MembersPage() {
 
       {/* ─── 支付弹窗 ─── */}
       <AnimatePresence>
-        {showPayModal && selectedPkg && (
+        {showPayModal && (selectedPkg || selectedDeposit) && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
@@ -271,7 +287,7 @@ export default function MembersPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
-                  {submitted ? "提交成功" : "开通查看价格会员"}
+                  {submitted ? "提交成功" : payMode === "deposit" ? "充值货款" : "开通查看价格会员"}
                 </h3>
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
               </div>
@@ -286,9 +302,19 @@ export default function MembersPage() {
               ) : (
                 <>
                   <div className="mb-4 p-3 bg-gray-50 rounded-xl">
-                    <p className="text-sm text-gray-600">{selectedPkg.name}</p>
-                    <p className="text-2xl font-bold text-accent">{formatPrice(selectedPkg.price)}</p>
-                    <p className="text-xs text-gray-500 mt-1">{selectedPkg.desc}</p>
+                    {payMode === "deposit" && selectedDeposit ? (
+                      <>
+                        <p className="text-sm text-gray-600">预存{selectedDeposit.amount}货款</p>
+                        <p className="text-2xl font-bold text-accent">¥{selectedDeposit.amount}</p>
+                        <p className="text-xs text-gray-500 mt-1">{selectedDeposit.discount}拿货 · {selectedDeposit.ret} · {selectedDeposit.extra}</p>
+                      </>
+                    ) : selectedPkg ? (
+                      <>
+                        <p className="text-sm text-gray-600">{selectedPkg.name}</p>
+                        <p className="text-2xl font-bold text-accent">{formatPrice(selectedPkg.price)}</p>
+                        <p className="text-xs text-gray-500 mt-1">{selectedPkg.desc}</p>
+                      </>
+                    ) : null}
                   </div>
 
                   <div className="mb-4">

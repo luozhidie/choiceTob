@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
             name: poi.name || '',
             address: poi.address || poi.pname + poi.cityname + poi.adname + poi.address || '',
             phone: poi.tel || '',
-            industry: industry || guessIndustry(poi.type || '', poi.name || ''),
+            industry: normalizeIndustry(industry) || guessIndustry(poi.type || '', poi.name || ''),
             city: poi.cityname || city || '',
             district: poi.adname || '',
             business_hours: poi.business_area || '',
@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 补充：百度地图 POI 搜索
+    // 补充：百度地图 POI 搜索（总是调用，与高德合并结果）
     // 兼容两种环境变量命名
     const baiduKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK || process.env.BAIDU_MAP_AK;
-    if (baiduKey && results.length < 20) {
+    if (baiduKey) {
       try {
         const baiduUrl = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(searchTerm)}&region=${encodeURIComponent(city || '全国')}&output=json&page_size=20&page_num=${page - 1}&ak=${baiduKey}`;
         const baiduRes = await fetch(baiduUrl, { next: { revalidate: 0 } });
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
                 name: poi.name || '',
                 address: poi.address || '',
                 phone: poi.telephone || poi.phone || '',
-                industry: industry || guessIndustry(poi.detail_info?.type || '', poi.name || ''),
+                industry: normalizeIndustry(industry) || guessIndustry(poi.detail_info?.type || '', poi.name || ''),
                 city: city || '',
                 district: '',
                 business_hours: poi.detail_info?.shop_hours || '',
@@ -102,6 +102,18 @@ export async function POST(request: NextRequest) {
     console.error("Scrape API error:", error);
     return NextResponse.json({ error: error.message || "采集失败" }, { status: 500 });
   }
+}
+
+// 归一化行业值，确保在数据库 CHECK 约束范围内
+function normalizeIndustry(industry: string | undefined): string {
+  const valid = ['服装店', '轮胎店', '滋补行', '其他'];
+  if (!industry) return '';
+  if (valid.includes(industry)) return industry;
+  // 模糊匹配
+  if (industry.includes('服装') || industry.includes('衣')) return '服装店';
+  if (industry.includes('轮胎') || industry.includes('汽配') || industry.includes('车轮')) return '轮胎店';
+  if (industry.includes('滋补') || industry.includes('参茸') || industry.includes('药材') || industry.includes('中药')) return '滋补行';
+  return '其他';
 }
 
 // 根据POI类型猜测行业

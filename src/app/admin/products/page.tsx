@@ -41,6 +41,14 @@ interface Product {
   stock: number;
   detail: string | null;
   created_at: string;
+  // 属性编码体系扩展字段
+  fabric_code?: string[] | null;
+  cut_code?: string[] | null;
+  pattern_code?: string[] | null;
+  color_hex?: string | null;
+  color_season_code?: string | null;
+  style_conclusion?: string | null;
+  sku?: string | null;
 }
 
 export default function AdminProductsPage() {
@@ -71,6 +79,14 @@ export default function AdminProductsPage() {
     tags: "",
     is_published: false,
     detail: "",
+    // 属性编码体系
+    sku: "",
+    fabric_code: [] as string[],
+    cut_code: [] as string[],
+    pattern_code: [] as string[],
+    color_hex: "",
+    color_season_code: "",
+    style_conclusion: "",
   });
 
   const supabase = createClient();
@@ -134,6 +150,13 @@ export default function AdminProductsPage() {
       tags: "",
       is_published: false,
       detail: "",
+      sku: "",
+      fabric_code: [],
+      cut_code: [],
+      pattern_code: [],
+      color_hex: "",
+      color_season_code: "",
+      style_conclusion: "",
     });
   };
 
@@ -163,6 +186,14 @@ export default function AdminProductsPage() {
         : null,
       is_published: form.is_published,
       detail: form.detail.trim() || null,
+      // 属性编码体系
+      sku: form.sku.trim() || null,
+      fabric_code: form.fabric_code.length > 0 ? form.fabric_code : null,
+      cut_code: form.cut_code.length > 0 ? form.cut_code : null,
+      pattern_code: form.pattern_code.length > 0 ? form.pattern_code : null,
+      color_hex: form.color_hex.trim() || null,
+      color_season_code: form.color_season_code.trim() || null,
+      style_conclusion: form.style_conclusion.trim() || null,
     };
 
     if (editingProduct) {
@@ -231,6 +262,13 @@ export default function AdminProductsPage() {
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published,
       detail: product.detail || "",
+      sku: product.sku || "",
+      fabric_code: product.fabric_code || [],
+      cut_code: product.cut_code || [],
+      pattern_code: product.pattern_code || [],
+      color_hex: product.color_hex || "",
+      color_season_code: product.color_season_code || "",
+      style_conclusion: product.style_conclusion || "",
     });
     setShowForm(true);
   };
@@ -784,6 +822,177 @@ export default function AdminProductsPage() {
                   placeholder="如：新品,热销,推荐"
                 />
               </div>
+
+              {/* === 属性编码体系 === */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-primary mb-3">属性编码体系</h4>
+                <p className="text-xs text-gray-400 mb-3">填写以下属性，系统将自动匹配色彩季型和风格结论，生成搭配方案</p>
+
+                {/* SKU */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">SKU 编码</label>
+                  <input
+                    type="text"
+                    value={form.sku}
+                    onChange={(e) => setForm({ ...form, sku: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：SKU-2024-001"
+                  />
+                </div>
+
+                {/* 颜色HEX */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">商品主色 HEX 值</label>
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={form.color_hex}
+                      onChange={(e) => setForm({ ...form, color_hex: e.target.value })}
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="如：#F5E6D3"
+                    />
+                    {form.color_hex && (
+                      <div className="w-8 h-8 rounded-lg border border-gray-200 shrink-0" style={{ backgroundColor: form.color_hex }} />
+                    )}
+                  </div>
+                </div>
+
+                {/* 面料编码 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">面料编码（可多选）</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["F01-少女型","F02-优雅型","F03-浪漫型","F04-少年型","F05-时尚型","F06-古典型","F07-自然型","F08-戏剧型"].map((f) => {
+                      const [code, label] = f.split("-");
+                      const checked = form.fabric_code.includes(code);
+                      return (
+                        <button
+                          type="button"
+                          key={code}
+                          onClick={() => {
+                            const next = checked
+                              ? form.fabric_code.filter(c => c !== code)
+                              : [...form.fabric_code, code];
+                            setForm({ ...form, fabric_code: next });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            checked
+                              ? "bg-primary/10 border-primary text-primary"
+                              : "bg-white border-gray-200 text-gray-500 hover:border-primary/30"
+                          }`}
+                        >
+                          {code}-{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 剪裁编码 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">剪裁编码（可多选）</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["B01-少女型","B02-优雅型","B03-浪漫型","B04-少年型","B05-时尚型","B06-古典型","B07-自然型","B08-戏剧型"].map((f) => {
+                      const [code, label] = f.split("-");
+                      const checked = form.cut_code.includes(code);
+                      return (
+                        <button
+                          type="button"
+                          key={code}
+                          onClick={() => {
+                            const next = checked
+                              ? form.cut_code.filter(c => c !== code)
+                              : [...form.cut_code, code];
+                            setForm({ ...form, cut_code: next });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            checked
+                              ? "bg-accent/10 border-accent text-accent"
+                              : "bg-white border-gray-200 text-gray-500 hover:border-accent/30"
+                          }`}
+                        >
+                          {code}-{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 图案编码 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">图案编码（可多选）</label>
+                  <div className="flex flex-wrap gap-2">
+                    {["P01-少女型","P02-优雅型","P03-浪漫型","P04-少年型","P05-时尚型","P06-古典型","P07-自然型","P08-戏剧型"].map((f) => {
+                      const [code, label] = f.split("-");
+                      const checked = form.pattern_code.includes(code);
+                      return (
+                        <button
+                          type="button"
+                          key={code}
+                          onClick={() => {
+                            const next = checked
+                              ? form.pattern_code.filter(c => c !== code)
+                              : [...form.pattern_code, code];
+                            setForm({ ...form, pattern_code: next });
+                          }}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                            checked
+                              ? "bg-green-50 border-green-400 text-green-700"
+                              : "bg-white border-gray-200 text-gray-500 hover:border-green-300"
+                          }`}
+                        >
+                          {code}-{label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 色彩季型编码（手动填，后面接AI自动识别） */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">色彩季型编码（可留空，提交后AI自动识别）</label>
+                  <select
+                    value={form.color_season_code}
+                    onChange={(e) => setForm({ ...form, color_season_code: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">自动识别（推荐）</option>
+                    <option value="S01">S01-浅暖</option>
+                    <option value="S02">S02-浅冷</option>
+                    <option value="S03">S03-深暖</option>
+                    <option value="S04">S04-深冷</option>
+                    <option value="S05">S05-暖亮</option>
+                    <option value="S06">S06-暖柔</option>
+                    <option value="S07">S07-冷亮</option>
+                    <option value="S08">S08-冷柔</option>
+                    <option value="S09">S09-净冷</option>
+                    <option value="S10">S10-净暖</option>
+                    <option value="S11">S11-柔冷</option>
+                    <option value="S12">S12-柔暖</option>
+                  </select>
+                </div>
+
+                {/* 风格结论（手动填，后面接AI自动识别） */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">风格结论（可留空，提交后AI自动识别）</label>
+                  <select
+                    value={form.style_conclusion}
+                    onChange={(e) => setForm({ ...form, style_conclusion: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">自动识别（推荐）</option>
+                    <option value="少女型">少女型</option>
+                    <option value="优雅型">优雅型</option>
+                    <option value="浪漫型">浪漫型</option>
+                    <option value="少年型">少年型</option>
+                    <option value="时尚型">时尚型</option>
+                    <option value="古典型">古典型</option>
+                    <option value="自然型">自然型</option>
+                    <option value="戏剧型">戏剧型</option>
+                  </select>
+                </div>
+              </div>
+              {/* === 属性编码体系结束 === */}
+
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"

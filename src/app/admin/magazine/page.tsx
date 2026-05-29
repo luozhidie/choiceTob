@@ -34,8 +34,7 @@ interface CrawledNews {
 }
 
 const CRAWL_SOURCES = [
-  { value: "vogue", label: "Vogue中国" },
-  { value: "elle", label: "ELLE中国" },
+  { value: "ai", label: "AI智能生成（推荐）" },
   { value: "bing", label: "搜索引擎聚合" },
 ];
 
@@ -55,7 +54,7 @@ export default function AdminMagazinePage() {
 
   // 爬虫相关状态
   const [crawlKeyword, setCrawlKeyword] = useState("");
-  const [crawlSources, setCrawlSources] = useState<string[]>(["bing", "vogue", "elle"]);
+  const [crawlSources, setCrawlSources] = useState<string[]>(["ai", "bing"]);
   const [crawling, setCrawling] = useState(false);
   const [crawledNews, setCrawledNews] = useState<CrawledNews[]>([]);
   const [crawlError, setCrawlError] = useState("");
@@ -82,14 +81,55 @@ export default function AdminMagazinePage() {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
+
     setUploading(true);
-    const ext = file.name.split(".").pop();
-    const filePath = `${Math.random()}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("magazine-images").upload(filePath, file);
-    if (uploadError) { alert("上传失败：" + uploadError.message); setUploading(false); return; }
-    const { data } = supabase.storage.from("magazine-images").getPublicUrl(filePath);
-    setFormData({ ...formData, image_url: data.publicUrl });
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("magazine-images").upload(filePath, file);
+      if (uploadError) {
+        if (uploadError.message.includes("bucket") || uploadError.message.includes("Bucket")) {
+          alert("上传失败：magazine-images 存储桶不存在。请在 Supabase Dashboard → Storage 中创建 'magazine-images' bucket 并设置为 public。");
+        } else {
+          alert("上传失败：" + uploadError.message);
+        }
+        setUploading(false);
+        return;
+      }
+      const { data } = supabase.storage.from("magazine-images").getPublicUrl(filePath);
+      setFormData({ ...formData, image_url: data.publicUrl });
+    } catch (err: any) {
+      alert("上传异常：" + err.message);
+    }
     setUploading(false);
+  };
+
+  // 文章内容中插入图片
+  const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
+
+    try {
+      const ext = file.name.split(".").pop();
+      const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("magazine-images").upload(filePath, file);
+      if (uploadError) {
+        alert("上传失败：" + uploadError.message);
+        return;
+      }
+      const { data } = supabase.storage.from("magazine-images").getPublicUrl(filePath);
+      // 在光标位置插入Markdown图片语法
+      const textarea = document.getElementById("article-content") as HTMLTextAreaElement;
+      const cursorPos = textarea?.selectionStart || formData.content.length;
+      const before = formData.content.substring(0, cursorPos);
+      const after = formData.content.substring(cursorPos);
+      const imageMarkdown = `\n![图片](${data.publicUrl})\n`;
+      setFormData({ ...formData, content: before + imageMarkdown + after });
+    } catch (err: any) {
+      alert("上传异常：" + err.message);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -157,7 +197,7 @@ export default function AdminMagazinePage() {
       } else {
         setCrawledNews(data.items || []);
         if (data.items.length === 0) {
-          setCrawlError("未采集到资讯，可能被反爬限制，建议更换关键词或数据源");
+          setCrawlError("未生成到资讯，建议：1) 更换关键词 2) 勾选'AI智能生成'数据源 3) 重试");
         }
       }
     } catch (err: any) {
@@ -166,29 +206,19 @@ export default function AdminMagazinePage() {
     setCrawling(false);
   };
 
-  const handleImportNews = async (news: CrawledNews) => {
-    setImporting(news.title);
-    try {
-      const { error } = await supabase.from("articles").insert([{
-        title: news.title,
-        excerpt: news.excerpt,
-        content: news.content || news.excerpt,
-        image_url: news.image_url,
-        tag: news.tag,
-        is_premium: false,
-        is_published: false,
-      }]);
-      if (error) {
-        alert("导入失败：" + error.message);
-      } else {
-        fetchArticles();
-        // 从列表中移除已导入的
-        setCrawledNews(prev => prev.filter(n => n.title !== news.title));
-      }
-    } catch (err: any) {
-      alert("导入失败：" + err.message);
-    }
-    setImporting(null);
+  // 导入单条资讯到编辑弹窗（一键生成文章）
+  const handleImportNews = (news: CrawledNews) => {
+    setEditingArticle(null);
+    setFormData({
+      title: news.title,
+      excerpt: news.excerpt,
+      content: news.content || news.excerpt,
+      image_url: news.image_url,
+      tag: news.tag,
+      is_premium: false,
+      is_published: false,
+    });
+    setShowModal(true);
   };
 
   const handleBatchImport = async () => {
@@ -471,9 +501,57 @@ export default function AdminMagazinePage() {
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="如：流行趋势、搭配技巧" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-primary mb-2">文章内容 *</label>
-                <textarea required value={formData.content} onChange={e => setFormData({...formData, content: e.target.value})}
-                  rows={8} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none font-mono" placeholder="文章内容" />
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-primary">文章内容 *</label>
+                  <div className="flex items-center gap-2">
+                    <label className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg text-xs text-gray-600 cursor-pointer hover:bg-gray-200 transition-colors">
+                      <Upload className="w-3 h-3" />
+                      <span>插入图片</span>
+                      <input type="file" accept="image/*" onChange={handleContentImageUpload} className="hidden" />
+                    </label>
+                    <span className="text-xs text-gray-400">支持 Markdown</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {/* 编辑区 */}
+                  <textarea
+                    id="article-content"
+                    required
+                    value={formData.content}
+                    onChange={e => setFormData({...formData, content: e.target.value})}
+                    rows={12}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none font-mono"
+                    placeholder="## 小标题&#10;&#10;正文内容...&#10;&#10;![图片描述](图片URL)"
+                  />
+                  {/* 预览区 */}
+                  <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm overflow-y-auto max-h-80">
+                    <div className="text-xs text-gray-400 mb-2 border-b border-gray-100 pb-1">实时预览</div>
+                    {formData.content ? (
+                      <div className="prose prose-sm max-w-none">
+                        {formData.content.split('\n').map((line, i) => {
+                          // 标题
+                          if (line.startsWith('### ')) return <h3 key={i} className="text-base font-bold text-primary mt-3 mb-1">{line.replace('### ', '')}</h3>;
+                          if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-primary mt-4 mb-2">{line.replace('## ', '')}</h2>;
+                          if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-primary mt-4 mb-2">{line.replace('# ', '')}</h1>;
+                          // 图片
+                          const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
+                          if (imgMatch) return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="max-w-full rounded-lg my-2" />;
+                          // 粗体
+                          if (line.includes('**')) {
+                            const parts = line.split(/(\*\*.*?\*\*)/);
+                            return <p key={i} className="my-1 leading-relaxed">{parts.map((p, j) => p.startsWith('**') && p.endsWith('**') ? <strong key={j}>{p.slice(2, -2)}</strong> : p)}</p>;
+                          }
+                          // 空行
+                          if (line.trim() === '') return <div key={i} className="h-2" />;
+                          // 普通段落
+                          return <p key={i} className="my-1 leading-relaxed">{line}</p>;
+                        })}
+                      </div>
+                    ) : (
+                      <div className="text-gray-300 text-sm italic">预览区域...</div>
+                    )}
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">封面图</label>

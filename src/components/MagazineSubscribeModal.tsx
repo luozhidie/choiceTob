@@ -188,7 +188,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                 填写联系信息
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {selectedPlan === "yearly" ? "年费会员 ¥980/年" : "月费会员 ¥98/月"}
+                {selectedPlan === "yearly" ? "年费会员 ¥1,380/年（订10个月送2个月）" : "月费会员 ¥138/月"}
               </p>
             </div>
 

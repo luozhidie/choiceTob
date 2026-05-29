@@ -149,11 +149,17 @@ export default function PlanningPage() {
     e.preventDefault();
     setSubmitting(true);
 
+    // 安全超时：8秒后强制重置状态，防止网络卡死
+    const safetyTimeout = setTimeout(() => {
+      setSubmitting(false);
+    }, 8000);
+
     try {
       // 检查登录状态
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setShowPaywall(true);
+        clearTimeout(safetyTimeout);
         setSubmitting(false);
         return;
       }
@@ -174,15 +180,18 @@ export default function PlanningPage() {
       }]);
 
       if (error) {
+        clearTimeout(safetyTimeout);
         alert("提交失败：" + error.message);
         setSubmitting(false);
         return;
       }
 
+      clearTimeout(safetyTimeout);
       setSubmitted(true);
+      setSubmitting(false);
     } catch (err: any) {
+      clearTimeout(safetyTimeout);
       alert("提交失败：" + (err.message || "未知错误"));
-    } finally {
       setSubmitting(false);
     }
   };
@@ -297,7 +306,7 @@ export default function PlanningPage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <button onClick={() => setActiveTab("create")} className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
-                <Wand2 className="w-5 h-5" /> 创建企划方案 <ChevronRight className="w-5 h-5" />
+                <Wand2 className="w-5 h-5" /> 商品企划策划 <ChevronRight className="w-5 h-5" />
               </button>
               <button onClick={() => setActiveTab("templates")} className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
                 <Eye className="w-5 h-5" /> 查看案例模板
@@ -315,7 +324,7 @@ export default function PlanningPage() {
               <LayoutGrid className="w-4 h-4 inline-block mr-1.5 -mt-0.5" /> 企划案例模板
             </button>
             <button onClick={() => setActiveTab("create")} className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${activeTab === "create" ? "bg-accent text-white" : "text-gray-600 hover:bg-gray-50"}`}>
-              <Wand2 className="w-4 h-4 inline-block mr-1.5 -mt-0.5" /> 创建企划方案
+              <Wand2 className="w-4 h-4 inline-block mr-1.5 -mt-0.5" /> 商品企划策划
             </button>
           </div>
         </div>
@@ -859,7 +868,7 @@ export default function PlanningPage() {
               </p>
               <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
                 <button onClick={() => setActiveTab("create")} className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20">
-                  创建企划方案 <ChevronRight className="w-5 h-5" />
+                  商品企划策划 <ChevronRight className="w-5 h-5" />
                 </button>
                 <Link href="/buyer" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
                   了解选品服务 <ArrowRight className="w-5 h-5" />

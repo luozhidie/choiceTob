@@ -13,6 +13,37 @@ import { PaywallModal } from "@/components/PaywallModal";
 import { MagazineSubscribeModal } from "@/components/MagazineSubscribeModal";
 
 /* ==================== 动画 ==================== */
+/* ==================== Markdown 渲染 ==================== */
+function renderMarkdown(text: string) {
+  if (!text) return null;
+  const lines = text.split('\n');
+  return lines.map((line, i) => {
+    // 空行
+    if (line.trim() === '') return <div key={i} className="h-2" />;
+    // H3
+    if (line.startsWith('### ')) return <h3 key={i} className="text-lg font-bold text-primary mt-4 mb-2">{line.replace('### ', '')}</h3>;
+    // H2
+    if (line.startsWith('## ')) return <h2 key={i} className="text-xl font-bold text-primary mt-5 mb-3">{line.replace('## ', '')}</h2>;
+    // H1
+    if (line.startsWith('# ')) return <h1 key={i} className="text-2xl font-bold text-primary mt-6 mb-3">{line.replace('# ', '')}</h1>;
+    // 图片
+    const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
+    if (imgMatch) return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="max-w-full rounded-lg my-3" />;
+    // 粗体 + 普通文本
+    const parts: (string | React.ReactElement)[] = [];
+    let lastIndex = 0;
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let match;
+    while ((match = boldRegex.exec(line)) !== null) {
+      if (match.index > lastIndex) parts.push(line.slice(lastIndex, match.index));
+      parts.push(<strong key={`${i}-${match.index}`} className="font-semibold text-primary">{match[1]}</strong>);
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < line.length) parts.push(line.slice(lastIndex));
+    return <p key={i} className="my-1.5 leading-relaxed text-gray-700">{parts}</p>;
+  });
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number = 0) => ({
@@ -140,7 +171,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
               </div>
               <div className="p-6">
                 {selectedArticle.image_url && <img src={selectedArticle.image_url} alt={selectedArticle.title} className="w-full rounded-lg mb-6" />}
-                {selectedArticle.content && <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: selectedArticle.content }} />}
+                {selectedArticle.content && <div className="prose max-w-none">{renderMarkdown(selectedArticle.content)}</div>}
               </div>
             </motion.div>
           </motion.div>
@@ -214,16 +245,16 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
             <p className="mt-4 text-lg text-white/80 leading-relaxed">
               最新时尚趋势分析、行业动态、搭配技巧，一站式阅读体验
             </p>
-            {plans.length > 0 && (
-              <div className="mt-8 flex flex-wrap gap-3">
-                {plans.map((plan) => (
-                  <button key={plan.id} onClick={() => setShowSubscribe(true)}
-                    className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
-                    {plan.name} ¥{(plan.price / 100).toFixed(0)}/{plan.duration_days === 30 ? "月" : "年"}
-                  </button>
-                ))}
-              </div>
-            )}
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button onClick={() => setShowSubscribe(true)}
+                className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
+                月费会员 ¥138/月
+              </button>
+              <button onClick={() => setShowSubscribe(true)}
+                className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
+                年费会员 ¥1,380/年（订10个月送2个月）
+              </button>
+            </div>
           </motion.div>
         </div>
       </section>

@@ -41,6 +41,7 @@ import {
   Store,
   BarChart3,
   Palette,
+  Check,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -370,6 +371,74 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
           </motion.div>
         </div>
       </section>
+
+      {/* 营销服务定价 */}
+      <section className="py-16 lg:py-20 bg-gradient-to-b from-blue-50/50 to-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Service Pricing</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">营销服务定价</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">从年度方案到单次咨询，灵活选择适合您的营销服务。</p>
+          </motion.div>
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {[
+              {
+                name: "年度营销方案定制",
+                price: "¥3,800",
+                unit: "起/年",
+                features: ["年度营销节奏规划", "全年节日活动排期", "内容日历定制", "渠道投放策略", "季度复盘报告"],
+                icon: CalendarDays,
+                color: "from-blue-500 to-cyan-400",
+              },
+              {
+                name: "节日/活动策划包",
+                price: "¥1,980",
+                unit: "/季度",
+                features: ["季度主题活动策划", "执行手册交付", "物料设计建议", "转化路径设计", "效果追踪模板"],
+                icon: Megaphone,
+                color: "from-accent to-pink-400",
+                highlight: true,
+              },
+              {
+                name: "1v1营销顾问咨询",
+                price: "¥598",
+                unit: "/小时",
+                features: ["店铺营销诊断", "问题定位分析", "定制化建议", "落地执行指导", "后续跟进一次"],
+                icon: Target,
+                color: "from-emerald-500 to-green-400",
+              },
+            ].map((service, i) => (
+              <motion.div key={service.name} variants={fadeUp} custom={i}>
+                <div className={`group flex flex-col h-full rounded-2xl bg-white border-2 transition-all duration-300 overflow-hidden ${service.highlight ? "border-accent shadow-lg" : "border-gray-100 shadow-sm hover:shadow-lg"}`}>
+                  <div className={`bg-gradient-to-r ${service.color} p-6 text-white`}>
+                    <div className="flex items-center gap-3">
+                      <service.icon className="w-8 h-8" />
+                      <h3 className="text-lg font-bold">{service.name}</h3>
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold text-accent">{service.price}</span>
+                      <span className="text-sm text-gray-500 ml-1">{service.unit}</span>
+                    </div>
+                    <ul className="space-y-2.5 flex-1">
+                      {service.features.map((f, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                          <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/contact" className="mt-6 block w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition-colors text-center">
+                      立即咨询
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
     </>
   );
 
@@ -494,6 +563,74 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
         </div>
       </section>
 
+      {/* 销售服务定价 */}
+      <section className="py-16 lg:py-20 bg-gradient-to-b from-emerald-50/50 to-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Service Pricing</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">销售服务定价</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">从话术训练到客户管理方案，提升门店销售转化效率。</p>
+          </motion.div>
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {[
+              {
+                name: "销售话术训练营",
+                price: "¥1,280",
+                unit: "/人",
+                features: ["全场景话术模板", "线上视频课程", "实战演练指导", "考核认证证书", "社群答疑陪伴"],
+                icon: Megaphone,
+                color: "from-orange-500 to-amber-400",
+              },
+              {
+                name: "客户跟进SOP定制",
+                price: "¥1,980",
+                unit: "/套",
+                features: ["客户分层模型", "跟进节奏设计", "话术库定制", "转化节点设置", "执行手册交付"],
+                icon: Users,
+                color: "from-accent to-pink-400",
+                highlight: true,
+              },
+              {
+                name: "1v1销售教练",
+                price: "¥598",
+                unit: "/小时",
+                features: ["销售能力诊断", "个性化提升方案", "实战陪跑带教", "问题现场纠正", "后续跟踪一次"],
+                icon: Handshake,
+                color: "from-teal-500 to-emerald-400",
+              },
+            ].map((service, i) => (
+              <motion.div key={service.name} variants={fadeUp} custom={i}>
+                <div className={`group flex flex-col h-full rounded-2xl bg-white border-2 transition-all duration-300 overflow-hidden ${service.highlight ? "border-accent shadow-lg" : "border-gray-100 shadow-sm hover:shadow-lg"}`}>
+                  <div className={`bg-gradient-to-r ${service.color} p-6 text-white`}>
+                    <div className="flex items-center gap-3">
+                      <service.icon className="w-8 h-8" />
+                      <h3 className="text-lg font-bold">{service.name}</h3>
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="mb-4">
+                      <span className="text-3xl font-bold text-accent">{service.price}</span>
+                      <span className="text-sm text-gray-500 ml-1">{service.unit}</span>
+                    </div>
+                    <ul className="space-y-2.5 flex-1">
+                      {service.features.map((f, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                          <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/contact" className="mt-6 block w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition-colors text-center">
+                      立即咨询
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
       {/* 店铺级服务交付 */}
       <section className="py-16 lg:py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -609,6 +746,89 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
                     <div className="flex items-center gap-3"><tier.icon className="w-8 h-8" /><div><h3 className="text-xl font-bold">{tier.name}</h3><p className="text-white/80 text-sm">{tier.range}</p></div></div>
                   </div>
                   <div className="p-6 flex-1 flex flex-col items-center justify-center text-center"><p className="text-muted-foreground text-sm">解锁更多尊享权益</p></div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* VIP增值服务 · 收费项目 */}
+      <section className="py-16 lg:py-20 bg-gradient-to-b from-amber-50/50 to-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div className="text-center max-w-2xl mx-auto mb-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <span className="text-accent font-semibold text-sm tracking-widest uppercase">Premium Services</span>
+            <h2 className="mt-3 text-3xl sm:text-4xl font-bold text-primary">VIP增值服务</h2>
+            <p className="mt-4 text-muted-foreground leading-relaxed">专业色彩诊断、形象顾问、穿搭定制，为VIP客户打造极致专属体验。</p>
+          </motion.div>
+          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.1 }} variants={stagger}>
+            {[
+              {
+                name: "VIP色彩+风格诊断",
+                price: "¥1,980",
+                unit: "/人",
+                groupPrice: "¥59,400/30人",
+                groupTag: "新客5折 ¥29,700",
+                features: ["12季色彩精准诊断", "八大风格定位分析", "个人色彩报告书", "搭配建议方案", "季型色卡专属定制"],
+                icon: Palette,
+                color: "from-pink-500 to-rose-400",
+                highlight: true,
+              },
+              {
+                name: "1v1私人形象顾问",
+                price: "¥19,800",
+                unit: "/次",
+                features: ["上门衣橱整理诊断", "个人形象全案设计", "12套场景穿搭方案", "购物清单精准推荐", "全年形象跟踪顾问"],
+                icon: Crown,
+                color: "from-amber-500 to-yellow-400",
+                highlight: false,
+              },
+              {
+                name: "门店VIP季度穿搭方案",
+                price: "¥98,000",
+                unit: "/30人/季度",
+                features: ["季度主题穿搭企划", "30人专属穿搭档案", "门店陈列搭配指导", "VIP到店穿搭服务", "季度效果复盘优化"],
+                icon: Gem,
+                color: "from-violet-500 to-purple-400",
+                highlight: false,
+              },
+            ].map((service, i) => (
+              <motion.div key={service.name} variants={fadeUp} custom={i}>
+                <div className={`group flex flex-col h-full rounded-2xl bg-white border-2 transition-all duration-300 overflow-hidden ${service.highlight ? "border-accent shadow-lg" : "border-gray-100 shadow-sm hover:shadow-lg"}`}>
+                  <div className={`bg-gradient-to-r ${service.color} p-6 text-white relative`}>
+                    {service.highlight && <span className="absolute top-3 right-3 text-xs bg-white/20 text-white px-2 py-0.5 rounded-full font-medium">热门</span>}
+                    <div className="flex items-center gap-3">
+                      <service.icon className="w-8 h-8" />
+                      <div>
+                        <h3 className="text-lg font-bold">{service.name}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="mb-4">
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-3xl font-bold text-accent">{service.price}</span>
+                        <span className="text-sm text-gray-500">{service.unit}</span>
+                      </div>
+                      {service.groupPrice && (
+                        <div className="mt-1 text-sm">
+                          <span className="text-gray-500">团体价 {service.groupPrice}</span>
+                          {service.groupTag && <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-medium">{service.groupTag}</span>}
+                        </div>
+                      )}
+                    </div>
+                    <ul className="space-y-2.5 flex-1">
+                      {service.features.map((f, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                          <Check className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/contact" className="mt-6 block w-full py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition-colors text-center">
+                      立即咨询
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ))}
@@ -854,7 +1074,7 @@ export default function MarketingClient({ initialTab }: { initialTab?: string })
                   咨询定制方案 <ChevronRight className="w-5 h-5" />
                 </Link>
                 <Link href="/style-test" className="inline-flex items-center gap-2 px-8 py-3.5 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
-                  免费风格测试 <ArrowRight className="w-5 h-5" />
+                  风格测试 <ArrowRight className="w-5 h-5" />
                 </Link>
               </div>
             </div>
