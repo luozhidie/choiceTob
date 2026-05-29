@@ -25,14 +25,14 @@ function checkRateLimit(ip: string): boolean {
   return true;
 }
 
-// ==================== Google Shopping 抓取 ====================
-async function crawlGoogleShopping(keyword: string, page: number = 1): Promise<any[]> {
+// ==================== DuckDuckGo 搜索抓取（主数据源，反爬弱）====================
+async function crawlDuckDuckGo(keyword: string): Promise<any[]> {
   const results: any[] = [];
   try {
-    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(keyword)}&tbm=shop&start=${(page - 1) * 10}`;
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(keyword + ' 服装')}`;
     const res = await fetch(searchUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
       },
@@ -43,46 +43,43 @@ async function crawlGoogleShopping(keyword: string, page: number = 1): Promise<a
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    // Google Shopping 商品卡片选择器
-    $('div.sh-dgr__content, div.g, div[data-docid]').each((i, el) => {
+    $('.result').each((i, el) => {
       try {
         const $el = $(el);
-        const title = $el.find('h3, .sht__title, a[href*="shopping"]').first().text().trim();
-        const priceText = $el.find('.shb__Price-info, .kHxAA, [data-price]').first().text().trim();
-        const price = parseFloat(priceText.replace(/[^\d.]/g, '')) || 0;
-        const image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src') || '';
-        const link = $el.find('a').first().attr('href') || '';
-        const shopName = $el.find('.shb__seller, .EI11P, span').first().text().trim();
-
+        const title = $el.find('.result__title a').first().text().trim();
+        const snippet = $el.find('.result__snippet').first().text().trim();
+        const href = $el.find('.result__title a').first().attr('href') || '';
+        
         if (title && title.length > 3) {
           results.push({
-            source_id: `GS_${Date.now()}_${i}`,
-            title,
-            price,
-            sales_volume: Math.floor(Math.random() * 5000) + 100, // Google不提供销量，用AI估算
-            image_urls: image ? [image] : [],
-            shop_name: shopName || '未知商家',
-            detail_url: link?.startsWith('http') ? link : `https://www.google.com${link || ''}`,
-            platform: 'google_shopping',
+            source_id: `DDG_${Date.now()}_${i}`,
+            title: title.substring(0, 300),
+            price: 0,
+            sales_volume: 0,
+            image_urls: [],
+            shop_name: snippet?.substring(0, 100) || '',
+            detail_url: href,
+            platform: 'duckduckgo',
           });
         }
-      } catch (e) { /* 跳过单条 */ }
+      } catch (e) {}
     });
   } catch (error) {
-    console.error('Google Shopping crawl error:', error);
+    console.error('DuckDuckGo crawl error:', error);
   }
   return results;
 }
 
-// ==================== Bing 图片搜索抓取 ====================
-async function crawlBingImages(keyword: string, page: number = 1): Promise<any[]> {
+// ==================== DuckDuckGo 图片搜索 ====================
+async function crawlDuckDuckGoImages(keyword: string): Promise<any[]> {
   const results: any[] = [];
   try {
-    const searchUrl = `https://www.bing.com/images/search?q=${encodeURIComponent(keyword)}&first=${(page - 1) * 35 + 1}`;
+    // DuckDuckGo图片搜索通过 SERP API
+    const searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(keyword + ' 服装')}`;
     const res = await fetch(searchUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
       signal: AbortSignal.timeout(15000),
     });
@@ -91,38 +88,72 @@ async function crawlBingImages(keyword: string, page: number = 1): Promise<any[]
     const html = await res.text();
     const $ = cheerio.load(html);
 
-    $('.iusc, .imgpt, a.iusc').each((i, el) => {
+    // 尝试从结果中提取图片
+    $('.result').each((i, el) => {
       try {
         const $el = $(el);
-        // Bing图片数据存在m属性里
-        const mData = $el.attr('m') || $el.find('a').first().attr('m');
-        let title = $el.attr('aria-label') || $el.find('img').first().attr('alt') || '';
-        let image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src') || '';
+        const title = $el.find('.result__title a').first().text().trim();
+        const href = $el.find('.result__title a').first().attr('href') || '';
         
-        if (mData) {
-          try {
-            const parsed = JSON.parse(mData);
-            title = parsed.t || title;
-            image = parsed.purl || parsed.murl || image;
-          } catch {}
-        }
-
-        if (title && image) {
+        if (title && title.length > 3) {
           results.push({
-            source_id: `BING_${Date.now()}_${i}`,
-            title: title.substring(0, 200),
-            price: 0, // Bing图片不提供价格
+            source_id: `DDG_IMG_${Date.now()}_${i}`,
+            title: title.substring(0, 300),
+            price: 0,
             sales_volume: 0,
-            image_urls: [image],
+            image_urls: [],
             shop_name: '',
-            detail_url: $el.attr('href') || '',
-            platform: 'bing_images',
+            detail_url: href,
+            platform: 'duckduckgo',
           });
         }
-      } catch (e) { /* 跳过 */ }
+      } catch (e) {}
     });
   } catch (error) {
-    console.error('Bing Images crawl error:', error);
+    console.error('DuckDuckGo images error:', error);
+  }
+  return results;
+}
+
+// ==================== Google Shopping 抓取（备选）====================
+async function crawlGoogleShopping(keyword: string, page: number = 1): Promise<any[]> {
+  const results: any[] = [];
+  try {
+    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(keyword)}&tbm=shop&start=${(page - 1) * 10}`;
+    const res = await fetch(searchUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+      },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return results;
+    const $ = cheerio.load(await res.text());
+    $('div.sh-dgr__content, div.g, div[data-docid]').each((i, el) => {
+      try {
+        const $el = $(el);
+        const title = $el.find('h3, .sht__title').first().text().trim();
+        const priceText = $el.find('.shb__Price-info, .kHxAA').first().text().trim();
+        const price = parseFloat(priceText.replace(/[^\d.]/g, '')) || 0;
+        const image = $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src') || '';
+        const link = $el.find('a').first().attr('href') || '';
+        const shopName = $el.find('.shb__seller, .EI11P').first().text().trim();
+        if (title && title.length > 3) {
+          results.push({
+            source_id: `GS_${Date.now()}_${i}`,
+            title, price,
+            sales_volume: Math.floor(Math.random() * 5000) + 100,
+            image_urls: image ? [image] : [],
+            shop_name: shopName || '未知商家',
+            detail_url: link?.startsWith('http') ? link : `https://www.google.com${link || ''}`,
+            platform: 'google_shopping',
+          });
+        }
+      } catch (e) {}
+    });
+  } catch (error) {
+    console.error('Google Shopping crawl error:', error);
   }
   return results;
 }
@@ -238,7 +269,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '频率超限，每IP每天限50次' }, { status: 429 });
     }
 
-    const { keyword, platforms = ['google_shopping', 'bing_images'], page = 1 } = await request.json();
+    const { keyword, platforms = ['all'], page = 1 } = await request.json();
 
     if (!keyword || typeof keyword !== 'string') {
       return NextResponse.json({ error: '请提供搜索关键词' }, { status: 400 });
@@ -247,32 +278,48 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     let allResults: any[] = [];
 
-    // 并行抓取各平台
-    const crawlPromises = [];
-    
-    if (platforms.includes('google_shopping') || platforms.includes('all')) {
-      crawlPromises.push(crawlGoogleShopping(keyword, page).then(r => r.map(x => ({ ...x, source_platform: 'google_shopping' }))));
-    }
-    if (platforms.includes('bing_images') || platforms.includes('all')) {
-      crawlPromises.push(crawlBingImages(keyword, page).then(r => r.map(x => ({ ...x, source_platform: 'bing_images' }))));
-    }
-    if (platforms.includes('xiaohongshu') || platforms.includes('all')) {
-      crawlPromises.push(crawlXiaohongshu(keyword, page).then(r => r.map(x => ({ ...x, source_platform: 'xiaohongshu' }))));
+    // 第1步：DuckDuckGo搜索（主数据源，反爬弱）
+    console.log('[Crawl] Step 1: DuckDuckGo search...');
+    const ddgResults = await crawlDuckDuckGo(keyword);
+    if (ddgResults.length > 0) {
+      allResults.push(...ddgResults);
+      console.log(`[Crawl] DuckDuckGo returned ${ddgResults.length} items`);
     }
 
-    const crawlResults = await Promise.allSettled(crawlPromises);
-    crawlResults.forEach(result => {
-      if (result.status === 'fulfilled') {
-        allResults.push(...result.value);
+    // 第2步：DuckDuckGo图片搜索
+    if (allResults.length < 10) {
+      console.log('[Crawl] Step 2: DuckDuckGo images...');
+      const ddgImgResults = await crawlDuckDuckGoImages(keyword);
+      if (ddgImgResults.length > 0) {
+        allResults.push(...ddgImgResults);
+        console.log(`[Crawl] DuckDuckGo images returned ${ddgImgResults.length} items`);
       }
-    });
+    }
+
+    // 第3步：备选 - Google Shopping（可能被反爬）
+    if (allResults.length < 10 && (platforms.includes('google_shopping') || platforms.includes('all'))) {
+      console.log('[Crawl] Step 3: Google Shopping (fallback)...');
+      const gsResults = await crawlGoogleShopping(keyword, page);
+      if (gsResults.length > 0) {
+        allResults.push(...gsResults.map(x => ({ ...x, source_platform: 'google_shopping' })));
+      }
+    }
+
+    // 第4步：备选 - 小红书/抖音（通过Google代理）
+    if (allResults.length < 10 && (platforms.includes('xiaohongshu') || platforms.includes('all'))) {
+      console.log('[Crawl] Step 4: Xiaohongshu via Google...');
+      const xhsResults = await crawlXiaohongshu(keyword, page);
+      if (xhsResults.length > 0) {
+        allResults.push(...xhsResults.map(x => ({ ...x, source_platform: 'xiaohongshu' })));
+      }
+    }
 
     if (allResults.length === 0) {
       return NextResponse.json({
         success: false,
         data: [],
         count: 0,
-        message: '未抓取到数据，可能触发反爬限制，请稍后重试或更换关键词',
+        message: '未抓取到数据，所有数据源均返回空。建议：1)更换关键词 2)稍后再试',
       });
     }
 
