@@ -93,6 +93,37 @@ const matchRules = [
   { code: 'R07', rule_name_cn: '夜配色', rule_name_en: 'Night Match', description: '高明度/鲜亮冷色与低明度暖色配在一起，神秘、异国情调', applicable_seasons: ['S03','S04','S07','S09'], applicable_styles: null, rule_logic: {type:'night',cool_bright:'high',warm_dark:'low'} },
 ];
 
+/* ── 表配置 ── */
+const TABLE_CONFIGS: Record<string, { items: any[]; pk: string }> = {
+  attribute_fabrics: { items: fabrics, pk: 'code' },
+  attribute_patterns: { items: patterns, pk: 'code' },
+  attribute_cuts: { items: cuts, pk: 'code' },
+  attribute_color_seasons: { items: colorSeasons, pk: 'code' },
+  attribute_match_rules: { items: matchRules, pk: 'code' },
+};
+
+/* ── 通过 information_schema 获取表的实际列名 ── */
+async function getTableColumns(supabase: any, tableName: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('information_schema.columns')
+    .select('column_name')
+    .eq('table_schema', 'public')
+    .eq('table_name', tableName);
+  if (error || !data) return [];
+  return data.map((r: any) => r.column_name);
+}
+
+/* ── 过滤种子数据，只保留表中存在的列 ── */
+function filterItemByColumns(item: any, columns: string[]): any {
+  const filtered: any = {};
+  for (const key of Object.keys(item)) {
+    if (columns.includes(key)) {
+      filtered[key] = item[key];
+    }
+  }
+  return filtered;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -106,42 +137,39 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const results: Record<string, { inserted: number; error?: string }> = {};
+    const results: Record<string, { inserted: number; skippedColumns?: string[]; error?: string }> = {};
 
-    // 1. 面料数据（upsert）
-    for (const item of fabrics) {
-      const { error } = await supabase.from('attribute_fabrics').upsert(item, { onConflict: 'code' });
-      if (error) results['fabrics'] = { inserted: 0, error: error.message };
-    }
-    if (!results['fabrics']) results['fabrics'] = { inserted: fabrics.length };
+    for (const [tableName, config] of Object.entries(TABLE_CONFIGS)) {
+      // 1. 获取表的实际列名
+      const columns = await getTableColumns(supabase, tableName);
+      if (columns.length === 0) {
+        results[tableName] = { inserted: 0, error: '无法获取表结构，表可能不存在' };
+        continue;
+      }
 
-    // 2. 剪裁数据（upsert）
-    for (const item of cuts) {
-      const { error } = await supabase.from('attribute_cuts').upsert(item as any, { onConflict: 'code' });
-      if (error) results['cuts'] = { inserted: 0, error: error.message };
-    }
-    if (!results['cuts']) results['cuts'] = { inserted: cuts.length };
+      // 2. 记录哪些列被跳过了
+      const firstItem = config.items[0];
+      const skippedColumns = Object.keys(firstItem).filter(k => !columns.includes(k));
 
-    // 3. 图案数据（upsert）
-    for (const item of patterns) {
-      const { error } = await supabase.from('attribute_patterns').upsert(item, { onConflict: 'code' });
-      if (error) results['patterns'] = { inserted: 0, error: error.message };
-    }
-    if (!results['patterns']) results['patterns'] = { inserted: patterns.length };
+      // 3. 逐个插入（过滤不存在的列）
+      let inserted = 0;
+      let lastError = '';
+      for (const item of config.items) {
+        const filtered = filterItemByColumns(item, columns);
+        const { error } = await supabase.from(tableName).upsert(filtered, { onConflict: config.pk });
+        if (error) {
+          lastError = error.message;
+        } else {
+          inserted++;
+        }
+      }
 
-    // 4. 色彩季型数据（upsert）
-    for (const item of colorSeasons) {
-      const { error } = await supabase.from('attribute_color_seasons').upsert(item, { onConflict: 'code' });
-      if (error) results['color_seasons'] = { inserted: 0, error: error.message };
+      if (inserted === config.items.length) {
+        results[tableName] = { inserted, skippedColumns: skippedColumns.length > 0 ? skippedColumns : undefined };
+      } else {
+        results[tableName] = { inserted, error: lastError };
+      }
     }
-    if (!results['color_seasons']) results['color_seasons'] = { inserted: colorSeasons.length };
-
-    // 5. 搭配规则数据（upsert）
-    for (const item of matchRules) {
-      const { error } = await supabase.from('attribute_match_rules').upsert(item as any, { onConflict: 'code' });
-      if (error) results['match_rules'] = { inserted: 0, error: error.message };
-    }
-    if (!results['match_rules']) results['match_rules'] = { inserted: matchRules.length };
 
     const hasError = Object.values(results).some(r => r.error);
     if (hasError) {
@@ -153,11 +181,12 @@ export async function POST(request: NextRequest) {
       message: '属性编码种子数据导入完成',
       counts: {
         fabrics: fabrics.length,
-        cuts: cuts.length,
         patterns: patterns.length,
+        cuts: cuts.length,
         color_seasons: colorSeasons.length,
         match_rules: matchRules.length,
       },
+      details: results,
     });
   } catch (error: any) {
     console.error('Seed error:', error);
