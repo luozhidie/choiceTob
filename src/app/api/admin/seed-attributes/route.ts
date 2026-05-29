@@ -102,26 +102,45 @@ const TABLE_CONFIGS: Record<string, { items: any[]; pk: string }> = {
   attribute_match_rules: { items: matchRules, pk: 'code' },
 };
 
-/* ── 通过 information_schema 获取表的实际列名 ── */
-async function getTableColumns(supabase: any, tableName: string): Promise<string[]> {
-  const { data, error } = await supabase
-    .from('information_schema.columns')
-    .select('column_name')
-    .eq('table_schema', 'public')
-    .eq('table_name', tableName);
-  if (error || !data) return [];
-  return data.map((r: any) => r.column_name);
-}
-
-/* ── 过滤种子数据，只保留表中存在的列 ── */
-function filterItemByColumns(item: any, columns: string[]): any {
+/* ── 尝试插入单条数据，自动过滤不存在的列 ── */
+async function tryInsert(
+  supabase: any,
+  tableName: string,
+  item: any,
+  pk: string,
+  excludedColumns: Set<string>
+): Promise<{ success: boolean; newExcluded?: string; error?: string }> {
+  // 过滤掉已知不存在的列
   const filtered: any = {};
-  for (const key of Object.keys(item)) {
-    if (columns.includes(key)) {
-      filtered[key] = item[key];
+  for (const [key, val] of Object.entries(item)) {
+    if (!excludedColumns.has(key)) {
+      filtered[key] = val;
     }
   }
-  return filtered;
+
+  const { error } = await supabase.from(tableName).upsert(filtered, { onConflict: pk });
+
+  if (!error) {
+    return { success: true };
+  }
+
+  // 分析错误：是否是列不存在？
+  const msg = error.message || '';
+  const match = msg.match(/Could not find the '([^']+)' column/);
+  if (match) {
+    const missingCol = match[1];
+    // 递归重试，排除这个列
+    excludedColumns.add(missingCol);
+    return tryInsert(supabase, tableName, item, pk, excludedColumns);
+  }
+
+  // RLS 错误
+  if (msg.includes('row-level security')) {
+    return { success: false, error: 'RLS 阻止写入，请关闭表的 Row Level Security' };
+  }
+
+  // 其他错误
+  return { success: false, error: msg };
 }
 
 export async function POST(request: NextRequest) {
@@ -137,35 +156,28 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const results: Record<string, { inserted: number; skippedColumns?: string[]; error?: string }> = {};
+    const results: Record<string, { inserted: number; excludedColumns?: string[]; error?: string }> = {};
 
     for (const [tableName, config] of Object.entries(TABLE_CONFIGS)) {
-      // 1. 获取表的实际列名
-      const columns = await getTableColumns(supabase, tableName);
-      if (columns.length === 0) {
-        results[tableName] = { inserted: 0, error: '无法获取表结构，表可能不存在' };
-        continue;
-      }
-
-      // 2. 记录哪些列被跳过了
-      const firstItem = config.items[0];
-      const skippedColumns = Object.keys(firstItem).filter(k => !columns.includes(k));
-
-      // 3. 逐个插入（过滤不存在的列）
       let inserted = 0;
       let lastError = '';
+      const excludedColumns = new Set<string>();
+
       for (const item of config.items) {
-        const filtered = filterItemByColumns(item, columns);
-        const { error } = await supabase.from(tableName).upsert(filtered, { onConflict: config.pk });
-        if (error) {
-          lastError = error.message;
-        } else {
+        const res = await tryInsert(supabase, tableName, item, config.pk, excludedColumns);
+        if (res.success) {
           inserted++;
+        } else {
+          lastError = res.error || '未知错误';
         }
       }
 
+      const excludedArr = Array.from(excludedColumns);
       if (inserted === config.items.length) {
-        results[tableName] = { inserted, skippedColumns: skippedColumns.length > 0 ? skippedColumns : undefined };
+        results[tableName] = {
+          inserted,
+          excludedColumns: excludedArr.length > 0 ? excludedArr : undefined,
+        };
       } else {
         results[tableName] = { inserted, error: lastError };
       }
