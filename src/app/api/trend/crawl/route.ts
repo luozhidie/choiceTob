@@ -209,6 +209,74 @@ function generateLocalItems(keyword: string): CrawledItem[] {
   });
 }
 
+// ==================== 真实API调用 ====================
+
+async function fetchFromTaobao(keyword: string): Promise<CrawledItem[]> {
+  const appKey = process.env.TAOBAO_APP_KEY;
+  if (!appKey) return [];
+  try {
+    const resp = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/taobao/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keyword, pageSize: 15 }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return (data.items || []).map((item: any) => ({
+      name: item.name,
+      platform: item.platform || "淘宝",
+      category: item.category || keyword,
+      price_range: item.price_range || "",
+      colors: item.colors || [],
+      style: item.style || "",
+      heat_score: item.heat_score || 70,
+      sales_volume: item.sales_volume || "",
+      trend_type: item.trend_type || "潜在爆款",
+      source_url: item.source_url || "",
+      image_url: item.image_url || "",
+      keywords: item.keywords || [keyword],
+      description: item.description || "",
+    }));
+  } catch (e) {
+    console.error("[Crawl] 淘宝API失败:", e);
+    return [];
+  }
+}
+
+async function fetchFrom1688(keyword: string): Promise<CrawledItem[]> {
+  const appKey = process.env.ALI1688_APP_KEY;
+  if (!appKey) return [];
+  try {
+    const resp = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/1688/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keyword, pageSize: 10 }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return (data.items || []).map((item: any) => ({
+      name: item.name,
+      platform: item.platform || "1688",
+      category: item.category || keyword,
+      price_range: item.price_range || "",
+      colors: item.colors || [],
+      style: item.style || "",
+      heat_score: item.heat_score || 70,
+      sales_volume: item.sales_volume || "",
+      trend_type: item.trend_type || "爆款微调款",
+      source_url: item.source_url || "",
+      image_url: item.image_url || "",
+      keywords: item.keywords || [keyword],
+      description: item.description || "",
+    }));
+  } catch (e) {
+    console.error("[Crawl] 1688 API失败:", e);
+    return [];
+  }
+}
+
 // ==================== 主接口 ====================
 export async function POST(req: NextRequest) {
   try {
@@ -220,9 +288,40 @@ export async function POST(req: NextRequest) {
     const kw = keyword.trim();
     console.log(`[Crawl] 开始采集: "${kw}"`);
 
-    // 核心：本地模板生成15条爆款数据（100%有数据，速度极快）
-    let allItems: CrawledItem[] = generateLocalItems(kw);
-    console.log(`[Crawl] 本地模板生成 ${allItems.length} 条`);
+    // 优先调用真实API
+    let allItems: CrawledItem[] = [];
+    let dataSource: "demo" | "real" = "demo";
+
+    const hasTaobao = !!process.env.TAOBAO_APP_KEY;
+    const has1688 = !!process.env.ALI1688_APP_KEY;
+
+    if (hasTaobao) {
+      console.log("[Crawl] 调用淘宝API...");
+      const taobaoItems = await fetchFromTaobao(kw);
+      if (taobaoItems.length > 0) {
+        allItems.push(...taobaoItems);
+        dataSource = "real";
+        console.log(`[Crawl] 淘宝API返回 ${taobaoItems.length} 条`);
+      }
+    }
+
+    if (has1688) {
+      console.log("[Crawl] 调用1688 API...");
+      const items1688 = await fetchFrom1688(kw);
+      if (items1688.length > 0) {
+        allItems.push(...items1688);
+        dataSource = "real";
+        console.log(`[Crawl] 1688 API返回 ${items1688.length} 条`);
+      }
+    }
+
+    // 如果真实API没有返回数据，回退到模板
+    if (allItems.length === 0) {
+      console.log("[Crawl] 无真实API数据，使用模板...");
+      allItems = generateLocalItems(kw);
+      dataSource = "demo";
+      console.log(`[Crawl] 本地模板生成 ${allItems.length} 条`);
+    }
 
     // 去重（按名称前15字）
     const seen = new Set<string>();
@@ -271,8 +370,8 @@ export async function POST(req: NextRequest) {
       items: deduped,
       stats,
       crawledAt: new Date().toISOString(),
-      dataSource: "demo",  // 标记为演示数据，前端可显示提示
-      source: "local_template",
+      dataSource,  // "demo" 或 "real"
+      source: dataSource === "real" ? "api" : "local_template",
     });
 
   } catch (err: any) {
