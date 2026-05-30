@@ -315,7 +315,45 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 如果真实API没有返回数据，回退到模板
+    // 尝试淘宝页面爬虫（需要芝麻代理Key）
+    const hasZhiMaProxy = !!process.env.ZHIMA_PROXY_KEY;
+    if (hasZhiMaProxy) {
+      console.log("[Crawl] 调用淘宝页面爬虫（芝麻代理）...");
+      try {
+        const proxyResp = await fetch(`${process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'}/api/crawl/taobao-page`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keyword: kw, maxPages: 1 }),
+          signal: AbortSignal.timeout(30000),
+        });
+        if (proxyResp.ok) {
+          const proxyData = await proxyResp.json();
+          if (proxyData.items?.length > 0) {
+            allItems.push(...proxyData.items.map((item: any) => ({
+              name: item.name,
+              platform: item.platform || "淘宝",
+              category: item.category || kw,
+              price_range: item.price_range || "",
+              colors: item.colors || [],
+              style: item.style || "",
+              heat_score: item.heat_score || 70,
+              sales_volume: item.sales_volume || "",
+              trend_type: item.trend_type || "潜在爆款",
+              source_url: item.source_url || "",
+              image_url: item.image_url || "",
+              keywords: item.keywords || [kw],
+              description: item.description || "",
+            })));
+            dataSource = "real";
+            console.log(`[Crawl] 淘宝页面爬虫返回 ${proxyData.items.length} 条`);
+          }
+        }
+      } catch (e: any) {
+        console.error("[Crawl] 淘宝页面爬虫失败:", e.message);
+      }
+    }
+
+    // 如果真实数据没有返回，回退到模板
     if (allItems.length === 0) {
       console.log("[Crawl] 无真实API数据，使用模板...");
       allItems = generateLocalItems(kw);
