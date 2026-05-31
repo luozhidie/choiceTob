@@ -20,8 +20,11 @@ import * as cheerio from "cheerio";
  */
 
 // ============ 配置 ============
-const ZHIMA_API_KEY = process.env.ZHIMA_PROXY_KEY || "";
-const ZHIMA_API_URL = "https://www.zhimarawangluo.com/api/getIp";
+const PROXY_HOST = process.env.PROXY_HOST || "";
+const PROXY_PORT = process.env.PROXY_PORT || "";
+const PROXY_USERNAME = process.env.PROXY_USERNAME || "";
+const PROXY_PASSWORD = process.env.PROXY_PASSWORD || "";
+const PROXY_URL = PROXY_HOST ? `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}` : "";
 
 // 按量付费代理：直接调用芝麻代理API获取IP，然后请求淘宝
 async function getZhiMaProxyIP(): Promise<string | null> {
@@ -154,10 +157,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
     }
     
-    if (!ZHIMA_API_KEY) {
+    if (!PROXY_URL) {
       return NextResponse.json({
-        error: "芝麻代理未配置，请在环境变量中设置 ZHIMA_PROXY_KEY",
-        help: "注册地址：https://www.zhimarawangluo.com/",
+        error: "快代理未配置，请在环境变量中设置 PROXY_HOST/PORT/USERNAME/PASSWORD",
+        help: "注册地址：https://www.kuaidaili.com/",
       }, { status: 401 });
     }
     
@@ -167,7 +170,8 @@ export async function POST(request: NextRequest) {
     // 多页抓取
     for (let page = 1; page <= Math.min(maxPages, 3); page++) {
       console.log(`[淘宝爬虫] 第${page}页开始...`);
-      const proxyUrl = await getZhiMaProxyIP();
+      const proxyUrl = PROXY_URL || undefined;
+      // const proxyUrl = await getZhiMaProxyIP(); // 芝麻代理已停用，改用快代理隧道代理
       const items = await searchTaobaoItems(keyword, page, proxyUrl || undefined);
       allItems.push(...items);
       if (items.length === 0) break;
@@ -215,11 +219,11 @@ export async function POST(request: NextRequest) {
 
 /** 健康检查 */
 export async function GET(request: NextRequest) {
-  const configured = !!ZHIMA_API_KEY;
+  const configured = !!PROXY_URL;
   return NextResponse.json({
     service: "taobao-page-crawl",
     configured,
-    proxyProvider: "zhima",
-    help: configured ? null : "请注册芝麻代理：https://www.zhimarawangluo.com/，然后设置环境变量 ZHIMA_PROXY_KEY",
+    proxyProvider: "kuaidaili",
+    help: configured ? null : "请注册快代理：https://www.kuaidaili.com/，然后设置环境变量 PROXY_HOST/PORT/USERNAME/PASSWORD",
   });
 }
