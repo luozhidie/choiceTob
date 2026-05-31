@@ -300,7 +300,7 @@ export default function Home() {
               热门服务
             </span>
             <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
-              限时优惠，立即体验
+              专业服务，一站赋能
             </h2>
           </motion.div>
 

@@ -30,7 +30,7 @@ const PLAN_TYPES = [
   { value: "color", label: "色彩企划", icon: Sparkles, desc: "基于色彩季型的色彩组合规划", price: 1380000, originalPrice: null },
   { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 1680000, originalPrice: null },
   { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 1680000, originalPrice: null },
-  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案，不仅全案商品企划服务，还会帮忙组一盘货", price: 4980000, originalPrice: 7800000, discountLabel: "新客优惠价 ¥49,800" },
+  { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案，不仅全案商品企划服务，还会帮忙组一盘货", price: 7800000, originalPrice: null },
 ];
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
@@ -717,9 +717,9 @@ export default function PlanningPage() {
                                         ¥{((selected?.price || 1500000) / 100).toLocaleString()}
                                         <span className="text-xs text-muted-foreground font-normal">/次</span>
                                       </span>
-                                      {selected?.discountLabel && (
+                                      {(selected as any)?.discountLabel && (
                                         <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                                          {selected.discountLabel}
+                                          {(selected as any).discountLabel}
                                         </span>
                                       )}
                                     </div>

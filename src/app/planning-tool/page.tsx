@@ -282,7 +282,7 @@ export default function PlanningToolPage() {
 
           {/* Step 指示器 */}
           <div className="flex items-center justify-center gap-4 mb-10">
-            {["填写需求", "确认支付", "提交成功"].map((label, i) => (
+            {["填写需求", "提交审核", "提交成功"].map((label, i) => (
               <div key={label} className="flex items-center gap-3">
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -521,14 +521,14 @@ export default function PlanningToolPage() {
                     disabled={!formData.brandName.trim() || !formData.storeType || !formData.storeScale || !formData.marketStyle || !formData.colorPref || !formData.contact.trim() || generating}
                     className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                   >
-                    下一步：确认支付
+                    下一步：提交审核
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* ====== Step 2: 确认支付 ====== */}
+            {/* ====== Step 2: 提交审核 ====== */}
             {step === 2 && (
               <motion.div
                 key="step2"
