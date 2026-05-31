@@ -85,7 +85,7 @@ async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20): Pr
       params.adzone_id = ADZONE_ID;
     }
 
-    const data = await callTaobaoAPI("taobao.tbk.material.optional", params);
+    const data = await callTaobaoAPI("taobao.tbk.dg.material.optional", params);
 
     // 检查错误
     if (data.error_response) {
@@ -97,7 +97,8 @@ async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20): Pr
       };
     }
 
-    const result = data.tbk_dg_material_optional_response?.result_list?.map_data || [];
+    const result = data.tbk_dg_material_optional_response?.result_list?.map_data ||
+                   data.tbk_dg_material_optional_response?.result_list || [];
     const items: TaobaoItem[] = result.map((item: any) => ({
       title: item.title || "",
       price: item.zk_final_price || item.reserve_price || "",
@@ -174,7 +175,7 @@ export async function POST(request: NextRequest) {
       total,
       duration_ms: duration,
       dataSource: "taobao_official_api",
-      apiUsed: "taobao.tbk.material.optional",
+      apiUsed: "taobao.tbk.dg.material.optional",
     });
 
   } catch (error: any) {
