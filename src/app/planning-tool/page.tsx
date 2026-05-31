@@ -78,6 +78,11 @@ interface PlanningReport {
 }
 
 /* ==================== 页面 ==================== */
+/* 价格配置 */
+const AI_REPORT_PRICE = 2980; // 非会员价
+const AI_REPORT_MEMBER_PRICE = 980; // 基础会员价
+const AI_REPORT_ORIGINAL_PRICE = 3980; // 划线原价
+
 export default function PlanningToolPage() {
   const [step, setStep] = useState(1);
   const [showPaywall, setShowPaywall] = useState(false);
@@ -86,6 +91,7 @@ export default function PlanningToolPage() {
   const [submitted, setSubmitted] = useState(false);
   const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null; style_position: string | null; target_age: string | null; price_range: string | null; shop_size: string | null }[]>([]);
   const [selectedStoreId, setSelectedStoreId] = useState("");
+  const [isBasicMember, setIsBasicMember] = useState(false);
 
   const [formData, setFormData] = useState({
     brandName: "",
@@ -107,6 +113,25 @@ export default function PlanningToolPage() {
   useEffect(() => {
     supabase.from("stores").select("id, name, city, style_position, target_age, price_range, shop_size").eq("status", "active").order("name")
       .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
+
+    // 检测是否基础会员
+    const checkMember = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: membership } = await supabase
+          .from("memberships")
+          .select("type, status")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .single();
+        if (membership && (membership.type === "basic" || membership.type === "pro" || membership.type === "premium")) {
+          setIsBasicMember(true);
+        }
+      }
+    };
+    checkMember();
   }, []);
 
   const handleSelectStore = (storeId: string) => {
@@ -234,7 +259,7 @@ export default function PlanningToolPage() {
               定制您的专属企划报告
             </h1>
             <p className="mt-3 text-white/80 leading-relaxed">
-              填写店铺信息，精准匹配类型+体量+风格，仅需 ¥99 获取完整商品企划报告，1-2个工作日交付。
+              填写店铺信息，精准匹配类型+体量+风格，{isBasicMember ? `基础会员仅需 ¥${AI_REPORT_MEMBER_PRICE}` : `¥${AI_REPORT_PRICE}`} 获取完整商品企划报告，1-2个工作日交付。
             </p>
             {/* 定位说明 */}
             <div className="mt-6 inline-flex items-center gap-4 text-xs text-white/60">
@@ -512,9 +537,9 @@ export default function PlanningToolPage() {
                 className="space-y-8"
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-primary">确认需求并支付</h2>
+                  <h2 className="text-2xl font-bold text-primary">确认需求并提交</h2>
                   <p className="mt-2 text-sm text-muted-foreground">
-                    核对您的需求信息，支付 ¥99 后我们将为您生成专属企划报告
+                    核对您的需求信息，提交后专业顾问将审核并联系您沟通需求
                   </p>
                 </div>
 
@@ -572,13 +597,18 @@ export default function PlanningToolPage() {
                     <div>
                       <h3 className="font-bold text-primary flex items-center gap-2">
                         <CreditCard className="w-4 h-4" />
-                        支付金额
+                        服务费用
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1">专属企划报告 · 精准匹配定制</p>
                     </div>
                     <div className="text-right">
-                      <span className="text-3xl font-bold text-accent">¥99</span>
-                      <span className="text-sm text-gray-400 line-through ml-2">¥199</span>
+                      <span className="text-3xl font-bold text-accent">
+                        ¥{isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE}
+                      </span>
+                      <span className="text-sm text-gray-400 line-through ml-2">¥{AI_REPORT_ORIGINAL_PRICE}</span>
+                      {isBasicMember && (
+                        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full ml-2">基础会员价</span>
+                      )}
                     </div>
                   </div>
                   <div className="space-y-2 text-sm text-muted-foreground">
@@ -596,21 +626,8 @@ export default function PlanningToolPage() {
                     </div>
                   </div>
 
-                  {/* 支付方式 */}
-                  <div className="mt-6 p-4 bg-white rounded-xl">
-                    <p className="text-sm font-medium text-gray-700 mb-3">选择支付方式</p>
-                    <div className="flex gap-3">
-                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-green-500 bg-green-50 text-green-700 font-medium text-sm">
-                        <span>微信支付</span>
-                      </button>
-                      <button className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-200 text-gray-600 font-medium text-sm hover:bg-gray-50">
-                        <span>支付宝</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-amber-50 rounded-xl border border-amber-100">
-                    <p className="text-xs text-amber-700">💡 当前为线下收款模式：支付后请截图联系客服确认，我们将尽快为您安排报告生成。</p>
+                  <div className="mt-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <p className="text-xs text-indigo-700">💡 提交后进入审核流程：专业顾问将在24小时内联系您确认需求，沟通完成后出具报告。</p>
                   </div>
                 </div>
 
@@ -626,7 +643,7 @@ export default function PlanningToolPage() {
                     className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
                   >
                     <CheckCircle2 className="w-5 h-5" />
-                    确认支付 ¥99
+                    提交审核
                   </button>
                 </div>
               </motion.div>
@@ -644,9 +661,9 @@ export default function PlanningToolPage() {
                   <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
                     <CheckCircle2 className="w-10 h-10 text-green-600" />
                   </div>
-                  <h2 className="text-2xl font-bold text-primary mb-2">需求提交成功！</h2>
+                  <h2 className="text-2xl font-bold text-primary mb-2">需求已提交审核！</h2>
                   <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    您的企划报告需求已收到，我们将在 <span className="font-bold text-accent">1-2个工作日</span> 内完成报告并发送至您的联系方式：{formData.contact}
+                    您的企划报告需求已进入审核队列，专业顾问将在 <span className="font-bold text-accent">24小时内</span> 联系您确认需求并沟通细节，之后出具报告。联系方式：{formData.contact}
                   </p>
                 </div>
 
@@ -711,8 +728,11 @@ export default function PlanningToolPage() {
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载Word/PDF完整版</li>
               </ul>
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="text-lg font-bold text-accent">¥99</span>
-                <span className="text-xs text-muted-foreground line-through">¥199</span>
+                <span className="text-lg font-bold text-accent">
+                  ¥{isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE}
+                </span>
+                <span className="text-xs text-muted-foreground line-through">¥{AI_REPORT_ORIGINAL_PRICE}</span>
+                {isBasicMember && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">会员价</span>}
               </div>
             </div>
             <div className="bg-white rounded-2xl p-6 border-2 border-primary/20">
@@ -722,13 +742,13 @@ export default function PlanningToolPage() {
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">/planning</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />顾问对接，48小时出方案</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />顾问对接，最快48小时出报告</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />结合店铺实际数据定制</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />完整方案，可落地执行</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />含后续跟踪与动态调整</li>
               </ul>
               <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="text-lg font-bold text-primary">¥598</span>
+                <span className="text-lg font-bold text-primary">¥7,800</span>
                 <span className="text-xs text-muted-foreground">/次起</span>
               </div>
             </div>
