@@ -121,7 +121,13 @@ export default function MembersPage() {
       <div className="bg-primary text-white py-10">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h1 className="text-2xl md:text-3xl font-bold mb-2">VIP会员中心</h1>
-          <p className="text-white/80 text-sm">查看批发价 · 享受折扣拿货 · 专属顾问服务</p>
+          <p className="text-white/80 text-sm mb-4">查看批发价 · 享受折扣拿货 · 专属顾问服务</p>
+          <a
+            href="/my-reports"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/10 text-white text-sm font-medium rounded-lg hover:bg-white/20 transition-colors"
+          >
+            我的报告
+          </a>
         </div>
       </div>
 

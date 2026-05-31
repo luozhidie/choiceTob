@@ -31,6 +31,7 @@ const PLAN_TYPES = [
   { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 1680000, originalPrice: null },
   { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 1680000, originalPrice: null },
   { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案，不仅全案商品企划服务，还会帮忙组一盘货", price: 7800000, originalPrice: null },
+  { value: "ai_report", label: "AI企划报告", icon: FileText, desc: "AI智能生成企划报告，填写资料后即刻生成", price: 298000, originalPrice: 398000, memberPrice: 98000 },
 ];
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
@@ -161,6 +162,14 @@ export default function PlanningPage() {
         setShowPaywall(true);
         clearTimeout(safetyTimeout);
         setSubmitting(false);
+        return;
+      }
+
+      // 如果是AI报告，跳转到AI测试页面
+      if (createForm.plan_type === "ai_report") {
+        clearTimeout(safetyTimeout);
+        setSubmitting(false);
+        window.location.href = "/planning-tool";
         return;
       }
 
