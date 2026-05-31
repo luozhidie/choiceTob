@@ -5,10 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText, Download, Eye, Sparkles, ChevronRight,
   CheckCircle2, Loader2, Wand2, ArrowRight, Store,
-  Ruler, MessageSquare, CreditCard, Check,
+  Ruler, MessageSquare, CreditCard, Check, LogIn, UserPlus,
 } from "lucide-react";
-import AdBanner from "@/components/AdBanner";
-import { PaywallModal } from "@/components/PaywallModal";
 import { createClient } from "@/lib/supabase/client";
 
 /* ==================== 选项数据 ==================== */
@@ -79,19 +77,17 @@ interface PlanningReport {
 
 /* ==================== 页面 ==================== */
 /* 价格配置 */
-const AI_REPORT_PRICE = 2980; // 非会员价
-const AI_REPORT_MEMBER_PRICE = 980; // 基础会员价
-const AI_REPORT_ORIGINAL_PRICE = 3980; // 划线原价
+const AI_REPORT_PRICE = 2980; // 非会员价（分）
+const AI_REPORT_MEMBER_PRICE = 980; // 基础会员价（分）
+const AI_REPORT_ORIGINAL_PRICE = 3980; // 划线原价（分）
 
 export default function PlanningToolPage() {
-  const [step, setStep] = useState(1);
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [report, setReport] = useState<PlanningReport | null>(null);
-  const [submitted, setSubmitted] = useState(false);
-  const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null; style_position: string | null; target_age: string | null; price_range: string | null; shop_size: string | null }[]>([]);
-  const [selectedStoreId, setSelectedStoreId] = useState("");
+  const [step, setStep] = useState<"landing" | "form" | "generating" | "done">("landing");
+  const [user, setUser] = useState<any>(null);
   const [isBasicMember, setIsBasicMember] = useState(false);
+  const [hasPaid, setHasPaid] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     brandName: "",
@@ -110,14 +106,14 @@ export default function PlanningToolPage() {
 
   const supabase = createClient();
 
+  // 初始化：检测登录状态 + 会员状态 + 是否已付费
   useEffect(() => {
-    supabase.from("stores").select("id, name, city, style_position, target_age, price_range, shop_size").eq("status", "active").order("name")
-      .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
-
-    // 检测是否基础会员
-    const checkMember = async () => {
+    const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
       if (user) {
+        // 检测是否基础会员
         const { data: membership } = await supabase
           .from("memberships")
           .select("type, status")
@@ -129,65 +125,171 @@ export default function PlanningToolPage() {
         if (membership && (membership.type === "basic" || membership.type === "pro" || membership.type === "premium")) {
           setIsBasicMember(true);
         }
+
+        // 检测是否已付费（查看 planning_payments 表有无 paid 记录）
+        const { data: payments } = await supabase
+          .from("planning_payments")
+          .select("id, status")
+          .eq("user_id", user.id)
+          .eq("status", "paid")
+          .limit(1);
+        if (payments && payments.length > 0) {
+          setHasPaid(true);
+          setStep("form"); // 已付费，直接进入填资料
+        } else {
+          setStep("landing"); // 未付费，显示介绍+支付按钮
+        }
+      } else {
+        setStep("landing"); // 未登录，显示介绍+登录按钮
       }
     };
-    checkMember();
+    init();
   }, []);
-
-  const handleSelectStore = (storeId: string) => {
-    setSelectedStoreId(storeId);
-    if (!storeId) return;
-    const store = storeOptions.find(s => s.id === storeId);
-    if (!store) return;
-    setFormData(f => ({
-      ...f,
-      brandName: f.brandName || store.name,
-      marketStyle: f.marketStyle || store.style_position || "",
-      targetAge: f.targetAge || store.target_age || "",
-      priceBand: f.priceBand || store.price_range || "199-399元",
-      shopSize: f.shopSize || store.shop_size || "",
-    }));
-  };
 
   const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
   const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
 
-  /* 提交需求并进入支付 */
-  const handleSubmit = async () => {
-    setGenerating(true);
-
+  /* 模拟支付 */
+  const handlePay = async () => {
+    if (!user) return;
+    const amount = isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE;
     try {
-      // 保存需求到 planning_requests 表
-      const { error } = await supabase.from("planning_requests").insert([{
-        store_name: formData.brandName,
-        store_type: formData.storeType,
-        store_scale: formData.storeScale,
-        style_preference: formData.marketStyle,
-        season: formData.season,
-        budget_range: formData.priceBand,
-        contact: formData.contact,
-        problems: formData.problems || null,
-        notes: formData.notes || null,
-      }]);
+      // 创建支付记录（模拟支付，直接标记paid）
+      const { data: payment, error } = await supabase
+        .from("planning_payments")
+        .insert([{
+          user_id: user.id,
+          amount,
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          payment_method: "mock",
+          mock_paid: true,
+        }])
+        .select("id")
+        .single();
 
       if (error) {
-        console.error("保存需求失败:", error);
+        console.error("支付失败:", error);
+        alert("支付失败，请重试");
+        return;
       }
+
+      setHasPaid(true);
+      setStep("form");
     } catch (err) {
-      console.error("提交失败:", err);
+      console.error("支付异常:", err);
+      alert("支付异常，请重试");
     }
-
-    setGenerating(false);
-    setStep(2);
   };
 
-  const handlePay = async () => {
-    setSubmitted(true);
-    setStep(3);
+  /* 提交资料 → 调用AI生成报告 */
+  const handleSubmit = async () => {
+    if (!user) return;
+    setGenerating(true);
+    setStep("generating");
+
+    try {
+      // 1. 保存需求到 planning_requests 表
+      const { data: req, error: reqError } = await supabase
+        .from("planning_requests")
+        .insert([{
+          user_id: user.id,
+          user_email: user.email,
+          store_name: formData.brandName,
+          store_type: formData.storeType,
+          store_scale: formData.storeScale,
+          style_preference: formData.marketStyle,
+          season: formData.season,
+          budget_range: formData.priceBand,
+          contact: formData.contact,
+          status: "paid",
+          paid_amount: isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE,
+          paid_at: new Date().toISOString(),
+          problems: formData.problems || null,
+          notes: formData.notes || null,
+        }])
+        .select("id")
+        .single();
+
+      if (reqError || !req) {
+        console.error("保存需求失败:", reqError);
+        alert("提交失败，请重试");
+        setGenerating(false);
+        setStep("form");
+        return;
+      }
+
+      setRequestId(req.id);
+
+      // 2. 调用 /api/generate-planning 生成AI报告
+      const colorLabel = getColorLabel(formData.colorPref);
+      const styleLabel = getStyleLabel(formData.marketStyle);
+
+      const aiRes = await fetch("/api/generate-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandName: formData.brandName,
+          season: formData.season,
+          colorPref: formData.colorPref,
+          colorLabel,
+          marketStyle: formData.marketStyle,
+          styleLabel,
+          priceBand: formData.priceBand,
+          targetAge: formData.targetAge,
+          shopSize: formData.shopSize,
+          notes: formData.notes,
+        }),
+      });
+
+      let reportJson = null;
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        reportJson = aiData.report;
+      }
+
+      // 3. 保存报告到 planning_reports 表
+      const { data: report, error: reportError } = await supabase
+        .from("planning_reports")
+        .insert([{
+          user_id: user.id,
+          request_id: req.id,
+          title: `${formData.brandName} · ${formData.season}企划报告`,
+          report_json: reportJson,
+          amount: isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE,
+          status: "draft",
+          category: "ai_generated",
+        }])
+        .select("id")
+        .single();
+
+      if (reportError || !report) {
+        console.error("保存报告失败:", reportError);
+      } else {
+        // 4. 更新 planning_requests 的 report_id
+        await supabase
+          .from("planning_requests")
+          .update({ report_id: report.id, status: "completed" })
+          .eq("id", req.id);
+      }
+
+      setStep("done");
+    } catch (err) {
+      console.error("提交生成失败:", err);
+      alert("生成失败，请重试");
+      setStep("form");
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  /* 如果正在生成，显示动画 */
-  if (generating) {
+  /* 跳转登录 */
+  const goLogin = () => {
+    window.location.href = "/login?redirect=" + encodeURIComponent(window.location.pathname);
+  };
+
+  /* ======== 渲染：生成中动画 ======== */
+  if (step === "generating") {
     return (
       <section className="min-h-screen flex items-center justify-center bg-white">
         <motion.div
@@ -198,9 +300,9 @@ export default function PlanningToolPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-accent/10 mb-6">
             <Loader2 className="w-10 h-10 text-accent animate-spin" />
           </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">正在生成企划初稿...</h2>
+          <h2 className="text-2xl font-bold text-primary mb-2">AI正在生成企划报告...</h2>
           <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-            正在结合{getStyleLabel(formData.marketStyle)}风格定位与{getColorLabel(formData.colorPref)}色系偏好，生成个性化商品企划初稿
+            正在结合{getStyleLabel(formData.marketStyle)}风格定位与{getColorLabel(formData.colorPref)}色系偏好，生成个性化商品企划报告
           </p>
           <div className="mt-8 max-w-sm mx-auto space-y-2 text-left">
             {[
@@ -208,7 +310,7 @@ export default function PlanningToolPage() {
               "匹配色系偏好与风格定位",
               "规划商品结构与价格带分布",
               "生成波段上新建议",
-              "输出初稿企划框架",
+              "输出完整企划报告",
             ].map((item, i) => (
               <motion.div
                 key={item}
@@ -229,537 +331,360 @@ export default function PlanningToolPage() {
     );
   }
 
-  return (
-    <>
-      <PaywallModal
-        isOpen={showPaywall}
-        onClose={() => setShowPaywall(false)}
-        title="完整Word报告"
-        description="付费后可下载完整Word版企划报告（含详细数据与分析）"
-        type="single"
-      />
+  /* ======== 渲染：着陆页（未登录/未付费） ======== */
+  if (step === "landing") {
+    const price = isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE;
+    const originalPrice = AI_REPORT_ORIGINAL_PRICE;
 
-      {/* ====== Hero ====== */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/3" />
-        </div>
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-14 sm:py-18">
-          <motion.div
-            className="max-w-2xl"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
-              <Sparkles className="w-4 h-4" />
-              AI 智能企划报告
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-bold leading-tight">
-              定制您的专属企划报告
-            </h1>
-            <p className="mt-3 text-white/80 leading-relaxed">
-              填写店铺信息，精准匹配类型+体量+风格，{isBasicMember ? `基础会员仅需 ¥${AI_REPORT_MEMBER_PRICE}` : `¥${AI_REPORT_PRICE}`} 获取完整商品企划报告，1-2个工作日交付。
-            </p>
-            {/* 定位说明 */}
-            <div className="mt-6 inline-flex items-center gap-4 text-xs text-white/60">
-              <span className="flex items-center gap-1">
-                <Wand2 className="w-3.5 h-3.5" />
-                精准匹配 · 专业定制
+    return (
+      <section className="min-h-screen bg-white">
+        {/* Hero */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80 text-white">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-accent/10 -translate-y-1/3 translate-x-1/3" />
+          </div>
+          <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+            <motion.div
+              className="max-w-2xl"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-accent text-sm font-medium backdrop-blur-sm border border-white/10 mb-4">
+                <Sparkles className="w-4 h-4" />
+                AI 智能企划报告
               </span>
-              <span className="flex items-center gap-1">
-                <FileText className="w-3.5 h-3.5" />
-                完整报告 · 可落地执行
-              </span>
-            </div>
-          </motion.div>
+              <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
+                ¥{price / 100} 获取专属<br />商品企划报告
+              </h1>
+              <p className="mt-4 text-white/80 leading-relaxed text-lg">
+                填写店铺信息，AI精准匹配类型+体量+风格，1-2个工作日交付完整报告。
+              </p>
+              <div className="mt-8 flex items-center gap-4">
+                {!user ? (
+                  <button
+                    onClick={goLogin}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-bold rounded-xl hover:bg-accent/90 transition-colors shadow-lg shadow-accent/30 text-base"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    登录后购买
+                  </button>
+                ) : (
+                  <button
+                    onClick={handlePay}
+                    className="inline-flex items-center gap-2 px-8 py-3.5 bg-accent text-white font-bold rounded-xl hover:bg-accent/90 transition-colors shadow-lg shadow-accent/30 text-base"
+                  >
+                    <CreditCard className="w-5 h-5" />
+                    立即支付 ¥{price / 100}
+                  </button>
+                )}
+                <span className="text-white/50 text-sm line-through">原价 ¥{originalPrice / 100}</span>
+                {isBasicMember && (
+                  <span className="text-[11px] font-bold text-green-300 bg-green-500/20 px-2 py-1 rounded-full">基础会员价</span>
+                )}
+              </div>
+              {!user && (
+                <p className="mt-3 text-white/50 text-xs">新用户请先注册登录，支付后即刻进入企划工具</p>
+              )}
+            </motion.div>
+          </div>
         </div>
-      </section>
 
-      {/* ====== 主内容 ====== */}
-      <section className="py-12 lg:py-16 bg-white">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-
-          {/* Step 指示器 */}
-          <div className="flex items-center justify-center gap-4 mb-10">
-            {["填写需求", "提交审核", "提交成功"].map((label, i) => (
-              <div key={label} className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                    step > i + 1 ? "bg-accent text-white" : step === i + 1 ? "bg-primary text-white" : "bg-gray-200 text-gray-400"
-                  }`}
-                >
-                  {step > i + 1 ? "✓" : i + 1}
-                </div>
-                <span className={`text-sm ${step === i + 1 ? "text-primary font-semibold" : "text-gray-400"}`}>
-                  {label}
-                </span>
-                {i < 2 && <div className="w-12 h-0.5 bg-gray-200" />}
+        {/* 功能说明 */}
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16">
+          <h2 className="text-2xl font-bold text-primary text-center mb-10">报告包含哪些内容？</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {[
+              { icon: "🎨", title: "色彩企划", desc: "基础色/主题色/点缀色/流行色四层配比，精准匹配VIP色彩季型分布" },
+              { icon: "👗", title: "风格企划", desc: "4-6个主流风格组合，每个含场合/氛围/流量占比/利润占比" },
+              { icon: "📦", title: "商品结构", desc: "引流款/利润款/形象款/搭配款合理配比，直接指导采购" },
+              { icon: "💰", title: "价格带策略", desc: "基于你的主力价格带拆分4档，含定价策略和毛利测算" },
+              { icon: "📅", title: "波段上新计划", desc: "3个波段具体事项，含爆款预测/陈列建议/补货策略" },
+              { icon: "📊", title: "货盘建议", desc: "核心SKU清单+避坑清单+库存策略，可落地执行" },
+            ].map((item) => (
+              <div key={item.title} className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                <div className="text-2xl mb-2">{item.icon}</div>
+                <h3 className="font-bold text-primary mb-1">{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+    );
+  }
 
+  /* ======== 渲染：填资料表单（已付费） ======== */
+  if (step === "form") {
+    return (
+      <section className="min-h-screen bg-white">
+        {/* Hero */}
+        <div className="bg-primary text-white py-8">
+          <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
+            <h1 className="text-2xl font-bold">填写店铺资料</h1>
+            <p className="mt-1 text-white/70 text-sm">精准匹配：类型 + 体量 + 风格，AI为您定制专属企划报告</p>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
           <AnimatePresence mode="wait">
-            {/* ====== Step 1: 填写信息 ====== */}
-            {step === 1 && (
-              <motion.div
-                key="step1"
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                className="space-y-6"
-              >
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-primary">填写店铺需求</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    精准匹配：类型 + 体量 + 风格，为您定制专属企划报告
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* 店铺类型 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      <Store className="w-3.5 h-3.5 inline mr-1" />
-                      店铺类型 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {STORE_TYPES.map((t) => (
-                        <button
-                          key={t.value}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, storeType: f.storeType === t.value ? "" : t.value }))}
-                          className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left ${
-                            formData.storeType === t.value
-                              ? "bg-primary text-white border-primary"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
-                          }`}
-                        >
-                          <span className="block font-semibold">{t.label}</span>
-                          <span className={`text-[10px] ${formData.storeType === t.value ? "text-white/70" : "text-muted-foreground"}`}>{t.desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 店铺体量 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      <Ruler className="w-3.5 h-3.5 inline mr-1" />
-                      店铺体量 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {STORE_SCALES.map((s) => (
-                        <button
-                          key={s.value}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, storeScale: f.storeScale === s.value ? "" : s.value }))}
-                          className={`w-full px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left flex items-center justify-between ${
-                            formData.storeScale === s.value
-                              ? "bg-accent text-white border-accent"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
-                          }`}
-                        >
-                          <div>
-                            <span className="block font-semibold">{s.label}</span>
-                            <span className={`text-[10px] ${formData.storeScale === s.value ? "text-white/70" : "text-muted-foreground"}`}>{s.desc}</span>
-                          </div>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${formData.storeScale === s.value ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>{s.range}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 品牌名称 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      品牌/店铺名称 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={formData.brandName}
-                      onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                      placeholder="请输入品牌或店铺名称"
-                    />
-                  </div>
-
-                  {/* 目标季节 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      目标季节 <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={formData.season}
-                      onChange={(e) => setFormData({ ...formData, season: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
-                    >
-                      {SEASONS.map((s) => (
-                        <option key={s} value={s}>{s}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* 风格定位 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      风格定位 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
-                      {MARKET_STYLES.map((s) => (
-                        <button
-                          key={s.value}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, marketStyle: f.marketStyle === s.value ? "" : s.value }))}
-                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
-                            formData.marketStyle === s.value
-                              ? "bg-accent text-white border-accent"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
-                          }`}
-                        >
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 色系偏好 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      色系偏好 <span className="text-red-500">*</span>
-                    </label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {COLOR_PREFERENCES.map((c) => (
-                        <button
-                          key={c.value}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, colorPref: f.colorPref === c.value ? "" : c.value }))}
-                          className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border text-left ${
-                            formData.colorPref === c.value
-                              ? "bg-primary text-white border-primary"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
-                          }`}
-                        >
-                          <span className="block font-semibold">{c.label}</span>
-                          <span className={`text-[10px] ${formData.colorPref === c.value ? "text-white/70" : "text-muted-foreground"}`}>{c.desc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 主价格带 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      主价格带
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {PRICE_BANDS.map((p) => (
-                        <button
-                          key={p}
-                          type="button"
-                          onClick={() => setFormData(f => ({ ...f, priceBand: p }))}
-                          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                            formData.priceBand === p
-                              ? "bg-primary text-white border-primary"
-                              : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
-                          }`}
-                        >
-                          ¥{p}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* 联系方式 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      联系方式 <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.contact}
-                      onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
-                      placeholder="手机号或微信，用于接收报告"
-                    />
-                  </div>
-                </div>
-
-                {/* 当前遇到的问题 */}
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* 店铺类型 */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
-                    当前遇到的问题（可选）
+                    <Store className="w-3.5 h-3.5 inline mr-1" />
+                    店铺类型 <span className="text-red-500">*</span>
                   </label>
-                  <textarea
-                    value={formData.problems}
-                    onChange={(e) => setFormData({ ...formData, problems: e.target.value })}
-                    rows={3}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
-                    placeholder="例如：库存积压、选品不准、陈列效果差、客流下降..."
-                  />
-                </div>
-
-                {/* 补充说明 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    补充说明（可选）
-                  </label>
-                  <textarea
-                    value={formData.notes}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={2}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
-                    placeholder="其他特殊需求或说明..."
-                  />
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!formData.brandName.trim() || !formData.storeType || !formData.storeScale || !formData.marketStyle || !formData.colorPref || !formData.contact.trim() || generating}
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
-                  >
-                    下一步：提交审核
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ====== Step 2: 提交审核 ====== */}
-            {step === 2 && (
-              <motion.div
-                key="step2"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-              >
-                <div className="text-center mb-8">
-                  <h2 className="text-2xl font-bold text-primary">确认需求并提交</h2>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    核对您的需求信息，提交后专业顾问将审核并联系您沟通需求
-                  </p>
-                </div>
-
-                {/* 需求确认卡片 */}
-                <div className="bg-gray-50 rounded-2xl p-6 space-y-4">
-                  <h3 className="font-bold text-primary flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    需求信息
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">店铺类型</span>
-                      <p className="font-medium text-primary">{STORE_TYPES.find(t => t.value === formData.storeType)?.label || formData.storeType}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">店铺体量</span>
-                      <p className="font-medium text-primary">{STORE_SCALES.find(s => s.value === formData.storeScale)?.label || formData.storeScale}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">品牌名称</span>
-                      <p className="font-medium text-primary">{formData.brandName}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">目标季节</span>
-                      <p className="font-medium text-primary">{formData.season}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">风格定位</span>
-                      <p className="font-medium text-primary">{getStyleLabel(formData.marketStyle)}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">色系偏好</span>
-                      <p className="font-medium text-primary">{getColorLabel(formData.colorPref)}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">主价格带</span>
-                      <p className="font-medium text-primary">{formData.priceBand}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">联系方式</span>
-                      <p className="font-medium text-primary">{formData.contact}</p>
-                    </div>
-                  </div>
-                  {formData.problems && (
-                    <div className="bg-white rounded-lg p-3">
-                      <span className="text-gray-400 text-xs">遇到的问题</span>
-                      <p className="font-medium text-primary text-sm mt-1">{formData.problems}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* 支付卡片 */}
-                <div className="bg-gradient-to-br from-primary/5 to-accent/5 rounded-2xl p-6 border border-accent/20">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-bold text-primary flex items-center gap-2">
-                        <CreditCard className="w-4 h-4" />
-                        服务费用
-                      </h3>
-                      <p className="text-sm text-muted-foreground mt-1">专属企划报告 · 精准匹配定制</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-3xl font-bold text-accent">
-                        ¥{isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE}
-                      </span>
-                      <span className="text-sm text-gray-400 line-through ml-2">¥{AI_REPORT_ORIGINAL_PRICE}</span>
-                      {isBasicMember && (
-                        <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full ml-2">基础会员价</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-accent shrink-0" />
-                      <span>基于您的店铺类型、体量、风格精准匹配</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-accent shrink-0" />
-                      <span>1-2个工作日内生成并发送至您的联系方式</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Check className="w-4 h-4 text-accent shrink-0" />
-                      <span>包含色彩企划、商品结构、价格带、波段规划</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-4 p-3 bg-indigo-50 rounded-xl border border-indigo-100">
-                    <p className="text-xs text-indigo-700">💡 提交后进入审核流程：专业顾问将在24小时内联系您确认需求，沟通完成后出具报告。</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-4">
-                  <button
-                    onClick={() => setStep(1)}
-                    className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    返回修改
-                  </button>
-                  <button
-                    onClick={handlePay}
-                    className="inline-flex items-center gap-2 px-8 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors shadow-lg shadow-accent/20"
-                  >
-                    <CheckCircle2 className="w-5 h-5" />
-                    提交审核
-                  </button>
-                </div>
-              </motion.div>
-            )}
-
-            {/* ====== Step 3: 提交成功 ====== */}
-            {step === 3 && (
-              <motion.div
-                key="step3"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-8"
-              >
-                <div className="text-center py-8">
-                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
-                    <CheckCircle2 className="w-10 h-10 text-green-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-primary mb-2">需求已提交审核！</h2>
-                  <p className="text-muted-foreground max-w-md mx-auto leading-relaxed">
-                    您的企划报告需求已进入审核队列，专业顾问将在 <span className="font-bold text-accent">24小时内</span> 联系您确认需求并沟通细节，之后出具报告。联系方式：{formData.contact}
-                  </p>
-                </div>
-
-                {/* 后续流程 */}
-                <div className="bg-gray-50 rounded-2xl p-6 max-w-lg mx-auto">
-                  <h3 className="font-bold text-primary mb-4 text-center">接下来会发生什么？</h3>
-                  <div className="space-y-4">
-                    {[
-                      { step: "1", title: "需求审核", desc: "专业顾问审核您的店铺信息与需求" },
-                      { step: "2", title: "报告生成", desc: "基于类型+体量+风格，AI+人工定制企划报告" },
-                      { step: "3", title: "报告交付", desc: "通过您预留的联系方式发送完整报告" },
-                    ].map((item, i) => (
-                      <div key={item.step} className="flex items-start gap-3">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? "bg-accent text-white" : "bg-gray-200 text-gray-500"}`}>
-                          {item.step}
-                        </div>
-                        <div>
-                          <p className="font-medium text-primary text-sm">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.desc}</p>
-                        </div>
-                      </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {STORE_TYPES.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => setFormData(f => ({ ...f, storeType: f.storeType === t.value ? "" : t.value }))}
+                        className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left ${
+                          formData.storeType === t.value
+                            ? "bg-primary text-white border-primary"
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                        }`}
+                      >
+                        <span className="block font-semibold">{t.label}</span>
+                        <span className={`text-[10px] ${formData.storeType === t.value ? "text-white/70" : "text-muted-foreground"}`}>{t.desc}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
 
-                <div className="flex items-center justify-center gap-4 pt-4">
-                  <button
-                    onClick={() => { setStep(1); setSubmitted(false); setFormData({ brandName: "", season: "春夏", colorPref: "", marketStyle: "", priceBand: "199-399元", targetAge: "", shopSize: "", storeType: "", storeScale: "", problems: "", contact: "", notes: "" }); }}
-                    className="px-5 py-2.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    再提交一个需求
-                  </button>
-                  <a
-                    href="/buyer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-                  >
-                    先去逛逛选品
-                    <ArrowRight className="w-4 h-4" />
-                  </a>
+                {/* 店铺体量 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <Ruler className="w-3.5 h-3.5 inline mr-1" />
+                    店铺体量 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    {STORE_SCALES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setFormData(f => ({ ...f, storeScale: f.storeScale === s.value ? "" : s.value }))}
+                        className={`w-full px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left flex items-center justify-between ${
+                          formData.storeScale === s.value
+                            ? "bg-accent text-white border-accent"
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                        }`}
+                      >
+                        <div>
+                          <span className="block font-semibold">{s.label}</span>
+                          <span className={`text-[10px] ${formData.storeScale === s.value ? "text-white/70" : "text-muted-foreground"}`}>{s.desc}</span>
+                        </div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${formData.storeScale === s.value ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>{s.range}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </motion.div>
-            )}
+
+                {/* 品牌名称 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    品牌/店铺名称 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.brandName}
+                    onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
+                    placeholder="请输入品牌或店铺名称"
+                  />
+                </div>
+
+                {/* 目标季节 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    目标季节 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={formData.season}
+                    onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm bg-white"
+                  >
+                    {SEASONS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* 风格定位 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    风格定位 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                    {MARKET_STYLES.map((s) => (
+                      <button
+                        key={s.value}
+                        type="button"
+                        onClick={() => setFormData(f => ({ ...f, marketStyle: f.marketStyle === s.value ? "" : s.value }))}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border ${
+                          formData.marketStyle === s.value
+                            ? "bg-accent text-white border-accent"
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 色系偏好 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    色系偏好 <span className="text-red-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {COLOR_PREFERENCES.map((c) => (
+                      <button
+                        key={c.value}
+                        type="button"
+                        onClick={() => setFormData(f => ({ ...f, colorPref: f.colorPref === c.value ? "" : c.value }))}
+                        className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors border text-left ${
+                          formData.colorPref === c.value
+                            ? "bg-primary text-white border-primary"
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                        }`}
+                      >
+                        <span className="block font-semibold">{c.label}</span>
+                        <span className={`text-[10px] ${formData.colorPref === c.value ? "text-white/70" : "text-muted-foreground"}`}>{c.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 主价格带 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    主价格带
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {PRICE_BANDS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setFormData(f => ({ ...f, priceBand: p }))}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                          formData.priceBand === p
+                            ? "bg-primary text-white border-primary"
+                            : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                        }`}
+                      >
+                        ¥{p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 联系方式 */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    联系方式 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.contact}
+                    onChange={(e) => setFormData({ ...formData, contact: e.target.value })}
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm"
+                    placeholder="手机号或微信，用于接收报告"
+                  />
+                </div>
+              </div>
+
+              {/* 当前遇到的问题 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  <MessageSquare className="w-3.5 h-3.5 inline mr-1" />
+                  当前遇到的问题（可选）
+                </label>
+                <textarea
+                  value={formData.problems}
+                  onChange={(e) => setFormData({ ...formData, problems: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
+                  placeholder="例如：库存积压、选品不准、陈列效果差、客流下降..."
+                />
+              </div>
+
+              {/* 补充说明 */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  补充说明（可选）
+                </label>
+                <textarea
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={2}
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none transition-all text-sm resize-none"
+                  placeholder="其他特殊需求或说明..."
+                />
+              </div>
+
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleSubmit}
+                  disabled={!formData.brandName.trim() || !formData.storeType || !formData.storeScale || !formData.marketStyle || !formData.colorPref || !formData.contact.trim() || generating}
+                  className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+                >
+                  提交并生成报告
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            </motion.div>
           </AnimatePresence>
         </div>
       </section>
+    );
+  }
 
-      {/* ====== 与人工企划的区别说明 ====== */}
-      <section className="py-12 bg-muted/50">
-        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
-          <h3 className="text-center text-lg font-bold text-primary mb-8">两种企划服务，如何选择？</h3>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl p-6 border-2 border-accent/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="w-5 h-5 text-accent" />
-                <h4 className="font-bold text-primary">AI 企划报告</h4>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">本页</span>
-              </div>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />精准匹配：类型+体量+风格</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />1-2个工作日交付完整报告</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />包含色彩/结构/价格/波段规划</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-accent shrink-0" />可下载Word/PDF完整版</li>
-              </ul>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="text-lg font-bold text-accent">
-                  ¥{isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE}
-                </span>
-                <span className="text-xs text-muted-foreground line-through">¥{AI_REPORT_ORIGINAL_PRICE}</span>
-                {isBasicMember && <span className="text-[10px] font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">会员价</span>}
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 border-2 border-primary/20">
-              <div className="flex items-center gap-2 mb-3">
-                <FileText className="w-5 h-5 text-primary" />
-                <h4 className="font-bold text-primary">人工定制企划</h4>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">/planning</span>
-              </div>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />顾问对接，最快48小时出报告</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />结合店铺实际数据定制</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />完整方案，可落地执行</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-primary shrink-0" />含后续跟踪与动态调整</li>
-              </ul>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-2">
-                <span className="text-lg font-bold text-primary">¥7,800</span>
-                <span className="text-xs text-muted-foreground">/次起</span>
-              </div>
-            </div>
+  /* ======== 渲染：完成页 ======== */
+  if (step === "done") {
+    return (
+      <section className="min-h-screen flex items-center justify-center bg-white">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center max-w-md mx-auto px-4"
+        >
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-green-100 mb-6">
+            <CheckCircle2 className="w-10 h-10 text-green-600" />
           </div>
-        </div>
+          <h2 className="text-2xl font-bold text-primary mb-2">报告已生成！</h2>
+          <p className="text-muted-foreground leading-relaxed mb-8">
+            您的AI企划报告已生成完毕，点击下方按钮查看完整报告。如需调整，可在报告中申请人工审核。
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="/my-reports"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors"
+            >
+              <FileText className="w-5 h-5" />
+              查看我的报告
+            </a>
+            <a
+              href="/"
+              className="inline-flex items-center gap-2 px-6 py-3 border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              返回首页
+            </a>
+          </div>
+        </motion.div>
       </section>
+    );
+  }
 
-      {/* Ad Banner */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <AdBanner position="inline" />
-      </div>
-    </>
-  );
+  return null;
 }

@@ -320,21 +320,49 @@ export async function POST(req: NextRequest) {
 {
   "brandName": "品牌名",
   "season": "季节",
-  "summary": "企划概要（200字以内）",
+  "summary": "企划概要（300字以内，包含市场机会、核心策略、预期效果）",
+  "marketAnalysis": {
+    "trend": "市场趋势分析（200字）",
+    "competition": "竞争格局分析（200字）",
+    "opportunity": "市场机会点（3-5个要点）"
+  },
+  "vipPortrait": {
+    "corePortrait": "核心VIP画像描述（200字）",
+    "consumptionPower": "消费力分析（100字）",
+    "priceSensitivity": "价格敏感度评估（100字）",
+    "loyaltyLevel": "忠诚度分析（100字）"
+  },
   "colorPlan": [
-    {"type": "基础色", "ratio": "40%", "colors": ["色1", "色2"]},
-    {"type": "主题色", "ratio": "35%", "colors": ["色1", "色2"]},
-    {"type": "点缀色", "ratio": "15%", "colors": ["色1", "色2"]},
-    {"type": "流行色", "ratio": "10%", "colors": ["色1", "色2"]}
+    {"type": "基础色/主题色/点缀色/流行色", "ratio": "占比", "colors": ["色1", "色2"], "reason": "选色理由"}
   ],
   "stylePlan": [
-    {"mainStyle": "主风格名", "subStyle": "偏风格名", "styleCombo": "组合名", "gender": "女士/男士", "occasions": ["场合1"], "vibe": ["风情1"], "trafficRatio": "占比", "profitRatio": "占比"}
+    {"mainStyle": "主风格名", "subStyle": "偏风格名", "styleCombo": "组合名", "gender": "女士/男士", "occasions": ["场合1"], "vibe": ["氛围1"], "trafficRatio": "占比", "profitRatio": "占比", "targetAge": "目标年龄"}
   ],
   "productStructure": [
-    {"type": "引流款/利润款/形象款/搭配款", "ratio": "占比", "desc": "简述"}
+    {"type": "引流款/利润款/形象款/搭配款", "ratio": "占比", "desc": "简述", "keyItems": ["关键单品1"]}
   ],
   "pricePlan": [
-    {"band": "价格带名", "range": "价格范围", "ratio": "占比", "strategy": "策略说明"}
+    {"band": "价格带名", "range": "价格范围", "ratio": "占比", "strategy": "策略说明", "marginTarget": "目标毛利%"}
+  ],
+  "waveCalendar": [
+    {"week": 1, "theme": "波段主题", "keyActions": ["动作1"], "buyPlan": "采购计划", "displayFocus": "陈列重点"}
+  ],
+  "displayAdvice": {
+    "floorPlan": "卖场规划建议（200字）",
+    "keyAreas": [{"area": "区域名", "focus": "重点", "colorMatch": "色彩搭配"}],
+    "windowDisplay": "橱窗陈列建议（200字）",
+    "topsTips": ["搭配技巧1", "搭配技巧2"]
+  },
+  "kpiTargets": {
+    "salesTarget": "销售额目标",
+    "marginTarget": "毛利率目标%",
+    "sellThroughTarget": "售罄率目标%",
+    "inventoryTurnTarget": "库存周转天数目标",
+    "trafficGoal": "客流目标人次",
+    "conversionGoal": "成交率目标%"
+  },
+  "riskWarnings": [
+    {"risk": "风险描述", "level": "高/中/低", "mitigation": "应对方案"}
   ],
   "quartersPlan": [
     {"phase": "波段名", "items": ["事项1", "事项2"]}
@@ -424,20 +452,32 @@ export async function POST(req: NextRequest) {
     userPrompt += `
 
 【企划要求】
-1. colorPlan 至少4组，比例加起来=100%。${hasVip ? "色彩占比必须与VIP色彩季型分布严格对齐" : hasMarket ? "色彩选择必须参考市场热门颜色数据" : ""}
-2. stylePlan 列出4-6个主流风格组合，每个包含mainStyle/subStyle/styleCombo/gender/occasions/vibe/trafficRatio/profitRatio。${hasVip ? "风格占比必须与VIP风格分布对齐" : hasMarket ? "参考市场热门风格数据" : ""}
-3. productStructure 4类（引流款15%、利润款50%、形象款20%、搭配款15%）
-4. pricePlan 必须严格基于用户输入的「主力价格带」拆分为4档，比例加起来=100%。${memberStats?.avg_vip_spent ? `参考VIP人均消费¥${memberStats.avg_vip_spent}。` : ""}${marketResearch?.priceAnalysis?.avg ? `参考市场均价¥${marketResearch.priceAnalysis.avg}。` : ""}绝对不能输出与用户价格带无关的默认价格。
-5. quartersPlan 3个波段，每波4个事项
-6. imageKeywords 必须基于实际风格组合生成
-7. 内容要具体、专业、可落地
-8. assortmentAdvice（货盘建议）是核心产出之一，必须包含：
+1. marketAnalysis：市场趋势、竞争格局、机会点，每部分200字，机会点列3-5个具体要点
+2. v_ipPortrait：基于VIP数据（如有）分析核心客群画像、消费力、价格敏感度、忠诚度
+3. colorPlan 至少4组，比例加起来=100%，每组注明选色理由。${hasVip ? "色彩占比必须与VIP色彩季型分布严格对齐" : hasMarket ? "色彩选择必须参考市场热门颜色数据" : ""}
+4. stylePlan 列出4-6个主流风格组合，每个包含mainStyle/subStyle/styleCombo/gender/occasions/vibe/trafficRatio/profitRatio/targetAge。${hasVip ? "风格占比必须与VIP风格分布对齐" : hasMarket ? "参考市场热门风格数据" : ""}
+5. productStructure 4类（引流款15%、利润款50%、形象款20%、搭配款15%），每类列2-3个关键单品
+6. pricePlan 必须严格基于用户输入的「主力价格带」拆分为4档，比例加起来=100%，每档注明目标毛利%。${memberStats?.avg_vip_spent ? `参考VIP人均消费¥${memberStats.avg_vip_spent}。` : ""}${marketResearch?.priceAnalysis?.avg ? `参考市场均价¥${marketResearch.priceAnalysis.avg}。` : ""}绝对不能输出与用户价格带无关的默认价格。
+7. waveCalendar：分4-6周，每周有波段主题、关键动作、采购计划、陈列重点
+8. displayAdvice：卖场规划、重点区域（3-5个）、橱窗建议、搭配技巧（5-8条）
+9. kpiTargets：销售额/毛利率/售罄率/库存周转/客流/成交率，所有指标必须具体可衡量
+10. riskWarnings：列出3-5个风险点（库存/竞争/季节/供应链），每个标注高/中/低风险并给应对方案
+11. quartersPlan 3个波段，每波4个事项
+12. imageKeywords 必须基于实际风格组合生成
+13. assortmentAdvice（货盘建议）是核心产出之一，必须包含：
    - categoryDepth：每个品类的SKU数量、颜色深度、尺码深度，基于VIP客群规模和库存现状决定
    - coreSkuList：列出8-12个核心款（占销量60%+的款），每款标注预期动销率和推荐理由
    - avoidList：明确不建议铺货的品类和原因（如：VIP中该风格占比<5%、市场动销率低、库存已有大量积压）
    - stockStrategy：首单/追单比例、补货触发条件
    原则：宁可少SKU多深度，不要多SKU浅深度。核心款做足颜色和尺码，非核心款只做1-2色。
-${hasVip && hasMarket ? `9. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）` : ""}`;
+${hasVip && hasMarket ? "14. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）" : ""}
+
+⚠ 报告质量要求（决定¥2980价值感）：
+- 所有分析必须有数据支撑，不能空泛
+- 所有建议必须可落地执行，不能只有方向
+- 核心数据（价格/占比/数量）必须精确，不能模糊
+- 风险预警必须具体且有应对方案
+- 整份报告字数不低于3000字，专业度对标咨询公司交付标准`;
 
     // 6. 调用AI API
     const useDeepseek = !!deepseekKey;
@@ -448,7 +488,7 @@ ${hasVip && hasMarket ? `9. 双数据源对齐原则（最重要）：色彩/风
     const aiRes = await fetch(apiUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({ model, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }], temperature: 0.7, max_tokens: 4000 }),
+      body: JSON.stringify({ model, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }], temperature: 0.7, max_tokens: 8000 }),
     });
 
     if (!aiRes.ok) {
@@ -525,25 +565,65 @@ function generateMockReport(brandName: string, season: string, colorLabel: strin
   return {
     brandName: brandName || "示例品牌",
     season,
-    summary: `基于${colorLabel || "综合"}偏好和${styleLabel || "百搭"}定位的${season}企划初稿。`,
+    summary: `基于${colorLabel || "综合"}偏好和${styleLabel || "百搭"}定位的${season}企划报告。本企划通过精准的色彩配比和风格定位，实现商品结构优化，预计可提升售罄率15-20%，降低库存积压30%。`,
+    marketAnalysis: {
+      trend: `${season}女装市场呈现"静奢风"与"新中式"双轨并行趋势，消费者更看重面料质感和版型剪裁，低价跑量模式逐步失效。社交媒体KOL带动"老钱风"持续升温。`,
+      competition: `主流竞争对手集中在¥200-400价格带，产品同质化严重。差异化机会在于：更精准的色彩配比+更专业的陈列指导+更高的性价比。`,
+      opportunity: ["静奢风扩大市场份额", "新中式元素差异化定位", "VIP专属配色方案", "小批量快反供应链", "社媒内容营销引流"],
+    },
+    v_ipPortrait: {
+      corePortrait: "核心VIP为30-45岁职场女性，年收入15-30万，注重品质感和职场适用性，对价格敏感度中等，更看重是否符合个人气质。",
+      consumptionPower: "VIP人均年消费¥8,000-15,000，其中Top 20%客户贡献60%营收，是高毛利款的核心购买力。",
+      priceSensitivity: "对¥199以下低价不敏感，对¥699以上高价需要强理由（面料/版型/稀缺性），主力成交价格带¥199-399。",
+      loyaltyLevel: "复购率45%，主要维系因素是专属服务和精准推荐，流失原因是款式更新慢和尺码不全。",
+    },
     colorPlan: [
-      { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"] },
-      { type: "主题色", ratio: "35%", colors: [(colorLabel || "中性") + "主调", "米白", "灰粉"] },
-      { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"] },
-      { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"] },
+      { type: "基础色", ratio: "40%", colors: ["黑", "白", "灰", "藏青"], reason: "适配职场场景，与其他色彩兼容性强" },
+      { type: "主题色", ratio: "35%", colors: [(colorLabel || "中性") + "主调", "米白", "灰粉"], reason: "呼应季节主题，体现品牌调性" },
+      { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"], reason: "小面积提亮，增加搭配趣味性" },
+      { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"], reason: "跟随Pantone流行色，吸引年轻客群" },
     ],
     stylePlan: [
-      { mainStyle: mainStyleName, subStyle: "浪漫", styleCombo: `${mainStyleName}偏浪漫`, gender: "女士", occasions: ["上班职场", "社交礼仪"], vibe: ["知性风", "职业风"], trafficRatio: "30%", profitRatio: "60%" },
-      { mainStyle: "优雅", subStyle: "少女", styleCombo: "优雅偏少女", gender: "女士", occasions: ["逛街约会", "社交礼仪"], vibe: ["韩系清新", "知性风"], trafficRatio: "12%", profitRatio: "8%" },
-      { mainStyle: "自然", subStyle: "少年", styleCombo: "自然偏少年", gender: "女士", occasions: ["出行旅游", "逛街约会"], vibe: ["休闲风", "运动休闲"], trafficRatio: "10%", profitRatio: "6%" },
+      { mainStyle: mainStyleName, subStyle: "浪漫", styleCombo: `${mainStyleName}偏浪漫`, gender: "女士", occasions: ["上班职场", "社交礼仪"], vibe: ["知性风", "职业风"], trafficRatio: "30%", profitRatio: "60%", targetAge: "30-40岁" },
+      { mainStyle: "优雅", subStyle: "少女", styleCombo: "优雅偏少女", gender: "女士", occasions: ["逛街约会", "社交礼仪"], vibe: ["韩系清新", "知性风"], trafficRatio: "12%", profitRatio: "8%", targetAge: "25-35岁" },
+      { mainStyle: "自然", subStyle: "少年", styleCombo: "自然偏少年", gender: "女士", occasions: ["出行旅游", "逛街约会"], vibe: ["休闲风", "运动休闲"], trafficRatio: "10%", profitRatio: "6%", targetAge: "25-40岁" },
     ],
     productStructure: [
-      { type: "引流款", ratio: "15%", desc: "低毛利高流量" },
-      { type: "利润款", ratio: "50%", desc: "核心利润来源" },
-      { type: "形象款", ratio: "20%", desc: "品牌调性展示" },
-      { type: "搭配款", ratio: "15%", desc: "提升连带率" },
+      { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引进店", keyItems: ["基础T恤", "牛仔裤"] },
+      { type: "利润款", ratio: "50%", desc: "核心利润来源，主推SKU", keyItems: ["西装外套", "连衣裙", "针织衫"] },
+      { type: "形象款", ratio: "20%", desc: "品牌调性展示，拉高客单价", keyItems: ["大衣", "羽绒服", "礼服裙"] },
+      { type: "搭配款", ratio: "15%", desc: "提升连带率，补全搭配", keyItems: ["围巾", "腰带", "配饰"] },
     ],
     pricePlan: buildMockPricePlan(priceBand),
+    waveCalendar: [
+      { week: 1, theme: "第一波：基础款上市", keyActions: ["上新基础T恤/衬衫", "橱窗第一版", "会员专享预览"], buyPlan: "首单40% + 补货预备", displayFocus: "入口展区放新品" },
+      { week: 2, theme: "第二波：主题款上市", keyActions: ["上新连衣裙/针织", "社媒内容发布", "KOL合作"], buyPlan: "追单30%", displayFocus: "中岛展区主打搭配" },
+      { week: 3, theme: "第三波：形象款上市", keyActions: ["上新大衣/外套", "VIP私享会", "搭配手册发布"], buyPlan: "形象款全色全码", displayFocus: "橱窗形象款主角" },
+      { week: 4, theme: "第四波：补货+促销", keyActions: ["畅销款追单", "滞销款促销", "新品预售"], buyPlan: "补货+清仓并行", displayFocus: "促销区调整" },
+    ],
+    displayAdvice: {
+      floorPlan: `卖场采用"回"字形动线，入口右侧设形象款展区（30%），中间位置设主推款展区（40%），左侧设促销/搭配区（20%），试衣间周边设配件区（10%）。`,
+      keyAreas: [
+        { area: "入口橱窗", focus: "形象款大衣+主题色背景", colorMatch: "主题色70%+点缀色30%" },
+        { area: "中岛展区", focus: "主推连衣裙+针织衫搭配", colorMatch: "基础色50%+主题色50%" },
+        { area: "试衣间周边", focus: "配件/配饰连带销售", colorMatch: "点缀色为主" },
+      ],
+      windowDisplay: `橱窗以"职场女性一天"为故事线，早间咖啡场景（基础色）+ 午间会议场景（形象款）+ 晚间约会场景（主题色），用灯光层次强化色彩情感。`,
+      topsTips: ["同色系深浅搭配显高级", "基础色+点缀色打造视觉焦点", "形象款只做2色保持稀缺感", "主推款做3-4色覆盖多客群", "配件用点缀色提亮整体造型"],
+    },
+    kpiTargets: {
+      salesTarget: "¥300,000/月",
+      marginTarget: "65%",
+      sellThroughTarget: "85%",
+      inventoryTurnTarget: "60天",
+      trafficGoal: "3000人次/月",
+      conversionGoal: "25%",
+    },
+    riskWarnings: [
+      { risk: "主推款售罄过快导致断码", level: "中", mitigation: "首单+追单模式，设置安全库存预警" },
+      { risk: "流行色接受度低导致积压", level: "低", mitigation: "流行色仅做10%，且只做1-2个SKU测试" },
+      { risk: "竞争对手同期大促分流", level: "高", mitigation: "提前2周布局内容营销，VIP专享提前购" },
+    ],
     quartersPlan: [
       { phase: "第一波段", items: ["风格商品结构规划", "色彩企划矩阵", "价格带分布策略", "核心品类确定"] },
       { phase: "第二波段", items: ["爆款预测与选品", "门店陈列建议", "库存周转提示", "营销活动建议"] },
@@ -553,6 +633,23 @@ function generateMockReport(brandName: string, season: string, colorLabel: strin
       colorImages: [`${season} ${colorLabel || "中性"}配色 知性通勤穿搭`],
       styleImages: [`${mainStyleName}偏浪漫 ${season}大衣 职场通勤搭配`],
       waveImages: [{ wave: 1, keywords: [`${season}第一波新品 大衣上市 店铺陈列`] }],
+    },
+    assortmentAdvice: {
+      summary: "核心SKU控制在80-100个，每个品类做2-3色×3-4码，首单60%+追单40%，重点关注连衣裙和针织衫的售罄率。",
+      categoryDepth: [
+        { category: "连衣裙", skuCount: 25, colorDepth: 3, sizeDepth: 4, reason: "核心品类，VIP复购最高" },
+        { category: "针织衫", skuCount: 20, colorDepth: 3, sizeDepth: 3, reason: "跨季销售，库存风险低" },
+        { category: "西装外套", skuCount: 15, colorDepth: 2, sizeDepth: 3, reason: "形象款，少色少码降低风险" },
+      ],
+      coreSkuList: [
+        { name: "基础款V领针织衫", category: "针织衫", colors: ["黑", "白", "灰"], priceRange: "199-299元", expectedSellThrough: "90%", reason: "跨季百搭，VIP复购TOP1" },
+        { name: "A字连衣裙", category: "连衣裙", colors: ["黑", "藏青", "酒红"], priceRange: "299-399元", expectedSellThrough: "85%", reason: "显瘦显高，职场约会双场景" },
+      ],
+      avoidList: [
+        { category: "破洞牛仔裤", reason: "VIP年龄层不接受，市场动销率<5%" },
+        { category: "超短裙", reason: "职场客群不适用，易滞销" },
+      ],
+      stockStrategy: "首单60%（安全库存覆盖2周）+ 追单40%（根据售罄率动态补货），补货触发条件：上市7天售罄率>30%即追单",
     },
   };
 }

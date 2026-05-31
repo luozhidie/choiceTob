@@ -65,6 +65,12 @@ export default function Navbar() {
                   <User className="w-4 h-4" />
                   {profile?.full_name || user.email?.split("@")[0] || "用户"}
                 </Link>
+                <Link
+                  href="/my-reports"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                >
+                  我的报告
+                </Link>
                 <button
                   onClick={() => signOut()}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
@@ -124,6 +130,13 @@ export default function Navbar() {
                     <User className="w-4 h-4" />
                     {profile?.full_name || user.email?.split("@")[0] || "用户"}
                   </div>
+                  <Link
+                    href="/my-reports"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                  >
+                    我的报告
+                  </Link>
                   <button
                     onClick={() => { signOut(); setMobileOpen(false); }}
                     className="flex items-center justify-center gap-1.5 w-full py-2.5 border border-border text-foreground/70 text-sm font-semibold rounded-lg hover:bg-muted transition-colors"
