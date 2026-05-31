@@ -6,17 +6,14 @@ import * as cheerio from "cheerio";
  * 淘宝商品页面爬虫（快代理隧道代理版）
  *
  * 环境变量：
- *   PROXY_HOST     - 快代理隧道代理Host（如 tunnel.kuaidaili.com）
- *   PROXY_PORT     - 快代理隧道代理端口（如 30008）
+ *   PROXY_HOST     - 快代理隧道代理Host
+ *   PROXY_PORT     - 快代理隧道代理端口
  *   PROXY_USERNAME - 快代理用户名
  *   PROXY_PASSWORD - 快代理密码
  *
  * 使用方式：
  *   POST /api/crawl/taobao-page
  *   body: { keyword: string, maxPages?: number }
- *
- * 返回：
- *   { success, items: [{ title, price, picUrl, sales, shopName, itemUrl }], count }
  */
 
 // ============ 配置 ============
@@ -25,7 +22,39 @@ const PROXY_PORT = process.env.PROXY_PORT || "";
 const PROXY_USERNAME = process.env.PROXY_USERNAME || "";
 const PROXY_PASSWORD = process.env.PROXY_PASSWORD || "";
 
-// ============ 淘宝商品搜索（使用axios原生proxy配置） ============
+function getProxyConfig() {
+  if (!PROXY_HOST || !PROXY_PORT) return undefined;
+  return {
+    host: PROXY_HOST,
+    port: parseInt(PROXY_PORT),
+    protocol: 'http' as const,
+    auth: (PROXY_USERNAME && PROXY_PASSWORD) ? {
+      username: PROXY_USERNAME,
+      password: PROXY_PASSWORD,
+    } : undefined,
+  };
+}
+
+// 模拟真实浏览器的完整请求头
+function getHeaders() {
+  return {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Referer": "https://www.taobao.com/",
+    "sec-ch-ua": '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": '"Windows"',
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-site",
+    "sec-fetch-user": "?1",
+    "upgrade-insecure-requests": "1",
+    "Connection": "keep-alive",
+    "Cache-Control": "max-age=0",
+  };
+}
 
 interface TaobaoItem {
   title: string;
@@ -37,47 +66,39 @@ interface TaobaoItem {
   location: string;
 }
 
-/** 搜索淘宝商品（使用隧道代理） */
+/** 搜索淘宝商品 */
 async function searchTaobaoItems(keyword: string, page = 1): Promise<TaobaoItem[]> {
   const searchUrl = `https://s.taobao.com/search?q=${encodeURIComponent(keyword)}&s=${(page - 1) * 44}`;
-
-  // 构建代理配置（axios原生支持http proxy）
-  const proxyConfig = (PROXY_HOST && PROXY_PORT) ? {
-    host: PROXY_HOST,
-    port: parseInt(PROXY_PORT),
-    protocol: 'http' as const,
-    auth: (PROXY_USERNAME && PROXY_PASSWORD) ? {
-      username: PROXY_USERNAME,
-      password: PROXY_PASSWORD,
-    } : undefined,
-  } : undefined;
+  const proxyConfig = getProxyConfig();
 
   try {
     const resp = await axios.get(searchUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-        "Referer": "https://www.taobao.com/",
-      },
+      headers: getHeaders(),
       timeout: 15000,
       proxy: proxyConfig,
+      decompress: true,
     });
 
-    const $ = cheerio.load(resp.data);
+    const html = String(resp.data);
+
+    // 检查是否被反爬拦截
+    if (html.includes("rgv587_flag") || html.includes("deny_h5") || html.includes("punish")) {
+      console.warn("[淘宝爬虫] 被反爬拦截，返回验证码页面");
+      return [];
+    }
+
+    const $ = cheerio.load(html);
     const items: TaobaoItem[] = [];
 
-    // 淘宝搜索结果在 script 标签里的 JSON 数据中
+    // 尝试从 script 标签解析 JSON 数据
     const scripts = $("script").toArray();
     for (const script of scripts) {
       const text = $(script).html() || "";
       if (text.includes("g_page_config") || text.includes("__NEXT_DATA__")) {
         try {
-          // 尝试解析JSON数据
           const jsonMatch = text.match(/g_page_config\s*=\s*(\{.*?\});/) || text.match(/__NEXT_DATA__\s*=\s*(\{.*)/);
           if (jsonMatch) {
             const data = JSON.parse(jsonMatch[1]);
-            // 提取商品列表（根据淘宝数据结构）
             const itemList = data?.mods?.itemlist?.data?.auctions ||
                           data?.pageProps?.initData?.items || [];
             for (const item of itemList.slice(0, 20)) {
@@ -159,7 +180,6 @@ export async function POST(request: NextRequest) {
       const items = await searchTaobaoItems(keyword, page);
       allItems.push(...items);
       if (items.length === 0) break;
-      // 延迟避免被封
       await new Promise(r => setTimeout(r, 2000));
     }
 
@@ -191,6 +211,7 @@ export async function POST(request: NextRequest) {
       duration_ms: duration,
       dataSource: "taobao_page_crawl",
       proxyUsed: !!(PROXY_HOST && PROXY_PORT),
+      antiCrawl: formattedItems.length === 0,
     });
 
   } catch (error: any) {
