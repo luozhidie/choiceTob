@@ -13,7 +13,7 @@ import {
   Globe,
   CheckCircle2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /* ------------------------------------------------------------------ */
 /*  Animation helpers                                                  */
@@ -94,8 +94,23 @@ export default function ContactPage() {
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
+  const [wechatWorkQR, setWechatWorkQR] = useState<string>("");
 
   const supabase = createClient();
+
+  // 加载企业微信二维码
+  useEffect(() => {
+    const loadQR = async () => {
+      const { data } = await supabase
+        .from("site_assets")
+        .select("image_url")
+        .eq("key", "wechat_work_qr")
+        .eq("is_active", true)
+        .single();
+      if (data?.image_url) setWechatWorkQR(data.image_url);
+    };
+    loadQR();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,9 +216,19 @@ export default function ContactPage() {
                 <h3 className="font-bold text-primary text-lg">{card.label}</h3>
                 {"isQrCode" in card ? (
                   <div className="mt-3 flex justify-center">
-                    <div className="w-32 h-32 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center">
-                      <p className="text-[10px] text-gray-400 text-center px-2">企业微信二维码<br/>（请联系管理员配置）</p>
-                    </div>
+                    {wechatWorkQR ? (
+                      <div className="w-32 h-32 rounded-xl border border-gray-200 overflow-hidden">
+                        <img
+                          src={wechatWorkQR}
+                          alt="企业微信二维码"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-32 h-32 rounded-xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+                        <p className="text-[10px] text-gray-400 text-center px-2">企业微信二维码<br/>（请在后台上传）</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>

@@ -77,6 +77,14 @@ const ASSET_CONFIGS = [
     sizeHint: "正方形，建议 ≥ 500×500",
     required: true,
   },
+  {
+    key: "wechat_work_qr",
+    title: "💬 企业微信二维码",
+    desc: "企业微信二维码图片，用于前台「联系我们」页面展示，客户扫码添加企微",
+    icon: ImageIcon,
+    sizeHint: "正方形，建议 ≥ 400×400",
+    required: false,
+  },
 ];
 
 export default function AdminSiteAssetsPage() {
