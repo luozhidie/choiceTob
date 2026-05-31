@@ -3,18 +3,18 @@ import axios from "axios";
 import * as cheerio from "cheerio";
 
 /**
- * 淘宝商品页面爬虫（按量付费代理版）
- * 
+ * 淘宝商品页面爬虫（快代理隧道代理版）
+ *
  * 环境变量：
- *   ZHIMA_PROXY_HOST     - 芝麻代理IP（格式：ip:port 或 host:port）
- *   ZHIMA_PROXY_USERNAME - 芝麻代理用户名（如需要认证）
- *   ZHIMA_PROXY_PASSWORD - 芝麻代理密码
- *   ZHIMA_PROXY_KEY       - 芝麻代理API Key（直接调用API版）
- * 
+ *   PROXY_HOST     - 快代理隧道代理Host（如 tunnel.kuaidaili.com）
+ *   PROXY_PORT     - 快代理隧道代理端口（如 30008）
+ *   PROXY_USERNAME - 快代理用户名
+ *   PROXY_PASSWORD - 快代理密码
+ *
  * 使用方式：
  *   POST /api/crawl/taobao-page
  *   body: { keyword: string, maxPages?: number }
- * 
+ *
  * 返回：
  *   { success, items: [{ title, price, picUrl, sales, shopName, itemUrl }], count }
  */
@@ -24,31 +24,8 @@ const PROXY_HOST = process.env.PROXY_HOST || "";
 const PROXY_PORT = process.env.PROXY_PORT || "";
 const PROXY_USERNAME = process.env.PROXY_USERNAME || "";
 const PROXY_PASSWORD = process.env.PROXY_PASSWORD || "";
-const PROXY_URL = PROXY_HOST ? `http://${PROXY_USERNAME}:${PROXY_PASSWORD}@${PROXY_HOST}:${PROXY_PORT}` : "";
 
-// 按量付费代理：直接调用芝麻代理API获取IP，然后请求淘宝
-async function getZhiMaProxyIP(): Promise<string | null> {
-  if (!ZHIMA_API_KEY) {
-    console.warn("[淘宝爬虫] 芝麻代理Key未配置");
-    return null;
-  }
-  try {
-    const resp = await axios.get(ZHIMA_API_URL, {
-      params: { key: ZHIMA_API_KEY, num: 1, yys: 1, sb: 0, pb: 4, mr: 1 },
-      timeout: 5000,
-    });
-    if (resp.data?.code === 0 && resp.data.data?.[0]) {
-      const ipData = resp.data.data[0];
-      return `http://${ipData.ip}:${ipData.port}`;
-    }
-    return null;
-  } catch (e) {
-    console.error("[淘宝爬虫] 获取代理IP失败:", e);
-    return null;
-  }
-}
-
-// ============ 淘宝商品搜索（使用代理IP） ============
+// ============ 淘宝商品搜索（使用axios原生proxy配置） ============
 
 interface TaobaoItem {
   title: string;
@@ -60,10 +37,21 @@ interface TaobaoItem {
   location: string;
 }
 
-/** 搜索淘宝商品（模拟浏览器请求） */
-async function searchTaobaoItems(keyword: string, page = 1, proxyUrl?: string): Promise<TaobaoItem[]> {
+/** 搜索淘宝商品（使用隧道代理） */
+async function searchTaobaoItems(keyword: string, page = 1): Promise<TaobaoItem[]> {
   const searchUrl = `https://s.taobao.com/search?q=${encodeURIComponent(keyword)}&s=${(page - 1) * 44}`;
-  
+
+  // 构建代理配置（axios原生支持http proxy）
+  const proxyConfig = (PROXY_HOST && PROXY_PORT) ? {
+    host: PROXY_HOST,
+    port: parseInt(PROXY_PORT),
+    protocol: 'http' as const,
+    auth: (PROXY_USERNAME && PROXY_PASSWORD) ? {
+      username: PROXY_USERNAME,
+      password: PROXY_PASSWORD,
+    } : undefined,
+  } : undefined;
+
   try {
     const resp = await axios.get(searchUrl, {
       headers: {
@@ -71,17 +59,15 @@ async function searchTaobaoItems(keyword: string, page = 1, proxyUrl?: string): 
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         "Referer": "https://www.taobao.com/",
-        "Cookie": "t=...", // 简单Cookie，避免被当成机器人
       },
       timeout: 15000,
-      ...(proxyUrl ? { proxy: false, httpsAgent: new (require("https-proxy-agent")).HttpsProxyAgent(proxyUrl) } : {}),
+      proxy: proxyConfig,
     });
-    
+
     const $ = cheerio.load(resp.data);
     const items: TaobaoItem[] = [];
-    
-    // 淘宝搜索结果在 .items .item 或 [data-category] 属性里
-    // 新版淘宝用JSON数据嵌入在页面里
+
+    // 淘宝搜索结果在 script 标签里的 JSON 数据中
     const scripts = $("script").toArray();
     for (const script of scripts) {
       const text = $(script).html() || "";
@@ -92,7 +78,7 @@ async function searchTaobaoItems(keyword: string, page = 1, proxyUrl?: string): 
           if (jsonMatch) {
             const data = JSON.parse(jsonMatch[1]);
             // 提取商品列表（根据淘宝数据结构）
-            const itemList = data?.mods?.itemlist?.data?.auctions || 
+            const itemList = data?.mods?.itemlist?.data?.auctions ||
                           data?.pageProps?.initData?.items || [];
             for (const item of itemList.slice(0, 20)) {
               items.push({
@@ -112,7 +98,7 @@ async function searchTaobaoItems(keyword: string, page = 1, proxyUrl?: string): 
         }
       }
     }
-    
+
     // 如果JSON解析失败，尝试HTML解析
     if (items.length === 0) {
       $(".item, [data-category='auctions']").each((i, el) => {
@@ -138,7 +124,7 @@ async function searchTaobaoItems(keyword: string, page = 1, proxyUrl?: string): 
         } catch (e) {}
       });
     }
-    
+
     return items.slice(0, 20);
   } catch (error: any) {
     console.error("[淘宝爬虫] 搜索失败:", error.message);
@@ -152,35 +138,33 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { keyword, maxPages = 1 } = body;
-    
+
     if (!keyword || typeof keyword !== "string") {
       return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
     }
-    
-    if (!PROXY_URL) {
+
+    if (!PROXY_HOST || !PROXY_PORT) {
       return NextResponse.json({
         error: "快代理未配置，请在环境变量中设置 PROXY_HOST/PORT/USERNAME/PASSWORD",
         help: "注册地址：https://www.kuaidaili.com/",
       }, { status: 401 });
     }
-    
+
     const startTime = Date.now();
     let allItems: TaobaoItem[] = [];
-    
+
     // 多页抓取
     for (let page = 1; page <= Math.min(maxPages, 3); page++) {
       console.log(`[淘宝爬虫] 第${page}页开始...`);
-      const proxyUrl = PROXY_URL || undefined;
-      // const proxyUrl = await getZhiMaProxyIP(); // 芝麻代理已停用，改用快代理隧道代理
-      const items = await searchTaobaoItems(keyword, page, proxyUrl || undefined);
+      const items = await searchTaobaoItems(keyword, page);
       allItems.push(...items);
       if (items.length === 0) break;
       // 延迟避免被封
       await new Promise(r => setTimeout(r, 2000));
     }
-    
+
     const duration = Date.now() - startTime;
-    
+
     // 转换为统一格式
     const formattedItems = allItems.map((item, i) => ({
       id: `tb_page_${Date.now()}_${i}`,
@@ -191,14 +175,14 @@ export async function POST(request: NextRequest) {
       colors: [],
       style: "",
       heat_score: Math.min(100, Math.floor(60 + Math.min(parseInt(item.sales) / 100, 40))),
-      sales_volume: item.sales > 0 ? `${(parseInt(item.sales) / 10000).toFixed(1)}万+` : "",
+      sales_volume: parseInt(item.sales) > 0 ? `${(parseInt(item.sales) / 10000).toFixed(1)}万+` : "",
       trend_type: parseInt(item.sales) > 10000 ? "全网爆款" : parseInt(item.sales) > 5000 ? "潜在爆款" : "爆款微调款",
       source_url: item.itemUrl,
       image_url: item.picUrl,
       keywords: [keyword, item.shopName],
       description: `${item.shopName} | ${item.location}`,
     }));
-    
+
     return NextResponse.json({
       success: true,
       keyword,
@@ -206,9 +190,9 @@ export async function POST(request: NextRequest) {
       count: formattedItems.length,
       duration_ms: duration,
       dataSource: "taobao_page_crawl",
-      proxyUsed: true,
+      proxyUsed: !!(PROXY_HOST && PROXY_PORT),
     });
-    
+
   } catch (error: any) {
     console.error("[淘宝爬虫] 错误:", error);
     return NextResponse.json({
@@ -219,7 +203,7 @@ export async function POST(request: NextRequest) {
 
 /** 健康检查 */
 export async function GET(request: NextRequest) {
-  const configured = !!PROXY_URL;
+  const configured = !!(PROXY_HOST && PROXY_PORT);
   return NextResponse.json({
     service: "taobao-page-crawl",
     configured,
