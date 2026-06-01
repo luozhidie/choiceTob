@@ -11,7 +11,7 @@ import {
   PieChart, FileText, CheckCircle2, Home, X, Loader2,
   Palette, Sparkles, Eye, Wand2, LayoutGrid, Layers,
   DollarSign, Calendar, Filter, Zap, Phone, ShoppingBag,
-  MapPin, Ruler, Users, Tag, MessageSquare,
+  MapPin, Ruler, Users, Tag, MessageSquare, Store,
 } from "lucide-react";
 
 /* ===================== 12季色彩（仅案例模板筛选用） ===================== */
@@ -31,7 +31,7 @@ const PLAN_TYPES = [
   { value: "price", label: "价格带企划", icon: DollarSign, desc: "价格带分布与商品定价策略", price: 1680000, originalPrice: null },
   { value: "quarter", label: "季度企划书", icon: Calendar, desc: "完整的季度企划书输出", price: 1680000, originalPrice: null },
   { value: "full", label: "全案企划", icon: Wand2, desc: "包含以上所有企划内容的完整方案，不仅全案商品企划服务，还会帮忙组一盘货", price: 7800000, originalPrice: null },
-  { value: "ai_report", label: "AI企划报告", icon: FileText, desc: "AI智能生成企划报告，填写资料后即刻生成", price: 298000, originalPrice: 398000, memberPrice: 98000 },
+  { value: "ai_report", label: "商品企划报告", icon: FileText, desc: "AI智能生成企划报告，填写资料后即刻生成", price: 298000, originalPrice: 398000, memberPrice: 98000 },
 ];
 
 /* ===================== 市场风格定位（女士八大+男士五大） ===================== */
@@ -97,7 +97,7 @@ export default function PlanningPage() {
   const [filterColor, setFilterColor] = useState("");
   const [filterStyle, setFilterStyle] = useState("");
 
-  // 创建企划表单 — 改用商业表达
+  // 创建企划表单
   const [createForm, setCreateForm] = useState({
     plan_type: "full",
     market_style: "",      // 市场风格定位
@@ -109,6 +109,9 @@ export default function PlanningPage() {
     location: "",          // 店铺位置/城市
     notes: "",
     contact_phone: "",     // 联系电话
+    store_type: "",       // 店铺类型（AI报告用）
+    store_scale: "",      // 店铺体量（AI报告用）
+    season: "春夏",       // 目标季节（AI报告用）
   });
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -146,6 +149,98 @@ export default function PlanningPage() {
     return list;
   }, [reports, filterCategory, filterColor, filterStyle]);
 
+  // AI报告提交：创建请求+模拟支付+生成报告
+  const handleAiReportSubmit = async (user: any, safetyTimeout: NodeJS.Timeout) => {
+    try {
+      const amount = 298000; // 非会员价，会员价逻辑前端已处理（显示层）
+      // 1. 创建planning_requests记录
+      const { data: req, error: reqError } = await supabase.from("planning_requests").insert([{
+        user_id: user.id,
+        user_email: user.email,
+        store_name: createForm.brand_name || "",
+        store_type: createForm.store_type || "",
+        store_scale: createForm.store_scale || "",
+        style_preference: createForm.market_style || "",
+        season: createForm.season || "春夏",
+        budget_range: createForm.price_range || "",
+        contact: createForm.contact_phone || "",
+        status: "paid",
+        paid_amount: amount,
+        paid_at: new Date().toISOString(),
+        problems: "",
+        notes: createForm.location ? `位置: ${createForm.location}` : "",
+      }]).select("id").single();
+
+      if (reqError || !req) {
+        clearTimeout(safetyTimeout);
+        alert("提交失败：" + (reqError?.message || "未知错误"));
+        setSubmitting(false);
+        return;
+      }
+
+      // 2. 创建planning_payments记录（模拟支付）
+      await supabase.from("planning_payments").insert([{
+        user_id: user.id,
+        request_id: req.id,
+        amount,
+        status: "paid",
+        paid_at: new Date().toISOString(),
+        payment_method: "mock",
+        mock_paid: true,
+      }]);
+
+      // 3. 调用/api/generate-planning生成AI报告
+      const colorLabel = COLOR_PREFERENCES.find(c => c.value === createForm.color_pref)?.label || "";
+      const styleLabel = MARKET_STYLES.find(s => s.value === createForm.market_style)?.label || "";
+
+      const aiRes = await fetch("/api/generate-planning", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brandName: createForm.brand_name || "",
+          season: createForm.season || "春夏",
+          colorPref: createForm.color_pref || "",
+          colorLabel,
+          marketStyle: createForm.market_style || "",
+          styleLabel,
+          priceBand: createForm.price_range || "199-399元",
+          targetAge: createForm.target_age || "",
+          shopSize: createForm.shop_size || "",
+          notes: createForm.notes || "",
+        }),
+      });
+
+      let reportJson = null;
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        reportJson = aiData.report;
+      }
+
+      // 4. 保存报告到planning_reports表
+      const { error: reportError } = await supabase.from("planning_reports").insert([{
+        user_id: user.id,
+        request_id: req.id,
+        title: `${createForm.brand_name || "品牌"}·${createForm.season || "春夏"}企划报告`,
+        report_json: reportJson,
+        amount,
+        status: "draft",
+        category: "ai_generated",
+      }]);
+
+      if (reportError) {
+        console.error("保存报告失败:", reportError);
+      }
+
+      clearTimeout(safetyTimeout);
+      setSubmitted(true);
+      setSubmitting(false);
+    } catch (err: any) {
+      clearTimeout(safetyTimeout);
+      alert("提交失败：" + (err.message || "未知错误"));
+      setSubmitting(false);
+    }
+  };
+
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
@@ -165,11 +260,11 @@ export default function PlanningPage() {
         return;
       }
 
-      // 如果是AI报告，跳转到AI测试页面
+      // 如果是AI报告，创建请求+模拟支付+生成报告
       if (createForm.plan_type === "ai_report") {
         clearTimeout(safetyTimeout);
-        setSubmitting(false);
-        window.location.href = "/planning-tool";
+        // 调用handleAiReportSubmit逻辑
+        await handleAiReportSubmit(user, safetyTimeout);
         return;
       }
 
@@ -589,6 +684,100 @@ export default function PlanningPage() {
                               placeholder="输入品牌名称（如有）"
                             />
                           </div>
+
+                          {/* AI报告专属字段：季节 + 店铺类型 + 店铺体量 */}
+                          {createForm.plan_type === "ai_report" && (
+                            <>
+                              {/* 目标季节 */}
+                              <div>
+                                <label className="block text-sm font-medium text-primary mb-2">
+                                  <Calendar className="w-4 h-4 inline-block mr-1 -mt-0.5 text-accent" />
+                                  目标季节 <span className="text-red-500">*</span>
+                                </label>
+                                <div className="flex flex-wrap gap-2">
+                                  {["春夏", "夏秋", "秋冬", "冬春"].map((s) => (
+                                    <button
+                                      key={s}
+                                      type="button"
+                                      onClick={() => setCreateForm(f => ({ ...f, season: f.season === s ? "" : s }))}
+                                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                                        createForm.season === s
+                                          ? "bg-primary text-white border-primary"
+                                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                                      }`}
+                                    >
+                                      {s}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* 店铺类型 */}
+                              <div>
+                                <label className="block text-sm font-medium text-primary mb-2">
+                                  <Store className="w-4 h-4 inline-block mr-1 -mt-0.5 text-accent" />
+                                  店铺类型 <span className="text-red-500">*</span>
+                                </label>
+                                <div className="grid grid-cols-2 gap-2">
+                                  {[
+                                    { value: "women", label: "女装店", desc: "专注女装品类" },
+                                    { value: "men", label: "男装店", desc: "专注男装品类" },
+                                    { value: "children", label: "童装店", desc: "专注童装品类" },
+                                    { value: "multi", label: "集合店", desc: "多品类综合经营" },
+                                    { value: "boutique", label: "买手店", desc: "设计师品牌/精品" },
+                                    { value: "online", label: "线上店铺", desc: "纯电商/直播" },
+                                  ].map((t) => (
+                                    <button
+                                      key={t.value}
+                                      type="button"
+                                      onClick={() => setCreateForm(f => ({ ...f, store_type: f.store_type === t.value ? "" : t.value }))}
+                                      className={`px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left ${
+                                        createForm.store_type === t.value
+                                          ? "bg-primary text-white border-primary"
+                                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-primary/30"
+                                      }`}
+                                    >
+                                      <span className="block font-semibold">{t.label}</span>
+                                      <span className={`text-[10px] ${createForm.store_type === t.value ? "text-white/70" : "text-muted-foreground"}`}>{t.desc}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* 店铺体量 */}
+                              <div>
+                                <label className="block text-sm font-medium text-primary mb-2">
+                                  <Users className="w-4 h-4 inline-block mr-1 -mt-0.5 text-accent" />
+                                  店铺体量 <span className="text-red-500">*</span>
+                                </label>
+                                <div className="space-y-2">
+                                  {[
+                                    { value: "small", label: "小型店", desc: "30-50㎡，1-2人", range: "月销5-15万" },
+                                    { value: "medium", label: "中型店", desc: "50-100㎡，2-4人", range: "月销15-30万" },
+                                    { value: "large", label: "大型店", desc: "100-200㎡，4-6人", range: "月销30-60万" },
+                                    { value: "flagship", label: "旗舰店", desc: "200㎡+，6人以上", range: "月销60万+" },
+                                  ].map((s) => (
+                                    <button
+                                      key={s.value}
+                                      type="button"
+                                      onClick={() => setCreateForm(f => ({ ...f, store_scale: f.store_scale === s.value ? "" : s.value }))}
+                                      className={`w-full px-3 py-2.5 rounded-lg text-xs font-medium transition-colors border text-left flex items-center justify-between ${
+                                        createForm.store_scale === s.value
+                                          ? "bg-accent text-white border-accent"
+                                          : "bg-gray-50 text-gray-600 border-gray-200 hover:border-accent/30"
+                                      }`}
+                                    >
+                                      <div>
+                                        <span className="block font-semibold">{s.label}</span>
+                                        <span className={`text-[10px] ${createForm.store_scale === s.value ? "text-white/70" : "text-muted-foreground"}`}>{s.desc}</span>
+                                      </div>
+                                      <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${createForm.store_scale === s.value ? "bg-white/20 text-white" : "bg-gray-200 text-gray-500"}`}>{s.range}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            </>
+                          )}
 
                           {/* 目标客群年龄 */}
                           <div>
