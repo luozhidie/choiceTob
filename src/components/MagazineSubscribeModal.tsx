@@ -29,7 +29,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
     }
     setSaving(true);
     try {
-      const planName = selectedPlan === "monthly" ? "月费会员" : "年费会员";
+      const planName = selectedPlan === "monthly" ? "月费会员" : "订阅一年享优惠价格";
       const planPrice = selectedPlan === "monthly" ? 13800 : 138000;
       await supabase.from("leads").insert([{
         name: formData.name.trim(),
@@ -153,7 +153,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">
-                  {selectedPlan === "yearly" ? "年费会员" : "月费会员"}
+                  {selectedPlan === "yearly" ? "订阅一年享优惠价格" : "月费会员"}
                 </span>
                 <span className="font-bold text-primary">
                   ¥{selectedPlan === "yearly" ? "1,380" : "138"}
@@ -188,7 +188,7 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
                 填写联系信息
               </h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {selectedPlan === "yearly" ? "年费会员 ¥1,380/年（订10个月送2个月）" : "月费会员 ¥138/月"}
+                {selectedPlan === "yearly" ? "订阅一年享优惠价格 ¥1,380/年" : "月费会员 ¥138/月"}
               </p>
             </div>
 

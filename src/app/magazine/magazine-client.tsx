@@ -252,7 +252,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
               </button>
               <button onClick={() => setShowSubscribe(true)}
                 className="px-6 py-3 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20 transition-colors border border-white/20">
-                年费会员 ¥1,380/年（订10个月送2个月）
+                订阅一年享优惠价格 ¥1,380/年
               </button>
             </div>
           </motion.div>
