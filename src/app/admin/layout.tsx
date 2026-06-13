@@ -160,6 +160,8 @@ const sidebarGroups: SidebarGroup[] = [
     items: [
       { label: "营销策划", href: "/admin/marketing", icon: Megaphone },
       { label: "营销图片", href: "/admin/marketing-images", icon: ImageIcon },
+      { label: "Banner 轮播图", href: "/admin/banners", icon: LayoutGrid },
+      { label: "搭配灵感", href: "/admin/inspirations", icon: Lightbulb },
       { label: "销售服务", href: "/admin/sales", icon: Headphones },
       { label: "销售图片", href: "/admin/sales-images", icon: ImageIcon },
       { label: "内容日历", href: "/admin/content-calendar", icon: Calendar },
@@ -227,15 +229,25 @@ export default function AdminLayout({
   const supabase = createClient();
 
   useEffect(() => {
-    const getUser = async () => {
+    const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push("/admin/login");
         return;
       }
+      // 同时检查 profile 角色（防止非 admin 直接访问 /admin/* URL）
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role,approval_status")
+        .eq("id", user.id)
+        .single();
+      if (!profile || profile.approval_status !== "approved" || !["admin", "owner"].includes(profile.role)) {
+        router.push("/admin/pending");
+        return;
+      }
       setUser(user);
     };
-    getUser();
+    checkAuth();
   }, [router, supabase]);
 
   const handleLogout = async () => {

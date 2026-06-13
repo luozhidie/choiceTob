@@ -417,7 +417,6 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('[1688] Crawl error:', error);
     try {
-      const supabase = await createClient();
       await supabase.from('crawl_log').insert({
         platform: '1688', crawl_type: 'multi_platform_1688',
         keyword: '', status: 'failed', items_count: 0, error_message: error.message,

@@ -26,25 +26,37 @@ async function fetchStoreInsights(storeId: string) {
       .order("created_at", { ascending: false })
       .limit(200);
 
-    const { data: colorAnalysis } = await supabase
-      .from("color_analyses")
-      .select("season_type, sub_type, created_at")
-      .eq("store_id", storeId)
-      .order("created_at", { ascending: false })
-      .limit(200);
+    let colorAnalysis: any[] | null = null;
+    try {
+      const caRes = await supabase
+        .from("color_analyses")
+        .select("season_type, sub_type, created_at")
+        .eq("store_id", storeId)
+        .order("created_at", { ascending: false })
+        .limit(200);
+      if (!caRes.error) colorAnalysis = caRes.data;
+    } catch (e) { /* color_analyses 表可能不存在 */ }
 
-    const { data: salesData } = await supabase
-      .from("weekly_sales_analysis")
-      .select("*")
-      .eq("store_id", storeId)
-      .order("week_start", { ascending: false })
-      .limit(12);
+    let salesData: any[] | null = null;
+    try {
+      const salesRes = await supabase
+        .from("weekly_sales_analysis")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("week_ending", { ascending: false })
+        .limit(12);
+      if (!salesRes.error) salesData = salesRes.data;
+    } catch (e) { /* weekly_sales 查询容错 */ }
 
-    const { data: inventoryData } = await supabase
-      .from("inventory")
-      .select("category, quantity, unit_cost, sold_count")
-      .eq("store_id", storeId)
-      .limit(200);
+    let inventoryData: any[] | null = null;
+    try {
+      const invRes = await supabase
+        .from("inventory")
+        .select("category, current_stock, unit_cost, sales_qty")
+        .eq("store_id", storeId)
+        .limit(200);
+      if (!invRes.error) inventoryData = invRes.data;
+    } catch (e) { /* inventory 查询容错 */ }
 
     if (vipList && vipList.length > 0) {
       const colorSeasonMap: Record<string, { count: number; totalSpent: number; purchaseCount: number }> = {};
@@ -101,8 +113,8 @@ async function fetchStoreInsights(storeId: string) {
         for (const inv of inventoryData) {
           const cat = inv.category || "其他";
           if (!categorySales[cat]) categorySales[cat] = { qty: 0, revenue: 0 };
-          categorySales[cat].qty += (inv.sold_count || 0);
-          categorySales[cat].revenue += (inv.sold_count || 0) * (inv.unit_cost || 0);
+          categorySales[cat].qty += (inv.sales_qty || 0);
+          categorySales[cat].revenue += (inv.sales_qty || 0) * (inv.unit_cost || 0);
         }
       }
 
@@ -137,7 +149,7 @@ async function fetchStoreInsights(storeId: string) {
           Object.entries(categorySales).sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 10)
         ),
         recent_sales_trend: (salesData || []).slice(0, 4).map((s: any) => ({
-          week: s.week_start,
+          week: s.week_ending || s.week_start,
           revenue: s.total_revenue,
           orders: s.order_count,
         })),
@@ -286,6 +298,14 @@ async function fetchMarketResearch(keyword: string, season: string, style: strin
 /* ============ 主接口 ============ */
 export async function POST(req: NextRequest) {
   try {
+    // 检查用户是否已登录
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
+    
     const body = await req.json();
     const { brandName, season, colorPref, colorLabel, marketStyle, styleLabel, priceBand, targetAge, shopSize, notes, storeId } = body;
 

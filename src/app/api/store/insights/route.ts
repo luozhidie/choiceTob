@@ -35,11 +35,15 @@ export async function GET(req: NextRequest) {
         .eq("store_id", storeId)
         .limit(500);
 
-      const { data: colorAnalysis } = await supabase
-        .from("color_analyses")
-        .select("season_type, sub_type")
-        .eq("store_id", storeId)
-        .limit(500);
+      let colorAnalysis: any[] | null = null;
+      try {
+        const caRes = await supabase
+          .from("color_analyses")
+          .select("season_type, sub_type")
+          .eq("store_id", storeId)
+          .limit(500);
+        if (!caRes.error) colorAnalysis = caRes.data;
+      } catch (e) { /* color_analyses 表可能不存在 */ }
 
       if (vipList && vipList.length > 0) {
         // 色彩季型分布
@@ -202,16 +206,20 @@ export async function GET(req: NextRequest) {
 
     // ===== 销售趋势 =====
     if (sections.includes("sales")) {
-      const { data: salesData } = await supabase
-        .from("weekly_sales_analysis")
-        .select("*")
-        .eq("store_id", storeId)
-        .order("week_start", { ascending: false })
-        .limit(12);
+      let salesData: any[] | null = null;
+      try {
+        const salesRes = await supabase
+          .from("weekly_sales_analysis")
+          .select("*")
+          .eq("store_id", storeId)
+          .order("week_ending", { ascending: false })
+          .limit(12);
+        if (!salesRes.error) salesData = salesRes.data;
+      } catch (e) { /* weekly_sales 查询容错 */ }
 
       result.sales = {
         recentWeeks: (salesData || []).map((s: any) => ({
-          week: s.week_start,
+          week: s.week_ending || s.week_start,
           revenue: s.total_revenue,
           orders: s.order_count,
           avgOrderValue: s.order_count > 0 ? Math.round(s.total_revenue / s.order_count) : 0,

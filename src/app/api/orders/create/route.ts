@@ -8,6 +8,17 @@ import { generateOrderNo } from "@/lib/payment";
  */
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient();
+    
+    // 检查用户是否已登录
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json(
+        { error: "请先登录" },
+        { status: 401 }
+      );
+    }
+    
     const body = await req.json();
     const {
       product_id,
@@ -38,12 +49,12 @@ export async function POST(req: NextRequest) {
     }
 
     const orderNo = generateOrderNo();
-    const supabase = await createClient();
 
     const { data: order, error: dbError } = await supabase
       .from("orders")
       .insert({
         order_no: orderNo,
+        user_id: user.id, // 添加用户ID
         product_id,
         product_title,
         product_price: product_price,

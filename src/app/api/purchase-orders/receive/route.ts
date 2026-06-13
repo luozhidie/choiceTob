@@ -2,10 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(req: NextRequest) {
+  // 检查用户是否已登录
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  }
+  
   const { orderId } = await req.json();
   if (!orderId) return NextResponse.json({ error: "缺少 orderId" }, { status: 400 });
-
-  const supabase = await createClient();
 
   // ── 获取订单 + 明细 ──
   const { data: order, error: orderErr } = await supabase

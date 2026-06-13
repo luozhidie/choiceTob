@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const { signUp } = useAuth();
+  const { signUp, error: authError } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,7 +54,7 @@ export default function RegisterPage() {
     setLoading(false);
   };
 
-  if (success) {
+    if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <motion.div
@@ -63,16 +63,21 @@ export default function RegisterPage() {
           animate={{ opacity: 1, scale: 1 }}
         >
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-            <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-[#0f4c3a] mb-2">注册成功！</h2>
-            <p className="text-gray-500 text-sm mb-6">
-              请前往您的邮箱查收验证邮件，点击链接激活账号后即可登录。
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-50 flex items-center justify-center">
+              <span className="text-2xl">�钵</span>
+            </div>
+            <h2 className="text-xl font-bold text-[#0f4c3a] mb-2">注册申请已提交</h2>
+            <p className="text-gray-500 text-sm mb-2">
+              您的账号需要管理员审批通过后才能登录使用。
+            </p>
+            <p className="text-gray-400 text-xs mb-6">
+              审批结果将发送至您的邮箱，请耐心等待（通常1-2个工作日）
             </p>
             <Link
               href="/login"
               className="inline-flex items-center justify-center px-6 py-3 bg-[#0f4c3a] text-white font-semibold rounded-xl hover:bg-[#0f4c3a]/90 transition-colors"
             >
-              去登录
+              返回登录页
             </Link>
           </div>
         </motion.div>
@@ -103,10 +108,10 @@ export default function RegisterPage() {
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          {error && (
+          {(error || authError) && (
             <div className="mb-6 flex items-center gap-2 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+              {error || authError}
             </div>
           )}
 

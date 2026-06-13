@@ -35,11 +35,17 @@ async function callDeepSeek(prompt: string, systemPrompt: string) {
  */
 export async function POST(req: NextRequest) {
   try {
+    // 检查用户是否已登录
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
+    
     const { store_id, occasion, style_tag, season_tag, match_rule } = await req.json();
 
     if (!store_id) return NextResponse.json({ error: "缺少 store_id" }, { status: 400 });
-
-    const supabase = await createClient();
 
     // 1. 获取符合条件的商品
     let productsQuery = supabase

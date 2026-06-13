@@ -377,7 +377,6 @@ export async function POST(request: NextRequest) {
     console.error('Crawl API error:', error);
 
     try {
-      const supabase = await createClient();
       await supabase.from('crawl_log').insert({
         platform: 'unknown',
         crawl_type: 'multi_platform_search',

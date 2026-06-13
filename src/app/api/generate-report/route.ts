@@ -24,10 +24,16 @@ const SEASON_PALETTE: Record<string, string[]> = {
 };
 
 export async function POST(req: NextRequest) {
+  // 检查用户是否已登录
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  }
+  
   const { storeId, season, reportType = "basic" } = await req.json();
   if (!storeId) return NextResponse.json({ error: "缺少 storeId" }, { status: 400 });
-
-  const supabase = await createClient();
 
   // 1. 加载数据
   const [{ data: store }, { data: customers }, { data: structure },

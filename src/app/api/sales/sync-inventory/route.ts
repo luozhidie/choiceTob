@@ -9,10 +9,16 @@ import { createClient } from "@/lib/supabase/server";
  * 2. 精确模式：传入 { items: [{sku_code, sold_qty}] } 逐条扣减
  */
 export async function POST(req: NextRequest) {
+  // 检查用户是否已登录
+  const { createClient } = await import("@/lib/supabase/server");
+  const supabase = await createClient();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  }
+  
   const { storeId, mode, totalSold, items } = await req.json();
   if (!storeId) return NextResponse.json({ error: "缺少 storeId" }, { status: 400 });
-
-  const supabase = await createClient();
 
   // ── 获取当前库存 ──
   const { data: inventory, error: invErr } = await supabase

@@ -6,8 +6,18 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(req: NextRequest) {
   const { secret, action } = await req.json();
-  if (secret !== "luozhidie2026") {
-    return NextResponse.json({ error: "Invalid secret" }, { status: 403 });
+  
+  // 使用环境变量中的密钥，必须有 MIGRATE_SECRET 才能调用
+  const expectedSecret = process.env.MIGRATE_SECRET;
+  
+  if (!expectedSecret) {
+    console.error('[Migrate] MIGRATE_SECRET 环境变量未设置！');
+    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+  }
+  
+  if (secret !== expectedSecret) {
+    console.warn('[Migrate] Invalid secret attempt');
+    return NextResponse.json({ error: 'Invalid secret' }, { status: 403 });
   }
 
   try {
