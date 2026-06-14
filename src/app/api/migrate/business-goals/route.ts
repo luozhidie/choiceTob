@@ -10,6 +10,12 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = await createClient();
 
+    // 鉴权：必须登录且为 owner
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    if (!profile || profile.role !== "owner") return NextResponse.json({ error: "仅owner可执行迁移" }, { status: 403 });
+
     // 检查是否已执行过
     const { data: testCol } = await supabase.from("stores").select("business_goals").limit(1);
     if (testCol !== null) {

@@ -13,8 +13,14 @@ export async function GET() {
   return NextResponse.json(data || []);
 }
 
-/** POST: 新增品类 */
+/** POST: 新增品类（需admin权限） */
 export async function POST(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
+
   const body = await req.json();
 
   const { data, error } = await supabase
@@ -32,8 +38,14 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-/** PUT: 更新品类 */
+/** PUT: 更新品类（需admin权限） */
 export async function PUT(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
+
   const body = await req.json();
 
   const { data, error } = await supabase
@@ -52,8 +64,14 @@ export async function PUT(req: NextRequest) {
   return NextResponse.json(data);
 }
 
-/** DELETE: 删除品类 */
+/** DELETE: 删除品类（需admin权限） */
 export async function DELETE(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user }, error: authErr } = await supabase.auth.getUser();
+  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
+
   const { id } = await req.json();
 
   const { error } = await supabase

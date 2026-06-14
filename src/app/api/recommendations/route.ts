@@ -35,6 +35,10 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+
     const body = await request.json();
 
     const { data, error } = await supabase
@@ -58,6 +62,10 @@ export async function POST(request: NextRequest) {
 
 export async function PATCH(request: NextRequest) {
   try {
+    const supabase = await createClient();
+    const { data: { user }, error: authErr } = await supabase.auth.getUser();
+    if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
