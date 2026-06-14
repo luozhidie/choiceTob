@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import {
   ShoppingBag, Lock, Eye, Loader2, Tag, ChevronRight,
   Crown, MessageCircle,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 interface HotProduct {
   id: string;
@@ -35,13 +36,12 @@ const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 export function HotProductsSection() {
   const [products, setProducts] = useState<HotProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<HotProduct | null>(null);
+  const { isHotPicksMember, user } = useAuth();
   const supabase = createClient();
 
   useEffect(() => {
     fetchProducts();
-    checkUser();
   }, []);
 
   const fetchProducts = async () => {
@@ -56,12 +56,30 @@ export function HotProductsSection() {
     setLoading(false);
   };
 
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    setUser(user);
-  };
+  const isMember = isHotPicksMember;
 
-  const isMember = !!user;
+  // 统一微信支付
+  const handleWechatPay = async (productId: string, price: number) => {
+    if (!user) { window.location.href = '/login?redirect=/hot-picks'; return; }
+    try {
+      const res = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId, total_fee: price, platform: 'mp', openid: user.id || '' }),
+      });
+      const result = await res.json();
+      if (result.prepay_id && typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+        (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+          appId: result.appId, timeStamp: result.timeStamp, nonceStr: result.nonceStr,
+          package: result.package, signType: result.signType || 'MD5', paySign: result.paySign,
+        }, (res: any) => {
+          if (res.err_msg === "get_brand_wcpay_request:ok") { alert('支付成功！已开通会员'); window.location.reload(); }
+          else if (res.err_msg === "get_brand_wcpay_request:cancel") alert('支付已取消');
+          else alert('支付失败：' + res.err_msg);
+        });
+      } else alert('请在微信中打开此页面进行支付');
+    } catch (e) { console.error('[pay]', e); alert('支付发起失败'); }
+  };
 
   const categories = ["全部", ...Array.from(new Set(products.map((p) => p.category).filter(Boolean))) as string[]];
   const [selectedCategory, setSelectedCategory] = useState("全部");
@@ -72,28 +90,6 @@ export function HotProductsSection() {
 
   return (
     <>
-      {/* 会员提示 Banner */}
-      {!isMember && (
-        <section className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-                  <Crown className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="font-semibold text-amber-800 text-sm">开通会员，解锁全部爆款样衣</p>
-                  <p className="text-xs text-amber-600">VIP会员可查看高清图片、价格与商品详情</p>
-                </div>
-              </div>
-              <Link href="/vip" className="px-5 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors shrink-0">
-                开通会员
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* 爆款样衣列表 */}
       <section className="py-12 md:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -241,12 +237,12 @@ export function HotProductsSection() {
                       )}
 
                       {/* 立即咨询按钮 */}
-                      <Link
-                        href="/contact"
+                      <button
+                        onClick={() => handleWechatPay('hotpicks_monthly', 99800)}
                         className="mt-3 block w-full py-2 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors text-center"
                       >
-                        立即咨询
-                      </Link>
+                        立即开通
+                      </button>
                     </div>
                   </div>
                 </motion.div>
@@ -292,9 +288,49 @@ export function HotProductsSection() {
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
                   <Lock className="w-10 h-10 text-white/80 mb-2" />
                   <span className="text-white font-medium">会员专属内容</span>
-                  <Link href="/vip" className="mt-3 px-5 py-2 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors">
-                    开通会员查看
-                  </Link>
+                  <button
+                    onClick={async () => {
+                      try {
+                        const response = await fetch('/api/wechat-pay/unified-order', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({
+                            product_id: 'hotpicks_monthly',
+                            total_fee: 99800,
+                            platform: 'mp',
+                            openid: user?.id || ''
+                          })
+                        });
+                        const result = await response.json();
+                        if (result.prepay_id && typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+                          (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+                            appId: result.appId,
+                            timeStamp: result.timeStamp,
+                            nonceStr: result.nonceStr,
+                            package: result.package,
+                            signType: result.signType,
+                            paySign: result.paySign
+                          }, function(res: any) {
+                            if (res.err_msg === "get_brand_wcpay_request:ok") {
+                              alert('支付成功！已开通会员');
+                              window.location.reload();
+                            }
+                          });
+                        } else if (!user) {
+                          window.location.href = '/login?redirect=/hot-picks';
+                        } else {
+                          alert('请在微信中打开此页面进行支付');
+                        }
+                      } catch (error) {
+                        console.error('[wechat pay]', error);
+                        alert('支付发起失败，请稍后重试');
+                      }
+                      setSelectedProduct(null); // 关闭弹窗
+                    }}
+                    className="mt-3 px-5 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition-colors"
+                  >
+                    微信支付 ¥998/月 开通
+                  </button>
                 </div>
               )}
               <button
@@ -355,12 +391,12 @@ export function HotProductsSection() {
 
               {/* 操作按钮 */}
               <div className="mt-6 flex gap-3">
-                <Link
-                  href="/contact"
+                <button
+                  onClick={() => handleWechatPay('hotpicks_monthly', 99800)}
                   className="flex-1 py-3 bg-accent text-white font-semibold rounded-xl hover:bg-accent/90 transition-colors text-center"
                 >
-                  立即咨询
-                </Link>
+                  立即开通
+                </button>
                 <button
                   onClick={() => setSelectedProduct(null)}
                   className="px-5 py-3 border border-gray-200 text-gray-600 font-medium rounded-xl hover:bg-gray-50 transition-colors"

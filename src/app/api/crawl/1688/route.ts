@@ -318,7 +318,6 @@ async function generateAIAnalysis(items: any[]): Promise<any[]> {
 
 // ==================== 主处理 ====================
 export async function POST(request: NextRequest) {
-  try {
     const ip = request.headers.get('x-forwarded-for') || 'unknown';
     if (!checkRateLimit(ip)) {
       return NextResponse.json({ error: '频率超限，每IP每天限30次' }, { status: 429 });
@@ -332,6 +331,7 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
     let allResults: any[] = [];
+  try {
 
     // 并行抓取
     const promises: Promise<any[]>[] = [];
@@ -434,7 +434,6 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = 20;
 
-    const supabase = await createClient();
     let query = supabase
       .from('bao_kuan_cases')
       .select('*', { count: 'exact' })

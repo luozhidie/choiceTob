@@ -13,7 +13,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signIn } = useAuth();
+  const { signIn, error: authError } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/buyer";
@@ -64,10 +64,10 @@ function LoginForm() {
 
         {/* Login Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          {error && (
+          {(error || authError) && (
             <div className="mb-6 flex items-center gap-2 p-4 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              {error}
+              {error || authError}
             </div>
           )}
 
@@ -90,9 +90,17 @@ function LoginForm() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                登录密码
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-sm font-medium text-gray-700">
+                  登录密码
+                </label>
+                <Link
+                  href="/forgot-password"
+                  className="text-xs text-primary hover:text-primary/80 transition-colors"
+                >
+                  忘记密码？
+                </Link>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" />
                 <input

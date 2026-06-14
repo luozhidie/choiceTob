@@ -145,9 +145,10 @@ async function tryInsert(
 
 export async function POST(request: NextRequest) {
   try {
+    // 检查用户是否是管理员
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
+    
     if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json({ error: '未配置 Supabase 环境变量' }, { status: 500 });
     }
@@ -155,6 +156,23 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+    
+    // 检查用户是否是管理员
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    }
+    
+    // 检查用户角色 - 从 profiles 表查询
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+      
+    if (!profile || profile.role !== 'admin') {
+      return NextResponse.json({ error: '需要管理员权限' }, { status: 403 });
+    }
 
     const results: Record<string, { inserted: number; excludedColumns?: string[]; error?: string }> = {};
 

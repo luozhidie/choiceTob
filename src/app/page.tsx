@@ -304,21 +304,35 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
-                href: "/style-test",
-                bg: "from-accent-light to-accent-light/40",
-                border: "border-accent/15 hover:border-accent/40",
-                iconBg: "bg-accent/10 text-accent group-hover:bg-accent group-hover:text-white",
-                icon: User,
-                title: "穿衣风格测试",
-                desc: "AI智能分析专属风格，科学定位美学密码",
+                href: "/style-test/female",
+                title: "女性风格测试",
+                desc: "优雅自信或浪漫灵动？AI分析30个维度，定位你的专属风格美学密码",
                 price: "¥99",
                 originPrice: "¥199",
                 tag: "可测2次",
-                cta: "立即测试",
-                ctaColor: "text-accent",
+                btnText: "女生测试",
+                ctaColor: "text-pink-500",
+                bg: "from-pink-50 to-rose-50/40",
+                border: "border-pink-200/50 hover:border-pink-300/60",
+                iconBg: "bg-pink-100 text-pink-500 group-hover:bg-pink-500 group-hover:text-white",
+                icon: Sparkles,
+              },
+              {
+                href: "/style-test/male",
+                title: "男性风格测试",
+                desc: "精致雅痞或硬朗型格？AI读懂男生审美密码，打造高智感个人形象",
+                price: "¥99",
+                originPrice: "¥199",
+                tag: "可测2次",
+                btnText: "男生测试",
+                ctaColor: "text-blue-500",
+                bg: "from-blue-50 to-indigo-50/40",
+                border: "border-blue-200/50 hover:border-blue-300/60",
+                iconBg: "bg-blue-100 text-blue-500 group-hover:bg-blue-500 group-hover:text-white",
+                icon: Sparkles,
               },
               {
                 href: "/courses",
@@ -394,7 +408,7 @@ export default function Home() {
                     )}
                   </div>
                   <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${item.ctaColor}`}>
-                    {item.cta} <ArrowRight className="w-4 h-4" />
+                    {item.btnText || item.cta} <ArrowRight className="w-4 h-4" />
                   </span>
                 </Link>
               </motion.div>

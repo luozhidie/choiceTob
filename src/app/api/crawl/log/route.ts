@@ -106,7 +106,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('crawl_log')
@@ -148,7 +147,6 @@ export async function DELETE(request: NextRequest) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - keepDays);
 
-    const supabase = await createClient();
 
     const { count, error } = await supabase
       .from('crawl_log')

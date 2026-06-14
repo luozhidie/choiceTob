@@ -6,6 +6,7 @@ import {
   Home, ChevronRight, ShoppingBag, Clock, Star, Diamond, Crown, Gem, Check, Info,
   Layers, Shirt, PenTool, Scissors, MessageCircle, ArrowRight
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 import { HotProductsSection } from "./hot-products-section";
 
@@ -150,6 +151,57 @@ export default function HotPicksPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("hot");
   const [designerSubTab, setDesignerSubTab] = useState<"pricing" | "tiers">("pricing");
   const [collocationSeason, setCollocationSeason] = useState<"ss" | "aw">("ss");
+  const { user, isHotPicksMember } = useAuth();
+
+  // 统一微信支付函数
+  const handleWechatPay = async (productId: string, price: number) => {
+    if (!user) {
+      alert('请先登录');
+      window.location.href = '/login?redirect=/hot-picks';
+      return;
+    }
+    try {
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          total_fee: price,
+          platform: 'mp',
+          openid: user.id || '',
+        }),
+      });
+      const result = await response.json();
+      if (result.prepay_id || result.package) {
+        if (typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+          (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+            appId: result.appId,
+            timeStamp: result.timeStamp,
+            nonceStr: result.nonceStr,
+            package: result.package || `prepay_id=${result.prepay_id}`,
+            signType: result.signType || 'MD5',
+            paySign: result.paySign,
+          }, function(res: any) {
+            if (res.err_msg === "get_brand_wcpay_request:ok") {
+              alert('支付成功！已开通会员');
+              window.location.reload();
+            } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+              alert('支付已取消');
+            } else {
+              alert('支付失败：' + res.err_msg);
+            }
+          });
+        } else {
+          alert('请在微信中打开此页面进行支付');
+        }
+      } else {
+        alert('支付发起失败：' + (result.error || '未知错误'));
+      }
+    } catch (error) {
+      console.error('[wechat pay]', error);
+      alert('支付发起失败，请稍后重试');
+    }
+  };
 
   const collocationData = collocationSeason === "ss" ? springSummer : autumnWinter;
 
@@ -209,7 +261,86 @@ export default function HotPicksPage() {
       </section>
 
       {/* ====== 爆款样衣 ====== */}
-      {activeTab === "hot" && <HotProductsSection />}
+      {activeTab === "hot" && (
+        <>
+          {/* 未登录/未开通 → 引导横幅 */}
+          {!isHotPicksMember && (
+            <section className="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5">
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+                      <Crown className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-amber-800 text-sm">
+                        {user ? "开通爆款样衣会员，解锁全部爆款" : "登录后开通爆款样衣会员"}
+                      </p>
+                      <p className="text-xs text-amber-600">¥998/月，查看高清图片、价格与商品详情</p>
+                    </div>
+                  </div>
+                  {user ? (
+                    <button
+                      onClick={async () => {
+                        try {
+                          const response = await fetch('/api/wechat-pay/unified-order', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              product_id: 'hotpicks_monthly',
+                              total_fee: 99800, // ¥998 = 99800分
+                              platform: 'mp', // 网站用公众号JSAPI
+                              openid: user.id || ''
+                            })
+                          });
+                          const result = await response.json();
+                          if (result.prepay_id) {
+                            // 网页端调起微信支付
+                            if (typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+                              (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+                                appId: result.appId,
+                                timeStamp: result.timeStamp,
+                                nonceStr: result.nonceStr,
+                                package: result.package,
+                                signType: result.signType,
+                                paySign: result.paySign
+                              }, function(res: any) {
+                                if (res.err_msg === "get_brand_wcpay_request:ok") {
+                                  alert('支付成功！已开通会员');
+                                  window.location.reload();
+                                } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+                                  alert('支付已取消');
+                                } else {
+                                  alert('支付失败：' + res.err_msg);
+                                }
+                              });
+                            } else {
+                              alert('请在微信中打开此页面进行支付');
+                            }
+                          } else {
+                            alert('支付发起失败：' + (result.error || '未知错误'));
+                          }
+                        } catch (error) {
+                          console.error('[wechat pay]', error);
+                          alert('支付发起失败，请稍后重试');
+                        }
+                      }}
+                      className="px-5 py-2 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600 transition-colors shrink-0"
+                    >
+                      微信支付开通
+                    </button>
+                  ) : (
+                    <Link href="/login?redirect=/hot-picks" className="px-5 py-2 bg-amber-500 text-white text-sm font-semibold rounded-lg hover:bg-amber-600 transition-colors shrink-0">
+                      登录 / 注册
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </section>
+          )}
+          <HotProductsSection />
+        </>
+      )}
 
       {/* ====== 买手爆款样衣 ====== */}
       {activeTab === "buyer" && (
@@ -262,9 +393,9 @@ export default function HotPicksPage() {
                     ))}
                   </ul>
 
-                  <Link href="/contact" className="block w-full py-3 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition-colors text-center">
-                    立即咨询
-                  </Link>
+                  <button onClick={() => handleWechatPay('buyer_spring', buyerPackages[0]?.price || 39000)} className="block w-full py-3 rounded-xl bg-accent text-white font-semibold hover:bg-accent/90 transition-colors text-center">
+                    立即开通
+                  </button>
                 </div>
               ))}
             </div>
@@ -321,13 +452,13 @@ export default function HotPicksPage() {
                       </div>
                     </div>
 
-                    <Link href="/contact" className={`block w-full py-2.5 rounded-xl text-sm font-semibold transition-colors text-center ${
+                    <button onClick={() => handleWechatPay('rental_trial', pkg.price)} className={`block w-full py-2.5 rounded-xl text-sm font-semibold transition-colors text-center ${
                       pkg.highlight
                         ? "bg-accent text-white hover:bg-accent/90"
                         : "bg-gray-100 text-primary hover:bg-gray-200"
                     }`}>
-                      立即咨询
-                    </Link>
+                      立即开通
+                    </button>
                   </div>
                 );
               })}
@@ -547,7 +678,7 @@ export default function HotPicksPage() {
                           </li>
                         ))}
                       </ul>
-                      <Link href="/contact"
+                      <button onClick={() => handleWechatPay('designer_trial', 9900)}
                         className={`block w-full py-2.5 rounded-xl text-sm font-semibold transition-colors text-center ${
                           tier.highlight
                             ? "bg-accent text-white hover:bg-accent/90"
@@ -555,7 +686,7 @@ export default function HotPicksPage() {
                         }`}
                       >
                         咨询详情
-                      </Link>
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -573,9 +704,9 @@ export default function HotPicksPage() {
                 联系我们的设计顾问，为您量身定制最适合的设计方案
               </p>
               <div className="flex justify-center gap-4">
-                <Link href="/contact" className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors">
-                  立即咨询
-                </Link>
+                <button onClick={() => handleWechatPay('designer_custom', 9900)} className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors">
+                  立即开通
+                </button>
                 <Link
                   href="/contact"
                   className="px-8 py-3 border-2 border-white/30 text-white rounded-xl font-semibold hover:bg-white/10 transition-colors"
@@ -669,9 +800,9 @@ export default function HotPicksPage() {
                     <div className="text-sm text-gray-400 mb-6">
                       共{pkg.count}款 · 平均¥{pkg.unitPrice}/款 · {pkg.period}
                     </div>
-                    <Link href="/contact" className="block w-full py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors text-center">
-                      立即咨询
-                    </Link>
+                    <button onClick={() => handleWechatPay('collocation_pkg', pkg.price)} className="block w-full py-2.5 rounded-xl bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors text-center">
+                      立即开通
+                    </button>
                   </div>
                 ))}
               </div>
@@ -710,9 +841,9 @@ export default function HotPicksPage() {
                     <div className="text-sm text-gray-400 mb-6">
                       共{pkg.count}款 · 平均¥{pkg.unitPrice}/款 · {pkg.period}
                     </div>
-                    <Link href="/contact" className="block w-full py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
-                      立即咨询
-                    </Link>
+                    <button onClick={() => handleWechatPay('collocation_pkg2', pkg.price)} className="block w-full py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
+                      立即开通
+                    </button>
                   </div>
                 ))}
               </div>
@@ -755,12 +886,12 @@ export default function HotPicksPage() {
                 联系我们的设计顾问，为您量身定制最适合的搭配方案
               </p>
               <div className="flex justify-center gap-4">
-                <Link
-                  href="/contact"
+                <button
+                  onClick={() => handleWechatPay('collocation_custom', 9900)}
                   className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors"
                 >
-                  立即咨询
-                </Link>
+                  立即开通
+                </button>
               </div>
             </div>
           </section>
@@ -842,9 +973,9 @@ export default function HotPicksPage() {
                         <div className="text-sm text-gray-600 bg-white/60 rounded-xl p-4">
                           {mode.suitable}
                         </div>
-                        <Link href="/contact" className="block w-full mt-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
+                        <button onClick={() => handleWechatPay('cooperation_mode', 9900)} className="block w-full mt-4 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors text-center">
                           立即咨询
-                        </Link>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -899,12 +1030,12 @@ export default function HotPicksPage() {
                 联系我们的顾问，根据您的实际情况推荐最适合的合作方案
               </p>
               <div className="flex justify-center gap-4">
-                <Link
-                  href="/contact"
+                <button
+                  onClick={() => handleWechatPay('cooperation_free', 0)}
                   className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors"
                 >
                   免费咨询
-                </Link>
+                </button>
               </div>
             </div>
           </section>
@@ -922,12 +1053,12 @@ export default function HotPicksPage() {
               联系我们的买手团队，为您挑选最适合的爆款样衣
             </p>
             <div className="flex justify-center gap-4">
-              <Link
-                href="/contact"
+              <button
+                onClick={() => handleWechatPay('hotpicks_cta', 99800)}
                 className="px-8 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors"
               >
                 立即咨询
-              </Link>
+              </button>
             </div>
           </div>
         </section>

@@ -299,8 +299,6 @@ async function fetchMarketResearch(keyword: string, season: string, style: strin
 export async function POST(req: NextRequest) {
   try {
     // 检查用户是否已登录
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 });

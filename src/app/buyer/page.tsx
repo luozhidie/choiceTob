@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
+import { useBuyerPageData } from "@/hooks/useBuyerPageData";
 
 /* ==================== 品类选项（静态兜底 + 动态合并）==================== */
 const STATIC_CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
@@ -151,11 +152,36 @@ export default function BuyerPage() {
 
   const supabase = createClient();
   const { user, isMember } = useAuth();
+  const {
+    promotions,
+    newProductCalendar,
+    productTags,
+    recommendations,
+    loading: dataLoading,
+    usingFallback,
+    fetchProductTags,
+    fetchRecommendations,
+    trackPageView,
+    updatePageViewDuration
+  } = useBuyerPageData();
 
   useEffect(() => {
     setVisible(true);
     fetchAllData();
-  }, []);
+    
+    // 获取用户推荐数据
+    if (user?.id) {
+      fetchRecommendations(user.id);
+    }
+    
+    // 记录页面浏览
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    void (async () => {
+      try {
+        await trackPageView('/buyer', user?.id);
+      } catch { /* 静默 */ }
+    })();
+  }, [user?.id]);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -394,6 +420,88 @@ export default function BuyerPage() {
         </div>
       </section>
 
+      {/* ====== 营销活动区 ====== */}
+      <section className="bg-white border-b border-gray-100 py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide">
+            {promotions.length > 0 ? promotions.map((promo) => (
+              <Link key={promo.id} href={promo.link_url || '#'}
+                className={`shrink-0 flex items-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r ${
+                  promo.promo_type === 'flash_sale' ? 'from-red-500 to-pink-500' :
+                  promo.promo_type === 'new_user' ? 'from-amber-500 to-orange-500' :
+                  promo.promo_type === 'invite' ? 'from-green-500 to-teal-500' :
+                  'from-purple-500 to-indigo-500'
+                } text-white min-w-[200px] hover:shadow-lg transition-shadow`}>
+                <div className="flex-1">
+                  <p className="font-bold text-sm">{promo.title}</p>
+                  <p className="text-xs text-white/80">{promo.description}</p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-white/70" />
+              </Link>
+            )) : (
+              // 加载状态或空状态
+              <div className="flex items-center gap-3">
+                <div className="px-4 py-3 rounded-xl bg-gray-100 text-gray-400 min-w-[200px] text-center text-sm">
+                  暂无营销活动
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* ====== 新品日历 ====== */}
+      <section className="bg-white border-b border-gray-100 py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Flame className="w-4 h-4 text-red-500" />
+            <h3 className="text-sm font-bold text-primary">新品日历</h3>
+            <span className="text-xs text-gray-400 ml-1">每日上新</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-2">
+            {Array.from({ length: 7 }).map((_, i) => {
+              const date = new Date();
+              date.setDate(date.getDate() + i);
+              const dateStr = date.toISOString().split('T')[0];
+              const month = date.getMonth() + 1;
+              const day = date.getDate();
+              const isToday = i === 0;
+              
+              // 检查这一天是否有新品上架
+              const hasNew = newProductCalendar.some(item => 
+                item.release_date === dateStr
+              );
+              
+              return (
+                <button
+                  key={i}
+                  className={`flex flex-col items-center justify-center min-w-[60px] h-[72px] rounded-xl border transition-all ${
+                    isToday
+                      ? "bg-primary text-white border-primary shadow-md"
+                      : hasNew
+                      ? "bg-white border-amber-200 hover:border-amber-400"
+                      : "bg-gray-50 border-gray-100 text-gray-400"
+                  }`}
+                >
+                  <span className={`text-xs ${isToday ? "text-white/80" : "text-gray-500"}`}>
+                    {month}月
+                  </span>
+                  <span className={`text-lg font-bold ${isToday ? "text-white" : hasNew ? "text-primary" : "text-gray-400"}`}>
+                    {day}
+                  </span>
+                  {hasNew && !isToday && (
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400 mt-0.5" />
+                  )}
+                </button>
+              );
+            })}
+            <button className="flex items-center justify-center min-w-[60px] h-[72px] rounded-xl border border-dashed border-gray-300 text-gray-400 hover:border-primary hover:text-primary transition-colors">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* ====== 筛选栏 ====== */}
       <section className="bg-white border-b border-gray-100 sticky top-[57px] z-20">
         <div className="container mx-auto px-4 py-3">
@@ -543,6 +651,38 @@ export default function BuyerPage() {
         </section>
       )}
 
+      {/* ====== 猜你喜欢 ====== */}
+      {!loading && recommendations.length > 0 && (
+        <section className="py-6 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
+              <h3 className="text-sm font-bold text-primary">猜你喜欢</h3>
+              <span className="text-xs text-gray-400 ml-1">根据你的偏好推荐</span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              {recommendations.map((rec) => (
+                <Link key={`rec-${rec.id}`} href={rec.products ? `/shop/${rec.products.id}` : '#'}>
+                  <div className="bg-white rounded-xl p-3 border border-amber-100 hover:shadow-md hover:border-amber-300 transition-all group">
+                    <div className="aspect-square bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg flex items-center justify-center mb-2 overflow-hidden">
+                      {rec.products?.cover_image ? (
+                        <img src={rec.products.cover_image} alt={rec.products.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <Star className="w-6 h-6 text-amber-300" />
+                      )}
+                    </div>
+                    <h4 className="text-xs font-medium text-primary line-clamp-1">{rec.products?.title}</h4>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-xs font-bold text-accent">{formatPrice(rec.products?.price || 0)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ====== 商品列表 ====== */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
@@ -576,6 +716,22 @@ export default function BuyerPage() {
                         }`}>
                           {product.source === "platform" ? "自营" : "供应商"}
                         </span>
+                        {/* 稀缺性标签 */}
+                        {product.stock <= 5 && product.stock > 0 && (
+                          <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-red-500/90 text-white">
+                            仅剩{product.stock}件
+                          </span>
+                        )}
+                        {product.stock === 0 && (
+                          <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-gray-500/90 text-white">
+                            已售罄
+                          </span>
+                        )}
+                        {product.stock > 5 && Math.random() > 0.7 && (
+                          <span className="absolute top-2 right-2 text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-purple-500/90 text-white">
+                            限量
+                          </span>
+                        )}
                       </div>
                     </Link>
                     <div className="p-3 md:p-4 flex flex-col flex-1">
@@ -1095,11 +1251,53 @@ export default function BuyerPage() {
             </p>
             <div className="space-y-3">
               {user ? (
-                <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
-                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                    去开通会员
-                  </span>
-                </Link>
+                <button 
+                  onClick={async () => {
+                    setShowMemberPrompt(false);
+                    // 调用微信支付开通会员
+                    try {
+                      const response = await fetch('/api/wechat-pay/unified-order', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          product_id: 'member_price_view',
+                          total_fee: 29900, // 299元 = 29900分
+                          platform: 'mini', // 或 'mp' 根据环境判断
+                          openid: user.id // 需要获取用户的 openid
+                        })
+                      });
+                      const result = await response.json();
+                      if (result.prepay_id) {
+                        // 调起微信支付
+                        if (typeof window !== 'undefined' && (window as any).WechatJSAPI) {
+                          (window as any).WechatJSAPI.chooseWXPay({
+                            appId: result.appId,
+                            timeStamp: result.timeStamp,
+                            nonceStr: result.nonceStr,
+                            package: result.package,
+                            signType: result.signType,
+                            paySign: result.paySign,
+                            success: function(res: any) {
+                              alert('支付成功！已开通会员');
+                              window.location.reload();
+                            },
+                            fail: function(res: any) {
+                              alert('支付失败，请重试');
+                            }
+                          });
+                        } else {
+                          // 网页端用 JSAPI
+                          alert('请在微信中打开或稍后支持网页支付');
+                        }
+                      }
+                    } catch (error) {
+                      alert('支付发起失败，请重试');
+                    }
+                  }}
+                  className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center"
+                >
+                  微信支付开通会员（¥299/年）
+                </button>
               ) : (
                 <Link href="/login?redirect=/buyer" onClick={() => setShowMemberPrompt(false)}>
                   <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">

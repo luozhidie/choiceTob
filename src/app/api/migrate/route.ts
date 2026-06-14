@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/migrate
@@ -21,7 +22,6 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
     const results: string[] = [];
 

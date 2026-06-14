@@ -1,107 +1,219 @@
+// lib/wechat-pay.ts - 微信支付工具库
+// 支持：小程序JSAPI支付、公众号JSAPI支付、NATIVE扫码支付
 import crypto from 'crypto';
-import { createClient } from '@/lib/supabase/server';
+import fs from 'fs';
 
-export interface WechatPayConfig {
-  appid: string;      // 公众号 / 小程序 appid (微信支付需要 appid)
-  mchid: string;        // 商户号
-  apiKey: string;      // 商户 APIv3 密钥
-  serialNo: string;   // 商户证书序列号
-  privateKey: string;  // 私钥 (PEM 格式)
-}
+const MCHID = process.env.WECHAT_MCHID!;
+const APIV2_KEY = process.env.WECHAT_APIV2_KEY!;
+const CERT_PATH = process.env.WECHAT_CERT_PATH!;
+const KEY_PATH = process.env.WECHAT_KEY_PATH!;
+const PUB_KEY_PATH = process.env.WECHAT_PUB_KEY_PATH!;
+const PUB_KEY_ID = process.env.WECHAT_PUB_KEY_ID!;
+const NOTIFY_URL = process.env.WECHAT_NOTIFY_URL!;
 
-export async function getWechatPayConfig(): Promise<WechatPayConfig> {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from('payment_config')
-    .select('*')
-    .eq('channel', 'wechat')
-    .single();
-  if (!data) throw new Error('未找到微信支付配置，请在后台配置');
-  return {
-    appid: data.app_id,
-    mchid: data.mch_id,
-    apiKey: data.api_key_encrypted,   // 应该用 pgcrypto 加密, 这里先明码简单处理
-    serialNo: data.cert_serial_no,
-    privateKey: data.private_key_encrypted,
-  };
-}
+// 双平台AppID
+export const WECHAT_MINI_APPID = process.env.WECHAT_MINI_APPID || '';
+export const WECHAT_MP_APPID = process.env.WECHAT_MP_APPID || '';
 
-/**
- * 微信支付 V3：JSAPI 下单 (https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi)
- * 返回：prepay_id (前端用它调起支付)
- */
-export async function wechatJsapiOrder(config: WechatPayConfig, order: {
-  outTradeNo: string;
-  description: string;
-  amount: number;      // 单位：分 e.g., 1元 = 100 分  (注意：你的 price 是 *100, 保持一致)
-  openid: string;      // 微信用户 openid
-  notifyUrl: string;  // 支付结果通知地址
-}) {
-  const url = 'https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi';
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const nonceStr = crypto.randomBytes(16).toString('hex');
+// 支付平台类型
+export type PayPlatform = 'mini' | 'mp' | 'native';
 
-  const body = {
-    appid: config.appid,
-    mchid: config.mchid,
-    description: order.description,
-    out_trade_no: order.outTradeNo,
-    notify_url: order.notifyUrl,
-    amount: {
-      total: order.amount,
-      currency: 'CNY',
-    },
-    payer: {
-      openid: order.openid,
-    },
-  };
-
-  const bodyStr = JSON.stringify(body);
-  const message = `POST\n/v3/pay/transactions/jsapi\n${timestamp}\n${nonceStr}\n${bodyStr}\n`;
-  const signature = signMessage(message, config.privateKey, config.serialNo);
-
-  const authorization = `WECHATPAY2-SHA256-RSA2048 mchid="${config.mchid}",nonce_str="${nonceStr}",timestamp="${timestamp}",serial_no="${config.serialNo}",signature="${signature}"`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Authorization': authorization,
-    },
-    body: bodyStr,
-  });
-  const result = await res.json();
-  if (!res.ok) {
-    throw new Error(`微信支付下单失败：${JSON.stringify(result)}`);
+// 获取对应平台的appid
+function getAppId(platform: PayPlatform): string {
+  switch (platform) {
+    case 'mini': return WECHAT_MINI_APPID;
+    case 'mp': return WECHAT_MP_APPID;
+    case 'native':
+    default:
+      // NATIVE默认用小程序appid
+      return WECHAT_MINI_APPID || WECHAT_MP_APPID;
   }
-  // result.prepay_id
-  return result as { prepay_id: string };
+}
+
+// 生成随机字符串
+function randomStr(len = 32) {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < len; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
+// MD5签名（APIv2）
+export function signMd5(params: Record<string, string>) {
+  const sorted = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&') + `&key=${APIV2_KEY}`;
+  return crypto.createHash('md5').update(sorted, 'utf8').digest('hex').toUpperCase();
+}
+
+// 构建XML
+export function buildXml(obj: Record<string, string>) {
+  let xml = '<xml>';
+  for (const [k, v] of Object.entries(obj)) {
+    xml += `<${k}><![CDATA[${v}]]></${k}>`;
+  }
+  xml += '</xml>';
+  return xml;
+}
+
+// 解析XML
+export function parseXml(xml: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  // 处理 CDATA 格式
+  const regex = /<([^>\s]+)[^>]*>(?:<!\[CDATA\[)?([^\]<]*)(?:\]\]>)?<\/\1>/g;
+  let match;
+  while ((match = regex.exec(xml)) !== null) {
+    result[match[1]] = match[2];
+  }
+  return result;
 }
 
 /**
- * 构造前端支付参数（wx.requestPayment 需要）
- * 文档：https://pay.weixin.qq.com/doc/v3/merchant/products/jsapi-payment.html
+ * 统一下单
+ * @param platform - mini:小程序 | mp:公众号(网站) | native:扫码
  */
-export function buildJsapiPayParams(prepayId: string, config: WechatPayConfig) {
-  const timestamp = Math.floor(Date.now() / 1000).toString();
-  const nonceStr = crypto.randomBytes(16).toString('hex');
-  const message = `${config.appid}\n${timestamp}\n${nonceStr}\nprepay_id=${prepayId}\n`;
-  const signature = signMessage(message, config.privateKey, config.serialNo);
+export async function unifiedOrder(params: {
+  out_trade_no: string;
+  body: string;
+  total_fee: number;       // 单位：分
+  openid?: string;          // JSAPI必传
+  platform?: PayPlatform;   // 默认 mini
+}) {
+  const { out_trade_no, body, total_fee, openid, platform = 'mini' } = params;
+  const nonce_str = randomStr();
 
-  return {
-    appId: config.appid,
-    timeStamp: timestamp,
-    nonceStr,
-    package: `prepay_id=${prepayId}`,
-    signType: 'RSA',
-    paySign: signature,
+  const tradeTypeMap: Record<PayPlatform, string> = {
+    mini: 'JSAPI',
+    mp: 'JSAPI',
+    native: 'NATIVE',
   };
+
+  const data: Record<string, string> = {
+    appid: getAppId(platform),
+    mch_id: MCHID,
+    nonce_str,
+    body,
+    out_trade_no,
+    total_fee: String(total_fee),
+    spbill_create_ip: '127.0.0.1',
+    notify_url: NOTIFY_URL,
+    trade_type: tradeTypeMap[platform],
+  };
+
+  if ((platform === 'mini' || platform === 'mp') && openid) {
+    data.openid = openid;
+  }
+
+  data.sign = signMd5(data);
+
+  const xml = buildXml(data);
+
+  console.log(`[微信统一下单] 平台:${platform} appid:${data.appid} 订单号:${out_trade_no} 金额:${total_fee}分`);
+
+  try {
+    const res = await fetch('https://api.mch.weixin.qq.com/pay/unifiedorder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/xml' },
+      body: xml,
+    });
+
+    const resText = await res.text();
+    const result = parseXml(resText);
+    console.log('[微信统一下单返回]', JSON.stringify(result));
+
+    if (result.return_code === 'FAIL') {
+      throw new Error(result.return_msg || '下单失败');
+    }
+    if (result.result_code === 'FAIL') {
+      throw new Error(result.err_code_des || result.err_code || '下单失败');
+    }
+
+    return result;
+  } catch (err: any) {
+    console.error('[微信统一下单错误]', err.message);
+    throw err;
+  }
 }
 
-function signMessage(message: string, privateKey: string, serialNo: string): string {
-  const sign = crypto.createSign('RSA-SHA256');
-  sign.write(message);
-  sign.end();
-  return sign.sign(privateKey, 'base64');
+/**
+ * 订单查询
+ */
+export async function orderQuery(out_trade_no: string) {
+  const nonce_str = randomStr();
+
+  const data: Record<string, string> = {
+    appid: getAppId('mini'),
+    mch_id: MCHID,
+    out_trade_no,
+    nonce_str,
+  };
+
+  data.sign = signMd5(data);
+
+  const xml = buildXml(data);
+
+  const res = await fetch('https://api.mch.weixin.qq.com/pay/orderquery', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/xml' },
+    body: xml,
+  });
+
+  const resText = await res.text();
+  return parseXml(resText);
+}
+
+/**
+ * 关闭订单
+ */
+export async function closeOrder(out_trade_no: string) {
+  const nonce_str = randomStr();
+
+  const data: Record<string, string> = {
+    appid: getAppId('mini'),
+    mch_id: MCHID,
+    out_trade_no,
+    nonce_str,
+  };
+
+  data.sign = signMd5(data);
+
+  const xml = buildXml(data);
+
+  const res = await fetch('https://api.mch.weixin.qq.com/pay/closeorder', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/xml' },
+    body: xml,
+  });
+
+  const resText = await res.text();
+  return parseXml(resText);
+}
+
+/**
+ * 生成JSAPI调起支付的参数（前端调用 wx.requestPayment 使用）
+ */
+export function generateJsapiPayParams(
+  prepay_id: string,
+  platform: PayPlatform = 'mini'
+): Record<string, string> {
+  const appId = getAppId(platform);
+  const timeStamp = String(Math.floor(Date.now() / 1000));
+  const nonceStr = randomStr();
+  const package_str = `prepay_id=${prepay_id}`;
+  const signType = 'MD5';
+
+  const paySignData = {
+    appId,
+    timeStamp,
+    nonceStr,
+    package: package_str,
+    signType,
+  };
+  
+  const paySign = signMd5(paySignData as unknown as Record<string, string>);
+
+  return {
+    ...paySignData,
+    paySign,
+  };
 }

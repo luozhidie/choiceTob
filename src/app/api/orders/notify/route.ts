@@ -91,7 +91,6 @@ export async function GET(req: NextRequest) {
   const status = params.status;
 
   if (status === "OD" && tradeOrderId) {
-    const supabase = await createClient();
 
     const { data: existingOrder } = await supabase
       .from("orders")

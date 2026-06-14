@@ -354,8 +354,8 @@ export default function PlanningToolPage() {
                 <Sparkles className="w-4 h-4" />
                 AI 智能企划报告
               </span>
-              <h1 className="text-4xl sm:text-5xl font-bold leading-tight">
-                ¥{price / 100} 获取专属<br />商品企划报告
+              <h1 className="text-4xl sm:text-5xl font-bold leading-tight tracking-tight">
+                ¥{(price / 100).toFixed(1)} 获取专属<br />商品企划报告
               </h1>
               <p className="mt-4 text-white/80 leading-relaxed text-lg">
                 填写店铺信息，AI精准匹配类型+体量+风格，1-2个工作日交付完整报告。

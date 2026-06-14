@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/delivery/upload
@@ -16,7 +17,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少文件或订单ID" }, { status: 400 });
     }
 
-    const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
     // 验证用户已登录
@@ -96,8 +96,6 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "缺少itemId" }, { status: 400 });
     }
 
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {

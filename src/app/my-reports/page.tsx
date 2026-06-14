@@ -17,7 +17,7 @@ interface MyReport {
   status: string;
   amount: number;
   created_at: string;
-  updated_at: string;
+  // note: planning_reports table may not have updated_at column
   report_json: any;
 }
 
@@ -41,7 +41,7 @@ export default function MyReportsPage() {
 
       const { data, error } = await supabase
         .from("planning_reports")
-        .select("id, title, category, status, amount, created_at, updated_at, report_json")
+        .select("id, title, category, status, amount, created_at, report_json")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
 
@@ -118,7 +118,7 @@ export default function MyReportsPage() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition-colors"
             >
               <Sparkles className="w-5 h-5" />
-              立即购买 ¥29.8起
+              立即购买 ¥2,980起
             </a>
           </div>
         ) : (

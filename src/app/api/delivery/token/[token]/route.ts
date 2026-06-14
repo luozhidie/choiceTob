@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * GET /api/delivery/token/[token]
@@ -14,7 +15,6 @@ export async function GET(
       return NextResponse.json({ error: "无效的交付链接" }, { status: 400 });
     }
 
-    const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
 
     // 查找订单
@@ -80,8 +80,6 @@ export async function POST(
       return NextResponse.json({ error: "无效的交付链接" }, { status: 400 });
     }
 
-    const { createClient } = await import("@/lib/supabase/server");
-    const supabase = await createClient();
 
     // 查找并更新订单
     const { data: order } = await supabase

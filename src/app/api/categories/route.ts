@@ -15,7 +15,6 @@ export async function GET() {
 
 /** POST: 新增品类 */
 export async function POST(req: NextRequest) {
-  const supabase = await createClient();
   const body = await req.json();
 
   const { data, error } = await supabase
@@ -35,7 +34,6 @@ export async function POST(req: NextRequest) {
 
 /** PUT: 更新品类 */
 export async function PUT(req: NextRequest) {
-  const supabase = await createClient();
   const body = await req.json();
 
   const { data, error } = await supabase
@@ -56,7 +54,6 @@ export async function PUT(req: NextRequest) {
 
 /** DELETE: 删除品类 */
 export async function DELETE(req: NextRequest) {
-  const supabase = await createClient();
   const { id } = await req.json();
 
   const { error } = await supabase

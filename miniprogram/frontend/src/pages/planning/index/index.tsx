@@ -1,77 +1,112 @@
-import { View, Text, Picker, Input } from '@tarojs/components';
-import { useState } from 'react';
-import Taro from '@tarojs/taro';
-import './index.scss';
+import { View, Text, ScrollView } from '@tarojs/components'
+import { useState, useEffect } from 'react'
+import Taro from '@tarojs/taro'
+import { supabase } from '@/services/supabase'
+import './index.scss'
+
+interface PlaningReport {
+  id: string
+  title: string | null
+  cover_image: string | null
+  status: string | null
+  category: string | null
+  created_at: string
+  member_only: boolean
+}
 
 export default function PlanningPage() {
-  const [form, setForm] = useState({
-    brandName: '', season: '2026夏季', colorPref: '', styleLabel: '',
-    priceBand: '600-3000元', targetAge: '25-45岁',
-  });
-  const [generating, setGenerating] = useState(false);
+  const [reports, setReports] = useState<PlanningReport[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const seasons = ['2026夏季', '2026秋冬', '2027春季', '2027夏季'];
-  const priceBands = ['199-399元', '399-899元', '600-3000元', '1000-5000元'];
-  const ages = ['20-30岁', '25-40岁', '25-45岁', '30-50岁', '35-55岁'];
+  useEffect(() => {
+    Taro.setNavigationBarTitle({ title: '商品企划' })
+    fetchReports()
+  }, [])
 
-  const generate = async () => {
-    if (!form.brandName) { Taro.showToast({ title: '请输入品牌名', icon: 'none' }); return; }
-    setGenerating(true);
-    try {
-      const res = await fetch('https://colour-choice.art/api/generate-planning', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (data.report) {
-        Taro.setStorageSync('ai_report', JSON.stringify(data.report));
-        Taro.setStorageSync('ai_source', data.source);
-        Taro.navigateTo({ url: '/pages/planning/result/index' });
-      } else {
-        Taro.showToast({ title: '生成失败', icon: 'none' });
-      }
-    } catch (e) {
-      Taro.showToast({ title: '网络错误', icon: 'none' });
-    }
-    setGenerating(false);
-  };
+  const fetchReports = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('planning_reports')
+      .select('*')
+      .eq('status', 'published')
+      .order('created_at', { ascending: false })
+      .getList<PlanningReport>()
+
+    if (data) setReports(data)
+    setLoading(false)
+  }
 
   return (
-    <View className='page'>
-      <View className='card'>
-        <Text className='section-title'>✨ AI 商品企划生成</Text>
-        <Text className='hint'>基于店铺定位和会员画像，智能生成季节企划方案</Text>
-
-        <View className='form-group'>
-          <Text className='form-label'>品牌名 *</Text>
-          <Input className='form-input' placeholder='输入品牌名' value={form.brandName} onInput={e => setForm({ ...form, brandName: e.detail.value })} />
-        </View>
-
-        <View className='form-group'>
-          <Text className='form-label'>季节</Text>
-          <Picker mode='selector' range={seasons} onChange={e => setForm({ ...form, season: seasons[e.detail.value] })}>
-            <View className='form-picker'>{form.season} ▼</View>
-          </Picker>
-        </View>
-
-        <View className='form-group'>
-          <Text className='form-label'>价格带</Text>
-          <Picker mode='selector' range={priceBands} onChange={e => setForm({ ...form, priceBand: priceBands[e.detail.value] })}>
-            <View className='form-picker'>{form.priceBand} ▼</View>
-          </Picker>
-        </View>
-
-        <View className='form-group'>
-          <Text className='form-label'>目标年龄段</Text>
-          <Picker mode='selector' range={ages} onChange={e => setForm({ ...form, targetAge: ages[e.detail.value] })}>
-            <View className='form-picker'>{form.targetAge} ▼</View>
-          </Picker>
-        </View>
-
-        <View className='btn-primary' onClick={generate}>
-          <Text className='btn-text'>{generating ? '生成中...' : '🚀 一键生成企划'}</Text>
+    <ScrollView className="planning-page" scrollY>
+      {/* 页面头部 */}
+      <View className="page-hero">
+        <View className="hero-overlay" />
+        <View className="hero-content">
+          <Text className="hero-badge">AI 智能企划</Text>
+          <Text className="hero-title">商品企划</Text>
+          <Text className="hero-desc">输入数据，AI自动生成完整企划方案</Text>
         </View>
       </View>
-    </View>
-  );
+
+      {/* 企划工具入口 */}
+      <View className="tools-section">
+        <View className="tool-card" onClick={() => Taro.navigateTo({ url: '/pages/planning/ai/index' })}>
+          <Text className="tool-icon">📊</Text>
+          <Text className="tool-title">AI 生成企划</Text>
+          <Text className="tool-desc">填写基本信息，一键生成企划报告</Text>
+        </View>
+        <View className="tool-card" onClick={() => Taro.navigateTo({ url: '/pages/planning/upload/index' })}>
+          <Text className="tool-icon">📁</Text>
+          <Text className="tool-title">上传销售数据</Text>
+          <Text className="tool-desc">上传Excel，AI分析并生成企划</Text>
+        </View>
+      </View>
+
+      {/* 企划报告列表 */}
+      <View className="reports-section">
+        <View className="section-header">
+          <Text className="section-title">企划报告</Text>
+          <Text className="section-subtitle">浏览已生成的企划方案</Text>
+        </View>
+
+        {loading ? (
+          <View className="loading">加载中...</View>
+        ) : reports.length === 0 ? (
+          <View className="empty">
+            <Text className="empty-icon">📄</Text>
+            <Text className="empty-text">暂无企划报告</Text>
+            <Text className="empty-hint">点击上方工具开始生成</Text>
+          </View>
+        ) : (
+          <View className="report-list">
+            {reports.map(report => (
+              <View key={report.id} className="report-card" onClick={() => Taro.navigateTo({ url: `/pages/planning/detail/index?id=${report.id}` })}>
+                <View className="report-cover">
+                  {report.cover_image ? (
+                    <Image className="cover-img" src={report.cover_image} mode="aspectFill" />
+                  ) : (
+                    <View className="cover-placeholder">
+                      <Text>📊</Text>
+                    </View>
+                  )}
+                  {report.member_only && (
+                    <View className="member-badge">
+                      <Text>会员专享</Text>
+                    </View>
+                  )}
+                </View>
+                <View className="report-info">
+                  <Text className="report-title">{report.title || '未命名企划'}</Text>
+                  <View className="report-meta">
+                    <Text className="report-category">{report.category || '通用'}</Text>
+                    <Text className="report-date">{new Date(report.created_at).toLocaleDateString()}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
+    </ScrollView>
+  )
 }

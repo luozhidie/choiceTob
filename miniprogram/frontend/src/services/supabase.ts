@@ -2,8 +2,7 @@
 import Taro from '@tarojs/taro';
 
 const SUPABASE_URL = 'https://fxeknwkmytzedkhplozn.supabase.co';
-// 注意：实际 ANON_KEY 需要在部署时配置
-const SUPABASE_ANON_KEY = '';
+const SUPABASE_ANON_KEY = 'sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW';
 
 class SupabaseClient {
   private url: string;

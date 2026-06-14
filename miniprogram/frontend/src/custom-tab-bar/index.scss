@@ -1,0 +1,58 @@
+.custom-tab-bar {
+  display: flex;
+  height: 100px;
+  background: #fff;
+  border-top: 1px solid #f0f0f0;
+  padding-bottom: env(safe-area-inset-bottom);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.tab-icon {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 4px;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.tab-icon-home { background-image: url('~@/assets/tabbar/home.png'); }
+.tab-icon-home.active { background-image: url('~@/assets/tabbar/home-active.png'); }
+
+.tab-icon-courses { background-image: url('~@/assets/tabbar/plan.png'); }
+.tab-icon-courses.active { background-image: url('~@/assets/tabbar/plan-active.png'); }
+
+.tab-icon-news { background-image: url('~@/assets/tabbar/user.png'); }
+.tab-icon-news.active { background-image: url('~@/assets/tabbar/user-active.png'); }
+
+.tab-icon-category { background-image: url('~@/assets/tabbar/category.png'); }
+.tab-icon-category.active { background-image: url('~@/assets/tabbar/category-active.png'); }
+
+.tab-icon-hot { background-image: url('~@/assets/tabbar/stock.png'); }
+.tab-icon-hot.active { background-image: url('~@/assets/tabbar/stock-active.png'); }
+
+.tab-icon-vip { background-image: url('~@/assets/tabbar/vip.png'); }
+.tab-icon-vip.active { background-image: url('~@/assets/tabbar/vip-active.png'); }
+
+.tab-text {
+  font-size: 20px;
+  color: #999;
+}
+
+.tab-text.active {
+  color: #2d1b2e;
+  font-weight: 600;
+}

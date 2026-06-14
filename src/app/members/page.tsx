@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Crown, Award, Gem, Check, X, ChevronRight,
   TrendingUp, Gift, Shield, Star, Lock, Eye, CreditCard,
 } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 
 // ────────── A. 查看价格会员 ──────────
 const VIEW_PRICE_PACKAGES = [
@@ -87,16 +89,17 @@ export default function MembersPage() {
   const [selectedDeposit, setSelectedDeposit] = useState<typeof DEPOSIT_TIERS[0] | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
   const [payMode, setPayMode] = useState<"view_price" | "deposit">("view_price");
-  const [contact, setContact] = useState("");
-  const [submitted, setSubmitted] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [paySuccess, setPaySuccess] = useState(false);
+  const { user } = useAuth();
+  const supabase = createClient();
 
   const handleBuy = (pkg: typeof VIEW_PRICE_PACKAGES[0]) => {
     setSelectedPkg(pkg);
     setSelectedDeposit(null);
     setPayMode("view_price");
     setShowPayModal(true);
-    setSubmitted(false);
-    setContact("");
+    setPaySuccess(false);
   };
 
   const handleDepositBuy = (tier: typeof DEPOSIT_TIERS[0]) => {
@@ -104,15 +107,92 @@ export default function MembersPage() {
     setSelectedPkg(null);
     setPayMode("deposit");
     setShowPayModal(true);
-    setSubmitted(false);
-    setContact("");
+    setPaySuccess(false);
   };
 
   const handleClose = () => {
     setShowPayModal(false);
     setSelectedPkg(null);
     setSelectedDeposit(null);
-    setSubmitted(false);
+    setPaySuccess(false);
+    setPaying(false);
+  };
+
+  // 发起微信支付
+  const handleWechatPay = async () => {
+    if (!user) {
+      alert('请先登录');
+      window.location.href = '/login?redirect=/members';
+      return;
+    }
+
+    setPaying(true);
+    try {
+      const productId = payMode === 'view_price' && selectedPkg
+        ? `view_price_${selectedPkg.id}`
+        : payMode === 'deposit' && selectedDeposit
+        ? `deposit_${selectedDeposit.amount}`
+        : '';
+
+      const totalFee = payMode === 'view_price' && selectedPkg
+        ? selectedPkg.price
+        : payMode === 'deposit' && selectedDeposit
+        ? parseInt(selectedDeposit.amount) * 100 // "5万" -> 50000 -> 5000000分
+        : 0;
+
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          total_fee: totalFee,
+          platform: 'mp', // 网站用公众号JSAPI
+          openid: user.id || ''
+        })
+      });
+
+      const result = await response.json();
+      if (result.prepay_id) {
+        // 调起微信支付
+        if (typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+          (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+            appId: result.appId,
+            timeStamp: result.timeStamp,
+            nonceStr: result.nonceStr,
+            package: result.package,
+            signType: result.signType,
+            paySign: result.paySign
+          }, async function(res: any) {
+            if (res.err_msg === "get_brand_wcpay_request:ok") {
+              // 支付成功，记录订单
+              await supabase.from('membership_orders').insert([{
+                user_id: user.id,
+                plan_id: productId,
+                amount: totalFee,
+                status: 'paid',
+                paid_at: new Date().toISOString()
+              }]);
+              setPaySuccess(true);
+            } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+              alert('支付已取消');
+            } else {
+              alert('支付失败：' + res.err_msg);
+            }
+            setPaying(false);
+          });
+        } else {
+          alert('请在微信中打开此页面进行支付');
+          setPaying(false);
+        }
+      } else {
+        alert('支付发起失败：' + (result.error || '未知错误'));
+        setPaying(false);
+      }
+    } catch (error) {
+      console.error('[wechat pay]', error);
+      alert('支付发起失败，请稍后重试');
+      setPaying(false);
+    }
   };
 
   return (
@@ -293,16 +373,16 @@ export default function MembersPage() {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">
-                  {submitted ? "提交成功" : payMode === "deposit" ? "充值货款" : "开通查看价格会员"}
+                  {paySuccess ? "支付成功" : payMode === "deposit" ? "充值货款" : "开通查看价格会员"}
                 </h3>
                 <button onClick={handleClose} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
               </div>
 
-              {submitted ? (
+              {paySuccess ? (
                 <div className="text-center py-4">
                   <Check className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                  <p className="text-gray-700 font-medium">已提交开通申请！</p>
-                  <p className="text-sm text-gray-500 mt-1">客服将在24小时内联系您确认</p>
+                  <p className="text-gray-700 font-medium">支付成功！</p>
+                  <p className="text-sm text-gray-500 mt-1">会员已开通，即将刷新页面...</p>
                   <button onClick={handleClose} className="mt-4 px-6 py-2 bg-accent text-white text-sm font-medium rounded-xl">完成</button>
                 </div>
               ) : (
@@ -324,32 +404,25 @@ export default function MembersPage() {
                   </div>
 
                   <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">微信扫码付款</p>
-                    <div className="flex justify-center">
-                      <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-48 h-auto rounded-xl border" />
+                    <p className="text-sm font-medium text-gray-700 mb-2">支付方式</p>
+                    <div className="flex items-center gap-2 p-3 bg-green-50 rounded-xl border border-green-200">
+                      <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">微信</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">微信支付</p>
+                        <p className="text-xs text-gray-500">推荐使用，支付后立即开通</p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
-                    <p className="text-sm font-medium text-gray-700 mb-1">或银行转账</p>
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>户名：吴川市樟铺骆芷蝶教你好看穿搭小店</p>
-                      <p>开户行：中国工商银行（吴川支行）</p>
-                      <p>账号：2015021309200280877</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <input
-                      type="text" value={contact} onChange={(e) => setContact(e.target.value)}
-                      placeholder="您的手机号/微信号"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent outline-none"
-                    />
-                    <button
-                      onClick={() => { if (!contact) { alert("请填写联系方式"); return; } setSubmitted(true); }}
-                      className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90"
-                    >我已付款，提交凭证</button>
-                  </div>
+                  <button
+                    onClick={handleWechatPay}
+                    disabled={paying}
+                    className="w-full py-3 bg-green-500 text-white text-sm font-semibold rounded-xl hover:bg-green-600 transition-colors disabled:opacity-50"
+                  >
+                    {paying ? '支付处理中...' : `微信支付 ${selectedPkg ? formatPrice(selectedPkg.price) : selectedDeposit ? `¥${selectedDeposit.amount}` : ''}`}
+                  </button>
                 </>
               )}
             </motion.div>

@@ -93,7 +93,14 @@ export default function Footer() {
         {/* Bottom bar */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-white/50">
           <p>&copy; 2026 骆芷蝶智选. 保留所有权利.</p>
-          <p>粤ICP备XXXXXXXX号</p>
+          <a
+            href="https://beian.miit.gov.cn/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-white/70 transition-colors"
+          >
+            粤ICP备2026073614号-1
+          </a>
         </div>
       </div>
     </footer>

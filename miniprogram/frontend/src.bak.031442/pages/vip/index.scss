@@ -1,0 +1,152 @@
+.vip-page {
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  font-size: 28px;
+  color: #999;
+}
+
+/* 用户头部 */
+.user-header {
+  background: linear-gradient(135deg, #1a56db 0%, #0d47a1 100%);
+  padding: 60px 32px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: #fff;
+  font-weight: bold;
+  margin-bottom: 16px;
+}
+
+.user-name {
+  font-size: 32px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.user-phone {
+  font-size: 24px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 12px;
+}
+
+.vip-badge {
+  background: rgba(255,255,255,0.2);
+  padding: 6px 20px;
+  border-radius: 20px;
+  font-size: 22px;
+  color: #fff;
+}
+
+.login-hint {
+  font-size: 32px;
+  color: #fff;
+  margin-top: 16px;
+}
+
+/* 区块 */
+.section {
+  margin: 16px 24px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.section-title {
+  font-size: 30px;
+  font-weight: bold;
+  color: #1a1a1a;
+  display: block;
+  margin-bottom: 20px;
+}
+
+/* 会员套餐 */
+.plans {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.plan-card {
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.plan-name {
+  font-size: 28px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.plan-price {
+  font-size: 36px;
+  font-weight: bold;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.plan-desc {
+  font-size: 22px;
+  color: #666;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.plan-btn {
+  padding: 16px 0;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.plan-btn-text {
+  color: #fff;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* 菜单 */
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-label {
+  font-size: 28px;
+  color: #333;
+}
+
+.menu-arrow {
+  font-size: 28px;
+  color: #ccc;
+}
+
+.logout {
+  justify-content: center;
+}

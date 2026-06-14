@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/generate-marketing-plan
  *
- * 营销策划方案 — 基于VIP画像 + 市场趋势 + 库存现状 + 企业预算与营利目标
+ * 营销策划方案 — 基于VIP画像 +  market趋势 + 库存现状 + 企业预算与营利目标
  * 核心目标：精准触达VIP客群，活动ROI最大化，驱动业绩目标达成
  */
 export async function POST(req: NextRequest) {
   try {
+    // 检查用户是否已登录
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    }
+    
     const {
       storeId,
       season,
