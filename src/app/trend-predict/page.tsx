@@ -66,11 +66,30 @@ const scoreColor = (score: number) =>
 /* ===================== 页面组件 ===================== */
 export default function TrendPredictPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(false); // 移除登录检查
+  const [checking, setChecking] = useState(true);
 
-  // 不再需要登录检查，直接可用
+  // 会员权限检查：必须从会员中心进入，且已开通会员
   useEffect(() => {
-    setChecking(false);
+    const checkAccess = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/members");
+        return;
+      }
+      // 检查是否为会员
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("membership_type")
+        .eq("id", user.id)
+        .single();
+      if (!profile?.membership_type) {
+        router.push("/members");
+        return;
+      }
+      setChecking(false);
+    };
+    checkAccess();
   }, []);
 
   /* ---- 预测控制 ---- */

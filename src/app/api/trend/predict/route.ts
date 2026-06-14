@@ -46,7 +46,7 @@ async function predictWithAI(keyword: string): Promise<any> {
 规则：
 - 所有name必须是具体的中文时尚术语
 - score必须按降序排列（最高在前）
-- direction根据${季节}特性判断趋势方向
+- direction根据${season}特性判断趋势方向
 - 加入随机种子${seed}使每次结果略有不同`;
 
   const resp = await fetch("https://api.deepseek.com/v1/chat/completions", {

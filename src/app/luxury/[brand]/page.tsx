@@ -199,8 +199,8 @@ export default function LuxuryBrandPage() {
               <li>关注品牌近3年走秀趋势，预判下一季流行方向</li>
               <li>将品牌元素（如五金扣型、图案）融入您的设计，提升质感</li>
             </ul>
-            <Link href="/trend-predict" className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium hover:underline">
-              前往爆款预测中心，结合奢品参考做开发判断 →
+            <Link href="/members" className="mt-3 inline-flex items-center gap-1 text-xs text-accent font-medium hover:underline">
+              前往会员中心，使用爆款预测分析功能 →
             </Link>
           </div>
         </div>

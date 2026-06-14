@@ -9,8 +9,6 @@ const navItems = [
   { label: "👑 会员中心", href: "/members" },
   { label: "风格测试", href: "/style-test" },
   { label: "买手选品", href: "/buyer" },
-  { label: "爆款预测", href: "/trend-predict" },
-  { label: "明星同款", href: "/celebrity" },
   { label: "时尚博主", href: "/magazine" },
   { label: "联系我们", href: "/contact" },
 ];

@@ -200,10 +200,10 @@ export default function DevelopmentDirectionPage() {
                   {loading ? "生成中..." : "📦 生成采购清单"}
                 </button>
                 <Link
-                  href="/trend-predict"
+                  href="/members"
                   className="px-6 py-3 border border-gray-200 text-primary text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors"
                 >
-                  查看详细趋势 →
+                  会员中心 → 爆款预测
                 </Link>
               </div>
 

@@ -20,7 +20,7 @@ const MEMBER_FEATURES = [
     bgColor: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200",
     href: "/vip",
     badge: "热门",
-    requiresMembership: true,  // 改为true：只有会员才能看到
+    requiresMembership: true,
   },
   {
     key: "planning",
@@ -47,12 +47,23 @@ const MEMBER_FEATURES = [
   {
     key: "trend",
     title: "爆款预测分析",
-    desc: "AI趋势预测、色彩/面料/款式趋势、明星同款货源搜索",
+    desc: "AI趋势预测、色彩/面料/款式趋势、智能搭配推荐",
     icon: TrendingUp,
     color: "from-purple-500 to-violet-500",
     bgColor: "bg-gradient-to-br from-purple-50 to-violet-50 border-purple-200",
     href: "/trend-predict",
     badge: "AI分析",
+    requiresMembership: true,
+  },
+  {
+    key: "celebrity",
+    title: "明星同款搜索",
+    desc: "搜索明星同款货源，AI智能推荐搭配，快速找货选品比价",
+    icon: Star,
+    color: "from-rose-500 to-pink-500",
+    bgColor: "bg-gradient-to-br from-rose-50 to-pink-50 border-rose-200",
+    href: "/celebrity",
+    badge: "找货",
     requiresMembership: true,
   },
   {
