@@ -124,3 +124,11 @@ CREATE POLICY "purchase_intents_read_authenticated" ON purchase_intents
   FOR SELECT TO authenticated USING (
     user_id = auth.uid() OR (SELECT role FROM current_user_role()) IN ('admin', 'owner')
   );
+
+-- 9. 修复 course_purchases - 添加 admin 删除权限
+CREATE POLICY "course_purchases_admin_all" ON course_purchases
+  FOR ALL TO authenticated USING (
+    (SELECT role FROM current_user_role()) IN ('admin', 'owner')
+  ) WITH CHECK (
+    (SELECT role FROM current_user_role()) IN ('admin', 'owner')
+  );
