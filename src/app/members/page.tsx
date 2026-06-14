@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   Crown, Sparkles, Package, TrendingUp, Megaphone,
   Lock, CheckCircle2, ArrowRight, User, Shield, Star,
+  ShoppingBag,
 } from "lucide-react";
 
 /** 会员功能卡片 */
@@ -242,6 +243,51 @@ export default function MembersPage() {
               );
             })}
           </div>
+
+          {/* 拿货充值档位（仅VIP可见） */}
+          {isMember && (
+            <section className="mt-10">
+              <div className="bg-gradient-to-br from-accent/5 via-pink-50 to-accent/5 rounded-2xl p-6 border border-pink-100">
+                <h2 className="text-lg font-bold text-primary mb-2 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-accent" /> 预存货款 · 折扣拿货
+                </h2>
+                <p className="text-xs text-gray-500 mb-4">预存越多，折扣越低。预存款可用于采购下单，随时退。</p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {[
+                    { amount: "50000", label: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
+                    { amount: "100000", label: "10万", discount: "2.8折", ret: "退10%", example: "原价¥100 → ¥28", highlight: false },
+                    { amount: "300000", label: "30万", discount: "2.6折", ret: "退20%", example: "原价¥100 → ¥26", highlight: true },
+                  ].map((tier) => (
+                    <div
+                      key={tier.amount}
+                      onClick={() => router.push("/vip")}
+                      className={`rounded-xl p-5 text-center cursor-pointer transition-all hover:-translate-y-1 ${
+                        tier.highlight
+                          ? "bg-gradient-to-br from-accent/20 to-pink-20 ring-2 ring-accent/30 shadow-lg"
+                          : "bg-white/80 backdrop-blur-sm shadow-sm hover:shadow-md"
+                      }`}
+                    >
+                      <div className="text-2xl font-black text-primary">{tier.label}</div>
+                      <div className="text-xs text-gray-500 mt-1">预存金额</div>
+                      <div className="mt-3 text-lg font-bold text-accent">{tier.discount}</div>
+                      <div className="text-[11px] text-gray-400">{tier.ret}</div>
+                      <div className="mt-2 pt-2 border-t border-gray-100 text-[11px] text-gray-600">{tier.example}</div>
+                      {tier.highlight && (
+                        <span className="mt-3 inline-block px-3 py-0.5 bg-accent text-white text-[10px] font-bold rounded-full">
+                          推荐
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[11px] text-center text-gray-400 mt-4">
+                  💡 预存款支持全额退还（扣除已用部分），详情请联系客服
+                </p>
+              </div>
+            </section>
+          )}
 
           {/* 底部提示 */}
           <div className="mt-10 text-center">

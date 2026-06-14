@@ -146,6 +146,7 @@ export default function BuyerPage() {
   const [paymentChecking, setPaymentChecking] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [showMemberPrompt, setShowMemberPrompt] = useState(false);
+  const [memberPromptType, setMemberPromptType] = useState<"view_price" | "deposit">("view_price");
 
   // 供应商入驻表单
   const [supplierForm, setSupplierForm] = useState({
@@ -278,9 +279,23 @@ export default function BuyerPage() {
     return list;
   }, [allProducts, searchTerm, activeCategory, activeSubcategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
+  // 创建订单并发起支付（检查拿货权限）
   const handleBuy = (product: MergedProduct) => {
     const source = product.source || "buyer";
-    router.push(`/checkout?id=${product.id}&source=${source}`);
+    // 检查是否为拿货充值会员
+    if (!user) {
+      setMemberPromptType("view_price");
+      setShowMemberPrompt(true);
+      return;
+    }
+    // 如果只是view_price会员（查价），提示升级
+    if (user && isMember) {
+      router.push(`/checkout?id=${product.id}&source=${source}`);
+      return;
+    }
+    // 非会员 → 提示开通
+    setMemberPromptType("deposit");
+    setShowMemberPrompt(true);
   };
   const handleCloseDetail = () => { setShowProductDetail(false); setSelectedProduct(null); setPaymentQR(null); setCurrentOrderNo(""); setPaymentSuccess(false); };
   const handleOpenPurchase = () => { setShowProductDetail(false); setShowPurchaseIntent(true); };
@@ -393,34 +408,6 @@ export default function BuyerPage() {
                   </button>
                 )}
               </div>
-            </div>
-            {/* 预存货款折扣档位 */}
-            <div className="flex flex-col gap-3 shrink-0">
-              <p className="text-xs text-white/70 text-center">预存货款享折扣拿货</p>
-              <div className="flex gap-3">
-                {[
-                  { amount: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
-                  { amount: "10万", discount: "2.8折", ret: "退10%", example: "原价¥100 → ¥28", highlight: false },
-                  { amount: "30万", discount: "2.6折", ret: "退20%", example: "原价¥100 → ¥26", highlight: true },
-                ].map((tier) => (
-                  <div key={tier.amount} className={`backdrop-blur-sm border rounded-xl p-4 text-center min-w-[100px] transition-all ${
-                    tier.highlight
-                      ? "bg-accent/20 border-accent/50 ring-1 ring-accent/30"
-                      : "bg-white/10 border-white/20"
-                  }`}>
-                    <div className="text-xl font-bold">{tier.amount}</div>
-                    <div className="text-xs text-white/60 mt-1">预存</div>
-                    <div className="mt-2 text-accent font-bold text-sm">{tier.discount}</div>
-                    <div className="text-[10px] text-white/50">{tier.ret}</div>
-                    <div className="text-[10px] text-white/70 mt-1.5 pt-1.5 border-t border-white/10">{tier.example}</div>
-                  </div>
-                ))}
-              </div>
-              <Link href="/members"
-                className="btn-accent text-xs py-2 rounded-lg font-semibold text-center flex items-center justify-center gap-1.5">
-                <Star className="w-3.5 h-3.5" />
-                了解货款折扣方案
-              </Link>
             </div>
           </div>
         </div>
@@ -791,7 +778,7 @@ export default function BuyerPage() {
                         ) : (
                           <>
                             <button
-                              onClick={(e) => { e.stopPropagation(); setShowMemberPrompt(true); }}
+                              onClick={(e) => { e.stopPropagation(); setMemberPromptType("view_price"); setShowMemberPrompt(true); }}
                               className="flex items-center gap-1.5"
                             >
                               <span className="text-sm font-bold text-gray-400">¥???</span>
@@ -800,7 +787,7 @@ export default function BuyerPage() {
                               </span>
                             </button>
                             <button
-                              onClick={(e) => { e.stopPropagation(); setShowMemberPrompt(true); }}
+                              onClick={(e) => { e.stopPropagation(); setMemberPromptType("view_price"); setShowMemberPrompt(true); }}
                               className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                             >
                               开通查看价格
@@ -1230,7 +1217,7 @@ export default function BuyerPage() {
         </motion.div>
       )}
 
-      {/* 查看价格充值提示弹窗 */}
+      {/* 会员权限弹窗（分层提示） */}
       {showMemberPrompt && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -1243,81 +1230,100 @@ export default function BuyerPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold text-gray-900">
-                {user ? "查看批发价" : "请先登录"}
+              <h3 className={`text-lg font-bold ${memberPromptType === "view_price" ? "text-primary" : "text-accent"}`}>
+                {memberPromptType === "view_price" ? (
+                  <>
+                    <Lock className="w-5 h-5 inline-block mr-1 -mt-0.5" /> 开通价格会员
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5 inline-block mr-1 -mt-0.5" /> 升级拿货会员
+                  </>
+                )}
               </h3>
               <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-600 mb-4">
-              {user
-                ? "开通查看价格会员，即可查看所有商品批发底价"
-                : "登录后即可查看批发价格，或开通会员享受更多权益"}
-            </p>
-            <div className="space-y-3">
-              {user ? (
-                <button 
-                  onClick={async () => {
-                    setShowMemberPrompt(false);
-                    // 调用微信支付开通会员
-                    try {
-                      const response = await fetch('/api/wechat-pay/unified-order', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          product_id: 'member_price_view',
-                          total_fee: 29900, // 299元 = 29900分
-                          platform: 'mini', // 或 'mp' 根据环境判断
-                          openid: user.id // 需要获取用户的 openid
-                        })
-                      });
-                      const result = await response.json();
-                      if (result.prepay_id) {
-                        // 调起微信支付
-                        if (typeof window !== 'undefined' && (window as any).WechatJSAPI) {
-                          (window as any).WechatJSAPI.chooseWXPay({
-                            appId: result.appId,
-                            timeStamp: result.timeStamp,
-                            nonceStr: result.nonceStr,
-                            package: result.package,
-                            signType: result.signType,
-                            paySign: result.paySign,
-                            success: function(res: any) {
-                              alert('支付成功！已开通会员');
-                              window.location.reload();
-                            },
-                            fail: function(res: any) {
-                              alert('支付失败，请重试');
-                            }
-                          });
-                        } else {
-                          // 网页端用 JSAPI
-                          alert('请在微信中打开或稍后支持网页支付');
-                        }
-                      }
-                    } catch (error) {
-                      alert('支付发起失败，请重试');
-                    }
-                  }}
-                  className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center"
-                >
-                  微信支付开通会员（¥299/年）
-                </button>
-              ) : (
-                <Link href="/login?redirect=/buyer" onClick={() => setShowMemberPrompt(false)}>
-                  <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                    去登录
-                  </span>
-                </Link>
-              )}
-              <button
-                onClick={() => setShowMemberPrompt(false)}
-                className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
-              >
-                再看看
-              </button>
-            </div>
+
+            {memberPromptType === "view_price" ? (
+              // === 查价VIP弹窗 ===
+              <>
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 mb-4 border border-amber-200">
+                  <p className="text-sm font-medium text-gray-800 mb-2">💰 查看价格年费会员</p>
+                  <ul className="space-y-1 text-xs text-gray-600">
+                    <li>✅ 查看所有商品批发底价</li>
+                    <li>✅ 对比供货价与市场价差</li>
+                    <li>✅ 爆款趋势预测数据</li>
+                    <li>✅ 明星同款货源搜索</li>
+                  </ul>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 text-center">
+                  年费 <span className="font-bold text-accent">¥299/年</span>，立即开通查看全部商品价格
+                </p>
+                <div className="space-y-3">
+                  {user ? (
+                    <Link href="/vip" onClick={() => setShowMemberPrompt(false)} className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center hover:brightness-110 transition-all">
+                      立即开通 ¥299/年 →
+                    </Link>
+                  ) : (
+                    <Link href="/login?redirect=/buyer" onClick={() => setShowMemberPrompt(false)}>
+                      <span className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center">
+                        登录后开通
+                      </span>
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => setShowMemberPrompt(false)}
+                    className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
+                  >
+                    再看看
+                  </button>
+                </div>
+              </>
+            ) : (
+              // === 拿货充值会员弹窗 ===
+              <>
+                <div className="bg-gradient-to-br from-accent-light/30 to-pink-50 rounded-xl p-4 mb-4 border border-pink-200">
+                  <p className="text-sm font-medium text-gray-800 mb-2">🚀 预存货款 · 折扣拿货</p>
+                  <div className="grid grid-cols-3 gap-2 mt-2">
+                    {[
+                      { a: "5万", d: "2.8折", h: true },
+                      { a: "10万", d: "2.8折", h: false },
+                      { a: "30万", d: "2.6折", h: false },
+                    ].map((t) => (
+                      <div key={t.a} className={`text-center rounded-lg p-2 ${t.h ? "bg-accent/20 ring-1 ring-accent/30" : "bg-white"}`}>
+                        <div className="text-sm font-bold">{t.a}</div>
+                        <div className="text-[10px] text-accent font-bold">{t.d}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 text-center">
+                  预存货款享超低折扣拿货，<span className="font-bold text-accent">原价¥100最低¥26</span>
+                </p>
+                <div className="space-y-3">
+                  <Link href="/members" onClick={() => setShowMemberPrompt(false)}
+                    className="block w-full py-3 bg-gradient-to-r from-accent to-pink-500 text-white text-sm font-semibold rounded-xl text-center hover:brightness-110 transition-all"
+                  >
+                    了解拿货方案 →
+                  </Link>
+                  {user && (
+                    <Link href="/vip" onClick={() => setShowMemberPrompt(false)}
+                      className="block w-full py-2.5 border border-accent text-accent text-sm font-semibold rounded-xl text-center hover:bg-accent/5 transition-colors"
+                    >
+                      先开查价会员 ¥299/年
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => setShowMemberPrompt(false)}
+                    className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
+                  >
+                    再看看
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
         </motion.div>
       )}
