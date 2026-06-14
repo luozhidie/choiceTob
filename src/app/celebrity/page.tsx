@@ -20,20 +20,11 @@ const HOT_CELEBRITIES = [
 
 export default function CelebrityPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false); // 移除登录检查
 
-  // 登录检查
+  // 不再需要登录检查
   useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login?redirect=/celebrity");
-        return;
-      }
-      setChecking(false);
-    };
-    checkAuth();
+    setChecking(false);
   }, []);
 
   const [keyword, setKeyword] = useState("");

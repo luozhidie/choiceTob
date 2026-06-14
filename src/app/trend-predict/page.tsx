@@ -66,20 +66,11 @@ const scoreColor = (score: number) =>
 /* ===================== 页面组件 ===================== */
 export default function TrendPredictPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false); // 移除登录检查
 
-  // 登录检查
+  // 不再需要登录检查，直接可用
   useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/login?redirect=/trend-predict");
-        return;
-      }
-      setChecking(false);
-    };
-    checkAuth();
+    setChecking(false);
   }, []);
 
   /* ---- 预测控制 ---- */

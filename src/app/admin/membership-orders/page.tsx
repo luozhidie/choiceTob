@@ -175,16 +175,19 @@ export default function AdminMembershipOrdersPage() {
     }
   };
 
-  // 删除订单
+  // 删除订单（优先服务端删除绕过RLS）
   const handleDelete = async (id: string, email: string) => {
     if (!confirm(`确定彻底删除「${email}」的订单记录？此操作不可恢复。`)) return;
     setProcessingId(id);
     try {
-      const { error } = await supabase
-        .from("membership_orders")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
+      // 直接调用服务端API（绕过RLS）
+      const res = await fetch("/api/admin/delete-membership-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "删除失败");
       showToast("success", "已删除");
       fetchOrders();
     } catch (err: any) {
