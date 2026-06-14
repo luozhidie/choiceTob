@@ -37,7 +37,9 @@ export async function POST(req: NextRequest) {
 
     const apiUrl = useDeepSeek ? "https://api.deepseek.com/v1/chat/completions" : "https://api.openai.com/v1/chat/completions";
     const model = useDeepSeek ? "deepseek-chat" : "gpt-4o";
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    const host = req.headers.get("host") || "localhost:3000";
+    const protocol = req.headers.get("x-forwarded-proto")?.split(",")[0] || "http";
+    const baseUrl = `${protocol}://${host}`;
 
     // 1. 获取店铺深度洞察（如果有storeId）
     let storeInsights: Record<string, any> = {};

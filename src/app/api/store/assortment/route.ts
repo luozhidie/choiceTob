@@ -16,7 +16,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少storeId或season" }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+    // 自动检测站点URL：Vercel用headers.host回连，本地开发用localhost
+    const host = req.headers.get("host") || "localhost:3000";
+    const protocol = req.headers.get("x-forwarded-proto")?.split(",")[0] || "http";
+    const baseUrl = `${protocol}://${host}`;
 
     // 1. 获取店铺洞察数据（VIP+经营+库存）
     const insightsResp = await fetch(`${baseUrl}/api/store/insights?storeId=${storeId}&sections=vip,business,inventory,sales`, {

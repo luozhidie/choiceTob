@@ -278,7 +278,9 @@ function buildMarketPromptSection(marketResearch: Record<string, any>): string {
 /* ============ 辅助函数：采集市场数据 ============ */
 async function fetchMarketResearch(keyword: string, season: string, style: string, priceBand: string) {
   try {
-    const researchResp = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/api/planning/market-research`, {
+    const host = req.headers.get("host") || "localhost:3000";
+    const protocol = req.headers.get("x-forwarded-proto")?.split(",")[0] || "http";
+    const researchResp = await fetch(`${protocol}://${host}/api/planning/market-research`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ keyword, season, style, priceBand }),
