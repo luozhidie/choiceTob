@@ -28,15 +28,15 @@ export default {
   tabBar: {
     custom: true,
     color: '#999999',
-    selectedColor: '#2d1b2e',
+    selectedColor: '#1a1a2e',
     borderStyle: 'white',
     backgroundColor: '#ffffff',
     list: [
       { pagePath: 'pages/home/index/index', text: '首页', iconPath: 'assets/tabbar/home.png', selectedIconPath: 'assets/tabbar/home-active.png' },
-      { pagePath: 'pages/courses/index/index', text: '课程企划', iconPath: 'assets/tabbar/plan.png', selectedIconPath: 'assets/tabbar/plan-active.png' },
-      { pagePath: 'pages/hot-picks/index/index', text: '爆款样衣', iconPath: 'assets/tabbar/stock.png', selectedIconPath: 'assets/tabbar/stock-active.png' },
-      { pagePath: 'pages/news/index/index', text: '资讯', iconPath: 'assets/tabbar/user.png', selectedIconPath: 'assets/tabbar/user-active.png' },
-      { pagePath: 'pages/vip/index/index', text: 'VIP', iconPath: 'assets/tabbar/vip.png', selectedIconPath: 'assets/tabbar/vip-active.png' },
+      { pagePath: 'pages/category/index/index', text: '分类', iconPath: 'assets/tabbar/plan.png', selectedIconPath: 'assets/tabbar/plan-active.png' },
+      { pagePath: 'pages/buyer/index/index', text: '购物车', iconPath: 'assets/tabbar/stock.png', selectedIconPath: 'assets/tabbar/stock-active.png' },
+      { pagePath: 'pages/vip/index/index', text: '会员', iconPath: 'assets/tabbar/vip.png', selectedIconPath: 'assets/tabbar/vip-active.png' },
+      { pagePath: 'pages/vip/profile/index/index', text: '我的', iconPath: 'assets/tabbar/user.png', selectedIconPath: 'assets/tabbar/user-active.png' },
     ],
   },
 }
