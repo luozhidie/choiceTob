@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Menu, X, ChevronRight, User, LogOut, Sparkles } from "lucide-react";
 
 const navItems = [
+  { label: "👑 会员中心", href: "/members" },
   { label: "VIP会员", href: "/vip" },
   { label: "风格测试", href: "/style-test" },
   { label: "买手选品", href: "/buyer" },

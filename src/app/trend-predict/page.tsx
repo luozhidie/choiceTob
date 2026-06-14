@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, TrendingUp, Palette, Scissors, History,
@@ -63,6 +65,23 @@ const scoreColor = (score: number) =>
 
 /* ===================== 页面组件 ===================== */
 export default function TrendPredictPage() {
+  const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  // 登录检查
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login?redirect=/trend-predict");
+        return;
+      }
+      setChecking(false);
+    };
+    checkAuth();
+  }, []);
+
   /* ---- 预测控制 ---- */
   const [keyword, setKeyword] = useState("连衣裙");
   const [days, setDays] = useState<7 | 30 | 90>(30);
@@ -185,6 +204,18 @@ export default function TrendPredictPage() {
       setCollectionLoading(false);
     }
   }, [keyword]);
+
+  /* ===================== 登录检查 ===================== */
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)] mx-auto mb-3" />
+          <p className="text-sm text-[var(--muted-foreground)]">正在检查登录状态...</p>
+        </div>
+      </div>
+    );
+  }
 
   /* ===================== 渲染 ===================== */
   return (

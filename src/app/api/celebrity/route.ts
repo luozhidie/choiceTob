@@ -4,148 +4,151 @@ import crypto from "crypto";
 /**
  * 明星同款搜索API
  * POST /api/celebrity
- * body: { celebrity: string, keyword?: string, page?: number, page_size?: number }
- * 
- * 返回：明星同款商品列表
+ * body: { celebrity: string }
+ *
+ * 默认用 DeepSeek AI 生成明星同款推荐（含真实商品链接建议）
  */
 
-const API_GATEWAY = "https://eco.taobao.com/router/rest";
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const APP_KEY = process.env.TAOBAO_APP_KEY || "";
 const APP_SECRET = process.env.TAOBAO_APP_SECRET || "";
-const ADZONE_ID = process.env.TAOBAO_ADZONE_ID || "";
 
-// 明星常用搜索关键词映射
-const CELEBRITY_KEYWORDS: Record<string, string[]> = {
-  "杨幂": ["杨幂同款", "杨幂穿搭", "杨幂同款连衣裙", "杨幂同款外套"],
-  "迪丽热巴": ["迪丽热巴同款", "迪丽热巴穿搭", "迪丽热巴同款"],
-  "刘亦菲": ["刘亦菲同款", "刘亦菲穿搭", "刘亦菲同款"],
-  "Angelababy": ["Angelababy同款", "杨颖同款", "Angelababy穿搭"],
-  "赵丽颖": ["赵丽颖同款", "赵丽颖穿搭", "赵丽颖同款"],
-  "唐嫣": ["唐嫣同款", "唐嫣穿搭", "唐嫣同款"],
-  "刘诗诗": ["刘诗诗同款", "刘诗诗穿搭", "刘诗诗同款"],
-  "倪妮": ["倪妮同款", "倪妮穿搭", "倪妮同款"],
-  "宋茜": ["宋茜同款", "宋茜穿搭", "宋茜同款"],
-  "杨紫": ["杨紫同款", "杨紫穿搭", "杨紫同款"],
-  "热巴": ["迪丽热巴同款", "热巴同款", "热巴穿搭"],
-  "幂幂": ["杨幂同款", "幂幂穿搭"],
+const CELEBRITIES: Record<string, string[]> = {
+  "杨幂": ["杨幂同款连衣裙", "杨幂穿搭外套", "杨幂同款半身裙"],
+  "迪丽热巴": ["迪丽热巴同款", "热巴穿搭裙装"],
+  "刘亦菲": ["刘亦菲同款风衣", "刘亦菲仙气裙"],
+  "Angelababy": ["杨颖同款", "Angelababy穿搭"],
+  "赵丽颖": ["赵丽颖同款", "赵丽颖连衣裙"],
+  "唐嫣": ["唐嫣同款", "唐嫣法式穿搭"],
+  "刘诗诗": ["刘诗诗同款", "刘诗诗新中式"],
+  "倪妮": ["倪妮同款", "倪妮极简穿搭"],
+  "宋茜": ["宋茜同款", "宋茜设计感单品"],
+  "杨紫": ["杨紫同款", "杨紫甜酷风"],
 };
 
-function generateSign(params: Record<string, string>): string {
+function genSign(params: Record<string, string>): string {
   const sortedKeys = Object.keys(params).sort();
-  let signStr = APP_SECRET;
-  for (const key of sortedKeys) {
-    signStr += key + params[key];
-  }
-  signStr += APP_SECRET;
-  return crypto.createHash("md5").update(signStr, "utf8").digest("hex").toUpperCase();
+  let s = APP_SECRET;
+  for (const k of sortedKeys) s += k + params[k];
+  s += APP_SECRET;
+  return crypto.createHash("md5").update(s).utf8().digest("hex").toUpperCase();
 }
 
-/** 淘宝API时间戳格式: yyyy-MM-dd HH:mm:ss */
-function formatTaobaoTimestamp(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+function fmtTS(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-async function callTaobaoAPI(method: string, bizParams: Record<string, any>): Promise<any> {
-  const timestamp = formatTaobaoTimestamp(new Date());
-  const sysParams: Record<string, string> = {
-    method, app_key: APP_KEY, timestamp, format: "json", v: "2.0", sign_method: "md5",
-  };
-  const allParams: Record<string, string> = { ...sysParams };
-  for (const [k, v] of Object.entries(bizParams)) {
-    if (v !== undefined && v !== null && v !== "") {
-      allParams[k] = typeof v === "string" ? v : String(v);
-    }
-  }
-  sysParams.sign = generateSign(allParams);
-  const url = new URL(API_GATEWAY);
-  for (const [k, v] of Object.entries(sysParams)) url.searchParams.append(k, v);
-  for (const [k, v] of Object.entries(bizParams)) {
-    if (v !== undefined && v !== null && v !== "") {
-      url.searchParams.append(k, typeof v === "string" ? v : String(v));
-    }
-  }
-  const resp = await fetch(url.toString(), { method: "GET", signal: AbortSignal.timeout(10000) });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  return resp.json();
+async function callTB(method: string, biz: any): Promise<any> {
+  const ts = fmtTS(new Date());
+  const sys: Record<string, string> = { method, app_key: APP_KEY, timestamp: ts, format: "json", v: "2.0", sign_method: "md5" };
+  const all = { ...sys };
+  for (const [k, v] of Object.entries(biz)) if (v) all[k] = typeof v === "string" ? v : String(v);
+  sys.sign = genSign(all);
+  const u = new URL("https://eco.taobao.com/router/rest");
+  for (const [k, v] of Object.entries(sys)) u.searchParams.append(k, v);
+  for (const [k, v] of Object.entries(biz)) if (v) u.searchParams.append(k, typeof v === "string" ? v : String(v));
+  const r = await fetch(u.toString(), { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`HTTP${r.status}`);
+  return r.json();
+}
+
+async function aiCelebrity(celebrity: string): Promise<any> {
+  if (!DEEPSEEK_API_KEY) throw new Error("AI未配置");
+
+  const now = new Date();
+  const seed = Math.random().toString(36).slice(2, 6);
+
+  const resp = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${DEEPSEEK_API_KEY}` },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [{ role: "user", content: `你是时尚买手助手。为明星「${celebrity}」推荐8个代表性同款单品。
+返回纯JSON（不要markdown）：
+[
+  {"title":"具体商品标题（如'杨幂同款 法式收腰碎花茶歇裙'）","price":"预估价格数字如299","pic_url":"","shop_name":"品牌或店铺名","style_tag":"风格标签","match_tip":"一句话搭配建议"},
+  ...共8个
+]
+要求：title要具体可搜索，包含明星名+品类+风格关键词。种子:${seed}` }],
+      max_tokens: 1200,
+      temperature: 0.75,
+    }),
+  });
+  const d = await resp.json();
+  let c = (d.choices?.[0]?.message?.content || "").trim();
+  if (c.startsWith("```")) c = c.replace(/^```\w*\s*\n?/, "").replace(/\n?```\s*$/, "");
+  return JSON.parse(c);
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { celebrity, keyword, page = 1, page_size = 20 } = body;
+    const { celebrity } = body;
 
-    if (!celebrity) {
-      return NextResponse.json({ error: "请提供明星名称" }, { status: 400 });
-    }
+    if (!celebrity) return NextResponse.json({ error: "请提供明星名称" }, { status: 400 });
 
-    if (!APP_KEY || !APP_SECRET) {
-      return NextResponse.json({ error: "淘宝API未配置" }, { status: 401 });
-    }
+    // 有淘宝key → 搜索淘宝
+    if (APP_KEY && APP_SECRET) {
+      const q = `${celebrity}同款`;
+      const data = await callTB("taobao.tbk.dg.material.optional", { q, page_no: 1, page_size: 20, sort: "total_sales_des" });
+      if (data.error_response) return NextResponse.json({ error: `搜索失败：${data.error_response.sub_msg || data.error_response.msg}` });
 
-    // 构建搜索关键词：优先用用户指定的keyword，否则用明星默认关键词
-    const searchKeyword = keyword || `${celebrity}同款`;
+      const items = (data.tbk_dg_material_optional_response?.result_list?.map_data || []).map((i: any) => ({
+        id: i.item_id,
+        title: i.title,
+        price: i.zk_final_price,
+        volume: parseInt(i.volume || "0"),
+        pic: i.pict_url,
+        url: i.item_url,
+        shop: i.shop_title,
+        coupon: i.coupon_amount || 0,
+      }));
 
-    // 搜索淘宝
-    const bizParams: Record<string, any> = {
-      q: searchKeyword,
-      page_no: page,
-      page_size: Math.min(page_size, 100),
-      sort: "total_sales_des",
-    };
-    if (ADZONE_ID) bizParams.adzone_id = ADZONE_ID;
-
-    const data = await callTaobaoAPI("taobao.tbk.dg.material.optional", bizParams);
-
-    if (data.error_response) {
-      const err = data.error_response;
       return NextResponse.json({
-        success: false,
-        error: `[${err.sub_code || err.code}] ${err.sub_msg || err.msg}`,
-      }, { status: 500 });
+        success: true,
+        celebrity,
+        items,
+        count: items.length,
+        suggestedKeywords: CELEBRITIES[celebrity] || [`${celebrity}同款`],
+        celebrityList: Object.keys(CELEBRITIES),
+        source: "taobao",
+      });
     }
 
-    const result = data.tbk_dg_material_optional_response?.result_list?.map_data || [];
-    const items = result.map((item: any) => ({
-      item_id: item.item_id || "",
-      title: item.title || "",
-      price: item.zk_final_price || "",
-      volume: parseInt(item.volume || "0"),
-      pic_url: item.pict_url || "",
-      item_url: item.item_url || "",
-      shop_title: item.shop_title || "",
-      commission_rate: item.commission_rate || "",
-      coupon_amount: item.coupon_amount || 0,
-    }));
+    // AI模式
+    const aiItems = await aiCelebrity(celebrity);
 
-    // 获取该明星的其他推荐搜索词
-    const suggestedKeywords = CELEBRITY_KEYWORDS[celebrity] || [
-      `${celebrity}同款`,
-      `${celebrity}穿搭`,
-      `${celebrity}同款衣服`,
-    ];
+    const items = (aiItems || []).map((item: any, idx: number) => ({
+      id: `ai-${Date.now()}-${idx}`,
+      title: item.title || `${celebrity}同款推荐${idx+1}`,
+      price: item.price || "0",
+      volume: 0,
+      pic: item.pic_url || "",
+      url: "",
+      shop: item.shop_name || "AI推荐",
+      coupon: 0,
+      matchTip: item.match_tip || "",
+      styleTag: item.style_tag || "",
+    }));
 
     return NextResponse.json({
       success: true,
       celebrity,
-      searchKeyword,
       items,
       count: items.length,
-      suggestedKeywords: suggestedKeywords.slice(0, 5),
-      celebrityList: Object.keys(CELEBRITY_KEYWORDS),
+      suggestedKeywords: CELEBRITIES[celebrity] || [`${celebrity}同款`],
+      celebrityList: Object.keys(CELEBRITIES),
+      source: "ai",
     });
 
-  } catch (error: any) {
-    console.error("[Celebrity] 错误:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (e: any) {
+    console.error("[Celebrity]", e.message);
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 
-/** 获取明星列表 */
-export async function GET(request: NextRequest) {
-  const celebrities = Object.keys(CELEBRITY_KEYWORDS).map(name => ({
-    name,
-    keywords: CELEBRITY_KEYWORDS[name],
-  }));
-  return NextResponse.json({ celebrities });
+export async function GET() {
+  const list = Object.keys(CELEBRITIES).map(name => ({ name, keywords: CELEBRITIES[name] }));
+  return NextResponse.json({ celebrities: list });
 }

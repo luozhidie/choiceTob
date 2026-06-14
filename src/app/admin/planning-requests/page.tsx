@@ -154,10 +154,22 @@ export default function AdminPlanningRequestsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("确定删除此需求？")) return;
-    const { error } = await supabase.from("planning_requests").delete().eq("id", id);
-    if (error) showToast("error", "删除失败");
-    else { showToast("success", "已删除"); fetchRequests(); }
+    if (!confirm("确定删除此需求？此操作不可恢复。")) return;
+    try {
+      // 先尝试直接删除
+      let { error } = await supabase.from("planning_requests").delete().eq("id", id);
+      if (error) {
+        // RLS 拦截时，通过 API 删除
+        console.warn("[PlanningRequests] 客户端删除被RLS拦截，尝试API:", error.message);
+        const res = await fetch(`/api/admin/delete-planning-request?id=${id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "API删除失败");
+      }
+      showToast("success", "已删除");
+      fetchRequests();
+    } catch (err: any) {
+      showToast("error", "删除失败：" + (err.message || "未知错误"));
+    }
   };
 
   const stats = {

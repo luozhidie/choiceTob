@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import { Search, Sparkles, ShoppingBag, ArrowRight } from "lucide-react";
 
@@ -19,6 +20,22 @@ const HOT_CELEBRITIES = [
 
 export default function CelebrityPage() {
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+
+  // 登录检查
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        router.push("/login?redirect=/celebrity");
+        return;
+      }
+      setChecking(false);
+    };
+    checkAuth();
+  }, []);
+
   const [keyword, setKeyword] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -58,6 +75,18 @@ export default function CelebrityPage() {
     const n = typeof p === "string" ? parseFloat(p) : p;
     return `¥${(n / 100).toFixed(0)}`;
   };
+
+  // 登录检查中
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-400">正在检查登录状态...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

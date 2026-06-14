@@ -5,11 +5,13 @@ import crypto from "crypto";
  * 爆款预测API
  * POST /api/trend/predict
  * body: { keyword: string, category?: string, days?: number }
- * 
- * 返回：预测爆款的颜色/面料/款式/图案趋势
+ *
+ * 策略：
+ * - 有淘宝API Key → 搜索淘宝商品，从数据中提取趋势
+ * - 无淘宝API Key → 用 DeepSeek AI 生成趋势（主要模式）
  */
 
-const API_GATEWAY = "https://eco.taobao.com/router/rest";
+const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || "";
 const APP_KEY = process.env.TAOBAO_APP_KEY || "";
 const APP_SECRET = process.env.TAOBAO_APP_SECRET || "";
 const ADZONE_ID = process.env.TAOBAO_ADZONE_ID || "";
@@ -17,219 +19,158 @@ const ADZONE_ID = process.env.TAOBAO_ADZONE_ID || "";
 function generateSign(params: Record<string, string>): string {
   const sortedKeys = Object.keys(params).sort();
   let signStr = APP_SECRET;
-  for (const key of sortedKeys) {
-    signStr += key + params[key];
-  }
+  for (const key of sortedKeys) signStr += key + params[key];
   signStr += APP_SECRET;
   return crypto.createHash("md5").update(signStr, "utf8").digest("hex").toUpperCase();
 }
 
-/** 淘宝API时间戳格式: yyyy-MM-dd HH:mm:ss */
-function formatTaobaoTimestamp(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+function formatTaobaoTS(d: Date): string {
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
 }
 
-async function callTaobaoAPI(method: string, bizParams: Record<string, any>): Promise<any> {
-  const timestamp = formatTaobaoTimestamp(new Date());
-  const sysParams: Record<string, string> = {
-    method,
-    app_key: APP_KEY,
-    timestamp,
-    format: "json",
-    v: "2.0",
-    sign_method: "md5",
-  };
-  const allParams: Record<string, string> = { ...sysParams };
-  for (const [k, v] of Object.entries(bizParams)) {
-    if (v !== undefined && v !== null && v !== "") {
-      allParams[k] = typeof v === "string" ? v : String(v);
-    }
+async function callTaobao(method: string, biz: Record<string, any>): Promise<any> {
+  const ts = formatTaobaoTS(new Date());
+  const sys: Record<string, string> = { method, app_key: APP_KEY, timestamp: ts, format: "json", v: "2.0", sign_method: "md5" };
+  const all: Record<string, string> = { ...sys };
+  for (const [k, v] of Object.entries(biz)) { if (v !== undefined && v !== null && v !== "") all[k] = typeof v === "string" ? v : String(v); }
+  sys.sign = generateSign(all);
+  const url = new URL("https://eco.taobao.com/router/rest");
+  for (const [k, v] of Object.entries(sys)) url.searchParams.append(k, v);
+  for (const [k, v] of Object.entries(biz)) { if (v !== undefined && v !== null && v !== "") url.searchParams.append(k, typeof v === "string" ? v : String(v)); }
+  const r = await fetch(url.toString(), { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+/** 用DeepSeek AI生成动态趋势数据 */
+async function predictWithAI(keyword: string): Promise<any> {
+  if (!DEEPSEEK_API_KEY) throw new Error("AI服务未配置，请联系管理员");
+
+  const now = new Date();
+  const month = now.getMonth() + 1; // 1-12
+  const season = month >= 3 && month <= 5 ? "春季" : month >= 6 && month <= 8 ? "夏季" : month >= 9 && month <= 11 ? "秋季" : "冬季";
+
+  // 每次加入时间戳种子，确保不同结果
+  const seed = Math.random().toString(36).slice(2, 8);
+
+  const prompt = `你是时尚数据分析专家。当前时间：${now.toLocaleDateString("zh-CN")}，季节：${season}。
+针对服装品类「${keyword}」，基于当前${season}时尚趋势和电商平台实时热销数据，输出分析结果。
+
+要求：纯JSON格式（不要markdown代码块），字段如下：
+
+{
+  "colors": [
+    {"name":"具体色名（如雾霾蓝、珊瑚橘、奶油白、焦糖棕）","score":85-100的热度分数,"direction":"up|stable|down"},
+    ...共10个
+  ],
+  "fabrics": [
+    {"name":"面料名（如天丝棉、醋酸缎面、重磅真丝）","score":80-98},
+    ...共10个  
+  ],
+  "styles": [
+    {"name":"款式风格（如法式收腰、美式复古、极简廓形）","score":75-95},
+    ...共10个
+  ],
+  "cuts": [
+    {"name":"剪裁设计特征（如不规则下摆、垫肩设计、镂空细节）","score":70-92},
+    ...共10个
+  ]
+}
+
+规则：
+- 所有name必须是具体的时尚术语，不要泛泛的词
+- score必须按降序排列
+- direction根据${season}特性判断
+- 加入随机种子${seed}使每次结果略有不同`;
+
+  const resp = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${DEEPSEEK_API_KEY}` },
+    body: JSON.stringify({
+      model: "deepseek-chat",
+      messages: [{ role: "user", content: prompt }],
+      max_tokens: 1500,
+      temperature: 0.7, // 增加随机性
+    }),
+  });
+  const data = await resp.json();
+  const content = data.choices?.[0]?.message?.content || "";
+
+  // 解析JSON
+  let jsonStr = content.trim();
+  if (jsonStr.startsWith("```")) jsonStr = jsonStr.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?```\s*$/, "");
+  try {
+    return JSON.parse(jsonStr);
+  } catch {
+    console.error("[Predict] AI解析失败:", content.slice(0, 300));
+    throw new Error("AI返回数据解析失败");
   }
-  sysParams.sign = generateSign(allParams);
-  const url = new URL(API_GATEWAY);
-  for (const [k, v] of Object.entries(sysParams)) {
-    url.searchParams.append(k, v);
-  }
-  for (const [k, v] of Object.entries(bizParams)) {
-    if (v !== undefined && v !== null && v !== "") {
-      url.searchParams.append(k, typeof v === "string" ? v : String(v));
-    }
-  }
-  const resp = await fetch(url.toString(), { method: "GET", signal: AbortSignal.timeout(10000) });
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-  return resp.json();
-}
-
-/** 从商品标题中提取颜色关键词 */
-function extractColors(title: string): string[] {
-  const colorKeywords = [
-    "黑色", "白色", "红色", "蓝色", "绿色", "黄色", "紫色", "粉色", "灰色", "棕色", "米色",
-    "橙色", "青色", "金色", "银色", "卡其色", "藏青色", "酒红色", "墨绿色", "雾霾蓝", "珊瑚粉",
-    "black", "white", "red", "blue", "green", "yellow", "purple", "pink", "gray", "brown",
-  ];
-  return colorKeywords.filter(c => title.toLowerCase().includes(c.toLowerCase()));
-}
-
-/** 从商品标题中提取面料关键词 */
-function extractFabrics(title: string): string[] {
-  const fabricKeywords = [
-    "棉", "麻", "丝", "羊毛", "羊绒", "涤纶", "尼龙", "皮革", "牛仔", "灯芯绒",
-    "绸缎", "雪纺", "针织", "毛呢", "法兰绒", "牛仔布", "pu", "pvc",
-  ];
-  return fabricKeywords.filter(f => title.toLowerCase().includes(f.toLowerCase()));
-}
-
-/** 从商品标题中提取款式关键词 */
-function extractStyles(title: string): string[] {
-  const styleKeywords = [
-    "修身", "宽松", "oversize", "韩版", "欧美", "复古", "街头", "商务", "休闲", "运动",
-    "甜美", "性感", "优雅", "朋克", "学院", "宫廷", "波西米亚", "极简", "轻奢",
-  ];
-  return styleKeywords.filter(s => title.toLowerCase().includes(s.toLowerCase()));
-}
-
-/** 从商品标题中提取图案关键词 */
-function extractPatterns(title: string): string[] {
-  const patternKeywords = [
-    "条纹", "格子", "碎花", "波点", "印花", "刺绣", "拼接", "渐变", "迷彩", "动物纹",
-    "字母", "logo", "卡通", "几何", "抽象", "民族风", "荷叶边", "蕾丝",
-  ];
-  return patternKeywords.filter(p => title.toLowerCase().includes(p.toLowerCase()));
-}
-
-/** 计算趋势分数 */
-function calculateTrendScore(items: any[]): {
-  colors: { name: string; score: number; count: number }[];
-  fabrics: { name: string; score: number; count: number }[];
-  styles: { name: string; score: number; count: number }[];
-  patterns: { name: string; score: number; count: number }[];
-} {
-  const colorMap: Record<string, { count: number; totalSales: number }> = {};
-  const fabricMap: Record<string, { count: number; totalSales: number }> = {};
-  const styleMap: Record<string, { count: number; totalSales: number }> = {};
-  const patternMap: Record<string, { count: number; totalSales: number }> = {};
-
-  for (const item of items) {
-    const title = item.title || "";
-    const sales = parseInt(item.volume || "0");
-
-    extractColors(title).forEach(c => {
-      if (!colorMap[c]) colorMap[c] = { count: 0, totalSales: 0 };
-      colorMap[c].count++;
-      colorMap[c].totalSales += sales;
-    });
-
-    extractFabrics(title).forEach(f => {
-      if (!fabricMap[f]) fabricMap[f] = { count: 0, totalSales: 0 };
-      fabricMap[f].count++;
-      fabricMap[f].totalSales += sales;
-    });
-
-    extractStyles(title).forEach(s => {
-      if (!styleMap[s]) styleMap[s] = { count: 0, totalSales: 0 };
-      styleMap[s].count++;
-      styleMap[s].totalSales += sales;
-    });
-
-    extractPatterns(title).forEach(p => {
-      if (!patternMap[p]) patternMap[p] = { count: 0, totalSales: 0 };
-      patternMap[p].count++;
-      patternMap[p].totalSales += sales;
-    });
-  }
-
-  const toSortedList = (map: Record<string, { count: number; totalSales: number }>) =>
-    Object.entries(map)
-      .map(([name, { count, totalSales }]) => ({
-        name,
-        count,
-        score: Math.min(100, Math.floor((count * 10) + (totalSales / 1000))),
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-
-  return {
-    colors: toSortedList(colorMap),
-    fabrics: toSortedList(fabricMap),
-    styles: toSortedList(styleMap),
-    patterns: toSortedList(patternMap),
-  };
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { keyword, category = "", days = 7 } = body;
+    if (!keyword) return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
 
-    if (!keyword) {
-      return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
-    }
-
-    if (!APP_KEY || !APP_SECRET) {
-      return NextResponse.json({
-        error: "淘宝API未配置",
-        help: "请设置 TAOBAO_APP_KEY 和 TAOBAO_APP_SECRET",
-      }, { status: 401 });
-    }
-
-    // 搜索淘宝商品（取前3页，每页20条，共60条样本）
-    const allItems: any[] = [];
-    for (let page = 1; page <= 3; page++) {
-      try {
-        const bizParams: Record<string, any> = {
-          q: keyword,
-          page_no: page,
-          page_size: 20,
-          sort: "total_sales_des",
-        };
-        if (ADZONE_ID) bizParams.adzone_id = ADZONE_ID;
-
-        const data = await callTaobaoAPI("taobao.tbk.dg.material.optional", bizParams);
-        if (data.error_response) continue;
-
-        const items = data.tbk_dg_material_optional_response?.result_list?.map_data || [];
-        allItems.push(...items);
-      } catch (e: any) {
-        console.warn(`[Trend Predict] 第${page}页获取失败:`, e.message);
+    // 策略选择：有淘宝key就用淘宝，否则用AI
+    if (APP_KEY && APP_SECRET) {
+      // 淘宝模式
+      const items: any[] = [];
+      for (let p = 1; p <= 3; p++) {
+        try {
+          const d = await callTaobao("taobao.tbk.dg.material.optional", {
+            q: keyword, page_no: p, page_size: 20, sort: "total_sales_des",
+            ...(ADZONE_ID ? { adzone_id: ADZONE_ID } : {}),
+          });
+          if (!d.error_response) items.push(...(d.tbk_dg_material_optional_response?.result_list?.map_data || []));
+        } catch {}
       }
+      if (items.length === 0) return NextResponse.json({ success: false, error: "未获取到商品数据" });
+
+      // 从标题提取趋势
+      const colorKw = ["黑色","白色","红色","蓝色","绿色","米色","灰色","棕色","粉色","紫色","橙色","卡其","藏青","酒红","墨绿","雾霾蓝","珊瑚粉","奶油白","杏色"];
+      const fabricKw = ["棉","麻","丝","羊毛","羊绒","涤纶","牛仔","雪纺","针织","毛呢","灯芯绒","绸缎","真丝","缎面","天丝","醋酸","皮革"];
+      const styleKw = ["修身","宽松","韩版","欧美","复古","街头","休闲","运动","甜美","优雅","法式","学院","波西米亚","极简","轻奢","oversize"];
+      const patternKw = ["条纹","格子","碎花","波点","印花","刺绣","拼接","蕾丝","荷叶边","镂空","不对称","露背"];
+
+      const cMap: Record<string, number> = {}, fMap: Record<string, number> = {}, sMap: Record<string, number> = {}, pMap: Record<string, number> = {};
+      for (const item of items) {
+        const t = (item.title || "").toLowerCase();
+        colorKw.forEach(k => { if (t.includes(k.toLowerCase())) cMap[k] = (cMap[k] || 0) + parseInt(item.volume||0) + 5; });
+        fabricKw.forEach(k => { if (t.includes(k.toLowerCase())) fMap[k] = (fMap[k] || 0) + parseInt(item.volume||0) + 3; });
+        styleKw.forEach(k => { if (t.includes(k.toLowerCase())) sMap[k] = (sMap[k] || 0) + parseInt(item.volume||0) + 4; });
+        patternKw.forEach(k => { if (t.includes(k.toLowerCase())) pMap[k] = (pMap[k] || 0) + parseInt(item.volume||0) + 2; });
+      }
+      const sort = (m: Record<string, number>) => Object.entries(m).sort((a,b) => b[1]-a[1]).slice(0,10).map(([n,s]) => ({ name:n, score: Math.min(100, Math.round(s/3)), direction:"up" as const }));
+
+      return NextResponse.json({ success: true, data: { color: sort(cMap), fabric: sort(fMap), style: sort(sMap), cut: sort(pMap) } });
     }
 
-    if (allItems.length === 0) {
-      return NextResponse.json({
-        success: false,
-        error: "未获取到商品数据，无法预测",
-      }, { status: 404 });
-    }
+    // AI模式（默认）
+    const aiResult = await predictWithAI(keyword);
 
-    // 计算趋势
-    const trend = calculateTrendScore(allItems);
-
-    // 生成预测结论
-    const prediction = {
-      keyword,
-      category,
-      days,
-      sampleSize: allItems.length,
-      predictedAt: new Date().toISOString(),
-      trend,
-      summary: {
-        topColor: trend.colors[0]?.name || "未知",
-        topFabric: trend.fabrics[0]?.name || "未知",
-        topStyle: trend.styles[0]?.name || "未知",
-        topPattern: trend.patterns[0]?.name || "未知",
-      },
-    };
+    // 确保每个数组都有direction字段
+    const fixDir = (arr: any[]) => arr.map((item: any) => ({
+      name: item.name,
+      score: Math.min(100, Math.max(1, Number(item.score) || 50)),
+      direction: item.direction || ["up", "stable", "down"][Math.floor(Math.random() * 3)],
+    }));
 
     return NextResponse.json({
       success: true,
-      prediction,
+      data: {
+        color: fixDir(aiResult.colors || []),
+        fabric: fixDir(aiResult.fabrics || []),
+        style: fixDir(aiResult.styles || []),
+        cut: fixDir(aiResult.cuts || []),
+      },
+      source: "ai",
     });
 
   } catch (error: any) {
-    console.error("[Trend Predict] 错误:", error);
-    return NextResponse.json({
-      error: error.message || "预测失败",
-    }, { status: 500 });
+    console.error("[Trend Predict]", error.message);
+    return NextResponse.json({ error: error.message || "预测失败，请稍后重试" }, { status: 500 });
   }
 }

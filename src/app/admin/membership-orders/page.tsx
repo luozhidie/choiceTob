@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   Loader2, CheckCircle2, X, Clock, CreditCard, Crown, Eye,
   Search, RefreshCw, Filter, UserCheck, UserX, DollarSign,
-  Calendar, AlertTriangle,
+  Calendar, AlertTriangle, Trash2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -175,6 +175,25 @@ export default function AdminMembershipOrdersPage() {
     }
   };
 
+  // 删除订单
+  const handleDelete = async (id: string, email: string) => {
+    if (!confirm(`确定彻底删除「${email}」的订单记录？此操作不可恢复。`)) return;
+    setProcessingId(id);
+    try {
+      const { error } = await supabase
+        .from("membership_orders")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+      showToast("success", "已删除");
+      fetchOrders();
+    } catch (err: any) {
+      showToast("error", "删除失败：" + err.message);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   // 统计
   const totalRevenue = orders
     .filter((o) => o.status === "confirmed")
@@ -335,13 +354,18 @@ export default function AdminMembershipOrdersPage() {
                               取消
                             </button>
                           </div>
-                        ) : order.status === "confirmed" ? (
-                          <span className="text-xs text-green-600 flex items-center justify-end gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            {order.confirmed_at ? new Date(order.confirmed_at).toLocaleDateString("zh-CN") : ""}
-                          </span>
                         ) : (
-                          <span className="text-xs text-gray-400">-</span>
+                          <button
+                            onClick={() => handleDelete(order.id, order.user_email || "")}
+                            disabled={processingId === order.id}
+                            className="px-2 py-1 text-xs font-medium text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                            title="删除此订单"
+                          >
+                            {processingId === order.id
+                              ? <Loader2 className="w-3 h-3 animate-spin" />
+                              : <Trash2 className="w-4 h-4" />
+                            }
+                          </button>
                         )}
                       </td>
                     </tr>

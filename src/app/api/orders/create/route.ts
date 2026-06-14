@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const price = Number(product_price) || 0;
     const qty = Math.max(1, quantity || 1);
-    const totalAmount = (product_price || 0) * qty;
+    const totalAmount = price * qty;
 
     if (totalAmount <= 0) {
       return NextResponse.json(
@@ -54,10 +55,10 @@ export async function POST(req: NextRequest) {
       .from("orders")
       .insert({
         order_no: orderNo,
-        user_id: user.id, // 添加用户ID
+        user_id: user.id,
         product_id,
-        product_title,
-        product_price: product_price,
+        product_title: product_title || "爆款样衣",
+        product_price: price,
         quantity: qty,
         total_amount: totalAmount,
         contact,

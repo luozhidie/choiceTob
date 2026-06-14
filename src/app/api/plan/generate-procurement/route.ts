@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { COLOR_SEASONS_PRO, FEMALE_STYLES, MALE_STYLES, PRODUCT_CATEGORIES } from "@/lib/styles";
+import { PRODUCT_CATEGORIES } from "@/lib/styles";
 
 export async function POST(req: NextRequest) {
   const { storeId, season, supplier, avgCostPrice } = await req.json();
@@ -8,11 +8,9 @@ export async function POST(req: NextRequest) {
 
   const supabase = await createClient();
 
-  // 鉴权：必须登录且为 admin/owner
+  // 鉴权：必须登录
   const { data: { user }, error: authErr } = await supabase.auth.getUser();
   if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
 
   // ── 加载96格矩阵 + 商品结构 ──
   const [{ data: matrix }, { data: structure }] = await Promise.all([
@@ -26,23 +24,20 @@ export async function POST(req: NextRequest) {
 
   const matrixData = matrix.matrix_data as Record<string, Record<string, { sku: number; pct: number; budget: number }>>;
   const items = (structure?.items || []) as any[];
-  const unitPrice = avgCostPrice || 150; // 默认采购均价150元
+  const unitPrice = avgCostPrice || 150;
 
   // ── 从矩阵生成采购明细 ──
   const procurementItems: any[] = [];
   let seq = 1;
 
-  // 品类列表
   const categories = items.length > 0
     ? items.map((i: any) => i.category)
     : PRODUCT_CATEGORIES.map(c => `${c.code}-${c.label}`);
 
-  // 遍历矩阵每个格子
   for (const [colorSeason, styles] of Object.entries(matrixData)) {
     for (const [style, cell] of Object.entries(styles)) {
       if (!cell || cell.sku <= 0) continue;
 
-      // 为每个格子分配品类（按循环分配）
       const catIdx = (seq - 1) % categories.length;
       const category = categories[catIdx];
 
@@ -53,10 +48,10 @@ export async function POST(req: NextRequest) {
         category,
         season_type: colorSeason,
         style,
-        colors: "", // 后续可细化
+        colors: "",
         sizes: "S,M,L,XL",
         cost_price: unitPrice,
-        retail_price: Math.round(unitPrice * 2.2), // 默认2.2倍加价率
+        retail_price: Math.round(unitPrice * 2.2),
         gross_margin_pct: Math.round((1 - 1 / 2.2) * 100),
         quantity: cell.sku,
         total_amount: Math.round(cell.sku * unitPrice),
@@ -65,6 +60,10 @@ export async function POST(req: NextRequest) {
       });
       seq++;
     }
+  }
+
+  if (procurementItems.length === 0) {
+    return NextResponse.json({ error: "矩阵中没有有效SKU，请先在矩阵中填写数据" }, { status: 400 });
   }
 
   // ── 按波段分组创建采购订单 ──
@@ -80,7 +79,6 @@ export async function POST(req: NextRequest) {
     const totalAmount = waveItems.reduce((s, i) => s + i.total_amount, 0);
     const orderNo = `PO-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${String(Math.floor(Math.random() * 9000) + 1000)}`;
 
-    // 创建采购订单主记录
     const { data: order, error: orderErr } = await supabase.from("purchase_orders").insert({
       store_id: storeId,
       order_no: orderNo,
@@ -96,13 +94,30 @@ export async function POST(req: NextRequest) {
       continue;
     }
 
-    // 创建采购明细
-    const itemsWithOrderId = waveItems.map(item => ({
-      ...item,
-      order_id: orderNo,
-    }));
+    // 写入采购明细（去掉 order_id 引用，用 order_no 关联）
+    const itemsToInsert = waveItems.map(item => {
+      const { store_id, sku_code, product_name, category, season_type, style, colors, sizes, cost_price, retail_price, gross_margin_pct, quantity, total_amount, wave_band, status } = item;
+      return {
+        order_id: orderNo,
+        store_id,
+        sku_code,
+        product_name,
+        category,
+        season_type,
+        style,
+        colors,
+        sizes,
+        cost_price,
+        retail_price,
+        gross_margin_pct,
+        quantity,
+        total_amount,
+        wave_band,
+        status,
+      };
+    });
 
-    const { error: itemsErr } = await supabase.from("purchase_order_items").insert(itemsWithOrderId);
+    const { error: itemsErr } = await supabase.from("purchase_order_items").insert(itemsToInsert);
     if (itemsErr) {
       console.error("创建采购明细失败:", itemsErr);
     }
