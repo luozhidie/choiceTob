@@ -25,21 +25,27 @@ const ADZONE_ID = process.env.TAOBAO_ADZONE_ID || "";
 function generateSign(params: Record<string, string>): string {
   // 1. 参数名按ASCII升序排序
   const sortedKeys = Object.keys(params).sort();
-  
+
   // 2. 拼接成 key + value（无分隔符），首尾加app_secret
   let signStr = APP_SECRET;
   for (const key of sortedKeys) {
     signStr += key + params[key];
   }
   signStr += APP_SECRET;
-  
+
   // 3. MD5加密，转大写
   return crypto.createHash("md5").update(signStr, "utf8").digest("hex").toUpperCase();
 }
 
+/** 淘宝API时间戳格式: yyyy-MM-dd HH:mm:ss */
+function formatTaobaoTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 /** 发起淘宝API请求 */
 async function callTaobaoAPI(method: string, bizParams: Record<string, any>): Promise<any> {
-  const timestamp = new Date().toISOString().replace(/\..+/, "") + "+08:00"; // 淘宝要求ISO格式时间戳
+  const timestamp = formatTaobaoTimestamp(new Date()); // 淘宝要求 yyyy-MM-dd HH:mm:ss
   
   // 公共参数
   const sysParams: Record<string, string> = {

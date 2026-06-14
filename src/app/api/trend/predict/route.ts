@@ -24,8 +24,14 @@ function generateSign(params: Record<string, string>): string {
   return crypto.createHash("md5").update(signStr, "utf8").digest("hex").toUpperCase();
 }
 
+/** 淘宝API时间戳格式: yyyy-MM-dd HH:mm:ss */
+function formatTaobaoTimestamp(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 async function callTaobaoAPI(method: string, bizParams: Record<string, any>): Promise<any> {
-  const timestamp = new Date().toISOString().replace(/\..+/, "") + "+08:00";
+  const timestamp = formatTaobaoTimestamp(new Date());
   const sysParams: Record<string, string> = {
     method,
     app_key: APP_KEY,

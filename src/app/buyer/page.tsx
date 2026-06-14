@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Search, X, TrendingUp, Truck, Star, CheckCircle2,
@@ -114,6 +115,7 @@ interface HotPick {
 
 /* ==================== 页面 ==================== */
 export default function BuyerPage() {
+  const router = useRouter();
   const [allProducts, setAllProducts] = useState<MergedProduct[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [hotPicks, setHotPicks] = useState<HotPick[]>([]);
@@ -276,7 +278,10 @@ export default function BuyerPage() {
     return list;
   }, [allProducts, searchTerm, activeCategory, activeSubcategory, activeUserStyle, activeUserColor, sourceFilter, sortBy]);
 
-  const handleBuy = (product: MergedProduct) => { setSelectedProduct(product); setShowProductDetail(true); };
+  const handleBuy = (product: MergedProduct) => {
+    const source = product.source || "buyer";
+    router.push(`/checkout?id=${product.id}&source=${source}`);
+  };
   const handleCloseDetail = () => { setShowProductDetail(false); setSelectedProduct(null); setPaymentQR(null); setCurrentOrderNo(""); setPaymentSuccess(false); };
   const handleOpenPurchase = () => { setShowProductDetail(false); setShowPurchaseIntent(true); };
   const handleClosePurchase = () => { setShowPurchaseIntent(false); setPurchaseQuantity(1); setPurchaseNote(""); setPurchaseContact(""); setPurchaseAddress(""); setPaymentQR(null); setCurrentOrderNo(""); setPaymentSuccess(false); };

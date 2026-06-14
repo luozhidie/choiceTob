@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ShoppingBag, Check, Building2, Truck, X, CheckCircle2, ChevronLeft, ChevronRight, Layers, Star } from "lucide-react";
+import {
+  ArrowLeft, ShoppingBag, Building2, Truck, X,
+  ChevronLeft, ChevronRight, Layers, Star,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuth } from "@/lib/auth-context";
 import {
   CATEGORY_MAP,
   SUBCATEGORY_MAP,
-  getCategoryPath,
 } from "@/lib/categories";
-import PaymentQRCode from "@/components/PaymentQRCode";
 
 interface Product {
   id: string;
@@ -36,35 +36,16 @@ export default function ProductDetailPage() {
   const params = useParams();
   const productId = params.id as string;
 
-  // ✅ 所有 hooks 必须在组件顶层，不能在条件/return 之后
+  // ✅ 所有 hooks 必须在组件顶层
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
-  const [visible, setVisible] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
-  // 采购意向 / 下单支付
-  const [showPurchaseIntent, setShowPurchaseIntent] = useState(false);
-  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
-  const [purchaseNote, setPurchaseNote] = useState("");
-  const [purchaseContact, setPurchaseContact] = useState("");
-  const [purchaseAddress, setPurchaseAddress] = useState("");
-  const [purchaseSubmitted, setPurchaseSubmitted] = useState(false);
-  const [paymentType, setPaymentType] = useState<"wechat" | "alipay">("wechat");
-  const [orderCreating, setOrderCreating] = useState(false);
-  const [paymentQR, setPaymentQR] = useState<{ url_qrcode: string; url: string } | null>(null);
-  const [currentOrderNo, setCurrentOrderNo] = useState("");
-  const [paymentChecking, setPaymentChecking] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState(false);
-  const [showMemberPrompt, setShowMemberPrompt] = useState(false);
-
-  const { user, isMember } = useAuth();
 
   // 获取商品数据
   useEffect(() => {
-    setVisible(true);
     if (!productId) return;
-
     let cancelled = false;
 
     const fetchProduct = async () => {
@@ -76,7 +57,7 @@ export default function ProductDetailPage() {
         Authorization: `Bearer ${supabaseKey}`,
       };
 
-      // 先查 products 表（原生 fetch 绕过 schema cache）
+      // 先查 products 表
       try {
         const platformRes = await fetch(
           `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(productId)}&select=*`,
@@ -105,11 +86,9 @@ export default function ProductDetailPage() {
             return;
           }
         }
-      } catch (e) {
-        console.error("查询 products 表失败:", e);
-      }
+      } catch (e) { console.error("查询 products 表失败:", e); }
 
-      // 再查 buyer_products 表（供应商上传的商品）
+      // 再查 buyer_products 表
       try {
         const buyerRes = await fetch(
           `${supabaseUrl}/rest/v1/buyer_products?id=eq.${encodeURIComponent(productId)}&select=*`,
@@ -139,11 +118,8 @@ export default function ProductDetailPage() {
             return;
           }
         }
-      } catch (e) {
-        console.error("查询 buyer_products 表失败:", e);
-      }
+      } catch (e) { console.error("查询 buyer_products 表失败:", e); }
 
-      // 两个表都查不到
       if (!cancelled) {
         setProduct(null);
         setLoading(false);
@@ -160,10 +136,8 @@ export default function ProductDetailPage() {
       setSupplierProducts([]);
       return;
     }
-
     let cancelled = false;
     const supabase = createClient();
-
     (async () => {
       const tableName = product.source === "platform" ? "products" : "buyer_products";
       const { data } = await supabase
@@ -173,72 +147,14 @@ export default function ProductDetailPage() {
         .neq("id", product.id)
         .eq("is_published", true)
         .limit(8);
-
       if (!cancelled) {
         setSupplierProducts((data as Product[] | null) || []);
       }
     })();
-
     return () => { cancelled = true; };
   }, [product?.supplier_name, product?.id, product?.source]);
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
-
-  // 创建订单并发起支付
-  const handleCreateOrder = async () => {
-    if (!product || !purchaseContact) return;
-    setOrderCreating(true);
-    try {
-      const res = await fetch('/api/orders/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: product.id,
-          product_title: product.title,
-          product_price: product.price,
-          quantity: purchaseQuantity,
-          contact: purchaseContact,
-          address: purchaseAddress,
-          note: purchaseNote,
-          payment_type: paymentType,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || '创建订单失败');
-
-      if (data.payment) {
-        setPaymentQR(data.payment);
-        setCurrentOrderNo(data.order.order_no);
-      } else {
-        setPurchaseSubmitted(true);
-        setCurrentOrderNo(data.order.order_no);
-      }
-    } catch (err: any) {
-      alert(err.message || '创建订单失败，请稍后重试');
-    } finally {
-      setOrderCreating(false);
-    }
-  };
-
-  // 轮询支付状态
-  useEffect(() => {
-    if (!currentOrderNo || !paymentQR || paymentSuccess) return;
-    const interval = setInterval(async () => {
-      try {
-        setPaymentChecking(true);
-        const res = await fetch(`/api/orders/status?order_no=${currentOrderNo}`);
-        const data = await res.json();
-        if (data.is_paid) {
-          setPaymentSuccess(true);
-          setPaymentChecking(false);
-          clearInterval(interval);
-        }
-      } catch {
-        // 忽略轮询错误
-      }
-    }, 3000);
-    return () => { clearInterval(interval); setPaymentChecking(false); };
-  }, [currentOrderNo, paymentQR, paymentSuccess]);
 
   // ---- 加载中 ----
   if (loading) {
@@ -272,6 +188,12 @@ export default function ProductDetailPage() {
   const categoryLink = product.category
     ? `/buyer?category=${product.category}`
     : "/buyer";
+
+  // 跳转下单页
+  const handleBuyNow = () => {
+    const source = product.source || "buyer";
+    router.push(`/checkout?id=${product.id}&source=${source}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -322,9 +244,7 @@ export default function ProductDetailPage() {
                     key={i}
                     onClick={() => setCurrentImage(i)}
                     className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                      currentImage === i
-                        ? "border-accent"
-                        : "border-transparent hover:border-gray-300"
+                      currentImage === i ? "border-accent" : "border-transparent hover:border-gray-300"
                     }`}
                   >
                     {img ? (
@@ -378,7 +298,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* ⚡ Lightbox 放大查看 */}
+              {/* Lightbox 放大查看 */}
               <AnimatePresence>
                 {lightboxOpen && (
                   <motion.div
@@ -388,15 +308,12 @@ export default function ProductDetailPage() {
                     className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
                     onClick={() => setLightboxOpen(false)}
                   >
-                    {/* 关闭按钮 */}
                     <button
                       onClick={() => setLightboxOpen(false)}
                       className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
                     >
                       <X className="w-5 h-5 text-white" />
                     </button>
-
-                    {/* 左箭头 */}
                     {allImages.length > 1 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i - 1 + allImages.length) % allImages.length); }}
@@ -405,8 +322,6 @@ export default function ProductDetailPage() {
                         <ChevronLeft className="w-5 h-5 text-white" />
                       </button>
                     )}
-
-                    {/* 右箭头 */}
                     {allImages.length > 1 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i + 1) % allImages.length); }}
@@ -415,8 +330,6 @@ export default function ProductDetailPage() {
                         <ChevronRight className="w-5 h-5 text-white" />
                       </button>
                     )}
-
-                    {/* 放大后的图片 */}
                     <motion.img
                       initial={{ scale: 0.9 }}
                       animate={{ scale: 1 }}
@@ -426,8 +339,6 @@ export default function ProductDetailPage() {
                       className="max-w-[90vw] max-h-[90vh] object-contain"
                       onClick={(e) => e.stopPropagation()}
                     />
-
-                    {/* 图片计数器 */}
                     {allImages.length > 1 && (
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
                         {currentImage + 1} / {allImages.length}
@@ -465,59 +376,28 @@ export default function ProductDetailPage() {
                 </p>
               )}
 
-              {/* 价格 */}
-              {isMember ? (
-                <div className="mb-2">
-                  <div className="flex items-end gap-2">
-                    <span className="text-3xl font-bold text-accent">
-                      {formatPrice(product.price)}
-                    </span>
-                    {product.original_price && product.original_price > product.price && (
-                      <span className="text-lg text-gray-400 line-through mb-1">
-                        {formatPrice(product.original_price)}
-                      </span>
-                    )}
-                  </div>
+              {/* 价格（所有人都能看到批发价） */}
+              <div className="mb-2">
+                <div className="flex items-end gap-2">
+                  <span className="text-3xl font-bold text-accent">
+                    {formatPrice(product.price)}
+                  </span>
                   {product.original_price && product.original_price > product.price && (
-                    <div className="mt-1 text-xs text-accent">
-                      💎 会员价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
-                    </div>
+                    <span className="text-lg text-gray-400 line-through mb-1">
+                      {formatPrice(product.original_price)}
+                    </span>
                   )}
                 </div>
-              ) : (
-                <div className="mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-3xl font-bold text-gray-400">¥???</span>
-                    <button
-                      onClick={() => setShowMemberPrompt(true)}
-                      className="text-xs px-2.5 py-1 bg-amber-100 text-amber-700 rounded-full font-medium"
-                    >
-                      付费查看批发价
-                    </button>
+                {product.original_price && product.original_price > product.price && (
+                  <div className="mt-1 text-xs text-accent">
+                    💎 批发价，立省 ¥{((product.original_price - product.price) / 100).toFixed(0)}
                   </div>
-                </div>
-              )}
-
-              {/* 会员开通入口 */}
-              <div className="mb-6 p-3 bg-gradient-to-r from-accent/5 to-primary/5 rounded-xl border border-accent/10">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-primary">预存货款享折扣拿货</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5">充值5万享2.8折 · 充值30万享2.6折</p>
-                  </div>
-                  <Link href="/members" className="btn-accent text-xs px-3 py-1.5 rounded-lg font-medium">
-                    了解方案
-                  </Link>
-                </div>
+                )}
               </div>
 
               {/* 库存 */}
               <div className="mb-6">
-                <span
-                  className={`text-xs font-medium ${
-                    product.stock > 0 ? "text-green-600" : "text-red-500"
-                  }`}
-                >
+                <span className={`text-xs font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
                   {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
                 </span>
               </div>
@@ -526,10 +406,7 @@ export default function ProductDetailPage() {
               {product.tags && product.tags.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-8">
                   {product.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs"
-                    >
+                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
                       {tag}
                     </span>
                   ))}
@@ -545,17 +422,18 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* 采购意向按钮 */}
+              {/* 立即下单按钮 → 跳转到 checkout 页面 */}
               <button
-                onClick={() => setShowPurchaseIntent(true)}
+                onClick={handleBuyNow}
                 disabled={product.stock === 0}
-                className="w-full btn-accent py-3.5 rounded-xl text-base font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-3.5 rounded-xl text-base font-semibold flex items-center justify-center gap-2 text-white bg-accent hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: 'var(--color-accent, #C8553D)', color: 'white' }}
               >
                 <ShoppingBag className="w-5 h-5" />
                 立即下单
               </button>
               <p className="mt-2 text-xs text-center text-muted-foreground">
-                微信/支付宝扫码支付，安全便捷
+                支持会员折扣 · 多种支付方式
               </p>
 
               {/* 同品类推荐 */}
@@ -580,7 +458,6 @@ export default function ProductDetailPage() {
             <h2 className="text-xl font-bold text-primary">一品三搭 · 搭配灵感</h2>
           </div>
           <p className="text-sm text-gray-500 mb-6">一件单品，三种风格，提升连带率</p>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[
               {
@@ -613,7 +490,6 @@ export default function ProductDetailPage() {
                 transition={{ delay: idx * 0.1 }}
                 className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
               >
-                {/* 搭配色块 */}
                 <div className="flex h-24">
                   {look.colors.map((c) => (
                     <div key={c} className="flex-1" style={{ backgroundColor: c }} />
@@ -669,205 +545,6 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
-
-      {/* 下单支付弹窗 */}
-      <AnimatePresence>
-        {showPurchaseIntent && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => { if (!paymentQR && !paymentSuccess) setShowPurchaseIntent(false); }}>
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-2xl p-6"
-              onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {paymentSuccess ? "支付成功" : paymentQR ? "请付款" : "确认订单"}
-                </h3>
-                <button onClick={() => setShowPurchaseIntent(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              {/* 支付成功 */}
-              {paymentSuccess ? (
-                <div className="text-center py-8">
-                  <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                  <p className="text-lg font-bold text-gray-800">支付成功！</p>
-                  <p className="text-sm text-gray-500 mt-2">订单号：{currentOrderNo}</p>
-                  <p className="text-sm text-gray-500 mt-1">我们将尽快安排发货，请保持联系方式畅通。</p>
-                  <button onClick={() => setShowPurchaseIntent(false)}
-                    className="mt-6 px-8 py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent/90 transition-colors">
-                    完成
-                  </button>
-                </div>
-              ) : paymentQR ? (
-                /* 线下付款 */
-                <div className="text-center">
-                  <div className="mb-4 p-4 bg-gray-50 rounded-xl">
-                    <p className="text-sm text-gray-600 mb-1">{product.title}</p>
-                    <p className="text-2xl font-bold text-accent">
-                      ¥{((product.price * purchaseQuantity) / 100).toFixed(0)}
-                      <span className="text-sm font-normal text-gray-400 ml-1">× {purchaseQuantity}件</span>
-                    </p>
-                  </div>
-
-                  {/* 微信收款码 */}
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">1. 微信扫码付款</p>
-                    <div className="flex justify-center">
-                      <PaymentQRCode type="wechat" className="w-52 h-52" />
-                    </div>
-                  </div>
-
-                  {/* 银行转账 */}
-                  <div className="mb-4 p-3 bg-amber-50 rounded-xl border border-amber-100 text-left">
-                    <p className="text-sm font-medium text-gray-700 mb-1">2. 银行对公转账</p>
-                    <div className="text-xs text-gray-600 space-y-0.5">
-                      <p>户名：吴川市樟铺骆芷蝶教你好看穿搭小店</p>
-                      <p>开户行：中国工商银行（吴川支行）</p>
-                      <p>账号：2015021309200280877</p>
-                    </div>
-                    <p className="text-[10px] text-amber-600 mt-1">转账时请备注订单号：{currentOrderNo}</p>
-                  </div>
-
-                  <div className="relative flex items-center gap-3 my-4">
-                    <div className="flex-1 h-px bg-gray-200" />
-                    <span className="text-xs text-gray-400">付款完成后</span>
-                    <div className="flex-1 h-px bg-gray-200" />
-                  </div>
-
-                  <button onClick={() => setPurchaseSubmitted(true)}
-                    className="w-full py-3 bg-green-600 text-white text-sm font-semibold rounded-xl hover:bg-green-700 transition-colors">
-                    我已付款，提交凭证
-                  </button>
-                  <p className="text-xs text-gray-400 mt-2">付款后请截图发给客服确认</p>
-                </div>
-              ) : (
-                /* 订单确认表单 */
-                <form onSubmit={(e) => { e.preventDefault(); handleCreateOrder(); }} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">商品</label>
-                    <div className="px-3 py-2 bg-gray-50 rounded-lg text-sm text-gray-600">
-                      {product.title} · {formatPrice(product.price)}/件
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">采购数量 *</label>
-                    <input type="number" min={1} value={purchaseQuantity}
-                      onChange={(e) => setPurchaseQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                      required />
-                    <p className="text-xs text-accent mt-1">
-                      合计：¥{((product.price * purchaseQuantity) / 100).toFixed(0)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">联系方式 *</label>
-                    <input type="text" value={purchaseContact} onChange={(e) => setPurchaseContact(e.target.value)}
-                      placeholder="手机号/微信号"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none"
-                      required />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">收货地址</label>
-                    <input type="text" value={purchaseAddress} onChange={(e) => setPurchaseAddress(e.target.value)}
-                      placeholder="省/市/区/详细地址"
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none" />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">备注</label>
-                    <textarea value={purchaseNote} onChange={(e) => setPurchaseNote(e.target.value)}
-                      placeholder="尺码、颜色等要求" rows={2}
-                      className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-accent focus:ring-2 focus:ring-accent/20 outline-none resize-none" />
-                  </div>
-
-                  {/* 支付方式选择 */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">支付方式</label>
-                    <div className="flex gap-3">
-                      <button type="button"
-                        onClick={() => setPaymentType("wechat")}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-colors ${
-                          paymentType === "wechat" ? "border-green-500 bg-green-50 text-green-700" : "border-gray-200 text-gray-600"
-                        }`}>
-                        微信支付
-                      </button>
-                      <button type="button"
-                        onClick={() => setPaymentType("alipay")}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border-2 transition-colors ${
-                          paymentType === "alipay" ? "border-blue-500 bg-blue-50 text-blue-700" : "border-gray-200 text-gray-600"
-                        }`}>
-                        支付宝
-                      </button>
-                    </div>
-                  </div>
-
-                  <button type="submit" disabled={orderCreating}
-                    className="w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl hover:bg-accent/90 transition-colors disabled:opacity-50">
-                    {orderCreating ? "正在创建订单..." : `确认支付 ¥${((product.price * purchaseQuantity) / 100).toFixed(0)}`}
-                  </button>
-                </form>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 查看价格充值提示弹窗 */}
-      <AnimatePresence>
-        {showMemberPrompt && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowMemberPrompt(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }}
-              className="bg-white rounded-2xl max-w-sm w-full shadow-2xl p-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  {user ? "查看批发价" : "请先登录"}
-                </h3>
-                <button onClick={() => setShowMemberPrompt(false)} className="text-gray-400 hover:text-gray-600">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                {user
-                  ? "开通查看价格会员，即可查看所有商品批发底价"
-                  : "登录后即可查看批发价格，或开通会员享受更多权益"}
-              </p>
-              <div className="space-y-3">
-                {user ? (
-                  <Link href="/members" onClick={() => setShowMemberPrompt(false)}>
-                    <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                      去开通会员
-                    </span>
-                  </Link>
-                ) : (
-                  <Link href={`/login?redirect=/shop/${productId}`} onClick={() => setShowMemberPrompt(false)}>
-                    <span className="block w-full py-3 bg-accent text-white text-sm font-semibold rounded-xl text-center">
-                      去登录
-                    </span>
-                  </Link>
-                )}
-                <button
-                  onClick={() => setShowMemberPrompt(false)}
-                  className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
-                >
-                  再看看
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
