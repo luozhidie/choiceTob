@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { Lock, ArrowLeft, Clock, BookOpen, CheckCircle2, X, ShoppingBag, CreditCard, Play, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import PaymentQRCode from "@/components/PaymentQRCode";
 
 interface Course {
   id: string;
@@ -480,7 +481,7 @@ export default function CourseDetailPage() {
                   <div className="mb-4">
                     <p className="text-sm font-medium text-gray-700 mb-2 text-center">微信扫码付款</p>
                     <div className="flex justify-center">
-                      <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-40 h-auto rounded-xl border" />
+                      <PaymentQRCode type="wechat" className="w-40 h-40" />
                     </div>
                   </div>
 

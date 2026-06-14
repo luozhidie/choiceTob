@@ -12,6 +12,7 @@ import {
   SUBCATEGORY_MAP,
   getCategoryPath,
 } from "@/lib/categories";
+import PaymentQRCode from "@/components/PaymentQRCode";
 
 interface Product {
   id: string;
@@ -714,7 +715,7 @@ export default function ProductDetailPage() {
                   <div className="mb-4">
                     <p className="text-sm font-medium text-gray-700 mb-2">1. 微信扫码付款</p>
                     <div className="flex justify-center">
-                      <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-52 h-auto rounded-xl border border-gray-100" />
+                      <PaymentQRCode type="wechat" className="w-52 h-52" />
                     </div>
                   </div>
 

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
           .update({ 
             status: 'paid', 
             paid_at: new Date().toISOString(),
-            transaction_id: transaction_id,
+            payment_trade_no: transaction_id,
           })
           .eq('order_no', out_trade_no);
 

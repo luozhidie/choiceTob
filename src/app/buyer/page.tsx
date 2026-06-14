@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 import { useBuyerPageData } from "@/hooks/useBuyerPageData";
+import PaymentQRCode from "@/components/PaymentQRCode";
 
 /* ==================== 品类选项（静态兜底 + 动态合并）==================== */
 const STATIC_CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
@@ -1123,7 +1124,7 @@ export default function BuyerPage() {
                 <div className="mb-4">
                   <p className="text-sm font-medium text-gray-700 mb-2">1. 微信扫码付款</p>
                   <div className="flex justify-center">
-                    <img src="/images/wechat-pay-qr.png" alt="微信收款码" className="w-52 h-auto rounded-xl border border-gray-100" />
+                    <PaymentQRCode type="wechat" className="w-52 h-52" />
                   </div>
                 </div>
 

@@ -39,11 +39,11 @@ export async function POST(request: NextRequest) {
       .from('orders')
       .insert([{
         order_no,
-        user_id: user.id, // 使用认证用户的ID
+        user_id: user.id,
         product_id,
         product_title: product_title || '',
         quantity,
-        total_price: total_fee * 100, // 存储为分
+        total_amount: total_fee, // 单位：分（与代码传入一致）
         contact: contact || '',
         address: address || '',
         note: note || '',
