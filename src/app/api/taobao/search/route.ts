@@ -104,7 +104,7 @@ interface TaobaoItem {
 }
 
 /** 搜索淘宝商品 */
-async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20): Promise<TaobaoItem[]> {
+async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20, existingIds?: string[]): Promise<TaobaoItem[]> {
   if (!APP_KEY || !APP_SECRET) {
     console.warn("[Taobao] App Key/Secret未配置，跳过API调用");
     return [];
@@ -135,7 +135,12 @@ async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20): Prom
     
     // 解析结果
     const result = data.tbk_dg_material_optional_response?.result_list?.map_data || [];
-    return result.map((item: any) => ({
+    
+    // 去重：过滤掉已存在的商品ID
+    const existingSet = new Set(existingIds || []);
+    const filtered = result.filter((item: any) => !existingSet.has(String(item.item_id)));
+    
+    return filtered.map((item: any) => ({
       item_id: item.item_id || "",
       title: item.title || "",
       pict_url: item.pict_url || "",
@@ -163,7 +168,7 @@ async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20): Prom
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { keyword, page = 1, pageSize = 20 } = body;
+    const { keyword, page = 1, pageSize = 20, existing_ids } = body;
     
     if (!keyword || typeof keyword !== "string") {
       return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
@@ -177,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
     
     const startTime = Date.now();
-    const items = await searchTaobaoItems(keyword, page, pageSize);
+    const items = await searchTaobaoItems(keyword, page, pageSize, existing_ids);
     const duration = Date.now() - startTime;
     
     // 转换为统一格式

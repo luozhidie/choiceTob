@@ -66,7 +66,7 @@ interface TaobaoItem {
 }
 
 /** 搜索淘宝商品（淘宝联盟物料搜索API） */
-async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20): Promise<{ items: TaobaoItem[]; total: number; error?: string }> {
+async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20, existingIds?: string[]): Promise<{ items: TaobaoItem[]; total: number; error?: string }> {
   if (!APP_KEY || !APP_SECRET) {
     return { items: [], total: 0, error: "淘宝API未配置，请先设置 TAOBAO_APP_KEY 和 TAOBAO_APP_SECRET" };
   }
@@ -99,13 +99,18 @@ async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20): Pr
 
     const result = data.tbk_dg_material_optional_response?.result_list?.map_data ||
                    data.tbk_dg_material_optional_response?.result_list || [];
-    const items: TaobaoItem[] = result.map((item: any) => ({
+
+    // 去重：过滤掉已存在的商品ID
+    const existingSet = new Set(existingIds || []);
+    const filtered = result.filter((item: any) => !existingSet.has(String(item.num_iid || item.item_id)));
+
+    const items: TaobaoItem[] = filtered.map((item: any) => ({
       title: item.title || "",
       price: item.zk_final_price || item.reserve_price || "",
       picUrl: item.pict_url || "",
       sales: item.volume || "0",
       shopName: item.shop_title || item.nick || "",
-      itemUrl: item.item_url || `https://item.taobao.com/item.htm?id=${item.num_iid}`,
+      itemUrl: item.item_url || `https://item.taobao.com/item.htm?id=${item.num_iid || item.item_id}`,
       category: item.category || "",
     }));
 
@@ -121,7 +126,7 @@ async function searchTaobaoItems(keyword: string, pageNo = 1, pageSize = 20): Pr
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { keyword, pageNo = 1, pageSize = 20 } = body;
+    const { keyword, pageNo = 1, pageSize = 20, existing_ids } = body;
 
     if (!keyword || typeof keyword !== "string") {
       return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
     }
 
     const startTime = Date.now();
-    const { items, total, error } = await searchTaobaoItems(keyword, pageNo, pageSize);
+    const { items, total, error } = await searchTaobaoItems(keyword, pageNo, pageSize, existing_ids);
     const duration = Date.now() - startTime;
 
     if (error) {
