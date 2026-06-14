@@ -20,7 +20,7 @@ const MEMBER_FEATURES = [
     bgColor: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200",
     href: "/vip",
     badge: "热门",
-    requiresMembership: false,
+    requiresMembership: true,  // 改为true：只有会员才能看到
   },
   {
     key: "planning",
