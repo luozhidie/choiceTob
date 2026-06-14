@@ -8,11 +8,11 @@ import { Menu, X, ChevronRight, User, LogOut, Sparkles } from "lucide-react";
 const navItems = [
   { label: "VIP会员", href: "/vip" },
   { label: "风格测试", href: "/style-test" },
-  { label: "线上课程", href: "/courses" },
   { label: "买手选品", href: "/buyer" },
+  { label: "爆款预测", href: "/trend-predict" },
   { label: "商品企划", href: "/planning" },
+  { label: "明星同款", href: "/celebrity" },
   { label: "爆款样衣", href: "/hot-picks" },
-  { label: "陈列搭配", href: "/display" },
   { label: "营销策划", href: "/marketing" },
   { label: "时尚博主", href: "/magazine" },
   { label: "联系我们", href: "/contact" },

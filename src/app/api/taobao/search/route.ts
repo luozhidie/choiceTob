@@ -115,37 +115,43 @@ async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20, exist
     console.warn("[Taobao] App Key/Secret未配置，跳过API调用");
     return [];
   }
-  
+
   try {
     const bizParams: Record<string, any> = {
       q: keyword,
       page_no: page,
       page_size: pageSize,
-      has_coupon: "true", // 优先有优惠券的商品（更可能是爆款）
-      sort: "total_sales_des", // 按销量降序
+      has_coupon: "true",
+      sort: "total_sales_des",
     };
-    
-    // 如果有推广位ID，加上
+
     if (ADZONE_ID) {
       bizParams.adzone_id = ADZONE_ID;
     }
-    
+
     const data = await callTaobaoAPI("taobao.tbk.dg.material.optional", bizParams);
-    
-    // 检查错误
+
     if (data.error_response) {
       const error = data.error_response;
       console.error("[Taobao] API错误:", error.sub_msg || error.msg);
       return [];
     }
-    
-    // 解析结果
+
     const result = data.tbk_dg_material_optional_response?.result_list?.map_data || [];
-    
-    // 去重：过滤掉已存在的商品ID
+
+    // 去重：过滤掉已存在的商品ID + 基于标题前20字去重
     const existingSet = new Set(existingIds || []);
-    const filtered = result.filter((item: any) => !existingSet.has(String(item.item_id)));
-    
+    const seenTitles = new Set<string>();
+    const filtered: any[] = [];
+    for (const item of result) {
+      const id = String(item.item_id);
+      const titleKey = (item.title || "").trim().substring(0, 20).replace(/\s+/g, "");
+      if (existingSet.has(id)) continue;
+      if (seenTitles.has(titleKey)) continue;
+      seenTitles.add(titleKey);
+      filtered.push(item);
+    }
+
     return filtered.map((item: any) => ({
       item_id: item.item_id || "",
       title: item.title || "",
@@ -162,6 +168,8 @@ async function searchTaobaoItems(keyword: string, page = 1, pageSize = 20, exist
       coupon_amount: item.coupon_amount || 0,
       coupon_info: item.coupon_info || "",
       short_title: item.short_title || "",
+      // 去重标记
+      title_key: (item.title || "").trim().substring(0, 20).replace(/\s+/g, ""),
     }));
   } catch (error: any) {
     console.error("[Taobao] 搜索失败:", error.message);
