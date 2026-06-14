@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
     if (brandKey) {
       // 查询单个品牌详情 + 经典款
       const { data: brand, error: brandError } = await supabase
-        .from("luxury_brands")
+        .from("luxury_brand_catalog")
         .select("*")
         .eq("brand_key", brandKey)
         .single();
@@ -116,7 +116,7 @@ export async function GET(request: NextRequest) {
 
       // 查询该品牌的经典款
       const { data: classics, error: cError } = await supabase
-        .from("luxury_classics")
+        .from("luxury_classic_items")
         .select("*")
         .eq("brand_key", brandKey)
         .order("year", { ascending: false });
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
 
     // 查询品牌列表
     const { data: brands, error } = await supabase
-      .from("luxury_brands")
+      .from("luxury_brand_catalog")
       .select("brand_key, brand_name_cn, brand_name_en, founded_year, origin_country, brand_profile")
       .order("founded_year", { ascending: true });
 
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
       for (const brand of FALLBACK_BRANDS) {
         // 插入品牌
         const { data: insertedBrand, error: brandError } = await supabase
-          .from("luxury_brands")
+          .from("luxury_brand_catalog")
           .upsert({
             brand_key: brand.brand_key,
             brand_name_cn: brand.brand_name_cn,
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
             description: c.description,
             attributes: c.attributes,
           }));
-          await supabase.from("luxury_classics").upsert(classicsToInsert, { onConflict: "brand_key,title" });
+          await supabase.from("luxury_classic_items").upsert(classicsToInsert, { onConflict: "brand_key,title" });
         }
       }
 
