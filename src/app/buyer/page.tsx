@@ -395,7 +395,7 @@ export default function BuyerPage() {
               </div>
               <h1 className="text-3xl md:text-4xl font-bold mb-3">买手选品</h1>
               <p className="text-sm md:text-base text-white/80 max-w-xl mb-6">
-                精选优质货源，按风格、色系精准筛选，充值会员享折扣拿货
+                精选优质货源，按风格、色系精准筛选，会员享专属权益
               </p>
               <div className="max-w-lg relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
