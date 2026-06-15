@@ -202,13 +202,18 @@ export async function updateSession(request: NextRequest) {
     }
 
     // 检查管理员权限
-    const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()).filter(Boolean) || [];
-    
+    // 优先使用环境变量，兜底使用硬编码管理员列表
+    const ADMIN_EMAILS_FALLBACK = ["luozhidie@live.cn"];
+    const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()).filter(Boolean) || ADMIN_EMAILS_FALLBACK;
+
     let isAdmin = false;
-    
+
     if (adminEmails.length > 0) {
       isAdmin = adminEmails.includes(user.email || "");
-    } else {
+    }
+
+    // 如果邮箱列表匹配失败，再查 profiles 表
+    if (!isAdmin) {
       try {
         const { data: profile } = await supabase
           .from("profiles")
@@ -218,7 +223,6 @@ export async function updateSession(request: NextRequest) {
         isAdmin = profile?.role === "admin";
       } catch (err) {
         console.error("[Middleware] Failed to fetch profile:", err);
-        isAdmin = false;
       }
     }
     
