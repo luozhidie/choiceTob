@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
@@ -18,12 +18,13 @@ export async function POST(request: NextRequest) {
     }
 
     // 使用 service role key（完全绕过RLS）
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         cookies: {
-          getAll() { return []; },
+          getAll() { return cookieStore.getAll(); },
           setAll() {},
         },
       }

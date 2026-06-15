@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient as createServerClient } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
@@ -12,12 +12,13 @@ export async function DELETE(req: NextRequest) {
     if (!id) return NextResponse.json({ error: "缺少 id 参数" }, { status: 400 });
 
     // 使用 service role key（完全绕过RLS）
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         cookies: {
-          getAll() { return []; },
+          getAll() { return cookieStore.getAll(); },
           setAll() {},
         },
       }
@@ -35,11 +36,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     // 删除
-    const { error } = await supabase
-      .from("planning_requests")
-      .delete()
-      .eq("id", id);
-
+    const { error } = await supabase.from("planning_requests").delete().eq("id", id);
     if (error) {
       console.error("[Delete PlanningRequest] error:", error);
       return NextResponse.json({ error: "删除失败：" + error.message }, { status: 500 });
