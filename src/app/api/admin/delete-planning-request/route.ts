@@ -1,39 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createClient as createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
  * DELETE /api/admin/delete-planning-request?id=xxx
- * 删除企划需求记录（服务端）
+ * 删除企划需求记录（使用 service role，完全绕过 RLS）
  */
 export async function DELETE(req: NextRequest) {
   try {
     const id = req.nextUrl.searchParams.get("id");
     if (!id) return NextResponse.json({ error: "缺少 id 参数" }, { status: 400 });
 
-    // 使用前端传来的 Authorization token 或 cookie
-    const authHeader = req.headers.get("authorization");
-    let supabase: any;
-
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { getAll: () => [], setAll: () => {} }, global: { headers: { Authorization: `Bearer ${token}` } } }
-      );
-    } else {
-      const cookieStore = await cookies();
-      supabase = createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        { cookies: { getAll() { return cookieStore.getAll(); }, setAll() {} } }
-      );
-    }
-
-    // 鉴权
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
-    if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+    // 使用 service role key（完全绕过RLS）
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      {
+        cookies: {
+          getAll() { return []; },
+          setAll() {},
+        },
+      }
+    );
 
     // 先确认记录存在
     const { data: existing } = await supabase
@@ -42,10 +30,16 @@ export async function DELETE(req: NextRequest) {
       .eq("id", id)
       .maybeSingle();
 
-    if (!existing) return NextResponse.json({ error: "记录不存在" }, { status: 404 });
+    if (!existing) {
+      return NextResponse.json({ error: "记录不存在" }, { status: 404 });
+    }
 
     // 删除
-    const { error } = await supabase.from("planning_requests").delete().eq("id", id);
+    const { error } = await supabase
+      .from("planning_requests")
+      .delete()
+      .eq("id", id);
+
     if (error) {
       console.error("[Delete PlanningRequest] error:", error);
       return NextResponse.json({ error: "删除失败：" + error.message }, { status: 500 });

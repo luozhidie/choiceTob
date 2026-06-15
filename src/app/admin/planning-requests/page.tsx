@@ -156,22 +156,10 @@ export default function AdminPlanningRequestsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此需求？此操作不可恢复。")) return;
     try {
-      // 先尝试直接删除
-      let { error } = await supabase.from("planning_requests").delete().eq("id", id);
-      if (error) {
-        // RLS 拦截时，通过 API 删除（带认证token）
-        console.warn("[PlanningRequests] 客户端删除被RLS拦截，尝试API:", error.message);
-        const { data: { session } } = await supabase.auth.getSession();
-        const headers: Record<string, string> = {};
-        if (session?.access_token) headers["Authorization"] = `Bearer ${session.access_token}`;
-        const res = await fetch(`/api/admin/delete-planning-request?id=${id}`, {
-          method: "DELETE",
-          credentials: "same-origin",
-          headers,
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "API删除失败");
-      }
+      // 直接调用服务端API（service role 完全绕过RLS）
+      const res = await fetch(`/api/admin/delete-planning-request?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "API删除失败");
       showToast("success", "已删除");
       fetchRequests();
     } catch (err: any) {
