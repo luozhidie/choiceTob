@@ -57,6 +57,7 @@ import {
   Upload,
   MessageCircle,
   Database,
+  Eye,
 } from "lucide-react";
 
 /* ── 侧边栏分组配置 ── */
@@ -178,6 +179,7 @@ const sidebarGroups: SidebarGroup[] = [
     icon: Users,
     items: [
       { label: "客户管理", href: "/admin/customers", icon: Users },
+      { label: "访客管理", href: "/admin/visitors", icon: Eye },
       { label: "线索管理", href: "/admin/leads", icon: ClipboardList },
       { label: "交付方案", href: "/admin/deliveries", icon: Package },
     ],
