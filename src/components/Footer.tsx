@@ -1,37 +1,44 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { MapPin, Phone, Mail } from "lucide-react";
 
-const footerSections = [
-  {
-    title: "核心服务",
-    links: [
-      { label: "买手选品", href: "/buyer" },
-      { label: "商品企划", href: "/planning" },
-      { label: "企划工具", href: "/planning-tool" },
-      { label: "爆款货盘", href: "/hot-picks" },
-      { label: "陈列搭配", href: "/display" },
-    ],
-  },
-  {
-    title: "增值服务",
-    links: [
-      { label: "营销策划", href: "/marketing" },
-      { label: "销售服务", href: "/sales" },
-      { label: "VIP管理", href: "/vip" },
-      { label: "教学中心", href: "/education" },
-    ],
-  },
-  {
-    title: "关于我们",
-    links: [
-      { label: "联系我们", href: "/contact" },
-      { label: "隐私政策", href: "#" },
-      { label: "服务条款", href: "#" },
-    ],
-  },
+// 需要 VIP 会员才能访问的功能
+const VIP_LINKS = new Set([
+  "/planning", "/planning-tool", "/hot-picks", "/display",
+  "/marketing", "/sales",
+]);
+
+const footerLinks = [
+  // 核心服务
+  { label: "买手选品", href: "/buyer" },
+  { label: "商品企划", href: "/planning", needVip: true },
+  { label: "企划工具", href: "/planning-tool", needVip: true },
+  { label: "爆款货盘", href: "/hot-picks", needVip: true },
+  { label: "陈列搭配", href: "/display", needVip: true },
+  // 增值服务
+  { label: "营销策划", href: "/marketing", needVip: true },
+  { label: "销售服务", href: "/sales", needVip: true },
+  { label: "VIP管理", href: "/vip" },
+  { label: "教学中心", href: "/education" },
+  // 关于
+  { label: "联系我们", href: "/contact" },
 ];
 
 export default function Footer() {
+  const { user, profile, signOut } = useAuth();
+  const isMember = !!profile?.membership_type && profile.membership_type !== "";
+
+  const handleVipLink = (href: string) => {
+    if (isMember) return;
+    window.location.href = `/vip?redirect=${encodeURIComponent(href)}`;
+  };
+
+  const coreServices = footerLinks.filter(l => !["营销策划", "销售服务", "VIP管理", "教学中心", "联系我们"].includes(l.label));
+  const extraServices = footerLinks.filter(l => ["营销策划", "销售服务", "VIP管理", "教学中心"].includes(l.label));
+
   return (
     <footer className="bg-primary text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 lg:py-16">
@@ -44,9 +51,7 @@ export default function Footer() {
               </div>
               <div className="flex flex-col leading-tight">
                 <span className="font-bold text-lg tracking-wide">骆芷蝶智选</span>
-                <span className="text-[10px] text-white/60 tracking-widest">
-                  LUOZHDIE ZHIXUAN
-                </span>
+                <span className="text-[10px] text-white/60 tracking-widest">LUOZHDIE ZHIXUAN</span>
               </div>
             </div>
             <p className="text-white/70 text-sm leading-relaxed max-w-sm mb-6">
@@ -68,26 +73,61 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Link columns */}
-          {footerSections.map((section) => (
-            <div key={section.title}>
-              <h3 className="font-semibold text-sm mb-4 text-white/90">
-                {section.title}
-              </h3>
-              <ul className="flex flex-col gap-2.5">
-                {section.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-white/60 hover:text-accent transition-colors"
-                    >
+          {/* 核心服务 */}
+          <div>
+            <h3 className="font-semibold text-sm mb-4 text-white/90">核心服务</h3>
+            <ul className="flex flex-col gap-2.5">
+              {coreServices.map((link) => (
+                <li key={link.label}>
+                  {link.needVip && !isMember ? (
+                    <button onClick={() => handleVipLink(link.href)}
+                      className="text-sm text-white/60 hover:text-accent transition-colors text-left cursor-pointer">
+                      {link.label}
+                      {!isMember && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-accent/20 text-[10px] text-accent">🔒 VIP</span>}
+                    </button>
+                  ) : (
+                    <Link href={link.href} className="text-sm text-white/60 hover:text-accent transition-colors">
                       {link.label}
                     </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 增值服务 */}
+          <div>
+            <h3 className="font-semibold text-sm mb-4 text-white/90">增值服务</h3>
+            <ul className="flex flex-col gap-2.5">
+              {extraServices.map((link) => (
+                <li key={link.label}>
+                  {(link.needVip && !isMember) || link.href === "/vip" ? (
+                    link.href === "/vip" ? (
+                      <Link href="/vip" className="text-sm text-white/60 hover:text-accent transition-colors">{link.label}</Link>
+                    ) : (
+                      <button onClick={() => handleVipLink(link.href)}
+                        className="text-sm text-white/60 hover:text-accent transition-colors text-left cursor-pointer">
+                        {link.label}
+                        <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-accent/20 text-[10px] text-accent">🔒 VIP</span>
+                      </button>
+                    )
+                  ) : (
+                    <Link href={link.href} className="text-sm text-white/60 hover:text-accent transition-colors">{link.label}</Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* 关于我们 */}
+          <div>
+            <h3 className="font-semibold text-sm mb-4 text-white/90">关于我们</h3>
+            <ul className="flex flex-col gap-2.5">
+              <li><Link href="/contact" className="text-sm text-white/60 hover:text-accent transition-colors">联系我们</Link></li>
+              <li><Link href="/privacy" className="text-sm text-white/60 hover:text-accent transition-colors">隐私政策</Link></li>
+              <li><Link href="/terms" className="text-sm text-white/60 hover:text-accent transition-colors">服务条款</Link></li>
+            </ul>
+          </div>
         </div>
 
         {/* Bottom bar */}

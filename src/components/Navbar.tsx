@@ -7,6 +7,8 @@ import { Menu, X, ChevronRight, User, LogOut, Sparkles } from "lucide-react";
 
 const navItems = [
   { label: "👑 会员中心", href: "/members" },
+  { label: "每日搭配", href: "/daily-looks" },
+  { label: "教学课程", href: "/courses" },
   { label: "风格测试", href: "/style-test" },
   { label: "买手选品", href: "/buyer" },
   { label: "时尚博主", href: "/magazine" },

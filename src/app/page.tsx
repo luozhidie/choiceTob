@@ -91,24 +91,28 @@ const coreServices = [
     title: "商品企划",
     desc: "科学品类规划 × 生命周期管理，最大化单品利润",
     href: "/planning",
+    needVip: true,
   },
   {
     icon: FileText,
     title: "企划工具",
     desc: "输入关键词 → 智能生成完整企划方案",
     href: "/planning-tool",
+    needVip: true,
   },
   {
     icon: BarChart3,
     title: "爆款货盘",
     desc: "全网热销实时追踪，一键锁定高转化货源",
     href: "/hot-picks",
+    needVip: true,
   },
   {
     icon: LayoutGrid,
     title: "陈列搭配",
     desc: "智能陈列 × 场景搭配，拉动连带销售",
     href: "/display",
+    needVip: true,
   },
 ];
 
@@ -118,12 +122,14 @@ const dataTools = [
     title: "营销策划",
     desc: "全渠道方案智能生成，流量转化双提升",
     href: "/marketing",
+    needVip: true,
   },
   {
     icon: Headphones,
     title: "销售服务",
     desc: "培训+工具全方位赋能，提升团队战斗力",
     href: "/sales",
+    needVip: true,
   },
   {
     icon: Crown,
@@ -175,10 +181,29 @@ const testimonials = [
 /* ------------------------------------------------------------------ */
 export default function Home() {
   const [siteImages, setSiteImages] = useState<SiteImageMap>(defaultSiteImages);
+  const [isMember, setIsMember] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
     fetchSiteImages().then(setSiteImages);
   }, []);
+
+  // 检查会员状态
+  useEffect(() => {
+    const checkMember = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: p } = await supabase.from("profiles").select("membership_type").eq("id", user.id).single();
+      if (p?.membership_type && p.membership_type !== "") setIsMember(true);
+    };
+    checkMember();
+  }, []);
+
+  // VIP 功能点击处理
+  const handleVipLink = (href: string) => {
+    if (isMember) window.location.href = href;
+    else window.location.href = `/vip?redirect=${encodeURIComponent(href)}`;
+  };
   return (
     <>
       {/* ====== Hero ====== */}
@@ -448,20 +473,38 @@ export default function Home() {
           >
             {coreServices.map((item, i) => (
               <motion.div key={item.title} variants={fadeUp} custom={i}>
-                <Link href={item.href} className="fashion-card group flex flex-col h-full p-8">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                    <item.icon className="w-5 h-5" />
+                {item.needVip && !isMember ? (
+                  <div onClick={() => handleVipLink(item.href)} className="fashion-card group flex flex-col h-full p-8 cursor-pointer">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
+                      {item.title}
+                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent/10 text-[10px] text-accent">🔒 VIP</span>
+                    </h3>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
+                      {item.desc}
+                    </p>
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
+                      开通VIP <ArrowRight className="w-4 h-4" />
+                    </span>
                   </div>
-                  <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-                    {item.desc}
-                  </p>
-                  <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
-                    了解详情 <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Link>
+                ) : (
+                  <Link href={item.href} className="fashion-card group flex flex-col h-full p-8">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
+                      {item.desc}
+                    </p>
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
+                      了解详情 <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </Link>
+                )}
               </motion.div>
             ))}
           </motion.div>
@@ -499,22 +542,40 @@ export default function Home() {
           >
             {dataTools.map((item, i) => (
               <motion.div key={item.title} variants={fadeUp} custom={i}>
-                <Link
-                  href={item.href}
-                  className="fashion-card group flex items-start gap-5 p-6"
-                >
-                  <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                    <item.icon className="w-5 h-5" />
+                {item.needVip && !isMember ? (
+                  <div
+                    onClick={() => handleVipLink(item.href)}
+                    className="fashion-card group flex items-start gap-5 p-6 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-primary group-hover:text-accent transition-colors">
+                        {item.title}
+                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent/10 text-[10px] text-accent">🔒 VIP</span>
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-primary group-hover:text-accent transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                      {item.desc}
-                    </p>
-                  </div>
-                </Link>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className="fashion-card group flex items-start gap-5 p-6"
+                  >
+                    <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                      <item.icon className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-bold text-primary group-hover:text-accent transition-colors">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                        {item.desc}
+                      </p>
+                    </div>
+                  </Link>
+                )}
               </motion.div>
             ))}
           </motion.div>
