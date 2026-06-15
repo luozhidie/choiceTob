@@ -1,6 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { User } from "@supabase/supabase-js";
 
 // CSRF Token 配置
 const CSRF_COOKIE_NAME = "csrf_token";
@@ -29,94 +28,73 @@ function needsCsrfProtection(request: NextRequest): boolean {
 function validateCsrfToken(request: NextRequest): boolean {
   const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   const headerToken = request.headers.get(CSRF_HEADER_NAME);
-  
-  if (!cookieToken || !headerToken) {
-    return false;
-  }
-  
+  if (!cookieToken || !headerToken) return false;
   return cookieToken === headerToken;
 }
 
 // 速率限制配置（登录页面防暴力破解）
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
-
+interface RateLimitEntry { count: number; resetAt: number; }
 const RATE_LIMIT_STORE = new Map<string, RateLimitEntry>();
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW = 5 * 60 * 1000;
 
 function getClientIp(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
+  if (forwarded) return forwarded.split(",")[0].trim();
   const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp;
-  }
+  if (realIp) return realIp;
   return request.ip || "unknown";
 }
 
 function checkRateLimit(ip: string): { allowed: boolean; retryAfter?: number } {
   const now = Date.now();
   const entry = RATE_LIMIT_STORE.get(ip);
-  
   if (!entry || now > entry.resetAt) {
     RATE_LIMIT_STORE.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW });
     return { allowed: true };
   }
-  
   if (entry.count >= RATE_LIMIT_MAX) {
-    const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
-    return { allowed: false, retryAfter };
+    return { allowed: false, retryAfter: Math.ceil((entry.resetAt - now) / 1000) };
   }
-  
   entry.count++;
   return { allowed: true };
 }
 
-function cleanupRateLimitStore() {
-  const now = Date.now();
-  for (const [ip, entry] of RATE_LIMIT_STORE.entries()) {
-    if (now > entry.resetAt) {
-      RATE_LIMIT_STORE.delete(ip);
-    }
-  }
-}
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-
-  // 步骤0：速率限制检查（仅登录页面 POST）
   const pathname = request.nextUrl.pathname;
-  const isLoginPost = pathname === "/admin/login" && request.method === "POST";
-  
+
+  // 判断路由类型
+  const isAdminRoute = pathname.startsWith("/admin");
+  const isApiAdminRoute = pathname.startsWith("/api/admin");
+
+  // 非 admin 路由直接放行
+  if (!isAdminRoute && !isApiAdminRoute) {
+    return supabaseResponse;
+  }
+
+  // 检查环境变量
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.warn("[Middleware] Supabase 环境变量缺失，跳过认证检查");
+    return supabaseResponse;
+  }
+
+  // 登录页面 POST 速率限制
+  const isLoginPost = isAdminRoute && pathname === "/admin/login" && request.method === "POST";
   if (isLoginPost) {
     const clientIp = getClientIp(request);
     const rateCheck = checkRateLimit(clientIp);
-    
     if (!rateCheck.allowed) {
       return new NextResponse(
-        JSON.stringify({ error: "Too many requests", message: "Rate limit exceeded" }),
-        { 
-          status: 429,
-          headers: {
-            "Retry-After": String(rateCheck.retryAfter || 300),
-            "Content-Type": "application/json",
-          }
-        }
+        JSON.stringify({ error: "Too many requests" }),
+        { status: 429, headers: { "Retry-After": String(rateCheck.retryAfter || 300), "Content-Type": "application/json" } }
       );
-    }
-    
-    // 定期清理过期条目
-    if (Math.random() < 0.01) {
-      cleanupRateLimitStore();
     }
   }
 
-  // 步骤1：确保所有请求都有 CSRF Cookie
+  // CSRF Cookie
   let csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
   if (!csrfToken) {
     csrfToken = generateCsrfToken();
@@ -128,48 +106,24 @@ export async function updateSession(request: NextRequest) {
     });
   }
 
-  // 只有 /admin 和 /api/admin 路由需要认证检查
-  const isAdminRoute = pathname.startsWith("/admin");
-  const isApiAdminRoute = pathname.startsWith("/api/admin");
-  
-  if (!isAdminRoute && !isApiAdminRoute) {
-    return supabaseResponse;
-  }
-
-  // 步骤2：对 admin 路由进行 CSRF 保护（跳过 /api/admin，因为已有 Supabase auth + 管理员邮箱双重保护）
+  // CSRF 保护（跳过 /api/admin 和登录页 POST）
   const isLoginPage = isAdminRoute && pathname === "/admin/login";
-
-  if (needsCsrfProtection(request) && !isLoginPage && !isApiAdminRoute) {
-    if (!validateCsrfToken(request)) {
-      return NextResponse.json(
-        { error: "CSRF token validation failed" },
-        { status: 403 }
-      );
-    }
+  if (needsCsrfProtection(request) && !isLoginPage && !isApiAdminRoute && !validateCsrfToken(request)) {
+    return NextResponse.json({ error: "CSRF token validation failed" }, { status: 403 });
   }
-  
-  // 步骤3：认证检查
+
+  // 认证检查
   try {
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return request.cookies.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value }) =>
-              request.cookies.set(name, value)
-            );
-            supabaseResponse = NextResponse.next({ request });
-            cookiesToSet.forEach(({ name, value, options }) =>
-              supabaseResponse.cookies.set(name, value, options)
-            );
-          },
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
+      cookies: {
+        getAll() { return request.cookies.getAll(); },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options));
         },
-      }
-    );
+      },
+    });
 
     const { data: { user } } = await withTimeout(
       supabase.auth.getUser(),
@@ -177,80 +131,50 @@ export async function updateSession(request: NextRequest) {
       { data: { user: null }, error: null }
     );
 
-    // 登录页 /admin/login
-    if (isAdminRoute && pathname === "/admin/login") {
+    // 登录页：已登录则跳转 dashboard，未登录则放行
+    if (pathname === "/admin/login") {
       if (user) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/admin/dashboard";
-        return NextResponse.redirect(url);
+        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
       }
       return supabaseResponse;
     }
 
-    // 未登录用户
+    // 未登录用户 → 跳转登录页
     if (!user) {
       if (isApiAdminRoute) {
-        return NextResponse.json(
-          { error: "Unauthorized" },
-          { status: 401 }
-        );
-      } else {
-        const url = request.nextUrl.clone();
-        url.pathname = "/admin/login";
-        return NextResponse.redirect(url);
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    // 检查管理员权限
-    // 优先使用环境变量，兜底使用硬编码管理员列表
+    // 管理员权限检查
     const ADMIN_EMAILS_FALLBACK = ["luozhidie@live.cn"];
     const adminEmails = process.env.ADMIN_EMAILS?.split(",").map((e) => e.trim()).filter(Boolean) || ADMIN_EMAILS_FALLBACK;
+    let isAdmin = adminEmails.includes(user.email || "");
 
-    let isAdmin = false;
-
-    if (adminEmails.length > 0) {
-      isAdmin = adminEmails.includes(user.email || "");
-    }
-
-    // 如果邮箱列表匹配失败，再查 profiles 表
     if (!isAdmin) {
       try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
         isAdmin = profile?.role === "admin";
-      } catch (err) {
-        console.error("[Middleware] Failed to fetch profile:", err);
-      }
+      } catch {}
     }
-    
+
     if (!isAdmin) {
       if (isApiAdminRoute) {
-        return NextResponse.json(
-          { error: "Forbidden" },
-          { status: 403 }
-        );
-      } else {
-        const url = request.nextUrl.clone();
-        url.pathname = "/";
-        return NextResponse.redirect(url);
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
+      return NextResponse.redirect(new URL("/", request.url));
     }
+
   } catch (err) {
     console.error("[Middleware] Error:", err);
     if (isApiAdminRoute) {
-      return NextResponse.json(
-        { error: "Internal Server Error" },
-        { status: 500 }
-      );
-    } else if (isAdminRoute && pathname !== "/admin/login") {
-      const url = request.nextUrl.clone();
-      url.pathname = "/admin/login";
-      return NextResponse.redirect(url);
+      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
+    if (pathname !== "/admin/login") {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
     }
   }
-  
+
   return supabaseResponse;
 }

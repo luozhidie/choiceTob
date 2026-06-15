@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
@@ -49,7 +49,6 @@ import {
   Star,
   Target,
   MessageSquare,
-  Palette as StyleIcon,
   Building2,
   Phone,
   Bell,
@@ -232,26 +231,63 @@ export default function AdminLayout({
   const [collapsedGroups, setCollapsedGroups] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
+
+  // 使用 useMemo 缓存 supabase 实例，避免每次渲染重新创建
+  const supabase = useMemo(() => createClient(), []);
 
   // 客户端 session 同步：只同步用户状态，不做权限检查
   // 权限检查完全由 middleware 在服务端处理
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-    });
+    let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
+    // 安全地获取用户信息
+    if (supabase && supabase.auth) {
+      supabase.auth
+        .getUser()
+        .then((result) => {
+          if (!mounted) return;
+          // 安全解构：防御 data 为 undefined 的情况
+          const u = result?.data?.user ?? null;
+          setUser(u);
+        })
+        .catch((err) => {
+          console.warn("[AdminLayout] getUser error:", err);
+          if (mounted) setUser(null);
+        });
+
+      // 安全地监听 auth 变化
+      try {
+        const result = supabase.auth.onAuthStateChange((_event, session) => {
+          if (mounted) {
+            setUser(session?.user ?? null);
+          }
+        });
+
+        return () => {
+          mounted = false;
+          // 安全取消订阅
+          try {
+            result?.data?.subscription?.unsubscribe();
+          } catch (e) {
+            // 忽略 unsubscribe 错误
+          }
+        };
+      } catch (err) {
+        console.warn("[AdminLayout] onAuthStateChange error:", err);
       }
-    );
+    }
 
-    return () => subscription.unsubscribe();
+    return () => { mounted = false; };
   }, [supabase]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      if (supabase?.auth?.signOut) {
+        await supabase.auth.signOut();
+      }
+    } catch (e) {
+      console.warn("signOut error:", e);
+    }
     router.push("/admin/login");
     router.refresh();
   };
@@ -364,7 +400,7 @@ export default function AdminLayout({
                               className={`flex items-center gap-3 pl-6 pr-3 py-2 rounded-lg text-sm transition-colors ${
                                 isActive
                                   ? "bg-accent text-primary font-semibold"
-                                  : "text-white/60 hover:text-white hover:bg-white/8"
+                                  : "text-white/60 hover:text-white hover:bg-white/10"
                               }`}
                             >
                               <item.icon className="w-4 h-4" />
@@ -429,26 +465,34 @@ export default function AdminLayout({
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden sm:inline text-xs text-muted-foreground">
-                🔒 已安全登录
+                已安全登录
               </span>
             </div>
           </div>
         </header>
 
-        {/* Page content */}
+        {/* Page content with ErrorBoundary */}
         <main className="p-4 sm:p-6 lg:p-8">
           <ErrorBoundary fallback={
             <div className="min-h-[60vh] flex items-center justify-center">
               <div className="text-center">
                 <div className="text-4xl mb-4">⚠️</div>
-                <h3 className="text-lg font-bold text-primary mb-2">后台页面出错</h3>
-                <p className="text-sm text-muted-foreground mb-4">请刷新页面重试，或联系技术支持</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90"
-                >
-                  刷新页面
-                </button>
+                <h3 className="text-lg font-bold text-primary mb-2">页面出错</h3>
+                <p className="text-sm text-muted-foreground mb-4">请刷新页面或返回登录</p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90"
+                  >
+                    刷新页面
+                  </button>
+                  <a
+                    href="/admin/login"
+                    className="px-4 py-2 border border-gray-200 text-gray-700 text-sm rounded-lg hover:bg-gray-50"
+                  >
+                    返回登录
+                  </a>
+                </div>
               </div>
             </div>
           }>
