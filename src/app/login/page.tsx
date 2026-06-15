@@ -86,29 +86,42 @@ function UserLoginForm() {
   );
 }
 
-/* ── 后台管理员登录 ── */
+/* ── 后台管理员登录（完全独立，不共享 session） ── */
 function AdminLoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const supabase = createClient();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      setError(error.message === "Invalid login credentials" ? "邮箱或密码错误，请重试" : error.message);
-      setLoading(false);
-      return;
-    }
+    try {
+      // 使用 fetch 直接调 login API，不依赖 supabase auth state
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // 硬跳转后台，绕过所有客户端检查
-    window.location.replace("/admin/dashboard");
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setError(result.error || "登录失败，请重试");
+        setLoading(false);
+        return;
+      }
+
+      // 登录成功，硬跳转后台（绕过所有客户端检查）
+      window.location.replace("/admin/dashboard");
+    } catch (err: any) {
+      setError(err.message || "网络错误，请重试");
+      setLoading(false);
+    }
   };
 
   return (
