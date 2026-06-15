@@ -131,111 +131,34 @@ export default function AdminDashboard() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const [
-        customers,
-        leads,
-        testResults,
-        testCodes,
-        deliveries,
-        orders,
-        courses,
-        products,
-        inventory,
-      ] = await Promise.all([
-        supabase.from("vip_customers").select("*", { count: "exact", head: true }).eq("store_id", storeId),
-        supabase.from("leads").select("*", { count: "exact" }).order("created_at", { ascending: false }),
-        supabase.from("style_test_results").select("*", { count: "exact", head: true }),
-        supabase.from("test_codes").select("*"),
-        supabase.from("delivery_plans").select("*").order("created_at", { ascending: false }),
-        supabase.from("orders").select("*"),
-        supabase.from("courses").select("*", { count: "exact" }),
-        supabase.from("products").select("*", { count: "exact" }),
-        supabase.from("inventory").select("*").eq("store_id", storeId),
-      ]);
-
-      const leadList = leads.data || [];
-      const orderList = orders.data || [];
-      const deliveryList = deliveries.data || [];
-      const testCodeList = testCodes.data || [];
-      const inventoryList = inventory.data || [];
-
-      // 计算进销存数据
-      const inventoryTotalValue = inventoryList.reduce(
-        (sum: number, item: any) => sum + (item.current_stock || 0) * (item.unit_cost || 0),
-        0
-      );
-
-      const totalSalesQty = inventoryList.reduce((sum: number, item: any) => sum + (item.sales_qty || 0), 0);
-      const totalStockInQty = inventoryList.reduce((sum: number, item: any) => sum + (item.stock_in_qty || 0), 0);
-      const inventorySellThroughRate = totalStockInQty > 0 ? (totalSalesQty / totalStockInQty) * 100 : 0;
-
-      const lowStockCount = inventoryList.filter((item: any) => (item.current_stock || 0) < 5).length;
-
-      // 品类库存分布
-      const categoryMap = new Map<string, number>();
-      inventoryList.forEach((item: any) => {
-        const category = item.category || "未分类";
-        const value = (item.current_stock || 0) * (item.unit_cost || 0);
-        categoryMap.set(category, (categoryMap.get(category) || 0) + value);
+      // 通过 API route 查询（service role key，绕过 RLS）
+      const res = await fetch(`/api/admin/dashboard-stats?store_id=${encodeURIComponent(storeId)}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
       });
-      const categoryDistribution = Array.from(categoryMap.entries()).map(([name, value]) => ({
-        name,
-        value: Math.round(value * 100) / 100,
-      }));
-
-      // 库存状态分布
-      const normalStock = inventoryList.filter((item: any) => (item.current_stock || 0) >= 20).length;
-      const lowStock = inventoryList.filter((item: any) => (item.current_stock || 0) >= 5 && (item.current_stock || 0) < 20).length;
-      const outOfStock = inventoryList.filter((item: any) => (item.current_stock || 0) === 0).length;
-      const slowMoving = inventoryList.filter((item: any) => (item.sales_qty || 0) === 0 && (item.current_stock || 0) > 0).length;
-
-      const stockStatusDistribution = [
-        { name: "正常库存", count: normalStock },
-        { name: "低库存", count: lowStock },
-        { name: "断货", count: outOfStock },
-        { name: "滞销", count: slowMoving },
-      ];
-
-      // SPA闭环数据（示例数据，实际应从相关表查询）
-      const spaCycleData = {
-        planning: products.data?.filter((p: any) => p.status === "planning").length || 0,
-        purchasing: products.data?.filter((p: any) => p.status === "purchasing").length || 0,
-        receiving: inventoryList.filter((item: any) => (item.current_stock || 0) > 0 && (item.stock_in_qty || 0) > 0).length,
-        sales: inventoryList.filter((item: any) => (item.sales_qty || 0) > 0).length,
-        replenishment: inventoryList.filter((item: any) => (item.current_stock || 0) < 10 && (item.sales_qty || 0) > 0).length,
-      };
-
-      setData({
-        customerCount: customers.count || 0,
-        leadCount: leads.count || 0,
-        newLeadCount: leadList.filter((l: any) => l.status === "new").length,
-        testResultCount: testResults.count || 0,
-        testCodeCount: testCodeList.length,
-        activeTestCodeCount: testCodeList.filter((t: any) => t.is_active).length,
-        deliveryCount: deliveryList.length,
-        draftDeliveryCount: deliveryList.filter((d: any) => d.status === "draft").length,
-        deliveredCount: deliveryList.filter((d: any) => d.status === "delivered" || d.status === "confirmed").length,
-        orderCount: orderList.length,
-        paidOrderCount: orderList.filter((o: any) => o.status === "paid").length,
-        totalRevenue: orderList.filter((o: any) => o.status === "paid").reduce((sum: number, o: any) => sum + (o.amount || 0), 0),
-        pendingAmount: orderList.filter((o: any) => o.status === "pending").reduce((sum: number, o: any) => sum + (o.amount || 0), 0),
-        courseCount: courses.count || 0,
-        publishedCourseCount: (courses.data || []).filter((c: any) => c.is_published).length,
-        productCount: products.count || 0,
-        publishedProductCount: (products.data || []).filter((p: any) => p.is_published).length,
-        recentLeads: leadList.slice(0, 5),
-        recentDeliveries: deliveryList.slice(0, 5),
-        inventoryTotalValue,
-        inventorySellThroughRate,
-        lowStockCount,
-        categoryDistribution,
-        stockStatusDistribution,
-        spaCycleData,
-      });
-    } catch (err) {
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        throw new Error(result.error || "数据加载失败");
+      }
+      setData(result.data);
+    } catch (err: any) {
       console.error("Dashboard fetch error:", err);
+      // 设置默认值，避免页面崩溃
+      setData({
+        customerCount: 0, leadCount: 0, newLeadCount: 0,
+        testResultCount: 0, testCodeCount: 0, activeTestCodeCount: 0,
+        deliveryCount: 0, draftDeliveryCount: 0, deliveredCount: 0,
+        orderCount: 0, paidOrderCount: 0, totalRevenue: 0, pendingAmount: 0,
+        courseCount: 0, publishedCourseCount: 0,
+        productCount: 0, publishedProductCount: 0,
+        recentLeads: [], recentDeliveries: [],
+        inventoryTotalValue: 0, inventorySellThroughRate: 0, lowStockCount: 0,
+        categoryDistribution: [], stockStatusDistribution: [],
+        spaCycleData: { planning: 0, purchasing: 0, receiving: 0, sales: 0, replenishment: 0 },
+      });
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const formatPrice = (price: number) => `¥${price.toLocaleString("zh-CN", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;

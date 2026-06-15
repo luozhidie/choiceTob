@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import {
   LayoutDashboard,
   TrendingUp,
@@ -434,7 +435,23 @@ export default function AdminLayout({
 
         {/* Page content */}
         <main className="p-4 sm:p-6 lg:p-8">
-          {children}
+          <ErrorBoundary fallback={
+            <div className="min-h-[60vh] flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-4xl mb-4">⚠️</div>
+                <h3 className="text-lg font-bold text-primary mb-2">后台页面出错</h3>
+                <p className="text-sm text-muted-foreground mb-4">请刷新页面重试，或联系技术支持</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-primary/90"
+                >
+                  刷新页面
+                </button>
+              </div>
+            </div>
+          }>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>
