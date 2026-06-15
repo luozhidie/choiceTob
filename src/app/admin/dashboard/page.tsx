@@ -99,6 +99,7 @@ export default function AdminDashboard() {
   const [stores, setStores] = useState<any[]>([]);
   const [checking, setChecking] = useState(true);
   const router = useRouter();
+  const supabase = createClient();
 
   // 管理员权限检查
   useEffect(() => {
