@@ -54,8 +54,8 @@ export default function AdminMembershipOrdersPage() {
     const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push("/admin/login"); return; }
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim());
-      if (!adminEmails.includes(user.email || "")) { router.push("/members"); return; }
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
+      if (!adminEmails.includes(user.email || "")) { router.push("/admin/login"); return; }
       setIsAdmin(true);
       setChecking(false);
     };
