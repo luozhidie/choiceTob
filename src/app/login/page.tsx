@@ -2,10 +2,13 @@
 
 import { useState, Suspense } from "react";
 import { useAuth } from "@/lib/auth-context";
+import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
+
+const supabase = createClient();
 
 function LoginForm() {
   const [email, setEmail] = useState("");
@@ -13,11 +16,10 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signIn, error: authError } = useAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/buyer";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,8 +37,14 @@ function LoginForm() {
       return;
     }
 
+    // 登录成功：检查是否是管理员，是则跳后台
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email === "luozhidie@live.cn") {
+      window.location.replace("/admin/dashboard");
+      return;
+    }
+
     router.push(redirect);
-    router.refresh();
   };
 
   return (

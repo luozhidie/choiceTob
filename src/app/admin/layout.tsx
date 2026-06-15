@@ -231,18 +231,21 @@ export default function AdminLayout({
   const pathname = usePathname();
   const supabase = createClient();
 
+  // 客户端 session 同步：只同步用户状态，不做权限检查
+  // 权限检查完全由 middleware 在服务端处理
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push("/admin/login");
-        return;
-      }
-      // 简化：只检查是否有登录，不检查 profile（避免一直跳 pending）
+    supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
-    };
-    checkAuth();
-  }, [router, supabase]);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

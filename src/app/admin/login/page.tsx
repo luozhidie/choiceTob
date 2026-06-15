@@ -34,8 +34,8 @@ export default function AdminLoginPage() {
       return;
     }
 
-    router.push("/admin/dashboard");
-    router.refresh();
+    // 使用硬跳转确保 session cookie 完全写入
+    window.location.replace("/admin/dashboard");
   };
 
   return (
