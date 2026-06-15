@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { X, CheckCircle2, Copy, Phone, MessageCircle } from "lucide-react";
+import { X, CheckCircle2, Copy, Phone, MessageCircle, Star, Crown } from "lucide-react";
 
 interface PaywallModalProps {
   isOpen: boolean;
@@ -12,6 +12,71 @@ interface PaywallModalProps {
   description?: string;
   type?: "annual" | "single" | "course" | "subscription" | "trend" | "style_test" | "product";
 }
+
+/* ── 套餐配置 ── */
+const PACKAGES = [
+  {
+    id: "trial",
+    name: "体验会员",
+    price: 29900,       // ¥299
+    period: "14天",
+    highlight: false,
+    tag: "尝鲜",
+    tagColor: "bg-green-100 text-green-700",
+    features: [
+      "查看所有买手选品供货价",
+      "爆款货盘基础查看",
+      "社群交流",
+    ],
+  },
+  {
+    id: "year1",
+    name: "1年会员",
+    price: 398000,      // ¥3,980
+    period: "1年",
+    highlight: false,
+    tag: "推荐",
+    tagColor: "bg-blue-100 text-blue-700",
+    features: [
+      "查看所有买手选品供货价",
+      "每日搭配灵感9折",
+      "线上风格测试不限次（非会员¥2980/次）",
+      "线上课程8折",
+      "爆款样衣9折",
+      "杂志订阅9折",
+      "社群交流 + 月度直播",
+    ],
+  },
+  {
+    id: "year2",
+    name: "2年会员",
+    price: 696000,      // ¥6,960（约8.7折）
+    period: "2年",
+    highlight: true,
+    tag: "最划算",
+    tagColor: "bg-amber-100 text-amber-700",
+    features: [
+      "1年会员全部权益",
+      "总价相当于8.7折",
+      "课程/样衣/杂志额外95折",
+    ],
+  },
+  {
+    id: "year3",
+    name: "3年会员",
+    price: 996000,      // ¥9,960（约8.3折）
+    period: "3年",
+    highlight: false,
+    tag: "尊享",
+    tagColor: "bg-purple-100 text-purple-700",
+    features: [
+      "2年会员全部权益",
+      "总价相当于8.3折",
+      "专属1v1客服",
+      "门店经营数据分析报告",
+    ],
+  },
+];
 
 export function PaywallModal({
   isOpen,
@@ -25,12 +90,13 @@ export function PaywallModal({
     name: "",
     phone: "",
     email: "",
-    service: "风格测试套餐",
+    service: "体验会员",
     message: "",
   });
   const [submitted, setSubmitted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [selectedPackage, setSelectedPackage] = useState(PACKAGES[1]); // 默认选1年会员
 
   const supabase = useMemo(() => createClient(), []);
 
@@ -50,7 +116,7 @@ export function PaywallModal({
           phone: formData.phone.trim(),
           source: "paywall_purchase",
           interest: formData.service,
-          notes: `邮箱: ${formData.email || "无"} | 补充: ${formData.message || "无"}`,
+          notes: `邮箱: ${formData.email || "无"} | 套餐: ${selectedPackage.name} ¥${(selectedPackage.price / 100).toFixed(0)} | 补充: ${formData.message || "无"}`,
         },
       ]);
       if (error) {
@@ -78,7 +144,7 @@ export function PaywallModal({
       case "trend": return "此趋势报告为付费内容";
       case "style_test": return "风格测试付费";
       case "product": return "商品购买";
-      case "annual": return "开通年度会员";
+      case "annual": return "开通会员";
       default: return "此内容为付费内容";
     }
   };
@@ -98,7 +164,8 @@ export function PaywallModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+
+      <div className="relative bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
@@ -106,11 +173,11 @@ export function PaywallModal({
           <X className="w-5 h-5" />
         </button>
 
-        {/* 套餐选择 */}
+        {/* 标题 */}
         {!contactForm && !submitted && (
           <>
             <div className="text-center mb-6">
-              <div className="text-5xl mb-4">🔒</div>
+              <div className="text-5xl mb-4">👑</div>
               <h3 className="text-xl font-bold text-primary">
                 {title || getDefaultTitle()}
               </h3>
@@ -119,60 +186,64 @@ export function PaywallModal({
               </p>
             </div>
 
-            <div className="space-y-3">
-              {/* 风格测试套餐 */}
-              <button
-                onClick={() => {
-                  setFormData({ ...formData, service: "风格测试套餐" });
-                  setContactForm(true);
-                }}
-                className="w-full p-4 rounded-xl border-2 border-accent bg-accent/5 hover:bg-accent/10 transition-colors text-left"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-primary">🎨 风格测试套餐</span>
-                  <span className="text-xs bg-accent text-white px-2 py-0.5 rounded-full">VIP免费</span>
-                </div>
-                <div className="text-2xl font-bold text-accent">¥99<span className="text-sm font-normal text-gray-400">/次</span></div>
-                <ul className="mt-3 space-y-1.5">
-                  {["可测2次（男士+女士）", "30天有效期内使用", "AI智能分析风格类型", "专属风格建议报告"].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-xs text-gray-600">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <div className="mt-4 text-center text-sm text-accent font-medium">立即购买 →</div>
-              </button>
+            {/* 套餐选择 */}
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              {PACKAGES.map((pkg) => (
+                <button
+                  key={pkg.id}
+                  onClick={() => setSelectedPackage(pkg)}
+                  className={`relative p-4 rounded-xl border-2 text-left transition-all ${
+                    selectedPackage.id === pkg.id
+                      ? "border-primary bg-primary/5 shadow-lg"
+                      : "border-gray-200 hover:border-primary/30 hover:bg-primary/5"
+                  }`}
+                >
+                  {/* 标签 */}
+                  {pkg.tag && (
+                    <span className={`absolute -top-2 left-4 px-2 py-0.5 rounded-full text-xs font-bold ${pkg.tagColor}`}>
+                      {pkg.tag}
+                    </span>
+                  )}
 
-              {/* 年度会员 */}
-              <button
-                onClick={() => {
-                  setFormData({ ...formData, service: "年度会员" });
-                  setContactForm(true);
-                }}
-                className="w-full p-4 rounded-xl border border-gray-200 hover:border-primary/30 hover:bg-primary/5 transition-colors text-left"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="font-bold text-primary">🌟 年度会员</span>
-                  <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">最划算</span>
-                </div>
-                <div className="text-2xl font-bold text-primary">¥9,800<span className="text-sm font-normal">/年</span></div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  全站内容无限查看，AI企划报告，爆款货盘，陈列方案等全部解锁
-                </p>
-                <div className="mt-3 text-sm text-primary font-medium">联系客服开通 →</div>
-              </button>
+                  <div className="font-bold text-primary mb-1">{pkg.name}</div>
+                  <div className="text-2xl font-bold text-accent mb-2">
+                    ¥{(pkg.price / 100).toLocaleString()}
+                    <span className="text-sm font-normal text-gray-400">/{pkg.period}</span>
+                  </div>
+                  <ul className="space-y-1">
+                    {pkg.features.slice(0, 3).map((item) => (
+                      <li key={item} className="flex items-center gap-1.5 text-xs text-gray-600">
+                        <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                    {pkg.features.length > 3 && (
+                      <li className="text-xs text-gray-400">+{pkg.features.length - 3}项权益...</li>
+                    )}
+                  </ul>
 
-              <Link
-                href="/admin/login"
-                className="block w-full p-3 rounded-xl bg-primary text-white text-center text-sm font-semibold hover:bg-primary/90 transition-colors"
-              >
-                管理员/会员登录
-              </Link>
+                  {selectedPackage.id === pkg.id && (
+                    <div className="absolute bottom-3 right-3 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                      <CheckCircle2 className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </button>
+              ))}
             </div>
 
-            <p className="mt-4 text-center text-xs text-gray-400">
-              支付渠道陆续开通中，当前请联系客服完成付费
+            {/* 购买按钮 */}
+            <button
+              onClick={() => {
+                setFormData({ ...formData, service: selectedPackage.name });
+                setContactForm(true);
+              }}
+              className="w-full py-3 bg-accent text-white text-base font-bold rounded-xl hover:bg-accent/90 transition-colors shadow-lg shadow-accent/30"
+            >
+              立即开通 · {selectedPackage.name} · ¥{(selectedPackage.price / 100).toLocaleString()}
+            </button>
+
+            <p className="mt-3 text-center text-xs text-gray-400">
+              支付渠道陆续开通中，当前请联系客服完成开通
             </p>
           </>
         )}
@@ -182,9 +253,9 @@ export function PaywallModal({
           <>
             <div className="mb-6">
               <div className="text-4xl mb-3">🎨</div>
-              <h3 className="text-lg font-bold text-primary">购买{formData.service}</h3>
+              <h3 className="text-lg font-bold text-primary">开通{formData.service}</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {formData.service === "风格测试套餐" ? "¥99 / 次，VIP会员免费" : "¥9,800 / 年，全站内容无限查看"}
+                ¥{(selectedPackage.price / 100).toLocaleString()} / {selectedPackage.period}
               </p>
             </div>
 
@@ -243,7 +314,7 @@ export function PaywallModal({
                   disabled={saving}
                   className="flex-1 py-2.5 rounded-lg bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors disabled:opacity-60"
                 >
-                  {saving ? "提交中..." : "提交购买"}
+                  {saving ? "提交中..." : "提交开通申请"}
                 </button>
               </div>
             </form>
@@ -256,9 +327,9 @@ export function PaywallModal({
             <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
               <CheckCircle2 className="w-8 h-8 text-accent" />
             </div>
-            <h3 className="text-lg font-bold text-primary">订单已提交！</h3>
+            <h3 className="text-lg font-bold text-primary">申请已提交！</h3>
             <p className="mt-2 text-sm text-muted-foreground">
-              请通过以下方式完成支付，支付后客服将发送测试码给您
+              请通过以下方式联系客服完成开通，开通后客服将发送测试码给您
             </p>
 
             <div className="mt-6 space-y-3">
@@ -267,40 +338,18 @@ export function PaywallModal({
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <MessageCircle className="w-4 h-4 text-green-600" />
-                    <span className="font-bold text-green-700 text-sm">微信支付</span>
+                    <span className="font-bold text-green-700 text-sm">微信开通</span>
                   </div>
                   <button
                     onClick={handleCopyWechat}
                     className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors"
                   >
                     {copied ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied ? "已复制" : "复制"}
+                    {copied ? "已复制" : "复制微信号"}
                   </button>
                 </div>
                 <p className="text-xs text-green-600">
-                  添加微信：<span className="font-mono font-medium">luozhidie666</span>，转账 <span className="font-bold">¥99</span>（VIP免费）
-                </p>
-              </div>
-
-              {/* 支付宝 */}
-              <div className="bg-blue-50 rounded-xl p-4 text-left border border-blue-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">💙</span>
-                    <span className="font-bold text-blue-700 text-sm">支付宝</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText("13925997776");
-                    }}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    <Copy className="w-3 h-3" />
-                    复制
-                  </button>
-                </div>
-                <p className="text-xs text-blue-600">
-                  手机号：<span className="font-mono font-medium">13925997776</span>，转账 <span className="font-bold">¥99</span>（VIP免费）
+                  添加微信：<span className="font-mono font-medium">luozhidie666</span>，备注"开通会员"
                 </p>
               </div>
 
@@ -321,7 +370,7 @@ export function PaywallModal({
                     复制
                   </button>
                 </div>
-                <p className="text-xs text-gray-600 font-mono">13925997776</p>
+                <p className="text-xs text-gray-600 font-mono">139-2599-7776</p>
               </div>
             </div>
 
