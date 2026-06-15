@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Crown, Sparkles, Package, Megaphone,
-  Lock, CheckCircle2, ArrowRight, User, Shield,
+  Lock, CheckCircle2, ArrowRight, User, Shield, Star,
   ShoppingBag,
 } from "lucide-react";
 
