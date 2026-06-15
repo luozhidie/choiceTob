@@ -6,8 +6,6 @@ import { cookies } from "next/headers";
  * 后台管理员登录 API
  * POST /api/admin/login
  * body: { email, password }
- * 
- * 这个 API 专门给后台登录用，使用独立的 session cookie。
  */
 export async function POST(request: NextRequest) {
   try {
@@ -21,63 +19,57 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 验证邮箱是否在管理员列表中
-    const ADMIN_EMAILS_FALLBACK = ["luozhidie@live.cn"];
-    const adminEmailsRaw = (
-      process.env.ADMIN_EMAILS ||
-      process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
-      ""
-    );
-    const adminEmails = adminEmailsRaw.split(",").map((e: string) => e.trim()).filter(Boolean);
-    const validEmails = adminEmails.length > 0 ? adminEmails : ADMIN_EMAILS_FALLBACK;
-
-    if (!validEmails.includes(email)) {
+    // 验证是不是管理员邮箱
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
+    if (!adminEmails.includes(email)) {
       return NextResponse.json(
-        { success: false, error: "该邮箱不是管理员账号" },
+        { success: false, error: "该邮箱没有管理员权限" },
         { status: 403 }
       );
     }
 
-    // 使用 Supabase 验证登录
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() { return cookieStore.getAll(); },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          },
-        },
-      }
-    );
+    // 用 Supabase 验证密码
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+    const supabase = createServerClient(supabaseUrl, supabaseKey, {
+      cookies: {
+        getAll() { return []; },
+        setAll() {},
+      },
+    });
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
-    if (error) {
+    if (error || !data.user) {
       return NextResponse.json(
-        { success: false, error: error.message || "登录失败" },
+        { success: false, error: "邮箱或密码错误" },
         { status: 401 }
       );
     }
 
-    return NextResponse.json({
+    // 登录成功：设置 admin_token cookie（独立于 Supabase session）
+    const response = NextResponse.json({
       success: true,
-      user: {
-        id: data.user?.id,
-        email: data.user?.email,
-      },
+      user: { id: data.user.id, email: data.user.email },
     });
+
+    // 设置一个标记 cookie，让 middleware 识别管理员
+    response.cookies.set("admin_logged_in", "true", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 8, // 8小时
+      path: "/admin",
+    });
+
+    return response;
   } catch (error: any) {
     console.error("[Admin Login API] 错误:", error);
     return NextResponse.json(
-      { success: false, error: error.message || "服务器错误" },
+      { success: false, error: "服务器错误，请稍后重试" },
       { status: 500 }
     );
   }

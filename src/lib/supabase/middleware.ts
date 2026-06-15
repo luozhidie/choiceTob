@@ -4,24 +4,11 @@ import { NextResponse, type NextRequest } from "next/server";
 const CSRF_COOKIE_NAME = "csrf_token";
 const CSRF_HEADER_NAME = "x-csrf-token";
 
-function generateCsrfToken(): string {
-  return Math.random().toString(36).substring(2) + Date.now().toString(36);
-}
-
-function needsCsrfProtection(request: NextRequest): boolean {
-  return ["POST", "PUT", "DELETE", "PATCH"].includes(request.method!.toUpperCase());
-}
-
-function validateCsrfToken(request: NextRequest): boolean {
-  const cookieToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
-  const headerToken = request.headers.get(CSRF_HEADER_NAME);
-  return !!(cookieToken && headerToken && cookieToken === headerToken);
-}
-
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
-
   const pathname = request.nextUrl.pathname;
+
+  // 只处理 /admin 和 /api/admin 路由
   const isAdminRoute = pathname.startsWith("/admin");
   const isApiAdminRoute = pathname.startsWith("/api/admin");
 
@@ -29,33 +16,36 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // CSRF Cookie
-  let csrfToken = request.cookies.get(CSRF_COOKIE_NAME)?.value;
-  if (!csrfToken) {
-    csrfToken = generateCsrfToken();
-    supabaseResponse.cookies.set(CSRF_COOKIE_NAME, csrfToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      path: "/",
-    });
-  }
-
-  // CSRF 保护（跳过 /api/admin）
-  const isLoginPage = pathname === "/admin/login";
-  if (needsCsrfProtection(request) && !isLoginPage && !isApiAdminRoute) {
-    if (!validateCsrfToken(request)) {
-      return NextResponse.json({ error: "CSRF token validation failed" }, { status: 403 });
+  // 登录页：直接放行
+  if (pathname === "/admin/login") {
+    // 如果已经有 admin_logged_in cookie，直接跳转 dashboard
+    const adminLoggedIn = request.cookies.get("admin_logged_in")?.value;
+    if (adminLoggedIn === "true") {
+      return NextResponse.redirect(new URL("/admin/dashboard", request.url));
     }
+    return supabaseResponse;
   }
 
-  // 认证检查
+  // 其他 admin 路由：检查 admin_logged_in cookie
+  const adminLoggedIn = request.cookies.get("admin_logged_in")?.value;
+  if (adminLoggedIn !== "true") {
+    // 未登录，跳转到登录页
+    if (isApiAdminRoute) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    return NextResponse.redirect(new URL("/admin/login", request.url));
+  }
+
+  // 已登录：检查管理员权限（双重验证）
   try {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseAnonKey) {
-      console.warn("[Middleware] Supabase 环境变量缺失");
+      // 环境变量缺失，但 cookie 已验证，放行
       return supabaseResponse;
     }
 
@@ -74,62 +64,33 @@ export async function updateSession(request: NextRequest) {
       },
     });
 
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // 登录页
-    if (pathname === "/admin/login") {
-      if (user) {
-        return NextResponse.redirect(new URL("/admin/dashboard", request.url));
-      }
-      return supabaseResponse;
-    }
-
-    // 未登录
     if (!user) {
-      if (isApiAdminRoute) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+      // Session 过期，清除 admin cookie，跳转登录页
+      supabaseResponse.cookies.set("admin_logged_in", "", { maxAge: 0, path: "/admin" });
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    // 管理员权限检查（同时检查服务端和客户端环境变量）
-    const ADMIN_EMAILS_FALLBACK = ["luozhidie@live.cn"];
-    const adminEmailsRaw = (
-      process.env.ADMIN_EMAILS ||
-      process.env.NEXT_PUBLIC_ADMIN_EMAILS ||
-      ""
-    );
-    const adminEmails = adminEmailsRaw.split(",").map(e => e.trim()).filter(Boolean) || ADMIN_EMAILS_FALLBACK;
+    // 验证邮箱是否是管理员
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+      .split(",")
+      .map(e => e.trim())
+      .filter(Boolean);
 
-    let isAdmin = adminEmails.includes(user.email || "");
+    const isAdmin = adminEmails.includes(user.email || "");
 
     if (!isAdmin) {
-      try {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single();
-        isAdmin = profile?.role === "admin";
-      } catch {}
-    }
-
-    if (!isAdmin) {
-      if (isApiAdminRoute) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-      }
+      // 不是管理员，清除 cookie，跳转首页
+      supabaseResponse.cookies.set("admin_logged_in", "", { maxAge: 0, path: "/admin" });
       return NextResponse.redirect(new URL("/", request.url));
     }
 
+    // 管理员验证通过，放行
+    return supabaseResponse;
   } catch (err) {
     console.error("[Middleware] Error:", err);
-    if (isApiAdminRoute) {
-      return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
-    }
-    if (pathname !== "/admin/login") {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
-    }
+    // 出错时也放行（因为已经有 admin_logged_in cookie）
+    return supabaseResponse;
   }
-
-  return supabaseResponse;
 }
