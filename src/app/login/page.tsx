@@ -8,18 +8,17 @@ import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
-const supabase = createClient();
-
 function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const { signIn } = useAuth();
+  const { signIn, error: authError } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/buyer";
+  const supabase = createClient();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
