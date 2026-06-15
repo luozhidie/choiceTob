@@ -136,10 +136,10 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  // 步骤2：对 admin 路由进行 CSRF 保护
+  // 步骤2：对 admin 路由进行 CSRF 保护（跳过 /api/admin，因为已有 Supabase auth + 管理员邮箱双重保护）
   const isLoginPage = isAdminRoute && pathname === "/admin/login";
-  
-  if (needsCsrfProtection(request) && !isLoginPage) {
+
+  if (needsCsrfProtection(request) && !isLoginPage && !isApiAdminRoute) {
     if (!validateCsrfToken(request)) {
       return NextResponse.json(
         { error: "CSRF token validation failed" },
