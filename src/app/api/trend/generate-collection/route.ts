@@ -18,7 +18,7 @@ function genSign(params: Record<string, string>): string {
   let s = APP_SECRET;
   for (const k of sortedKeys) s += k + params[k];
   s += APP_SECRET;
-  return crypto.createHash("md5").update(s).utf8().digest("hex").toUpperCase();
+  return crypto.createHash("md5").update(s, "utf8").digest("hex").toUpperCase();
 }
 
 function fmtTS(d: Date): string {

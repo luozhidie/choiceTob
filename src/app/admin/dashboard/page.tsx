@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Users,
   ClipboardList,
@@ -96,7 +97,23 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<any[]>([]);
-  const supabase = createClient();
+  const [checking, setChecking] = useState(true);
+  const router = useRouter();
+
+  // 管理员权限检查
+  useEffect(() => {
+    const check = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { router.push("/admin/login"); return; }
+      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "").split(",").map(e => e.trim());
+      if (!adminEmails.includes(user.email || "")) { router.push("/members"); return; }
+      setChecking(false);
+    };
+    check();
+  }, [router]);
+
+  if (checking) return null;
 
   useEffect(() => {
     (async () => {

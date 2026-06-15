@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 /**
- * 服务端删除VIP订单（绕过RLS）
+ * 服务端删除VIP订单
  * POST /api/admin/delete-membership-order
  * body: { id: string }
  */
@@ -16,8 +17,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少订单ID" }, { status: 400 });
     }
 
-    // 使用服务端client（绕过RLS）
-    const supabase = await createClient();
+    // 使用前端传来的 Authorization token 或 cookie
+    const authHeader = request.headers.get("authorization");
+    let supabase: any;
+
+    if (authHeader?.startsWith("Bearer ")) {
+      // 用前端传来的 token 创建客户端
+      const token = authHeader.replace("Bearer ", "");
+      supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: { getAll: () => [], setAll: () => {} },
+          global: { headers: { Authorization: `Bearer ${token}` } },
+        }
+      );
+    } else {
+      // fallback: 用 cookie（标准方式）
+      const cookieStore = await cookies();
+      supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() { return cookieStore.getAll(); },
+            setAll() {},
+          },
+        }
+      );
+    }
 
     // 先查询订单是否存在
     const { data: order, error: fetchError } = await supabase
