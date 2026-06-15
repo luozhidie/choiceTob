@@ -102,6 +102,14 @@ export function PaywallModal({
 
   if (!isOpen) return null;
 
+  // 如果是年度会员类型，直接跳转到 VIP 页面（显示基础/进阶/高阶三个套餐）
+  if (type === "annual") {
+    if (typeof window !== "undefined") {
+      window.location.href = "/vip";
+    }
+    return null;
+  }
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.phone.trim()) {
