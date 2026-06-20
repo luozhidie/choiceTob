@@ -7,7 +7,8 @@ import Link from "next/link";
 import {
   ArrowLeft, ShoppingBag, Building2, Truck, X,
   ChevronLeft, ChevronRight, Layers, Star,
-  Clock, ShoppingCart,
+  Clock, ShoppingCart, Share2, Copy, Check,
+  Image as ImageIcon, MessageCircle, QrCode,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -46,6 +47,8 @@ export default function ProductDetailPage() {
   const [currentImage, setCurrentImage] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   // 获取商品数据
   useEffect(() => {
@@ -203,36 +206,77 @@ export default function ProductDetailPage() {
     router.push(`/checkout?id=${product.id}&source=${source}`);
   };
 
+  // 分享功能
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/shop/${product.id}`
+    : "";
+
+  const copyShareLink = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // fallback: 选中输入框内容让用户手动复制
+      const input = document.createElement("input");
+      input.value = shareUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleNativeShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: product.title,
+          text: `骆芷蝶智选推荐：${product.title} ¥${product.price}`,
+          url: shareUrl,
+        });
+      } catch { /* 用户取消分享 */ }
+    } else {
+      copyShareLink();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 面包屑 */}
+      {/* 面包屑 + 分享按钮 */}
       <div className="bg-white border-b border-gray-100">
-        <div className="container mx-auto px-4 py-3">
-          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap">
-            <Link href="/" className="hover:text-primary">首页</Link>
-            <span>/</span>
-            <Link href="/buyer" className="hover:text-primary">买手选品</Link>
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap flex-1 min-w-0">
+            <Link href="/" className="hover:text-primary shrink-0">首页</Link>
+            <span className="shrink-0">/</span>
+            <Link href="/buyer" className="hover:text-primary shrink-0">买手选品</Link>
             {product.category && (
               <>
-                <span>/</span>
-                <Link href={categoryLink} className="hover:text-primary">
+                <span className="shrink-0">/</span>
+                <Link href={categoryLink} className="hover:text-primary shrink-0">
                   {CATEGORY_MAP[product.category] || product.category}
                 </Link>
               </>
             )}
             {product.subcategory && (
               <>
-                <span>/</span>
-                <span className="text-gray-400">
+                <span className="shrink-0">/</span>
+                <span className="text-gray-400 line-clamp-1">
                   {SUBCATEGORY_MAP[product.subcategory] || product.subcategory}
                 </span>
               </>
             )}
-            <span className="hidden sm:inline">/</span>
-            <span className="text-primary font-medium hidden sm:inline line-clamp-1 max-w-[200px]">
-              {product.title}
-            </span>
           </nav>
+          {/* 分享按钮 */}
+          <button
+            onClick={() => setShareOpen(true)}
+            className="ml-3 p-2 rounded-full hover:bg-gray-100 active:scale-90 transition-all shrink-0"
+            title="分享商品"
+          >
+            <Share2 className="w-5 h-5 text-gray-500" />
+          </button>
         </div>
       </div>
 
@@ -463,6 +507,15 @@ export default function ProductDetailPage() {
                 {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
               </p>
 
+              {/* 分享入口 */}
+              <button
+                onClick={() => setShareOpen(true)}
+                className="mt-3 w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 border border-dashed border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                分享给好友
+              </button>
+
               {/* 同品类推荐 */}
               {product.category && (
                 <Link
@@ -572,6 +625,155 @@ export default function ProductDetailPage() {
           </div>
         </section>
       )}
+
+      {/* ====== 分享弹窗 ====== */}
+      <AnimatePresence>
+        {shareOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center"
+            onClick={() => setShareOpen(false)}
+          >
+            {/* 遮罩 */}
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
+
+            {/* 弹窗内容 */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
+            >
+              {/* 头部拖拽条（移动端）+ 关闭按钮 */}
+              <div className="sm:hidden flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+              </div>
+              <div className="flex items-center justify-between px-5 py-4 border-b">
+                <h3 className="text-lg font-bold text-gray-900">分享商品</h3>
+                <button
+                  onClick={() => setShareOpen(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* 商品预览卡片 */}
+              <div className="px-5 py-4">
+                <div className="flex gap-3 p-3 bg-gradient-to-br from-pink-50 to-orange-50 rounded-xl border border-pink-100">
+                  {product.cover_image ? (
+                    <img
+                      src={product.cover_image}
+                      alt={product.title}
+                      className="w-20 h-20 object-cover rounded-lg shrink-0"
+                    />
+                  ) : (
+                    <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center shrink-0">
+                      <ShoppingBag className="w-8 h-8 text-pink-300" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">
+                      {product.title}
+                    </h4>
+                    <p className="text-red-500 font-bold mt-1.5">¥{product.price}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      骆芷蝶智选 · 不自用不分享
+                    </p>
+                  </div>
+                </div>
+
+                {/* 分享选项 */}
+                <div className="mt-4 grid grid-cols-4 gap-3">
+                  {/* 复制链接 */}
+                  <button
+                    onClick={copyShareLink}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
+                      copied ? "bg-green-100" : "bg-blue-100"
+                    }`}>
+                      {copied ? (
+                        <Check className="w-5 h-5 text-green-600" />
+                      ) : (
+                        <Copy className="w-5 h-5 text-blue-600" />
+                      )}
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-700">
+                      {copied ? "已复制" : "复制链接"}
+                    </span>
+                  </button>
+
+                  {/* 系统分享 */}
+                  <button
+                    onClick={handleNativeShare}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-orange-100 flex items-center justify-center">
+                      <Share2 className="w-5 h-5 text-orange-600" />
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-700">系统分享</span>
+                  </button>
+
+                  {/* 分享图片（生成海报） */}
+                  <button
+                    onClick={() => {
+                      if (product.cover_image) window.open(product.cover_image, "_blank");
+                    }}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-purple-100 flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-700">分享图片</span>
+                  </button>
+
+                  {/* 微信好友提示 */}
+                  <button
+                    onClick={copyShareLink}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
+                  >
+                    <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-green-600" />
+                    </div>
+                    <span className="text-[11px] font-medium text-gray-700">微信好友</span>
+                  </button>
+                </div>
+
+                {/* 分享链接展示区 */}
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-[11px] text-gray-400 mb-1.5">商品链接</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs text-gray-600 truncate bg-white px-3 py-2 rounded border">
+                      {shareUrl}
+                    </code>
+                    <button
+                      onClick={copyShareLink}
+                      className={`shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
+                        copied
+                          ? "bg-green-500 text-white"
+                          : "bg-gray-800 text-white hover:bg-gray-700"
+                      }`}
+                    >
+                      {copied ? "✓ 已复制" : "复制"}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 提示文字 */}
+                <p className="mt-4 text-center text-xs text-gray-400 leading-relaxed">
+                  分享给好友，一起发现好物<br />
+                  每次分享都可能获得推荐奖励
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
