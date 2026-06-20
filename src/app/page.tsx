@@ -18,13 +18,13 @@ import {
 const categories = [
   { name: "全部", href: "/", key: "all" },
   { name: "穿搭", href: "/buyer", key: "clothing" },
-  { name: "护肤", href: "/buyer?category=护肤", key: "skincare" },
-  { name: "彩妆", href: "/buyer?category=彩妆", key: "makeup" },
-  { name: "养生", href: "/buyer?category=养生", key: "wellness" },
-  { name: "食品", href: "/buyer?category=食品", key: "food" },
-  { name: "家居", href: "/buyer?category=家居", key: "home" },
-  { name: "文创", href: "/buyer?category=文创", key: "creative" },
-  { name: "艺术", href: "/buyer?category=艺术", key: "art" },
+  { name: "护肤", href: "/buyer?tab=推荐&category=护肤", key: "skincare" },
+  { name: "彩妆", href: "/buyer?tab=推荐&category=彩妆", key: "makeup" },
+  { name: "养生", href: "/buyer?tab=推荐&category=养生", key: "wellness" },
+  { name: "食品", href: "/buyer?tab=推荐&category=食品", key: "food" },
+  { name: "家居", href: "/buyer?tab=推荐&category=家居", key: "home" },
+  { name: "文创", href: "/buyer?tab=推荐&category=文创", key: "creative" },
+  { name: "艺术", href: "/buyer?tab=推荐&category=艺术", key: "art" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -197,8 +197,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 分类标签栏（暖橙渐变背景） ====== */}
-      <section className="bg-gradient-to-r from-orange-300 via-orange-200 to-orange-300 overflow-hidden">
+      {/* ====== 分类标签栏（透明背景） ====== */}
+      <section className="bg-transparent">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
             {categories.map((cat) => (
@@ -208,8 +208,8 @@ export default function Home() {
                 onClick={() => setActiveCategoryName(cat.name)}
                 className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
                   activeCategoryName === cat.name
-                    ? "bg-white shadow-sm font-semibold text-gray-800"
-                    : "text-gray-600 hover:bg-white/55"
+                    ? "bg-white/90 backdrop-blur-sm shadow-sm font-semibold text-gray-800"
+                    : "text-gray-500 hover:bg-white/40 hover:text-gray-700"
                 }`}
               >
                 {cat.name}
@@ -219,23 +219,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 子分类标签栏 ====== */}
-      <section className="bg-white border-b border-gray-100">
+      {/* ====== 子分类标签栏（透明背景） ====== */}
+      <section className="bg-transparent border-b border-gray-100/50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            {currentSubCategories.map((sub) => (
-              <Link
-                key={sub.name}
-                href={sub.subKey ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}` : "/"}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                  sub.name === "精选"
-                    ? "bg-[#2a2238] text-white font-medium shadow-md"
-                    : "bg-gray-50 text-gray-500 hover:bg-gray-100"
-                }`}
-              >
-                {sub.icon} {sub.name}
-              </Link>
-            ))}
+            {currentSubCategories.map((sub) => {
+              const isBuyer = activeCategoryName === "穿搭";
+              const href = sub.subKey
+                ? isBuyer
+                  ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
+                  : `/buyer?tab=推荐&category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
+                : "/";
+              return (
+                <Link
+                  key={sub.name}
+                  href={href}
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
+                    sub.name === "精选"
+                      ? "bg-[#2a2238] text-white font-medium shadow-md"
+                      : "bg-white/60 text-gray-500 hover:bg-white/80 hover:text-gray-700"
+                  }`}
+                >
+                  {sub.icon} <span>{sub.name}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
