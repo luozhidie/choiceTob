@@ -93,20 +93,25 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroBgUrl, setHeroBgUrl] = useState<string>("");
+  const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
 
   const supabase = createClient();
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
-  // 从 site_assets 读取 Hero 背景图
+  // 从 site_assets 读取 Hero 背景图（顶部区域 + 大图区域）
   useEffect(() => {
-    const fetchHeroBg = async () => {
+    const fetchHeroBgs = async () => {
       try {
-        const { data } = await supabase.from("site_assets").select("image_url").eq("key", "hero_bg").maybeSingle();
-        if (data?.image_url) setHeroBgUrl(data.image_url);
+        const [topRes, mainRes] = await Promise.all([
+          supabase.from("site_assets").select("image_url").eq("key", "hero_top_bg").maybeSingle(),
+          supabase.from("site_assets").select("image_url").eq("key", "hero_bg").maybeSingle(),
+        ]);
+        if (topRes.data?.image_url) setHeroTopBgUrl(topRes.data.image_url);
+        if (mainRes.data?.image_url) setHeroBgUrl(mainRes.data.image_url);
       } catch {}
     };
-    fetchHeroBg();
+    fetchHeroBgs();
   }, []);
 
   const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
@@ -136,9 +141,28 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ====== Hero 区域（深紫背景 + 左对齐文字） ====== */}
-      <section style={{ background: "linear-gradient(135deg, #2f2845 0%, #3b3460 100%)" }} className="py-11 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto">
+      {/* ====== Hero 顶部区域（支持后台上传背景图） ====== */}
+      <section className="relative py-11 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {heroTopBgUrl ? (
+          <>
+            {/* 动态背景图 + 深色遮罩 */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{ backgroundImage: `url('${heroTopBgUrl}')` }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(135deg, rgba(47,40,69,0.88) 0%, rgba(59,52,96,0.85) 100%)" }}
+            />
+          </>
+        ) : (
+          /* 默认深紫渐变（无背景图时） */
+          <div
+            className="absolute inset-0"
+            style={{ background: "linear-gradient(135deg, #2f2845 0%, #3b3460 100%)" }}
+          />
+        )}
+        <div className="relative z-10 max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full mb-5" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <span className="text-[#d8a0c0] text-[11px] tracking-wider">✦</span>
             <span className="text-white/60 text-[11px] font-medium tracking-widest">数据驱动 · 智选未来</span>
