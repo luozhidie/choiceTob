@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle } from "lucide-react";
 
+/**
+ * 后台管理员独立登录页
+ * 完全不依赖 Supabase Auth session，只通过 /api/admin/login 设置独立 cookie
+ */
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,29 +16,34 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
-  const supabase = createClient();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      // 通过 API 登录（设置独立的 admin_logged_in cookie）
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (error) {
-      setError(error.message === "Invalid login credentials"
-        ? "邮箱或密码错误，请重试"
-        : error.message
-      );
+      const result = await res.json();
+
+      if (!res.ok || !result.success) {
+        setError(result.error || "登录失败");
+        setLoading(false);
+        return;
+      }
+
+      // 硬跳转，确保 cookie 写入后再导航
+      window.location.replace("/admin/dashboard");
+    } catch (err: any) {
+      setError(err.message || "网络错误");
       setLoading(false);
-      return;
     }
-
-    // 使用硬跳转确保 session cookie 完全写入
-    window.location.replace("/admin/dashboard");
   };
 
   return (
