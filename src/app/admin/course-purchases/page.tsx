@@ -33,9 +33,6 @@ export default function AdminCoursePurchasesPage() {
 
   useEffect(() => {
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) router.push("/admin/login");
-    };
     check();
   }, []);
 

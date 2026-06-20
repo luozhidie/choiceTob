@@ -1,9 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Users,
   ClipboardList,
@@ -116,34 +114,9 @@ const DEFAULT_DATA: DashboardData = {
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [checking, setChecking] = useState(true);
 
-  const router = useRouter();
-
-  // 管理员权限检查（最简化的版本）
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const supabase = createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          router.push("/admin/login");
-          return;
-        }
-        // 简单检查：只要有登录用户就允许进入（后续可以在 middleware 中加强）
-        setChecking(false);
-      } catch (e) {
-        console.error("权限检查错误:", e);
-        router.push("/admin/login");
-      }
-    };
-    checkAuth();
-  }, [router]);
-
-  if (checking) return null;
-
-  // 加载数据
+  // 不再做 Supabase 权限检查（middleware 已处理）
+  // 直接加载数据
   useEffect(() => {
     const loadDashboard = async () => {
       setLoading(true);

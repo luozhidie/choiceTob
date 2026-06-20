@@ -66,9 +66,6 @@ export default function AdminDisplayPage() {
   useEffect(() => { checkUser(); fetchDisplays(); }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
 
   const fetchDisplays = async () => {
     setLoading(true);

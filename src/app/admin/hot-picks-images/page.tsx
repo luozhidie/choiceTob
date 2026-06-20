@@ -53,10 +53,6 @@ export default function AdminHotPicksImagesPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
   };
 
   const fetchImages = async () => {

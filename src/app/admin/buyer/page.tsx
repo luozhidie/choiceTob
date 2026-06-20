@@ -72,9 +72,6 @@ export default function AdminBuyerPage() {
 
   useEffect(() => { checkUser(); fetchProducts(); }, []);
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase

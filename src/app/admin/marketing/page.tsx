@@ -61,9 +61,6 @@ export default function AdminMarketingPlanPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
 
   const fetchStores = async () => {
     const { data } = await supabase.from("stores").select("id, name, business_goals").order("name");

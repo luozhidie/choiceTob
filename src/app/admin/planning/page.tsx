@@ -117,9 +117,6 @@ export default function AdminPlanningPage() {
   useEffect(() => { checkUser(); fetchReports(); }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
 
   const fetchReports = async () => {
     setLoading(true);

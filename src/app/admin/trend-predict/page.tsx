@@ -25,48 +25,9 @@ const scoreColor = (s: number) => s >= 80 ? "bg-emerald-500" : s >= 50 ? "bg-amb
 /* ===================== 页面 ===================== */
 export default function AdminTrendPredictPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
   // 管理员权限检查
   useEffect(() => {
     const check = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/admin/login"); return; }
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
-      if (!adminEmails.includes(user.email || "")) { router.push("/admin/login"); return; }
-      setIsAdmin(true);
-      setChecking(false);
-    };
-    check();
-  }, [router]);
-
-  const [keyword, setKeyword] = useState("连衣裙");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState<any>(null);
-  const [tab, setTab] = useState<"color" | "fabric" | "style" | "cut">("color");
-
-  const [products, setProducts] = useState<ProductItem[]>([]);
-  const [outfitPlan, setOutfitPlan] = useState("");
-  const [loadingProducts, setLoadingProducts] = useState(false);
-
-  const runPredict = async () => {
-    if (!keyword.trim()) return;
-    setLoading(true); setError("");
-    try {
-      const res = await fetch("/api/trend/predict", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: keyword.trim() }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || "预测失败");
-      setResult(d.data ?? d);
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
-  };
 
   const fetchProducts = async () => {
     if (!keyword.trim()) return;
@@ -92,7 +53,6 @@ export default function AdminTrendPredictPage() {
     finally { setLoadingProducts(false); }
   };
 
-  if (checking) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
     </div>

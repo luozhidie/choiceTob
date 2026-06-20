@@ -67,9 +67,6 @@ export default function AdminMagazinePage() {
   useEffect(() => { checkUser(); fetchArticles(); }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
 
   const fetchArticles = async () => {
     setLoading(true);

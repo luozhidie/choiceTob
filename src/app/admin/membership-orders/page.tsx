@@ -38,8 +38,6 @@ const PLAN_TYPE_MAP: Record<string, { label: string; icon: any; color: string }>
 
 export default function AdminMembershipOrdersPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
@@ -52,20 +50,6 @@ export default function AdminMembershipOrdersPage() {
   // 管理员权限检查
   useEffect(() => {
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/admin/login"); return; }
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
-      if (!adminEmails.includes(user.email || "")) { router.push("/admin/login"); return; }
-      setIsAdmin(true);
-      setChecking(false);
-    };
-    check();
-  }, [router]);
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -159,10 +143,7 @@ export default function AdminMembershipOrdersPage() {
       o.user_name?.includes(search) ||
       o.user_phone?.includes(search);
     return matchStatus && matchSearch;
-  });
-
-  if (checking) return null;
-  if (!isAdmin) return null;
+  });if (!isAdmin) return null;
 
   return (
     <div className="min-h-screen">

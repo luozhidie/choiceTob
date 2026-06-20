@@ -43,15 +43,6 @@ export default function AdminSalesPlanPage() {
 
   useEffect(() => { checkUser(); fetchStores(); fetchSaved(); }, []);
 
-  const checkUser = async () => { const { data: { user } } = await supabase.auth.getUser(); if (!user) router.push("/admin/login"); };
-  const fetchStores = async () => { const { data } = await supabase.from("stores").select("id, name, business_goals").order("name"); if (data) setStores(data); };
-  const fetchSaved = async () => { const { data } = await supabase.from("sales_services").select("*").not("ai_report", "is", null).order("created_at", { ascending: false }).limit(20); if (data) setSavedPlans(data); };
-
-  const handleStoreChange = (id: string) => {
-    setSelectedStore(id);
-    const s = stores.find(s => s.id === id);
-    setStoreGoals(s?.business_goals && Object.keys(s.business_goals).length > 0 ? s.business_goals : null);
-  };
 
   const toggle = (k: string) => setExpanded(p => ({ ...p, [k]: !p[k] }));
 

@@ -57,12 +57,6 @@ export default function AdminStyleTestResultsPage() {
   }, [page, search, filterGender, filterMainStyle]);
 
   const checkUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
   };
 
   const fetchResults = async () => {

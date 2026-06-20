@@ -96,12 +96,6 @@ export default function AdminLeadsPage() {
   }, [page, search, filterSource, filterStatus]);
 
   const checkUser = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
   };
 
   const fetchLeads = async () => {

@@ -99,9 +99,6 @@ export default function AdminSiteAssetsPage() {
   // 登录检查
   useEffect(() => {
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) router.push("/admin/login");
-    };
     check();
   }, []);
 

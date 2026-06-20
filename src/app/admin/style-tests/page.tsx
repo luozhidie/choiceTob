@@ -45,11 +45,6 @@ export default function AdminStyleTestsPage() {
 
   useEffect(() => {
     const check = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/admin/login"); return; }
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-      if (profile?.role !== "admin") { router.push("/"); }
-    };
     check();
   }, []);
 

@@ -48,10 +48,6 @@ export default function AdminSupplierPage() {
   }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-    }
   };
 
   const fetchSuppliers = async () => {

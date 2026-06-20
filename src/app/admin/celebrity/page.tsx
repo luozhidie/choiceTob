@@ -27,57 +27,10 @@ const CELEBRITIES = [
 
 export default function AdminCelebrityPage() {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-
   // 管理员权限检查
   useEffect(() => {
     const check = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/admin/login"); return; }
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
-      if (!adminEmails.includes(user.email || "")) { router.push("/admin/login"); return; }
-      setIsAdmin(true);
-      setChecking(false);
-    };
-    check();
-  }, [router]);
 
-  const [keyword, setKeyword] = useState("杨幂");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [items, setItems] = useState<CelebrityItem[]>([]);
-  const [source, setSource] = useState("");
-
-  const searchCelebrity = async () => {
-    if (!keyword.trim()) return;
-    setLoading(true); setError(""); setItems([]);
-    try {
-      const res = await fetch("/api/celebrity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword: keyword.trim() }),
-      });
-      const d = await res.json();
-      if (!res.ok) throw new Error(d.error || "搜索失败");
-      const list = d.items ?? [];
-      setItems(list.map((p: any) => ({
-        id: p.id ?? `c-${Math.random()}`,
-        title: p.title ?? p.name ?? "",
-        price_range: p.price_range ?? (p.price ? `¥${p.price}` : ""),
-        image_url: p.image_url ?? p.pic_url ?? "",
-        sales_volume: p.sales_volume ?? 0,
-        shop_name: p.shop_name ?? "",
-        styleTag: p.styleTag ?? "",
-        matchTip: p.matchTip ?? "",
-      })));
-      setSource(d.source ?? "");
-    } catch (e: any) { setError(e.message); }
-    finally { setLoading(false); }
-  };
-
-  if (checking) return (
     <div className="min-h-screen flex items-center justify-center bg-gray-950">
       <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
     </div>

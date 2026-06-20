@@ -41,7 +41,6 @@ export default function AdminCustomers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [checking, setChecking] = useState(true);
   
   const router = useRouter();
   const limit = 20;
@@ -49,36 +48,6 @@ export default function AdminCustomers() {
   // 权限检查
   useEffect(() => {
     const check = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { router.push("/admin/login"); return; }
-      const adminEmails = (process.env.NEXT_PUBLIC_ADMIN_EMAILS || "luozhidie@live.cn").split(",").map(e => e.trim());
-      if (!adminEmails.includes(user.email || "")) { router.push("/admin/login"); return; }
-      setChecking(false);
-    };
-    check();
-  }, [router]);
-  
-  if (checking) return null;
-  
-  // 加载客户数据
-  const loadCustomers = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: limit.toString(),
-        ...(statusFilter && { status: statusFilter }),
-        ...(search && { search }),
-      });
-      
-      const res = await fetch(`/api/admin/customers?${params}`);
-      const result = await res.json();
-      
-      if (result.success) {
-        setCustomers(result.data);
-        setTotal(result.total);
-      }
     } catch (error) {
       console.error("Load customers error:", error);
     } finally {

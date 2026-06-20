@@ -37,9 +37,6 @@ export default function AdminVipAddonsPage() {
   useEffect(() => { checkUser(); fetchData(); }, []);
 
   const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) router.push("/admin/login");
-  };
 
   const fetchData = async () => {
     setLoading(true);
