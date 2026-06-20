@@ -10,9 +10,8 @@ import {
 
 /* ------------------------------------------------------------------ */
 /*  主分类                                                            */
-/*  全部 → 首页                                                      */
-/*  穿搭 → /buyer（买手选品列表）                                     */
-/*  其他 → /buyer?category=xxx（同一列表页，带分类筛选）               */
+/*  穿搭 → /buyer（买手选品）                                         */
+/*  其他 → /buyer?tab=推荐&category=xxx（商品列表推荐tab）            */
 /* ------------------------------------------------------------------ */
 
 const categories = [
@@ -28,7 +27,7 @@ const categories = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  子分类（全部跳 /buyer）                                            */
+/*  子分类                                                            */
 /* ------------------------------------------------------------------ */
 
 const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subKey: string }[]> = {
@@ -99,24 +98,17 @@ export default function Home() {
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
-  // 从 site_assets 表动态读取 Hero 背景图（后台可设置）
+  // 从 site_assets 读取 Hero 背景图
   useEffect(() => {
     const fetchHeroBg = async () => {
       try {
-        const { data } = await supabase
-          .from("site_assets")
-          .select("image_url")
-          .eq("key", "hero_bg")
-          .maybeSingle();
+        const { data } = await supabase.from("site_assets").select("image_url").eq("key", "hero_bg").maybeSingle();
         if (data?.image_url) setHeroBgUrl(data.image_url);
-      } catch {
-        // 用默认图
-      }
+      } catch {}
     };
     fetchHeroBg();
   }, []);
 
-  // 默认背景图（当后台没设置时使用）
   const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
   const bgImage = heroBgUrl || defaultHeroBg;
 
@@ -125,8 +117,7 @@ export default function Home() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        let query = supabase.from("products").select("id, name, price, image_url, category, sub_category");
-        const { data, error } = await query.limit(20);
+        const { data, error } = await supabase.from("products").select("id, name, price, image_url, category, sub_category").limit(20);
         if (!error && data) setProducts(data);
       } catch (err) {
         console.error("加载商品失败:", err);
@@ -148,35 +139,16 @@ export default function Home() {
       {/* ====== Hero 区域（深紫背景 + 左对齐文字） ====== */}
       <section style={{ background: "linear-gradient(135deg, #2f2845 0%, #3b3460 100%)" }} className="py-11 px-4 sm:px-6 lg:px-8">
         <div className="max-w-5xl mx-auto">
-          {/* 标签 —— 按截图：小字，圆角胶囊，半透明 */}
-          <div
-            className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full mb-5"
-            style={{
-              background: "rgba(255,255,255,0.08)",
-              border: "1px solid rgba(255,255,255,0.12)"
-            }}
-          >
+          <div className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full mb-5" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <span className="text-[#d8a0c0] text-[11px] tracking-wider">✦</span>
             <span className="text-white/60 text-[11px] font-medium tracking-widest">数据驱动 · 智选未来</span>
           </div>
-
-          {/* 主标题 —— 按截图：大字号，左对齐 */}
-          <h1
-            className="font-black text-white leading-[1.12] mb-3 tracking-tight"
-            style={{ fontSize: "clamp(30px, 5vw, 44px)" }}
-          >
+          <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight" style={{ fontSize: "clamp(30px, 5vw, 44px)" }}>
             服装供应链<span className="text-[#e89aac]">智选</span>平台
           </h1>
-
-          {/* 描述 —— 按截图：较小字号，灰色，左对齐 */}
-          <p
-            className="text-white/40 mb-8 leading-relaxed"
-            style={{ fontSize: "14px", maxWidth: "520px" }}
-          >
+          <p className="text-white/40 mb-8 leading-relaxed" style={{ fontSize: "14px", maxWidth: "520px" }}>
             从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营，助力品牌精准选品、科学决策。
           </p>
-
-          {/* 搜索框 + 按钮 —— 按截图：圆角搜索框 + 白色按钮靠右 */}
           <form onSubmit={handleSearch} className="flex gap-3 max-w-lg">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
@@ -184,104 +156,86 @@ export default function Home() {
                 type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
                 placeholder="搜索商品名称、描述..."
                 className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/[0.07] border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:bg-white/12 text-sm"
-                style={{ backdropFilter: "blur(10px)" }}
               />
             </div>
-            <Link
-              href="/buyer"
-              className="px-6 py-3 bg-white text-[#2f2845] text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
-            >
+            <Link href="/buyer" className="px-6 py-3 bg-white text-[#2f2845] text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
               浏览选品 <ArrowRight className="w-4 h-4" />
             </Link>
           </form>
         </div>
       </section>
 
-      {/* ====== 分类标签栏（透明背景） ====== */}
-      <section className="bg-transparent">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                href={cat.href}
-                onClick={() => setActiveCategoryName(cat.name)}
-                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
-                  activeCategoryName === cat.name
-                    ? "bg-white/90 backdrop-blur-sm shadow-sm font-semibold text-gray-800"
-                    : "text-gray-500 hover:bg-white/40 hover:text-gray-700"
-                }`}
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* ====== 大图区域（背景图 + 分类栏叠在上面） ====== */}
+      <section className="relative overflow-hidden">
+        {/* 背景图 */}
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${bgImage}')` }} />
+        {/* 底部渐变遮罩（过渡到白色商品区） */}
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.5) 70%, rgba(255,255,255,1) 100%)" }} />
 
-      {/* ====== 子分类标签栏（透明背景） ====== */}
-      <section className="bg-transparent border-b border-gray-100/50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            {currentSubCategories.map((sub) => {
-              const isBuyer = activeCategoryName === "穿搭";
-              const href = sub.subKey
-                ? isBuyer
-                  ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
-                  : `/buyer?tab=推荐&category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
-                : "/";
-              return (
+        {/* ====== 分类标签栏（透明，叠在图片上） ====== */}
+        <div className="relative z-10">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+              {categories.map((cat) => (
                 <Link
-                  key={sub.name}
-                  href={href}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                    sub.name === "精选"
-                      ? "bg-[#2a2238] text-white font-medium shadow-md"
-                      : "bg-white/60 text-gray-500 hover:bg-white/80 hover:text-gray-700"
+                  key={cat.name}
+                  href={cat.href}
+                  onClick={() => setActiveCategoryName(cat.name)}
+                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+                    activeCategoryName === cat.name
+                      ? "bg-white/90 backdrop-blur-sm shadow-md font-semibold text-gray-800"
+                      : "text-white/80 hover:bg-white/20 hover:text-white"
                   }`}
                 >
-                  {sub.icon} <span>{sub.name}</span>
+                  {cat.name}
                 </Link>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* ====== 大图区域（从 site_assets 动态读取背景，后台可换图） ====== */}
-      <section className="relative h-[380px] sm:h-[430px] overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url('${bgImage}')` }}
-        />
-        {/* 半透明遮罩 —— 让背景隐约可见，同时保证文字清晰 */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.55) 100%)" }}></div>
+          {/* ====== 子分类标签栏（透明，叠在图片上） ====== */}
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
+              {currentSubCategories.map((sub) => {
+                const isBuyer = activeCategoryName === "穿搭";
+                const href = sub.subKey
+                  ? isBuyer
+                    ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
+                    : `/buyer?tab=推荐&category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
+                  : "/";
+                return (
+                  <Link
+                    key={sub.name}
+                    href={href}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
+                      sub.name === "精选"
+                        ? "bg-white/90 backdrop-blur-sm text-gray-800 font-semibold shadow-md"
+                        : "bg-white/15 backdrop-blur-sm text-white/80 border border-white/20 hover:bg-white/25"
+                    }`}
+                  >
+                    {sub.icon} <span>{sub.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
 
-        {/* 文字内容 —— 居中叠加在图片上 */}
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4 pt-6">
-          <h2
-            className="font-bold tracking-wide drop-shadow-md"
-            style={{ fontSize: "clamp(24px, 4vw, 36px)" }}
-          >
-            骆芷蝶智选 · 好物推荐
-          </h2>
-          <p className="mt-1.5 mb-8 text-white/80 tracking-[0.2em] font-light" style={{ fontSize: "15px" }}>
-            不自用 · 不分享
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Link
-              href="/buyer"
-              className="px-9 py-3 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg"
-            >
-              全部商品
-            </Link>
-            <Link
-              href="/buyer"
-              className="px-9 py-3 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2"
-            >
-              爆款安利 <ArrowRight className="w-4 h-4" />
-            </Link>
+          {/* ====== 大图标题 + 按钮（叠在图片上） ====== */}
+          <div className="text-center text-white px-4 pt-10 pb-16">
+            <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(24px, 4vw, 36px)" }}>
+              骆芷蝶智选 · 好物推荐
+            </h2>
+            <p className="text-white/85 mb-8 tracking-[0.2em] font-light" style={{ fontSize: "15px" }}>
+              不自用 · 不分享
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/buyer" className="px-9 py-3 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
+                全部商品
+              </Link>
+              <Link href="/buyer" className="px-9 py-3 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2">
+                爆款安利 <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
@@ -293,10 +247,7 @@ export default function Home() {
             {activeCategoryName === "全部" ? "穿搭" : activeCategoryName} · 精选
             <span className="ml-2 text-xs font-normal text-gray-400">({products.length} 件)</span>
           </h2>
-          <button
-            onClick={() => setActiveCategoryName("全部")}
-            className="text-xs text-gray-400 hover:text-gray-500"
-          >
+          <button onClick={() => setActiveCategoryName("全部")} className="text-xs text-gray-400 hover:text-gray-500">
             ✕ 清除筛选
           </button>
         </div>
@@ -322,23 +273,14 @@ export default function Home() {
               <Link key={product.id} href={`/shop/${product.id}`} className="group block">
                 <div className="relative overflow-hidden rounded-xl bg-gray-50 mb-2.5 aspect-[3/4]">
                   {product.image_url ? (
-                    <img
-                      src={product.image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
                   )}
                 </div>
-                <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">
-                  {product.name}
-                </h4>
+                <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
                 <p className="text-red-500 font-bold mt-1 text-[15px]">¥{product.price}</p>
-                <Link
-                  href={`/shop/${product.id}`}
-                  className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all"
-                >
+                <Link href={`/shop/${product.id}`} className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all">
                   下单
                 </Link>
               </Link>
