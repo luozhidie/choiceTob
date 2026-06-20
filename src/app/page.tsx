@@ -11,19 +11,19 @@ import {
 /* ------------------------------------------------------------------ */
 /*  主分类                                                            */
 /*  穿搭 → /buyer（买手选品）                                         */
-/*  其他 → /buyer?tab=推荐&category=xxx（商品列表推荐tab）            */
+/*  其他 → /category/[category]（商品列表页，带综合/销量/价格/上新tab）*/
 /* ------------------------------------------------------------------ */
 
 const categories = [
   { name: "全部", href: "/", key: "all" },
   { name: "穿搭", href: "/buyer", key: "clothing" },
-  { name: "护肤", href: "/buyer?tab=推荐&category=护肤", key: "skincare" },
-  { name: "彩妆", href: "/buyer?tab=推荐&category=彩妆", key: "makeup" },
-  { name: "养生", href: "/buyer?tab=推荐&category=养生", key: "wellness" },
-  { name: "食品", href: "/buyer?tab=推荐&category=食品", key: "food" },
-  { name: "家居", href: "/buyer?tab=推荐&category=家居", key: "home" },
-  { name: "文创", href: "/buyer?tab=推荐&category=文创", key: "creative" },
-  { name: "艺术", href: "/buyer?tab=推荐&category=艺术", key: "art" },
+  { name: "护肤", href: "/category/护肤", key: "skincare" },
+  { name: "彩妆", href: "/category/彩妆", key: "makeup" },
+  { name: "养生", href: "/category/养生", key: "wellness" },
+  { name: "食品", href: "/category/食品", key: "food" },
+  { name: "家居", href: "/category/家居", key: "home" },
+  { name: "文创", href: "/category/文创", key: "creative" },
+  { name: "艺术", href: "/category/艺术", key: "art" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -201,8 +201,8 @@ export default function Home() {
                 const href = sub.subKey
                   ? isBuyer
                     ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
-                    : `/buyer?tab=推荐&category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
-                  : "/";
+                    : `/category/${encodeURIComponent(activeCategoryName)}?subCategory=${encodeURIComponent(sub.subKey)}`
+                  : isBuyer ? "/buyer" : `/category/${encodeURIComponent(activeCategoryName)}`;
                 return (
                   <Link
                     key={sub.name}
