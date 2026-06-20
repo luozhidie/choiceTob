@@ -4,27 +4,27 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Search, ArrowRight, Star, Shirt, Scissors, Flame, Gem, Footprints, ShoppingCart,
-  Sparkles, Heart, X,
+  Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
 } from "lucide-react";
 import AdBanner, { PopupAd } from "@/components/AdBanner";
 
 /* ------------------------------------------------------------------ */
-/*  顶部分类导航（跳转 /buyer）                                        */
+/*  分类导航                                                          */
 /* ------------------------------------------------------------------ */
 
-const topCategories = [
-  { label: "穿搭", href: "/buyer?category=穿搭" },
-  { label: "护肤", href: "/buyer?category=护肤" },
-  { label: "洗护", href: "/buyer?category=洗护" },
-  { label: "养生", href: "/buyer?category=养生" },
-  { label: "食品", href: "/buyer?category=食品" },
-  { label: "家居", href: "/buyer?category=家居" },
-  { label: "文创", href: "/buyer?category=文创" },
-  { label: "艺术", href: "/buyer?category=艺术" },
+const categories = [
+  { name: "全部", href: "/" },
+  { name: "穿搭", href: "/buyer" },
+  { name: "护肤", href: "/buyer?category=护肤" },
+  { name: "洗护", href: "/buyer?category=洗护" },
+  { name: "养生", href: "/buyer?category=养生" },
+  { name: "食品", href: "/buyer?category=食品" },
+  { name: "家居", href: "/buyer?category=家居" },
+  { name: "文创", href: "/buyer?category=文创" },
+  { name: "艺术", href: "/buyer?category=艺术" },
 ];
 
-const subTags = [
+const subCategories = [
   { name: "精选", icon: <Star className="w-4 h-4" /> },
   { name: "上装", icon: <Shirt className="w-4 h-4" /> },
   { name: "下装", icon: <Scissors className="w-4 h-4" /> },
@@ -40,39 +40,41 @@ const subTags = [
 
 export default function Home() {
   const [keyword, setKeyword] = useState("");
-  const [activeTag, setActiveTag] = useState("精选");
+  const [activeCategory, setActiveCategory] = useState("全部");
+  const [activeSubCategory, setActiveSubCategory] = useState("精选");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPromo, setShowPromo] = useState(false);
+
   const supabase = createClient();
 
-  // 加载商品
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
-      let query = supabase.from("products").select("id,name,price,image_url,category,sub_category");
-      if (activeTag !== "精选") query = query.eq("sub_category", activeTag);
+      let query = supabase
+        .from("products")
+        .select("id, name, price, image_url, category, sub_category");
+      if (activeSubCategory !== "精选") {
+        query = query.eq("sub_category", activeSubCategory);
+      }
       const { data, error } = await query.limit(20);
       if (!error && data) setProducts(data);
       setLoading(false);
     };
     fetchProducts();
-    // 延迟显示促销弹窗
-    const timer = setTimeout(() => setShowPromo(true), 2000);
-    return () => clearTimeout(timer);
-  }, [activeTag]);
+  }, [activeSubCategory]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (keyword.trim()) window.location.href = `/shop?keyword=${encodeURIComponent(keyword.trim())}`;
+    if (keyword.trim()) {
+      window.location.href = `/shop?keyword=${encodeURIComponent(keyword.trim())}`;
+    }
   };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ===== 顶部导航条 ===== */}
+      {/* ===== 顶部导航 ===== */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[#2d2a3e] flex items-center justify-center text-white font-bold text-lg">
               骆
@@ -83,16 +85,6 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* 分类导航（桌面端） */}
-          <nav className="hidden md:flex items-center gap-6 text-sm">
-            {topCategories.map((cat) => (
-              <Link key={cat.label} href={cat.href} className="text-gray-600 hover:text-gray-900 transition-colors whitespace-nowrap">
-                {cat.label}
-              </Link>
-            ))}
-          </nav>
-
-          {/* 移动端菜单按钮 */}
           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden">
             <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -101,93 +93,125 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ===== Hero 搜索区（深紫色背景） ===== */}
-      <section className="bg-gradient-to-br from-[#38354a] via-[#44415c] to-[#4d3e5c] py-11 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-white/15 bg-white/8 backdrop-blur-sm mb-6 text-[12px] text-white/80 font-medium tracking-wide">
+      {/* ===== Hero 区域（深色背景 + 搜索框） ===== */}
+      <section className="bg-gradient-to-br from-[#3d3a52] to-[#4a4663] py-8 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          {/* 数据驱动标签 */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/15 mb-5 text-xs text-white/80 font-medium tracking-wide">
             ✨ 数据驱动 · 智选未来
           </div>
 
-          <h1 className="text-[34px] sm:text-[40px] lg:text-[48px] font-black text-white leading-tight tracking-tight mb-3">
-            骆芷蝶智选
-            <span className="text-[#ff6b9d]">· 好物推荐</span>
+          {/* 主标题 */}
+          <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white leading-tight mb-3 tracking-tight">
+            服装供应链<span className="text-accent">智选</span>平台
           </h1>
 
-          <p className="text-[15px] sm:text-base text-white/70 max-w-xl mx-auto mb-8 leading-relaxed">
-            不自用 · 不分享
+          {/* 描述 */}
+          <p className="text-sm sm:text-base text-white/60 max-w-2xl mx-auto mb-7 leading-relaxed">
+            从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营，助力品牌精准选品、科学决策。
           </p>
 
-          <form onSubmit={handleSearch} className="flex gap-2.5 max-w-[520px] mx-auto">
+          {/* 搜索框 + 浏览选品按钮 */}
+          <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
             <div className="flex-1 relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-[18px] h-[18px] text-white/35" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               <input
-                type="text" value={keyword}
+                type="text"
+                value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="搜索商品名称、描述..."
-                className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/10 border border-white/25 text-white placeholder:text-white/40 focus:bg-white/20 focus:border-white/50 focus:outline-none text-[14px]"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/18 text-sm"
               />
             </div>
-            <Link href="/buyer" className="px-6 py-3 bg-white text-[#38354a] font-bold rounded-xl hover:bg-gray-100 transition-colors flex items-center gap-2 whitespace-nowrap text-[14px]">
-              浏览选品 <ArrowRight className="w-4 h-4" />
+            <Link
+              href="/buyer"
+              className="px-5 py-3 bg-white text-[#3d3a3e] font-semibold rounded-xl hover:bg-gray-100 transition-all whitespace-nowrap text-sm flex items-center gap-1.5"
+            >
+              浏览选品
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </form>
         </div>
       </section>
 
-      {/* ===== 分类标签栏（橙棕色渐变背景） ===== */}
-      <section className="bg-gradient-to-r from-orange-300/90 via-orange-200 to-orange-300/80">
+      {/* ===== 分类标签栏（橙棕色渐变） ===== */}
+      <section className="bg-gradient-to-r from-orange-300 via-amber-200 to-orange-200 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-0.5 py-3 overflow-x-auto scrollbar-hide">
-            <span className="text-[13px] font-bold text-white/60 mr-1 shrink-0">📌</span>
-            {topCategories.map((cat) => (
-              <Link key={cat.label} href={cat.href}
-                className={`shrink-0 px-4 py-1.5 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
-                  cat.label === "穿搭" ? "bg-white shadow-sm text-[#38354a]" : "text-white/85 hover:bg-white/30"
+          <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+            {categories.map((cat) => (
+              <Link
+                key={cat.name}
+                href={cat.href}
+                onClick={() => setActiveCategory(cat.name)}
+                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+                  activeCategory === cat.name
+                    ? "bg-white shadow-md font-semibold text-gray-800"
+                    : "hover:bg-white/60 text-gray-700"
                 }`}
               >
-                {cat.label}
+                {cat.name}
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== Hero 大图区（服装陈列背景图 + 标题 + 按钮） ===== */}
-      <section className="relative h-[420px] sm:h-[480px] overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1600&q=80)' }} />
-        <div className="absolute inset-0 bg-black/45"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent"></div>
-
-        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
-          <h2 className="text-[28px] sm:text-[36px] lg:text-[44px] font-black tracking-tight">
-            骆芷蝶智选 · 好物推荐
-          </h2>
-          <p className="mt-2 text-base text-white/80 tracking-widest">不自用 · 不分享</p>
-
-          <div className="flex flex-col sm:flex-row gap-3 mt-7">
-            <Link href="/shop" className="px-10 py-3 bg-white text-[#2d2a3e] font-bold rounded-lg hover:bg-gray-100 transition-all text-[15px]">
-              全部商品
-            </Link>
-            <Link href="/buyer" className="px-10 py-3 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/15 hover:border-white transition-all flex items-center justify-center gap-2 text-[15px]">
-              爆款安利 <ArrowRight className="w-4 h-4" />
-            </Link>
+      {/* ===== 子分类标签栏（大图上方） ===== */}
+      <section className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
+            {subCategories.map((sub) => (
+              <button
+                key={sub.name}
+                onClick={() => setActiveSubCategory(sub.name)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
+                  activeSubCategory === sub.name
+                    ? "bg-[#2d2a3e] text-white font-medium shadow-md"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {typeof sub.icon === "string" ? <span className="text-base">{sub.icon}</span> : sub.icon}
+                {sub.name}
+              </button>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ===== 子分类标签栏 ===== */}
-      <section className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            {subTags.map((tag) => (
-              <button key={tag.name} onClick={() => setActiveTag(tag.name)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-all ${
-                  activeTag === tag.name ? "bg-[#2d2a3e] text-white shadow-md" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
-              >
-                {typeof tag.icon === "string" ? <span>{tag.icon}</span> : tag.icon}{tag.name}
-              </button>
-            ))}
+      {/* ===== Hero 大图区域（暖色调衣架背景） ===== */}
+      <section className="relative h-[420px] sm:h-[480px] overflow-hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80')`,
+          }}
+        >
+          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30"></div>
+        </div>
+
+        <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 tracking-wide">
+            骆芷蝶智选 · 好物推荐
+          </h2>
+          <p className="text-base sm:text-lg text-white/80 mb-8 tracking-widest">
+            不自用 · 不分享
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+            <Link
+              href="/shop"
+              className="px-9 py-3 bg-white text-[#2d2a3e] font-bold rounded-lg hover:bg-gray-100 transition-all text-base"
+            >
+              全部商品
+            </Link>
+            <Link
+              href="/buyer"
+              className="px-9 py-3 bg-transparent border-2 border-white/60 text-white font-bold rounded-lg hover:bg-white/10 hover:border-white transition-all text-base flex items-center justify-center gap-2"
+            >
+              爆款安利
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>
@@ -195,32 +219,60 @@ export default function Home() {
       {/* ===== 商品列表区 ===== */}
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-[18px] font-bold text-[#222]">
-            穿搭 · {activeTag} <span className="ml-1.5 text-sm font-normal text-[#aaa]">({products.length} 件)</span>
+          <h3 className="text-xl font-bold text-gray-900">
+            {activeCategory} · {activeSubCategory}
+            <span className="ml-2 text-sm font-normal text-gray-400">({products.length} 件)</span>
           </h3>
-          <button onClick={() => { setActiveTag("精选"); setProducts([]); }} className="text-sm text-[#bbb] hover:text-[#666] flex items-center gap-1">
+          <button
+            onClick={() => { setActiveSubCategory("精选"); setProducts([]); }}
+            className="text-sm text-gray-400 hover:text-gray-600"
+          >
             ✕ 清除筛选
           </button>
         </div>
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="animate-pulse"><div className="bg-gray-200 rounded-2xl aspect-[3/4] mb-3" /><div className="bg-gray-200 h-4 rounded w-3/4 mb-2" /><div className="bg-gray-200 h-4 rounded w-1/2" /></div>
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-200 rounded-2xl aspect-[3/4] mb-3"></div>
+                <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+              </div>
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="py-24 text-center text-[#ccc] text-[18px]">暂无选品</div>
+          <div className="py-16 text-center">
+            <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-300 text-lg">暂无选品</p>
+          </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
-            {products.map((p) => (
-              <Link key={p.id} href={`/shop/${p.id}`} className="group block">
-                <div className="relative overflow-hidden rounded-2xl bg-gray-100 mb-2.5 aspect-[3/4]">
-                  {p.image_url && <img src={p.image_url} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />}
-                  <button className="absolute top-2 right-2 p-1.5 bg-white/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Heart className="w-4 h-4 text-gray-500" /></button>
+            {products.map((product) => (
+              <Link key={product.id} href={`/shop/${product.id}`} className="group block">
+                <div className="relative overflow-hidden rounded-2xl bg-gray-100 mb-3 aspect-[3/4]">
+                  {product.image_url ? (
+                    <img
+                      src={product.image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      暂无图片
+                    </div>
+                  )}
                 </div>
-                <h4 className="font-medium text-[#333] group-hover:text-accent transition-colors text-[13px] line-clamp-2 leading-snug">{p.name}</h4>
-                <p className="text-accent font-bold text-[15px] mt-1">¥{p.price}</p>
+                <h4 className="font-medium text-gray-900 group-hover:text-accent transition-colors leading-snug text-sm">
+                  {product.name}
+                </h4>
+                <p className="text-accent font-bold mt-1 text-base">¥{product.price}</p>
+                <Link
+                  href={`/shop/${product.id}`}
+                  className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:shadow-md transition-all"
+                >
+                  下单
+                </Link>
               </Link>
             ))}
           </div>
@@ -228,34 +280,20 @@ export default function Home() {
       </section>
 
       {/* ===== 底部 CTA ===== */}
-      <section className="mt-8 bg-gradient-to-b from-[#fff8ed] to-[#fef5e8] py-14 px-4">
+      <section className="mt-12 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4">
         <div className="max-w-md mx-auto text-center">
-          <div className="mb-4 inline-flex justify-center"><Sparkles className="w-10 h-10 text-orange-400" /></div>
-          <h3 className="text-[22px] font-extrabold text-[#111] mb-2">立即拿货，享受批发价</h3>
-          <p className="text-[#888] text-[14px]">开通查看价格会员，满3件起享批发底价</p>
-          <div className="mt-4 w-28 h-1 bg-[#111] mx-auto rounded-full" />
+          <div className="mb-4 flex justify-center">
+            <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center">
+              <Sparkles className="w-7 h-7 text-orange-500" />
+            </div>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">立即拿货，享受批发价</h3>
+          <p className="text-gray-500 text-sm mb-4">开通查看价格会员，满3件起享批发底价</p>
+          <div className="mt-3 w-28 h-1 bg-gray-800 mx-auto rounded-full"></div>
         </div>
       </section>
 
       <AdBanner />
-      <PopupAd />
-
-      {/* ===== 限时优惠弹窗 ===== */}
-      {showPromo && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setShowPromo(false)}>
-          <div className="relative bg-white rounded-2xl p-8 max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setShowPromo(false)} className="absolute top-3 right-3 p-1 text-gray-400 hover:text-gray-600">
-              <X className="w-5 h-5" />
-            </button>
-            <div className="text-center mb-4">🎁</div>
-            <h3 className="text-xl font-bold text-[#ff4785] mb-2">限时优惠活动</h3>
-            <p className="text-[#666] text-sm mb-6 leading-relaxed">新用户首单立减500元，附赠价值1000元买手选品诊断服务</p>
-            <Link href="/contact" className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-[#ff4785] to-[#ff1748] text-white font-bold rounded-lg hover:shadow-lg transition-all text-[15px]">
-              立即咨询 <ArrowRight className="w-4 h-4" />
-            </Link>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
