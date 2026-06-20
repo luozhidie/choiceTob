@@ -1,386 +1,333 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import {
-  Wallet,
-  TrendingUp,
-  FileText,
-  ArrowRight,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-import { PaywallModal } from "@/components/PaywallModal";
-import { motion } from "framer-motion";
-
-interface RechargeTier {
-  id: string;
-  amount: number;
-  discount: number;
-  return_rate: number;
-  is_active: boolean;
-}
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase-client';
 
 interface UserProfile {
   id: string;
   email: string;
-  company_name: string | null;
+  name: string;
   balance: number;
-  discount: number;
-  return_rate: number;
-  total_recharged: number;
+  discount_rate: number;
 }
 
-interface Order {
+interface ChargeOrder {
   id: string;
-  product_id: string;
-  quantity: number;
-  unit_price: number;
-  discount_price: number;
-  total_amount: number;
+  order_no: string;
+  amount: number;
+  discount_rate: number;
+  actual_amount: number;
   status: string;
   created_at: string;
 }
 
 export default function BuyerCenterPage() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [tiers, setTiers] = useState<RechargeTier[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPaywall, setShowPaywall] = useState(false);
-  const [selectedTier, setSelectedTier] = useState<RechargeTier | null>(null);
-  const [activeTab, setActiveTab] = useState<"recharge" | "orders">("recharge");
-
-  const supabase = createClient();
-  const router = useRouter();
+  const [orders, setOrders] = useState<ChargeOrder[]>([]);
+  const [showRecharge, setShowRecharge] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState<number>(50000);
+  const [rechargeMethod, setRechargeMethod] = useState<string>('bank_transfer');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    fetchProfile();
+    fetchOrders();
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      router.push("/admin/login");
-      return;
+  const fetchProfile = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        window.location.href = '/login';
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) {
+        console.error('获取用户信息失败:', error);
+      } else {
+        setProfile(data);
+      }
+    } catch (err) {
+      console.error('获取用户信息异常:', err);
+    } finally {
+      setLoading(false);
     }
-    fetchProfile(user.id);
-    fetchTiers();
-    fetchOrders(user.id);
   };
 
-  const fetchProfile = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("buyer_user_profiles")
-      .select("*")
-      .eq("id", userId)
-      .single();
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch('/api/charge-orders?userId=current&page=1&pageSize=10');
+      const result = await response.json();
 
-    if (error || !data) {
-      // 没有 profile，创建一个
-      const { data: userData } = await supabase.auth.getUser();
-      await supabase.from("buyer_user_profiles").insert({
-        id: userId,
-        email: userData.user?.email || "",
-        balance: 0,
-        discount: 1.00,
-        return_rate: 0,
+      if (result.success) {
+        setOrders(result.data || []);
+      }
+    } catch (err) {
+      console.error('获取充值订单失败:', err);
+    }
+  };
+
+  const handleRecharge = async () => {
+    if (!rechargeAmount || rechargeAmount <= 0) {
+      alert('请输入正确的充值金额');
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const discountRate = profile?.discount_rate || 1;
+      
+      const response = await fetch('/api/charge-orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: rechargeAmount,
+          discount_rate: discountRate,
+          payment_method: rechargeMethod,
+          remark: ''
+        })
       });
-      fetchProfile(userId);
-      return;
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert('充值订单创建成功！请按照支付方式完成支付，等待管理员确认。');
+        setShowRecharge(false);
+        fetchOrders();
+      } else {
+        alert('创建充值订单失败：' + result.error);
+      }
+    } catch (err: any) {
+      alert('创建充值订单失败：' + err.message);
+    } finally {
+      setSubmitting(false);
     }
-    setProfile(data as UserProfile);
-    setLoading(false);
   };
 
-  const fetchTiers = async () => {
-    const { data } = await supabase
-      .from("buyer_recharge_tiers")
-      .select("*")
-      .eq("is_active", true)
-      .order("amount", { ascending: true });
-    if (data) setTiers(data as RechargeTier[]);
+  const getStatusText = (status: string) => {
+    const statusMap: { [key: string]: string } = {
+      pending: '待支付',
+      paid: '已支付待确认',
+      confirmed: '已确认',
+      cancelled: '已取消'
+    };
+    return statusMap[status] || status;
   };
 
-  const fetchOrders = async (userId: string) => {
-    const { data } = await supabase
-      .from("buyer_orders")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (data) setOrders(data as Order[]);
+  const getStatusColor = (status: string) => {
+    const colorMap: { [key: string]: string } = {
+      pending: 'bg-yellow-100 text-yellow-800',
+      paid: 'bg-blue-100 text-blue-800',
+      confirmed: 'bg-green-100 text-green-800',
+      cancelled: 'bg-red-100 text-red-800'
+    };
+    return colorMap[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const handleRecharge = (tier: RechargeTier) => {
-    setSelectedTier(tier);
-    setShowPaywall(true);
+  const formatMoney = (amount: number) => {
+    return `¥${amount.toFixed(2)}`;
   };
-
-  const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
-  const formatDiscount = (d: number) => `${(d * 10).toFixed(1)}折`;
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
-          <p className="text-muted-foreground text-sm">加载中...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">加载中...</div>
       </div>
     );
   }
 
+  const discountRate = profile?.discount_rate || 1;
+  const actualAmount = rechargeAmount * discountRate;
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-primary to-primary/80 text-white py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <Wallet className="w-5 h-5" />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <h1 className="text-3xl font-bold mb-8">充值中心</h1>
+
+        {/* 账户信息卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm text-gray-600 mb-2">账户余额</div>
+            <div className="text-3xl font-bold text-green-600">
+              {formatMoney(profile?.balance || 0)}
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold">买手中心</h1>
           </div>
-          <p className="text-white/80 text-sm md:text-base">
-            企业管理专属账号，享充值折扣与退换保障
-          </p>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm text-gray-600 mb-2">折扣率</div>
+            <div className="text-3xl font-bold text-blue-600">
+              {(discountRate * 100).toFixed(0)}%
+            </div>
+            <div className="text-sm text-gray-500 mt-1">
+              充值享受{discountRate * 10}折优惠
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow p-6">
+            <div className="text-sm text-gray-600 mb-2">累计充值</div>
+            <div className="text-3xl font-bold text-purple-600">
+              {formatMoney(orders
+                .filter(o => o.status === 'confirmed')
+                .reduce((sum, o) => sum + o.actual_amount, 0)
+              )}
+            </div>
+          </div>
         </div>
-      </section>
 
-      {/* User Info Cards */}
-      <section className="py-8">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-            {/* Balance */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Wallet className="w-4 h-4 text-primary" />
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">账户余额</span>
-              </div>
-              <div className="text-2xl font-bold text-primary">
-                ¥{((profile?.balance || 0) / 100).toFixed(0)}
-              </div>
-              {profile?.company_name && (
-                <div className="text-xs text-muted-foreground mt-1">{profile.company_name}</div>
-              )}
-            </div>
+        {/* 充值按钮 */}
+        <div className="mb-8">
+          <button
+            onClick={() => setShowRecharge(true)}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          >
+            立即充值
+          </button>
+        </div>
 
-            {/* Discount */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-4 h-4 text-accent" />
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">拿货折扣</span>
-              </div>
-              <div className="text-2xl font-bold text-accent">
-                {profile?.discount ? formatDiscount(profile.discount) : "未充值"}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                退换比例 {((profile?.return_rate || 0) * 100).toFixed(0)}%
-              </div>
-            </div>
-
-            {/* Total Recharged */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle2 className="w-4 h-4 text-green-500" />
-                <span className="text-xs text-muted-foreground uppercase tracking-wider">累计充值</span>
-              </div>
-              <div className="text-2xl font-bold text-green-600">
-                ¥{((profile?.total_recharged || 0) / 100).toFixed(0)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {profile?.email}
-              </div>
-            </div>
+        {/* 充值订单列表 */}
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b">
+            <h2 className="text-xl font-semibold">充值记录</h2>
           </div>
-
-          {/* Tabs */}
-          <div className="flex gap-1 mb-6 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab("recharge")}
-              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "recharge"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              充值档位
-            </button>
-            <button
-              onClick={() => setActiveTab("orders")}
-              className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === "orders"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              采购订单
-              {orders.length > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold">
-                  {orders.length}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Recharge Tab */}
-          {activeTab === "recharge" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            >
-              {tiers.map((tier) => {
-                const isCurrent =
-                  (profile?.total_recharged ?? 0) >= tier.amount &&
-                  (profile?.discount ?? 1) === tier.discount;
-                return (
-                  <div
-                    key={tier.id}
-                    className={`relative bg-white rounded-2xl shadow-sm border-2 overflow-hidden hover:shadow-md transition-all ${
-                      isCurrent ? "border-accent" : "border-transparent"
-                    }`}
-                  >
-                    {isCurrent && (
-                      <div className="bg-accent text-white text-center text-xs font-bold py-1">
-                        当前档位
+          
+          <div className="divide-y">
+            {orders.length === 0 ? (
+              <div className="px-6 py-8 text-center text-gray-500">
+                暂无充值记录
+              </div>
+            ) : (
+              orders.map((order) => (
+                <div key={order.id} className="px-6 py-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <div className="font-mono text-sm text-gray-600 mb-1">
+                        {order.order_no}
                       </div>
-                    )}
-                    <div className="p-6">
-                      <div className="text-center mb-6">
-                        <div className="text-3xl font-bold text-primary mb-1">
-                          ¥{(tier.amount / 10000).toFixed(0)}万
-                        </div>
-                        <div className="text-xs text-muted-foreground">充值金额</div>
+                      <div className="text-lg font-medium mb-1">
+                        充值 {formatMoney(order.amount)}
                       </div>
-
-                      <div className="space-y-3 mb-6">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">拿货折扣</span>
-                          <span className="text-lg font-bold text-accent">
-                            {formatDiscount(tier.discount)}
+                      <div className="text-sm text-gray-600">
+                        到账 {formatMoney(order.actual_amount)}
+                        {order.discount_rate && order.discount_rate < 1 && (
+                          <span className="ml-2 text-green-600">
+                            ({ (order.discount_rate * 100).toFixed(0) }折)
                           </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">退换比例</span>
-                          <span className="text-lg font-bold text-green-600">
-                            {(tier.return_rate * 100).toFixed(0)}%
-                          </span>
-                        </div>
+                        )}
                       </div>
-
-                      <button
-                        onClick={() => handleRecharge(tier)}
-                        disabled={isCurrent}
-                        className={`w-full py-3 rounded-xl text-sm font-semibold transition-colors ${
-                          isCurrent
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-primary text-white hover:bg-primary/90"
-                        }`}
-                      >
-                        {isCurrent ? "当前使用" : "立即充值"}
-                      </button>
+                    </div>
+                    <div className="text-right">
+                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(order.status)}`}>
+                        {getStatusText(order.status)}
+                      </span>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {new Date(order.created_at).toLocaleString('zh-CN')}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
-            </motion.div>
-          )}
-
-          {/* Orders Tab */}
-          {activeTab === "orders" && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-            >
-              {orders.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-2xl">
-                  <FileText className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-                  <p className="text-muted-foreground text-sm">暂无采购订单</p>
-                  <Link
-                    href="/buyer"
-                    className="inline-block mt-4 text-sm text-primary hover:text-accent font-medium"
-                  >
-                    去选品 →
-                  </Link>
                 </div>
-              ) : (
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="bg-gray-50 text-left text-xs text-muted-foreground uppercase tracking-wider">
-                        <th className="px-5 py-3">订单号</th>
-                        <th className="px-5 py-3">商品</th>
-                        <th className="px-5 py-3">数量</th>
-                        <th className="px-5 py-3">单价</th>
-                        <th className="px-5 py-3">折扣价</th>
-                        <th className="px-5 py-3">合计</th>
-                        <th className="px-5 py-3">状态</th>
-                        <th className="px-5 py-3">日期</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {orders.map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50/50">
-                          <td className="px-5 py-3 font-mono text-xs text-gray-500">
-                            {order.id.slice(0, 8)}
-                          </td>
-                          <td className="px-5 py-3 text-primary font-medium">
-                            <Link href={`/buyer/${order.product_id}`}>
-                              {order.product_id.slice(0, 8)}...
-                            </Link>
-                          </td>
-                          <td className="px-5 py-3">{order.quantity}</td>
-                          <td className="px-5 py-3 text-gray-400 line-through">
-                            {formatPrice(order.unit_price)}
-                          </td>
-                          <td className="px-5 py-3 font-medium text-accent">
-                            {formatPrice(order.discount_price)}
-                          </td>
-                          <td className="px-5 py-3 font-bold text-primary">
-                            {formatPrice(order.total_amount)}
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                              order.status === "completed" ? "bg-green-50 text-green-600" :
-                              order.status === "paid" ? "bg-blue-50 text-blue-600" :
-                              order.status === "shipped" ? "bg-amber-50 text-amber-600" :
-                              "bg-gray-100 text-gray-500"
-                            }`}>
-                              {order.status === "pending" ? "待付款" :
-                               order.status === "paid" ? "已付款" :
-                               order.status === "shipped" ? "已发货" :
-                               order.status === "completed" ? "已完成" : order.status}
-                            </span>
-                          </td>
-                          <td className="px-5 py-3 text-xs text-muted-foreground">
-                            {new Date(order.created_at).toLocaleDateString("zh-CN")}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </motion.div>
-          )}
+              ))
+            )}
+          </div>
         </div>
-      </section>
 
-      {/* Paywall Modal */}
-      {showPaywall && selectedTier && (
-        <PaywallModal
-          isOpen={showPaywall}
-          type="product"
-          title={`充值 ¥${(selectedTier.amount / 10000).toFixed(0)}万`}
-          description={`${formatDiscount(selectedTier.discount)}拿货 · 退换${(selectedTier.return_rate * 100).toFixed(0)}% · 联系客服完成充值`}
-          onClose={() => { setShowPaywall(false); setSelectedTier(null); }}
-        />
-      )}
+        {/* 充值弹窗 */}
+        {showRecharge && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-xl font-bold">充值</h3>
+                <button
+                  onClick={() => setShowRecharge(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">充值金额（元）</label>
+                  <input
+                    type="number"
+                    value={rechargeAmount}
+                    onChange={(e) => setRechargeAmount(Number(e.target.value))}
+                    className="w-full px-4 py-2 border rounded"
+                    min={1}
+                    step={1000}
+                  />
+                  <div className="mt-2 flex gap-2">
+                    {[50000, 100000, 300000].map((amount) => (
+                      <button
+                        key={amount}
+                        onClick={() => setRechargeAmount(amount)}
+                        className={`px-3 py-1 rounded text-sm ${
+                          rechargeAmount === amount
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {amount / 10000}万
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm text-gray-600 mb-2">支付方式</label>
+                  <select
+                    value={rechargeMethod}
+                    onChange={(e) => setRechargeMethod(e.target.value)}
+                    className="w-full px-4 py-2 border rounded"
+                  >
+                    <option value="bank_transfer">银行转账</option>
+                    <option value="wechat">微信支付</option>
+                  </select>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded">
+                  <div className="flex justify-between mb-2">
+                    <span>充值金额</span>
+                    <span className="font-medium">{formatMoney(rechargeAmount)}</span>
+                  </div>
+                  <div className="flex justify-between mb-2">
+                    <span>折扣率</span>
+                    <span className="text-green-600">{(discountRate * 100).toFixed(0)}%</span>
+                  </div>
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>实际到账</span>
+                    <span className="text-green-600">{formatMoney(actualAmount)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <button
+                    onClick={() => setShowRecharge(false)}
+                    className="px-4 py-2 border rounded hover:bg-gray-100"
+                  >
+                    取消
+                  </button>
+                  <button
+                    onClick={handleRecharge}
+                    disabled={submitting}
+                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {submitting ? '提交中...' : '确认充值'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
