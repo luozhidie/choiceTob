@@ -2,11 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
-} from "lucide-react";
-import AdBanner, { PopupAd } from "@/components/AdBanner";
 
 /* ------------------------------------------------------------------ */
 /*  分类导航                                                          */
@@ -47,6 +44,7 @@ export default function Home() {
 
   const supabase = createClient();
 
+  // 加载商品
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -72,7 +70,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ===== 顶部导航 ===== */}
+      {/* ====== 顶部导航 ====== */}
       <header className="sticky top-0 z-50 bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -81,11 +79,11 @@ export default function Home() {
             </div>
             <div>
               <div className="font-bold text-[#2d2a3e] text-lg leading-tight">骆芷蝶智选</div>
-              <div className="text-xs text-gray-400 tracking-widest">CHOICETOB</div>
+              <div className="text-xs text-gray-400 tracking-wider">CHOICETOB</div>
             </div>
           </Link>
 
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors md:hidden">
+          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <svg className="w-6 h-6 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
@@ -93,7 +91,7 @@ export default function Home() {
         </div>
       </header>
 
-      {/* ===== Hero 区域（深色背景 + 搜索框） ===== */}
+      {/* ====== Hero 区域（深色背景 + 搜索框） ====== */}
       <section className="bg-gradient-to-br from-[#3d3a52] to-[#4a4663] py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
           {/* 数据驱动标签 */}
@@ -134,7 +132,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 分类标签栏（橙棕色渐变） ===== */}
+      {/* ====== 分类标签栏（橙棕色渐变） ====== */}
       <section className="bg-gradient-to-r from-orange-300 via-amber-200 to-orange-200 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
@@ -156,7 +154,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 子分类标签栏（大图上方） ===== */}
+      {/* ====== 精选标签栏（大图上方） ====== */}
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
@@ -170,15 +168,14 @@ export default function Home() {
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {typeof sub.icon === "string" ? <span className="text-base">{sub.icon}</span> : sub.icon}
-                {sub.name}
+                {typeof sub.icon === "string" ? <span>{sub.icon}</span> : sub.icon} {sub.name}
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ===== Hero 大图区域（暖色调衣架背景） ===== */}
+      {/* ====== Hero 大图区域（暖色调衣架背景） ====== */}
       <section className="relative h-[420px] sm:h-[480px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -186,8 +183,8 @@ export default function Home() {
             backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80')`,
           }}
         >
-          <div className="absolute inset-0 bg-black/40"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30"></div>
+          <div className="absolute inset-0 bg-black/35"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
         </div>
 
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
@@ -216,13 +213,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== 商品列表区 ===== */}
+      {/* ====== 商品列表区 ====== */}
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900">
             {activeCategory} · {activeSubCategory}
             <span className="ml-2 text-sm font-normal text-gray-400">({products.length} 件)</span>
-          </h3>
+          </h2>
           <button
             onClick={() => { setActiveSubCategory("精选"); setProducts([]); }}
             className="text-sm text-gray-400 hover:text-gray-600"
@@ -266,7 +263,7 @@ export default function Home() {
                 <h4 className="font-medium text-gray-900 group-hover:text-accent transition-colors leading-snug text-sm">
                   {product.name}
                 </h4>
-                <p className="text-accent font-bold mt-1 text-base">¥{product.price}</p>
+                <p className="text-red-500 font-bold mt-1 text-base">¥{product.price}</p>
                 <Link
                   href={`/shop/${product.id}`}
                   className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-sm font-semibold rounded-lg hover:shadow-md transition-all"
@@ -279,8 +276,8 @@ export default function Home() {
         )}
       </section>
 
-      {/* ===== 底部 CTA ===== */}
-      <section className="mt-12 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4">
+      {/* ====== 底部 CTA ====== */}
+      <section className="mt-8 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4">
         <div className="max-w-md mx-auto text-center">
           <div className="mb-4 flex justify-center">
             <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center">
@@ -292,8 +289,6 @@ export default function Home() {
           <div className="mt-3 w-28 h-1 bg-gray-800 mx-auto rounded-full"></div>
         </div>
       </section>
-
-      <AdBanner />
     </div>
   );
 }
