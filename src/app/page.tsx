@@ -429,7 +429,7 @@ export default function Home() {
       </section>
 
       <AdBanner />
-      <PopoupAd />
+      <PopupAd />
     </div>
   );
 }
