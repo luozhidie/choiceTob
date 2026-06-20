@@ -29,6 +29,10 @@ export const metadata: Metadata = {
     "骆芷蝶智选是专注服装行业的ToB供应链智选平台，以数据驱动选品、企划、营销全链路，助力服装门店精准运营与高效增长。",
 };
 
+// 强制动态渲染，禁用所有静态缓存
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function RootLayout({
   children,
 }: Readonly<{

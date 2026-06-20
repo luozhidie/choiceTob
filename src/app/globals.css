@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* DEPLOY-VERSION: 20260620-1509 - 强制缓存失效 */
+
 :root {
   /* 时尚品牌调色板 */
   --background: #faf8f6;

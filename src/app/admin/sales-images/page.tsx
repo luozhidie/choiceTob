@@ -44,6 +44,7 @@ export default function AdminSalesImagesPage() {
   });
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("all");
+  const [tab, setTab] = useState<string>("all");
   const router = useRouter();
   const supabase = createClient();
 

@@ -44,6 +44,7 @@ export default function AdminMembershipOrdersPage() {
   const [search, setSearch] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [isAdmin] = useState(true);
 
   const supabase = createClient();
 
