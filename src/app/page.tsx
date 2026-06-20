@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  分类导航                                                          */
+/*  分类导航（点击跳转到对应页面）                                      */
 /* ------------------------------------------------------------------ */
 
 const categories = [
@@ -22,7 +22,7 @@ const categories = [
 ];
 
 const subCategories = [
-  { name: "精选", icon: <Star className="w-4 h-4" /> },
+  { name: "精选", icon: <Star className="w-4 h-4" />, active: true },
   { name: "上装", icon: <Shirt className="w-4 h-4" /> },
   { name: "下装", icon: <Scissors className="w-4 h-4" /> },
   { name: "连衣裙", icon: "👗" },
@@ -140,7 +140,6 @@ export default function Home() {
               <Link
                 key={cat.name}
                 href={cat.href}
-                onClick={() => setActiveCategory(cat.name)}
                 className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
                   activeCategory === cat.name
                     ? "bg-white shadow-md font-semibold text-gray-800"
@@ -154,7 +153,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 精选标签栏（大图上方） ====== */}
+      {/* ====== 精选标签栏 ====== */}
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
@@ -164,27 +163,27 @@ export default function Home() {
                 onClick={() => setActiveSubCategory(sub.name)}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
                   activeSubCategory === sub.name
-                    ? "bg-[#2d2a3e] text-white font-medium shadow-md"
+                    ? "bg-[#2d2a3e] text-white font-medium"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {typeof sub.icon === "string" ? <span>{sub.icon}</span> : sub.icon} {sub.name}
+                {sub.icon} {sub.name}
               </button>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ====== Hero 大图区域（暖色调衣架背景） ====== */}
+      {/* ====== Hero 大图区域 ====== */}
       <section className="relative h-[420px] sm:h-[480px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80')`,
+            backgroundImage: `url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=800&fit=crop')`,
           }}
         >
-          <div className="absolute inset-0 bg-black/35"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30"></div>
+          <div className="absolute inset-0 bg-black/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/30"></div>
         </div>
 
         <div className="relative z-10 h-full flex flex-col items-center justify-center text-center text-white px-4">
