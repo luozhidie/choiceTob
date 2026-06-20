@@ -78,7 +78,28 @@ function createDummyClient() {
   return {
     from: (_table: string) => chain,
     auth: {
-      getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+      getUser: () => {
+        // 管理后台页面会通过 cookie 判断登录状态
+        // 如果 admin_logged_in cookie 存在，返回一个模拟用户
+        // 这样所有管理页面原有的 getUser() 检查都能通过
+        if (typeof document !== "undefined") {
+          const cookies = document.cookie;
+          if (cookies.includes("admin_logged_in=true")) {
+            return Promise.resolve({
+              data: {
+                user: {
+                  id: "admin-user",
+                  email: "admin@colour-choice.art",
+                  role: "authenticated",
+                  aud: "authenticated",
+                } as any,
+              },
+              error: null,
+            });
+          }
+        }
+        return Promise.resolve({ data: { user: null }, error: null });
+      },
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
       getUserByEmail: () => Promise.resolve({ data: { user: null }, error: null }),
       onAuthStateChange: (_callback: any) => ({
