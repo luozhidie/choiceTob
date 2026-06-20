@@ -93,10 +93,32 @@ export default function Home() {
   const [activeCategoryName, setActiveCategoryName] = useState("全部");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroBgUrl, setHeroBgUrl] = useState<string>("");
 
   const supabase = createClient();
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
+
+  // 从 site_assets 表动态读取 Hero 背景图（后台可设置）
+  useEffect(() => {
+    const fetchHeroBg = async () => {
+      try {
+        const { data } = await supabase
+          .from("site_assets")
+          .select("image_url")
+          .eq("key", "hero_bg")
+          .maybeSingle();
+        if (data?.image_url) setHeroBgUrl(data.image_url);
+      } catch {
+        // 用默认图
+      }
+    };
+    fetchHeroBg();
+  }, []);
+
+  // 默认背景图（当后台没设置时使用）
+  const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
+  const bgImage = heroBgUrl || defaultHeroBg;
 
   // 加载商品
   useEffect(() => {
@@ -218,15 +240,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 大图区域（衣架背景 + 透明叠加 + 文字居中） ====== */}
-      {/* 按截图：背景图清晰可见（衣架），上面叠加半透明遮罩+白色文字 */}
+      {/* ====== 大图区域（从 site_assets 动态读取背景，后台可换图） ====== */}
       <section className="relative h-[380px] sm:h-[430px] overflow-hidden">
-        {/* 背景图 */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format')",
-          }}
+          style={{ backgroundImage: `url('${bgImage}')` }}
         />
         {/* 半透明遮罩 —— 让背景隐约可见，同时保证文字清晰 */}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.35) 60%, rgba(0,0,0,0.55) 100%)" }}></div>
