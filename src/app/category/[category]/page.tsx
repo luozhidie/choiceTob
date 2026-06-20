@@ -4,20 +4,26 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Search, ArrowRight, ShoppingCart } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  Home,
+  LayoutGrid,
+  Package,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  分类中文名映射                                                   */
 /* ------------------------------------------------------------------ */
 
 const CATEGORY_LABELS: Record<string, string> = {
-  "护肤": "护肤",
-  "彩妆": "彩妆",
-  "养生": "养生",
-  "食品": "食品",
-  "家居": "家居",
-  "文创": "文创",
-  "艺术": "艺术",
+  护肤: "护肤",
+  彩妆: "彩妆",
+  养生: "养生",
+  食品: "食品",
+  家居: "家居",
+  文创: "文创",
+  艺术: "艺术",
 };
 
 /* ------------------------------------------------------------------ */
@@ -33,8 +39,12 @@ export default function CategoryPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("综合");
+  const [viewMode, setViewMode] = useState<"list" | "recommend">("list");
   const [keyword, setKeyword] = useState("");
   const [subCategory, setSubCategory] = useState(subCategoryParam || "");
+
+  // 价格排序方向（价格 / 价格↓）
+  const [priceAsc, setPriceAsc] = useState(true);
 
   const supabase = createClient();
 
@@ -45,7 +55,9 @@ export default function CategoryPage() {
       try {
         const { data, error } = await supabase
           .from("products")
-          .select("id, title, price, cover_image, category, subcategory, created_at")
+          .select(
+            "id, title, price, cover_image, category, subcategory, created_at"
+          )
           .eq("category", category)
           .eq("is_published", true)
           .order("sort_order", { ascending: true })
@@ -81,7 +93,6 @@ export default function CategoryPage() {
     // Tab 排序
     switch (activeTab) {
       case "销量":
-        // 如果有sales字段就按销量排序，否则按默认
         if (list[0]?.hasOwnProperty("sales")) {
           list.sort((a: any, b: any) => (b.sales || 0) - (a.sales || 0));
         }
@@ -89,8 +100,10 @@ export default function CategoryPage() {
       case "价格":
         list.sort((a, b) => a.price - b.price);
         break;
+      case "价格↓":
+        list.sort((a, b) => b.price - a.price);
+        break;
       case "上新":
-        // 按创建时间排序
         list.sort((a: any, b: any) => {
           const aTime = a.created_at ? new Date(a.created_at).getTime() : 0;
           const bTime = b.created_at ? new Date(b.created_at).getTime() : 0;
@@ -99,7 +112,7 @@ export default function CategoryPage() {
         break;
       case "综合":
       default:
-        // 综合：保持默认顺序（按 sort_order）
+        // 综合：保持默认顺序
         break;
     }
 
@@ -115,154 +128,174 @@ export default function CategoryPage() {
     return Array.from(subs);
   }, [products]);
 
-  const tabs = ["综合", "销量", "价格", "上新"];
+  const sortTabs = ["综合", "销量", "价格", "价格↓", "上新"];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* ====== 顶部区域 ====== */}
-      <section className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {CATEGORY_LABELS[category] || category} · 精选
-          </h1>
-          <p className="text-gray-500 text-sm mb-6">
-            骆芷蝶智选 · 不自用 · 不分享
-          </p>
+    <div className="min-h-screen bg-white">
+      {/* ====== 顶部导航栏（返回 + 首页） ====== */}
+      <div className="flex items-center gap-4 px-4 py-3 border-b">
+        <Link href="/" className="text-gray-600 hover:text-gray-900">
+          <ChevronLeft className="w-5 h-5" />
+        </Link>
+        <Link href="/" className="text-gray-600 hover:text-gray-900">
+          <Home className="w-5 h-5" />
+        </Link>
+      </div>
 
-          {/* 搜索栏 */}
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex gap-3 max-w-2xl"
-          >
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
-                placeholder={`搜索${category}商品...`}
-                className="w-full pl-11 pr-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:border-pink-400 focus:ring-1 focus:ring-pink-100 text-sm"
-              />
-            </div>
-            <Link
-              href="/"
-              className="px-5 py-2.5 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1.5"
-            >
-              返回首页 <ArrowRight className="w-4 h-4" />
-            </Link>
-          </form>
+      {/* ====== 搜索框 ====== */}
+      <div className="px-4 py-3 border-b">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <input
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="搜索商品..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-gray-50 border-none focus:outline-none text-sm"
+          />
         </div>
-      </section>
+      </div>
 
-      {/* ====== 子分类标签 ====== */}
+      {/* ====== 第一行Tab：列表 | 推荐 + 网格图标 ====== */}
+      <div className="border-b">
+        <div className="flex items-center justify-between px-4">
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setViewMode("list")}
+              className={`py-3 text-sm font-medium transition-colors relative ${
+                viewMode === "list"
+                  ? "text-gray-900 font-semibold"
+                  : "text-gray-500"
+              }`}
+            >
+              列表
+              {viewMode === "list" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></span>
+              )}
+            </button>
+            <button
+              onClick={() => setViewMode("recommend")}
+              className={`py-3 text-sm font-medium transition-colors relative ${
+                viewMode === "recommend"
+                  ? "text-gray-900 font-semibold"
+                  : "text-gray-500"
+              }`}
+            >
+              推荐
+              {viewMode === "recommend" && (
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900"></span>
+              )}
+            </button>
+          </div>
+          <button className="p-2 text-gray-400 hover:text-gray-600">
+            <LayoutGrid className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* ====== 第二行Tab：综合 | 销量 | 价格 | 价格↓ | 上新 ====== */}
+      <div className="border-b sticky top-0 bg-white z-10">
+        <div className="flex items-center px-4 gap-5 overflow-x-auto scrollbar-hide">
+          {sortTabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`py-2.5 text-sm whitespace-nowrap transition-colors ${
+                activeTab === tab
+                  ? "text-gray-900 font-semibold"
+                  : "text-gray-500"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ====== 子分类标签（如果有） ====== */}
       {subCategories.length > 0 && (
-        <section className="bg-white border-b">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center gap-2 py-3 overflow-x-auto">
+        <div className="px-4 py-2.5 border-b bg-gray-50">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <button
+              onClick={() => setSubCategory("")}
+              className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${
+                subCategory === ""
+                  ? "bg-gray-200 text-gray-800 font-medium"
+                  : "bg-white text-gray-600 border border-gray-200"
+              }`}
+            >
+              全部
+            </button>
+            {subCategories.map((sub) => (
               <button
-                onClick={() => setSubCategory("")}
-                className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
-                  subCategory === ""
-                    ? "bg-gray-900 text-white font-medium"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                key={sub}
+                onClick={() => setSubCategory(sub)}
+                className={`px-3 py-1 rounded-full text-xs whitespace-nowrap ${
+                  subCategory === sub
+                    ? "bg-gray-200 text-gray-800 font-medium"
+                    : "bg-white text-gray-600 border border-gray-200"
                 }`}
               >
-                全部
+                {sub}
               </button>
-              {subCategories.map((sub) => (
-                <button
-                  key={sub}
-                  onClick={() => setSubCategory(sub)}
-                  className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
-                    subCategory === sub
-                      ? "bg-gray-900 text-white font-medium"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
-        </section>
+        </div>
       )}
 
-      {/* ====== Tab 切换 ====== */}
-      <section className="bg-white border-b sticky top-0 z-10 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-pink-500 text-pink-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-200"
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
-            <div className="ml-auto text-sm text-gray-400">
-              {filteredProducts.length} 件商品
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ====== 商品计数 ====== */}
+      <div className="px-4 pt-3 pb-1">
+        <span className="text-xs text-gray-500">共 {filteredProducts.length} 件</span>
+      </div>
 
       {/* ====== 商品列表 ====== */}
-      <section className="max-w-7xl mx-auto px-4 py-8">
-        {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-gray-200 rounded-xl aspect-[3/4] mb-2.5"></div>
-                <div className="bg-gray-200 h-3.5 rounded w-3/4 mb-1.5"></div>
-                <div className="bg-gray-200 h-3.5 rounded w-2/5"></div>
+      {loading ? (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4 py-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-gray-100 rounded aspect-[3/4] mb-2"></div>
+              <div className="bg-gray-100 h-3 rounded w-3/4 mb-1.5"></div>
+              <div className="bg-gray-100 h-3 rounded w-2/5"></div>
+            </div>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        /* ====== 空状态 ====== */
+        <div className="flex flex-col items-center justify-center py-24">
+          <Package className="w-16 h-16 text-gray-300 mb-4" />
+          <p className="text-gray-400 text-base">暂无商品</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 px-4 py-4">
+          {filteredProducts.map((product) => (
+            <Link
+              key={product.id}
+              href={`/shop/${product.id}`}
+              className="group block"
+            >
+              <div className="relative overflow-hidden rounded bg-gray-100 mb-2 aspect-[3/4]">
+                {product.cover_image ? (
+                  <img
+                    src={product.cover_image}
+                    alt={product.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
+                    暂无图片
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="py-20 text-center">
-            <ShoppingCart className="w-16 h-16 text-gray-200 mx-auto mb-4" />
-            <p className="text-gray-400 text-base">暂无商品</p>
-            <p className="text-gray-300 text-sm mt-1">
-              该分类下还没有上架商品，去看看其他分类吧
-            </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
-            {filteredProducts.map((product) => (
-              <Link
-                key={product.id}
-                href={`/shop/${product.id}`}
-                className="group block"
-              >
-                <div className="relative overflow-hidden rounded-xl bg-gray-100 mb-2.5 aspect-[3/4]">
-                  {product.cover_image ? (
-                    <img
-                      src={product.cover_image}
-                      alt={product.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">
-                      暂无图片
-                    </div>
-                  )}
-                </div>
-                <h4 className="font-medium text-gray-900 group-hover:text-pink-500 transition-colors leading-snug text-[13px] line-clamp-2">
-                  {product.title}
-                </h4>
-                <p className="text-red-500 font-bold mt-1 text-[15px]">
-                  ¥{product.price}
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
+              <h4 className="font-medium text-gray-900 group-hover:text-pink-500 transition-colors leading-snug text-[13px] line-clamp-2">
+                {product.title}
+              </h4>
+              <p className="text-red-500 font-bold mt-1 text-[15px]">
+                ¥{product.price}
+              </p>
+            </Link>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
