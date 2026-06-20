@@ -487,3 +487,4 @@ function CollapsibleSection({ title, icon: Icon, color, expanded, onToggle, chil
     </div>
   );
 }
+}

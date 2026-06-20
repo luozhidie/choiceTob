@@ -56,11 +56,6 @@ export default function AdminStoreReportsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchReports = async () => {
     setLoading(true);
     try {

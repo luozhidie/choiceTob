@@ -34,7 +34,7 @@ export default function AdminBuyerCenterPage() {
 
   useEffect(() => { checkUser(); fetchData(); }, []);
 
-  const checkUser = async () => {
+  const checkUser = async () => { /* middleware 已验证 */ };
 
   const fetchData = async () => {
     setLoading(true);

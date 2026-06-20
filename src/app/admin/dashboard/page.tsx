@@ -114,6 +114,7 @@ const DEFAULT_DATA: DashboardData = {
 export default function AdminDashboard() {
   const [data, setData] = useState<DashboardData>(DEFAULT_DATA);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // 不再做 Supabase 权限检查（middleware 已处理）
   // 直接加载数据

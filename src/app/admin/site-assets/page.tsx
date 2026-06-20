@@ -96,12 +96,6 @@ export default function AdminSiteAssetsPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  // 登录检查
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);

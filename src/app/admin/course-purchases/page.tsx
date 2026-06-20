@@ -31,11 +31,6 @@ export default function AdminCoursePurchasesPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchPurchases = async () => {
     setLoading(true);
     try {

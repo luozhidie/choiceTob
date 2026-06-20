@@ -42,11 +42,6 @@ export default function AdminDailyLooksPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchLooks = async () => {
     setLoading(true);
     try {

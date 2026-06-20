@@ -43,11 +43,6 @@ export default function AdminStyleTestsPage() {
   const supabase = createClient();
   const router = useRouter();
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchData = async () => {
     setLoading(true);
     try {

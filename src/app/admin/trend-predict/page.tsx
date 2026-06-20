@@ -25,9 +25,12 @@ const scoreColor = (s: number) => s >= 80 ? "bg-emerald-500" : s >= 50 ? "bg-amb
 /* ===================== 页面 ===================== */
 export default function AdminTrendPredictPage() {
   const router = useRouter();
-  // 管理员权限检查
-  useEffect(() => {
-    const check = async () => {
+  // middleware 已验证管理员身份，无需再次检查
+  const [keyword, setKeyword] = useState("");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [outfitPlan, setOutfitPlan] = useState("");
+  const [error, setError] = useState("");
 
   const fetchProducts = async () => {
     if (!keyword.trim()) return;
@@ -53,11 +56,6 @@ export default function AdminTrendPredictPage() {
     finally { setLoadingProducts(false); }
   };
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-    </div>
-  );
-  if (!isAdmin) return null;
 
   const currentData = result ? (result[tab] ?? []) : [];
   const tabs = [

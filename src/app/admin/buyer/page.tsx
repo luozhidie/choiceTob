@@ -71,7 +71,7 @@ export default function AdminBuyerPage() {
   const supabase = createClient();
 
   useEffect(() => { checkUser(); fetchProducts(); }, []);
-  const checkUser = async () => {
+  const checkUser = async () => { /* verified */ }
   const fetchProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase

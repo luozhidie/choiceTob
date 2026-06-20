@@ -44,16 +44,7 @@ export default function AdminVisitors() {
   const router = useRouter();
   const limit = 20;
   
-  // 权限检查
-  useEffect(() => {
-    const check = async () => {
-    } catch (error) {
-      console.error("Load visitors error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
   useEffect(() => {
     loadVisitors();
   }, [page, statusFilter, sourceFilter]);

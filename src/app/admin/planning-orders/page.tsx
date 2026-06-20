@@ -53,11 +53,6 @@ export default function AdminPlanningOrdersPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchOrders = async () => {
     setLoading(true);
     try {

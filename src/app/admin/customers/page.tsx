@@ -45,16 +45,7 @@ export default function AdminCustomers() {
   const router = useRouter();
   const limit = 20;
   
-  // 权限检查
-  useEffect(() => {
-    const check = async () => {
-    } catch (error) {
-      console.error("Load customers error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  
+
   useEffect(() => {
     loadCustomers();
   }, [page, statusFilter]);

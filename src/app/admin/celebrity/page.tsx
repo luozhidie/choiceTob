@@ -27,15 +27,25 @@ const CELEBRITIES = [
 
 export default function AdminCelebrityPage() {
   const router = useRouter();
-  // 管理员权限检查
-  useEffect(() => {
-    const check = async () => {
+  // middleware 已验证管理员身份，无需再次检查
+  const [keyword, setKeyword] = useState("");
+  const [results, setResults] = useState<CelebrityItem[]>([]);
+  const [loading, setLoading] = useState(false);
 
-    <div className="min-h-screen flex items-center justify-center bg-gray-950">
-      <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
-    </div>
-  );
-  if (!isAdmin) return null;
+  // 搜索明星同款
+  const handleSearch = async () => {
+    if (!keyword.trim()) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/celebrity-search?q=${encodeURIComponent(keyword)}`);
+      const data = await res.json();
+      setResults(data.results || []);
+    } catch (e) {
+      console.error("搜索失败:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">

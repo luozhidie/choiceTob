@@ -47,9 +47,7 @@ export default function AdminMembershipOrdersPage() {
 
   const supabase = createClient();
 
-  // 管理员权限检查
-  useEffect(() => {
-    const check = async () => {
+  // middleware 已验证管理员身份
 
   const fetchOrders = async () => {
     setLoading(true);

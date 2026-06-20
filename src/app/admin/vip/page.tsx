@@ -45,12 +45,6 @@ export default function AdminVIPPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 登录检查
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   // 获取所有付费会员
   const fetchMembers = async () => {
     setLoading(true);

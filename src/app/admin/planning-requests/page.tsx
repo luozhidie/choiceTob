@@ -70,11 +70,6 @@ export default function AdminPlanningRequestsPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  useEffect(() => {
-    const check = async () => {
-    check();
-  }, []);
-
   const fetchRequests = async () => {
     setLoading(true);
     let query = supabase
