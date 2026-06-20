@@ -6,29 +6,14 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import AdBanner, { PopupAd } from "@/components/AdBanner";
 import {
-  ChevronRight,
-  TrendingUp,
-  BarChart3,
-  Lightbulb,
-  LayoutGrid,
-  Megaphone,
-  Headphones,
-  Crown,
-  Truck,
-  GraduationCap,
-  ArrowRight,
-  Sparkles,
-  CheckCircle2,
-  FileText,
-  Palette,
-  BookOpen,
-  ShoppingBag,
-  User,
-  Star,
+  Search, TrendingUp, BarChart3, Lightbulb, LayoutGrid,
+  Megaphone, Headphones, Crown, Truck, GraduationCap,
+  ArrowRight, Sparkles, CheckCircle2, FileText, Palette,
+  BookOpen, ShoppingBag, User, Star, Quote,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  站点图片类型
+/*  站点图片类型                                                      */
 /* ------------------------------------------------------------------ */
 interface SiteImageMap {
   hero_bg: string | null;
@@ -55,7 +40,7 @@ async function fetchSiteImages(): Promise<SiteImageMap> {
       .in("key", ["hero_bg", "magazine_1", "magazine_2", "magazine_3", "cta_bg"]);
     if (error || !data) return defaultSiteImages;
     const map: SiteImageMap = { ...defaultSiteImages };
-    (data as any[]).forEach((a) => { if (a.key in map) (map as any)[a.key] = a.image_url; });
+    (data as any[]).forEach((a: any) => { if (a.key in map) (map as any)[a.key] = a.image_url; });
     return map;
   } catch { return defaultSiteImages; }
 }
@@ -182,6 +167,8 @@ const testimonials = [
 export default function Home() {
   const [siteImages, setSiteImages] = useState<SiteImageMap>(defaultSiteImages);
   const [isMember, setIsMember] = useState(false);
+  const [keyword, setKeyword] = useState("");
+  const [searchActive, setSearchActive] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -199,618 +186,241 @@ export default function Home() {
     checkMember();
   }, []);
 
-  // VIP 功能点击处理
-  const handleVipLink = (href: string) => {
-    if (isMember) window.location.href = href;
-    else window.location.href = `/vip?redirect=${encodeURIComponent(href)}`;
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (keyword.trim()) {
+      window.location.href = `/products?keyword=${encodeURIComponent(keyword.trim())}`;
+    }
   };
+
   return (
-    <>
+    <div>
       {/* ====== Hero ====== */}
-      <section className="relative overflow-hidden hero-gradient text-white">
-        {/* 背景图片 */}
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary via-primary/95 to-primary/80">
+        {/* 背景图 */}
         {siteImages.hero_bg && (
-          <div className="absolute inset-0 pointer-events-none">
-            <img
-              src={siteImages.hero_bg}
-              alt="Hero Background"
-              className="w-full h-full object-cover opacity-30"
-            />
+          <div className="absolute inset-0 z-0">
+            <img src={siteImages.hero_bg} alt="" className="w-full h-full object-cover opacity-30" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/80 via-primary/60 to-transparent" />
           </div>
         )}
 
-        {/* Decorative (only show when no bg image) */}
-        {!siteImages.hero_bg && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-[-10%] right-[-5%] w-[700px] h-[700px] rounded-full bg-accent/8 blur-3xl" />
-            <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] rounded-full bg-gold/5 blur-3xl" />
-          </div>
-        )}
-
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36">
-          <div className="max-w-3xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 mb-8 text-[13px] font-medium tracking-wide text-white/90">
-                ✨ 数据驱动 · 智选未来
-              </span>
-            </motion.div>
-
-            <motion.h1
-              className="text-[2.5rem] leading-[1.15] sm:text-[3.5rem] sm:leading-[1.12] lg:text-[4.5rem] lg:leading-[1.08] font-black tracking-tight"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-            >
-              服装供应链
-              <br className="sm:hidden" />
-              <span className="text-accent">智选</span>平台
-            </motion.h1>
-
-            <motion.p
-              className="mt-6 text-base sm:text-lg text-white/60 leading-relaxed max-w-xl"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营，助力品牌精准选品、科学决策。
-            </motion.p>
-
-            <motion.div
-              className="mt-10 flex flex-col sm:flex-row gap-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              <Link
-                href="/contact"
-                className="btn-fashion btn-fashion-accent shadow-lg shadow-accent/25"
-              >
-                预约演示
-                <ChevronRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/buyer"
-                className="btn-fashion border-1.5 border-white/25 text-white hover:bg-white/10"
-              >
-                探索产品
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-            </motion.div>
-          </div>
-
-          {/* Stats */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36 text-center">
           <motion.div
-            className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8"
-            initial="hidden"
-            animate="visible"
-            variants={stagger}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            {stats.map((s) => (
-              <motion.div
-                key={s.label}
-                className="text-center"
-                variants={fadeUp}
-              >
-                <div className="text-3xl sm:text-4xl font-black text-white tracking-tight">
-                  {s.value}
-                </div>
-                <div className="mt-2 text-xs sm:text-sm text-white/40 font-medium tracking-wider">
-                  {s.label}
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Top Ad Banner ====== */}
-      <AdBanner position="top" />
-
-      {/* ====== Hot Services ====== */}
-      <section className="py-20 lg:py-28 bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-xl mx-auto mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="accent-line mx-auto mb-5" />
-            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
-              热门服务
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 mb-8 text-[13px] font-medium tracking-wide text-white/90">
+              ✨ 数据驱动 · 智选未来
             </span>
-            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
-              专业服务，一站赋能
-            </h2>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                href: "/style-test/female",
-                title: "女性风格测试",
-                desc: "优雅自信或浪漫灵动？AI分析30个维度，定位你的专属风格美学密码",
-                price: "¥99",
-                originPrice: "¥199",
-                tag: "可测2次",
-                btnText: "女生测试",
-                ctaColor: "text-pink-500",
-                bg: "from-pink-50 to-rose-50/40",
-                border: "border-pink-200/50 hover:border-pink-300/60",
-                iconBg: "bg-pink-100 text-pink-500 group-hover:bg-pink-500 group-hover:text-white",
-                icon: Sparkles,
-              },
-              {
-                href: "/style-test/male",
-                title: "男性风格测试",
-                desc: "精致雅痞或硬朗型格？AI读懂男生审美密码，打造高智感个人形象",
-                price: "¥99",
-                originPrice: "¥199",
-                tag: "可测2次",
-                btnText: "男生测试",
-                ctaColor: "text-blue-500",
-                bg: "from-blue-50 to-indigo-50/40",
-                border: "border-blue-200/50 hover:border-blue-300/60",
-                iconBg: "bg-blue-100 text-blue-500 group-hover:bg-blue-500 group-hover:text-white",
-                icon: Sparkles,
-              },
-              {
-                href: "/courses",
-                bg: "from-muted to-muted/40",
-                border: "border-border hover:border-primary/30",
-                iconBg: "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white",
-                icon: BookOpen,
-                title: "线上课程",
-                desc: "专业色彩形象课程，从入门到精通",
-                extInfo: (
-                  <>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                      免费+付费
-                    </span>
-                    <span className="text-xs text-muted-foreground">多门课程可选</span>
-                  </>
-                ),
-                cta: "浏览课程",
-                ctaColor: "text-primary",
-              },
-              {
-                href: "/buyer",
-                bg: "from-pink-50 to-pink-50/40",
-                border: "border-pink-200/50 hover:border-pink-300/60",
-                iconBg: "bg-pink-100 text-pink-500 group-hover:bg-pink-500 group-hover:text-white",
-                icon: ShoppingBag,
-                title: "买手选品",
-                desc: "精选优质货源，按风格色系精准筛选",
-                extInfo: (
-                  <>
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-pink-100 text-pink-500 font-medium">
-                      精选推荐
-                    </span>
-                    <span className="text-xs text-muted-foreground">品质保障</span>
-                  </>
-                ),
-                cta: "去逛逛",
-                ctaColor: "text-pink-500",
-              },
-            ].map((item, i) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1 + i * 0.1 }}
+          <motion.h1
+            className="text-[2.5rem] leading-[1.15] sm:text-[3.5rem] sm:leading-[1.12] lg:text-[4.5rem] lg:leading-[1.08] font-black tracking-tight text-white"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            骆芷蝶智选
+            <br className="sm:hidden" />
+            <span className="text-accent">· 好物推荐</span>
+          </motion.h1>
+
+          <motion.p
+            className="mt-6 text-base sm:text-lg text-white/60 leading-relaxed max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营
+          </motion.p>
+
+          {/* 搜索框 */}
+          <motion.form
+            onSubmit={handleSearch}
+            className="mt-10 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <div className="flex gap-2 p-2 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
+                <input
+                  type="text"
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  onFocus={() => setSearchActive(true)}
+                  onBlur={() => setSearchActive(false)}
+                  placeholder="搜索商品、品牌、关键词..."
+                  className="w-full pl-12 pr-4 py-3 bg-transparent text-white placeholder:text-white/40 focus:outline-none text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-accent text-white rounded-xl font-semibold hover:bg-accent/90 transition-colors"
               >
-                <Link
-                  href={item.href}
-                  className={`group block p-8 rounded-2xl bg-gradient-to-br ${item.bg} border ${item.border} hover:shadow-lg transition-all duration-300`}
+                搜索
+              </button>
+            </div>
+
+            {/* 热门标签 */}
+            <div className="flex flex-wrap gap-2 mt-4 justify-center">
+              {["穿搭精选", "爆款推荐", "新品上市", "供应链优选"].map((tag) => (
+                <button
+                  key={tag}
+                  onClick={() => { setKeyword(tag); }}
+                  className="text-xs px-3 py-1 rounded-full bg-white/10 text-white/70 hover:bg-white/20 transition-colors cursor-pointer"
                 >
-                  <div
-                    className={`flex items-center justify-center w-14 h-14 rounded-xl ${item.iconBg} mb-6 transition-colors duration-300`}
-                  >
-                    <item.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold text-primary group-hover:text-accent transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">
-                    {item.desc}
-                  </p>
-                  <div className="mt-5 flex items-center gap-3">
-                    {item.price && (
-                      <>
-                        <span className="text-2xl font-bold text-accent">{item.price}</span>
-                        <span className="text-sm text-gray-300 line-through">{item.originPrice}</span>
-                        <span className="text-xs px-2 py-0.5 bg-accent text-white rounded-full">{item.tag}</span>
-                      </>
-                    )}
-                    {item.extInfo && (
-                      <div className="flex items-center gap-2">{item.extInfo}</div>
-                    )}
-                  </div>
-                  <span className={`mt-5 inline-flex items-center gap-1.5 text-sm font-semibold ${item.ctaColor}`}>
-                    {item.btnText || item.cta} <ArrowRight className="w-4 h-4" />
-                  </span>
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ====== Core Business ====== */}
-      <section className="py-20 lg:py-28 bg-background">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-xl mx-auto mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="gold-line mx-auto mb-5" />
-            <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
-              核心业务
-            </span>
-            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
-              全链路数据驱动服务
-            </h2>
-            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
-              覆盖从选品到销售的核心场景，以数据智能赋能每一个决策节点
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {coreServices.map((item, i) => (
-              <motion.div key={item.title} variants={fadeUp} custom={i}>
-                {item.needVip && !isMember ? (
-                  <div onClick={() => handleVipLink(item.href)} className="fashion-card group flex flex-col h-full p-8 cursor-pointer">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                      <item.icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
-                      {item.title}
-                      <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent/10 text-[10px] text-accent">🔒 VIP</span>
-                    </h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-                      {item.desc}
-                    </p>
-                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
-                      开通VIP <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </div>
-                ) : (
-                  <Link href={item.href} className="fashion-card group flex flex-col h-full p-8">
-                    <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-primary/5 text-primary group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                      <item.icon className="w-5 h-5" />
-                    </div>
-                    <h3 className="mt-5 text-lg font-bold text-primary group-hover:text-accent transition-colors">
-                      {item.title}
-                    </h3>
-                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed flex-1">
-                      {item.desc}
-                    </p>
-                    <span className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-accent opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
-                      了解详情 <ArrowRight className="w-4 h-4" />
-                    </span>
-                  </Link>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Data Tools ====== */}
-      <section className="py-20 lg:py-28 bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-xl mx-auto mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="accent-line mx-auto mb-5" />
-            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
-              增值工具
-            </span>
-            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
-              数据工具与专业服务
-            </h2>
-            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
-              以数据为引擎，以服务为纽带，构建全场景赋能体系
-            </p>
-          </motion.div>
-
-          <motion.div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {dataTools.map((item, i) => (
-              <motion.div key={item.title} variants={fadeUp} custom={i}>
-                {item.needVip && !isMember ? (
-                  <div
-                    onClick={() => handleVipLink(item.href)}
-                    className="fashion-card group flex items-start gap-5 p-6 cursor-pointer"
-                  >
-                    <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                      <item.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-primary group-hover:text-accent transition-colors">
-                        {item.title}
-                        <span className="ml-2 px-1.5 py-0.5 rounded-full bg-accent/10 text-[10px] text-accent">🔒 VIP</span>
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <Link
-                    href={item.href}
-                    className="fashion-card group flex items-start gap-5 p-6"
-                  >
-                    <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-accent-light text-accent shrink-0 group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                      <item.icon className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-primary group-hover:text-accent transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                        {item.desc}
-                      </p>
-                    </div>
-                  </Link>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Why Choose Us ====== */}
-      <section className="py-20 lg:py-28 bg-background">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-14 lg:gap-20 items-center">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.3 }}
-              variants={fadeUp}
-            >
-              <div className="gold-line mb-5" />
-              <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
-                为什么选择我们
-              </span>
-              <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight leading-tight">
-                行业深耕
-                <br />
-                数据驱动
-              </h2>
-              <p className="mt-5 text-muted-foreground leading-relaxed">
-                十年服装行业深耕，结合前沿数据智能技术，打造真正懂行业的供应链智选平台。
-              </p>
-              <ul className="mt-8 flex flex-col gap-4">
-                {[
-                  "全网实时数据监测，覆盖主流电商平台与社交渠道",
-                  "AI驱动的趋势预测模型，提前30天预判爆款走向",
-                  "100+资深行业顾问，提供策略到落地的全程陪伴",
-                  "5,000+优质供应商深度合作，源头资源直达",
-                ].map((text) => (
-                  <li key={text} className="flex items-start gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-                    <span className="text-sm text-foreground/80 leading-relaxed">
-                      {text}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-              <Link
-                href="/contact"
-                className="btn-fashion btn-fashion-accent mt-10"
-              >
-                立即咨询 <ArrowRight className="w-4 h-4" />
-              </Link>
-            </motion.div>
-
-            <motion.div
-              className="grid grid-cols-2 gap-4"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, amount: 0.2 }}
-              variants={stagger}
-            >
-              {[
-                { num: "10+", sub: "年行业深耕" },
-                { num: "50万+", sub: "SKU数据覆盖" },
-                { num: "200+", sub: "行业专家顾问" },
-                { num: "99.9%", sub: "系统可用性" },
-              ].map((item, i) => (
-                <motion.div
-                  key={item.sub}
-                  className="fashion-card flex flex-col items-center justify-center p-8"
-                  variants={fadeUp}
-                  custom={i}
-                >
-                  <span className="text-[1.75rem] sm:text-[2.25rem] font-black tracking-tight text-primary">
-                    {item.num}
-                  </span>
-                  <span className="mt-2 text-sm text-muted-foreground text-center">
-                    {item.sub}
-                  </span>
-                </motion.div>
+                  {tag}
+                </button>
               ))}
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== Magazine Preview ====== */}
-      <section className="py-20 lg:py-28 bg-surface">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-xl mx-auto mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="accent-line mx-auto mb-5" />
-            <span className="text-accent font-semibold text-xs tracking-[0.2em] uppercase">
-              时尚前沿
-            </span>
-            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight text-primary leading-tight">
-              骆芷蝶时尚杂志
-            </h2>
-            <p className="mt-5 text-muted-foreground leading-relaxed text-sm max-w-md mx-auto">
-              对标Vogue，汇聚全球时尚资讯、流行趋势与搭配灵感
-            </p>
-          </motion.div>
+            </div>
+          </motion.form>
 
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
-            variants={stagger}
-          >
-            {[
-              {
-                tag: "流行趋势",
-                title: "2026春夏十大流行色：从数字薰衣草到珊瑚粉",
-                desc: "全球权威色彩机构发布最新流行色报告，提前掌握下一季色彩风向标",
-                date: "2026-05-10",
-                imageKey: "magazine_1" as const,
-              },
-              {
-                tag: "搭配灵感",
-                title: "法式慵懒风回归：如何穿出不费力的时髦感",
-                desc: "从巴黎街头到小红书爆款，法式风格持续霸榜，掌握核心搭配逻辑",
-                date: "2026-05-08",
-                imageKey: "magazine_2" as const,
-              },
-              {
-                tag: "行业洞察",
-                title: "可持续时尚崛起：环保面料成消费者新宠",
-                desc: "Z世代消费观念转变，环保认证成品牌溢价新支点",
-                date: "2026-05-05",
-                imageKey: "magazine_3" as const,
-              },
-            ].map((article, i) => (
-              <motion.div
-                key={article.title}
-                variants={fadeUp}
-                custom={i}
-                className="group cursor-pointer"
-                onClick={() => (window.location.href = "/magazine")}
-              >
-                <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 aspect-[4/3] flex items-center justify-center mb-5 group-hover:shadow-md transition-shadow border border-border ${!siteImages[article.imageKey] ? '' : 'p-0'}`}>
-                  {siteImages[article.imageKey] ? (
-                    <img
-                      src={siteImages[article.imageKey]!}
-                      alt={article.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span className="fashion-heading text-7xl text-primary/10 select-none">M</span>
-                  )}
-                  <span className="absolute top-4 left-4 fashion-tag bg-accent text-white text-[10px]">
-                    {article.tag}
-                  </span>
-                </div>
-                <h3 className="font-bold text-primary group-hover:text-accent transition-colors line-clamp-2 leading-snug">
-                  {article.title}
-                </h3>
-                <p className="mt-2 text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                  {article.desc}
-                </p>
-                <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-                  <span className="w-1 h-1 rounded-full bg-gold" />
-                  <span>{article.date}</span>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            className="text-center mt-12"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
+            className="mt-8 flex flex-col sm:flex-row gap-4 justify-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
             <Link
-              href="/magazine"
-              className="btn-fashion btn-fashion-outline"
+              href="/contact"
+              className="btn-fashion btn-fashion-accent shadow-lg shadow-accent/25"
             >
-              浏览完整杂志
+              预约演示
               <ArrowRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/buyer"
+              className="btn-fashion border-1.5 border-white/25 text-white hover:bg-white/10"
+            >
+              探索买手选品
             </Link>
           </motion.div>
         </div>
       </section>
 
-      {/* ====== Testimonials ====== */}
-      <section className="py-20 lg:py-28 hero-gradient text-white">
+      {/* ====== 核心服务 ====== */}
+      <section className="py-20 bg-white">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className="text-center max-w-xl mx-auto mb-16"
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <div className="w-12 h-[2px] bg-gold/60 mx-auto mb-5" />
-            <span className="text-gold font-semibold text-xs tracking-[0.2em] uppercase">
-              客户证言
-            </span>
-            <h2 className="mt-4 text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight">
-              他们正在使用骆芷蝶智选
-            </h2>
-            <p className="mt-5 text-white/60 leading-relaxed text-sm max-w-md mx-auto">
-              众多知名服装品牌的选择与信赖
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900">核心服务</h2>
+            <p className="mt-4 text-gray-500 max-w-2xl mx-auto">
+              覆盖服装行业全链路数字化需求，助力品牌精准决策与高效增长
             </p>
-          </motion.div>
+          </div>
 
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-3 gap-6"
+            className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6"
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, amount: 0.1 }}
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            {coreServices.map((service, i) => (
+              <motion.div
+                key={service.title}
+                className="bg-gray-50 rounded-2xl p-6 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300"
+                variants={fadeUp}
+                custom={i}
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                  <service.icon className="w-6 h-6 text-primary" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">{service.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">{service.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ====== 数据工具 ====== */}
+      <section className="py-20 bg-gray-50">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900">数据工具</h2>
+            <p className="mt-4 text-gray-500">AI驱动的数据分析工具，让决策更科学</p>
+          </div>
+
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            {dataTools.map((tool, i) => (
+              <motion.div
+                key={tool.title}
+                className="bg-white rounded-2xl p-6 hover:shadow-lg transition-all duration-300"
+                variants={fadeUp}
+                custom={i}
+              >
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
+                  <tool.icon className="w-6 h-6 text-accent" />
+                </div>
+                <h3 className="font-bold text-gray-900 mb-2">{tool.title}</h3>
+                <p className="text-sm text-gray-500">{tool.desc}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ====== 数据统计 ====== */}
+      <section className="py-20 bg-primary">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={stagger}
+          >
+            {stats.map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                className="text-center"
+                variants={fadeUp}
+                custom={i}
+              >
+                <div className="text-4xl font-black text-white">{stat.value}</div>
+                <div className="mt-2 text-sm text-white/60">{stat.label}</div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ====== 客户证言 ====== */}
+      <section className="py-20 bg-white">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-bold text-gray-900">客户怎么说</h2>
+          </div>
+
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
             variants={stagger}
           >
             {testimonials.map((t, i) => (
               <motion.div
-                key={t.name}
-                className="flex flex-col p-8 rounded-2xl bg-white/[0.06] backdrop-blur-sm border border-white/10 hover:bg-white/[0.09] transition-colors"
+                key={i}
+                className="bg-gray-50 rounded-2xl p-8"
                 variants={fadeUp}
                 custom={i}
               >
-                <div className="flex gap-0.5 mb-5">
-                  {[...Array(5)].map((_, j) => (
-                    <Star key={j} className="w-3.5 h-3.5 fill-gold text-gold" />
-                  ))}
-                </div>
-                <p className="text-white/80 leading-relaxed flex-1 text-sm">
-                  "{t.quote}"
-                </p>
-                <div className="mt-6 pt-5 border-t border-white/10">
-                  <div className="font-semibold text-sm">{t.name}</div>
-                  <div className="text-white/40 text-xs mt-1">{t.role}</div>
+                <Quote className="w-8 h-8 text-primary/30 mb-4" />
+                <p className="text-gray-600 leading-relaxed mb-6">"{t.quote}"</p>
+                <div>
+                  <div className="font-semibold text-gray-900">{t.name}</div>
+                  <div className="text-sm text-gray-500">{t.role}</div>
                 </div>
               </motion.div>
             ))}
@@ -818,67 +428,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== CTA ====== */}
-      <section className="py-20 lg:py-28 bg-background">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <motion.div
-            className={`relative overflow-hidden rounded-3xl hero-gradient px-8 sm:px-12 lg:px-20 py-16 sm:py-20 text-center text-white ${siteImages.cta_bg ? '' : ''}`}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            {siteImages.cta_bg && (
-              <div className="absolute inset-0 pointer-events-none">
-                <img src={siteImages.cta_bg!} alt="" className="w-full h-full object-cover opacity-20" />
-              </div>
-            )}
-            {/* Decorative (only show when no bg image) */}
-            {!siteImages.cta_bg && (
-              <>
-                <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-accent/8 blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-60 h-60 rounded-full bg-gold/5 blur-3xl pointer-events-none" />
-              </>
-            )}
-
-            <div className="relative">
-              <h2 className="text-[1.75rem] sm:text-[2.25rem] lg:text-[2.5rem] font-black tracking-tight">
-                开启数据驱动的智选之旅
-              </h2>
-              <p className="mt-5 text-white/70 max-w-lg mx-auto leading-relaxed text-sm">
-                立即预约演示，了解骆芷蝶智选如何助力您的门店实现精准运营与高效增长
-              </p>
-              <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <Link
-                  href="/contact"
-                  className="btn-fashion btn-fashion-accent shadow-lg shadow-accent/20"
-                >
-                  预约免费演示
-                  <ChevronRight className="w-5 h-5" />
-                </Link>
-                <Link
-                  href="/buyer"
-                  className="btn-fashion border-1.5 border-white/25 text-white hover:bg-white/10"
-                >
-                  探索产品功能
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ====== Popup Ad + Admin Link ====== */}
-      <PopupAd />
-
-      <div className="py-4 bg-background border-t border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-end">
-          <Link href="/admin/login" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-            管理员登录
-          </Link>
-        </div>
-      </div>
-    </>
+      <AdBanner />
+      <PopoupAd />
+    </div>
   );
 }
