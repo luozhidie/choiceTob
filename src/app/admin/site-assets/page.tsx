@@ -121,7 +121,7 @@ export default function AdminSiteAssetsPage() {
 
   useEffect(() => { fetchAssets(); }, []);
 
-  // 上传图片
+  // 上传图片（通过服务端 API，使用 service_role 绕过 RLS）
   const handleUpload = async (key: string, file: File) => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -131,35 +131,20 @@ export default function AdminSiteAssetsPage() {
 
     setUploadingKey(key);
     try {
-      // 1. 上传到 Storage
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `site-assets/${key}_${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("site-assets").upload(fileName, file);
-      if (upErr) throw upErr;
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("key", key);
 
-      // 2. 获取公开URL
-      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(fileName);
+      const res = await fetch("/api/admin/site-assets", {
+        method: "POST",
+        body: formData,
+      });
 
-      // 3. 更新或插入数据库
-      const existing = assets[key];
-      let error;
-      if (existing) {
-        ({ error } = await supabase
-          .from("site_assets")
-          .update({ image_url: urlData.publicUrl, updated_at: new Date().toISOString() })
-          .eq("id", existing.id));
-      } else {
-        const config = ASSET_CONFIGS.find(c => c.key === key);
-        ({ error } = await supabase
-          .from("site_assets")
-          .insert([{
-            key,
-            title: config?.title || key,
-            image_url: urlData.publicUrl,
-            is_active: true,
-          }]));
+      const result = await res.json();
+
+      if (!res.ok) {
+        throw new Error(result.error || "上传失败");
       }
-      if (error) throw error;
 
       showToast("success", "上传成功！");
       fetchAssets();
