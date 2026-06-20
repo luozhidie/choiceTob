@@ -3,33 +3,82 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart } from "lucide-react";
+import {
+  Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
+  Droplets, Leaf, Heart, Coffee, Home as HomeIcon, PenTool, Palette,
+} from "lucide-react";
 
 /* ------------------------------------------------------------------ */
-/*  分类导航（点击跳转到对应页面）                                      */
+/*  主分类（点击跳转到 /buyer）                                        */
 /* ------------------------------------------------------------------ */
 
 const categories = [
   { name: "全部", href: "/" },
-  { name: "穿搭", href: "/buyer" },
-  { name: "护肤", href: "/buyer?category=护肤" },
-  { name: "洗护", href: "/buyer?category=洗护" },
-  { name: "养生", href: "/buyer?category=养生" },
-  { name: "食品", href: "/buyer?category=食品" },
-  { name: "家居", href: "/buyer?category=家居" },
-  { name: "文创", href: "/buyer?category=文创" },
-  { name: "艺术", href: "/buyer?category=艺术" },
+  { name: "穿搭", href: "/buyer?category=穿搭", key: "clothing" },
+  { name: "护肤", href: "/buyer?category=护肤", key: "skincare" },
+  { name: "洗护", href: "/buyer?category=洗护", key: "haircare" },
+  { name: "养生", href: "/buyer?category=养生", key: "wellness" },
+  { name: "食品", href: "/buyer?category=食品", key: "food" },
+  { name: "家居", href: "/buyer?category=家居", key: "home" },
+  { name: "文创", href: "/buyer?category=文创", key: "creative" },
+  { name: "艺术", href: "/buyer?category=艺术", key: "art" },
 ];
 
-const subCategories = [
-  { name: "精选", icon: <Star className="w-4 h-4" />, active: true },
-  { name: "上装", icon: <Shirt className="w-4 h-4" /> },
-  { name: "下装", icon: <Scissors className="w-4 h-4" /> },
-  { name: "连衣裙", icon: "👗" },
-  { name: "外套", icon: "🧥" },
-  { name: "配饰", icon: <Gem className="w-4 h-4" /> },
-  { name: "鞋履", icon: <Footprints className="w-4 h-4" /> },
-];
+/* ------------------------------------------------------------------ */
+/*  每个主分类对应的子分类（点击跳转 /buyer?category=父类&subCategory=子类）*/
+/* ------------------------------------------------------------------ */
+
+const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subKey: string }[]> = {
+  "全部": [
+    { name: "精选", icon: <Star className="w-4 h-4" />, subKey: "" },
+  ],
+  "穿搭": [
+    { name: "上装", icon: <Shirt className="w-4 h-4" />, subKey: "tops" },
+    { name: "下装", icon: <Scissors className="w-4 h-4" />, subKey: "bottoms" },
+    { name: "连衣裙", icon: "👗", subKey: "dress" },
+    { name: "外套", icon: "🧥", subKey: "outerwear" },
+    { name: "配饰", icon: <Gem className="w-4 h-4" />, subKey: "accessory" },
+    { name: "鞋履", icon: <Footprints className="w-4 h-4" />, subKey: "shoes" },
+  ],
+  "护肤": [
+    { name: "洁面", icon: <Droplets className="w-4 h-4" />, subKey: "cleanser" },
+    { name: "精华", icon: "💧", subKey: "serum" },
+    { name: "面霜", icon: "🧴", subKey: "cream" },
+    { name: "防晒", icon: "☀️", subKey: "sunscreen" },
+    { name: "面膜", icon: "😊", subKey: "mask" },
+  ],
+  "洗护": [
+    { name: "洗发", icon: "🧴", subKey: "shampoo" },
+    { name: "护发", icon: "💆", subKey: "conditioner" },
+    { name: "沐浴", icon: "🚿", subKey: "bodywash" },
+    { name: "身体护理", icon: "🧖", subKey: "bodycare" },
+  ],
+  "养生": [
+    { name: "补品", icon: "💊", subKey: "supplement" },
+    { name: "茶饮", icon: "🍵", subKey: "tea" },
+    { name: "器械", icon: "🏋️", subKey: "fitness" },
+  ],
+  "食品": [
+    { name: "零食", icon: "🍪", subKey: "snack" },
+    { name: "饮品", icon: "☕", subKey: "drink" },
+    { name: "食材", icon: "🥬", subKey: "ingredient" },
+  ],
+  "家居": [
+    { name: "厨具", icon: "🍳", subKey: "kitchen" },
+    { name: "收纳", icon: "📦", subKey: "storage" },
+    { name: "装饰", icon: "🎨", subKey: "decoration" },
+  ],
+  "文创": [
+    { name: "文具", icon: <PenTool className="w-4 h-4" />, subKey: "stationery" },
+    { name: "手账", icon: "📒", subKey: "journal" },
+    { name: "礼品", icon: "🎁", subKey: "gift" },
+  ],
+  "艺术": [
+    { name: "画作", icon: <Palette className="w-4 h-4" />, subKey: "painting" },
+    { name: "雕塑", icon: "🗿", subKey: "sculpture" },
+    { name: "工艺品", icon: "🏺", subKey: "craft" },
+  ],
+};
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
@@ -37,12 +86,14 @@ const subCategories = [
 
 export default function Home() {
   const [keyword, setKeyword] = useState("");
-  const [activeCategory, setActiveCategory] = useState("全部");
-  const [activeSubCategory, setActiveSubCategory] = useState("精选");
+  const [activeCategoryName, setActiveCategoryName] = useState("全部");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();
+
+  // 当前子分类列表
+  const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
   // 加载商品
   useEffect(() => {
@@ -51,15 +102,12 @@ export default function Home() {
       let query = supabase
         .from("products")
         .select("id, name, price, image_url, category, sub_category");
-      if (activeSubCategory !== "精选") {
-        query = query.eq("sub_category", activeSubCategory);
-      }
       const { data, error } = await query.limit(20);
       if (!error && data) setProducts(data);
       setLoading(false);
     };
     fetchProducts();
-  }, [activeSubCategory]);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -119,8 +167,9 @@ export default function Home() {
               <Link
                 key={cat.name}
                 href={cat.href}
+                onClick={() => setActiveCategoryName(cat.name)}
                 className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
-                  activeCategory === cat.name
+                  activeCategoryName === cat.name
                     ? "bg-white shadow-md font-semibold text-gray-800"
                     : "hover:bg-white/60 text-gray-700"
                 }`}
@@ -132,28 +181,31 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 精选标签栏 ====== */}
+      {/* ====== 动态子分类标签栏（根据选中分类变化） ====== */}
       <section className="bg-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-            {subCategories.map((sub) => (
-              <button
+            {currentSubCategories.map((sub) => (
+              <Link
                 key={sub.name}
-                onClick={() => setActiveSubCategory(sub.name)}
+                href={sub.subKey
+                  ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
+                  : "/"
+                }
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                  activeSubCategory === sub.name
-                    ? "bg-[#2d2a3e] text-white font-medium"
+                  sub.name === "精选"
+                    ? "bg-[#2d2a3e] text-white font-medium shadow-md"
                     : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                 }`}
               >
-                {sub.icon} {sub.name}
-              </button>
+                {typeof sub.icon === "string" ? <span>{sub.icon}</span> : sub.icon} {sub.name}
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ====== Hero 大图区域 ====== */}
+      {/* ====== Hero 大图区域（服装陈列背景） ====== */}
       <section className="relative h-[420px] sm:h-[480px] overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -195,13 +247,10 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">
-            {activeCategory} · {activeSubCategory}
+            {activeCategoryName === "全部" ? "穿搭" : activeCategoryName} · 精选
             <span className="ml-2 text-sm font-normal text-gray-400">({products.length} 件)</span>
           </h2>
-          <button
-            onClick={() => { setActiveSubCategory("精选"); setProducts([]); }}
-            className="text-sm text-gray-400 hover:text-gray-600"
-          >
+          <button className="text-sm text-gray-400 hover:text-gray-600">
             ✕ 清除筛选
           </button>
         </div>
