@@ -9,10 +9,7 @@ export default function AdminLayout({
 }) {
   const [mounted, setMounted] = useState(false);
 
-  // 确保只在客户端渲染
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) {
     return (
@@ -28,85 +25,285 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
+  /* ── 完整菜单定义（按截图中的分组） ── */
+  const menuGroups = [
+    {
+      label: "概览",
+      items: [
+        { label: "数据概览", href: "/admin/dashboard" },
+        { label: "站点图片", href: "/admin/site-assets" },
+      ],
+    },
+    {
+      label: "店铺管理",
+      items: [
+        { label: "店铺列表", href: "/admin/stores" },
+        { label: "品类管理", href: "/admin/categories" },
+        { label: "店铺买手决策", href: "/admin/buyer-features" },
+        { label: "买手步骤", href: "/admin/buyer-steps" },
+      ],
+    },
+    {
+      label: "VIP会员",
+      items: [
+        { label: "VIP订单", href: "/admin/membership-orders" },
+        { label: "VIP管理", href: "/admin/vip" },
+        { label: "VIP加油包", href: "/admin/vip-addons" },
+        { label: "色彩季型录入", href: "/admin/color-analysis" },
+        { label: "色彩季型对比", href: "/admin/color-compare" },
+        { label: "风格测试记录", href: "/admin/style-tests" },
+        { label: "测试码管理", href: "/admin/test-codes" },
+      ],
+    },
+    {
+      label: "商品&企划",
+      items: [
+        { label: "企划需求处理", href: "/admin/planning-requests" },
+        { label: "企划订单管理", href: "/admin/planning-orders" },
+        { label: "商品企划", href: "/admin/product-plan" },
+        { label: "生成企划报告", href: "/admin/report" },
+        { label: "商品管理", href: "/admin/products" },
+        { label: "爆款样衣", href: "/admin/hot-products" },
+        { label: "爆款货盘", href: "/admin/hot-picks" },
+        { label: "爆款图片", href: "/admin/hot-picks-images" },
+        { label: "买家选品", href: "/admin/buyer" },
+        { label: "选品步骤", href: "/admin/planning-steps" },
+        { label: "选品功能", href: "/admin/assortment" },
+      ],
+    },
+    {
+      label: "采购&供应链",
+      items: [
+        { label: "采购意向", href: "/admin/purchase-intents" },
+        { label: "订单管理", href: "/admin/orders" },
+        { label: "采购订单", href: "/admin/purchase-orders" },
+        { label: "供应商管理", href: "/admin/supplier" },
+        { label: "供应商图片", href: "/admin/supplier-images" },
+      ],
+    },
+    {
+      label: "库存&销售",
+      items: [
+        { label: "库存管理", href: "/admin/inventory" },
+        { label: "销售数据", href: "/admin/sales-data" },
+        { label: "门店经营数据", href: "/admin/store-reports" },
+        { label: "订单管理", href: "/admin/orders" },
+        { label: "市场需求统计", href: "/admin/market-demand" },
+      ],
+    },
+    {
+      label: "陈列&搭配",
+      items: [
+        { label: "陈列搭配", href: "/admin/collocation" },
+        { label: "搭配方案", href: "/admin/display" },
+        { label: "陈列图片", href: "/admin/display-images" },
+        { label: "每日搭配", href: "/admin/daily-looks" },
+        { label: "属性编码管理", href: "/admin/attribute-encoding" },
+      ],
+    },
+    {
+      label: "营销&内容",
+      items: [
+        { label: "营销策划", href: "/admin/marketing" },
+        { label: "营销图片", href: "/admin/marketing-images" },
+        { label: "销售服务", href: "/admin/sales" },
+        { label: "Banner轮播图", href: "/admin/banners" },
+        { label: "搭配灵感", href: "/admin/inspirations" },
+        { label: "内容日历", href: "/admin/content-calendar" },
+        { label: "沙龙活动", href: "/admin/salon" },
+        { label: "沙龙流程", href: "/admin/salon-events" },
+        { label: "爆款样衣(设计)", href: "/admin/designer" },
+      ],
+    },
+    {
+      label: "客户&线索",
+      items: [
+        { label: "客户管理", href: "/admin/customers" },
+        { label: "线索管理", href: "/admin/leads" },
+        { label: "交付方案", href: "/admin/report" },
+      ],
+    },
+    {
+      label: "潜客管理",
+      items: [
+        { label: "门店信息", href: "/admin/crm/wechat-add" },
+        { label: "联系人管理", href: "/admin/crm/contacts" },
+        { label: "跟进记录", href: "/admin/crm/follow-ups" },
+        { label: "加微信", href: "/admin/crm/wechat-templates" },
+        { label: "微信话术", href: "/admin/crm/scrape" },
+        { label: "门后采集", href: "/admin/crm/import" },
+        { label: "提醒中心", href: "/admin/crm/reminders" },
+        { label: "批量导入", href: "/admin/crm/stores" },
+      ],
+    },
+    {
+      label: "项目&预算",
+      items: [
+        { label: "项目进度", href: "/admin/project-tracker" },
+        { label: "预算与成本", href: "/admin/budget-tracker" },
+      ],
+    },
+    {
+      label: "教学&资讯",
+      items: [
+        { label: "教学中心", href: "/admin/courses" },
+        { label: "课程管理", href: "/admin/courses" },
+        { label: "课程购买记录", href: "/admin/course-purchases" },
+        { label: "流行资讯", href: "/admin/fashion-trends" },
+      ],
+    },
+    {
+      label: "趋势",
+      items: [
+        { label: "趋势预测", href: "/admin/trend-predict" },
+        { label: "趋势中心", href: "/admin/trend-center" },
+        { label: "明星同款", href: "/admin/celebrity" },
+      ],
+    },
+    {
+      label: "其他",
+      items: [
+        { label: "访客管理", href: "/admin/visitors" },
+        { label: "配送管理", href: "/admin/deliveries" },
+        { label: "教育", href: "/admin/education" },
+        { label: "杂志", href: "/admin/magazine" },
+        { label: "待审", href: "/admin/pending" },
+      ],
+    },
+  ];
+
+  const findTitle = () => {
+    for (const group of menuGroups) {
+      const found = group.items.find((i) => i.href === pathname);
+      if (found) return found.label;
+    }
+    return "数据概览";
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex" }}>
-      {/* 侧边栏 - 极简版 */}
-      <aside style={{ width: 240, background: "#1e293b", color: "white", flexShrink: 0, overflow: "auto" }}>
-        <div style={{ padding: 16, borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
-          <a href="/admin/dashboard" style={{ textDecoration: "none", color: "white", fontSize: 16, fontWeight: "bold" }}>
+    <div style={{ minHeight: "100vh", background: "#1a1a2e", display: "flex" }}>
+      {/* 侧边栏 */}
+      <aside
+        style={{
+          width: 240,
+          background: "#16162b",
+          color: "#94a3b8",
+          flexShrink: 0,
+          overflowY: "auto",
+          overflowX: "hidden",
+          borderRight: "1px solid rgba(255,255,255,0.06)",
+        }}
+      >
+        {/* Logo */}
+        <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <a
+            href="/admin/dashboard"
+            style={{ textDecoration: "none", color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: "0.5px" }}
+          >
             骆芷蝶智选 · 后台
           </a>
         </div>
-        <nav style={{ padding: 8 }}>
-          {[
-            { label: "数据概览", href: "/admin/dashboard" },
-            { label: "VIP 订单", href: "/admin/membership-orders" },
-            { label: "企划需求", href: "/admin/planning-requests" },
-            { label: "商品管理", href: "/admin/products" },
-            { label: "爆款预测", href: "/admin/trend-predict" },
-            { label: "明星同款", href: "/admin/celebrity" },
-            { label: "客户管理", href: "/admin/customers" },
-            { label: "访客管理", href: "/admin/visitors" },
-          ].map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <a
-                key={item.href}
-                href={item.href}
+
+        {/* 菜单组 */}
+        <nav style={{ padding: "8px" }}>
+          {menuGroups.map((group) => (
+            <div key={group.label} style={{ marginBottom: 4 }}>
+              <div
                 style={{
-                  display: "block",
-                  padding: "8px 12px",
-                  borderRadius: 6,
-                  marginBottom: 2,
-                  textDecoration: "none",
-                  color: isActive ? "#fff" : "rgba(255,255,255,0.7)",
-                  background: isActive ? "#3b82f6" : "transparent",
-                  fontSize: 14,
+                  padding: "6px 12px",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.08em",
+                  color: "#64748b",
                 }}
               >
-                {item.label}
-              </a>
-            );
-          })}
+                {group.label}
+              </div>
+              {group.items.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    style={{
+                      display: "block",
+                      padding: "5px 12px 5px 20px",
+                      borderRadius: 4,
+                      marginBottom: 1,
+                      textDecoration: "none",
+                      fontSize: 13,
+                      color: isActive ? "#fff" : "#94a3b8",
+                      background: isActive ? "#3b82f6" : "transparent",
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                );
+              })}
+            </div>
+          ))}
         </nav>
-        <div style={{ padding: 16, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
-          <a href="/admin/login" style={{ display: "block", padding: 8, textAlign: "center", background: "rgba(255,255,255,0.1)", borderRadius: 6, color: "white", textDecoration: "none", fontSize: 13 }}>退出</a>
-          <a href="/" style={{ display: "block", marginTop: 8, padding: 8, textAlign: "center", borderRadius: 6, color: "rgba(255,255,255,0.7)", textDecoration: "none", fontSize: 13 }}>返回前台</a>
+
+        {/* 底部操作 */}
+        <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 8 }}>
+          <a
+            href="/admin/login"
+            style={{
+              display: "block",
+              padding: 7,
+              textAlign: "center",
+              borderRadius: 5,
+              background: "rgba(239,68,68,0.12)",
+              color: "#ef4444",
+              textDecoration: "none",
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            退出登录
+          </a>
+          <a
+            href="/"
+            style={{
+              display: "block",
+              marginTop: 6,
+              padding: 7,
+              textAlign: "center",
+              borderRadius: 5,
+              color: "#64748b",
+              textDecoration: "none",
+              fontSize: 12,
+            }}
+          >
+            返回前台 →
+          </a>
         </div>
       </aside>
 
       {/* 主内容区 */}
-      <main style={{ flex: 1, overflow: "auto" }}>
+      <main style={{ flex: 1, overflow: "auto", background: "#f8fafc" }}>
         {/* 顶栏 */}
-        <header style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "12px 24px", position: "sticky", top: 0, zIndex: 10 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 14, color: "#666" }}>管理后台</span>
-            <span style={{ fontSize: 14, color: "#333", fontWeight: 500 }}>
-              {(() => {
-                try {
-                  const item = [
-                    { label: "数据概览", href: "/admin/dashboard" },
-                    { label: "VIP 订单", href: "/admin/membership-orders" },
-                    { label: "企划需求", href: "/admin/planning-requests" },
-                    { label: "商品管理", href: "/admin/products" },
-                    { label: "爆款预测", href: "/admin/trend-predict" },
-                    { label: "明星同款", href: "/admin/celebrity" },
-                    { label: "客户管理", href: "/admin/customers" },
-                    { label: "访客管理", href: "/admin/visitors" },
-                  ].find(i => i.href === pathname);
-                  return item?.label || "数据概览";
-                } catch {
-                  return "数据概览";
-                }
-              })()}
-            </span>
-          </div>
+        <header
+          style={{
+            background: "#fff",
+            borderBottom: "1px solid #e2e8f0",
+            padding: "12px 24px",
+            position: "sticky",
+            top: 0,
+            zIndex: 10,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <span style={{ fontSize: 13, color: "#64748b" }}>管理后台</span>
+          <span style={{ fontSize: 14, color: "#1e293b", fontWeight: 600 }}>{findTitle()}</span>
         </header>
 
         {/* 页面内容 */}
-        <div style={{ padding: 24 }}>
-          {children}
-        </div>
+        <div style={{ padding: 24 }}>{children}</div>
       </main>
     </div>
   );
