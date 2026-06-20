@@ -60,7 +60,7 @@ export default function AdminMarketingPlanPage() {
     fetchSavedCampaigns();
   }, []);
 
-  const checkUser = async () => {
+  const checkUser = async () => { /* middleware 已验证 */ };
 
   const fetchStores = async () => {
     const { data } = await supabase.from("stores").select("id, name, business_goals").order("name");
@@ -486,5 +486,4 @@ function CollapsibleSection({ title, icon: Icon, color, expanded, onToggle, chil
       {expanded && <div className="px-5 pb-5">{children}</div>}
     </div>
   );
-}
 }

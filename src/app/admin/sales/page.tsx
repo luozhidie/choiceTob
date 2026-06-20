@@ -41,7 +41,22 @@ export default function AdminSalesPlanPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchStores(); fetchSaved(); }, []);
+  // middleware 已验证管理员身份
+  const fetchStores = async () => {
+    const { data } = await supabase.from("stores").select("id, name").order("name");
+    if (data) setStores(data);
+  };
+
+  const fetchSaved = async () => {
+    const { data } = await supabase
+      .from("sales_services")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setSavedPlans(data);
+  };
+
+  useEffect(() => { fetchStores(); fetchSaved(); }, []);
 
 
   const toggle = (k: string) => setExpanded(p => ({ ...p, [k]: !p[k] }));

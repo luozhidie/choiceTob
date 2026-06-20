@@ -43,7 +43,38 @@ export default function AdminVisitors() {
   
   const router = useRouter();
   const limit = 20;
-  
+  const supabase = createClient();
+
+  // 加载访客数据
+  const loadVisitors = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("visitors")
+        .select("*", { count: "exact" })
+        .order("last_visit_at", { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (search.trim()) {
+        query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+      if (statusFilter) {
+        query = query.eq("status", statusFilter);
+      }
+      if (sourceFilter) {
+        query = query.eq("source", sourceFilter);
+      }
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+      setVisitors(data || []);
+      setTotal(count || 0);
+    } catch (err: any) {
+      console.error("Load visitors error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     loadVisitors();

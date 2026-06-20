@@ -57,7 +57,7 @@ export default function AdminTrendPredictPage() {
   };
 
 
-  const currentData = result ? (result[tab] ?? []) : [];
+  // 趋势数据（从 API 获取）
   const tabs = [
     { key: "color" as const, label: "色彩趋势", icon: <Palette className="w-4 h-4" /> },
     { key: "fabric" as const, label: "面料趋势", icon: <Layers className="w-4 h-4" /> },
