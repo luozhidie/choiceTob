@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, HighHeel } from "lucide-react";
+import { Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
 /*  分类和标签数据                                                      */
@@ -26,7 +26,7 @@ const subCategories = [
   { name: "连衣裙", icon: "👗" },
   { name: "外套", icon: "🧥" },
   { name: "配饰", icon: <Gem className="w-4 h-4" /> },
-  { name: "鞋履", icon: <HighHeel className="w-4 h-4" /> },
+  { name: "鞋履", icon: <Footprints className="w-4 h-4" /> },
 ];
 
 /* ------------------------------------------------------------------ */

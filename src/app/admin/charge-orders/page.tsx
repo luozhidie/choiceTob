@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase-client';
-import AdminLayout from '@/components/AdminLayout';
+import { createClient } from '@/lib/supabase/client';
+import AdminLayout from '@/app/admin/layout';
 
 interface ChargeOrder {
   id: string;
