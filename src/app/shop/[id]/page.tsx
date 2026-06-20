@@ -7,6 +7,7 @@ import Link from "next/link";
 import {
   ArrowLeft, ShoppingBag, Building2, Truck, X,
   ChevronLeft, ChevronRight, Layers, Star,
+  Clock, ShoppingCart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -29,6 +30,9 @@ interface Product {
   stock: number;
   supplier_name?: string | null;
   source?: "platform" | "buyer" | "supplier_submit" | null;
+  /* 预售字段 */
+  is_preorder?: boolean;
+  preorder_days?: number | null;
 }
 
 export default function ProductDetailPage() {
@@ -81,6 +85,8 @@ export default function ProductDetailPage() {
               is_published: p.is_published,
               stock: p.stock || 0,
               source: "platform",
+              is_preorder: p.is_preorder || false,
+              preorder_days: p.preorder_days || null,
             });
             setLoading(false);
             return;
@@ -113,6 +119,8 @@ export default function ProductDetailPage() {
               stock: p.stock || 0,
               supplier_name: p.supplier_name || null,
               source: p.source || "buyer",
+              is_preorder: p.is_preorder || false,
+              preorder_days: p.preorder_days || null,
             });
             setLoading(false);
             return;
@@ -376,6 +384,16 @@ export default function ProductDetailPage() {
                 </p>
               )}
 
+              {/* 预售标签 */}
+              {product.is_preorder && (
+                <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200">
+                  <Clock className="w-4 h-4 text-orange-500" />
+                  <span className="text-sm font-semibold text-orange-600">
+                    预售{product.preorder_days ? `，${product.preorder_days}天内发货` : ""}
+                  </span>
+                </div>
+              )}
+
               {/* 价格（所有人都能看到批发价） */}
               <div className="mb-2">
                 <div className="flex items-end gap-2">
@@ -422,18 +440,27 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* 立即下单按钮 → 跳转到 checkout 页面 */}
+              {/* 加入购物车 / 立即下单 按钮 */}
               <button
                 onClick={handleBuyNow}
                 disabled={product.stock === 0}
-                className="w-full py-3.5 rounded-xl text-base font-semibold flex items-center justify-center gap-2 text-white bg-accent hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ backgroundColor: 'var(--color-accent, #C8553D)', color: 'white' }}
+                className="w-full py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
               >
-                <ShoppingBag className="w-5 h-5" />
-                立即下单
+                {product.is_preorder ? (
+                  <>
+                    <ShoppingCart className="w-5 h-5" />
+                    加入购物车
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-5 h-5" />
+                    立即下单
+                  </>
+                )}
               </button>
               <p className="mt-2 text-xs text-center text-muted-foreground">
-                支持会员折扣 · 多种支付方式
+                {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
               </p>
 
               {/* 同品类推荐 */}

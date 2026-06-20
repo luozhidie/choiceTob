@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
   Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
-  Droplets, PenTool, Palette, Sun,
+  Droplets, PenTool, Palette, Sun, Package, Users,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -117,13 +117,31 @@ export default function Home() {
   const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
   const bgImage = heroBgUrl || defaultHeroBg;
 
-  // 加载商品
+  // 加载商品（穿搭精选：从 buyer_products + products 加载服装类）
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const { data, error } = await supabase.from("products").select("id, name, price, image_url, category, sub_category").limit(20);
-        if (!error && data) setProducts(data);
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+        const headers: Record<string, string> = {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        };
+
+        const [platformRes, buyerRes] = await Promise.all([
+          supabase.from("products").select("id, name, price, image_url, category, sub_category").limit(20),
+          fetch(`${supabaseUrl}/rest/v1/buyer_products?is_published=eq.true&order=sort_order.asc&select=id,title,name,price,cover_image,image_url,category,subcategory&limit=20`, { headers }).then(r => r.ok ? r.json() : []),
+        ]);
+
+        const merged: any[] = [];
+        if (!platformRes.error && platformRes.data) {
+          (platformRes.data as any[]).forEach((p) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
+        }
+        if (Array.isArray(buyerRes)) {
+          (buyerRes as any[]).forEach((p) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
+        }
+        setProducts(merged);
       } catch (err) {
         console.error("加载商品失败:", err);
       }
@@ -289,7 +307,16 @@ export default function Home() {
         ) : products.length === 0 ? (
           <div className="py-16 text-center">
             <ShoppingCart className="w-14 h-14 text-gray-200 mx-auto mb-3" />
-            <p className="text-gray-300 text-base">暂无选品</p>
+            <p className="text-gray-300 text-base mb-5">暂无选品</p>
+            {/* 拿货拼单入口 */}
+            <Link
+              href="/buyer"
+              className="inline-flex items-center gap-2 px-7 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-xl hover:shadow-lg transition-all"
+            >
+              <Users className="w-4 h-4" />
+              去拿货拼单
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-5">
