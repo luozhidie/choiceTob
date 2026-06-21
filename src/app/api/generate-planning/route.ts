@@ -276,7 +276,7 @@ function buildMarketPromptSection(marketResearch: Record<string, any>): string {
 }
 
 /* ============ 辅助函数：采集市场数据 ============ */
-async function fetchMarketResearch(keyword: string, season: string, style: string, priceBand: string) {
+async function fetchMarketResearch(req: NextRequest, keyword: string, season: string, style: string, priceBand: string) {
   try {
     const host = req.headers.get("host") || "localhost:3000";
     const protocol = req.headers.get("x-forwarded-proto")?.split(",")[0] || "http";
@@ -300,6 +300,8 @@ async function fetchMarketResearch(keyword: string, season: string, style: strin
 /* ============ 主接口 ============ */
 export async function POST(req: NextRequest) {
   try {
+    const supabase = await createClient();
+
     // 检查用户是否已登录
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
@@ -322,7 +324,7 @@ export async function POST(req: NextRequest) {
 
     // 2. 采集市场数据
     const researchKeyword = [brandName, season, styleLabel].filter(Boolean).join(" ") || "女装 2025";
-    const marketResearch = await fetchMarketResearch(researchKeyword, season || "", styleLabel || "", priceBand || "");
+    const marketResearch = await fetchMarketResearch(req, researchKeyword, season || "", styleLabel || "", priceBand || "");
 
     // 3. 检查API Key
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
