@@ -1,30 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/lib/auth-context";
 import { useRouter } from "next/navigation";
 import { Clock, Mail, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 
 export default function PendingPage() {
-  const { user, profile } = useAuth();
   const router = useRouter();
   const [checking, setChecking] = useState(true);
-  const supabase = createClient();
+  const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
-    if (!user) {
-      router.push("/admin/login");
-      return;
+    // 检查是否通过后台登录（cookie 方式）
+    if (typeof document !== "undefined") {
+      const isAdmin = document.cookie.includes("admin_logged_in=true");
+      if (!isAdmin) {
+        router.push("/admin/login");
+        return;
+      }
+
+      // 从 cookie 获取管理员邮箱
+      const match = document.cookie.match(/admin_email=([^;]+)/);
+      setEmail(match?.[1] || "");
+      setChecking(false);
     }
-    // 如果已经被批准了，跳转到后台
-    if (profile?.approval_status === "approved") {
-      router.push("/admin/dashboard");
-      return;
-    }
-    setChecking(false);
-  }, [user, profile]);
+  }, []);
 
   if (checking) {
     return (
@@ -35,27 +35,36 @@ export default function PendingPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md text-center">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-amber-50 flex items-center justify-center">
-            <Clock className="w-10 h-10 text-amber-600" />
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafc" }}>
+      <div style={{ width: 448, maxWidth: "90vw", textAlign: "center" }}>
+        <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px rgba(0,0,0,0.08)", border: "1px solid #f1f5f9", padding: 32 }}>
+          {/* 图标 */}
+          <div style={{ width: 80, height: 80, margin: "0 auto 24px", borderRadius: "50%", background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Clock size={40} color="#d97706" />
           </div>
-          <h1 className="text-2xl font-bold text-[#0f4c3a] mb-3">等待管理员审批</h1>
-          <p className="text-gray-500 text-sm mb-2 leading-relaxed">
+
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#1e293b", marginBottom: 12 }}>
+            等待管理员审批
+          </h1>
+
+          <p style={{ fontSize: 14, color: "#64748b", lineHeight: 1.6, marginBottom: 4 }}>
             您的账号注册申请已提交，需要管理员审批通过后才能登录使用后台系统。
           </p>
-          <p className="text-gray-400 text-xs mb-8 leading-relaxed">
-            审批结果将发送至您的邮箱 <span className="font-medium text-gray-600">{user?.email}</span>，
-            <br />通常处理时间为 <span className="font-medium text-gray-600">1-2 个工作日</span>。
+          <p style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.6, marginBottom: 32 }}>
+            审批结果将发送至您的邮箱{" "}
+            <span style={{ fontWeight: 500, color: "#475569" }}>{email}</span>
+            ，<br />
+            通常处理时间为{" "}
+            <span style={{ fontWeight: 500, color: "#475569" }}>1-2 个工作日</span>。
           </p>
 
-          <div className="bg-gray-50 rounded-xl p-4 mb-8 text-left">
-            <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
-              <Mail className="w-4 h-4 text-gray-500" />
+          {/* 流程说明 */}
+          <div style={{ background: "#f8fafc", borderRadius: 12, padding: 16, marginBottom: 32, textAlign: "left" }}>
+            <h3 style={{ fontSize: 13, fontWeight: 600, color: "#334155", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+              <Mail size={14} color="#94a3b8" />
               审批流程说明
             </h3>
-            <ol className="text-xs text-gray-500 space-y-1.5 pl-4 list-decimal">
+            <ol style={{ fontSize: 12, color: "#64748b", paddingLeft: 20, margin: 0, lineHeight: 2 }}>
               <li>管理员收到您的审批申请通知</li>
               <li>管理员审核您的注册信息</li>
               <li>审批通过后，您会收到邮件通知</li>
@@ -63,30 +72,42 @@ export default function PendingPage() {
             </ol>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
+          {/* 按钮 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <Link
-              href="/admin/login"
-              className="flex-1 text-center px-6 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              href="/admin/dashboard"
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "10px 16px",
+                background: "#1e293b",
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#fff",
+                textDecoration: "none",
+              }}
             >
-              返回登录页
+              返回后台首页
             </Link>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors"
+            <Link
+              href="/"
+              style={{
+                flex: 1,
+                textAlign: "center",
+                padding: "10px 16px",
+                border: "1px solid #e2e8f0",
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 500,
+                color: "#64748b",
+                textDecoration: "none",
+                transition: "background 0.15s",
+              }}
             >
-              退出
-            </button>
+              返回网站首页 →
+            </Link>
           </div>
-        </div>
-
-        <div className="mt-6 text-center">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            返回网站首页
-          </Link>
         </div>
       </div>
     </div>

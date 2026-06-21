@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, PanelLeftClose, X } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { ChevronLeft, ChevronRight, PanelLeftClose, ChevronsDown, ChevronsUp } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -10,6 +10,7 @@ export default function AdminLayout({
 }) {
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -179,6 +180,40 @@ export default function AdminLayout({
     },
   ];
 
+  // 初始化时自动展开包含当前页面的分组
+  useEffect(() => {
+    if (!collapsed) {
+      const autoExpand = new Set<string>();
+      for (const group of menuGroups) {
+        if (group.items.some((item) => item.href === pathname)) {
+          autoExpand.add(group.label);
+          break;
+        }
+      }
+      setExpandedGroups(autoExpand);
+    }
+  }, [pathname, collapsed]);
+
+  const toggleGroup = useCallback((label: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(label)) {
+        next.delete(label);
+      } else {
+        next.add(label);
+      }
+      return next;
+    });
+  }, []);
+
+  // 折叠所有 / 展开所有
+  const expandAll = useCallback(() => {
+    setExpandedGroups(new Set(menuGroups.map(g => g.label)));
+  }, []);
+  const collapseAll = useCallback(() => {
+    setExpandedGroups(new Set());
+  }, []);
+
   const findTitle = () => {
     for (const group of menuGroups) {
       const found = group.items.find((i) => i.href === pathname);
@@ -200,10 +235,12 @@ export default function AdminLayout({
           overflowX: "hidden",
           borderRight: "1px solid rgba(255,255,255,0.06)",
           transition: "width 0.2s ease",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {/* Logo */}
-        <div style={{ padding: collapsed ? "14px 10px" : "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between" }}>
+        <div style={{ padding: collapsed ? "14px 10px" : "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", flexShrink: 0 }}>
           {!collapsed && (
             <a
               href="/admin/dashboard"
@@ -221,59 +258,123 @@ export default function AdminLayout({
           </button>
         </div>
 
-        {/* 菜单组 */}
-        <nav style={{ padding: "8px" }}>
-          {menuGroups.map((group) => (
-            <div key={group.label} style={{ marginBottom: 4 }}>
-              {!collapsed && (
-                <div
-                  style={{
-                    padding: "6px 12px",
-                    fontSize: 10,
-                    fontWeight: 600,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.08em",
-                    color: "#64748b",
-                  }}
-                >
-                  {group.label}
-                </div>
-              )}
-              {group.items.map((item) => {
-                const isActive = pathname === item.href;
-                return (
-                  <a
-                    key={item.href}
-                    href={item.href}
-                    title={collapsed ? item.label : undefined}
+        {/* 分组折叠控制（仅展开状态显示） */}
+        {!collapsed && (
+          <div style={{ padding: "6px 12px 0", display: "flex", gap: 4, flexShrink: 0 }}>
+            <button
+              onClick={expandAll}
+              title="展开全部"
+              style={{
+                padding: "2px 8px", borderRadius: 4,
+                background: "rgba(255,255,255,0.06)", border: "none",
+                color: "#94a3b8", cursor: "pointer", fontSize: 11,
+                display: "flex", alignItems: "center", gap: 2,
+              }}
+            >
+              <ChevronsDown className="w-3 h-3" /> 全部展开
+            </button>
+            <button
+              onClick={collapseAll}
+              title="折叠全部"
+              style={{
+                padding: "2px 8px", borderRadius: 4,
+                background: "rgba(255,255,255,0.06)", border: "none",
+                color: "#94a3b8", cursor: "pointer", fontSize: 11,
+                display: "flex", alignItems: "center", gap: 2,
+              }}
+            >
+              <ChevronsUp className="w-3 h-3" /> 全部收起
+            </button>
+          </div>
+        )}
+
+        {/* 菜单组 - 支持折叠 */}
+        <nav style={{ padding: "8px", flex: 1 }}>
+          {menuGroups.map((group) => {
+            const isExpanded = expandedGroups.has(group.label);
+
+            return (
+              <div key={group.label} style={{ marginBottom: 2 }}>
+                {/* 分组标题（可点击折叠） */}
+                {!collapsed && (
+                  <button
+                    onClick={() => toggleGroup(group.label)}
+                    title={`${isExpanded ? "收起" : "展开"} ${group.label}`}
                     style={{
+                      width: "100%",
+                      padding: "7px 12px 5px",
+                      fontSize: 10,
+                      fontWeight: 600,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.08em",
+                      color: "#64748b",
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
                       display: "flex",
                       alignItems: "center",
-                      padding: collapsed ? "5px 0" : "5px 12px 5px 20px",
-                      borderRadius: 4,
-                      marginBottom: 1,
-                      textDecoration: "none",
-                      fontSize: collapsed ? 0 : 13,
-                      color: isActive ? "#fff" : "#94a3b8",
-                      background: isActive ? "#3b82f6" : "transparent",
-                      transition: "all 0.15s",
-                      justifyContent: collapsed ? "center" : "flex-start",
-                      gap: collapsed ? 0 : undefined,
-                      whiteSpace: collapsed ? "nowrap" : undefined,
+                      gap: 5,
+                      transition: "color 0.15s",
                     }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = "#94a3b8"}
+                    onMouseLeave={(e) => e.currentTarget.style.color = "#64748b"}
                   >
-                    {collapsed
-                      ? <span style={{ fontSize: 14 }}>{item.label.charAt(0)}</span>
-                      : item.label}
-                    </a>
-                );
-              })}
-            </div>
-          ))}
+                    <span style={{
+                      display: "inline-flex",
+                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                    }}>▼</span>
+                    {group.label}
+                  </button>
+                )}
+
+                {/* 菜单项（根据展开状态显示/隐藏） */}
+                {(isExpanded || collapsed) && (
+                  <div style={{
+                    maxHeight: isExpanded || collapsed ? undefined : 0,
+                    overflow: "hidden",
+                    transition: "max-height 0.25s ease, opacity 0.15s ease",
+                    opacity: isExpanded || collapsed ? 1 : 0,
+                  }}>
+                    {group.items.map((item) => {
+                      const isActive = pathname === item.href;
+                      return (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          title={collapsed ? item.label : undefined}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            padding: collapsed ? "5px 0" : "5px 12px 5px 20px",
+                            borderRadius: 4,
+                            marginBottom: 1,
+                            textDecoration: "none",
+                            fontSize: collapsed ? 0 : 13,
+                            color: isActive ? "#fff" : "#94a3b8",
+                            background: isActive ? "#3b82f6" : "transparent",
+                            transition: "all 0.15s",
+                            justifyContent: collapsed ? "center" : "flex-start",
+                            gap: collapsed ? 0 : undefined,
+                            whiteSpace: collapsed ? "nowrap" : undefined,
+                          }}
+                        >
+                          {collapsed
+                            ? <span style={{ fontSize: 14 }}>{item.label.charAt(0)}</span>
+                            : item.label}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* 底部操作 */}
-        <div style={{ padding: collapsed ? "8px 4px" : "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+        <div style={{ padding: collapsed ? "8px 4px" : "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 0, display: "flex", flexDirection: "column", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <a
             href="/admin/login"
             title="退出登录"
