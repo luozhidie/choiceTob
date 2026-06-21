@@ -160,7 +160,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* ====== Hero 顶部区域（支持后台上传背景图） ====== */}
-      <section className="relative py-11 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative py-7 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {heroTopBgUrl ? (
           <>
             {/* 动态背景图 + 深色遮罩 */}
@@ -181,14 +181,14 @@ export default function Home() {
           />
         )}
         <div className="relative z-10 max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full mb-5" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
-            <span className="text-[#d8a0c0] text-[11px] tracking-wider">✦</span>
-            <span className="text-white/60 text-[11px] font-medium tracking-widest">数据驱动．智选未来</span>
+          <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
+            <span className="text-[#d8a0c0] text-[10px] tracking-wider">✦</span>
+            <span className="text-white/60 text-[10px] font-medium tracking-widest">数据驱动．智选未来</span>
           </div>
-          <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight" style={{ fontSize: "clamp(30px, 5vw, 44px)" }}>
+          <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight" style={{ fontSize: "clamp(22px, 4vw, 36px)" }}>
             骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
           </h1>
-          <p className="text-white/40 mb-8 leading-relaxed" style={{ fontSize: "14px", maxWidth: "520px" }}>
+          <p className="text-white/40 mb-5 leading-relaxed" style={{ fontSize: "13px", maxWidth: "480px" }}>
             从选品企划到营销落地，以数据智能驱动全链路高效运营，助力品牌精准选品、科学决策。
           </p>
           <form onSubmit={handleSearch} className="flex gap-3 max-w-lg">
