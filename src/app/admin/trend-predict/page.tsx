@@ -1,17 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  ArrowLeft, TrendingUp, Palette, Scissors,
-  Sparkles, Loader2, AlertCircle, Shirt, Layers, Search,
-} from "lucide-react";
+import { ArrowLeft, TrendingUp, Palette, Scissors, Sparkles, Loader2, AlertCircle, Shirt, Layers, Search } from "lucide-react";
 
 /* ===================== 类型 ===================== */
 interface TrendItem { name: string; score: number; direction: "up" | "stable" | "down"; }
-interface ProductItem { id: string; title: string; price: number; image: string; matchSuggestion?: string; }
 
 /* ===================== 辅助 ===================== */
 const directionIcon = (d: TrendItem["direction"]) => {
@@ -24,13 +18,30 @@ const scoreColor = (s: number) => s >= 80 ? "bg-emerald-500" : s >= 50 ? "bg-amb
 
 /* ===================== 页面 ===================== */
 export default function AdminTrendPredictPage() {
-  const router = useRouter();
-  // middleware 已验证管理员身份，无需再次检查
   const [keyword, setKeyword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<"color" | "fabric" | "style" | "cut">("color");
+  const [result, setResult] = useState<Record<string, TrendItem[]>>({});
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [outfitPlan, setOutfitPlan] = useState("");
   const [error, setError] = useState("");
+
+  const runPredict = async () => {
+    if (!keyword.trim()) return;
+    setLoading(true); setError("");
+    try {
+      const res = await fetch("/api/trend/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: keyword.trim() }),
+      });
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || "预测失败");
+      setResult(d.trends ?? d.data ?? {});
+    } catch (e: any) { setError(e.message); }
+    finally { setLoading(false); }
+  };
 
   const fetchProducts = async () => {
     if (!keyword.trim()) return;
@@ -56,14 +67,13 @@ export default function AdminTrendPredictPage() {
     finally { setLoadingProducts(false); }
   };
 
-
-  // 趋势数据（从 API 获取）
   const tabs = [
     { key: "color" as const, label: "色彩趋势", icon: <Palette className="w-4 h-4" /> },
     { key: "fabric" as const, label: "面料趋势", icon: <Layers className="w-4 h-4" /> },
     { key: "style" as const, label: "款式趋势", icon: <Shirt className="w-4 h-4" /> },
     { key: "cut" as const, label: "剪裁趋势", icon: <Scissors className="w-4 h-4" /> },
   ];
+  const currentData: TrendItem[] = result[tab] ?? [];
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100">
@@ -103,7 +113,7 @@ export default function AdminTrendPredictPage() {
               <AlertCircle className="w-4 h-4" /> {error}
             </p>
           )}
-          {result && (
+          {Object.keys(result).length > 0 && (
             <>
               <div className="flex gap-2 mb-6 flex-wrap">
                 {tabs.map(t => (

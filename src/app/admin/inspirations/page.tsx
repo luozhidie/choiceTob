@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -19,7 +18,6 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Inspiration {
   id: string;
   title: string;
-  description: string | null;
   image_url: string | null;
   style_tags: string[] | null;
   is_published: boolean;
@@ -37,14 +35,12 @@ export default function AdminInspirationsPage() {
 
   const [form, setForm] = useState({
     title: "",
-    description: "",
     image_url: "",
     style_tags: "",
     is_published: true,
   });
 
   const supabase = createClient();
-  const router = useRouter();
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -57,7 +53,7 @@ export default function AdminInspirationsPage() {
     try {
       const { data, error } = await supabase
         .from("outfit_matches")
-        .select("id, title, description, image_url, style_tags, is_published, created_at, updated_at")
+        .select("id, title, image_url, style_tags, is_published, created_at, updated_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setInspirations(data || []);
@@ -76,14 +72,13 @@ export default function AdminInspirationsPage() {
       setEditingInspiration(inspiration);
       setForm({
         title: inspiration.title || "",
-        description: inspiration.description || "",
         image_url: inspiration.image_url || "",
         style_tags: inspiration.style_tags?.join(", ") || "",
         is_published: inspiration.is_published,
       });
     } else {
       setEditingInspiration(null);
-      setForm({ title: "", description: "", image_url: "", style_tags: "", is_published: true });
+      setForm({ title: "", image_url: "", style_tags: "", is_published: true });
     }
     setShowForm(true);
   };
@@ -92,7 +87,7 @@ export default function AdminInspirationsPage() {
   const closeForm = () => {
     setShowForm(false);
     setEditingInspiration(null);
-    setForm({ title: "", description: "", image_url: "", style_tags: "", is_published: true });
+    setForm({ title: "", image_url: "", style_tags: "", is_published: true });
   };
 
   // 提交表单
@@ -106,7 +101,6 @@ export default function AdminInspirationsPage() {
 
       const payload = {
         title: form.title,
-        description: form.description || null,
         image_url: form.image_url || null,
         style_tags: tags.length > 0 ? tags : null,
         is_published: form.is_published,
@@ -278,9 +272,6 @@ export default function AdminInspirationsPage() {
               {/* 内容 */}
               <div className="p-4">
                 <h3 className="font-semibold text-primary mb-1 truncate">{inspiration.title}</h3>
-                {inspiration.description && (
-                  <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{inspiration.description}</p>
-                )}
 
                 {/* 风格标签 */}
                 {inspiration.style_tags && inspiration.style_tags.length > 0 && (
@@ -357,18 +348,6 @@ export default function AdminInspirationsPage() {
                     className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm"
                     placeholder="搭配灵感标题"
                     required
-                  />
-                </div>
-
-                {/* 描述 */}
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1.5">描述</label>
-                  <textarea
-                    value={form.description}
-                    onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm resize-none"
-                    rows={3}
-                    placeholder="搭配灵感描述（可选）"
                   />
                 </div>
 

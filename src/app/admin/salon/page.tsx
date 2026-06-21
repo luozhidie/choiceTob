@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff, Loader2, Calendar,
 } from "lucide-react";
@@ -31,12 +30,7 @@ export default function AdminSalonPage() {
     title: "", description: "", event_date: "", location: "", price_individual: 0, price_group: 0, capacity: 30, registered: 0, image_url: "", is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
-
-  useEffect(() => { checkUser(); fetchData(); }, []);
-
-  const checkUser = async () => {
 
   const fetchData = async () => {
     setLoading(true);
@@ -45,6 +39,8 @@ export default function AdminSalonPage() {
     else setEvents(data || []);
     setLoading(false);
   };
+
+  useEffect(() => { fetchData(); }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -135,7 +131,7 @@ export default function AdminSalonPage() {
                     <span className="text-muted-foreground">/{event.capacity}</span>
                   </td>
                   <td className="px-6 py-4">
-                    <button onClick={() => togglePublish(event)} className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium transition-colors ${event.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
+                    <button onClick={() => togglePublish(event)} className={`inline-flex items-center gap-1 px-[10px] py-[2px] rounded-full text-xs font-medium transition-colors ${event.is_published ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}`}>
                       {event.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
                     </button>
                   </td>
@@ -162,34 +158,34 @@ export default function AdminSalonPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">活动名称 <span className="text-red-500">*</span></label>
-                <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：春季色彩搭配沙龙" />
+                <input type="text" required value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：春季色彩搭配沙龙" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">活动日期 <span className="text-red-500">*</span></label>
-                  <input type="date" required value={formData.event_date} onChange={(e) => setFormData({ ...formData, event_date: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
+                  <input type="date" required value={formData.event_date} onChange={(e) => setFormData({ ...formData, event_date: e.target.value })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">活动地点</label>
-                  <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：深圳市南山区" />
+                  <input type="text" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：深圳市南山区" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">活动描述</label>
-                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入活动描述" />
+                <textarea value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors resize-none" placeholder="输入活动描述" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">个人价格（元）</label>
-                  <input type="number" value={formData.price_individual} onChange={(e) => setFormData({ ...formData, price_individual: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0" />
+                  <input type="number" value={formData.price_individual} onChange={(e) => setFormData({ ...formData, price_individual: parseInt(e.target.value) || 0 })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">团体价格（元）</label>
-                  <input type="number" value={formData.price_group} onChange={(e) => setFormData({ ...formData, price_group: parseInt(e.target.value) || 0 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0" />
+                  <input type="number" value={formData.price_group} onChange={(e) => setFormData({ ...formData, price_group: parseInt(e.target.value) || 0 })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="0" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">容量（人数）</label>
-                  <input type="number" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 30 })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="30" />
+                  <input type="number" value={formData.capacity} onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 30 })} className="w-full px-4 py-[10px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="30" />
                 </div>
               </div>
               <div>
@@ -221,5 +217,4 @@ export default function AdminSalonPage() {
       )}
     </div>
   );
-}
 }

@@ -447,13 +447,13 @@ export default function SalonEventsPage() {
                         onClick={() => openEdit(event)}
                         className="text-blue-600 hover:text-blue-800 mr-3 text-xs"
                       >
-                        <Edit2 className="w-3.5 h-3.5 inline" /> 编辑
+                        <Edit2 className="w-[14px] h-[14px] inline" /> 编辑
                       </button>
                       <button
                         onClick={() => deleteEvent(event.id!, event.event_name)}
                         className="text-red-500 hover:text-red-700 text-xs"
                       >
-                        <Trash2 className="w-3.5 h-3.5 inline" /> 删除
+                        <Trash2 className="w-[14px] h-[14px] inline" /> 删除
                       </button>
                     </td>
                   </tr>

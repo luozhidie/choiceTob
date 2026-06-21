@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
   ArrowLeft, Star, Loader2, AlertCircle,
-  Search, Sparkles, Users, ChevronDown,
+  Search, Users,
 } from "lucide-react";
 
 interface CelebrityItem {
@@ -26,22 +24,28 @@ const CELEBRITIES = [
 ];
 
 export default function AdminCelebrityPage() {
-  const router = useRouter();
   // middleware 已验证管理员身份，无需再次检查
   const [keyword, setKeyword] = useState("");
-  const [results, setResults] = useState<CelebrityItem[]>([]);
+  const [items, setItems] = useState<CelebrityItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [source, setSource] = useState<"taobao" | "ai" | "">("");
 
   // 搜索明星同款
   const handleSearch = async () => {
     if (!keyword.trim()) return;
     setLoading(true);
+    setError("");
     try {
       const res = await fetch(`/api/celebrity-search?q=${encodeURIComponent(keyword)}`);
       const data = await res.json();
-      setResults(data.results || []);
+      const list: CelebrityItem[] = data.results || [];
+      setItems(list);
+      if (data.source) setSource(data.source);
+      if (list.length === 0) setError("未找到相关结果，请尝试其他明星名称");
     } catch (e) {
       console.error("搜索失败:", e);
+      setError("搜索失败，请稍后重试");
     } finally {
       setLoading(false);
     }
@@ -71,7 +75,7 @@ export default function AdminCelebrityPage() {
               placeholder="输入明星名称，如：杨幂"
               className="flex-1 min-w-[200px] rounded-lg bg-gray-800 border border-gray-700 px-4 py-2.5 text-sm focus:border-pink-500 outline-none"
             />
-            <button disabled={loading} onClick={searchCelebrity}
+            <button disabled={loading} onClick={handleSearch}
               className="px-5 py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 disabled:opacity-40 text-sm font-medium flex items-center gap-2">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
               搜索
