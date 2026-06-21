@@ -59,52 +59,31 @@ export default function AdminVIPPage() {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      // 同时查询所有可能存储客户数据的表
-      const results = await Promise.allSettled([
-        supabase.from("vip_customers").select("*").order("id", { ascending: false }).limit(200),
-        supabase.from("customers").select("*").order("id", { ascending: false }).limit(200),
-        supabase.from("profiles").select("*").order("id", { ascending: false }).limit(200),
-      ]);
+      // 通过服务端 API 获取数据（绕过 RLS 限制）
+      const res = await fetch("/api/admin/vip-data");
+      const json = await res.json();
 
-      const allData: any[] = [];
-      const sourceCounts: Record<string, number> = {};
+      if (json.success && json.data) {
+        // 用兼容映射标准化
+        const normalized = json.data.map((raw: any) => normalizeMember(raw, raw._source || "未知"));
 
-      // vip_customers
-      if (results[0].status === "fulfilled" && results[0].value.data?.length) {
-        const d = results[0].value.data;
-        allData.push(...d.map((r: any) => normalizeMember(r, "色彩季型录入")));
-        sourceCounts["色彩季型录入(vip_customers)"] = d.length;
-        if (d.length > 0) console.log("[vip_customers] 字段:", Object.keys(d[0]), "样例:", JSON.stringify(d[0]).slice(0, 300));
+        // 统计来源
+        const sourceCounts: Record<string, number> = {};
+        json.data.forEach((r: any) => {
+          const src = r._source || "未知";
+          sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+          if ((sourceCounts[src] || 0) === 1) {
+            console.log(`[${src}] 字段:`, Object.keys(r), "样例:", JSON.stringify(r).slice(0, 300));
+          }
+        });
+
+        const infoParts = Object.entries(sourceCounts).map(([k, v]) => `${k}: ${v}条`);
+        setDebugInfo(`共 ${normalized.length} 条 (${infoParts.join(" + ")})`);
+        setMembers(normalized);
+      } else {
+        setDebugInfo("API返回空: " + JSON.stringify(json).slice(0, 200));
+        setMembers([]);
       }
-
-      // customers
-      if (results[1].status === "fulfilled" && results[1].value.data?.length) {
-        const d = results[1].value.data;
-        allData.push(...d.map((r: any) => normalizeMember(r, "客户管理")));
-        sourceCounts["客户管理(customers)"] = d.length;
-        if (d.length > 0) console.log("[customers] 字段:", Object.keys(d[0]), "样例:", JSON.stringify(d[0]).slice(0, 300));
-      }
-
-      // profiles（注册用户）
-      if (results[2].status === "fulfilled" && results[2].value.data?.length) {
-        const d = results[2].value.data;
-        // 只取有名字的记录
-        const withName = d.filter((r: any) => r.full_name || r.name || r.phone || r.email);
-        allData.push(...withName.map((r: any) => normalizeMember(r, "注册用户")));
-        if (withName.length > 0) sourceCounts["注册用户(profiles)"] = withName.length;
-      }
-
-      // 按id去重
-      const seen = new Set<string>();
-      const deduped = allData.filter((m) => {
-        if (!m.id || seen.has(m.id)) return false;
-        seen.add(m.id);
-        return true;
-      });
-
-      const infoParts = Object.entries(sourceCounts).map(([k, v]) => `${k}: ${v}条`);
-      setDebugInfo(deduped.length > 0 ? `共 ${deduped.length} 条 (${infoParts.join(" + ")})` : `未找到任何客户数据`);
-      setMembers(deduped);
     } catch (err: any) {
       showToast("error", "加载失败：" + err.message);
       console.error("加载错误:", err);
@@ -121,13 +100,15 @@ export default function AdminVIPPage() {
   const handleDelete = async (member: any) => {
     if (!confirm(`确定删除「${member.name}」？`)) return;
     try {
-      let error;
-      if (member._source === "色彩季型录入") {
-        ({ error } = await supabase.from("vip_customers").delete().eq("id", member.id));
-      } else if (member._source === "客户管理") {
-        ({ error } = await supabase.from("customers").delete().eq("id", member.id));
-      }
-      if (error) throw error;
+      const table = member._source === "色彩季型录入" ? "vip_customers"
+        : member._source === "客户管理" ? "customers" : "profiles";
+      const res = await fetch("/api/admin/vip-data", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: member.id, table }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       showToast("success", "已删除");
       fetchMembers();
     } catch (err: any) {
