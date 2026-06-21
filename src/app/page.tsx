@@ -183,13 +183,13 @@ export default function Home() {
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-1 px-3.5 py-1 rounded-full mb-5" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <span className="text-[#d8a0c0] text-[11px] tracking-wider">✦</span>
-            <span className="text-white/60 text-[11px] font-medium tracking-widest">数据驱动 · 智选未来</span>
+            <span className="text-white/60 text-[11px] font-medium tracking-widest">数据驱动．智选未来</span>
           </div>
           <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight" style={{ fontSize: "clamp(30px, 5vw, 44px)" }}>
-            服装供应链<span className="text-[#e89aac]">智选</span>平台
+            骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
           </h1>
           <p className="text-white/40 mb-8 leading-relaxed" style={{ fontSize: "14px", maxWidth: "520px" }}>
-            从选品企划到营销落地，以数据智能驱动服装行业全链路高效运营，助力品牌精准选品、科学决策。
+            从选品企划到营销落地，以数据智能驱动全链路高效运营，助力品牌精准选品、科学决策。
           </p>
           <form onSubmit={handleSearch} className="flex gap-3 max-w-lg">
             <div className="flex-1 relative">
@@ -265,10 +265,10 @@ export default function Home() {
           {/* ====== 大图标题 + 按钮（叠在图片上） ====== */}
           <div className="text-center text-white px-4 pt-10 pb-16">
             <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(24px, 4vw, 36px)" }}>
-              骆芷蝶智选 · 好物推荐
+              爆款选品 · 拿货精选
             </h2>
             <p className="text-white/85 mb-8 tracking-[0.2em] font-light" style={{ fontSize: "15px" }}>
-              不自用 · 不分享
+              骆芷蝶智选 · 专业推荐
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/buyer" className="px-9 py-3 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
