@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import {
   Loader2, Crown, Eye, Wallet, Search, RefreshCw, Clock, AlertTriangle,
   Users, UserCheck, UserX, UserPlus, Calendar, Mail, Phone, Building2,
@@ -11,13 +10,17 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface VipMember {
   id: string;
-  email: string;
-  full_name: string | null;
+  name: string;
   phone: string | null;
-  company_name: string | null;
-  membership_type: "view_price" | "deposit_discount";
-  membership_expires_at: string;
+  wechat: string | null;
+  gender: string | null;
+  color_season: string | null;
+  main_style: string | null;
+  membership_type: "view_price" | "deposit_discount" | null;
+  membership_expires_at: string | null;
   created_at: string;
+  store_id: string | null;
+  store_name?: string;
 }
 
 const MEMBERSHIP_LABELS: Record<string, { label: string; icon: any; color: string }> = {
@@ -27,7 +30,6 @@ const MEMBERSHIP_LABELS: Record<string, { label: string; icon: any; color: strin
 
 export default function AdminVIPPage() {
   const [members, setMembers] = useState<VipMember[]>([]);
-  const [filteredMembers, setFilteredMembers] = useState<VipMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("");
@@ -38,63 +40,32 @@ export default function AdminVIPPage() {
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const supabase = createClient();
-  const router = useRouter();
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 获取所有付费会员（同时查询 profiles + membership_orders）
+  // 获取所有 VIP 客户（从 vip_customers 表）
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      // 1. 从 profiles 表查已有会员
-      const { data: profileData, error: profileErr } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, phone, company_name, membership_type, membership_expires_at, created_at")
-        .in("membership_type", ["view_price", "deposit_discount"]);
+      const { data, error } = await supabase
+        .from("vip_customers")
+        .select(`
+          id, name, phone, wechat, gender, color_season, main_style,
+          membership_type, membership_expires_at, created_at, store_id,
+          stores (name)
+        `)
+        .order("created_at", { ascending: false });
 
-      if (profileErr) console.warn("profiles 查询警告:", profileErr.message);
+      if (error) throw error;
 
-      // 2. 从 membership_orders 查已确认的订单（补充来源）
-      const { data: orderData, error: orderErr } = await supabase
-        .from("membership_orders")
-        .select("*")
-        .eq("status", "confirmed");
-
-      if (orderErr) console.warn("orders 查询警告:", orderErr.message);
-
-      // 合并数据：以 profiles 为基础，用 orders 补充
-      const memberMap = new Map<string, VipMember>();
-
-      // 先加入 profiles 数据
-      (profileData || []).forEach((p: any) => {
-        memberMap.set(p.id, p as VipMember);
-      });
-
-      // 再用 orders 补充（如果 profiles 里没有这个用户）
-      (orderData || []).forEach((o: any) => {
-        if (!memberMap.has(o.user_id)) {
-          memberMap.set(o.user_id, {
-            id: o.user_id,
-            email: o.user_email || "",
-            full_name: o.user_name || null,
-            phone: o.user_phone || null,
-            company_name: null,
-            membership_type: o.plan_id || "view_price",
-            membership_expires_at: o.confirmed_at || o.created_at,
-            created_at: o.created_at,
-          });
-        }
-      });
-
-      const allMembers = Array.from(memberMap.values()).sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setMembers(allMembers);
-      setFilteredMembers(allMembers);
+      const list = (data || []).map((item: any) => ({
+        ...item,
+        store_name: item.stores?.name || "",
+      }));
+      setMembers(list as VipMember[]);
     } catch (err: any) {
       showToast("error", "加载失败：" + err.message);
     } finally {
@@ -105,22 +76,21 @@ export default function AdminVIPPage() {
   useEffect(() => { fetchMembers(); }, []);
 
   // 搜索 + 筛选
-  useEffect(() => {
+  const filteredMembers = useMemo(() => {
     let list = [...members];
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(
         (m) =>
-          (m.email && m.email.toLowerCase().includes(q)) ||
-          (m.full_name && m.full_name.toLowerCase().includes(q)) ||
-          (m.company_name && m.company_name.toLowerCase().includes(q)) ||
-          (m.phone && m.phone.includes(q))
+          (m.name && m.name.toLowerCase().includes(q)) ||
+          (m.phone && m.phone?.includes(q)) ||
+          (m.wechat && m.wechat.toLowerCase().includes(q))
       );
     }
     if (filterType) {
       list = list.filter((m) => m.membership_type === filterType);
     }
-    setFilteredMembers(list);
+    return list;
   }, [search, filterType, members]);
 
   // 修改会员类型
@@ -132,7 +102,7 @@ export default function AdminVIPPage() {
       if (editExpiry) updates.membership_expires_at = new Date(editExpiry).toISOString();
 
       const { error } = await supabase
-        .from("profiles")
+        .from("vip_customers")
         .update(updates)
         .eq("id", member.id);
 
@@ -147,13 +117,13 @@ export default function AdminVIPPage() {
     }
   };
 
-  // 移除会员（降级为none）
+  // 移除会员（降级为 none）
   const handleRevoke = async (member: VipMember) => {
-    if (!confirm(`确定取消「${member.email}」的会员资格？`)) return;
+    if (!confirm(`确定取消「${member.name || member.phone}」的会员资格？`)) return;
     try {
       const { error } = await supabase
-        .from("profiles")
-        .update({ membership_type: "none", membership_expires_at: null })
+        .from("vip_customers")
+        .update({ membership_type: null, membership_expires_at: null })
         .eq("id", member.id);
       if (error) throw error;
       showToast("success", "已取消会员资格");
@@ -165,14 +135,14 @@ export default function AdminVIPPage() {
 
   // 续期一个月
   const handleExtend = async (member: VipMember) => {
-    if (!confirm(`确定为「${member.email}」续期1个月？`)) return;
+    if (!confirm(`确定为「${member.name || member.phone}」续期1个月？`)) return;
     try {
       const current = member.membership_expires_at
         ? new Date(member.membership_expires_at)
         : new Date();
       current.setMonth(current.getMonth() + 1);
       const { error } = await supabase
-        .from("profiles")
+        .from("vip_customers")
         .update({ membership_expires_at: current.toISOString() })
         .eq("id", member.id);
       if (error) throw error;
@@ -187,7 +157,7 @@ export default function AdminVIPPage() {
   const now = new Date();
   const next30Days = new Date(now.getTime() + 30 * 24 * 3600 * 1000);
 
-  const totalMembers = members.length;
+  const totalMembers = members.filter((m) => m.membership_type).length;
   const activeMembers = members.filter(
     (m) => m.membership_expires_at && new Date(m.membership_expires_at) > now
   ).length;
@@ -259,7 +229,7 @@ export default function AdminVIPPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
-            placeholder="搜索邮箱/姓名/店名/手机号..."
+            placeholder="搜索姓名/手机号/微信号..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
@@ -299,7 +269,7 @@ export default function AdminVIPPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">用户</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">客户</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">联系方式</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">会员类型</th>
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">到期时间</th>
@@ -312,24 +282,26 @@ export default function AdminVIPPage() {
                   const isExpired =
                     member.membership_expires_at &&
                     new Date(member.membership_expires_at) <= now;
-                  const memberInfo = MEMBERSHIP_LABELS[member.membership_type];
+                  const memberInfo = member.membership_type ? MEMBERSHIP_LABELS[member.membership_type] : null;
                   const MemberIcon = memberInfo?.icon || Crown;
 
                   return (
                     <tr key={member.id} className={`hover:bg-gray-50/50 transition-colors ${isExpired ? "opacity-60" : ""}`}>
-                      {/* 用户信息 */}
+                      {/* 客户信息 */}
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                             <span className="text-xs font-bold text-primary">
-                              {(member.full_name || member.email || "?").charAt(0).toUpperCase()}
+                              {(member.name || "?")[0].toUpperCase()}
                             </span>
                           </div>
                           <div className="min-w-0">
                             <p className="text-sm font-semibold text-primary truncate">
-                              {member.full_name || "未设置姓名"}
+                              {member.name || "未设置姓名"}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">{member.email}</p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {member.store_name && `店铺: ${member.store_name}`}
+                            </p>
                           </div>
                         </div>
                       </td>
@@ -342,12 +314,12 @@ export default function AdminVIPPage() {
                               <Phone className="w-3 h-3" /> {member.phone}
                             </div>
                           )}
-                          {member.company_name && (
+                          {member.wechat && (
                             <div className="flex items-center gap-1 text-xs text-gray-500">
-                              <Building2 className="w-3 h-3" /> {member.company_name}
+                              <Mail className="w-3 h-3" /> {member.wechat}
                             </div>
                           )}
-                          {!member.phone && !member.company_name && (
+                          {!member.phone && !member.wechat && (
                             <span className="text-xs text-gray-300">-</span>
                           )}
                         </div>
@@ -366,12 +338,14 @@ export default function AdminVIPPage() {
                             <option value="deposit_discount">高阶VIP</option>
                           </select>
                         ) : (
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${memberInfo.color}`}
-                          >
-                            <MemberIcon className="w-3 h-3" />
-                            {memberInfo.label}
-                          </span>
+                          memberInfo && (
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${memberInfo.color}`}
+                            >
+                              <MemberIcon className="w-3 h-3" />
+                              {memberInfo.label}
+                            </span>
+                          )
                         )}
                       </td>
 
@@ -435,7 +409,7 @@ export default function AdminVIPPage() {
                               <button
                                 onClick={() => {
                                   setEditingId(member.id);
-                                  setEditType(member.membership_type);
+                                  setEditType(member.membership_type || "");
                                   setEditExpiry(
                                     member.membership_expires_at
                                       ? new Date(member.membership_expires_at).toISOString().slice(0, 10)
