@@ -18,11 +18,9 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Inspiration {
   id: string;
   title: string;
-  image_url: string | null;
   style_tags: string[] | null;
   is_published: boolean;
   created_at: string;
-  updated_at: string;
 }
 
 export default function AdminInspirationsPage() {
@@ -35,7 +33,6 @@ export default function AdminInspirationsPage() {
 
   const [form, setForm] = useState({
     title: "",
-    image_url: "",
     style_tags: "",
     is_published: true,
   });
@@ -53,7 +50,7 @@ export default function AdminInspirationsPage() {
     try {
       const { data, error } = await supabase
         .from("outfit_matches")
-        .select("id, title, image_url, style_tags, is_published, created_at, updated_at")
+        .select("id, title, style_tags, is_published, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       setInspirations(data || []);
