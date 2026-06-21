@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -45,18 +45,13 @@ export default function AdminFashionTrendsPage() {
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchTrends();
+    
+fetchTrends();
   }, []);
-
-  const checkUser = async () => {
-  };
-
-  const fetchTrends = async () => {
+const fetchTrends = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("fashion_trends")

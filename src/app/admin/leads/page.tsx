@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -84,21 +84,16 @@ export default function AdminLeadsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    
+}, []);
 
   useEffect(() => {
     fetchLeads();
   }, [page, search, filterSource, filterStatus]);
-
-  const checkUser = async () => {
-  };
-
-  const fetchLeads = async () => {
+const fetchLeads = async () => {
     setLoading(true);
     let query = supabase
       .from("leads")

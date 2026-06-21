@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -41,18 +41,13 @@ export default function AdminBuyerStepsPage() {
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchSteps();
+    
+fetchSteps();
   }, []);
-
-  const checkUser = async () => {
-  };
-
-  const fetchSteps = async () => {
+const fetchSteps = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("buyer_steps")

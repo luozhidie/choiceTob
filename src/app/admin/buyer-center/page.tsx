@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff, Loader2, ShoppingBag,
 } from "lucide-react";
@@ -29,14 +29,11 @@ export default function AdminBuyerCenterPage() {
     name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchData(); }, []);
-
-  const checkUser = async () => { /* middleware 已验证 */ };
-
-  const fetchData = async () => {
+  useEffect(() => { 
+fetchData(); }, []);
+const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("buyer_packages").select("*").order("sort_order", { ascending: true });
     if (error) console.error(error);

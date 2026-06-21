@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import { FEMALE_STYLES, MALE_STYLES, getStyleProLabel } from "@/lib/styles";
 import {
   Trash2,
@@ -45,21 +45,16 @@ export default function AdminStyleTestResultsPage() {
   const [total, setTotal] = useState(0);
   const [detailResult, setDetailResult] = useState<StyleTestResult | null>(null);
   const [mainStyles, setMainStyles] = useState<string[]>([]);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-  }, []);
+    
+}, []);
 
   useEffect(() => {
     fetchResults();
   }, [page, search, filterGender, filterMainStyle]);
-
-  const checkUser = async () => {
-  };
-
-  const fetchResults = async () => {
+const fetchResults = async () => {
     setLoading(true);
     let query = supabase
       .from("style_test_results")

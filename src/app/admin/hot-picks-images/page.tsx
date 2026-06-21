@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -45,18 +45,13 @@ export default function AdminHotPicksImagesPage() {
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("all");
   const [tab, setTab] = useState<string>("all");
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchImages();
+    
+fetchImages();
   }, []);
-
-  const checkUser = async () => {
-  };
-
-  const fetchImages = async () => {
+const fetchImages = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("hot_picks_images")

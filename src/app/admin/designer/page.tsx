@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff, Loader2, Palette,
 } from "lucide-react";
@@ -29,13 +28,9 @@ export default function AdminDesignerPage() {
     name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchData(); }, []);
-
-  const checkUser = async () => {
-
+  // 加载数据
   const fetchData = async () => {
     setLoading(true);
     const { data, error } = await supabase.from("designer_packages").select("*").order("sort_order", { ascending: true });
@@ -44,11 +39,15 @@ export default function AdminDesignerPage() {
     setLoading(false);
   };
 
+  useEffect(() => { fetchData(); }, []);
+
+  // 上传图片
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const fileName = `${Math.random()}.${file.name.split(".").pop()}`;
+    const fileExt = file.name.split(".").pop();
+    const fileName = `${Date.now()}.${fileExt}`;
     const { error } = await supabase.storage.from("designer-images").upload(fileName, file);
     if (error) { alert("上传失败：" + error.message); setUploading(false); return; }
     const { data } = supabase.storage.from("designer-images").getPublicUrl(fileName);
@@ -56,6 +55,7 @@ export default function AdminDesignerPage() {
     setUploading(false);
   };
 
+  // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
@@ -70,12 +70,14 @@ export default function AdminDesignerPage() {
     fetchData();
   };
 
+  // 编辑
   const handleEdit = (pkg: DesignerPackage) => {
     setEditing(pkg);
     setFormData({ name: pkg.name, description: pkg.description || "", features: pkg.features || "", price_individual: pkg.price_individual || 0, price_group: pkg.price_group || 0, image_url: pkg.image_url || "", is_published: pkg.is_published, sort_order: pkg.sort_order || 0 });
     setShowModal(true);
   };
 
+  // 删除
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个套餐吗？")) return;
     const { error } = await supabase.from("designer_packages").delete().eq("id", id);
@@ -83,6 +85,7 @@ export default function AdminDesignerPage() {
     fetchData();
   };
 
+  // 切换发布状态
   const togglePublish = async (pkg: DesignerPackage) => {
     const { error } = await supabase.from("designer_packages").update({ is_published: !pkg.is_published }).eq("id", pkg.id);
     if (error) { alert("操作失败：" + error.message); return; }
@@ -210,5 +213,4 @@ export default function AdminDesignerPage() {
       )}
     </div>
   );
-}
 }

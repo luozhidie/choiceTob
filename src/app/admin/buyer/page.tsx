@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import { STYLE_KEY_MAP, FEMALE_STYLES, MALE_STYLES, COLOR_SEASON_PRO_MAP, COLOR_SEASONS_PRO, getColorSeasonLabel, getStyleProLabel, getColorSeasonProLabel } from "@/lib/styles";
 import {
   Plus,
@@ -67,20 +67,10 @@ export default function AdminBuyerPage() {
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchProducts(); }, []);
-  const checkUser = async () => { /* verified */ }
-  const fetchProducts = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("buyer_products")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (!error && data) setProducts(data as BuyerProduct[]);
-    setLoading(false);
-  };
+  useEffect(() => { 
+fetchProducts(); }, []);
 
   const openCreate = () => {
     setEditing(null);

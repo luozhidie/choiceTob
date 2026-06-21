@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Loader2,
   Megaphone,
@@ -51,18 +51,14 @@ export default function AdminMarketingPlanPage() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ budgetPlan: true, vipStrategies: true, timeline: true, productFocus: true });
   const [savedCampaigns, setSavedCampaigns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchStores();
+    
+fetchStores();
     fetchSavedCampaigns();
   }, []);
-
-  const checkUser = async () => { /* middleware 已验证 */ };
-
-  const fetchStores = async () => {
+const fetchStores = async () => {
     const { data } = await supabase.from("stores").select("id, name, business_goals").order("name");
     if (data) setStores(data);
   };

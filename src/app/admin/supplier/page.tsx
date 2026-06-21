@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -39,18 +39,13 @@ export default function AdminSupplierPage() {
     description: "",
     is_published: false,
   });
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchSuppliers();
+    
+fetchSuppliers();
   }, []);
-
-  const checkUser = async () => {
-  };
-
-  const fetchSuppliers = async () => {
+const fetchSuppliers = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("suppliers")

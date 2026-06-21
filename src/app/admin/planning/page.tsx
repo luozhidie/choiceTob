@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { COLOR_SEASONS_PRO, getColorSeasonProLabel, getStyleProLabel } from "@/lib/styles";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
   Loader2, Lightbulb, Star,
@@ -111,21 +111,11 @@ export default function AdminPlanningPage() {
     is_template: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchReports(); }, []);
-
-  const checkUser = async () => {
-
-  const fetchReports = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("planning_reports").select("*").order("created_at", { ascending: false });
-    if (!error && data) setReports(data as PlanningReport[]);
-    setLoading(false);
-  };
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => { 
+fetchReports(); }, []);
+const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
     setUploading(true);
@@ -423,5 +413,4 @@ export default function AdminPlanningPage() {
       )}
     </div>
   );
-}
 }

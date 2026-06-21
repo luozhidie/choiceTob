@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import {  } from "next/navigation";
 import {
   Plus,
   Pencil,
@@ -42,18 +42,13 @@ export default function AdminSupplierImagesPage() {
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
   const supabase = createClient();
 
   useEffect(() => {
-    checkUser();
-    fetchImages();
+    
+fetchImages();
   }, []);
-
-  const checkUser = async () => {
-  };
-
-  const fetchImages = async () => {
+const fetchImages = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("supplier_images")
