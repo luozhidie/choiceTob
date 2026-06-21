@@ -125,7 +125,6 @@ const menuGroups = [
     { label: "课程管理", href: "/admin/courses" },
     { label: "课程购买记录", href: "/admin/course-purchases" },
     { label: "流行资讯", href: "/admin/fashion-trends" },
-    { label: "服装趋势", href: "/admin/trend-predict" },
   ]},
 
   // ─── 趋势（保留额外分组） ───
