@@ -51,28 +51,37 @@ export default function AdminVIPPage() {
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      // 查询 vip_customers 表
-      const { data, error } = await supabase
-        .from("vip_customers")
-        .select("*")
-        .order("id", { ascending: false })
-        .limit(100);
+      // 同时查询两个表：vip_customers + customers（客户管理页面录入的数据）
+      const [vipRes, custRes] = await Promise.all([
+        supabase.from("vip_customers").select("*").order("id", { ascending: false }).limit(100),
+        supabase.from("customers").select("*").order("id", { ascending: false }).limit(100),
+      ]);
 
-      if (error) throw error;
+      const allData: any[] = [];
+      const sources: string[] = [];
 
-      if (data && data.length > 0) {
-        // 记录第一条数据的所有字段名用于调试
-        const keys = Object.keys(data[0]);
-        setDebugInfo(`字段: ${keys.join(", ")}`);
-        console.log("vip_customers 首条数据:", data[0], "字段:", keys);
-
-        // 用兼容映射标准化每条记录
-        const normalized = data.map(normalizeMember);
-        setMembers(normalized);
-      } else {
-        setMembers([]);
-        setDebugInfo("表为空");
+      if (vipRes.data && vipRes.data.length > 0) {
+        allData.push(...vipRes.data.map((r: any) => ({ ...normalizeMember(r), _source: "vip_customers" })));
+        sources.push(`vip_customers: ${vipRes.data.length}条`);
+        console.log("vip_customers 字段:", Object.keys(vipRes.data[0]), "数据:", vipRes.data[0]);
       }
+
+      if (custRes.data && custRes.data.length > 0) {
+        allData.push(...custRes.data.map((r: any) => ({ ...normalizeMember(r), _source: "customers" })));
+        sources.push(`customers: ${custRes.data.length}条`);
+        console.log("customers 字段:", Object.keys(custRes.data[0]), "数据:", custRes.data[0]);
+      }
+
+      // 按id去重（同一用户可能两个表都有，保留有更多信息的）
+      const seen = new Set<string>();
+      const deduped = allData.filter((m) => {
+        if (seen.has(m.id)) return false;
+        seen.add(m.id);
+        return true;
+      });
+
+      setDebugInfo(`数据来源: ${sources.join(" + ") || "无"}`);
+      setMembers(deduped);
     } catch (err: any) {
       showToast("error", "加载失败：" + err.message);
       console.error("VIP加载错误:", err);
@@ -168,6 +177,7 @@ export default function AdminVIPPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">色彩季型</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">主风格</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">店铺/VIP等级</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">来源</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">录入时间</th>
               </tr>
             </thead>
@@ -186,6 +196,13 @@ export default function AdminVIPPage() {
                   <td className="px-4 py-3 text-sm text-gray-600">
                     <div>{m.store_name || "-"}</div>
                     {m.vip_level && m.vip_level !== "-" && <div className="text-[10px] text-accent">VIP {m.vip_level}</div>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      m._source === "customers" ? "bg-blue-50 text-blue-600" : "bg-green-50 text-green-600"
+                    }`}>
+                      {m._source === "customers" ? "客户管理录入" : "色彩季型录入"}
+                    </span>
                   </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(m.created_at).toLocaleDateString("zh-CN")}</td>
                 </tr>
