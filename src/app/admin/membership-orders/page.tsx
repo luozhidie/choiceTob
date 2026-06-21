@@ -1,298 +1,200 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import {
-  ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2,
-  AlertTriangle, RefreshCw, Search, DollarSign, Clock, UserCheck,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2, RefreshCw, DollarSign, Clock, UserCheck } from "lucide-react";
 
-interface Order {
-  id: string;
-  user_id: string;
-  user_email: string;
-  user_name: string;
-  user_phone: string;
-  plan_id: string;
-  plan_name: string;
-  price: number;
-  status: string;
-  payment_method: string;
-  created_at: string;
-  confirmed_at?: string;
+const STATUS_MAP: Record<string, { label: string; cls: string }> = {
+  pending: { label: "待确认", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
+  confirmed: { label: "已开通", cls: "bg-green-50 text-green-700 border border-green-200" },
+  cancelled: { label: "已取消", cls: "bg-gray-100 text-gray-500 border border-gray-200" },
+};
+
+// 服务端获取订单
+async function getOrders() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("membership_orders")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return [];
+  return data || [];
 }
 
-const STATUS_LABLES: Record<string, { label: string; icon: any; color: string }> = {
-  pending: { label: "待确认", icon: Clock, color: "text-amber-600 bg-amber-50 border-amber-200" },
-  confirmed: { label: "已开通", icon: UserCheck, color: "text-green-600 bg-green-50 border-green-200" },
-  cancelled: { label: "已取消", icon: XCircle, color: "text-gray-500 bg-gray-50 border-gray-200" },
-};
+// 服务端删除订单
+async function deleteOrder(orderId: string): Promise<{ success?: boolean; error?: string }> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const PLAN_TYPE_MAP: Record<string, { label: string; icon: any; color: string }> = {
-  view_price: { label: "查价特权", icon: DollarSign, color: "text-blue-600 bg-blue-50" },
-  deposit_discount: { label: "拿货折扣", icon: UserCheck, color: "text-accent bg-accent/10" },
-};
+  // 方案1：用 createClient 删除（service role 绕过RLS）
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("membership_orders").delete().eq("id", orderId);
+    if (error) throw new Error(error.message);
+    return { success: true };
+  } catch {}
 
-export default function AdminMembershipOrdersPage() {
-  const router = useRouter();
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("");
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [isAdmin] = useState(true);
+  // 方案2：直接用 REST API
+  try {
+    const res = await fetch(`${supabaseUrl}/rest/v1/membership_orders?id=eq.${encodeURIComponent(orderId)}`, {
+      method: "DELETE",
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Prefer: "return=minimal",
+      },
+    });
+    if (!res.ok) return { error: `HTTP ${res.status}` };
+    return { success: true };
+  } catch (e: any) {
+    return { error: e.message || "未知错误" };
+  }
+}
 
-  const supabase = createClient();
+export default async function MembershipOrdersPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string>>;
+}) {
+  const params = await searchParams;
+  const action = params.action;
+  const targetId = params.id;
 
-  // middleware 已验证管理员身份
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("membership_orders")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setOrders(data || []);
-    } catch (err: any) {
-      showToast("error", "加载失败：" + err.message);
-    } finally {
-      setLoading(false);
+  // 处理删除操作
+  if (action === "delete" && targetId) {
+    const result = await deleteOrder(targetId);
+    if (result.success) {
+      // redirect to show success
+      return new Response(null, { status: 302, headers: { Location: "/admin/membership-orders?msg=deleted" } });
     }
+  }
+
+  const msg = params.msg || null;
+  const orders = await getOrders();
+
+  const stats = {
+    total: orders.length,
+    pending: orders.filter(o => o.status === "pending").length,
+    confirmed: orders.filter(o => o.status === "confirmed").length,
+    revenue: orders.filter(o => o.status === "confirmed").reduce((s, o) => s + (o.price || 0), 0),
   };
 
-  useEffect(() => { if (isAdmin) fetchOrders(); }, [isAdmin]);
+  const filterStatus = params.status || "";
 
-  // 确认开通
-  const handleConfirm = async (order: Order) => {
-    if (!confirm(`确认开通「${order.user_name || order.user_email}」的VIP会员？`)) return;
-    setProcessingId(order.id);
-    try {
-      const { error } = await supabase
-        .from("membership_orders")
-        .update({ status: "confirmed", confirmed_at: new Date().toISOString() })
-        .eq("id", order.id);
-      if (error) throw error;
-      showToast("success", "已开通VIP");
-      fetchOrders();
-    } catch (err: any) {
-      showToast("error", "开通失败：" + err.message);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // 取消订单
-  const handleCancel = async (order: Order) => {
-    if (!confirm(`取消「${order.user_name || order.user_email}」的订单？`)) return;
-    setProcessingId(order.id);
-    try {
-      const { error } = await supabase
-        .from("membership_orders")
-        .update({ status: "cancelled" })
-        .eq("id", order.id);
-      if (error) throw error;
-      showToast("success", "已取消");
-      fetchOrders();
-    } catch (err: any) {
-      showToast("error", "取消失败：" + err.message);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // 删除订单（直接调用服务端API，service role 完全绕过RLS）
-  const handleDelete = async (id: string, email: string) => {
-    if (!confirm(`确定彻底删除「${email}」的订单记录？此操作不可恢复。`)) return;
-    setProcessingId(id);
-    try {
-      const res = await fetch("/api/admin/delete-membership-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "删除失败");
-      showToast("success", "已删除");
-      fetchOrders();
-    } catch (err: any) {
-      showToast("error", "删除失败：" + err.message);
-    } finally {
-      setProcessingId(null);
-    }
-  };
-
-  // 统计
-  const totalRevenue = orders
-    .filter((o) => o.status === "confirmed")
-    .reduce((sum, o) => sum + o.price, 0);
-  const pendingCount = orders.filter((o) => o.status === "pending").length;
-  const confirmedCount = orders.filter((o) => o.status === "confirmed").length;
-
-  // 筛选
-  const filteredOrders = orders.filter((o) => {
-    const matchStatus = !filterStatus || o.status === filterStatus;
-    const matchSearch = !search ||
-      o.user_email?.includes(search) ||
-      o.user_name?.includes(search) ||
-      o.user_phone?.includes(search);
-    return matchStatus && matchSearch;
-  });if (!isAdmin) return null;
+  const filtered = filterStatus ? orders.filter(o => o.status === filterStatus) : orders;
 
   return (
-    <div className="min-h-screen">
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${toast.type === "success" ? "bg-primary" : "bg-red-500"}`}
-          >
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div className="p-6">
-        {/* 标题 */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Link href="/admin/dashboard" className="text-muted-foreground hover:text-primary">
-                <ArrowLeft className="w-4 h-4" />
-              </Link>
-              <h1 className="text-2xl font-bold text-primary">VIP订单管理</h1>
-            </div>
-            <p className="text-sm text-muted-foreground">审核会员支付订单，确认开通或取消</p>
-          </div>
-          <button onClick={fetchOrders} className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5">
-            <RefreshCw className="w-4 h-4 inline mr-1" /> 刷新
-          </button>
+    <div className="min-h-screen p-6">
+      {/* 操作结果提示 */}
+      {msg && (
+        <div className="mb-6 px-5 py-3 rounded-xl font-medium text-sm shadow-sm bg-green-50 text-green-700 border border-green-200">
+          订单已成功删除
+          <a href="/admin/membership-orders" className="ml-3 underline">返回列表</a>
         </div>
+      )}
 
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl p-4 border shadow-sm">
-            <p className="text-xs text-muted-foreground">待确认</p>
-            <p className="text-2xl font-black text-amber-600">{pendingCount}</p>
+      {/* 标题 */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Link href="/admin/dashboard" className="text-muted-foreground hover:text-primary">
+              <ArrowLeft className="w-4 h-4" />
+            </Link>
+            <h1 className="text-2xl font-bold text-primary">VIP订单管理</h1>
           </div>
-          <div className="bg-white rounded-xl p-4 border shadow-sm">
-            <p className="text-xs text-muted-foreground">已开通</p>
-            <p className="text-2xl font-black text-green-600">{confirmedCount}</p>
-          </div>
-          <div className="bg-white rounded-xl p-4 border shadow-sm">
-            <p className="text-xs text-muted-foreground">累计营收</p>
-            <p className="text-2xl font-black text-accent">¥{(totalRevenue / 100).toFixed(0)}</p>
-          </div>
+          <p className="text-sm text-muted-foreground">审核会员支付订单，确认开通或取消</p>
         </div>
+      </div>
 
-        {/* 筛选 */}
-        <div className="flex gap-3 mb-4">
-          <input
-            value={search} onChange={(e) => setSearch(e.target.value)}
-            placeholder="搜索邮箱/姓名/手机号..."
-            className="flex-1 max-w-sm px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-          <select
-            value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 border rounded-lg text-sm"
-          >
-            <option value="">全部状态</option>
-            <option value="pending">待确认</option>
-            <option value="confirmed">已开通</option>
-            <option value="cancelled">已取消</option>
-          </select>
+      {/* 统计 */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <p className="text-xs text-muted-foreground">待确认</p>
+          <p className="text-2xl font-black text-amber-600">{stats.pending}</p>
         </div>
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <p className="text-xs text-muted-foreground">已开通</p>
+          <p className="text-2xl font-black text-green-600">{stats.confirmed}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border shadow-sm">
+          <p className="text-xs text-muted-foreground">累计营收</p>
+          <p className="text-2xl font-black text-accent">¥{(stats.revenue / 100).toFixed(0)}</p>
+        </div>
+      </div>
 
-        {/* 表格 */}
-        {loading ? (
-          <div className="text-center py-12"><Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" /></div>
-        ) : filteredOrders.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground text-sm">暂无订单</div>
-        ) : (
-          <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-gray-50/50 text-xs text-muted-foreground">
-                  <th className="text-left px-4 py-3">用户</th>
-                  <th className="text-left px-4 py-3">套餐</th>
-                  <th className="text-left px-4 py-3">支付</th>
-                  <th className="text-right px-4 py-3">金额</th>
-                  <th className="text-left px-4 py-3">时间</th>
-                  <th className="text-left px-4 py-3">状态</th>
-                  <th className="text-right px-4 py-3">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => {
-                  const statusInfo = STATUS_LABLES[order.status] || STATUS_LABLES.pending;
-                  const StatusIcon = statusInfo.icon;
-                  const planInfo = PLAN_TYPE_MAP[order.plan_id] || { label: order.plan_name, icon: DollarSign, color: "text-gray-600 bg-gray-50" };
-                  const PlanIcon = planInfo.icon;
-                  return (
-                    <tr key={order.id} className="border-t hover:bg-gray-50/50">
-                      <td className="px-4 py-3">
-                        <div>
-                          <p className="font-medium text-sm">{order.user_name || "-"}</p>
-                          <p className="text-xs text-muted-foreground">{order.user_email}</p>
-                          {order.user_phone && <p className="text-xs text-muted-foreground">{order.user_phone}</p>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${planInfo.color}`}>
-                          <PlanIcon className="w-3 h-3" /> {planInfo.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs">{order.payment_method === "wechat" ? "微信" : order.payment_method === "alipay" ? "支付宝" : "-"}</td>
-                      <td className="px-4 py-3 text-right font-bold">¥{(order.price / 100).toFixed(0)}</td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString("zh-CN")}</td>
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ${statusInfo.color}`}>
-                          <StatusIcon className="w-3 h-3" /> {statusInfo.label}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {order.status === "pending" ? (
-                          <div className="flex justify-end gap-1">
-                            <button
-                              onClick={() => handleConfirm(order)}
-                              disabled={processingId === order.id}
-                              className="px-3 py-1 text-xs bg-accent text-white rounded-lg disabled:opacity-50"
-                            >
-                              {processingId === order.id ? <Loader2 className="w-3 h-3 inline animate-spin" /> : "确认开通"}
-                            </button>
-                            <button
-                              onClick={() => handleCancel(order)}
-                              disabled={processingId === order.id}
-                              className="px-3 py-1 text-xs border rounded-lg disabled:opacity-50"
-                            >
-                              取消
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => handleDelete(order.id, order.user_email || "")}
-                            disabled={processingId === order.id}
-                            className="text-red-500 hover:text-red-700 disabled:opacity-50"
-                            title="删除"
-                          >
-                            {processingId === order.id ? <Loader2 className="w-3 h-3 inline animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+      {/* 筛选 */}
+      <div className="flex gap-3 mb-4">
+        <a href="?status=pending"
+          className={("px-3 py-2 rounded-lg text-sm border ") + (filterStatus === "pending" ? "bg-primary text-white border-primary" : "border-gray-200 hover:bg-gray-50")}>
+          待确认 ({stats.pending})
+        </a>
+        <a href="?status=confirmed"
+          className={("px-3 py-2 rounded-lg text-sm border ") + (filterStatus === "confirmed" ? "bg-green-600 text-white border-green-600" : "border-gray-200 hover:bg-gray-50")}>
+          已开通 ({stats.confirmed})
+        </a>
+        <a href="/admin/membership-orders"
+          className={("px-3 py-2 rounded-lg text-sm border ") + (!filterStatus ? "bg-gray-800 text-white border-gray-800" : "border-gray-200 hover:bg-gray-50")}>
+          全部 ({stats.total})
+        </a>
+      </div>
+
+      {/* 表格 */}
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border shadow-sm">
+          <p className="text-muted-foreground">暂无{filterStatus ? STATUS_MAP[filterStatus]?.label : ""}订单</p>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50 text-xs text-muted-foreground uppercase">
+                <th className="text-left px-4 py-3">套餐</th>
+                <th className="text-left px-4 py-3">支付方式</th>
+                <th className="text-right px-4 py-3">金额</th>
+                <th className="text-left px-4 py-3">时间</th>
+                <th className="text-left px-4 py-3">状态</th>
+                <th className="text-right px-4 py-3">操作</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {filtered.map((o) => {
+                const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+                return (
+                  <tr key={o.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3 font-medium">{o.plan_name || o.plan_id || "-"}</td>
+                    <td className="px-4 py-3">{o.payment_method === "wechat" ? "微信" : o.payment_method === "alipay" ? "支付宝" : "-"}</td>
+                    <td className="px-4 py-3 text-right font-bold">¥{(o.price / 100).toFixed(0)}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {new Date(o.created_at).toLocaleDateString("zh-CN")}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs border ") + st.cls}>
+                        {o.status === "confirmed" ? <CheckCircle2 className="w-3 h-3" /> :
+                         o.status === "cancelled" ? <XCircle className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                        {st.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <form method="GET" action="/admin/membership-orders" className="inline">
+                        <input type="hidden" name="action" value="delete" />
+                        <input type="hidden" name="id" value={o.id} />
+                        <button type="submit"
+                          onClick={() => confirm("确定删除「" + (o.plan_name || "") + "」？") || undefined}
+                          className="text-red-500 hover:text-red-700 disabled:opacity-50 inline-flex items-center gap-1"
+                          title="彻底删除此订单"
+                        >
+                          <Trash2 className="w-4 h-4" /> 删除
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="mt-8 text-xs text-gray-400 text-center">
+        订单数据来自 membership_orders 表 · 共 {stats.total} 条记录
       </div>
     </div>
   );
