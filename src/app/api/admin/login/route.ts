@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       secure: true,
       sameSite: "lax",
       maxAge: 60 * 60 * 8, // 8 小时
-      path: "/admin",
+      path: "/",
     });
 
     return response;
