@@ -4,28 +4,42 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Loader2, Search, RefreshCw,
-  Users, Mail, Phone, Building2, Calendar, Palette, Sparkles, Eye,
+  Users, Mail, Phone, Building2, Calendar, Palette, Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-interface VipMember {
-  id: string;
-  name: string;
-  phone?: string;
-  wechat?: string;
-  gender?: string;
-  color_season?: string;
-  main_style?: string;
-  created_at: string;
-  store_id?: string | null;
-  store_name?: string;
+// 字段名兼容映射：数据库可能用不同名称
+function getField(row: any, ...names: string[]): any {
+  for (const name of names) {
+    if (row[name] !== undefined && row[name] !== null) return row[name];
+  }
+  return undefined;
+}
+
+// 统一的字段访问（兼容 customer_name/name, customer_phone/phone 等）
+function normalizeMember(raw: any) {
+  return {
+    id: raw.id,
+    name: getField(raw, "name", "customer_name", "full_name") || "-",
+    phone: getField(raw, "phone", "customer_phone", "mobile"),
+    wechat: getField(raw, "wechat", "customer_wechat", "wechat_id"),
+    gender: getField(raw, "gender"),
+    color_season: getField(raw, "color_season", "colour_season", "season_type"),
+    main_style: getField(raw, "main_style", "style_type", "body_type"),
+    vip_level: getField(raw, "vip_level", "level", "membership_tier"),
+    store_name: getField(raw, "store_name", "store"),
+    created_at: getField(raw, "created_at", "inserted_at") || new Date().toISOString(),
+    // 保留原始数据供调试
+    _raw: raw,
+  };
 }
 
 export default function AdminVIPPage() {
-  const [members, setMembers] = useState<VipMember[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string>("");
 
   const supabase = createClient();
 
@@ -34,34 +48,36 @@ export default function AdminVIPPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 获取所有客户（从 vip_customers 表，兼容各种列结构）
   const fetchMembers = async () => {
     setLoading(true);
     try {
+      // 查询 vip_customers 表
       const { data, error } = await supabase
         .from("vip_customers")
         .select("*")
-        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(100);
 
-      if (error) {
-        // 如果表不存在或出错，尝试其他数据源
-        console.warn("vip_customers 查询失败，尝试 profiles:", error.message);
-        const { data: pData, error: pErr } = await supabase
-          .from("profiles")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(100);
-        if (!pErr && pData) {
-          setMembers(pData as any[]);
-        } else {
-          setMembers([]);
-        }
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        // 记录第一条数据的所有字段名用于调试
+        const keys = Object.keys(data[0]);
+        setDebugInfo(`字段: ${keys.join(", ")}`);
+        console.log("vip_customers 首条数据:", data[0], "字段:", keys);
+
+        // 用兼容映射标准化每条记录
+        const normalized = data.map(normalizeMember);
+        setMembers(normalized);
       } else {
-        setMembers((data || []) as VipMember[]);
+        setMembers([]);
+        setDebugInfo("表为空");
       }
     } catch (err: any) {
       showToast("error", "加载失败：" + err.message);
+      console.error("VIP加载错误:", err);
+      setDebugInfo("错误: " + err.message);
+      setMembers([]);
     } finally {
       setLoading(false);
     }
@@ -69,15 +85,13 @@ export default function AdminVIPPage() {
 
   useEffect(() => { fetchMembers(); }, []);
 
-  // 搜索过滤
   const filtered = members.filter((m) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return (
-      (m.name || "").toLowerCase().includes(q) ||
-      (m.phone || "").includes(q) ||
-      (m.wechat || "").toLowerCase().includes(q)
-    );
+    const name = (m.name || "").toLowerCase();
+    const phone = (m.phone || "");
+    const wechat = (m.wechat || "").toLowerCase();
+    return name.includes(q) || phone.includes(q) || wechat.includes(q);
   });
 
   return (
@@ -100,13 +114,14 @@ export default function AdminVIPPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">VIP 客户管理</h1>
           <p className="text-sm text-muted-foreground mt-1">管理所有录入的客户数据（色彩季型、风格测试等）</p>
+          {debugInfo && <p className="text-[10px] text-gray-400 mt-0.5 font-mono">{debugInfo}</p>}
         </div>
         <button onClick={fetchMembers} className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-white border border-gray-200 rounded-lg hover:bg-gray-50">
-          <RefreshCw className="w-4 h-4" /> 刷新
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> 刷新
         </button>
       </div>
 
-      {/* 统计 */}
+      {/* 统计卡片 */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
           <Users className="w-8 h-8 text-blue-600 mb-2" />
@@ -152,14 +167,14 @@ export default function AdminVIPPage() {
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">性别</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">色彩季型</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">主风格</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">店铺</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">店铺/VIP等级</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">录入时间</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filtered.map((m) => (
                 <tr key={m.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-primary">{m.name || "-"}</td>
+                  <td className="px-4 py-3 font-medium text-primary">{m.name}</td>
                   <td className="px-4 py-3 text-sm text-gray-600 space-y-1">
                     {m.phone && <div><Phone className="w-3 h-3 inline mr-1" />{m.phone}</div>}
                     {m.wechat && <div><Mail className="w-3 h-3 inline mr-1" />{m.wechat}</div>}
@@ -168,7 +183,10 @@ export default function AdminVIPPage() {
                   <td className="px-4 py-3 text-sm">{m.gender === "female" ? "女" : m.gender === "male" ? "男" : "-"}</td>
                   <td className="px-4 py-3"><span className="px-2 py-0.5 rounded-full text-xs bg-purple-50 text-purple-700">{m.color_season || "-"}</span></td>
                   <td className="px-4 py-3 text-sm">{m.main_style || "-"}</td>
-                  <td className="px-4 py-3 text-sm text-gray-600">{m.store_name || "-"}</td>
+                  <td className="px-4 py-3 text-sm text-gray-600">
+                    <div>{m.store_name || "-"}</div>
+                    {m.vip_level && m.vip_level !== "-" && <div className="text-[10px] text-accent">VIP {m.vip_level}</div>}
+                  </td>
                   <td className="px-4 py-3 text-sm text-gray-500">{new Date(m.created_at).toLocaleDateString("zh-CN")}</td>
                 </tr>
               ))}
