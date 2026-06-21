@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2, RefreshCw, Clock } from "lucide-react";
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending: { label: "待确认", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
