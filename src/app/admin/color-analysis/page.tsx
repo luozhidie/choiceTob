@@ -12,6 +12,9 @@ import {
   Loader2,
   CheckCircle2,
   BookOpen,
+  History,
+  Search,
+  Filter,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -153,12 +156,32 @@ export default function ColorAnalysisPage() {
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [storeOptions, setStoreOptions] = useState<{ id: string; name: string; city: string | null }[]>([]);
 
+  // 历史记录相关状态
+  const [historyList, setHistoryList] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historySearch, setHistorySearch] = useState("");
+  const [showHistory, setShowHistory] = useState(true);
+
   const supabase = createClient();
 
   useEffect(() => {
     supabase.from("stores").select("id, name, city").eq("status", "active").order("name")
       .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
+    fetchHistory();
   }, []);
+
+  // 获取色彩季型历史记录
+  const fetchHistory = async () => {
+    setHistoryLoading(true);
+    const { data } = await supabase
+      .from("vip_customers")
+      .select("*")
+      .not("color_season", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    setHistoryList((data || []) as any[]);
+    setHistoryLoading(false);
+  };
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -205,6 +228,8 @@ export default function ColorAnalysisPage() {
       if (form.color_season) {
         setShowResult(true);
       }
+      // 刷新历史记录
+      fetchHistory();
     } catch (err: any) {
       showToast("error", "保存失败：" + err.message);
     } finally {
@@ -571,6 +596,92 @@ export default function ColorAnalysisPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
               <Palette className="w-12 h-12 text-gray-200 mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">选择色彩季型后<br />AI将自动生成分析建议</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 历史记录列表 */}
+      <div className="max-w-5xl mx-auto mt-8">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+          {/* 标题栏 */}
+          <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-base font-bold text-primary flex items-center gap-2 cursor-pointer" onClick={() => setShowHistory(!showHistory)}>
+              <History className="w-5 h-5" />
+              已录入色彩季型记录
+              <span className="text-xs font-normal text-muted-foreground bg-gray-100 px-2 py-0.5 rounded-full">{historyList.length}条</span>
+            </h2>
+            <div className="flex items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={historySearch}
+                  onChange={(e) => setHistorySearch(e.target.value)}
+                  placeholder="搜索姓名/手机号..."
+                  className="pl-9 pr-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 w-48"
+                />
+              </div>
+            </div>
+          </div>
+
+          {showHistory && (
+            <div className="divide-y divide-gray-50">
+              {historyLoading ? (
+                <div className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-primary" /><p className="text-sm text-muted-foreground mt-2">加载中...</p></div>
+              ) : historyList.length === 0 ? (
+                <div className="p-12 text-center"><Palette className="w-10 h-10 mx-auto text-gray-200 mb-2" /><p className="text-sm text-muted-foreground">暂无色彩季型记录</p><p className="text-xs text-gray-400 mt-1">录入客户数据后记录将显示在这里</p></div>
+              ) : (
+                historyList
+                  .filter((item) =>
+                    !historySearch ||
+                    (item.name || "").toLowerCase().includes(historySearch.toLowerCase()) ||
+                    (item.phone || "").includes(historySearch)
+                  )
+                  .map((item) => {
+                    const season = colorSeasons.find((s) => s.value === item.color_season);
+                    return (
+                      <div key={item.id} className="px-5 py-4 hover:bg-gray-50/50 transition-colors">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-3 mb-1">
+                              <span className="font-medium text-sm text-primary truncate">{item.name}</span>
+                              {season && (
+                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                  season.group === "春" ? "bg-green-50 text-green-600" :
+                                  season.group === "夏" ? "bg-blue-50 text-blue-600" :
+                                  season.group === "秋" ? "bg-orange-50 text-orange-600" :
+                                  "bg-purple-50 text-purple-600"
+                                }`}>
+                                  {season.label}
+                                </span>
+                              )}
+                              {item.main_style && (
+                                <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-pink-50 text-pink-600">
+                                  {item.main_style}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              {(item.phone || item.wechat) && (
+                                <span>{item.phone ? `📱 ${item.phone}` : ""}{item.wechat ? ` 💬 ${item.wechat}` : ""}</span>
+                              )}
+                              {item.store_name && <span>🏪 {item.store_name}</span>}
+                              <span>📅 {item.created_at ? new Date(item.created_at).toLocaleDateString("zh-CN") : "未知"}</span>
+                            </div>
+                          </div>
+                          {season && recommendation && (item.color_season) && (
+                            <div className="hidden sm:flex flex-wrap gap-1 max-w-[240px]">
+                              {(aiRecommendations[item.color_season]?.colors || []).slice(0, 5).map((c: string) => (
+                                <span key={c} className="px-2 py-0.5 bg-accent/10 text-accent text-[10px] rounded">{c}</span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+              )}
             </div>
           )}
         </div>
