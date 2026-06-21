@@ -8,10 +8,8 @@ import {
   Trash2,
   Loader2,
   Image as ImageIcon,
-  Upload,
   Eye,
   EyeOff,
-  Tags,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -20,7 +18,6 @@ interface Inspiration {
   title: string;
   style_tags: string[] | null;
   is_published: boolean;
-  created_at: string;
 }
 
 export default function AdminInspirationsPage() {
@@ -28,7 +25,6 @@ export default function AdminInspirationsPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingInspiration, setEditingInspiration] = useState<Inspiration | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   const [form, setForm] = useState({
@@ -50,8 +46,8 @@ export default function AdminInspirationsPage() {
     try {
       const { data, error } = await supabase
         .from("outfit_matches")
-        .select("id, title, style_tags, is_published, created_at")
-        .order("created_at", { ascending: false });
+        .select("id, title, style_tags, is_published")
+        .order("id", { ascending: false });
       if (error) throw error;
       setInspirations(data || []);
     } catch (err: any) {
@@ -69,13 +65,12 @@ export default function AdminInspirationsPage() {
       setEditingInspiration(inspiration);
       setForm({
         title: inspiration.title || "",
-        image_url: inspiration.image_url || "",
         style_tags: inspiration.style_tags?.join(", ") || "",
         is_published: inspiration.is_published,
       });
     } else {
       setEditingInspiration(null);
-      setForm({ title: "", image_url: "", style_tags: "", is_published: true });
+      setForm({ title: "", style_tags: "", is_published: true });
     }
     setShowForm(true);
   };
@@ -84,7 +79,7 @@ export default function AdminInspirationsPage() {
   const closeForm = () => {
     setShowForm(false);
     setEditingInspiration(null);
-    setForm({ title: "", image_url: "", style_tags: "", is_published: true });
+    setForm({ title: "", style_tags: "", is_published: true });
   };
 
   // 提交表单
@@ -98,10 +93,8 @@ export default function AdminInspirationsPage() {
 
       const payload = {
         title: form.title,
-        image_url: form.image_url || null,
         style_tags: tags.length > 0 ? tags : null,
         is_published: form.is_published,
-        updated_at: new Date().toISOString(),
       };
 
       let error;
@@ -143,37 +136,12 @@ export default function AdminInspirationsPage() {
     try {
       const { error } = await supabase
         .from("outfit_matches")
-        .update({ is_published: !inspiration.is_published, updated_at: new Date().toISOString() })
+        .update({ is_published: !inspiration.is_published })
         .eq("id", inspiration.id);
       if (error) throw error;
       fetchInspirations();
     } catch (err: any) {
       showToast("error", "操作失败：" + err.message);
-    }
-  };
-
-  // 上传图片
-  const handleImageUpload = async (file: File) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast("error", "图片不能超过 10MB");
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `inspirations/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("site-assets").upload(fileName, file);
-      if (upErr) throw upErr;
-
-      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(fileName);
-      setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
-      showToast("success", "上传成功！");
-    } catch (err: any) {
-      showToast("error", "上传失败：" + err.message);
-    } finally {
-      setUploading(false);
     }
   };
 
@@ -197,7 +165,7 @@ export default function AdminInspirationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">搭配灵感管理</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            管理首页搭配灵感，支持上传图片、设置风格标签
+            管理首页搭配灵感，设置风格标签
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -247,15 +215,9 @@ export default function AdminInspirationsPage() {
               transition={{ delay: index * 0.05 }}
               className="bg-white rounded-xl border border-border overflow-hidden hover:shadow-lg transition-shadow"
             >
-              {/* 图片 */}
-              <div className="relative h-48 bg-gray-100">
-                {inspiration.image_url ? (
-                  <img src={inspiration.image_url} alt={inspiration.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-12 h-12 text-gray-300" />
-                  </div>
-                )}
+              {/* 占位图区域 */}
+              <div className="relative h-32 bg-gradient-to-br from-accent/20 to-primary/10 flex items-center justify-center">
+                <ImageIcon className="w-10 h-10 text-gray-300" />
                 {/* 状态标签 */}
                 <div className="absolute top-3 right-3">
                   {inspiration.is_published ? (
@@ -268,7 +230,7 @@ export default function AdminInspirationsPage() {
 
               {/* 内容 */}
               <div className="p-4">
-                <h3 className="font-semibold text-primary mb-1 truncate">{inspiration.title}</h3>
+                <h3 className="font-semibold text-primary mb-2 truncate">{inspiration.title}</h3>
 
                 {/* 风格标签 */}
                 {inspiration.style_tags && inspiration.style_tags.length > 0 && (
@@ -346,45 +308,6 @@ export default function AdminInspirationsPage() {
                     placeholder="搭配灵感标题"
                     required
                   />
-                </div>
-
-                {/* 图片上传 */}
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1.5">图片</label>
-                  <div className="space-y-3">
-                    {form.image_url && (
-                      <div className="w-full h-40 rounded-lg overflow-hidden bg-gray-100">
-                        <img src={form.image_url} alt="预览" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                      <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) handleImageUpload(file);
-                            e.target.value = "";
-                          }}
-                          disabled={uploading}
-                          className="hidden"
-                        />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                          {uploading ? "上传中..." : "上传图片"}
-                        </span>
-                      </label>
-                      <span className="text-xs text-muted-foreground">或</span>
-                      <input
-                        type="text"
-                        value={form.image_url}
-                        onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))}
-                        className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm"
-                        placeholder="输入图片 URL"
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 {/* 风格标签 */}
