@@ -32,7 +32,7 @@ const menuGroups = [
     { label: "企划需求处理", href: "/admin/planning-requests" },
     { label: "企划订单管理", href: "/admin/planning-orders" },
     { label: "商品企划", href: "/admin/product-plan" },
-    { label: "生成企划报告", href: "/admin/report" },
+    { label: "企划报告与交付", href: "/admin/report" },
     { label: "商品管理", href: "/admin/products" },
     { label: "爆款样衣", href: "/admin/hot-products" },
     { label: "爆款货盘", href: "/admin/hot-picks" },
@@ -75,7 +75,6 @@ const menuGroups = [
   { label: "客户&线索", items: [
     { label: "客户管理", href: "/admin/customers" },
     { label: "线索管理", href: "/admin/leads" },
-    { label: "交付方案", href: "/admin/report" },
   ]},
   { label: "潜客管理", items: [
     { label: "门店信息", href: "/admin/crm/wechat-add" },
@@ -92,7 +91,6 @@ const menuGroups = [
     { label: "预算与成本", href: "/admin/budget-tracker" },
   ]},
   { label: "教学&资讯", items: [
-    { label: "教学中心", href: "/admin/courses" },
     { label: "课程管理", href: "/admin/courses" },
     { label: "课程购买记录", href: "/admin/course-purchases" },
     { label: "流行资讯", href: "/admin/fashion-trends" },
