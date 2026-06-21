@@ -1,198 +1,34 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, PanelLeftClose, ChevronsDown, ChevronsUp } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { ChevronLeft, PanelLeftClose, ChevronsDown, ChevronsUp } from "lucide-react";
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // ── 所有 hooks 必须在条件返回之前 ──
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#666" }}>加载中...</div>
-      </div>
-    );
-  }
-
-  const pathname = window.location.pathname;
-
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
-
-  /* ── 完整菜单定义（按截图中的分组） ── */
-  const menuGroups = [
-    {
-      label: "概览",
-      items: [
-        { label: "数据概览", href: "/admin/dashboard" },
-        { label: "站点图片", href: "/admin/site-assets" },
-      ],
-    },
-    {
-      label: "店铺管理",
-      items: [
-        { label: "店铺列表", href: "/admin/stores" },
-        { label: "品类管理", href: "/admin/categories" },
-        { label: "店铺买手决策", href: "/admin/buyer-features" },
-        { label: "买手步骤", href: "/admin/buyer-steps" },
-      ],
-    },
-    {
-      label: "VIP会员",
-      items: [
-        { label: "VIP订单", href: "/admin/membership-orders" },
-        { label: "VIP管理", href: "/admin/vip" },
-        { label: "VIP加油包", href: "/admin/vip-addons" },
-        { label: "色彩季型录入", href: "/admin/color-analysis" },
-        { label: "色彩季型对比", href: "/admin/color-compare" },
-        { label: "风格测试记录", href: "/admin/style-tests" },
-        { label: "测试码管理", href: "/admin/test-codes" },
-      ],
-    },
-    {
-      label: "充值管理",
-      items: [
-        { label: "充值订单", href: "/admin/charge-orders" },
-      ],
-    },
-    {
-      label: "商品&企划",
-      items: [
-        { label: "企划需求处理", href: "/admin/planning-requests" },
-        { label: "企划订单管理", href: "/admin/planning-orders" },
-        { label: "商品企划", href: "/admin/product-plan" },
-        { label: "生成企划报告", href: "/admin/report" },
-        { label: "商品管理", href: "/admin/products" },
-        { label: "爆款样衣", href: "/admin/hot-products" },
-        { label: "爆款货盘", href: "/admin/hot-picks" },
-        { label: "爆款图片", href: "/admin/hot-picks-images" },
-        { label: "买手选品", href: "/admin/buyer" },
-        { label: "选品步骤", href: "/admin/planning-steps" },
-        { label: "选品功能", href: "/admin/assortment" },
-      ],
-    },
-    {
-      label: "采购&供应链",
-      items: [
-        { label: "采购意向", href: "/admin/purchase-intents" },
-        { label: "订单管理", href: "/admin/orders" },
-        { label: "采购订单", href: "/admin/purchase-orders" },
-        { label: "供应商管理", href: "/admin/supplier" },
-        { label: "供应商图片", href: "/admin/supplier-images" },
-      ],
-    },
-    {
-      label: "库存&销售",
-      items: [
-        { label: "库存管理", href: "/admin/inventory" },
-        { label: "销售数据", href: "/admin/sales-data" },
-        { label: "门店经营数据", href: "/admin/store-reports" },
-        { label: "市场需求统计", href: "/admin/market-demand" },
-      ],
-    },
-    {
-      label: "陈列&搭配",
-      items: [
-        { label: "陈列搭配", href: "/admin/collocation" },
-        { label: "搭配方案", href: "/admin/display" },
-        { label: "陈列图片", href: "/admin/display-images" },
-        { label: "每日搭配", href: "/admin/daily-looks" },
-        { label: "属性编码管理", href: "/admin/attribute-encoding" },
-      ],
-    },
-    {
-      label: "营销&内容",
-      items: [
-        { label: "营销策划", href: "/admin/marketing" },
-        { label: "营销图片", href: "/admin/marketing-images" },
-        { label: "销售服务", href: "/admin/sales" },
-        { label: "Banner轮播图", href: "/admin/banners" },
-        { label: "搭配灵感", href: "/admin/inspirations" },
-        { label: "内容日历", href: "/admin/content-calendar" },
-        { label: "沙龙活动", href: "/admin/salon" },
-        { label: "沙龙流程", href: "/admin/salon-events" },
-        { label: "爆款样衣(设计)", href: "/admin/designer" },
-      ],
-    },
-    {
-      label: "客户&线索",
-      items: [
-        { label: "客户管理", href: "/admin/customers" },
-        { label: "线索管理", href: "/admin/leads" },
-        { label: "交付方案", href: "/admin/report" },
-      ],
-    },
-    {
-      label: "潜客管理",
-      items: [
-        { label: "门店信息", href: "/admin/crm/wechat-add" },
-        { label: "联系人管理", href: "/admin/crm/contacts" },
-        { label: "跟进记录", href: "/admin/crm/follow-ups" },
-        { label: "加微信", href: "/admin/crm/wechat-templates" },
-        { label: "微信话术", href: "/admin/crm/scrape" },
-        { label: "门后采集", href: "/admin/crm/import" },
-        { label: "提醒中心", href: "/admin/crm/reminders" },
-        { label: "批量导入", href: "/admin/crm/stores" },
-      ],
-    },
-    {
-      label: "项目&预算",
-      items: [
-        { label: "项目进度", href: "/admin/project-tracker" },
-        { label: "预算与成本", href: "/admin/budget-tracker" },
-      ],
-    },
-    {
-      label: "教学&资讯",
-      items: [
-        { label: "教学中心", href: "/admin/courses" },
-        { label: "课程管理", href: "/admin/courses" },
-        { label: "课程购买记录", href: "/admin/course-purchases" },
-        { label: "流行资讯", href: "/admin/fashion-trends" },
-      ],
-    },
-    {
-      label: "趋势",
-      items: [
-        { label: "趋势预测", href: "/admin/trend-predict" },
-        { label: "趋势中心", href: "/admin/trend-center" },
-        { label: "明星同款", href: "/admin/celebrity" },
-      ],
-    },
-    {
-      label: "其他",
-      items: [
-        { label: "访客管理", href: "/admin/visitors" },
-        { label: "配送管理", href: "/admin/deliveries" },
-        { label: "教育", href: "/admin/education" },
-        { label: "杂志", href: "/admin/magazine" },
-        { label: "待审", href: "/admin/pending" },
-      ],
-    },
-  ];
-
   // 初始化时自动展开包含当前页面的分组
   useEffect(() => {
-    if (!collapsed) {
-      const autoExpand = new Set<string>();
-      for (const group of menuGroups) {
-        if (group.items.some((item) => item.href === pathname)) {
-          autoExpand.add(group.label);
-          break;
-        }
+    if (!mounted || collapsed) return;
+    const autoExpand = new Set<string>();
+    for (const group of menuGroups) {
+      if (group.items.some((item) => item.href === pathname)) {
+        autoExpand.add(group.label);
+        break;
       }
-      setExpandedGroups(autoExpand);
     }
-  }, [pathname, collapsed]);
+    setExpandedGroups(autoExpand);
+  }, [pathname, mounted, collapsed]);
 
   const toggleGroup = useCallback((label: string) => {
     setExpandedGroups((prev) => {
@@ -206,13 +42,132 @@ export default function AdminLayout({
     });
   }, []);
 
-  // 折叠所有 / 展开所有
   const expandAll = useCallback(() => {
     setExpandedGroups(new Set(menuGroups.map(g => g.label)));
   }, []);
   const collapseAll = useCallback(() => {
     setExpandedGroups(new Set());
   }, []);
+
+  // ── 条件返回（在所有 hooks 之后）──
+  if (!mounted) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#666" }}>加载中...</div>
+      </div>
+    );
+  }
+
+  if (pathname === "/admin/login") {
+    return <>{children}</>;
+  }
+
+  /* ── 完整菜单定义（按截图中的分组） ── */
+  const menuGroups = [
+    { label: "概览", items: [
+      { label: "数据概览", href: "/admin/dashboard" },
+      { label: "站点图片", href: "/admin/site-assets" },
+    ]},
+    { label: "店铺管理", items: [
+      { label: "店铺列表", href: "/admin/stores" },
+      { label: "品类管理", href: "/admin/categories" },
+      { label: "店铺买手决策", href: "/admin/buyer-features" },
+      { label: "买手步骤", href: "/admin/buyer-steps" },
+    ]},
+    { label: "VIP会员", items: [
+      { label: "VIP订单", href: "/admin/membership-orders" },
+      { label: "VIP管理", href: "/admin/vip" },
+      { label: "VIP加油包", href: "/admin/vip-addons" },
+      { label: "色彩季型录入", href: "/admin/color-analysis" },
+      { label: "色彩季型对比", href: "/admin/color-compare" },
+      { label: "风格测试记录", href: "/admin/style-tests" },
+      { label: "测试码管理", href: "/admin/test-codes" },
+    ]},
+    { label: "充值管理", items: [
+      { label: "充值订单", href: "/admin/charge-orders" },
+    ]},
+    { label: "商品&企划", items: [
+      { label: "企划需求处理", href: "/admin/planning-requests" },
+      { label: "企划订单管理", href: "/admin/planning-orders" },
+      { label: "商品企划", href: "/admin/product-plan" },
+      { label: "生成企划报告", href: "/admin/report" },
+      { label: "商品管理", href: "/admin/products" },
+      { label: "爆款样衣", href: "/admin/hot-products" },
+      { label: "爆款货盘", href: "/admin/hot-picks" },
+      { label: "爆款图片", href: "/admin/hot-picks-images" },
+      { label: "买手选品", href: "/admin/buyer" },
+      { label: "选品步骤", href: "/admin/planning-steps" },
+      { label: "选品功能", href: "/admin/assortment" },
+    ]},
+    { label: "采购&供应链", items: [
+      { label: "采购意向", href: "/admin/purchase-intents" },
+      { label: "订单管理", href: "/admin/orders" },
+      { label: "采购订单", href: "/admin/purchase-orders" },
+      { label: "供应商管理", href: "/admin/supplier" },
+      { label: "供应商图片", href: "/admin/supplier-images" },
+    ]},
+    { label: "库存&销售", items: [
+      { label: "库存管理", href: "/admin/inventory" },
+      { label: "销售数据", href: "/admin/sales-data" },
+      { label: "门店经营数据", href: "/admin/store-reports" },
+      { label: "市场需求统计", href: "/admin/market-demand" },
+    ]},
+    { label: "陈列&搭配", items: [
+      { label: "陈列搭配", href: "/admin/collocation" },
+      { label: "搭配方案", href: "/admin/display" },
+      { label: "陈列图片", href: "/admin/display-images" },
+      { label: "每日搭配", href: "/admin/daily-looks" },
+      { label: "属性编码管理", href: "/admin/attribute-encoding" },
+    ]},
+    { label: "营销&内容", items: [
+      { label: "营销策划", href: "/admin/marketing" },
+      { label: "营销图片", href: "/admin/marketing-images" },
+      { label: "销售服务", href: "/admin/sales" },
+      { label: "Banner轮播图", href: "/admin/banners" },
+      { label: "搭配灵感", href: "/admin/inspirations" },
+      { label: "内容日历", href: "/admin/content-calendar" },
+      { label: "沙龙活动", href: "/admin/salon" },
+      { label: "沙龙流程", href: "/admin/salon-events" },
+      { label: "爆款样衣(设计)", href: "/admin/designer" },
+    ]},
+    { label: "客户&线索", items: [
+      { label: "客户管理", href: "/admin/customers" },
+      { label: "线索管理", href: "/admin/leads" },
+      { label: "交付方案", href: "/admin/report" },
+    ]},
+    { label: "潜客管理", items: [
+      { label: "门店信息", href: "/admin/crm/wechat-add" },
+      { label: "联系人管理", href: "/admin/crm/contacts" },
+      { label: "跟进记录", href: "/admin/crm/follow-ups" },
+      { label: "加微信", href: "/admin/crm/wechat-templates" },
+      { label: "微信话术", href: "/admin/crm/scrape" },
+      { label: "门后采集", href: "/admin/crm/import" },
+      { label: "提醒中心", href: "/admin/crm/reminders" },
+      { label: "批量导入", href: "/admin/crm/stores" },
+    ]},
+    { label: "项目&预算", items: [
+      { label: "项目进度", href: "/admin/project-tracker" },
+      { label: "预算与成本", href: "/admin/budget-tracker" },
+    ]},
+    { label: "教学&资讯", items: [
+      { label: "教学中心", href: "/admin/courses" },
+      { label: "课程管理", href: "/admin/courses" },
+      { label: "课程购买记录", href: "/admin/course-purchases" },
+      { label: "流行资讯", href: "/admin/fashion-trends" },
+    ]},
+    { label: "趋势", items: [
+      { label: "趋势预测", href: "/admin/trend-predict" },
+      { label: "趋势中心", href: "/admin/trend-center" },
+      { label: "明星同款", href: "/admin/celebrity" },
+    ]},
+    { label: "其他", items: [
+      { label: "访客管理", href: "/admin/visitors" },
+      { label: "配送管理", href: "/admin/deliveries" },
+      { label: "教育", href: "/admin/education" },
+      { label: "杂志", href: "/admin/magazine" },
+      { label: "待审", href: "/admin/pending" },
+    ]},
+  ];
 
   const findTitle = () => {
     for (const group of menuGroups) {
@@ -331,12 +286,7 @@ export default function AdminLayout({
 
                 {/* 菜单项（根据展开状态显示/隐藏） */}
                 {(isExpanded || collapsed) && (
-                  <div style={{
-                    maxHeight: isExpanded || collapsed ? undefined : 0,
-                    overflow: "hidden",
-                    transition: "max-height 0.25s ease, opacity 0.15s ease",
-                    opacity: isExpanded || collapsed ? 1 : 0,
-                  }}>
+                  <div style={{ opacity: isExpanded || collapsed ? 1 : 0, transition: "opacity 0.15s ease" }}>
                     {group.items.map((item) => {
                       const isActive = pathname === item.href;
                       return (
@@ -356,7 +306,6 @@ export default function AdminLayout({
                             background: isActive ? "#3b82f6" : "transparent",
                             transition: "all 0.15s",
                             justifyContent: collapsed ? "center" : "flex-start",
-                            gap: collapsed ? 0 : undefined,
                             whiteSpace: collapsed ? "nowrap" : undefined,
                           }}
                         >

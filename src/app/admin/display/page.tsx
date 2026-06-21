@@ -330,9 +330,9 @@ export default function AdminDisplayPage() {
                   <label className="block text-sm font-medium text-primary mb-2">色彩季型</label>
                   <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                     <option value="">不指定</option>
-                    {["春", "夏", "秋", "冬"].map((group) => (
-                      <optgroup key={group} label={`${group}季型`}>
-                        {COLOR_SEASONS.filter((c) => c.group === group).map((c) => (
+                    {["暖色系", "冷色系", "大地色系", "深色系", "中性色系"].map((group) => (
+                      <optgroup key={group} label={group}>
+                        {COLOR_SEASONS_PRO.filter((c) => c.group === group).map((c) => (
                           <option key={c.value} value={c.value}>{c.label}</option>
                         ))}
                       </optgroup>
