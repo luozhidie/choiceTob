@@ -161,25 +161,32 @@ export default function Home() {
     <div className="min-h-screen bg-white">
       {/* ====== Hero 顶部区域（支持后台上传背景图） ====== */}
       <section className="relative py-7 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        {/* 默认背景：暖紫红 + 圆形光晕 */}
+        <div className="absolute inset-0" style={{ background: "#3a2538" }} />
+        {/* 装饰性圆形光晕 */}
+        <div
+          className="absolute -right-20 -top-20 w-[500px] h-[500px] rounded-full opacity-30"
+          style={{ background: "radial-gradient(circle, rgba(120,60,100,0.5) 0%, transparent 70%)" }}
+        />
+        <div
+          className="absolute -left-32 bottom-0 w-[400px] h-[400px] rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, rgba(160,80,130,0.6) 0%, transparent 70%)" }}
+        />
+
         {heroTopBgUrl ? (
           <>
-            {/* 动态背景图 + 深色遮罩 */}
+            {/* 动态背景图 + 暖紫遮罩 */}
             <div
               className="absolute inset-0 bg-cover bg-center bg-no-repeat"
               style={{ backgroundImage: `url('${heroTopBgUrl}')` }}
             />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(135deg, rgba(47,40,69,0.88) 0%, rgba(59,52,96,0.85) 100%)" }}
+              style={{ background: "linear-gradient(135deg, rgba(58,37,56,0.85) 0%, rgba(70,45,65,0.82) 100%)" }}
             />
           </>
-        ) : (
-          /* 默认深紫渐变（无背景图时） */
-          <div
-            className="absolute inset-0"
-            style={{ background: "linear-gradient(135deg, #2f2845 0%, #3b3460 100%)" }}
-          />
-        )}
+        ) : null}
+        {/* 有上传图片时遮罩层在上面，无图片时用上面的纯色+光晕 */}
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
             <span className="text-[#d8a0c0] text-[10px] tracking-wider">✦</span>
