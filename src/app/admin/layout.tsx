@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, PanelLeftClose, X } from "lucide-react";
 
 export default function AdminLayout({
   children,
@@ -8,6 +9,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -190,61 +192,80 @@ export default function AdminLayout({
       {/* 侧边栏 */}
       <aside
         style={{
-          width: 240,
+          width: collapsed ? 56 : 240,
           background: "#16162b",
           color: "#94a3b8",
           flexShrink: 0,
           overflowY: "auto",
           overflowX: "hidden",
           borderRight: "1px solid rgba(255,255,255,0.06)",
+          transition: "width 0.2s ease",
         }}
       >
         {/* Logo */}
-        <div style={{ padding: "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-          <a
-            href="/admin/dashboard"
-            style={{ textDecoration: "none", color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: "0.5px" }}
+        <div style={{ padding: collapsed ? "14px 10px" : "16px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between" }}>
+          {!collapsed && (
+            <a
+              href="/admin/dashboard"
+              style={{ textDecoration: "none", color: "#fff", fontSize: 14, fontWeight: 700, letterSpacing: "0.5px" }}
+            >
+              骆芷蝶智选 · 后台
+            </a>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            title={collapsed ? "展开菜单" : "收起菜单"}
+            style={{ padding: 6, borderRadius: 4, background: "rgba(255,255,255,0.08)", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.15s" }}
           >
-            骆芷蝶智选 · 后台
-          </a>
+            {collapsed ? <PanelLeftClose className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </button>
         </div>
 
         {/* 菜单组 */}
         <nav style={{ padding: "8px" }}>
           {menuGroups.map((group) => (
             <div key={group.label} style={{ marginBottom: 4 }}>
-              <div
-                style={{
-                  padding: "6px 12px",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.08em",
-                  color: "#64748b",
-                }}
-              >
-                {group.label}
-              </div>
+              {!collapsed && (
+                <div
+                  style={{
+                    padding: "6px 12px",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                    color: "#64748b",
+                  }}
+                >
+                  {group.label}
+                </div>
+              )}
               {group.items.map((item) => {
                 const isActive = pathname === item.href;
                 return (
                   <a
                     key={item.href}
                     href={item.href}
+                    title={collapsed ? item.label : undefined}
                     style={{
-                      display: "block",
-                      padding: "5px 12px 5px 20px",
+                      display: "flex",
+                      alignItems: "center",
+                      padding: collapsed ? "5px 0" : "5px 12px 5px 20px",
                       borderRadius: 4,
                       marginBottom: 1,
                       textDecoration: "none",
-                      fontSize: 13,
+                      fontSize: collapsed ? 0 : 13,
                       color: isActive ? "#fff" : "#94a3b8",
                       background: isActive ? "#3b82f6" : "transparent",
                       transition: "all 0.15s",
+                      justifyContent: collapsed ? "center" : "flex-start",
+                      gap: collapsed ? 0 : undefined,
+                      whiteSpace: collapsed ? "nowrap" : undefined,
                     }}
                   >
-                    {item.label}
-                  </a>
+                    {collapsed
+                      ? <span style={{ fontSize: 14 }}>{item.label.charAt(0)}</span>
+                      : item.label}
+                    </a>
                 );
               })}
             </div>
@@ -252,37 +273,40 @@ export default function AdminLayout({
         </nav>
 
         {/* 底部操作 */}
-        <div style={{ padding: "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 8 }}>
+        <div style={{ padding: collapsed ? "8px 4px" : "12px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <a
             href="/admin/login"
+            title="退出登录"
             style={{
-              display: "block",
-              padding: 7,
+              padding: collapsed ? 7 : 7,
               textAlign: "center",
               borderRadius: 5,
               background: "rgba(239,68,68,0.12)",
               color: "#ef4444",
               textDecoration: "none",
-              fontSize: 12,
+              fontSize: collapsed ? 0 : 12,
               fontWeight: 500,
+              width: collapsed ? undefined : "100%",
             }}
           >
-            退出登录
+            {!collapsed && "退出登录"}
+            {collapsed && "✕"}
           </a>
           <a
             href="/"
+            title="返回前台"
             style={{
-              display: "block",
-              marginTop: 6,
-              padding: 7,
+              padding: collapsed ? 7 : 7,
               textAlign: "center",
               borderRadius: 5,
               color: "#64748b",
               textDecoration: "none",
-              fontSize: 12,
+              fontSize: collapsed ? 0 : 12,
+              width: collapsed ? undefined : "100%",
             }}
           >
-            返回前台 →
+            {!collapsed && "返回前台 →"}
+            {collapsed && "🏠"}
           </a>
         </div>
       </aside>

@@ -12,22 +12,14 @@ function generateOrderNo() {
 // 获取充值订单列表
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户权限
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: '未授权' }, { status: 401 });
+    // 检查管理员是否已登录（cookie方式，与后台统一）
+    const cookieHeader = request.headers.get("cookie") || "";
+    const isAdmin = cookieHeader.includes("admin_logged_in=true");
+    if (!isAdmin) {
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 
-    // 检查是否是管理员
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    const isAdmin = profile?.role === 'admin';
+    const supabase = await createClient();
     const searchParams = request.nextUrl.searchParams;
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
@@ -89,13 +81,14 @@ export async function GET(request: NextRequest) {
 // 创建充值订单
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户登录
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 });
+    // 检查管理员是否已登录（cookie方式，与后台统一）
+    const cookieHeader = request.headers.get("cookie") || "";
+    const isAdmin = cookieHeader.includes("admin_logged_in=true");
+    if (!isAdmin) {
+      return NextResponse.json({ error: "请先登录" }, { status: 401 });
     }
+
+    const supabase = await createClient();
 
     const body = await request.json();
     const { amount, discount_rate, payment_method, remark } = body;
