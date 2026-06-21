@@ -180,7 +180,7 @@ export default function PendingPage() {
                     disabled={actionLoading === u.id}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-[14px] h-[14px]" />
                     批准
                   </button>
                   <button
@@ -188,7 +188,7 @@ export default function PendingPage() {
                     disabled={actionLoading === u.id}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
+                    <XCircle className="w-[14px] h-[14px]" />
                     拒绝
                   </button>
                   <button
@@ -196,7 +196,7 @@ export default function PendingPage() {
                     disabled={actionLoading === u.id}
                     className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="w-[14px] h-[14px]" />
                     删除
                   </button>
                 </div>

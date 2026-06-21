@@ -29,6 +29,40 @@ export async function GET(request: NextRequest) {
 }
 
 // 审批操作（批准/拒绝）
+// 删除用户申请
+export async function DELETE(request: NextRequest) {
+  try {
+    const cookieHeader = request.headers.get("cookie") || "";
+    const isAdmin = cookieHeader.includes("admin_logged_in=true");
+    if (!isAdmin) {
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { user_id } = body;
+
+    if (!user_id) {
+      return NextResponse.json({ error: "缺少 user_id" }, { status: 400 });
+    }
+
+    const supabase = await createClient();
+
+    // 先删除 profiles 表中的记录
+    const { error } = await supabase
+      .from("profiles")
+      .delete()
+      .eq("id", user_id);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true, message: "已删除" });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
 export async function PATCH(request: NextRequest) {
   try {
     const cookieHeader = request.headers.get("cookie") || "";
