@@ -42,9 +42,20 @@ export default function AdminSalesPlanPage() {
   const supabase = createClient();
 
   // middleware 已验证管理员身份
+
   const fetchStores = async () => {
     const { data } = await supabase.from("stores").select("id, name").order("name");
     if (data) setStores(data);
+  };
+
+  const handleStoreChange = (storeId: string) => {
+    setSelectedStore(storeId);
+    const store = stores.find(s => s.id === storeId);
+    if (store?.business_goals && Object.keys(store.business_goals).length > 0) {
+      setStoreGoals(store.business_goals);
+    } else {
+      setStoreGoals(null);
+    }
   };
 
   const fetchSaved = async () => {

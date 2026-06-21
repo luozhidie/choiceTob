@@ -69,8 +69,17 @@ export default function AdminBuyerPage() {
   const [uploading, setUploading] = useState(false);
   const supabase = createClient();
 
-  useEffect(() => { 
-fetchProducts(); }, []);
+  // 加载数据
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("buyer_products").select("*").order("created_at", { ascending: false });
+    if (!error && data) setProducts(data as BuyerProduct[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const openCreate = () => {
     setEditing(null);
