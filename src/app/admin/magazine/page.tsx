@@ -2,11 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
-  FileText, Loader2, Globe, Search, Sparkles, Download,
-  Newspaper, CheckCircle2, AlertCircle,
+  FileText, Loader2, Globe, Search, Download,
+  Newspaper, AlertCircle,
 } from "lucide-react";
 
 interface Article {
@@ -58,22 +57,24 @@ export default function AdminMagazinePage() {
   const [crawling, setCrawling] = useState(false);
   const [crawledNews, setCrawledNews] = useState<CrawledNews[]>([]);
   const [crawlError, setCrawlError] = useState("");
-  const [importing, setImporting] = useState<string | null>(null); // 正在导入的title
+  const [importing, setImporting] = useState<string | null>(null);
   const [fetchContent, setFetchContent] = useState(false);
 
-  const router = useRouter();
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchArticles(); }, []);
-
-  const checkUser = async () => {
-
+  // ── 所有函数定义在组件顶层（不在其他函数内部）──
   const fetchArticles = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
-    if (!error) setArticles(data || []);
+    try {
+      const { data, error } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
+      if (!error) setArticles(data || []);
+    } catch (e) {
+      console.error("获取文章失败:", e);
+    }
     setLoading(false);
   };
+
+  useEffect(() => { fetchArticles(); }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,18 +92,17 @@ export default function AdminMagazinePage() {
         } else {
           alert("上传失败：" + uploadError.message);
         }
-        setUploading(false);
         return;
       }
       const { data } = supabase.storage.from("magazine-images").getPublicUrl(filePath);
-      setFormData({ ...formData, image_url: data.publicUrl });
+      setFormData(prev => ({ ...prev, image_url: (data as any).publicUrl }));
     } catch (err: any) {
       alert("上传异常：" + err.message);
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
-  // 文章内容中插入图片
   const handleContentImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -112,18 +112,14 @@ export default function AdminMagazinePage() {
       const ext = file.name.split(".").pop();
       const filePath = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
       const { error: uploadError } = await supabase.storage.from("magazine-images").upload(filePath, file);
-      if (uploadError) {
-        alert("上传失败：" + uploadError.message);
-        return;
-      }
+      if (uploadError) { alert("上传失败：" + uploadError.message); return; }
       const { data } = supabase.storage.from("magazine-images").getPublicUrl(filePath);
-      // 在光标位置插入Markdown图片语法
       const textarea = document.getElementById("article-content") as HTMLTextAreaElement;
       const cursorPos = textarea?.selectionStart || formData.content.length;
       const before = formData.content.substring(0, cursorPos);
       const after = formData.content.substring(cursorPos);
-      const imageMarkdown = `\n![图片](${data.publicUrl})\n`;
-      setFormData({ ...formData, content: before + imageMarkdown + after });
+      const imageMarkdown = `\n![图片](${(data as any).publicUrl})\n`;
+      setFormData(prev => ({ ...prev, content: before + imageMarkdown + after }));
     } catch (err: any) {
       alert("上传异常：" + err.message);
     }
@@ -131,17 +127,21 @@ export default function AdminMagazinePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingArticle) {
-      const { error } = await supabase.from("articles").update(formData).eq("id", editingArticle.id);
-      if (error) { alert("更新失败：" + error.message); return; }
-    } else {
-      const { error } = await supabase.from("articles").insert([formData]);
-      if (error) { alert("创建失败：" + error.message); return; }
+    try {
+      if (editingArticle) {
+        const { error } = await supabase.from("articles").update(formData).eq("id", editingArticle.id);
+        if (error) { alert("更新失败：" + error.message); return; }
+      } else {
+        const { error } = await supabase.from("articles").insert([formData]);
+        if (error) { alert("创建失败：" + error.message); return; }
+      }
+      setShowModal(false);
+      setEditingArticle(null);
+      setFormData({ title: "", excerpt: "", content: "", image_url: "", tag: "", is_premium: false, is_published: false });
+      fetchArticles();
+    } catch (err: any) {
+      alert("操作失败：" + err.message);
     }
-    setShowModal(false);
-    setEditingArticle(null);
-    setFormData({ title: "", excerpt: "", content: "", image_url: "", tag: "", is_premium: false, is_published: false });
-    fetchArticles();
   };
 
   const handleEdit = (article: Article) => {
@@ -156,22 +156,33 @@ export default function AdminMagazinePage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除？")) return;
-    await supabase.from("articles").delete().eq("id", id);
-    fetchArticles();
+    try {
+      await supabase.from("articles").delete().eq("id", id);
+      fetchArticles();
+    } catch (err: any) {
+      alert("删除失败：" + err.message);
+    }
   };
 
   const togglePublish = async (article: Article) => {
-    await supabase.from("articles").update({ is_published: !article.is_published }).eq("id", article.id);
-    fetchArticles();
+    try {
+      await supabase.from("articles").update({ is_published: !article.is_published }).eq("id", article.id);
+      fetchArticles();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const togglePremium = async (article: Article) => {
-    await supabase.from("articles").update({ is_premium: !article.is_premium }).eq("id", article.id);
-    fetchArticles();
+    try {
+      await supabase.from("articles").update({ is_premium: !article.is_premium }).eq("id", article.id);
+      fetchArticles();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
-  // ========== 爬虫功能 ==========
-
+  // 爬虫功能
   const handleCrawl = async () => {
     if (!crawlKeyword.trim()) return;
     setCrawling(true);
@@ -182,38 +193,29 @@ export default function AdminMagazinePage() {
       const resp = await fetch("/api/magazine/crawl", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keyword: crawlKeyword.trim(),
-          sources: crawlSources,
-          fetchContent,
-        }),
+        body: JSON.stringify({ keyword: crawlKeyword.trim(), sources: crawlSources, fetchContent }),
       });
       const data = await resp.json();
       if (data.error) {
         setCrawlError(data.error);
       } else {
         setCrawledNews(data.items || []);
-        if (data.items.length === 0) {
+        if ((data.items || []).length === 0) {
           setCrawlError("未生成到资讯，建议：1) 更换关键词 2) 勾选'AI智能生成'数据源 3) 重试");
         }
       }
     } catch (err: any) {
       setCrawlError(`请求失败: ${err.message}`);
+    } finally {
+      setCrawling(false);
     }
-    setCrawling(false);
   };
 
-  // 导入单条资讯到编辑弹窗（一键生成文章）
   const handleImportNews = (news: CrawledNews) => {
     setEditingArticle(null);
     setFormData({
-      title: news.title,
-      excerpt: news.excerpt,
-      content: news.content || news.excerpt,
-      image_url: news.image_url,
-      tag: news.tag,
-      is_premium: false,
-      is_published: false,
+      title: news.title, excerpt: news.excerpt, content: news.content || news.excerpt,
+      image_url: news.image_url, tag: news.tag, is_premium: false, is_published: false,
     });
     setShowModal(true);
   };
@@ -223,19 +225,18 @@ export default function AdminMagazinePage() {
     if (toImport.length === 0) return;
     if (!confirm(`确认导入${toImport.length}条资讯？`)) return;
 
-    for (const news of toImport) {
-      await supabase.from("articles").insert([{
-        title: news.title,
-        excerpt: news.excerpt,
-        content: news.content || news.excerpt,
-        image_url: news.image_url,
-        tag: news.tag,
-        is_premium: false,
-        is_published: false,
-      }]);
+    try {
+      for (const news of toImport) {
+        await supabase.from("articles").insert([{
+          title: news.title, excerpt: news.excerpt, content: news.content || news.excerpt,
+          image_url: news.image_url, tag: news.tag, is_premium: false, is_published: false,
+        }]);
+      }
+      fetchArticles();
+      setCrawledNews(prev => prev.slice(toImport.length));
+    } catch (err: any) {
+      alert("批量导入失败：" + err.message);
     }
-    fetchArticles();
-    setCrawledNews(prev => prev.slice(toImport.length));
   };
 
   const toggleCrawlSource = (value: string) => {
@@ -260,7 +261,7 @@ export default function AdminMagazinePage() {
         </button>
       </div>
 
-      {/* ========== Tab: 文章管理 ========== */}
+      {/* Tab: 文章管理 */}
       {tab === "manage" && (
         <>
           <div className="flex items-center justify-between mb-6">
@@ -279,7 +280,7 @@ export default function AdminMagazinePage() {
           ) : articles.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl border border-gray-100">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-              <p className="text-muted-foreground">暂无文章，点击"新增文章"或使用"时尚资讯爬虫"采集</p>
+              <p className="text-muted-foreground">暂无文章，点击&quot;新增文章&quot;或使用&quot;时尚资讯爬虫&quot;采集</p>
             </div>
           ) : (
             <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
@@ -306,9 +307,7 @@ export default function AdminMagazinePage() {
                         <div className="font-medium text-primary max-w-xs truncate">{article.title}</div>
                         <div className="text-sm text-muted-foreground truncate max-w-xs">{article.excerpt}</div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">{article.tag || "未分类"}</span>
-                      </td>
+                      <td className="px-6 py-4"><span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">{article.tag || "未分类"}</span></td>
                       <td className="px-6 py-4">
                         <button onClick={() => togglePremium(article)}
                           className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${article.is_premium ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-800"}`}>
@@ -337,7 +336,7 @@ export default function AdminMagazinePage() {
         </>
       )}
 
-      {/* ========== Tab: 时尚资讯爬虫 ========== */}
+      {/* Tab: 爬虫 */}
       {tab === "crawl" && (
         <div>
           <div className="mb-6">
@@ -355,7 +354,7 @@ export default function AdminMagazinePage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input type="text" value={crawlKeyword} onChange={e => setCrawlKeyword(e.target.value)}
                   onKeyDown={e => e.key === "Enter" && handleCrawl()}
-                  placeholder="输入关键词搜索时尚资讯（如：2025春夏趋势、穿搭技巧、品牌动态）"
+                  placeholder="输入关键词搜索时尚资讯"
                   className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" />
               </div>
               <button onClick={handleCrawl} disabled={crawling || crawlSources.length === 0}
@@ -365,7 +364,6 @@ export default function AdminMagazinePage() {
               </button>
             </div>
 
-            {/* 数据源 */}
             <div className="mt-4">
               <div className="text-xs text-gray-500 mb-2">数据源：</div>
               <div className="flex flex-wrap gap-2">
@@ -380,16 +378,14 @@ export default function AdminMagazinePage() {
               </div>
             </div>
 
-            {/* 选项 */}
             <div className="mt-3 flex items-center gap-4">
               <label className="flex items-center gap-2 text-xs text-gray-500 cursor-pointer">
                 <input type="checkbox" checked={fetchContent} onChange={e => setFetchContent(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded text-accent" />
+                  className="w-[14px] h-[14px] rounded text-accent" />
                 同时抓取文章详情（较慢，但内容更完整）
               </label>
             </div>
 
-            {/* 快捷关键词 */}
             <div className="flex flex-wrap gap-2 mt-3">
               {QUICK_KEYWORDS.map(kw => (
                 <button key={kw} onClick={() => setCrawlKeyword(kw)}
@@ -400,7 +396,6 @@ export default function AdminMagazinePage() {
             </div>
           </div>
 
-          {/* 错误提示 */}
           {crawlError && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 flex items-start gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
@@ -408,7 +403,6 @@ export default function AdminMagazinePage() {
             </div>
           )}
 
-          {/* 采集结果 */}
           {crawledNews.length > 0 && (
             <>
               <div className="flex items-center justify-between mb-4">
@@ -420,7 +414,6 @@ export default function AdminMagazinePage() {
                   <Download className="w-4 h-4" /> 批量导入前10条
                 </button>
               </div>
-
               <div className="space-y-3">
                 {crawledNews.map((news, i) => (
                   <div key={i} className="bg-white rounded-xl border border-gray-200 p-4">
@@ -441,19 +434,13 @@ export default function AdminMagazinePage() {
                         <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                           <span>{news.source}</span>
                           {news.published_at && <span>{news.published_at}</span>}
-                          {news.source_url && (
-                            <a href={news.source_url} target="_blank" rel="noopener noreferrer"
-                              className="text-accent hover:underline flex items-center gap-1">
-                              <Globe className="w-3 h-3" />查看原文
-                            </a>
-                          )}
                         </div>
                       </div>
                       <button
                         onClick={() => handleImportNews(news)}
                         disabled={importing === news.title}
                         className="px-4 py-2 bg-accent/10 text-accent rounded-lg text-xs font-medium hover:bg-accent/20 transition-colors flex items-center gap-1.5 flex-shrink-0 whitespace-nowrap">
-                        {importing === news.title ? <Loader2 className="w-3 h-3 animate-spin" /> : <Plus className="w-3 h-3" />}
+                        {importing === news.title ? <Loader2 className="w-[14px] h-[14px] animate-spin" /> : <Plus className="w-[14px] h-[14px]" />}
                         导入
                       </button>
                     </div>
@@ -467,7 +454,6 @@ export default function AdminMagazinePage() {
             <div className="text-center py-16">
               <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-4" />
               <p className="text-muted-foreground">输入关键词搜索真实互联网时尚资讯</p>
-              <p className="text-xs text-gray-400 mt-1">数据来源：Vogue中国、ELLE中国、搜索引擎聚合</p>
             </div>
           )}
         </div>
@@ -502,51 +488,36 @@ export default function AdminMagazinePage() {
                   <label className="block text-sm font-medium text-primary">文章内容 *</label>
                   <div className="flex items-center gap-2">
                     <label className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-lg text-xs text-gray-600 cursor-pointer hover:bg-gray-200 transition-colors">
-                      <Upload className="w-3 h-3" />
-                      <span>插入图片</span>
+                      <Upload className="w-[14px] h-[14px]" /><span>插入图片</span>
                       <input type="file" accept="image/*" onChange={handleContentImageUpload} className="hidden" />
                     </label>
                     <span className="text-xs text-gray-400">支持 Markdown</span>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {/* 编辑区 */}
-                  <textarea
-                    id="article-content"
-                    required
-                    value={formData.content}
+                  <textarea id="article-content" required value={formData.content}
                     onChange={e => setFormData({...formData, content: e.target.value})}
-                    rows={12}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none font-mono"
-                    placeholder="## 小标题&#10;&#10;正文内容...&#10;&#10;![图片描述](图片URL)"
-                  />
-                  {/* 预览区 */}
+                    rows={12} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 resize-none font-mono"
+                    placeholder={"## 小标题\n\n正文内容...\n\n![图片描述](图片URL)"} />
                   <div className="w-full px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm overflow-y-auto max-h-80">
                     <div className="text-xs text-gray-400 mb-2 border-b border-gray-100 pb-1">实时预览</div>
                     {formData.content ? (
                       <div className="prose prose-sm max-w-none">
                         {formData.content.split('\n').map((line, i) => {
-                          // 标题
                           if (line.startsWith('### ')) return <h3 key={i} className="text-base font-bold text-primary mt-3 mb-1">{line.replace('### ', '')}</h3>;
                           if (line.startsWith('## ')) return <h2 key={i} className="text-lg font-bold text-primary mt-4 mb-2">{line.replace('## ', '')}</h2>;
                           if (line.startsWith('# ')) return <h1 key={i} className="text-xl font-bold text-primary mt-4 mb-2">{line.replace('# ', '')}</h1>;
-                          // 图片
                           const imgMatch = line.match(/!\[(.*?)\]\((.*?)\)/);
                           if (imgMatch) return <img key={i} src={imgMatch[2]} alt={imgMatch[1]} className="max-w-full rounded-lg my-2" />;
-                          // 粗体
                           if (line.includes('**')) {
                             const parts = line.split(/(\*\*.*?\*\*)/);
                             return <p key={i} className="my-1 leading-relaxed">{parts.map((p, j) => p.startsWith('**') && p.endsWith('**') ? <strong key={j}>{p.slice(2, -2)}</strong> : p)}</p>;
                           }
-                          // 空行
                           if (line.trim() === '') return <div key={i} className="h-2" />;
-                          // 普通段落
                           return <p key={i} className="my-1 leading-relaxed">{line}</p>;
                         })}
                       </div>
-                    ) : (
-                      <div className="text-gray-300 text-sm italic">预览区域...</div>
-                    )}
+                    ) : <div className="text-gray-300 text-sm italic">预览区域...</div>}
                   </div>
                 </div>
               </div>
@@ -555,8 +526,7 @@ export default function AdminMagazinePage() {
                 {formData.image_url ? (
                   <div className="relative inline-block">
                     <img src={formData.image_url} alt="" className="w-64 h-40 object-cover rounded-lg" />
-                    <button type="button" onClick={() => setFormData({...formData, image_url: ""})}
-                      className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full"><X className="w-4 h-4" /></button>
+                    <button type="button" onClick={() => setFormData(prev => ({ ...prev, image_url: "" }))} className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full"><X className="w-4 h-4" /></button>
                   </div>
                 ) : (
                   <label className="flex flex-col items-center justify-center w-64 h-40 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
@@ -586,5 +556,4 @@ export default function AdminMagazinePage() {
       )}
     </div>
   );
-}
 }
