@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
-import { ALL_STYLES, STYLE_KEY_MAP, getStyleProLabel, FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO, getColorSeasonProLabel } from "@/lib/styles";
 import {
   Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff,
   Loader2, LayoutGrid,
 } from "lucide-react";
+import {
+  FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
+  getStyleProLabel, getColorSeasonProLabel,
+} from "@/lib/styles";
 
 interface Display {
   id: string;
@@ -38,42 +40,34 @@ const SCENARIOS = [
   { value: "vacation", label: "度假旅行" },
 ];
 
-const COLOR_SEASONS = COLOR_SEASONS_PRO;
-
-const STYLES = ALL_STYLES;
-
 export default function AdminDisplayPage() {
   const [displays, setDisplays] = useState<Display[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingDisplay, setEditingDisplay] = useState<Display | null>(null);
   const [formData, setFormData] = useState({
-    title: "",
-    label: "",
-    section: "styles",
-    scenario: "",
-    description: "",
-    color_season: "",
-    style_type: "",
-    image_url: "",
-    is_published: false,
-    sort_order: 0,
+    title: "", label: "", section: "styles", scenario: "",
+    description: "", color_season: "", style_type: "",
+    image_url: "", is_published: false, sort_order: 0,
   });
   const [uploading, setUploading] = useState(false);
-  const router = useRouter();
+
   const supabase = createClient();
 
-  useEffect(() => { checkUser(); fetchDisplays(); }, []);
-
-  const checkUser = async () => {
-
+  /* ---- 加载数据 ---- */
   const fetchDisplays = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("display_images").select("*").order("sort_order", { ascending: true });
+    const { data, error } = await supabase
+      .from("display_images")
+      .select("*")
+      .order("sort_order", { ascending: true });
     if (!error && data) setDisplays(data as Display[]);
     setLoading(false);
   };
 
+  useEffect(() => { fetchDisplays(); }, []);
+
+  /* ---- 上传图片 ---- */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -81,13 +75,20 @@ export default function AdminDisplayPage() {
     const file = files[0];
     const fileExt = file.name.split(".").pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const { error: uploadError } = await supabase.storage.from("display-images").upload(fileName, file);
-    if (uploadError) { alert(`上传失败：${uploadError.message}`); setUploading(false); return; }
+    const { error: uploadError } = await supabase
+      .storage.from("display-images")
+      .upload(fileName, file);
+    if (uploadError) {
+      alert(`上传失败：${uploadError.message}`);
+      setUploading(false);
+      return;
+    }
     const { data } = supabase.storage.from("display-images").getPublicUrl(fileName);
     setFormData({ ...formData, image_url: data.publicUrl });
     setUploading(false);
   };
 
+  /* ---- 提交表单 ---- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const payload = {
@@ -104,24 +105,29 @@ export default function AdminDisplayPage() {
     };
 
     if (editingDisplay) {
-      const { error } = await supabase.from("display_images").update(payload).eq("id", editingDisplay.id);
+      const { error } = await supabase
+        .from("display_images")
+        .update(payload)
+        .eq("id", editingDisplay.id);
       if (error) { alert("更新失败：" + error.message); return; }
     } else {
-      const { error } = await supabase.from("display_images").insert([payload]);
+      const { error } = await supabase
+        .from("display_images")
+        .insert([payload]);
       if (error) { alert("创建失败：" + error.message); return; }
     }
 
     setShowModal(false);
     setEditingDisplay(null);
-    setFormData({ title: "", label: "", section: "styles", scenario: "", description: "", color_season: "", style_type: "", image_url: "", is_published: false, sort_order: 0 });
+    resetForm();
     fetchDisplays();
   };
 
+  /* ---- 编辑 ---- */
   const handleEdit = (display: Display) => {
     setEditingDisplay(display);
     setFormData({
-      title: display.title,
-      label: display.label || "",
+      title: display.title, label: display.label || "",
       section: display.section || "styles",
       scenario: display.scenario || "",
       description: display.description || "",
@@ -134,41 +140,61 @@ export default function AdminDisplayPage() {
     setShowModal(true);
   };
 
+  /* ---- 删除 ---- */
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个陈列方案吗？")) return;
-    const { error } = await supabase.from("display_images").delete().eq("id", id);
+    const { error } = await supabase
+      .from("display_images")
+      .delete()
+      .eq("id", id);
     if (error) { alert("删除失败：" + error.message); return; }
     fetchDisplays();
   };
 
+  /* ---- 切换发布 ---- */
   const togglePublish = async (display: Display) => {
-    const { error } = await supabase.from("display_images").update({ is_published: !display.is_published }).eq("id", display.id);
+    const { error } = await supabase
+      .from("display_images")
+      .update({ is_published: !display.is_published })
+      .eq("id", display.id);
     if (error) { alert("操作失败：" + error.message); return; }
     fetchDisplays();
   };
 
-  const sectionLabels: Record<string, string> = { styles: "风格陈列", scenarios: "场景搭配", layouts: "门店布局" };
+  /* ---- 重置表单 ---- */
+  const resetForm = () => {
+    setFormData({
+      title: "", label: "", section: "styles", scenario: "",
+      description: "", color_season: "", style_type: "",
+      image_url: "", is_published: false, sort_order: 0,
+    });
+  };
+
+  const sectionLabels: Record<string, string> = {
+    styles: "风格陈列",
+    scenarios: "场景搭配",
+    layouts: "门店布局",
+  };
+
+  /* ===================== 渲染 ===================== */
 
   return (
     <div>
+      {/* 标题栏 */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-primary">陈列搭配管理</h1>
           <p className="text-muted-foreground mt-1">管理陈列案例图片和搭配方案</p>
         </div>
         <button
-          onClick={() => {
-            setEditingDisplay(null);
-            setFormData({ title: "", label: "", section: "styles", scenario: "", description: "", color_season: "", style_type: "", image_url: "", is_published: false, sort_order: 0 });
-            setShowModal(true);
-          }}
+          onClick={() => { setEditingDisplay(null); resetForm(); setShowModal(true); }}
           className="btn-primary flex items-center gap-2"
         >
-          <Plus className="w-4 h-4" />
-          新增陈列
+          <Plus className="w-4 h-4" /> 新增陈列
         </button>
       </div>
 
+      {/* 内容区 */}
       {loading ? (
         <div className="text-center py-12">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" />
@@ -212,7 +238,7 @@ export default function AdminDisplayPage() {
                       </span>
                       {display.scenario && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                          {SCENARIOS.find(s => s.value === display.scenario)?.label || display.scenario}
+                          {SCENARIOS.find((s) => s.value === display.scenario)?.label || display.scenario}
                         </span>
                       )}
                     </div>
@@ -232,8 +258,19 @@ export default function AdminDisplayPage() {
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <button onClick={() => togglePublish(display)} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${display.is_published ? "bg-green-100 text-green-800 hover:bg-green-200" : "bg-gray-100 text-gray-800 hover:bg-gray-200"}`}>
-                      {display.is_published ? <><Eye className="w-3 h-3" />已发布</> : <><EyeOff className="w-3 h-3" />草稿</>}
+                    <button
+                      onClick={() => togglePublish(display)}
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                        display.is_published
+                          ? "bg-green-100 text-green-800 hover:bg-green-200"
+                          : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+                      }`}
+                    >
+                      {display.is_published ? (
+                        <><Eye className="w-3 h-3" />已发布</>
+                      ) : (
+                        <><EyeOff className="w-3 h-3" />草稿</>
+                      )}
                     </button>
                   </td>
                   <td className="px-4 py-3">
@@ -249,6 +286,7 @@ export default function AdminDisplayPage() {
         </div>
       )}
 
+      {/* 弹窗 */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
@@ -282,9 +320,7 @@ export default function AdminDisplayPage() {
                   <label className="block text-sm font-medium text-primary mb-2">适用场景</label>
                   <select value={formData.scenario} onChange={(e) => setFormData({ ...formData, scenario: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                     <option value="">不指定</option>
-                    {SCENARIOS.map((s) => (
-                      <option key={s.value} value={s.value}>{s.label}</option>
-                    ))}
+                    {SCENARIOS.map((s) => (<option key={s.value} value={s.value}>{s.label}</option>))}
                   </select>
                 </div>
               </div>
@@ -294,9 +330,9 @@ export default function AdminDisplayPage() {
                   <label className="block text-sm font-medium text-primary mb-2">色彩季型</label>
                   <select value={formData.color_season} onChange={(e) => setFormData({ ...formData, color_season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                     <option value="">不指定</option>
-                    {["春", "夏", "秋", "冬"].map(group => (
+                    {["春", "夏", "秋", "冬"].map((group) => (
                       <optgroup key={group} label={`${group}季型`}>
-                        {COLOR_SEASONS.filter(c => c.group === group).map(c => (
+                        {COLOR_SEASONS.filter((c) => c.group === group).map((c) => (
                           <option key={c.value} value={c.value}>{c.label}</option>
                         ))}
                       </optgroup>
@@ -308,10 +344,10 @@ export default function AdminDisplayPage() {
                   <select value={formData.style_type} onChange={(e) => setFormData({ ...formData, style_type: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
                     <option value="">不指定</option>
                     <optgroup label="── 女士八大风格 ──">
-                      {FEMALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
+                      {FEMALE_STYLES.map((s) => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                     <optgroup label="── 男士五大风格 ──">
-                      {MALE_STYLES.map(s => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
+                      {MALE_STYLES.map((s) => <option key={s.value} value={s.value}>{s.proLabel}</option>)}
                     </optgroup>
                   </select>
                 </div>
@@ -338,8 +374,8 @@ export default function AdminDisplayPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="is_published" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
-                  <label htmlFor="is_published" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
+                  <input type="checkbox" id="is_published_display" checked={formData.is_published} onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })} className="w-4 h-4 text-accent focus:ring-accent rounded" />
+                  <label htmlFor="is_published_display" className="text-sm font-medium text-primary cursor-pointer">立即发布</label>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">排序</label>
@@ -357,5 +393,4 @@ export default function AdminDisplayPage() {
       )}
     </div>
   );
-}
 }
