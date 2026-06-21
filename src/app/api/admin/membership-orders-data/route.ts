@@ -57,10 +57,12 @@ export async function PUT(req: NextRequest) {
 
       if (orders && orders.length > 0 && orders[0].user_id) {
         const uid = orders[0].user_id;
-        let mType = "deposit_discount";
+        /* 根据套餐类型确定 membership_type */
+        let mType = "deposit_discount"; // 默认高阶
         const planId = orders[0].plan_id || "";
         if (planId === "daily_looks") mType = "view_price";
 
+        /* 更新或创建profile记录（让前台能识别到VIP状态）*/
         const { data: existingProfile } = await supabase
           .from("profiles")
           .select("id")
@@ -83,7 +85,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: true, message: "已开通" });
     }
 
-    /* 取消 */
+    /* 取消：any -> cancelled + 清除profile VIP状态 */
     if (action === "cancel") {
       const { error } = await supabase
         .from("membership_orders")
@@ -91,17 +93,20 @@ export async function PUT(req: NextRequest) {
         .eq("id", id);
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+      /* 清除该用户的VIP状态 */
       const { data: orderData } = await supabase
         .from("membership_orders")
         .select("user_id")
         .eq("id", id)
         .single();
       if (orderData?.user_id) {
+        /* 检查是否还有其他已开通的订单 */
         const { count } = await supabase
           .from("membership_orders")
           .select("*", { count: "exact", head: true })
           .eq("user_id", orderData.user_id)
           .eq("status", "confirmed");
+        /* 如果没有其他已开通的订单了，清除VIP状态 */
         if ((count || 0) === 0) {
           await supabase
             .from("profiles")
@@ -113,10 +118,11 @@ export async function PUT(req: NextRequest) {
             .eq("id", orderData.user_id);
         }
       }
+
       return NextResponse.json({ success: true, message: "已取消" });
     }
 
-    /* 重置 */
+    /* 重置为待确认：any -> pending */
     if (action === "reset-pending") {
       const { error } = await supabase
         .from("membership_orders")
@@ -130,7 +136,7 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ success: true, message: "已重置" });
     }
 
-    return NextResponse.json({ error: "未知操作，支持: confirm / cancel / reset-pending" }, { status: 400 });
+    return NextResponse.json({ error: "未知操作，支持: confirm / cancel / reset-pending / delete-member" }, { status: 400 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
