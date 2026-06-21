@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import AdminLayout from '@/app/admin/layout';
 
 interface ChargeOrder {
   id: string;
@@ -143,8 +142,7 @@ export default function AdminChargeOrdersPage() {
   };
 
   return (
-    <AdminLayout>
-      <div className="p-6">
+    <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">充值订单管理</h1>
 
         {/* 筛选条件 */}
@@ -413,6 +411,5 @@ export default function AdminChargeOrdersPage() {
           </div>
         )}
       </div>
-    </AdminLayout>
-  );
+    );
 }
