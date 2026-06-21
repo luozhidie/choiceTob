@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { CheckCircle2, XCircle, Mail, User, Building, Clock } from "lucide-react";
+import { CheckCircle2, XCircle, Trash2, Mail, User, Building, Clock } from "lucide-react";
 
 interface PendingUser {
   id: string;
@@ -76,6 +76,28 @@ export default function PendingPage() {
       }
     } catch (e: any) {
       alert("操作失败：" + e.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDelete = async (userId: string) => {
+    if (!confirm("确定删除该用户的注册申请？删除后该用户需重新注册。")) return;
+    setActionLoading(userId);
+    try {
+      const res = await fetch("/api/admin/approve", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        fetchList();
+      } else {
+        alert("删除失败：" + result.error);
+      }
+    } catch (e: any) {
+      alert("删除失败：" + e.message);
     } finally {
       setActionLoading(null);
     }
@@ -168,6 +190,14 @@ export default function PendingPage() {
                   >
                     <XCircle className="w-3.5 h-3.5" />
                     拒绝
+                  </button>
+                  <button
+                    onClick={() => handleDelete(u.id)}
+                    disabled={actionLoading === u.id}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors disabled:opacity-50 flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    删除
                   </button>
                 </div>
 
