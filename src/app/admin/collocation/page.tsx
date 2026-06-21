@@ -8,7 +8,6 @@ import Link from "next/link";
 interface OutfitMatch {
   id: string;
   title: string;
-  description: string | null;
   product_ids: string[];
   style_tags: string[] | null;
   season_tags: string[] | null;
@@ -232,9 +231,6 @@ export default function AdminCollocationPage() {
                     {outfit.is_published ? "已发布" : "草稿"}
                   </span>
                 </div>
-                {outfit.description && (
-                  <p className="text-sm text-gray-500 mb-2 line-clamp-2">{outfit.description}</p>
-                )}
                 <div className="flex flex-wrap gap-1 mb-3">
                   {outfit.style_tags?.map((t) => (
                     <span key={t} className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary">{t}</span>

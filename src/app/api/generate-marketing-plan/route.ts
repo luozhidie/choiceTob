@@ -9,12 +9,8 @@ import { createClient } from "@/lib/supabase/server";
  */
 export async function POST(req: NextRequest) {
   try {
-    // 检查用户是否已登录
+    // middleware 已验证管理员身份，无需检查 Supabase Auth
     const supabase = await createClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "请先登录" }, { status: 401 });
-    }
     
     const {
       storeId,
