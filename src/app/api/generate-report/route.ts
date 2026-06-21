@@ -24,12 +24,14 @@ const SEASON_PALETTE: Record<string, string[]> = {
 };
 
 export async function POST(req: NextRequest) {
-  // 检查用户是否已登录
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
+  // 检查管理员是否已登录（cookie方式，与后台统一）
+  const cookieHeader = req.headers.get("cookie") || "";
+  const isAdmin = cookieHeader.includes("admin_logged_in=true");
+  if (!isAdmin) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
+
+  const supabase = await createClient();
   
   const { storeId, season, reportType = "basic" } = await req.json();
   if (!storeId) return NextResponse.json({ error: "缺少 storeId" }, { status: 400 });
