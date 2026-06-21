@@ -45,19 +45,56 @@ export default function AdminVIPPage() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 获取所有付费会员
+  // 获取所有付费会员（同时查询 profiles + membership_orders）
   const fetchMembers = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. 从 profiles 表查已有会员
+      const { data: profileData, error: profileErr } = await supabase
         .from("profiles")
         .select("id, email, full_name, phone, company_name, membership_type, membership_expires_at, created_at")
-        .in("membership_type", ["view_price", "deposit_discount"])
-        .order("created_at", { ascending: false });
+        .in("membership_type", ["view_price", "deposit_discount"]);
 
-      if (error) throw error;
-      setMembers((data || []) as VipMember[]);
-      setFilteredMembers((data || []) as VipMember[]);
+      if (profileErr) console.warn("profiles 查询警告:", profileErr.message);
+
+      // 2. 从 membership_orders 查已确认的订单（补充来源）
+      const { data: orderData, error: orderErr } = await supabase
+        .from("membership_orders")
+        .select("*")
+        .eq("status", "confirmed");
+
+      if (orderErr) console.warn("orders 查询警告:", orderErr.message);
+
+      // 合并数据：以 profiles 为基础，用 orders 补充
+      const memberMap = new Map<string, VipMember>();
+
+      // 先加入 profiles 数据
+      (profileData || []).forEach((p: any) => {
+        memberMap.set(p.id, p as VipMember);
+      });
+
+      // 再用 orders 补充（如果 profiles 里没有这个用户）
+      (orderData || []).forEach((o: any) => {
+        if (!memberMap.has(o.user_id)) {
+          memberMap.set(o.user_id, {
+            id: o.user_id,
+            email: o.user_email || "",
+            full_name: o.user_name || null,
+            phone: o.user_phone || null,
+            company_name: null,
+            membership_type: o.plan_id || "view_price",
+            membership_expires_at: o.confirmed_at || o.created_at,
+            created_at: o.created_at,
+          });
+        }
+      });
+
+      const allMembers = Array.from(memberMap.values()).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setMembers(allMembers);
+      setFilteredMembers(allMembers);
     } catch (err: any) {
       showToast("error", "加载失败：" + err.message);
     } finally {
