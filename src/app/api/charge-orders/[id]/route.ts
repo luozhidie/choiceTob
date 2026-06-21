@@ -1,30 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+// 检查管理员权限（cookie 方式）
+function checkAdminAuth(request: NextRequest) {
+  const cookieHeader = request.headers.get("cookie") || "";
+  const isAdmin = cookieHeader.includes("admin_logged_in=true");
+  return isAdmin;
+}
+
 // 获取单个充值订单详情
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户权限
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // 检查管理员是否已登录（cookie方式）
+    if (!checkAdminAuth(request)) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    // 检查是否是管理员
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
-    }
+    const supabase = await createClient();
 
     const { data, error } = await supabase
       .from('charge_orders')
@@ -61,24 +56,12 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户权限
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // 检查管理员是否已登录（cookie方式）
+    if (!checkAdminAuth(request)) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    // 检查是否是管理员
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
-    }
+    const supabase = await createClient();
 
     const body = await request.json();
     const { status, payment_proof, admin_remark } = body;
@@ -99,16 +82,15 @@ export async function PATCH(
 
     if (status !== undefined) {
       updateData.status = status;
-      
+
       // 如果状态改为已支付，记录支付时间
       if (status === 'paid' && currentOrder.status === 'pending') {
         updateData.paid_at = new Date().toISOString();
       }
-      
-      // 如果状态改为已确认，记录确认时间和确认人
+
+      // 如果状态改为已确认，记录确认时间
       if (status === 'confirmed' && currentOrder.status !== 'confirmed') {
         updateData.confirmed_at = new Date().toISOString();
-        updateData.confirmed_by = user.id;
       }
     }
 
@@ -153,26 +135,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户权限
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    // 检查管理员是否已登录（cookie方式）
+    if (!checkAdminAuth(request)) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
 
-    // 检查是否是管理员
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!profile || profile.role !== 'admin') {
-      return NextResponse.json({ error: '权限不足' }, { status: 403 });
-    }
-
     // 检查订单状态，只能删除未确认的订单
+    const supabase = await createClient();
     const { data: currentOrder } = await supabase
       .from('charge_orders')
       .select('status')

@@ -30,14 +30,9 @@ export async function GET(request: NextRequest) {
       .from('charge_orders')
       .select('*', { count: 'exact' });
 
-    // 如果不是管理员，只能查看自己的订单
-    if (!isAdmin) {
-      query = query.eq('user_id', user.id);
-    } else {
-      // 管理员可以筛选特定用户
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
+    // 管理员可以筛选特定用户
+    if (userId) {
+      query = query.eq('user_id', userId);
     }
 
     // 状态筛选
@@ -91,9 +86,12 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
 
     const body = await request.json();
-    const { amount, discount_rate, payment_method, remark } = body;
+    const { user_id, amount, discount_rate, payment_method, remark } = body;
 
     // 验证必填字段
+    if (!user_id) {
+      return NextResponse.json({ error: '缺少用户ID' }, { status: 400 });
+    }
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: '充值金额必须大于0' }, { status: 400 });
     }
@@ -105,7 +103,7 @@ export async function POST(request: NextRequest) {
     const { data: userProfile } = await supabase
       .from('user_profiles')
       .select('email, name')
-      .eq('id', user.id)
+      .eq('id', user_id)
       .single();
 
     // 创建充值订单
@@ -113,8 +111,8 @@ export async function POST(request: NextRequest) {
       .from('charge_orders')
       .insert({
         order_no: generateOrderNo(),
-        user_id: user.id,
-        user_email: userProfile?.email || user.email,
+        user_id,
+        user_email: userProfile?.email || '',
         user_name: userProfile?.name || '',
         amount,
         discount_rate,
