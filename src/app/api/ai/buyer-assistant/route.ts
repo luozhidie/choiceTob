@@ -46,7 +46,6 @@ export async function POST(req: NextRequest) {
 
     // 检查认证
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }

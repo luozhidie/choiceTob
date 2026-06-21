@@ -158,7 +158,6 @@ export async function POST(request: NextRequest) {
     });
     
     // 检查用户是否是管理员
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }

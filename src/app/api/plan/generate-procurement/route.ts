@@ -9,8 +9,6 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
   // 鉴权：必须登录
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
 
   // ── 加载96格矩阵 + 商品结构 ──
   const [{ data: matrix }, { data: structure }] = await Promise.all([

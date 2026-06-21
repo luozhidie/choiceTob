@@ -16,10 +16,6 @@ export async function GET() {
 /** POST: 新增品类（需admin权限） */
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
 
   const body = await req.json();
 
@@ -41,10 +37,6 @@ export async function POST(req: NextRequest) {
 /** PUT: 更新品类（需admin权限） */
 export async function PUT(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
 
   const body = await req.json();
 
@@ -67,10 +59,6 @@ export async function PUT(req: NextRequest) {
 /** DELETE: 删除品类（需admin权限） */
 export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
-  const { data: { user }, error: authErr } = await supabase.auth.getUser();
-  if (authErr || !user) return NextResponse.json({ error: "请先登录" }, { status: 401 });
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (!profile || !["admin", "owner"].includes(profile.role)) return NextResponse.json({ error: "无权限" }, { status: 403 });
 
   const { id } = await req.json();
 

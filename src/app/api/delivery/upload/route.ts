@@ -20,7 +20,6 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient();
 
     // 验证用户已登录
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
@@ -96,8 +95,6 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "缺少itemId" }, { status: 400 });
     }
 
-
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }

@@ -9,7 +9,6 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     
     // 检查用户是否是管理员
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
@@ -70,7 +69,6 @@ export async function GET(request: NextRequest) {
   try {
     
     // 检查用户是否是管理员
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }

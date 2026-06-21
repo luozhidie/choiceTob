@@ -19,7 +19,6 @@ export async function GET(req: NextRequest) {
     const supabase = await createClient();
 
     // 鉴权：必须登录
-    const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) {
       return NextResponse.json({ error: "请先登录" }, { status: 401 });
     }
