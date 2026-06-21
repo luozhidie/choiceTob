@@ -3,8 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2, RefreshCw, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, CheckCircle2, XCircle, Trash2, RefreshCw, Clock, CircleCheck } from "lucide-react";
 
 const STATUS_MAP: Record<string, { label: string; cls: string }> = {
   pending: { label: "待确认", cls: "bg-amber-50 text-amber-700 border border-amber-200" },
@@ -25,25 +24,23 @@ interface Order {
 export default function MembershipOrdersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const supabase = createClient();
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [msg, setMsg] = useState(searchParams.get("msg") || null);
+  const [actionId, setActionId] = useState<string | null>(null); /* 正在操作的订单 */
+  const [msg, setMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (searchParams.get("msg")) setMsg("deleted");
+    const m = searchParams.get("msg");
+    if (m === "deleted") setMsg("订单已删除");
+    else if (m === "confirmed") setMsg("订单已开通");
   }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // 通过服务端API获取数据（绕过RLS）
       const res = await fetch("/api/admin/membership-orders-data");
       const json = await res.json();
-      if (json.success) {
-        setOrders(json.data || []);
-      }
+      if (json.success) setOrders(json.data || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -53,9 +50,10 @@ export default function MembershipOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, []);
 
+  /* 删除订单 */
   const handleDelete = async (id: string) => {
-    if (!confirm("确定删除此订单？")) return;
-    setDeletingId(id);
+    if (!confirm("确定删除此订单？此操作不可恢复")) return;
+    setActionId(id);
     try {
       const res = await fetch("/api/admin/membership-orders-data", {
         method: "DELETE",
@@ -63,15 +61,32 @@ export default function MembershipOrdersPage() {
         body: JSON.stringify({ id }),
       });
       const json = await res.json();
-      if (json.success) {
-        router.push("/admin/membership-orders?msg=deleted");
-      } else {
-        alert("删除失败：" + (json.error || ""));
-      }
+      if (json.success) router.push("/admin/membership-orders?msg=deleted");
+      else alert("删除失败：" + (json.error || "未知错误"));
     } catch (e: any) {
       alert("删除失败：" + e.message);
     } finally {
-      setDeletingId(null);
+      setActionId(null);
+    }
+  };
+
+  /* 确认开通 */
+  const handleConfirm = async (id: string) => {
+    if (!confirm("确定开通此VIP会员？")) return;
+    setActionId(id);
+    try {
+      const res = await fetch("/api/admin/membership-orders-data", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, action: "confirm" }),
+      });
+      const json = await res.json();
+      if (json.success) router.push("/admin/membership-orders?msg=confirmed");
+      else alert("开通失败：" + (json.error || "未知错误"));
+    } catch (e: any) {
+      alert("开通失败：" + e.message);
+    } finally {
+      setActionId(null);
     }
   };
 
@@ -87,11 +102,12 @@ export default function MembershipOrdersPage() {
 
   return (
     <div className="min-h-screen p-6">
-      {/* 成功提示 */}
+      {/* 操作结果提示 */}
       {msg && (
         <div className="mb-6 px-5 py-3 rounded-xl font-medium text-sm shadow-sm bg-green-50 text-green-700 border border-green-200 flex items-center gap-3">
-          订单已成功删除
-          <button onClick={() => router.push("/admin/membership-orders")} className="underline">返回列表</button>
+          <CheckCircle2 className="w-4 h-4" />
+          {msg}
+          <button onClick={() => router.push("/admin/membership-orders")} className="underline ml-2">返回列表</button>
         </div>
       )}
 
@@ -104,7 +120,7 @@ export default function MembershipOrdersPage() {
             </Link>
             <h1 className="text-2xl font-bold text-primary">VIP订单管理</h1>
           </div>
-          <p className="text-sm text-muted-foreground">审核会员支付订单，确认开通或取消</p>
+          <p className="text-sm text-muted-foreground">审核会员支付订单，确认开通或删除</p>
         </div>
         <button onClick={fetchOrders} className="px-4 py-2 text-sm font-medium text-primary border border-primary rounded-lg hover:bg-primary/5">
           <RefreshCw className="w-4 h-4 inline mr-1" /> 刷新
@@ -123,11 +139,11 @@ export default function MembershipOrdersPage() {
         </div>
         <div className="bg-white rounded-xl p-4 border shadow-sm">
           <p className="text-xs text-muted-foreground">累计营收</p>
-          <p className="text-2xl font-black text-accent">¥{(stats.revenue / 100).toFixed(0)}</p>
+          <p className="text-2xl font-black text-accent">{stats.revenue > 0 ? "\u00A5" + (stats.revenue / 100).toFixed(0) : "\u00A50"}</p>
         </div>
       </div>
 
-      {/* 筛选 */}
+      {/* 筛选按钮 */}
       <div className="flex gap-3 mb-4 flex-wrap">
         <button
           onClick={() => router.push("/admin/membership-orders")}
@@ -139,7 +155,7 @@ export default function MembershipOrdersPage() {
         <button
           onClick={() => router.push("?status=pending")}
           className={"px-3 py-2 rounded-lg text-sm border transition-colors " +
-            (filterStatus === "pending" ? "bg-primary text-white border-primary" : "border-gray-200 hover:bg-gray-50")}
+            (filterStatus === "pending" ? "bg-amber-500 text-white border-amber-500" : "border-gray-200 hover:bg-gray-50")}
         >
           待确认 ({stats.pending})
         </button>
@@ -173,11 +189,12 @@ export default function MembershipOrdersPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map((o) => {
                 const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+                const isPending = o.status === "pending";
                 return (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium">{o.plan_name || o.plan_id || "-"}</td>
                     <td className="px-4 py-3">{o.payment_method === "wechat" ? "微信" : "-"}</td>
-                    <td className="px-4 py-3 text-right font-bold">¥{(o.price / 100).toFixed(0)}</td>
+                    <td className="px-4 py-3 text-right font-bold">\u00A5{(o.price / 100).toFixed(0)}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {new Date(o.created_at).toLocaleDateString("zh-CN")}
                     </td>
@@ -192,14 +209,30 @@ export default function MembershipOrdersPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(o.id)}
-                        disabled={deletingId === o.id}
-                        className="text-red-500 hover:text-red-700 disabled:opacity-50 inline-flex items-center gap-1"
-                        title="彻底删除此订单"
-                      >
-                        {deletingId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-4 h-4" />} 删除
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        {/* 待确认：显示开通按钮 */}
+                        {isPending && (
+                          <button
+                            onClick={() => handleConfirm(o.id)}
+                            disabled={actionId === o.id}
+                            className="text-green-600 hover:text-green-700 disabled:opacity-50 inline-flex items-center gap-1 text-xs font-medium"
+                            title="确认开通"
+                          >
+                            {actionId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <CircleCheck className="w-4 h-4" />}
+                            开通
+                          </button>
+                        )}
+                        {/* 所有订单都可以删 */}
+                        <button
+                          onClick={() => handleDelete(o.id)}
+                          disabled={actionId === o.id}
+                          className="text-red-500 hover:text-red-700 disabled:opacity-50 inline-flex items-center gap-1 text-xs font-medium"
+                          title="删除订单"
+                        >
+                          {actionId === o.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                          删除
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -215,4 +248,3 @@ export default function MembershipOrdersPage() {
     </div>
   );
 }
-// 部署时间: 2026-06-21 13:04:55 - 全部admin页面验证通过
