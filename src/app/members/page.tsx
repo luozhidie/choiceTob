@@ -63,6 +63,7 @@ export default function MembersPage() {
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [isVipMember, setIsVipMember] = useState(false);
 
   const supabase = createClient();
 
@@ -81,6 +82,23 @@ export default function MembersPage() {
         .eq("id", u.id)
         .single();
       setProfile(p || {});
+
+      // 同时检查 membership_orders 表是否有已开通的订单（双重验证）
+      if (u.id && (p?.membership_type)) {
+        setIsVipMember(true);
+      } else {
+        try {
+          const { data: orders } = await supabase
+            .from("membership_orders")
+            .select("status")
+            .eq("user_id", u.id)
+            .eq("status", "confirmed");
+          if (orders && orders.length > 0) {
+            setIsVipMember(true);
+          }
+        } catch {}
+      }
+
       setChecking(false);
     };
     init();
@@ -94,7 +112,7 @@ export default function MembersPage() {
     );
   }
 
-  const isMember = profile?.membership_type && profile?.membership_type !== "";
+  const isMember = isVipMember || (profile?.membership_type && profile?.membership_type !== "");
   const memberType = profile?.membership_type === "view_price" ? "基础VIP（查价特权）"
     : profile?.membership_type === "deposit_discount" ? "高阶VIP（拿货折扣）" : null;
 
