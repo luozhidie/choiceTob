@@ -37,7 +37,7 @@ export default function AdminCelebrityPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`/api/celebrity-search?q=${encodeURIComponent(keyword)}`);
+      const res = await fetch(`/api/celebrity?q=${encodeURIComponent(keyword)}`);
       const data = await res.json();
       const list: CelebrityItem[] = data.results || [];
       setItems(list);
