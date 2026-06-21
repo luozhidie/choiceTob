@@ -33,6 +33,75 @@ interface Customer {
   tags: string[];
 }
 
+// 添加客户弹窗组件（真正写入数据库）
+function AddCustomerModal({ supabase, onClose, onAdded }: {
+  supabase: any;
+  onClose: () => void;
+  onAdded: () => void;
+}) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    setSaving(true);
+    try {
+      // 写入 customers 表
+      const { error } = await supabase.from("customers").insert([{
+        full_name: form.name.trim(),
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+        membership_level: "normal",
+        status: "active",
+        total_spent: 0,
+        order_count: 0,
+      }]);
+      if (error) throw error;
+      onAdded();
+    } catch (err: any) {
+      alert("添加失败：" + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4" onClick={e => e.stopPropagation()}>
+        <h2 className="text-xl font-bold mb-6">添加客户</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
+            <input type="text" required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+              placeholder="客户姓名" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">电话</label>
+              <input type="tel" value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                placeholder="手机号" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
+              <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <button type="button" onClick={onClose} className="px-5 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
+            <button type="submit" disabled={saving} className="px-5 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50">
+              {saving ? "保存中..." : "添加"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +110,7 @@ export default function AdminCustomers() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [adding, setAdding] = useState(false);
   
   const router = useRouter();
   const limit = 20;
@@ -308,35 +378,11 @@ export default function AdminCustomers() {
       
       {/* 添加客户弹窗 */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h2 className="text-2xl font-bold mb-6">添加客户</h2>
-            <form onSubmit={(e) => { e.preventDefault(); alert("添加功能开发中"); setShowAddModal(false); }} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
-                <input type="text" required className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">邮箱</label>
-                  <input type="email" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">电话</label>
-                  <input type="tel" className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50" />
-                </div>
-              </div>
-              <div className="flex justify-end gap-4 mt-6">
-                <button type="button" onClick={() => setShowAddModal(false)} className="px-6 py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
-                  取消
-                </button>
-                <button type="submit" className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
-                  添加
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <AddCustomerModal
+          supabase={supabase}
+          onClose={() => setShowAddModal(false)}
+          onAdded={() => { setShowAddModal(false); loadCustomers(); }}
+        />
       )}
     </div>
   );
