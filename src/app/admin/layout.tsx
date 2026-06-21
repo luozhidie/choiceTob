@@ -13,8 +13,6 @@ const menuGroups = [
   { label: "店铺管理", items: [
     { label: "店铺列表", href: "/admin/stores" },
     { label: "品类管理", href: "/admin/categories" },
-    { label: "店铺买手决策", href: "/admin/buyer-features" },
-    { label: "买手步骤", href: "/admin/buyer-steps" },
   ]},
   { label: "VIP会员", items: [
     { label: "VIP订单", href: "/admin/membership-orders" },
@@ -40,6 +38,8 @@ const menuGroups = [
     { label: "买手选品", href: "/admin/buyer" },
     { label: "选品步骤", href: "/admin/planning-steps" },
     { label: "选品功能", href: "/admin/assortment" },
+    { label: "买手功能", href: "/admin/buyer-features" },
+    { label: "买手步骤", href: "/admin/buyer-steps" },
   ]},
   { label: "采购&供应链", items: [
     { label: "采购意向", href: "/admin/purchase-intents" },
