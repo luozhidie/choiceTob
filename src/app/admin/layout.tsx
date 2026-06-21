@@ -6,14 +6,20 @@ import { ChevronLeft, PanelLeftClose, ChevronsDown, ChevronsUp } from "lucide-re
 
 // 菜单数据（定义在组件外部，避免每次渲染重建）
 const menuGroups = [
+  // ─── 概览 ───
   { label: "概览", items: [
     { label: "数据概览", href: "/admin/dashboard" },
     { label: "站点图片", href: "/admin/site-assets" },
   ]},
+
+  // ─── 店铺管理 ───
   { label: "店铺管理", items: [
     { label: "店铺列表", href: "/admin/stores" },
     { label: "品类管理", href: "/admin/categories" },
+    { label: "店铺买手决策", href: "/admin/buyer-features" },
   ]},
+
+  // ─── VIP会员 ───
   { label: "VIP会员", items: [
     { label: "VIP订单", href: "/admin/membership-orders" },
     { label: "VIP管理", href: "/admin/vip" },
@@ -23,14 +29,18 @@ const menuGroups = [
     { label: "风格测试记录", href: "/admin/style-tests" },
     { label: "测试码管理", href: "/admin/test-codes" },
   ]},
+
+  // ─── 充值管理（保留） ───
   { label: "充值管理", items: [
     { label: "充值订单", href: "/admin/charge-orders" },
   ]},
+
+  // ─── 商品&企划 ───
   { label: "商品&企划", items: [
     { label: "企划需求处理", href: "/admin/planning-requests" },
     { label: "企划订单管理", href: "/admin/planning-orders" },
     { label: "商品企划", href: "/admin/product-plan" },
-    { label: "企划报告与交付", href: "/admin/report" },
+    { label: "生成企划报告", href: "/admin/report" },
     { label: "商品管理", href: "/admin/products" },
     { label: "爆款样衣", href: "/admin/hot-products" },
     { label: "爆款货盘", href: "/admin/hot-picks" },
@@ -38,9 +48,12 @@ const menuGroups = [
     { label: "买手选品", href: "/admin/buyer" },
     { label: "选品步骤", href: "/admin/planning-steps" },
     { label: "选品功能", href: "/admin/assortment" },
-    { label: "买手功能", href: "/admin/buyer-features" },
+    { label: "买手中心", href: "/admin/buyer-center" },
     { label: "买手步骤", href: "/admin/buyer-steps" },
+    { label: "货盘规划", href: "/admin/product-evaluation" },
   ]},
+
+  // ─── 采购&供应链 ───
   { label: "采购&供应链", items: [
     { label: "采购意向", href: "/admin/purchase-intents" },
     { label: "订单管理", href: "/admin/orders" },
@@ -48,12 +61,17 @@ const menuGroups = [
     { label: "供应商管理", href: "/admin/supplier" },
     { label: "供应商图片", href: "/admin/supplier-images" },
   ]},
+
+  // ─── 库存&销售 ───
   { label: "库存&销售", items: [
     { label: "库存管理", href: "/admin/inventory" },
     { label: "销售数据", href: "/admin/sales-data" },
     { label: "门店经营数据", href: "/admin/store-reports" },
+    { label: "订单管理", href: "/admin/orders" },
     { label: "市场需求统计", href: "/admin/market-demand" },
   ]},
+
+  // ─── 陈列&搭配 ───
   { label: "陈列&搭配", items: [
     { label: "陈列搭配", href: "/admin/collocation" },
     { label: "搭配方案", href: "/admin/display" },
@@ -61,51 +79,68 @@ const menuGroups = [
     { label: "每日搭配", href: "/admin/daily-looks" },
     { label: "属性编码管理", href: "/admin/attribute-encoding" },
   ]},
+
+  // ─── 营销&内容 ───
   { label: "营销&内容", items: [
     { label: "营销策划", href: "/admin/marketing" },
     { label: "营销图片", href: "/admin/marketing-images" },
-    { label: "销售服务", href: "/admin/sales" },
     { label: "Banner轮播图", href: "/admin/banners" },
     { label: "搭配灵感", href: "/admin/inspirations" },
+    { label: "销售服务", href: "/admin/sales" },
+    { label: "销售图片", href: "/admin/sales-images" },
     { label: "内容日历", href: "/admin/content-calendar" },
     { label: "沙龙活动", href: "/admin/salon" },
     { label: "沙龙流程", href: "/admin/salon-events" },
     { label: "爆款样衣(设计)", href: "/admin/designer" },
   ]},
+
+  // ─── 客户&线索 ───
   { label: "客户&线索", items: [
     { label: "客户管理", href: "/admin/customers" },
     { label: "线索管理", href: "/admin/leads" },
+    { label: "交付方案", href: "/admin/deliveries" },
   ]},
+
+  // ─── 潜客管理 ───
   { label: "潜客管理", items: [
-    { label: "门店信息管理", href: "/admin/crm/stores" },
+    { label: "门店信息", href: "/admin/crm/stores" },
     { label: "联系人管理", href: "/admin/crm/contacts" },
     { label: "跟进记录", href: "/admin/crm/follow-ups" },
-    { label: "加微信管理", href: "/admin/crm/wechat-add" },
-    { label: "微信话术模板", href: "/admin/crm/wechat-templates" },
-    { label: "门店信息采集", href: "/admin/crm/scrape" },
-    { label: "批量导入", href: "/admin/crm/import" },
+    { label: "加微信", href: "/admin/crm/wechat-add" },
+    { label: "微信话术", href: "/admin/crm/wechat-templates" },
+    { label: "门后采集", href: "/admin/crm/scrape" },
     { label: "提醒中心", href: "/admin/crm/reminders" },
+    { label: "批量导入", href: "/admin/crm/import" },
   ]},
+
+  // ─── 项目&预算 ───
   { label: "项目&预算", items: [
     { label: "项目进度", href: "/admin/project-tracker" },
     { label: "预算与成本", href: "/admin/budget-tracker" },
   ]},
+
+  // ─── 教学&资讯 ───
   { label: "教学&资讯", items: [
+    { label: "教学中心", href: "/admin/education" },
     { label: "课程管理", href: "/admin/courses" },
     { label: "课程购买记录", href: "/admin/course-purchases" },
     { label: "流行资讯", href: "/admin/fashion-trends" },
+    { label: "服装趋势", href: "/admin/trend-predict" },
   ]},
+
+  // ─── 趋势（保留额外分组） ───
   { label: "趋势", items: [
     { label: "趋势预测", href: "/admin/trend-predict" },
     { label: "趋势中心", href: "/admin/trend-center" },
     { label: "明星同款", href: "/admin/celebrity" },
   ]},
+
+  // ─── 其他（保留） ───
   { label: "其他", items: [
     { label: "访客管理", href: "/admin/visitors" },
-    { label: "配送管理", href: "/admin/deliveries" },
-    { label: "教育", href: "/admin/education" },
     { label: "杂志", href: "/admin/magazine" },
     { label: "待审", href: "/admin/pending" },
+    { label: "风格测试结果", href: "/admin/style-test-results" },
   ]},
 ];
 
