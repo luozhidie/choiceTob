@@ -22,9 +22,17 @@ interface SiteAsset {
 /* 预定义的图片位置配置 */
 const ASSET_CONFIGS = [
   {
+    key: "hero_top_bg",
+    title: "🏠 首页 Hero 顶部背景",
+    desc: "建议尺寸 1440×600px，用于首页顶部「骆芷蝶供应链智选平台」区域的背景图",
+    icon: Camera,
+    sizeHint: "1440 × 600",
+    required: false,
+  },
+  {
     key: "hero_bg",
-    title: "🏠 首页 Hero 大背景",
-    desc: "建议尺寸 1440×900px，用于首页顶部主视觉区域",
+    title: "🏔️ 首页 Hero 大背景",
+    desc: "建议尺寸 1440×900px，用于首页大图区域背景",
     icon: Camera,
     sizeHint: "1440 × 900",
     required: true,
