@@ -10,6 +10,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     
     // 检查用户是否已登录
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: '请先登录' }, { status: 401 });
     }
