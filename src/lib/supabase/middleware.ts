@@ -17,7 +17,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next({ request });
   }
 
-  // 所有 /admin/* 路由都检查 admin_logged_in cookie
+  // /admin/login 直接放行（让页面自己处理）
+  if (pathname === "/admin/login") {
+    return NextResponse.next({ request });
+  }
+
+  // 其他 /admin/* 路由才检查 admin_logged_in cookie
   const adminCookie = request.cookies.get("admin_logged_in");
   if (adminCookie?.value !== "true") {
     // 未登录 → 重定向到登录页

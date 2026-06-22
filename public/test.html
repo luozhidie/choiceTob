@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>功能验证测试</title>
+  <style>
+    body { font-family: system-ui; max-width: 800px; margin: 40px auto; padding: 20px; }
+    .card { background: #f9f9f9; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .success { color: #16a34a; }
+    .error { color: #dc2626; }
+    button { background: #000; color: #fff; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; }
+    button:hover { background: #333; }
+    pre { background: #000; color: #0f0; padding: 10px; border-radius: 6px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔧 功能验证测试页面</h1>
+  <p>这个页面帮你快速验证所有修复是否生效。</p>
+
+  <div class="card">
+    <h2>1. 测试VIP数据API</h2>
+    <button onclick="testVIP()">测试 /api/admin/vip-data</button>
+    <div id="vip-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>2. 测试订单数据API</h2>
+    <button onclick="testOrders()">测试 /api/admin/membership-orders-data</button>
+    <div id="orders-result"></div>
+  </div>
+
+  <div class="card">
+    <h2>3. 快速链接</h2>
+    <button onclick="window.open('/admin/vip', '_blank')">打开VIP管理页面</button>
+    <button onclick="window.open('/admin/membership-orders', '_blank')">打订单管理页面</button>
+    <button onclick="window.open('/admin/dashboard', '_blank')">打开仪表盘</button>
+  </div>
+
+  <script>
+    async function testVIP() {
+      const result = document.getElementById('vip-result');
+      result.innerHTML = '<p>测试中...</p>';
+      try {
+        const res = await fetch('/api/admin/vip-data');
+        const json = await res.json();
+        if (json.success) {
+          result.innerHTML = `<p class="success">✅ API正常工作！</p>
+            <p>找到 ${json.count || json.data.length} 条VIP记录</p>
+            <pre>${JSON.stringify(json.data.slice(0, 2), null, 2)}</pre>`;
+        } else {
+          result.innerHTML = `<p class="error">❌ API返回错误：${json.error}</p>`;
+        }
+      } catch (e) {
+        result.innerHTML = `<p class="error">❌ 请求失败：${e.message}</p>`;
+      }
+    }
+
+    async function testOrders() {
+      const result = document.getElementById('orders-result');
+      result.innerHTML = '<p>测试中...</p>';
+      try {
+        const res = await fetch('/api/admin/membership-orders-data');
+        const json = await res.json();
+        if (json.success) {
+          result.innerHTML = `<p class="success">✅ API正常工作！</p>
+            <p>找到 ${json.data.length} 条订单记录</p>
+            <pre>${JSON.stringify(json.data.slice(0, 2), null, 2)}</pre>`;
+        } else {
+          result.innerHTML = `<p class="error">❌ API返回错误：${json.error}</p>`;
+        }
+      } catch (e) {
+        result.innerHTML = `<p class="error">❌ 请求失败：${e.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
