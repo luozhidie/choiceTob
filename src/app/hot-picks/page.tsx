@@ -153,7 +153,10 @@ export default function HotPicksPage() {
   const [collocationSeason, setCollocationSeason] = useState<"ss" | "aw">("ss");
   const { user, isHotPicksMember } = useAuth();
 
-  // 统一微信支付函数
+  const [payQrCode, setPayQrCode] = useState<string | null>(null);
+  const [showPayModal, setShowPayModal] = useState(false);
+
+  // 微信支付：自动判断环境，微信内用JSAPI直接拉起，其他环境显示二维码
   const handleWechatPay = async (productId: string, price: number) => {
     if (!user) {
       alert('请先登录');
@@ -161,24 +164,36 @@ export default function HotPicksPage() {
       return;
     }
     try {
+      // 判断是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      const platform = isWeChat ? 'mp' : 'native';
+
       const response = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: productId,
+          product_title: '色彩智选-会员开通',
           total_fee: price,
-          platform: 'mp',
-          openid: user.id || '',
+          platform,
+          openid: user?.id || '',
         }),
       });
       const result = await response.json();
-      if (result.prepay_id || result.package) {
-        if (typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
+
+      if (result.error) {
+        alert('支付发起失败：' + result.error);
+        return;
+      }
+
+      if (isWeChat && result.prepay_id && typeof window !== 'undefined') {
+        // 微信内：JSAPI 直接拉起微信支付
+        if ((window as any).WeixinJSBridge) {
           (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
             appId: result.appId,
             timeStamp: result.timeStamp,
             nonceStr: result.nonceStr,
-            package: result.package || `prepay_id=${result.prepay_id}`,
+            package: result.package || ('prepay_id=' + result.prepay_id),
             signType: result.signType || 'MD5',
             paySign: result.paySign,
           }, function(res: any) {
@@ -192,10 +207,17 @@ export default function HotPicksPage() {
             }
           });
         } else {
-          alert('请在微信中打开此页面进行支付');
+          // WeixinJSBridge 还没准备好，等一下再调
+          document.addEventListener('WeixinJSBridgeReady', function() {
+            handleWechatPay(productId, price);
+          }, { once: true });
         }
+      } else if (result.code_url) {
+        // 非微信内：显示二维码
+        setPayQrCode(result.code_url);
+        setShowPayModal(true);
       } else {
-        alert('支付发起失败：' + (result.error || '未知错误'));
+        alert('支付发起失败，请稍后重试');
       }
     } catch (error) {
       console.error('[wechat pay]', error);
@@ -1062,6 +1084,28 @@ export default function HotPicksPage() {
             </div>
           </div>
         </section>
+      )}
+
+      {/* 微信支付二维码弹窗（非微信内环境） */}
+      {showPayModal && payQrCode && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60" onClick={() => setShowPayModal(false)}>
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">微信扫码支付</h3>
+              <button onClick={() => setShowPayModal(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+            </div>
+            {/* 用二维码API生成图片 */}
+            <div className="flex justify-center my-4">
+              <img
+                src={'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(payQrCode)}
+                alt="微信支付二维码"
+                className="w-52 h-52"
+              />
+            </div>
+            <p className="text-center text-sm text-gray-500">请用微信扫一扫完成支付</p>
+            <p className="text-center text-xs text-gray-400 mt-2">支付成功后自动开通会员</p>
+          </div>
+        </div>
       )}
     </div>
   );
