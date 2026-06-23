@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Loader2,
 } from "lucide-react";
+import TabBar from "@/components/TabBar";
 
 interface Order {
   id: string;
@@ -340,6 +341,7 @@ export default function MyPage() {
           </>
         )}
       </div>
+      <TabBar />
     </div>
   );
 }

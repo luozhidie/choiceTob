@@ -10,6 +10,7 @@ import {
   MessageCircle, CheckCircle2, ShoppingBag
 } from "lucide-react";
 import { motion } from "framer-motion";
+import TabBar from "@/components/TabBar";
 
 export default function CartCheckoutPage() {
   const router = useRouter();
@@ -153,7 +154,7 @@ export default function CartCheckoutPage() {
 
   if (items.length === 0 && !payQrCode) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center pb-16">
         <div className="text-center">
           <ShoppingCart className="w-20 h-20 text-gray-300 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-gray-600 mb-2">购物车是空的</h1>
@@ -162,6 +163,7 @@ export default function CartCheckoutPage() {
             <ShoppingBag className="w-5 h-5" /> 去选购
           </Link>
         </div>
+        <TabBar />
       </div>
     );
   }
@@ -352,6 +354,7 @@ export default function CartCheckoutPage() {
           </div>
         )}
       </motion.div>
+      <TabBar />
     </div>
   );
 }

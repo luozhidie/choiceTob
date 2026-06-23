@@ -17,6 +17,7 @@ import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/st
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 import { useBuyerPageData } from "@/hooks/useBuyerPageData";
 import PaymentQRCode from "@/components/PaymentQRCode";
+import TabBar from "@/components/TabBar";
 
 /* ==================== 品类选项（静态兜底 + 动态合并）==================== */
 const STATIC_CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
@@ -1478,6 +1479,7 @@ export default function BuyerPage() {
           </motion.div>
         </motion.div>
       )}
+      <TabBar />
     </div>
   );
 }

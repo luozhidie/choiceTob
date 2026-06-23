@@ -7,6 +7,7 @@ import {
   Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
   Droplets, PenTool, Palette, Sun, Package, Users,
 } from "lucide-react";
+import TabBar from "@/components/TabBar";
 
 /* ------------------------------------------------------------------ */
 /*  主分类                                                            */
@@ -348,7 +349,7 @@ export default function Home() {
       </section>
 
       {/* ====== 底部 CTA ====== */}
-      <section className="mt-8 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4">
+      <section className="mt-8 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4 pb-20">
         <div className="max-w-md mx-auto text-center">
           <div className="mb-4 inline-flex justify-center">
             <Sparkles className="w-7 h-7 text-orange-400" />
@@ -358,6 +359,8 @@ export default function Home() {
           <div className="mt-3 w-24 h-0.5 bg-gray-300 mx-auto rounded-full"></div>
         </div>
       </section>
+
+      <TabBar />
     </div>
   );
 }
