@@ -1,21 +1,26 @@
 /**
  * 会员折扣计算模块
  *
- * 会员等级体系（基于充值金额）：
- * - 非会员: 原价
- * - 银卡 (充5万): 2.8折 + 返利5%
- * - 金卡 (充10万): 2.8折 + 返利10%
- * - 钻石 (充30万): 2.6折 + 返利20%
+ * 新会员等级体系（基于套餐）：
+ * - 非会员: 原价（无法查看批发价）
+ * - 体验会员 (¥19.9): 7天体验，9折优惠
+ * - 年度会员 (¥399): 全年有效，8折优惠 + 返利5%
+ * - 两年会员 (¥599): 2年有效，75折优惠 + 返利8%
+ * - 三年会员 (¥699): 3年有效，7折优惠 + 返利10%
  */
 
 export interface MemberTier {
   key: string;
   label: string;
-  discount: number;      // 折扣率 0.28 = 2.8折
-  rebate: number;        // 返利率 0.05 = 5%
-  minRecharge: number;   // 最低充值额（分）
-  color: string;         // UI 配色
-  icon: string;          // 图标
+  subLabel?: string;       // 副标题说明
+  discount: number;        // 折扣率 0.8 = 8折 = 打8折
+  rebate: number;          // 返利率 0.05 = 5%
+  price?: number;          // 套餐价格（分），用于显示
+  duration?: string;       // 有效期
+  minRecharge?: number;    // 兼容旧字段
+  color: string;           // UI 配色
+  icon: string;            // 图标
+  highlight?: boolean;     // 是否推荐
 }
 
 export const MEMBER_TIERS: MemberTier[] = [
@@ -29,30 +34,52 @@ export const MEMBER_TIERS: MemberTier[] = [
     icon: "👤",
   },
   {
-    key: "tier_5w",
-    label: "银卡会员",
-    discount: 0.28,
-    rebate: 0.05,
-    minRecharge: 5_000_000,
-    color: "text-slate-600 bg-slate-50 border-slate-300",
-    icon: "🥈",
+    key: "trial",
+    label: "体验会员",
+    subLabel: "7天体验",
+    discount: 0.9,         // 9折
+    rebate: 0,
+    price: 1990,           // ¥19.9
+    duration: "7天",
+    minRecharge: 1990,
+    color: "text-blue-600 bg-blue-50 border-blue-300",
+    icon: "🌟",
   },
   {
-    key: "tier_10w",
-    label: "金卡会员",
-    discount: 0.28,
-    rebate: 0.10,
-    minRecharge: 10_000_000,
-    color: "text-amber-600 bg-amber-50 border-amber-300",
-    icon: "🥇",
+    key: "annual",
+    label: "年度会员",
+    subLabel: "最畅销 · 推荐",
+    discount: 0.8,         // 8折 = 打8折
+    rebate: 0.05,          // 5%返利
+    price: 39900,          // ¥399
+    duration: "1年",
+    minRecharge: 39900,
+    color: "text-green-600 bg-green-50 border-green-300",
+    icon: "⭐",
+    highlight: true,
   },
   {
-    key: "tier_30w",
-    label: "钻石会员",
-    discount: 0.26,
-    rebate: 0.20,
-    minRecharge: 30_000_000,
+    key: "two_year",
+    label: "两年会员",
+    subLabel: "超值优选",
+    discount: 0.75,        // 7.5折
+    rebate: 0.08,          // 8%返利
+    price: 59900,          // ¥599
+    duration: "2年",
+    minRecharge: 59900,
     color: "text-purple-600 bg-purple-50 border-purple-300",
+    icon: "👑",
+  },
+  {
+    key: "three_year",
+    label: "三年会员",
+    subLabel: "极致性价比",
+    discount: 0.7,         // 7折
+    rebate: 0.10,          // 10%返利
+    price: 69900,          // ¥699
+    duration: "3年（实得40个月）",
+    minRecharge: 69900,
+    color: "text-pink-600 bg-pink-50 border-pink-300",
     icon: "💎",
   },
 ];
@@ -103,9 +130,10 @@ export function formatPrice(price: number): string {
 }
 
 /**
- * 格式化折扣率显示（0.28 → "2.8折"）
+ * 格式化折扣率显示（0.8 → "8折"）
  */
 export function formatDiscountRate(rate: number): string {
+  if (rate === 1.0) return "原价";
   return `${(rate * 10).toFixed(1)}折`;
 }
 
@@ -113,5 +141,6 @@ export function formatDiscountRate(rate: number): string {
  * 格式化返利率显示（0.05 → "5%"）
  */
 export function formatRebateRate(rate: number): string {
+  if (rate === 0) return "无";
   return `${(rate * 100).toFixed(0)}%`;
 }

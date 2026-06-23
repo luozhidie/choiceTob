@@ -330,10 +330,10 @@ export default function BlocksAdminPage() {
                         color: block.style?.textColor || "#374151",
                       }}
                     >
-                      {(BLOCK_TYPES.find((t) => t.value === block.type)?.icon ||
-                        Tag)({
-                        className: "w-5 h-5",
-                      })}
+                      {(() => {
+                        const IconComp = BLOCK_TYPES.find((t) => t.value === block.type)?.icon || Tag;
+                        return <IconComp className="w-5 h-5" />;
+                      })()}
                     </div>
 
                     <div className="flex-1">
@@ -547,8 +547,10 @@ export default function BlocksAdminPage() {
                       }}
                     >
                       <div className="flex items-center gap-2 font-semibold">
-                        {(BLOCK_TYPES.find((t) => t.value === form.type)?.icon ||
-                          Tag)({ className: "w-5 h-5" })}
+                        {(() => {
+                          const IconComp = BLOCK_TYPES.find((t) => t.value === form.type)?.icon || Tag;
+                          return <IconComp className="w-5 h-5" />;
+                        })()}
                         {form.title || "未命名版块"}
                       </div>
                       <p className="text-sm opacity-70 mt-1">

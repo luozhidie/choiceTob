@@ -76,17 +76,22 @@ export default function Navbar() {
             {user ? (
               <div className="flex items-center gap-3">
                 <Link
-                  href="/members"
+                  href="/my"
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-primary hover:bg-muted rounded-lg transition-colors"
                 >
                   <User className="w-4 h-4" />
-                  {profile?.full_name || user.email?.split("@")[0] || "用户"}
+                  {profile?.full_name || user.email?.split("@")[0] || "我的"}
                 </Link>
                 <Link
-                  href="/my-reports"
-                  className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                  href="/checkout/cart"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors relative"
                 >
-                  我的报告
+                  <ShoppingCart className="w-4 h-4" />
+                  购物车
+                  {totalItems > 0 && (
+                    <span className="w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">{totalItems > 99 ? '99+' : totalItems}</span>
+                  )}
+                </Link>
                 </Link>
                 <button
                   onClick={() => signOut()}
@@ -148,7 +153,7 @@ export default function Navbar() {
                     {profile?.full_name || user.email?.split("@")[0] || "用户"}
                   </div>
                   <Link
-                    href="/my-reports"
+                    href="/my"
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-accent hover:bg-accent/10 rounded-lg transition-colors"
                   >
