@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Layers, Star,
   Clock, ShoppingCart, Share2, Copy, Check,
   Image as ImageIcon, MessageCircle, QrCode,
-  Lock, Eye, CheckCircle2,
+  Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -50,7 +50,6 @@ export default function ProductDetailPage() {
   const [supplierProducts, setSupplierProducts] = useState<Product[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [showPricePrompt, setShowPricePrompt] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
 
@@ -442,58 +441,24 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* 价格 - 零售价可见，批发价隐藏 */}
+              {/* 价格 - 只显示零售价，批发价隐藏 */}
               <div className="mb-2">
                 {/* 零售价 */}
                 <div className="flex items-end gap-2">
                   <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(product.original_price || Math.round(product.price * 1.5))}
+                    {formatPrice(product.original_price || Math.round(product.price * 2))}
                   </span>
                   <span className="text-sm text-gray-400 mb-1">零售价</span>
                 </div>
 
-                {/* 批发价区域 */}
+                {/* 批发价区域 - 只显示问号，不弹会员明细 */}
                 <div className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
-                   onClick={() => setShowPricePrompt(true)}>
+                   onClick={() => router.push("/vip")}>
                   <Lock className="w-4 h-4 text-blue-500 shrink-0" />
                   <span className="text-sm font-medium text-blue-700">批发价</span>
                   <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
-                  <span className="text-[10px] text-blue-400 ml-1">点击查看</span>
+                  <span className="text-[10px] text-blue-400 ml-1">会员可见</span>
                 </div>
-
-                {showPricePrompt && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="mt-3 p-4 bg-white border border-blue-200 rounded-xl shadow-lg relative z-10"
-                  >
-                    <button onClick={() => setShowPricePrompt(false)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">✕</button>
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                        <Eye className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-sm text-gray-900">开通价格会员</p>
-                        <p className="text-xs text-gray-500">查看所有商品批发底价</p>
-                      </div>
-                    </div>
-                    <div className="space-y-1.5 mb-3">
-                      <p className="text-xs text-gray-600 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
-                        ¥19.9体验14天 / ¥399全年查看
-                      </p>
-                      <p className="text-xs text-gray-600 flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
-                        同色同款3件起可享拿货折扣
-                      </p>
-                    </div>
-                    <Link href="/vip" onClick={() => setShowPricePrompt(false)}
-                      className="block w-full py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg text-center hover:bg-blue-600 transition-colors">
-                      了解价格会员 →
-                    </Link>
-                  </motion.div>
-                )}
               </div>
 
               {/* 数量选择 */}
