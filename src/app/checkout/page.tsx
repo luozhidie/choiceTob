@@ -102,23 +102,23 @@ function CheckoutContent() {
   }, [discountResult, quantity]);
 
   const handleSubmit = async () => {
-    if (!product || !discountResult) return;
+    if (!product) return;
     if (!shippingName.trim() || !shippingPhone.trim()) { alert("请填写收货人姓名和联系电话"); return; }
+    const retailPrice = product.original_price || Math.round(product.price * 2);
+    const totalAmt = retailPrice * quantity;
     setSubmitting(true);
     try {
       // 1. 创建订单
       const orderData: Record<string, unknown> = {
         product_id: product.id,
         quantity,
-        unit_price: product.original_price || product.price,
-        discount_price: discountResult.discountPrice,
-        total_amount: totalAmount,
+        unit_price: retailPrice,
+        discount_price: retailPrice,
+        total_amount: totalAmt,
         status: "pending",
         shipping_address: shippingAddress || shippingPhone,
         note: [
           `备注: ${note}`,
-          `会员等级: ${discountResult.memberLabel}`,
-          `折扣率: ${formatDiscountRate(discountResult.discountRate)}`,
           `支付方式: 微信支付`,
           `收货人: ${shippingName}`,
           `电话: ${shippingPhone}`,
@@ -127,14 +127,10 @@ function CheckoutContent() {
         product_title: product.title,
         product_image: product.cover_image,
         product_source: productSource,
-        original_price: product.original_price || product.price,
-        discount_rate: discountResult.discountRate,
-        member_level: memberLevel,
-        rebate_rate: discountResult.rebateRate,
-        rebate_amount: discountResult.rebateAmount * quantity,
+        original_price: retailPrice,
         shipping_name: shippingName.trim(),
         shipping_phone: shippingPhone.trim(),
-        payment_method: "wechat_pay",  // 统一使用微信支付
+        payment_method: "wechat_pay",
       };
       try {
         await supabase.from("buyer_orders").insert([orderData]);
@@ -142,18 +138,18 @@ function CheckoutContent() {
         const basicData = {
           product_id: product.id,
           quantity,
-          unit_price: product.original_price || product.price,
-          discount_price: discountResult.discountPrice,
-          total_amount: totalAmount,
+          unit_price: retailPrice,
+          discount_price: retailPrice,
+          total_amount: totalAmt,
           status: "pending",
           shipping_address: `${shippingName.trim()} ${shippingPhone.trim()} ${shippingAddress}`,
-          note: `会员:${discountResult.memberLabel} 折扣:${formatDiscountRate(discountResult.discountRate)} 微信支付 ${note}`,
+          note: `微信支付 ${note}`,
         };
         await supabase.from("buyer_orders").insert([basicData]);
       }
 
       // 2. 调用微信支付API
-      await handleWechatPay(product.id, totalAmount);
+      await handleWechatPay(product.id, totalAmt);
     } catch (err) {
       console.error("提交订单失败:", err); alert("提交订单失败，请稍后重试或联系客服");
     } finally { setSubmitting(false); }
@@ -295,17 +291,11 @@ function CheckoutContent() {
                 )}
                 <div className="mt-3 flex items-end justify-between flex-wrap gap-3">
                   <div>
+                    {/* 只显示零售价 */}
                     <div className="flex items-end gap-2">
-                      <span className="text-2xl font-bold text-accent">{formatPrice(product.price)}</span>
-                      {product.original_price && product.original_price > product.price && (
-                        <span className="text-sm text-gray-400 line-through">{formatPrice(product.original_price)}</span>
-                      )}
+                      <span className="text-2xl font-bold text-gray-900">{formatPrice(product.original_price || Math.round(product.price * 2))}</span>
+                      <span className="text-sm text-gray-400 mb-1">零售价</span>
                     </div>
-                    {memberLevel !== "none" && discountResult && (
-                      <div className="text-xs text-accent mt-0.5">
-                        会员价 {formatPrice(discountResult.discountPrice)} · 省{formatPrice(discountResult.savedAmount)}
-                      </div>
-                    )}
                   </div>
                   <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-1.5">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 hover:text-primary transition-colors">
@@ -321,63 +311,13 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* 会员折扣 */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
-            <h2 className="text-base font-bold text-primary mb-4">🏷️ 会员折扣</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {MEMBER_TIERS.map((tier) => {
-                const isSelected = memberLevel === tier.key;
-                const disc = calcDiscount(originalPrice, tier.key);
-                return (
-                  <button
-                    key={tier.key}
-                    onClick={() => setMemberLevel(tier.key)}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
-                      isSelected ? "border-accent bg-accent/5 shadow-sm" : "border-gray-100 hover:border-gray-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{tier.icon}</span>
-                        <span className="font-bold text-sm text-primary">{tier.label}</span>
-                      </div>
-                      {isSelected && <CheckCircle2 className="w-5 h-5 text-accent" />}
-                    </div>
-                    {tier.key === "none" ? (
-                      <p className="text-xs text-gray-400">原价购买</p>
-                    ) : (
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">拿货折扣</span>
-                          <span className="text-accent font-bold">{formatDiscountRate(tier.discount)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">返利比例</span>
-                          <span className="text-accent font-bold">{formatRebateRate(tier.rebate)}</span>
-                        </div>
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-gray-500">本单折后</span>
-                          <span className="text-accent font-bold">{formatPrice(disc.discountPrice)}</span>
-                        </div>
-                        <div className="text-[10px] text-gray-400 mt-1">
-                          充值{(tier.minRecharge / 10000).toFixed(0)}元开通
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+          {/* 会员提示 - 简洁版 */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm">🔒</span>
+              <span className="text-xs text-gray-600">开通价格会员查看批发底价 · 同款3件起享拿货折扣</span>
+              <Link href="/vip" className="text-xs font-medium text-blue-600 hover:text-blue-700 ml-auto">了解 →</Link>
             </div>
-            {memberLevel !== "none" && discountResult && (
-              <div className="mt-4 p-3 bg-amber-50 border border-amber-100 rounded-lg">
-                <p className="text-xs text-amber-700">
-                  💡 会员折扣需先充值开通，未开通会员将按原价下单。开通后可享{formatDiscountRate(discountResult.discountRate)}拿货价，订单返利{formatRebateRate(discountResult.rebateRate)}将返还至账户余额。
-                </p>
-                <Link href="/buyer-center" className="text-xs text-accent font-medium hover:underline mt-1 inline-block">
-                  前往充值开通 →
-                </Link>
-              </div>
-            )}
           </div>
 
           {/* 收货信息 */}
@@ -432,26 +372,12 @@ function CheckoutContent() {
             <h2 className="text-base font-bold text-primary mb-4">📋 订单汇总</h2>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-500">商品金额</span>
-                <span className="text-primary">{formatPrice(originalPrice)} × {quantity}</span>
+                <span className="text-gray-500">零售价</span>
+                <span>{formatPrice(product.original_price || Math.round(product.price * 2))} × {quantity}</span>
               </div>
-              {discountResult && memberLevel !== "none" && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500">会员折扣（{formatDiscountRate(discountResult.discountRate)}）</span>
-                    <span className="text-green-600">-{formatPrice((originalPrice - discountResult.discountPrice) * quantity)}</span>
-                  </div>
-                  {discountResult.rebateRate > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-500">返利（{formatRebateRate(discountResult.rebateRate)}）</span>
-                      <span className="text-accent">+{formatPrice(discountResult.rebateAmount * quantity)}</span>
-                    </div>
-                  )}
-                </>
-              )}
               <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
                 <span className="font-bold text-primary">实付金额</span>
-                <span className="text-2xl font-bold text-accent">{formatPrice(totalAmount)}</span>
+                <span className="text-2xl font-bold text-accent">{formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}</span>
               </div>
             </div>
           </div>
@@ -509,7 +435,7 @@ function CheckoutContent() {
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             ) : (
               <>
-                <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice(totalAmount)}
+                <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}
               </>
             )}
           </button>
@@ -547,7 +473,7 @@ function CheckoutContent() {
                   )}
                 </div>
                 <p className="text-xs text-center text-gray-400 mt-4">
-                  支付金额：<span className="font-bold text-green-600">{formatPrice(totalAmount)}</span>
+                  支付金额：<span className="font-bold text-green-600">{formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}</span>
                 </p>
               </div>
             </div>

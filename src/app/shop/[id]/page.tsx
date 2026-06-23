@@ -16,6 +16,7 @@ import {
   CATEGORY_MAP,
   SUBCATEGORY_MAP,
 } from "@/lib/categories";
+import { useCart } from "@/lib/cart-context";
 
 interface Product {
   id: string;
@@ -52,6 +53,7 @@ export default function ProductDetailPage() {
   const [copied, setCopied] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
+  const { addItem } = useCart();
 
   // 获取商品数据
   useEffect(() => {
@@ -530,12 +532,16 @@ export default function ProductDetailPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    try {
-                      const cart = JSON.parse(localStorage.getItem("cart_items") || "[]");
-                      cart.push({ id: product.id, title: product.title, price: product.price * 1.5, qty: quantity });
-                      localStorage.setItem("cart_items", JSON.stringify(cart));
-                      alert("已加入购物车！");
-                    } catch(e) { console.error(e); }
+                    if (!product) return;
+                    addItem({
+                      id: product.id,
+                      title: product.title,
+                      image: product.cover_image,
+                      price: product.original_price || Math.round(product.price * 2),
+                      originalPrice: null,
+                      source: product.source || "buyer",
+                    });
+                    alert("已加入购物车！");
                   }}
                   className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
                 >
