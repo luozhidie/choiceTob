@@ -92,7 +92,6 @@ export default function Navbar() {
                     <span className="w-4 h-4 bg-accent text-white text-[9px] font-bold rounded-full flex items-center justify-center">{totalItems > 99 ? '99+' : totalItems}</span>
                   )}
                 </Link>
-                </Link>
                 <button
                   onClick={() => signOut()}
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
