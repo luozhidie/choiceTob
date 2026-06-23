@@ -1,357 +1,279 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "@/lib/cart-context";
-import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import {
-  ShoppingCart, Minus, Plus, Trash2, ArrowLeft,
-  MessageCircle, CheckCircle2, ShoppingBag
+  ArrowLeft, ShoppingCart, Trash2, Plus, Minus,
+  Truck, Package, AlertCircle, CheckCircle2,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
-export default function CartCheckoutPage() {
+interface CartItem {
+  id: string;
+  productId: string;
+  title: string;
+  cover_image: string | null;
+  price: number;
+  quantity: number;
+  color?: string;
+  size?: string;
+  source: "platform" | "buyer";
+}
+
+export default function CartPage() {
   const router = useRouter();
-  const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
-  const supabase = createClient();
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showWholesaleTip, setShowWholesaleTip] = useState(false);
 
-  // 表单状态
-  const [shippingName, setShippingName] = useState("");
-  const [shippingPhone, setShippingPhone] = useState("");
-  const [shippingAddress, setShippingAddress] = useState("");
-  const [note, setNote] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [payLoading, setPayLoading] = useState(false);
-  const [payQrCode, setPayQrCode] = useState<string | null>(null);
-
-  // 格式化价格
-  const formatPrice = (price: number) => `¥${(price / 100).toFixed(2)}`;
-
-  // 提交订单并调用微信支付
-  const handleSubmit = async () => {
-    if (items.length === 0) {
-      alert("购物车是空的");
-      return;
-    }
-    if (!shippingName.trim() || !shippingPhone.trim()) {
-      alert("请填写收货人姓名和联系电话");
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // 为每个商品创建订单（或者创建一个合并订单）
-      for (const item of items) {
-        const orderData = {
-          product_id: item.id,
-          quantity: item.quantity,
-          unit_price: item.price,
-          discount_price: item.price,
-          total_amount: item.price * item.quantity,
-          status: "pending",
-          shipping_address: shippingAddress || shippingPhone,
-          note: `购物车结算 | ${note}`,
-          product_title: item.title,
-          product_image: item.image,
-          product_source: item.source || 'buyer',
-          original_price: item.originalPrice || item.price,
-          shipping_name: shippingName.trim(),
-          shipping_phone: shippingPhone.trim(),
-          payment_method: "wechat_pay",
-        };
-
-        await supabase.from("buyer_orders").insert([orderData]);
-      }
-
-      // 调用微信支付（使用总金额）
-      await handleWechatPay('cart_' + Date.now(), totalPrice);
-    } catch (err) {
-      console.error("提交订单失败:", err);
-      alert("提交订单失败，请稍后重试");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  // 微信支付核心逻辑
-  const handleWechatPay = async (productId: string, price: number) => {
-    setPayLoading(true);
-    try {
-      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-      const platform = isWeChat ? 'mp' : 'native';
-
-      // 使用第一个商品标题作为描述
-      const title = items.length === 1
-        ? items[0].title
-        : `${items[0].title}等${items.length}件商品`;
-
-      const response = await fetch('/api/wechat-pay/unified-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          product_id: productId,
-          product_title: title,
-          total_fee: Math.round(price),
-          platform,
-          openid: '',
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.error) {
-        alert('支付发起失败：' + result.error);
-        setPayLoading(false);
-        return;
-      }
-
-      if (isWeChat && result.prepay_id && typeof window !== 'undefined') {
-        invokeWechatPay(result);
-      } else if (result.code_url) {
-        setPayQrCode(result.code_url);
-        setPayLoading(false);
-      } else {
-        alert('支付发起失败，请稍后重试');
-        setPayLoading(false);
-      }
-    } catch (error) {
-      console.error('[wechat pay]', error);
-      alert('支付请求失败');
-      setPayLoading(false);
-    }
-  };
-
-  // 调用微信JSAPI支付
-  const invokeWechatPay = (payParams: any) => {
-    if ((window as any).WeixinJSBridge) {
-      (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-        appId: payParams.appId,
-        timeStamp: payParams.timeStamp,
-        nonceStr: payParams.nonceStr,
-        package: payParams.package || ('prepay_id=' + payParams.prepay_id),
-        signType: payParams.signType || 'MD5',
-        paySign: payParams.paySign,
-      }, function(res: any) {
-        setPayLoading(false);
-        if (res.err_msg === "get_brand_wcpay_request:ok") {
-          clearCart();
-          alert('✅ 支付成功！感谢您的购买');
-          router.push('/');
-        } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
-          alert('支付已取消');
-        } else {
-          alert('❌ 支付失败：' + res.err_msg);
+  // 加载购物车
+  useEffect(() => {
+    const loadCart = () => {
+      try {
+        const saved = localStorage.getItem("cart_items");
+        if (saved) {
+          const items = JSON.parse(saved) as CartItem[];
+          setCartItems(items);
+          // 检查是否有3件以上的商品
+          const hasWholesale = items.some(item => item.quantity >= 3);
+          if (hasWholesale) {
+            setShowWholesaleTip(true);
+          }
         }
-      });
-    } else {
-      document.addEventListener('WeixinJSBridgeReady', function() {
-        invokeWechatPay(payParams);
-      }, { once: true });
-    }
+      } catch (e) {
+        console.error("加载购物车失败:", e);
+      }
+      setLoading(false);
+    };
+    loadCart();
+  }, []);
+
+  // 保存购物车
+  const saveCart = (items: CartItem[]) => {
+    setCartItems(items);
+    localStorage.setItem("cart_items", JSON.stringify(items));
   };
 
-  if (items.length === 0 && !payQrCode) {
+  // 更新数量
+  const updateQuantity = (index: number, delta: number) => {
+    const newItems = [...cartItems];
+    const newQty = newItems[index].quantity + delta;
+    if (newQty < 1) {
+      removeItem(index);
+      return;
+    }
+    newItems[index].quantity = newQty;
+    saveCart(newItems);
+    // 检查是否需要显示拿货提示
+    const hasWholesale = newItems.some(item => item.quantity >= 3);
+    setShowWholesaleTip(hasWholesale);
+  };
+
+  // 移除商品
+  const removeItem = (index: number) => {
+    const newItems = cartItems.filter((_, i) => i !== index);
+    saveCart(newItems);
+  };
+
+  // 计算总价
+  const totalPrice = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+
+  // 去结算
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    // 构建商品参数
+    const itemsParam = encodeURIComponent(JSON.stringify(
+      cartItems.map(item => ({
+        id: item.productId,
+        qty: item.quantity,
+        color: item.color,
+        size: item.size,
+        source: item.source,
+      }))
+    ));
+    router.push(`/checkout?items=${itemsParam}`);
+  };
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <ShoppingCart className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-600 mb-2">购物车是空的</h1>
-          <p className="text-gray-400 mb-6">快去挑选喜欢的商品吧</p>
-          <Link href="/buyer" className="inline-flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl hover:bg-accent/90">
-            <ShoppingBag className="w-5 h-5" /> 去选购
-          </Link>
-        </div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-24">
-      {/* 头部 */}
-      <div className="bg-white border-b border-gray-100 sticky top-16 z-30">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button onClick={() => router.back()} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <ArrowLeft className="w-5 h-5" />
+    <div className="min-h-screen bg-gray-50">
+      {/* 顶部导航 */}
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4 flex items-center gap-3">
+          <button onClick={() => router.back()} className="p-2 -ml-2 rounded-full hover:bg-gray-100">
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
-          <h1 className="text-lg font-bold">🛒 购物车 ({totalItems}件)</h1>
+          <h1 className="text-lg font-bold text-primary">购物车</h1>
+          {cartItems.length > 0 && (
+            <span className="ml-auto text-sm text-gray-500">
+              {totalItems} 件
+            </span>
+          )}
         </div>
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* 商品列表 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
-          <h2 className="font-bold text-lg mb-4">商品清单</h2>
-          {items.map(item => (
-            <div key={item.id} className="flex gap-4 p-4 bg-gray-50 rounded-xl">
-              {item.image ? (
-                <img src={item.image} alt="" className="w-24 h-24 rounded-xl object-cover" />
-              ) : (
-                <div className="w-24 h-24 rounded-xl bg-gray-200 flex items-center justify-center">
-                  <ShoppingCart className="w-8 h-8 text-gray-400" />
-                </div>
+      <div className="container mx-auto px-4 py-6">
+        {cartItems.length === 0 ? (
+          /* 空购物车 */
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-24 h-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+              <ShoppingCart className="w-10 h-10 text-gray-300" />
+            </div>
+            <p className="text-gray-400 text-lg mb-2">购物车是空的</p>
+            <p className="text-sm text-gray-400 mb-6">快去挑选喜欢的商品吧</p>
+            <Link
+              href="/buyer"
+              className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors"
+            >
+              去逛逛
+            </Link>
+          </div>
+        ) : (
+          <>
+            {/* 拿货会员提示 */}
+            <AnimatePresence>
+              {showWholesaleTip && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200"
+                >
+                  <div className="flex items-start gap-3">
+                    <Truck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-amber-800">
+                        购物车中有商品满足拿货条件
+                      </p>
+                      <p className="text-xs text-amber-600 mt-1">
+                        同色同款3件起可享批发价，开通拿货会员可享折扣和返点
+                      </p>
+                      <Link
+                        href="/vip"
+                        className="inline-block mt-2 text-xs font-medium text-amber-700 hover:text-amber-800 underline"
+                      >
+                        了解拿货会员优惠 →
+                      </Link>
+                    </div>
+                    <button
+                      onClick={() => setShowWholesaleTip(false)}
+                      className="text-amber-400 hover:text-amber-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </motion.div>
               )}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium line-clamp-2">{item.title}</h3>
-                <p className="text-accent font-bold mt-2">{formatPrice(item.price)}</p>
-                {item.originalPrice && item.originalPrice > item.price && (
-                  <p className="text-xs text-gray-400 line-through">{formatPrice(item.originalPrice)}</p>
-                )}
+            </AnimatePresence>
 
-                {/* 数量控制 */}
-                <div className="flex items-center gap-3 mt-3">
-                  <div className="flex items-center gap-2 bg-white rounded-lg px-2 py-1">
-                    <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-1 text-gray-500 hover:bg-gray-100 rounded">
-                      <Minus className="w-4 h-4" />
-                    </button>
-                    <span className="w-10 text-center font-medium">{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-1 text-gray-500 hover:bg-gray-100 rounded">
-                      <Plus className="w-4 h-4" />
-                    </button>
+            {/* 购物车列表 */}
+            <div className="space-y-3 mb-6">
+              {cartItems.map((item, index) => (
+                <motion.div
+                  key={`${item.productId}-${item.color}-${item.size}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-xl p-4 flex gap-4 shadow-sm"
+                >
+                  {/* 商品图片 */}
+                  <Link href={`/shop/${item.productId}`} className="shrink-0">
+                    <div className="w-20 h-20 rounded-lg bg-gray-100 overflow-hidden">
+                      {item.cover_image ? (
+                        <img
+                          src={item.cover_image}
+                          alt={item.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Package className="w-8 h-8 text-gray-300" />
+                        </div>
+                      )}
+                    </div>
+                  </Link>
+
+                  {/* 商品信息 */}
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/shop/${item.productId}`}>
+                      <h3 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                        {item.title}
+                      </h3>
+                    </Link>
+                    {(item.color || item.size) && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        {item.color && `颜色：${item.color}`}
+                        {item.color && item.size && " / "}
+                        {item.size && `尺寸：${item.size}`}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-bold text-accent">
+                        ¥{(item.price / 100).toFixed(0)}
+                      </span>
+                      {/* 数量控制 */}
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => updateQuantity(index, -1)}
+                          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="w-8 text-center text-sm font-medium">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateQuantity(index, 1)}
+                          className="w-7 h-7 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="text-sm font-bold text-primary">
-                    小计: {formatPrice(item.price * item.quantity)}
-                  </div>
-
-                  <button onClick={() => removeItem(item.id)}
-                    className="ml-auto p-2 text-red-400 hover:bg-red-50 rounded-lg"
-                    title="删除">
+                  {/* 删除按钮 */}
+                  <button
+                    onClick={() => removeItem(index)}
+                    className="self-start p-1 text-gray-300 hover:text-red-500 transition-colors"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* 结算栏 */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-20">
+              <div className="container mx-auto flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-500">合计</p>
+                  <p className="text-xl font-bold text-accent">
+                    ¥{(totalPrice / 100).toFixed(0)}
+                  </p>
                 </div>
+                <button
+                  onClick={handleCheckout}
+                  className="px-8 py-3 bg-accent text-white rounded-xl font-bold text-base hover:bg-accent/90 transition-colors"
+                >
+                  去结算 ({totalItems})
+                </button>
               </div>
             </div>
-          ))}
 
-          {/* 清空按钮 */}
-          {items.length > 0 && (
-            <button
-              onClick={() => { if (confirm('确定要清空购物车吗？')) clearCart(); }}
-              className="text-sm text-red-500 hover:text-red-600 font-medium"
-            >
-              🗑️ 清空购物车
-            </button>
-          )}
-        </div>
-
-        {/* 收货信息 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-bold text-lg mb-4">📦 收货信息</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">收货人 *</label>
-              <input
-                type="text"
-                value={shippingName}
-                onChange={(e) => setShippingName(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none"
-                placeholder="请输入姓名"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">联系电话 *</label>
-              <input
-                type="tel"
-                value={shippingPhone}
-                onChange={(e) => setShippingPhone(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none"
-                placeholder="请输入手机号"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 mb-1">收货地址</label>
-              <input
-                type="text"
-                value={shippingAddress}
-                onChange={(e) => setShippingAddress(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 outline-none"
-                placeholder="省/市/区/详细地址"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-medium text-gray-700 mb-1">备注</label>
-              <textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={2}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-green-500 outline-none resize-none"
-                placeholder="尺码、颜色等要求（选填）"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 订单汇总 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-          <h2 className="font-bold text-lg mb-4">📋 订单汇总</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-gray-500">商品数量</span><span>{totalItems} 件</span></div>
-            <div className="border-t pt-3 flex justify-between items-center">
-              <span className="font-bold text-base">合计金额</span>
-              <span className="text-2xl font-bold text-accent">{formatPrice(totalPrice)}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 支付方式提示 */}
-        <div className="bg-green-50 rounded-2xl p-5 border-2 border-green-200">
-          <div className="flex items-center gap-3">
-            <MessageCircle className="w-10 h-10 text-green-500" />
-            <div>
-              <div className="font-bold text-green-800">微信支付</div>
-              <div className="text-sm text-green-600">点击下方按钮将调起微信安全支付</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 提交按钮 */}
-        <button
-          onClick={handleSubmit}
-          disabled={submitting || payLoading}
-          className="w-full py-4 bg-green-500 text-white text-lg font-bold rounded-2xl hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-500/30 flex items-center justify-center gap-2"
-        >
-          {payLoading ? (
-            <>
-              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-              正在调起微信支付...
-            </>
-          ) : submitting ? (
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-          ) : (
-            <>
-              <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice(totalPrice)}
-            </>
-          )}
-        </button>
-
-        {/* 微信支付二维码弹窗 */}
-        {payQrCode && (
-          <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl max-w-sm w-full p-6 relative">
-              <button
-                onClick={() => setPayQrCode(null)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl"
-              >
-                ✕
-              </button>
-              <h3 className="text-lg font-bold text-center mb-4">微信扫码支付</h3>
-              <div className="bg-gray-100 p-8 rounded-xl flex flex-col items-center">
-                <MessageCircle className="w-16 h-16 text-green-500 mb-3" />
-                <p className="text-sm text-gray-500 text-center">
-                  请使用微信扫描二维码完成支付<br/>
-                  <span className="text-xs mt-2 block">或复制链接到微信打开</span>
-                </p>
-              </div>
-              <p className="text-center mt-4 font-bold text-green-600">
-                金额: {formatPrice(totalPrice)}
-              </p>
-            </div>
-          </div>
+            {/* 底部占位 */}
+            <div className="h-20" />
+          </>
         )}
-      </motion.div>
+      </div>
     </div>
   );
 }
