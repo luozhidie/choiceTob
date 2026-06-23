@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
@@ -37,18 +37,6 @@ interface Product {
   preorder_days?: number | null;
 }
 
-interface CartItem {
-  id: string;
-  productId: string;
-  title: string;
-  cover_image: string | null;
-  price: number;
-  quantity: number;
-  color?: string;
-  size?: string;
-  source: "platform" | "buyer";
-}
-
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
@@ -64,8 +52,6 @@ export default function ProductDetailPage() {
   const [copied, setCopied] = useState(false);
   const [showPricePrompt, setShowPricePrompt] = useState(false);
   const [quantity, setQuantity] = useState(1);
-  const [selectedColor, setSelectedColor] = useState<string>("");
-  const [selectedSize, setSelectedSize] = useState<string>("");
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
 
   // 获取商品数据
@@ -220,45 +206,9 @@ export default function ProductDetailPage() {
 
   // 跳转下单页
   const handleBuyNow = () => {
-    // 如果选择了3件以上，先提示拿货会员（用户可以选择不开通）
-    if (quantity >= 3 && showWholesalePrompt === false) {
-      setShowWholesalePrompt(true);
-      return; // 先显示提示，用户关闭后再下单
-    }
     const source = product.source || "buyer";
-    router.push(`/checkout?id=${product.id}&source=${source}&qty=${quantity}&color=${selectedColor}&size=${selectedSize}`);
+    router.push(`/checkout?id=${product.id}&source=${source}`);
   };
-
-  // 添加到购物车
-  const handleAddToCart = useCallback(() => {
-    try {
-      const cartData = localStorage.getItem("cart_items");
-      const cart: CartItem[] = cartData ? JSON.parse(cartData) : [];
-      // 检查是否已存在相同商品
-      const existingIndex = cart.findIndex(
-        item => item.productId === product.id && item.color === selectedColor && item.size === selectedSize
-      );
-      if (existingIndex >= 0) {
-        cart[existingIndex].quantity += quantity;
-      } else {
-        cart.push({
-          id: `${product.id}-${Date.now()}`,
-          productId: product.id,
-          title: product.title,
-          cover_image: product.cover_image,
-          price: product.price,
-          quantity: quantity,
-          color: selectedColor,
-          size: selectedSize,
-          source: product.source || "buyer",
-        });
-      }
-      localStorage.setItem("cart_items", JSON.stringify(cart));
-      alert("已添加到购物车！");
-    } catch (e) {
-      console.error("添加到购物车失败:", e);
-    }
-  }, [product, quantity, selectedColor, selectedSize]);
 
   // 分享功能
   const shareUrl = typeof window !== "undefined"
@@ -492,7 +442,7 @@ export default function ProductDetailPage() {
                 </div>
               )}
 
-              {/* 价格 - 零售价可见，批发价需开通会员 */}
+              {/* 价格 - 零售价可见，批发价隐藏 */}
               <div className="mb-2">
                 {/* 零售价 */}
                 <div className="flex items-end gap-2">
@@ -502,7 +452,7 @@ export default function ProductDetailPage() {
                   <span className="text-sm text-gray-400 mb-1">零售价</span>
                 </div>
 
-                {/* 批发价区域 - 隐藏显示 */}
+                {/* 批发价区域 */}
                 <div className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
                    onClick={() => setShowPricePrompt(true)}>
                   <Lock className="w-4 h-4 text-blue-500 shrink-0" />
@@ -515,13 +465,10 @@ export default function ProductDetailPage() {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                    exit={{ opacity: 0 }}
                     className="mt-3 p-4 bg-white border border-blue-200 rounded-xl shadow-lg relative z-10"
                   >
-                    <button onClick={() => setShowPricePrompt(false)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">
-                      ✕
-                    </button>
-
+                    <button onClick={() => setShowPricePrompt(false)} className="absolute top-2 right-2 p-1 text-gray-400 hover:text-gray-600">✕</button>
                     <div className="flex items-start gap-3 mb-3">
                       <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                         <Eye className="w-4 h-4 text-blue-600" />
@@ -531,7 +478,6 @@ export default function ProductDetailPage() {
                         <p className="text-xs text-gray-500">查看所有商品批发底价</p>
                       </div>
                     </div>
-
                     <div className="space-y-1.5 mb-3">
                       <p className="text-xs text-gray-600 flex items-center gap-1.5">
                         <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />
@@ -542,7 +488,6 @@ export default function ProductDetailPage() {
                         同色同款3件起可享拿货折扣
                       </p>
                     </div>
-
                     <Link href="/vip" onClick={() => setShowPricePrompt(false)}
                       className="block w-full py-2.5 bg-blue-500 text-white text-sm font-medium rounded-lg text-center hover:bg-blue-600 transition-colors">
                       了解价格会员 →
@@ -551,96 +496,39 @@ export default function ProductDetailPage() {
                 )}
               </div>
 
-              {/* 颜色选择 - 如果有 */}
-              {product.tags && product.tags.includes("多颜色") && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">颜色</p>
-                  <div className="flex gap-2">
-                    {["红色", "黑色", "白色", "蓝色"].map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => setSelectedColor(color)}
-                        className={`px-3 py-1.5 rounded-lg text-sm border transition-all ${
-                          selectedColor === color
-                            ? "border-primary bg-primary/10 text-primary font-medium"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        {color}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 尺寸选择 - 如果有 */}
-              {product.tags && product.tags.includes("多尺寸") && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700 mb-2">尺寸</p>
-                  <div className="flex gap-2 flex-wrap">
-                    {["S", "M", "L", "XL", "XXL"].map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setSelectedSize(size)}
-                        className={`w-10 h-10 rounded-lg text-sm border transition-all ${
-                          selectedSize === size
-                            ? "border-primary bg-primary/10 text-primary font-medium"
-                            : "border-gray-200 hover:border-gray-300"
-                        }`}
-                      >
-                        {size}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* 数量选择 */}
-              <div className="mb-6">
+              <div className="mb-4">
                 <p className="text-sm font-medium text-gray-700 mb-2">数量</p>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 transition-colors text-lg font-medium"
-                  >
-                    -
-                  </button>
-                  <span className="w-12 text-center text-base font-medium">{quantity}</span>
+                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
+                  >-</button>
+                  <span className="w-12 text-center font-medium">{quantity}</span>
                   <button
                     onClick={() => {
                       setQuantity(q => Math.min(product.stock, q + 1));
-                      // 如果选择3件以上，提示拿货会员
                       if (quantity + 1 >= 3 && !showWholesalePrompt) {
                         setTimeout(() => setShowWholesalePrompt(true), 300);
                       }
                     }}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 transition-colors text-lg font-medium"
-                  >
-                    +
-                  </button>
-                  <span className="text-xs text-gray-400 ml-2">库存 {product.stock} 件</span>
+                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
+                  >+</button>
+                  <span className="text-xs text-gray-400">库存{product.stock}件</span>
                 </div>
-                {/* 拿货会员提示 */}
+                {/* 拿货提示 */}
                 {quantity >= 3 && showWholesalePrompt && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200"
-                  >
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 p-2.5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
                     <div className="flex items-start gap-2">
                       <Truck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                       <div className="flex-1">
                         <p className="text-xs font-medium text-amber-800">提示：同色同款3件起可享拿货折扣</p>
-                        <p className="text-[11px] text-amber-600 mt-0.5">
-                          开通拿货会员（充值5万起）可享受批发价和返点服务
-                        </p>
-                        <Link href="/vip" className="inline-block mt-2 text-[11px] font-medium text-amber-700 hover:text-amber-800">
+                        <Link href="/vip" className="text-[11px] text-amber-700 hover:text-amber-800 mt-1 inline-block">
                           了解拿货会员 →
                         </Link>
                       </div>
-                      <button onClick={() => setShowWholesalePrompt(false)} className="text-amber-400 hover:text-amber-600">
-                        ✕
-                      </button>
+                      <button onClick={() => setShowWholesalePrompt(false)} className="text-amber-400 text-xs">✕</button>
                     </div>
                   </motion.div>
                 )}
@@ -677,31 +565,27 @@ export default function ProductDetailPage() {
               <div className="flex gap-3">
                 <button
                   onClick={() => {
-                    // 先加入购物车，然后跳转
-                    router.push(`/checkout/cart?add=${product.id}&qty=${quantity}&color=${selectedColor}&size=${selectedSize}`);
+                    try {
+                      const cart = JSON.parse(localStorage.getItem("cart_items") || "[]");
+                      cart.push({ id: product.id, title: product.title, price: product.price * 1.5, qty: quantity });
+                      localStorage.setItem("cart_items", JSON.stringify(cart));
+                      alert("已加入购物车！");
+                    } catch(e) { console.error(e); }
                   }}
-                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5 transition-colors"
+                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
                 >
-                  <ShoppingCart className="w-5 h-5" />
-                  加入购物车
+                  <ShoppingCart className="w-5 h-5" /> 加入购物车
                 </button>
                 <button
-                  onClick={handleBuyNow}
+                  onClick={() => {
+                    if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
+                    router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
+                  }}
                   disabled={product.stock === 0}
-                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white disabled:opacity-50"
                   style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
                 >
-                  {product.is_preorder ? (
-                    <>
-                      <Clock className="w-5 h-5" />
-                      立即预定
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag className="w-5 h-5" />
-                      立即下单
-                    </>
-                  )}
+                  {product.is_preorder ? (<><Clock className="w-5 h-5" />立即预定</>) : (<><ShoppingBag className="w-5 h-5" />立即下单</>)}
                 </button>
               </div>
               <p className="mt-2 text-xs text-center text-muted-foreground">
