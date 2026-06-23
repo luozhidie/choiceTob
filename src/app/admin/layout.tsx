@@ -27,6 +27,7 @@ const menuGroups = [
     { label: "色彩季型录入", href: "/admin/color-analysis" },
     { label: "色彩季型对比", href: "/admin/color-compare" },
     { label: "风格测试记录", href: "/admin/style-tests" },
+    { label: "风格测试结果", href: "/admin/style-test-results" },
     { label: "测试码管理", href: "/admin/test-codes" },
   ]},
 
@@ -125,6 +126,7 @@ const menuGroups = [
     { label: "课程管理", href: "/admin/courses" },
     { label: "课程购买记录", href: "/admin/course-purchases" },
     { label: "流行资讯", href: "/admin/fashion-trends" },
+    { label: "杂志", href: "/admin/magazine" },
   ]},
 
   // ─── 趋势（保留额外分组） ───
@@ -137,9 +139,7 @@ const menuGroups = [
   // ─── 其他（保留） ───
   { label: "其他", items: [
     { label: "访客管理", href: "/admin/visitors" },
-    { label: "杂志", href: "/admin/magazine" },
     { label: "待审", href: "/admin/pending" },
-    { label: "风格测试结果", href: "/admin/style-test-results" },
   ]},
 ];
 

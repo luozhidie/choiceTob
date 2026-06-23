@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
+import { useCart } from "@/lib/cart-context";
 import { ALL_STYLES, COLOR_SEASONS_PRO, COLOR_SEASON_MARKET_MAP } from "@/lib/styles";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 import { useBuyerPageData } from "@/hooks/useBuyerPageData";
@@ -156,6 +157,7 @@ export default function BuyerPage() {
 
   const supabase = createClient();
   const { user, isMember } = useAuth();
+  const { addItem, isInCart } = useCart();
   const {
     promotions,
     newProductCalendar,
@@ -773,6 +775,28 @@ export default function BuyerPage() {
                             <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleBuy(product); }}
                               className="btn-accent text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium">
                               下单
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                addItem({
+                                  id: product.id,
+                                  title: product.title || "商品",
+                                  image: product.cover_image || product.image_url,
+                                  price: product.price,
+                                  originalPrice: product.original_price,
+                                  source: product.source || 'buyer',
+                                });
+                              }}
+                              className={`text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium transition-colors ${
+                                isInCart(product.id)
+                                  ? 'bg-green-100 text-green-700 border border-green-300'
+                                  : 'border border-gray-200 text-gray-600 hover:bg-gray-100'
+                              }`}
+                              title={isInCart(product.id) ? '已在购物车' : '加入购物车'}
+                            >
+                              {isInCart(product.id) ? '✓ 已加购' : '+ 购物车'}
                             </button>
                           </>
                         ) : (

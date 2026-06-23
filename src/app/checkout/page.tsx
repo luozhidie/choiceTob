@@ -40,13 +40,17 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
   const [memberLevel, setMemberLevel] = useState("none");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat" | "alipay" | "contact">("contact");
+  const [paymentMethod, setPaymentMethod] = useState<"wechat_pay">("wechat_pay");  // 默认微信支付
   const [shippingName, setShippingName] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState("");
+  // 微信支付相关状态
+  const [payQrCode, setPayQrCode] = useState<string | null>(null);
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
 
   const supabase = createClient();
 
@@ -102,6 +106,7 @@ function CheckoutContent() {
     if (!shippingName.trim() || !shippingPhone.trim()) { alert("请填写收货人姓名和联系电话"); return; }
     setSubmitting(true);
     try {
+      // 1. 创建订单
       const orderData: Record<string, unknown> = {
         product_id: product.id,
         quantity,
@@ -114,7 +119,7 @@ function CheckoutContent() {
           `备注: ${note}`,
           `会员等级: ${discountResult.memberLabel}`,
           `折扣率: ${formatDiscountRate(discountResult.discountRate)}`,
-          `支付方式: ${paymentMethod === "wechat" ? "微信" : paymentMethod === "alipay" ? "支付宝" : "联系客服"}`,
+          `支付方式: 微信支付`,
           `收货人: ${shippingName}`,
           `电话: ${shippingPhone}`,
           product.supplier_name ? `供应商: ${product.supplier_name}` : "",
@@ -129,12 +134,11 @@ function CheckoutContent() {
         rebate_amount: discountResult.rebateAmount * quantity,
         shipping_name: shippingName.trim(),
         shipping_phone: shippingPhone.trim(),
-        payment_method: paymentMethod,
+        payment_method: "wechat_pay",  // 统一使用微信支付
       };
       try {
         await supabase.from("buyer_orders").insert([orderData]);
       } catch {
-        // 回退基础字段
         const basicData = {
           product_id: product.id,
           quantity,
@@ -143,14 +147,91 @@ function CheckoutContent() {
           total_amount: totalAmount,
           status: "pending",
           shipping_address: `${shippingName.trim()} ${shippingPhone.trim()} ${shippingAddress}`,
-          note: `会员:${discountResult.memberLabel} 折扣:${formatDiscountRate(discountResult.discountRate)} 支付:${paymentMethod} ${note}`,
+          note: `会员:${discountResult.memberLabel} 折扣:${formatDiscountRate(discountResult.discountRate)} 微信支付 ${note}`,
         };
         await supabase.from("buyer_orders").insert([basicData]);
       }
-      router.push(`/checkout/success?title=${encodeURIComponent(product.title)}&amount=${totalAmount}&payment=${paymentMethod}`);
+
+      // 2. 调用微信支付API
+      await handleWechatPay(product.id, totalAmount);
     } catch (err) {
       console.error("提交订单失败:", err); alert("提交订单失败，请稍后重试或联系客服");
     } finally { setSubmitting(false); }
+  };
+
+  // 微信支付核心逻辑
+  const handleWechatPay = async (productId: string, price: number) => {
+    setPayLoading(true);
+    try {
+      // 判断是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      const platform = isWeChat ? 'mp' : 'native';
+
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: productId,
+          product_title: product?.title || '商品购买',
+          total_fee: Math.round(price),  // 微信支付金额单位是分
+          platform,
+          openid: '',  // JSAPI需要openid，但这里先留空
+        }),
+      });
+      const result = await response.json();
+
+      if (result.error) {
+        alert('支付发起失败：' + result.error);
+        setPayLoading(false);
+        return;
+      }
+
+      // 微信内：JSAPI 直接拉起微信支付
+      if (isWeChat && result.prepay_id && typeof window !== 'undefined') {
+        invokeWechatPay(result);
+      } else if (result.code_url) {
+        // 非微信内：显示二维码
+        setPayQrCode(result.code_url);
+        setShowPayModal(true);
+        setPayLoading(false);
+      } else {
+        alert('支付发起失败，请稍后重试');
+        setPayLoading(false);
+      }
+    } catch (error) {
+      console.error('[wechat pay]', error);
+      alert('支付请求失败，请检查网络后重试');
+      setPayLoading(false);
+    }
+  };
+
+  // 调用微信JSAPI支付
+  const invokeWechatPay = (payParams: any) => {
+    if ((window as any).WeixinJSBridge) {
+      (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
+        appId: payParams.appId,
+        timeStamp: payParams.timeStamp,
+        nonceStr: payParams.nonceStr,
+        package: payParams.package || ('prepay_id=' + payParams.prepay_id),
+        signType: payParams.signType || 'MD5',
+        paySign: payParams.paySign,
+      }, function(res: any) {
+        setPayLoading(false);
+        if (res.err_msg === "get_brand_wcpay_request:ok") {
+          alert('✅ 支付成功！感谢您的购买');
+          router.push('/');
+        } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+          alert('支付已取消');
+        } else {
+          alert('❌ 支付失败：' + res.err_msg);
+        }
+      });
+    } else {
+      // WeixinJSBridge 还没准备好，等一下再调
+      document.addEventListener('WeixinJSBridgeReady', function() {
+        invokeWechatPay(payParams);
+      }, { once: true });
+    }
   };
 
   const handleCopy = (text: string, label: string) => { navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(""), 2000); };
@@ -375,78 +456,37 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* 支付方式 */}
+          {/* 支付方式 - 微信支付 */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4">
             <h2 className="text-base font-bold text-primary mb-4">💳 支付方式</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <button
-                onClick={() => setPaymentMethod("contact")}
-                className={`p-4 rounded-xl border-2 text-center transition-all ${
-                  paymentMethod === "contact" ? "border-accent bg-accent/5" : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <Phone className="w-6 h-6 mx-auto text-primary mb-2" />
-                <div className="text-sm font-bold text-primary">联系客服</div>
-                <div className="text-[10px] text-gray-400 mt-1">人工确认后付款</div>
-              </button>
-              <button
-                onClick={() => setPaymentMethod("wechat")}
-                className={`p-4 rounded-xl border-2 text-center transition-all ${
-                  paymentMethod === "wechat" ? "border-green-500 bg-green-50" : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <MessageCircle className="w-6 h-6 mx-auto text-green-600 mb-2" />
-                <div className="text-sm font-bold text-primary">微信支付</div>
-                <div className="text-[10px] text-gray-400 mt-1">添加微信转账</div>
-              </button>
-              <button
-                onClick={() => setPaymentMethod("alipay")}
-                className={`p-4 rounded-xl border-2 text-center transition-all ${
-                  paymentMethod === "alipay" ? "border-blue-500 bg-blue-50" : "border-gray-100 hover:border-gray-200"
-                }`}
-              >
-                <span className="w-6 h-6 mx-auto mb-2 text-blue-600 text-lg">💙</span>
-                <div className="text-sm font-bold text-primary">支付宝</div>
-                <div className="text-[10px] text-gray-400 mt-1">转账到支付宝账户</div>
-              </button>
+            <div className="bg-green-50 rounded-xl p-5 border-2 border-green-200">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                  <MessageCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <div className="font-bold text-green-800 text-base">微信支付</div>
+                  <div className="text-xs text-green-600">安全快捷 · 即时到账</div>
+                </div>
+                {payLoading && (
+                  <div className="ml-auto animate-spin rounded-full h-5 w-5 border-b-2 border-green-500" />
+                )}
+              </div>
+
+              {/* 非微信环境显示提示 */}
+              {typeof window !== 'undefined' && !/MicroMessenger/i.test(navigator.userAgent) && (
+                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
+                  💡 如需在微信内直接支付，请在微信中打开此页面；当前将显示付款二维码
+                </p>
+              )}
+
+              {/* 微信内显示提示 */}
+              {typeof window !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent) && (
+                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
+                  ✓ 检测到微信环境，点击下方按钮将直接拉起微信支付
+                </p>
+              )}
             </div>
-            {paymentMethod === "wechat" && (
-              <div className="mt-4 bg-green-50 rounded-xl p-4 border border-green-100">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <MessageCircle className="w-4 h-4 text-green-600" />
-                    <span className="font-bold text-green-700 text-sm">微信支付</span>
-                  </div>
-                  <button
-                    onClick={() => handleCopy("luozhidie666", "wechat")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-500 text-white text-xs rounded-lg hover:bg-green-600 transition-colors"
-                  >
-                    {copied === "wechat" ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied === "wechat" ? "已复制" : "复制微信号"}
-                  </button>
-                </div>
-                <p className="text-xs text-green-600">
-                  添加微信：<span className="font-mono font-medium">luozhidie666</span>，转账 <span className="font-bold">{formatPrice(totalAmount)}</span>
-                </p>
-              </div>
-            )}
-            {paymentMethod === "alipay" && (
-              <div className="mt-4 bg-blue-50 rounded-xl p-4 border border-blue-100">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-bold text-blue-700 text-sm">支付宝</span>
-                  <button
-                    onClick={() => handleCopy("13925997776", "alipay")}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-500 text-white text-xs rounded-lg hover:bg-blue-600 transition-colors"
-                  >
-                    {copied === "alipay" ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                    {copied === "alipay" ? "已复制" : "复制账号"}
-                  </button>
-                </div>
-                <p className="text-xs text-blue-600">
-                  手机号：<span className="font-mono font-medium">13925997776</span>，转账 <span className="font-bold">{formatPrice(totalAmount)}</span>
-                </p>
-              </div>
-            )}
           </div>
 
           <div className="flex items-center justify-center gap-6 py-4 text-xs text-gray-400">
@@ -457,20 +497,61 @@ function CheckoutContent() {
 
           <button
             onClick={handleSubmit}
-            disabled={submitting || product.stock === 0}
-            className="w-full py-4 bg-accent text-white text-lg font-bold rounded-2xl hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-accent/20"
+            disabled={submitting || payLoading || product.stock === 0}
+            className="w-full py-4 bg-green-500 text-white text-lg font-bold rounded-2xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
           >
-            {submitting ? (
+            {payLoading ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
+                正在调起微信支付...
+              </>
+            ) : submitting ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             ) : (
               <>
-                <ShoppingBag className="w-5 h-5" /> 提交订单 · {formatPrice(totalAmount)}
+                <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice(totalAmount)}
               </>
             )}
           </button>
           <p className="mt-3 text-xs text-center text-gray-400">
-            提交订单后，客服将确认商品和价格，确认后安排发货
+            点击"立即支付"后将调起微信支付，请在微信中完成付款
           </p>
+
+          {/* 微信支付二维码弹窗（非微信环境） */}
+          {showPayModal && payQrCode && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative">
+                <button
+                  onClick={() => { setShowPayModal(false); setPayQrCode(null); }}
+                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+                <h3 className="text-lg font-bold text-center mb-2">微信扫码支付</h3>
+                <p className="text-sm text-center text-gray-500 mb-4">请使用微信扫描二维码完成支付</p>
+                <div className="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-center">
+                  {/* 使用QRCode组件或img标签显示二维码 */}
+                  {payQrCode.startsWith('weixin://') || payQrCode.startsWith('wxpay://') ? (
+                    <div className="w-48 h-48 bg-gray-100 flex items-center justify-center">
+                      <p className="text-xs text-gray-500 text-center px-4">
+                        请在微信中打开此页面以使用更便捷的JSAPI支付
+                      </p>
+                    </div>
+                  ) : (
+                    // 如果是URL格式的code_url，需要生成二维码图片
+                    <div className="w-48 h-48 bg-gray-100 flex flex-col items-center justify-center gap-2 p-4">
+                      <MessageCircle className="w-12 h-12 text-green-500" />
+                      <p className="text-xs text-center text-gray-500">正在生成支付二维码...</p>
+                      <p className="text-[10px] text-gray-400 break-all">{payQrCode.slice(0, 30)}...</p>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-center text-gray-400 mt-4">
+                  支付金额：<span className="font-bold text-green-600">{formatPrice(totalAmount)}</span>
+                </p>
+              </div>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

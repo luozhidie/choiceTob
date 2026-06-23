@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Shield } from "lucide-react";
-import { motion } from "framer-motion";
 
 /* ── 前台用户登录 ── */
 function UserLoginForm() {
@@ -24,17 +23,74 @@ function UserLoginForm() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const { error } = await signIn(email, password);
-    if (error) {
-      setError(error.message === "Invalid login credentials" ? "邮箱或密码错误，请重试" : error.message);
+
+    try {
+      // 检测是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+
+      if (isWeChat) {
+        // 微信内：走服务端API登录
+        let res;
+        try {
+          res = await fetch("/api/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+        } catch (fetchErr: any) {
+          alert("网络错误：" + fetchErr.message);
+          setLoading(false);
+          return;
+        }
+
+        let json;
+        try {
+          json = await res.json();
+        } catch (e) {
+          alert("服务器返回异常：" + (e.message || ""));
+          setLoading(false);
+          return;
+        }
+
+        if (!res.ok || !json.success) {
+          const errMsg = json.error || "登录失败";
+          setError(errMsg);
+          alert("登录失败：" + errMsg);
+          setLoading(false);
+          return;
+        }
+
+        // 登录成功！跳转
+        alert("登录成功！正在跳转...");
+        window.location.href = redirect || "/hot-picks";
+        return;
+      } else {
+        // 普通浏览器：直接用Supabase客户端
+        const result = await signIn(email, password);
+        if (result.error) {
+          const msg = result.error.message === "Invalid login credentials" ? "邮箱或密码错误" : result.error.message;
+          setError(msg);
+          setLoading(false);
+          return;
+        }
+        router.push(redirect);
+      }
+
+      if (result.error) {
+        setError(result.error.message === "Invalid login credentials" ? "邮箱或密码错误，请重试" : result.error.message);
+        setLoading(false);
+        return;
+      }
+      router.push(redirect);
+    } catch (err: any) {
+      console.error("[Login Error]", err);
+      setError("网络错误，请稍后重试");
       setLoading(false);
-      return;
     }
-    router.push(redirect);
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
+    <div>
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
         <h3 className="text-lg font-bold text-[#0f4c3a] mb-1">会员登录</h3>
         <p className="text-xs text-gray-500 mb-5">登录后查看批发价、享受会员权益</p>
@@ -82,7 +138,7 @@ function UserLoginForm() {
           <Link href="/" className="text-gray-400 hover:text-gray-600">← 返回首页</Link>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -125,7 +181,7 @@ function AdminLoginForm() {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
+    <div>
       <div className="bg-gradient-to-br from-[#0f4c3a] to-[#1a3a52] rounded-2xl shadow-lg p-8 text-white">
         <div className="flex items-center gap-2 mb-1">
           <Shield className="w-5 h-5 text-amber-300" />
@@ -172,7 +228,7 @@ function AdminLoginForm() {
           <Link href="/" className="text-xs text-white/40 hover:text-white/60">← 返回网站首页</Link>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
