@@ -140,6 +140,8 @@ const menuGroups = [
   { label: "其他", items: [
     { label: "访客管理", href: "/admin/visitors" },
     { label: "待审", href: "/admin/pending" },
+    { label: "图片抓取工具", href: "/admin/image-grabber" },
+    { label: "版块管理器", href: "/admin/blocks" },
   ]},
 ];
 

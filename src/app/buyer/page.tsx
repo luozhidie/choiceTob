@@ -535,7 +535,15 @@ export default function BuyerPage() {
             <div className="w-px h-5 bg-gray-200 shrink-0" />
             {categoryOptions.map((cat) => (
               <button key={cat.value} onClick={() => setActiveCategory(activeCategory === cat.value ? "" : cat.value)}
-                className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${activeCategory === cat.value ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-50"}`}>
+                className={`shrink-0 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  activeCategory === cat.value
+                    ? "bg-primary text-white shadow-sm"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}>
+                {/* 显示行业图标和名称 */}
+                {CATEGORIES.find(c => c.key === cat.value)?.icon && (
+                  <span className="mr-1">{CATEGORIES.find(c => c.key === cat.value)?.icon}</span>
+                )}
                 {cat.label}
               </button>
             ))}
@@ -1274,36 +1282,79 @@ export default function BuyerPage() {
               // === 查价VIP弹窗 ===
               <>
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 mb-4 border border-amber-200">
-                  <p className="text-sm font-medium text-gray-800 mb-2">💰 查看价格年费会员</p>
+                  <p className="text-sm font-medium text-gray-800 mb-2">💰 查看批发价会员</p>
                   <ul className="space-y-1 text-xs text-gray-600">
                     <li>✅ 查看所有商品批发底价</li>
-                    <li>✅ 对比供货价与市场价差</li>
-                    <li>✅ 爆款趋势预测数据</li>
-                    <li>✅ 明星同款货源搜索</li>
+                    <li>✅ 享受会员专属折扣</li>
+                    <li>✅ 爆款优先选购权</li>
+                    <li>✅ 加入会员交流群</li>
                   </ul>
                 </div>
-                <p className="text-sm text-gray-600 mb-4 text-center">
-                  年费 <span className="font-bold text-accent">¥299/年</span>，立即开通查看全部商品价格
-                </p>
-                <div className="space-y-3">
-                  {user ? (
-                    <Link href="/vip" onClick={() => setShowMemberPrompt(false)} className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center hover:brightness-110 transition-all">
-                      立即开通 ¥299/年 →
-                    </Link>
-                  ) : (
-                    <Link href="/login?redirect=/buyer" onClick={() => setShowMemberPrompt(false)}>
-                      <span className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center">
-                        登录后开通
-                      </span>
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => setShowMemberPrompt(false)}
-                    className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center"
-                  >
-                    再看看
-                  </button>
+
+                {/* VIP套餐选项 */}
+                <div className="space-y-2 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-primary">🌟 体验会员</span>
+                        <p className="text-[10px] text-gray-500">7天体验全部功能</p>
+                      </div>
+                      <span className="text-sm font-bold text-accent">¥19.9</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-2 border-green-300 cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-green-700">⭐ 年度会员（推荐）</span>
+                        <p className="text-[10px] text-green-600">最畅销 · 全年无限次</p>
+                      </div>
+                      <span className="text-base font-bold text-green-600">¥399</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-purple-200 hover:border-purple-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-purple-600">👑 两年会员</span>
+                        <p className="text-[10px] text-gray-500">超值优惠</p>
+                      </div>
+                      <span className="text-sm font-bold text-purple-600">¥599</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-pink-200 hover:border-pink-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-pink-600">💎 三年会员</span>
+                        <p className="text-[10px] text-gray-500">日均仅0.64元</p>
+                      </div>
+                      <span className="text-sm font-bold text-pink-600">¥699</span>
+                    </div>
+                  </div>
                 </div>
+
+                {user ? (
+                  <Link href="/vip" onClick={() => setShowMemberPrompt(false)} className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center hover:brightness-110 transition-all">
+                    立即开通 →
+                  </Link>
+                ) : (
+                  <Link href="/login?redirect=/vip" onClick={() => setShowMemberPrompt(false)}>
+                    <span className="block w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-xl text-center">
+                      登录后开通
+                    </span>
+                  </Link>
+                )}
+                <button
+                  onClick={() => setShowMemberPrompt(false)}
+                  className="block w-full py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-xl text-center mt-2"
+                >
+                  再看看
+                </button>
               </>
             ) : (
               // === 拿货充值会员弹窗 ===
