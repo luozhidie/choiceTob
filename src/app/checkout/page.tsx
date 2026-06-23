@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   ShoppingBag, Building2, ArrowLeft, Minus, Plus,
   CheckCircle2, MessageCircle, Phone, Copy, ChevronRight,
-  ShieldCheck, Truck, RotateCcw,
+  ShieldCheck, Truck, RotateCcw, Lock,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -296,6 +296,14 @@ function CheckoutContent() {
                       <span className="text-2xl font-bold text-gray-900">{formatPrice(product.original_price || Math.round(product.price * 2))}</span>
                       <span className="text-sm text-gray-400 mb-1">零售价</span>
                     </div>
+                    {/* 批发价区域 - 隐藏显示 */}
+                    <div className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
+                       onClick={() => window.location.href = '/vip'}>
+                      <Lock className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span className="text-sm font-medium text-blue-700">批发价</span>
+                      <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
+                      <span className="text-[10px] text-blue-400 ml-1">会员可见</span>
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-1.5">
                     <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-gray-400 hover:text-primary transition-colors">
@@ -307,16 +315,23 @@ function CheckoutContent() {
                     </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          {/* 会员提示 - 简洁版 */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-4 mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">🔒</span>
-              <span className="text-xs text-gray-600">开通价格会员查看批发底价 · 同款3件起享拿货折扣</span>
-              <Link href="/vip" className="text-xs font-medium text-blue-600 hover:text-blue-700 ml-auto">了解 →</Link>
+                {/* 拿货会员提示 - 选3件以上显示 */}
+                {quantity >= 3 && (
+                  <div className="mt-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
+                    <div className="flex items-start gap-2">
+                      <Truck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-xs font-medium text-amber-800">提示：同色同款3件起可享拿货折扣</p>
+                        <p className="text-[11px] text-amber-600 mt-0.5">开通拿货会员（充值5万起）可享受批发价和返点服务</p>
+                        <a href="/vip" className="inline-block mt-2 text-[11px] font-medium text-amber-700 hover:text-amber-800 underline">
+                          了解拿货会员 →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
