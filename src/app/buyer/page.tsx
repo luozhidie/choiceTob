@@ -1279,40 +1279,75 @@ export default function BuyerPage() {
             </div>
 
             {memberPromptType === "view_price" ? (
-              // === 查价VIP弹窗（三类会员） ===
+              // === 开通会员查看批发价 ===
               <>
                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-4 mb-4 border border-amber-200">
-                  <p className="text-sm font-medium text-gray-800 mb-2">💰 开通会员查看批发价</p>
+                  <p className="text-sm font-medium text-gray-800 mb-2">💰 开通价格会员查看批发价</p>
                   <ul className="space-y-1 text-xs text-gray-600">
                     <li>✅ 查看所有商品批发底价</li>
                     <li>✅ 对比供货价与市场价差</li>
-                    <li>✅ 爆款趋势预测数据</li>
-                    <li>✅ 明星同款货源搜索</li>
                   </ul>
                 </div>
 
                 {/* ====== 第一类：价格会员 ====== */}
-                <div className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-400 transition-colors cursor-pointer"
-                     onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-blue-700">👁️ 价格会员</span>
-                      <p className="text-[10px] text-gray-500">查看批发价 · 对比价差</p>
+                <p className="text-[11px] text-gray-400 mb-1 px-1">—— 价格会员：查看批发价 ——</p>
+
+                <div className="space-y-2 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-blue-700">👁️ 价格会员·体验</span>
+                        <p className="text-[10px] text-gray-500">14天体验</p>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">¥19.9</span>
                     </div>
-                    <span className="text-sm font-bold text-blue-600">¥299/年</span>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-3 border-2 border-blue-300 cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-blue-700">👁️ 价格会员·年卡 ★推荐</span>
+                        <p className="text-[10px] text-blue-600">全年查看批发价</p>
+                      </div>
+                      <span className="text-base font-bold text-blue-600">¥399/年</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-blue-700">👁️ 价格会员·两年卡</span>
+                        <p className="text-[10px] text-gray-500">立省¥199</p>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">¥599/2年</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-blue-200 hover:border-blue-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-blue-700">👁️ 价格会员·三年卡</span>
+                        <p className="text-[10px] text-gray-500">超值！省¥498</p>
+                      </div>
+                      <span className="text-sm font-bold text-blue-600">¥699/3年</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* ====== 第二类：商城会员 ====== */}
-                <p className="text-[11px] text-gray-400 mt-3 mb-1 px-1">—— 城商城服务与资源优惠 ——</p>
+                <p className="text-[11px] text-gray-400 mb-1 px-1">—— 商城会员：商城服务与资源优惠 ——</p>
 
-                <div className="space-y-2">
+                <div className="space-y-2 mb-4">
                   <div className="bg-white rounded-lg p-3 border border-amber-200 hover:border-amber-400 transition-colors cursor-pointer"
                        onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-xs font-bold text-amber-700">⭐ 基础VIP</span>
-                        <p className="text-[10px] text-gray-500">风格测试·搭配·课程9折</p>
+                        <p className="text-[10px] text-gray-500">搭配9折·课程8折·爆款9折·杂志9折</p>
                       </div>
                       <span className="text-sm font-bold text-amber-600">¥3,980/年</span>
                     </div>
@@ -1323,7 +1358,7 @@ export default function BuyerPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-xs font-bold text-purple-700">💜 进阶VIP ★推荐</span>
-                        <p className="text-[10px] text-purple-600">爆款8折·企划95折·专属客服</p>
+                        <p className="text-[10px] text-purple-600">爆款8折·企划95折·专属客服·到店诊断</p>
                       </div>
                       <span className="text-base font-bold text-purple-600">¥13,800/年</span>
                     </div>
@@ -1334,7 +1369,7 @@ export default function BuyerPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <span className="text-xs font-bold text-pink-700">👑 高阶VIP</span>
-                        <p className="text-[10px] text-gray-500">7折+返利8%·到店诊断·私密直播</p>
+                        <p className="text-[10px] text-gray-500">7折+返利8%·私密直播</p>
                       </div>
                       <span className="text-sm font-bold text-pink-600">¥29,800/年</span>
                     </div>
@@ -1342,16 +1377,40 @@ export default function BuyerPage() {
                 </div>
 
                 {/* ====== 第三类：拿货会员 ====== */}
-                <p className="text-[11px] text-gray-400 mt-3 mb-1 px-1">—— 三件起批发价 ——</p>
+                <p className="text-[11px] text-gray-400 mb-1 px-1">—— 拿货会员：三件起批·2.8折拿货 ——</p>
 
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-2 border-green-300 cursor-pointer"
-                     onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-xs font-bold text-green-700">📦 拿货会员</span>
-                      <p className="text-[10px] text-green-600">三件起批发·退换服务保障</p>
+                <div className="space-y-2 mb-4">
+                  <div className="bg-white rounded-lg p-3 border border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-green-700">📦 拿货会员·充5万</span>
+                        <p className="text-[10px] text-gray-500">2.8折·退换额度5%</p>
+                      </div>
+                      <span className="text-sm font-bold text-green-600">充值¥5万</span>
                     </div>
-                    <span className="text-base font-bold text-green-600">¥599/年</span>
+                  </div>
+
+                  <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-3 border-2 border-green-300 cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-green-700">📦 拿货会员·充10万 ★推荐</span>
+                        <p className="text-[10px] text-green-600">2.8折·退换额度10%</p>
+                      </div>
+                      <span className="text-base font-bold text-green-600">充值¥10万</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <span className="text-xs font-bold text-green-700">📦 拿货会员·充30万</span>
+                        <p className="text-[10px] text-gray-500">2.8折·退换额度20%</p>
+                      </div>
+                      <span className="text-sm font-bold text-green-600">充值¥30万</span>
+                    </div>
                   </div>
                 </div>
 

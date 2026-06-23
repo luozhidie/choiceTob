@@ -30,113 +30,202 @@ interface Plan {
 }
 
 const plans: Plan[] = [
-  // ====== 第一类：价格会员 ======
+  // ========================================
+  // 第一类：价格会员（查看批发价）
+  // ========================================
   {
-    id: "view_price",
-    name: "价格会员",
-    price: 29900,  // ¥299
-    originalPrice: 59900,
-    priceLabel: "¥299/年",
-    discountLabel: "新客首年半价",
+    id: "price_trial",
+    name: "价格会员·体验",
+    price: 1990,          // ¥19.9
+    originalPrice: 0,
+    priceLabel: "¥19.9",
+    discountLabel: "14天体验",
     newCustomerLabel: "查看批发价",
     membershipType: "view_price",
     icon: Eye,
     highlight: false,
     features: [
-      "查看所有商品批发底价",
+      "14天体验期",
+      "查看所有商品批发价",
+      "对比供货价与市场价差",
+    ],
+  },
+  {
+    id: "price_1y",
+    name: "价格会员·年卡",
+    price: 39900,         // ¥399
+    originalPrice: 0,
+    priceLabel: "¥399/年",
+    discountLabel: "全年查看批发价",
+    membershipType: "view_price",
+    icon: Eye,
+    highlight: true,
+    features: [
+      "查看所有商品批发价",
       "对比供货价与市场价差",
       "爆款趋势预测数据",
       "明星同款货源搜索",
     ],
   },
-  // ====== 第二类：商城会员（基础/进阶/高阶） ======
+  {
+    id: "price_2y",
+    name: "价格会员·两年卡",
+    price: 59900,         // ¥599
+    originalPrice: 79800,
+    priceLabel: "¥599/2年",
+    discountLabel: "立省¥199",
+    membershipType: "view_price",
+    icon: Eye,
+    highlight: false,
+    features: [
+      "2年无限次查看批发价",
+      "对比供货价与市场价差",
+      "爆款趋势预测数据",
+      "明星同款货源搜索",
+    ],
+  },
+  {
+    id: "price_3y",
+    name: "价格会员·三年卡",
+    price: 69900,         // ¥699
+    originalPrice: 119700,
+    priceLabel: "¥699/3年",
+    discountLabel: "超值！省¥498",
+    membershipType: "view_price",
+    icon: Eye,
+    highlight: false,
+    features: [
+      "3年无限次查看批发价",
+      "对比供货价与市场价差",
+      "爆款趋势预测数据",
+      "明星同款货源搜索",
+    ],
+  },
+
+  // ========================================
+  // 第二类：商城会员（享受商城服务与资源优惠）
+  // ========================================
   {
     id: "basic",
     name: "基础VIP",
-    price: 398000,   // ¥3,980
-    originalPrice: 980000,
+    price: 398000,        // ¥3,980
+    originalPrice: 0,
     priceLabel: "¥3,980/年",
-    discountLabel: "新客优惠¥500",
-    newCustomerLabel: "新客价 ¥3,480",
+    discountLabel: "商城会员",
     membershipType: "deposit_discount",
-    icon: Eye,
+    icon: Star,
     highlight: false,
     features: [
       "查看所有买手选品供货价",
       "每日搭配灵感9折优惠",
-      "线上风格测试工具不限次使用，非会员¥2980/次",
+      "线上风格测试工具不限次使用，非会员¥99/次",
       "线上课程8折优惠",
       "爆款样衣9折优惠",
       "杂志订阅9折优惠",
-      "社群交流 + 月度直播",
+      "社群交流＋月度直播",
     ],
   },
   {
     id: "pro",
     name: "进阶VIP",
-    price: 1380000,  // ¥13,800
+    price: 1380000,       // ¥13,800
     originalPrice: 1980000,
     priceLabel: "¥13,800/年",
     discountLabel: "首年直降¥6,000",
+    newCustomerLabel: "适合单店/连锁/品牌",
     membershipType: "pro",
     icon: Star,
     highlight: true,
     features: [
       "基础VIP全部权益",
-      "爆款样衣8折优惠",
+      "爆款样衣8折优惠，每日搭配灵感8折，杂志订阅8折优惠",
       "商品企划95折",
       "专属1v1客服（微信/电话）",
       "货款充值享阶梯折扣",
       "线下到店诊断（1次/半年，报销差旅）",
       "新品优先拿货权",
       "门店经营数据分析报告（季度）",
-      "VIP专属社群 + 直播",
+      "VIP专属社群＋直播",
     ],
   },
   {
     id: "premium",
     name: "高阶VIP",
-    price: 2980000,  // ¥29,800
-    originalPrice: 3980000,
+    price: 2980000,       // ¥29,800
+    originalPrice: 0,
     priceLabel: "¥29,800/年",
-    discountLabel: "首年直降¥10,000",
+    discountLabel: "商城会员",
     membershipType: "deposit_discount",
     icon: Crown,
     highlight: false,
     features: [
-      "基础VIP全部权益（升级至7折）",
-      "每日搭配灵感7折优惠",
-      "爆款样衣7折优惠",
-      "杂志订阅7折优惠",
+      "进阶VIP全部权益",
+      "爆款样衣7折优惠，每日搭配灵感7折，杂志订阅7折优惠",
       "商品企划95折",
       "专属1v1客服（微信/电话）",
       "货款充值享阶梯折扣",
       "线下到店诊断（1次/年，报销差旅）",
       "新品优先拿货权",
       "门店经营数据分析报告",
-      "VIP专属社群 + 私密直播",
+      "VIP专属社群＋私密直播",
     ],
   },
-  // ====== 第三类：拿货会员 ======
+
+  // ========================================
+  // 第三类：拿货会员（三件起批，拿货折扣和退换服务）
+  // ========================================
   {
-    id: "wholesale",
-    name: "拿货会员",
-    price: 59900,     // ¥599
-    originalPrice: 99900,
-    priceLabel: "¥599/年",
-    discountLabel: "省¥400",
-    newCustomerLabel: "三件起批发",
+    id: "wholesale_5w",
+    name: "拿货会员·充5万",
+    price: 5000000,       // 充值5万
+    originalPrice: 0,
+    priceLabel: "充值¥50,000",
+    discountLabel: "2.8折拿货",
+    newCustomerLabel: "退换额度5%",
     membershipType: "pro",
     icon: Package,
     highlight: false,
     features: [
-      "同色同款三件起享受批发价",
-      "拿货专属折扣（低于零售价）",
-      "退换货服务保障",
-      "优先发货权",
-      "新品样品优先获取",
-      "专属拿货客服通道",
-      "季度返利奖励",
+      "同色同款拿货三件起批，享受批发价",
+      "拿货折扣2.8折",
+      "退换额度5%",
+      "开通拿货会员享拿货折扣和退换服务",
+    ],
+  },
+  {
+    id: "wholesale_10w",
+    name: "拿货会员·充10万",
+    price: 10000000,      // 充值10万
+    originalPrice: 0,
+    priceLabel: "充值¥100,000",
+    discountLabel: "2.8折拿货",
+    newCustomerLabel: "退换额度10%",
+    membershipType: "pro",
+    icon: Package,
+    highlight: true,
+    features: [
+      "同色同款拿货三件起批，享受批发价",
+      "拿货折扣2.8折",
+      "退换额度10%",
+      "开通拿货会员享拿货折扣和退换服务",
+    ],
+  },
+  {
+    id: "wholesale_30w",
+    name: "拿货会员·充30万",
+    price: 30000000,      // 充值30万
+    originalPrice: 0,
+    priceLabel: "充值¥300,000",
+    discountLabel: "2.8折拿货",
+    newCustomerLabel: "退换额度20%",
+    membershipType: "pro",
+    icon: Package,
+    highlight: false,
+    features: [
+      "同色同款拿货三件起批，享受批发价",
+      "拿货折扣2.8折",
+      "退换额度20%",
+      "开通拿货会员享拿货折扣和退换服务",
     ],
   },
 ];
