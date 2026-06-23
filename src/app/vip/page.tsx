@@ -9,6 +9,7 @@ import {
   Crown, Eye, CreditCard, CheckCircle2, X, Clock, Star,
   MessageCircle, Smartphone, Copy, Check, Loader2, ArrowRight,
   ShieldCheck, Zap, Gift, HeadphonesIcon, AlertCircle, Sparkles,
+  Package,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentQRCode from "@/components/PaymentQRCode";
