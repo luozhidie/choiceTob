@@ -135,14 +135,16 @@ export default function MyPage() {
               {profile?.membership_type && profile.membership_type !== "none" && (
                 <div className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white/20 text-xs font-medium">
                   <Crown className="w-3.5 h-3.5" />
-                  {profile.membership_type === "trial"
-                    ? "体验会员"
-                    : profile.membership_type === "annual"
-                    ? "年度会员"
-                    : profile.membership_type === "two_year"
-                    ? "两年会员"
-                    : profile.membership_type === "three_year"
-                    ? "三年会员"
+                  {profile.membership_type === "view_price"
+                    ? "价格会员"
+                    : profile.membership_type === "basic"
+                    ? "基础VIP"
+                    : profile.membership_type === "pro"
+                    ? "进阶VIP"
+                    : profile.membership_type === "premium"
+                    ? "高阶VIP"
+                    : profile.membership_type === "wholesale"
+                    ? "拿货会员"
                     : "VIP会员"}
                 </div>
               )}
@@ -277,14 +279,16 @@ export default function MyPage() {
                     <div className="text-2xl">💎</div>
                     <div>
                       <p className="font-semibold text-gray-900">
-                        {profile.membership_type === "trial"
-                          ? "体验会员"
-                          : profile.membership_type === "annual"
-                          ? "年度会员"
-                          : profile.membership_type === "two_year"
-                          ? "两年会员"
-                          : profile.membership_type === "three_year"
-                          ? "三年会员"
+                        {profile.membership_type === "view_price"
+                          ? "价格会员"
+                          : profile.membership_type === "basic"
+                          ? "基础VIP"
+                          : profile.membership_type === "pro"
+                          ? "进阶VIP"
+                          : profile.membership_type === "premium"
+                          ? "高阶VIP"
+                          : profile.membership_type === "wholesale"
+                          ? "拿货会员"
                           : "VIP会员"}
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">享受专属折扣和批发价查看权限</p>
