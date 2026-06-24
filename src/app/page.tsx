@@ -217,15 +217,15 @@ export default function Home() {
       </section>
 
       {/* ====== 大图区域（轮播图背景 + 分类栏叠在上面） ====== */}
-      <section className="relative overflow-hidden" style={{ height: "85vh", minHeight: "600px" }}>
-        {/* 轮播图背景 */}
+      <section className="relative overflow-hidden" style={{ height: "85vh", minHeight: "580px", maxHeight: "700px" }}>
+        {/* 轮播图（全屏） */}
         <HeroCarousel />
-        {/* 底部渐变遮罩（过渡到白色商品区） */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(255,255,255,0.9) 100%)" }} />
 
-        {/* ====== 分类标签栏（透明，叠在图片上） ====== */}
-        <div className="relative z-10">
-          <div className="max-w-7xl mx-auto px-4">
+        {/* 分类标签栏 + 标题按钮（叠在图片上，z-index 要高于轮播图的链接层） */}
+        <div className="absolute inset-0 z-30 pointer-events-none">
+          <div className="flex flex-col justify-between h-full">
+          {/* 顶部：分类标签栏 */}
+          <div className="max-w-7xl mx-auto px-4 pointer-events-auto">
             <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
               {categories.map((cat) => (
                 <Link
@@ -244,8 +244,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ====== 子分类标签栏（透明，叠在图片上） ====== */}
-          <div className="max-w-7xl mx-auto px-4">
+          {/* 子分类标签栏 */}
+          <div className="max-w-7xl mx-auto px-4 pointer-events-auto">
             <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
               {currentSubCategories.map((sub) => {
                 const isBuyer = activeCategoryName === "穿搭";
@@ -271,8 +271,8 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ====== 大图标题 + 按钮（叠在图片上） ====== */}
-          <div className="text-center text-white px-4 pt-10 pb-16">
+          {/* 底部：标题 + 按钮 */}
+          <div className="text-center text-white px-4 pb-14 pt-8 pointer-events-auto">
             <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(24px, 4vw, 36px)" }}>
               爆款选品 · 拿货精选
             </h2>
@@ -288,6 +288,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
+        </div>
         </div>
       </section>
 

@@ -1,28 +1,35 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface Banner {
   id: string;
   image_url: string;
-  link_url?: string;
-  title?: string;
-  subtitle?: string;
+  link_url?: string | null;
+  title?: string | null;
+  subtitle?: string | null;
+  button_text?: string | null;
+  is_active: boolean;
 }
 
 export default function HeroCarousel() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showCloseBtn, setShowCloseBtn] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = createClient();
 
-  // 从后台加载轮播图（site_assets 表中 key = 'hero_banner' 的记录）
+  // 从后台加载轮播图
   useEffect(() => {
     const loadBanners = async () => {
       try {
         const { data, error } = await supabase
           .from("site_assets")
-          .select("id, image_url, link_url, title, subtitle")
+          .select("*")
           .like("key", "hero_banner%")
           .eq("is_active", true)
           .order("sort_order", { ascending: true });
@@ -30,16 +37,36 @@ export default function HeroCarousel() {
         if (!error && data && data.length > 0) {
           setBanners(data);
         } else {
-          // 默认轮播图（如果后台没配置）
+          // 默认示例数据（方便测试）
           setBanners([
-            { id: "default-1", image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format", title: "爆款选品", subtitle: "拿货精选" },
-            { id: "default-2", image_url: "https://images.unsplash.com/photo-1469337982187-4a8d9b1eeeb?w=1600&q=80&auto=format", title: "新品上市", subtitle: "时尚穿搭" },
+            { 
+              id: "default-1", 
+              image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format",
+              link_url: "/buyer",
+              title: "爆款选品 · 拿货精选",
+              subtitle: "骆芷蝶智选 · 专业推荐",
+              button_text: "全部商品 →",
+              is_active: true,
+            },
+            { 
+              id: "default-2", 
+              image_url: "https://images.unsplash.com/photo-1469337982187-4a8d9b1eeeb?w=1600&q=80&auto=format",
+              link_url: "/vip",
+              title: "开通价格会员",
+              subtitle: "解锁批发价，享受更多优惠",
+              button_text: "立即开通 →",
+              is_active: true,
+            },
           ]);
         }
       } catch {
-        // 使用默认图
         setBanners([
-          { id: "default-1", image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format" },
+          { 
+            id: "default-1", 
+            image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format",
+            link_url: "/buyer",
+            is_active: true,
+          },
         ]);
       }
     };
@@ -47,66 +74,200 @@ export default function HeroCarousel() {
   }, []);
 
   // 自动轮播
-  useEffect(() => {
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay();
     if (banners.length <= 1) return;
-    
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
-    }, 4000); // 4秒切换
-
-    return () => clearInterval(timer);
+    timerRef.current = setInterval(() => {
+      handleNext();
+    }, 5000); // 5秒切换
   }, [banners.length]);
 
-  // 手动切换
-  const goTo = useCallback((index: number) => {
-    setCurrentIndex(index);
+  const stopAutoPlay = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
   }, []);
+
+  useEffect(() => {
+    startAutoPlay();
+    return () => stopAutoPlay();
+  }, [startAutoPlay, stopAutoPlay]);
+
+  // 切换下一张
+  const handleNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  // 切换上一张
+  const handlePrev = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  // 跳转到指定张
+  const goTo = (index: number) => {
+    if (isTransitioning || index === currentIndex) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(index);
+      setIsTransitioning(false);
+    }, 300);
+  };
 
   if (banners.length === 0) return null;
 
   const currentBanner = banners[currentIndex];
 
+  // 处理链接
+  const renderLink = (children: React.ReactNode, linkUrl?: string | null) => {
+    if (!linkUrl) return <div>{children}</div>;
+    
+    if (linkUrl.startsWith("http")) {
+      return (
+        <a href={linkUrl} target="_blank" rel="noopener noreferrer" className="block">
+          {children}
+        </a>
+      );
+    }
+    
+    return <Link href={linkUrl}>{children}</Link>;
+  };
+
   return (
-    <>
-      {/* 轮播图 */}
+    <div 
+      className="relative w-full h-full"
+      onMouseEnter={() => { stopAutoPlay(); setShowCloseBtn(true); }}
+      onMouseLeave={() => { startAutoPlay(); setShowCloseBtn(false); }}
+      onTouchStart={() => stopAutoPlay()}
+      onTouchEnd={() => startAutoPlay()}
+    >
+      {/* 轮播图片 */}
       <div className="absolute inset-0">
         {banners.map((banner, index) => (
           <div
             key={banner.id}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-              index === currentIndex ? "opacity-100" : "opacity-0"
+            className={`absolute inset-0 bg-cover bg-center transition-all duration-700 ease-in-out ${
+              index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
             style={{ backgroundImage: `url('${banner.image_url}')` }}
           />
         ))}
-
-        {/* 点击跳转 */}
+        
+        {/* 整个区域可点击跳转 */}
         {currentBanner.link_url && (
-          <a
-            href={currentBanner.link_url}
-            className="absolute inset-0 z-10"
-            target="_blank"
-            rel="noopener noreferrer"
-          />
+          currentBanner.link_url.startsWith("http") ? (
+            <a
+              href={currentBanner.link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 z-10"
+            />
+          ) : (
+            <Link href={currentBanner.link_url || "#"} className="absolute inset-0 z-10" />
+          )
         )}
       </div>
 
-      {/* 指示器（小圆点） */}
+      {/* 遮罩层 - 让文字更清晰 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+
+      {/* 内容区 - 标题、描述、按钮 */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-end pb-16 px-5">
+        <div className="max-w-lg mx-auto text-center">
+          {/* 标题 */}
+          {currentBanner.title && (
+            <h2 className="text-white font-bold drop-shadow-lg mb-2 leading-tight"
+               style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
+              {currentBanner.title}
+            </h2>
+          )}
+          
+          {/* 副标题/描述 */}
+          {currentBanner.subtitle && (
+            <p className="text-white/90 mb-5 tracking-wide drop-shadow-md"
+               style={{ fontSize: "clamp(13px, 2vw, 16px)" }}>
+              {currentBanner.subtitle}
+            </p>
+          )}
+          
+          {/* 按钮 */}
+          {currentBanner.button_text && (
+            renderLink(
+              <span className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-colors shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 active:translate-y-0">
+                {currentBanner.button_text}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </span>,
+              currentBanner.link_url
+            )
+          )}
+
+          {/* 如果没有按钮但有链接，显示小提示 */}
+          {!currentBanner.button_text && currentBanner.link_url && (
+            <span className="text-white/50 text-xs mt-2 inline-block px-3 py-1 rounded-full border border-white/30">
+              点击查看详情 ↓
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 左右箭头 */}
       {banners.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
+            aria-label="上一张"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleNext(); }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white hover:bg-black/40 transition-colors"
+            aria-label="下一张"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </>
+      )}
+
+      {/* 底部指示器 */}
+      {banners.length > 1 && (
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
           {banners.map((_, index) => (
             <button
               key={index}
-              onClick={() => goTo(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              onClick={(e) => { e.stopPropagation(); goTo(index); }}
+              className={`transition-all duration-300 ${
                 index === currentIndex
-                  ? "bg-white w-6"
-                  : "bg-white/50 hover:bg-white/80"
+                  ? "w-6 h-2 rounded-full bg-white"
+                  : "w-2 h-2 rounded-full bg-white/50 hover:bg-white/80"
               }`}
+              aria-label={`第${index + 1}张`}
             />
           ))}
         </div>
       )}
-    </>
+
+      {/* 关闭按钮（hover时显示） */}
+      {showCloseBtn && banners.length > 1 && (
+        <button
+          onClick={(e) => { e.stopPropagation(); stopAutoPlay(); }}
+          className="absolute top-3 right-3 z-30 w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/40 transition-colors"
+          title="暂停轮播"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   );
 }
