@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -93,30 +93,10 @@ export default function Home() {
   const [activeCategoryName, setActiveCategoryName] = useState("全部");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [heroBgUrl, setHeroBgUrl] = useState<string>("");
-  const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
 
   const supabase = createClient();
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
-
-  // 从 site_assets 读取 Hero 背景图（顶部区域 + 大图区域）
-  useEffect(() => {
-    const fetchHeroBgs = async () => {
-      try {
-        const [topRes, mainRes] = await Promise.all([
-          supabase.from("site_assets").select("image_url").eq("key", "hero_top_bg").maybeSingle(),
-          supabase.from("site_assets").select("image_url").eq("key", "hero_bg").maybeSingle(),
-        ]);
-        if (topRes.data?.image_url) setHeroTopBgUrl(topRes.data.image_url);
-        if (mainRes.data?.image_url) setHeroBgUrl(mainRes.data.image_url);
-      } catch {}
-    };
-    fetchHeroBgs();
-  }, []);
-
-  const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
-  const bgImage = heroBgUrl || defaultHeroBg;
 
   // 加载商品（穿搭精选：从 buyer_products + products 加载服装类）
   useEffect(() => {
@@ -137,10 +117,10 @@ export default function Home() {
 
         const merged: any[] = [];
         if (!platformRes.error && platformRes.data) {
-          (platformRes.data as any[]).forEach((p) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
+          (platformRes.data as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
         }
         if (Array.isArray(buyerRes)) {
-          (buyerRes as any[]).forEach((p) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
+          (buyerRes as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
         }
         setProducts(merged);
       } catch (err) {
@@ -174,19 +154,6 @@ export default function Home() {
           style={{ background: "radial-gradient(circle, rgba(160,80,130,0.6) 0%, transparent 70%)" }}
         />
 
-        {heroTopBgUrl ? (
-          <>
-            {/* 动态背景图 + 暖紫遮罩 */}
-            <div
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-              style={{ backgroundImage: `url('${heroTopBgUrl}')` }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{ background: "linear-gradient(135deg, rgba(58,37,56,0.85) 0%, rgba(70,45,65,0.82) 100%)" }}
-            />
-          </>
-        ) : null}
         {/* 有上传图片时遮罩层在上面，无图片时用上面的纯色+光晕 */}
         <div className="relative z-10 max-w-5xl mx-auto">
           <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }}>
@@ -215,15 +182,19 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 大图区域（背景图 + 分类栏叠在上面） ====== */}
-      <section className="relative overflow-hidden">
-        {/* 背景图 */}
-        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" style={{ backgroundImage: `url('${bgImage}')` }} />
-        {/* 底部渐变遮罩（过渡到白色商品区） */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.5) 70%, rgba(255,255,255,1) 100%)" }} />
+      {/* ====== 大图区域（轮播图背景 + 分类/标题叠在上面） ====== */}
+      <section className="relative" style={{ height: "500px" }}>
+        {/* 轮播图背景 */}
+        <HeroCarousel />
 
-        {/* ====== 分类标签栏（透明，叠在图片上） ====== */}
-        <div className="relative z-10">
+        {/* 渐变遮罩 */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.18) 0%, rgba(0,0,0,0.28) 50%, rgba(255,255,255,0.88) 100%)" }}
+        />
+
+        {/* 分类标签栏 + 标题文字 + 按钮（叠在图片上） */}
+        <div className="relative z-10 h-full flex flex-col justify-between">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
               {categories.map((cat) => (
@@ -243,7 +214,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ====== 子分类标签栏（透明，叠在图片上） ====== */}
+          {/* 子分类标签栏 */}
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
               {currentSubCategories.map((sub) => {
@@ -270,7 +241,7 @@ export default function Home() {
             </div>
           </div>
 
-          {/* ====== 大图标题 + 按钮（叠在图片上） ====== */}
+          {/* 大图标题 + 按钮 */}
           <div className="text-center text-white px-4 pt-10 pb-16">
             <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(24px, 4vw, 36px)" }}>
               爆款选品 · 拿货精选
