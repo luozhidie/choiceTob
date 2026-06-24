@@ -55,16 +55,16 @@ export async function POST(request: NextRequest) {
     const finalFilename = filename.replace(/\.[^.]+$/, "") + "." + fileExt;
     const mimeType = `image/${fileExt}`;
 
-    // 4. 上传到Supabase Storage
-    const supabase = await createClient();
-    const storagePath = `grabbed/${Date.now()}_${finalFilename}`;
-    
-    // 尝试上传到storage
-    let storedUrl: string | null = null;
-    try {
-      const { data, error } = await supabase.storage
-        .from("product-images") // 使用产品图片存储桶
-        .upload(storagePath, Buffer.from(base64), {
+      // 4. 上传到Supabase Storage
+      const supabase = await createClient();
+      const storagePath = `grabbed/${Date.now()}_${finalFilename}`;
+      
+      // 尝试上传到storage
+      let storedUrl: string | null = null;
+      try {
+        const { data, error } = await supabase.storage
+          .from("products") // 与商品管理页面使用相同的存储桶
+          .upload(storagePath, Buffer.from(base64), {
           contentType: mimeType,
           cacheControl: "3600",
           upsert: false,
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       } else {
         // 获取公开URL
         const { data: urlData } = supabase.storage
-          .from("product-images")
+          .from("products")
           .getPublicUrl(storagePath);
 
         storedUrl = urlData.publicUrl || imageUrl;

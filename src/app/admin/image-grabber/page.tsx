@@ -122,17 +122,20 @@ export default function ImageGrabberPage() {
         // 上传到 Supabase Storage
         const filePath = `grabbed/${Date.now()}_${file.name}`;
         const { data, error } = await supabase.storage
-          .from("product-images")
+          .from("products")
           .upload(filePath, file, {
             cacheControl: "3600",
             upsert: false,
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase Storage 错误:", error);
+          throw new Error(error.message || "存储上传失败");
+        }
 
         // 获取公开 URL
         const { data: urlData } = supabase.storage
-          .from("product-images")
+          .from("products")
           .getPublicUrl(filePath);
 
         setImages((prev) =>
