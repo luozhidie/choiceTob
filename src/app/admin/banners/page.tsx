@@ -219,22 +219,51 @@ export default function BannersAdminPage() {
                           </label>
                         </div>
                       ) : (
-                        <label className="w-64 h-36 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              if (e.target.files?.[0]) {
-                                uploadImage(banner.id, e.target.files[0]);
-                              }
-                            }}
-                            className="hidden"
-                          />
-                          <div className="text-center">
-                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                            <span className="text-sm text-gray-500">点击上传图片</span>
+                        <div className="w-64 space-y-2">
+                          {/* 方式1：本地上传 */}
+                          <label className="w-64 h-28 border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors rounded-xl">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  uploadImage(banner.id, e.target.files[0]);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <div className="text-center">
+                              <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-1" />
+                              <span className="text-sm text-gray-500">点击上传图片</span>
+                            </div>
+                          </label>
+                          {/* 方式2：粘贴URL（备用） */}
+                          <div className="flex gap-1">
+                            <input
+                              type="text"
+                              placeholder="或粘贴图片URL..."
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter' && (e.target as HTMLInputElement).value.trim()) {
+                                  updateBanner(banner.id, { image_url: (e.target as HTMLInputElement).value.trim() });
+                                  showToast("success", "图片链接已保存！");
+                                }
+                              }}
+                              className="flex-1 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:border-primary outline-none"
+                            />
+                            <button
+                              onClick={() => {
+                                const input = document.getElementById(`url-input-${banner.id}`) as HTMLInputElement;
+                                if (input && input.value.trim()) {
+                                  updateBanner(banner.id, { image_url: input.value.trim() });
+                                  showToast("success", "图片链接已保存！");
+                                }
+                              }}
+                              className="px-2 py-1.5 text-xs bg-primary text-white rounded-lg hover:bg-primary/90"
+                            >
+                              确认
+                            </button>
                           </div>
-                        </label>
+                        </div>
                       )}
                     </div>
 
