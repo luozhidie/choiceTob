@@ -1,8 +1,5 @@
-"use client";
-
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Image as ImageIcon, Upload } from "lucide-react";
 import { motion } from "framer-motion";
 
 interface Banner {
@@ -16,144 +13,129 @@ interface Banner {
   is_active: boolean;
 }
 
+const API_BASE = "/api/admin/banners";
+
 export default function BannersAdminPage() {
-  const supabase = createClient();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  // 加载轮播图配置
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
   const loadBanners = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("site_assets")
-        .select("*")
-        .like("key", "hero_banner%")
-        .order("sort_order", { ascending: true });
-
-      if (error) throw error;
+      const res = await fetch(`${API_BASE}?action=list`, { credentials: "include" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "加载失败");
       setBanners(data || []);
     } catch (error: any) {
-      showToast("error", "加载失败：" + error.message);
+      showToast("error", error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadBanners();
-  }, []);
+  useEffect(() => { loadBanners(); }, []);
 
-  // 新增轮播图
   const addBanner = async () => {
     try {
-      const newKey = `hero_banner_${Date.now()}`;
-      const { data, error } = await supabase
-        .from("site_assets")
-        .insert({
-          key: newKey,
+      const res = await fetch(API_BASE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          key: `hero_banner_${Date.now()}`,
           image_url: "",
           link_url: null,
           title: "",
           subtitle: "",
           sort_order: banners.length,
           is_active: true,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "添加失败");
       setBanners([...banners, data]);
       showToast("success", "已添加，请填写信息并上传图片");
     } catch (error: any) {
-      showToast("error", "添加失败：" + error.message);
+      showToast("error", error.message);
     }
   };
 
-  // 更新轮播图
   const updateBanner = async (id: string, updates: Partial<Banner>) => {
     try {
-      const { error } = await supabase
-        .from("site_assets")
-        .update(updates)
-        .eq("id", id);
-
-      if (error) throw error;
+      const res = await fetch(API_BASE, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, ...updates }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "更新失败");
       setBanners(banners.map(b => b.id === id ? { ...b, ...updates } : b));
     } catch (error: any) {
-      showToast("error", "更新失败：" + error.message);
+      showToast("error", error.message);
     }
   };
 
-  // 删除轮播图
   const deleteBanner = async (id: string) => {
     if (!confirm("确定要删除这张轮播图吗？")) return;
     try {
-      const { error } = await supabase
-        .from("site_assets")
-        .delete()
-        .eq("id", id);
-
-      if (error) throw error;
+      const res = await fetch(`${API_BASE}?id=${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "删除失败");
       setBanners(banners.filter(b => b.id !== id));
       showToast("success", "删除成功");
     } catch (error: any) {
-      showToast("error", "删除失败：" + error.message);
+      showToast("error", error.message);
     }
   };
 
-  // 上传图片
   const uploadImage = async (bannerId: string, file: File) => {
     setSaving(true);
     try {
-      const filePath = `banners/${Date.now()}_${file.name}`;
-      const { data, error } = await supabase.storage
-        .from("products")
-        .upload(filePath, file, { cacheControl: "3600", upsert: false });
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("bannerId", bannerId);
 
-      if (error) throw error;
+      const res = await fetch("/api/admin/banners/upload", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
 
-      const { data: urlData } = supabase.storage
-        .from("products")
-        .getPublicUrl(filePath);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "上传失败");
 
-      await updateBanner(bannerId, { image_url: urlData.publicUrl });
+      await updateBanner(bannerId, { image_url: data.url });
       showToast("success", "图片上传成功！");
     } catch (error: any) {
-      showToast("error", "上传失败：" + error.message);
+      showToast("error", error.message);
     } finally {
       setSaving(false);
     }
   };
 
-  // 上移/下移
   const moveBanner = async (index: number, direction: "up" | "down") => {
     const newBanners = [...banners];
     const targetIndex = direction === "up" ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newBanners.length) return;
 
-    // 交换顺序
     [newBanners[index], newBanners[targetIndex]] = [newBanners[targetIndex], newBanners[index]];
-
-    // 更新 sort_order
     const updates = newBanners.map((b, i) => ({ ...b, sort_order: i }));
     setBanners(updates);
 
-    // 保存到数据库
     for (const banner of updates) {
-      await supabase
-        .from("site_assets")
-        .update({ sort_order: banner.sort_order })
-        .eq("id", banner.id);
+      await updateBanner(banner.id, { sort_order: banner.sort_order });
     }
-  };
-
-  // 显示提示
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
   };
 
   if (loading) {
