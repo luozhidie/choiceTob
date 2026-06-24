@@ -217,11 +217,11 @@ export default function Home() {
       </section>
 
       {/* ====== 大图区域（轮播图背景 + 分类栏叠在上面） ====== */}
-      <section className="relative overflow-hidden" style={{ height: "500px" }}>
+      <section className="relative overflow-hidden" style={{ height: "85vh", minHeight: "600px" }}>
         {/* 轮播图背景 */}
         <HeroCarousel />
         {/* 底部渐变遮罩（过渡到白色商品区） */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.35) 40%, rgba(0,0,0,0.5) 70%, rgba(255,255,255,1) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.25) 50%, rgba(255,255,255,0.9) 100%)" }} />
 
         {/* ====== 分类标签栏（透明，叠在图片上） ====== */}
         <div className="relative z-10">

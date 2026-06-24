@@ -69,7 +69,7 @@ export default function HeroCarousel() {
   return (
     <>
       {/* 轮播图 */}
-      <div className="relative w-full h-full">
+      <div className="absolute inset-0">
         {banners.map((banner, index) => (
           <div
             key={banner.id}
@@ -93,7 +93,7 @@ export default function HeroCarousel() {
 
       {/* 指示器（小圆点） */}
       {banners.length > 1 && (
-        <div className="relative z-20 flex justify-center gap-2 -mt-8">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
           {banners.map((_, index) => (
             <button
               key={index}
