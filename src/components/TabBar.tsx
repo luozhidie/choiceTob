@@ -6,7 +6,7 @@ import { Home, LayoutGrid, ShoppingCart, User } from "lucide-react";
 
 const tabs = [
   { href: "/", label: "首页", icon: Home },
-  { href: "/buyer", label: "分类", icon: LayoutGrid },
+  { href: "/categories", label: "分类", icon: LayoutGrid },
   { href: "/checkout/cart", label: "购物车", icon: ShoppingCart },
   { href: "/my", label: "我的", icon: User },
 ];
@@ -20,7 +20,8 @@ export default function TabBar() {
   }
 
   const isActive = (href: string) => {
-    if (href === "/") return pathname === "/" || pathname === "/buyer";
+    if (href === "/") return pathname === "/";
+    if (href === "/categories") return pathname.startsWith("/categories") || pathname.startsWith("/buyer") || pathname.startsWith("/category/");
     return pathname.startsWith(href);
   };
 

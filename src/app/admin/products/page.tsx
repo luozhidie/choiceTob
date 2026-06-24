@@ -87,6 +87,13 @@ export default function AdminProductsPage() {
     color_hex: "",
     color_season_code: "",
     style_conclusion: "",
+    // 商品参数
+    material: "",
+    sizes: "",
+    origin: "",
+    care_instructions: "",
+    weight: "",
+    brand: "",
   });
 
   const supabase = createClient();
@@ -739,20 +746,46 @@ export default function AdminProductsPage() {
                   placeholder="0"
                 />
               </div>
-              {/* 封面图 */}
+              {/* 封面图 - 支持上传和URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  封面图URL
+                  封面图
                 </label>
-                <input
-                  type="text"
-                  value={form.cover_image}
-                  onChange={(e) =>
-                    setForm({ ...form, cover_image: e.target.value })
-                  }
-                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="https://..."
-                />
+                <div className="flex gap-2 items-start">
+                  <input
+                    type="text"
+                    value={form.cover_image}
+                    onChange={(e) =>
+                      setForm({ ...form, cover_image: e.target.value })
+                    }
+                    className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="https://..."
+                  />
+                  <label className="shrink-0 w-10 h-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                    {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
+                    <input type="file" accept="image/*" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
+                      setUploading(true);
+                      try {
+                        const supabase = createClient();
+                        const ext = file.name.split('.').pop();
+                        const fileName = `cover_${Date.now()}.${ext}`;
+                        const { error } = await supabase.storage.from("products").upload(fileName, file);
+                        if (error) throw error;
+                        const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
+                        setForm({ ...form, cover_image: urlData.publicUrl });
+                      } catch (err) { console.error(err); alert("上传失败"); }
+                      setUploading(false);
+                    }} className="hidden" />
+                  </label>
+                  {form.cover_image && (
+                    <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden">
+                      <img src={form.cover_image} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* 商品图片上传 */}
@@ -991,7 +1024,83 @@ export default function AdminProductsPage() {
                   </select>
                 </div>
               </div>
-              {/* === 属性编码体系结束 === */}
+              {/* === 商品参数 === */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-primary mb-3">商品参数</h4>
+
+                {/* 材质 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">材质</label>
+                  <input
+                    type="text"
+                    value={form.material}
+                    onChange={(e) => setForm({ ...form, material: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：真丝、棉麻、聚酯纤维"
+                  />
+                </div>
+
+                {/* 尺码 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码表</label>
+                  <input
+                    type="text"
+                    value={form.sizes}
+                    onChange={(e) => setForm({ ...form, sizes: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：S/M/L/XL 或 均码"
+                  />
+                </div>
+
+                {/* 产地 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">产地</label>
+                  <input
+                    type="text"
+                    value={form.origin}
+                    onChange={(e) => setForm({ ...form, origin: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：杭州、广州"
+                  />
+                </div>
+
+                {/* 重量 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">重量（克）</label>
+                  <input
+                    type="number"
+                    value={form.weight}
+                    onChange={(e) => setForm({ ...form, weight: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：350"
+                  />
+                </div>
+
+                {/* 洗涤说明 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">洗涤说明</label>
+                  <textarea
+                    value={form.care_instructions}
+                    onChange={(e) => setForm({ ...form, care_instructions: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                    placeholder="如：手洗、不可漂白、阴凉处晾晒"
+                  />
+                </div>
+
+                {/* 品牌 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">品牌</label>
+                  <input
+                    type="text"
+                    value={form.brand}
+                    onChange={(e) => setForm({ ...form, brand: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：ZARA、优衣库"
+                  />
+                </div>
+              </div>
+              {/* === 商品参数结束 === */}
 
               <div className="flex items-center gap-2">
                 <input

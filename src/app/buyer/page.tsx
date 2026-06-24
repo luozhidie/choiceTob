@@ -19,8 +19,8 @@ import { useBuyerPageData } from "@/hooks/useBuyerPageData";
 import PaymentQRCode from "@/components/PaymentQRCode";
 import TabBar from "@/components/TabBar";
 
-/* ==================== 品类选项（静态兜底 + 动态合并）==================== */
-const STATIC_CATEGORY_OPTIONS = CATEGORIES.map((c) => ({ value: c.key, label: c.label }));
+/* ==================== 品类选项（只保留服装穿搭）==================== */
+const STATIC_CATEGORY_OPTIONS = CATEGORIES.filter((c) => c.key === "fashion" || c.key === "clothing" || c.key === "accessory").map((c) => ({ value: c.key, label: c.label }));
 
 /* ==================== 静态数据 ==================== */
 
@@ -263,6 +263,8 @@ export default function BuyerPage() {
     list = list.filter((p) => !["color_tools", "book", "pro_tool"].includes(p.category || ""));
     /* 只显示有分类的商品 */
     list = list.filter((p) => !!p.category);
+    /* 只显示服装穿搭类商品（fashion/clothing/accessory） */
+    list = list.filter((p) => ["fashion", "clothing", "accessory"].includes(p.category || ""));
     if (sourceFilter) list = list.filter((p) => p.source === sourceFilter);
     if (searchTerm.trim()) {
       const kw = searchTerm.toLowerCase();
