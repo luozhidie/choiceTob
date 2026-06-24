@@ -44,6 +44,7 @@ const menuGroups = [
     { label: "生成企划报告", href: "/admin/report" },
     { label: "商品管理", href: "/admin/products" },
     { label: "测款管理", href: "/admin/testing" },
+    { label: "轮播图管理", href: "/admin/banners" },
     { label: "爆款样衣", href: "/admin/hot-products" },
     { label: "爆款货盘", href: "/admin/hot-picks" },
     { label: "爆款图片", href: "/admin/hot-picks-images" },

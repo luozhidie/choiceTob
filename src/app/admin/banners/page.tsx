@@ -2,373 +2,387 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Upload,
-  Loader2,
-  Image as ImageIcon,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Image as ImageIcon } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface Banner {
   id: string;
   key: string;
+  image_url: string;
+  link_url: string | null;
   title: string | null;
-  image_url: string | null;
-  alt_text: string | null;
+  subtitle: string | null;
+  sort_order: number;
   is_active: boolean;
-  created_at: string;
-  updated_at: string;
 }
 
-export default function AdminBannersPage() {
+export default function BannersAdminPage() {
+  const supabase = createClient();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [form, setForm] = useState({
-    title: "",
-    image_url: "",
-    alt_text: "",
-    is_active: true,
-  });
-
-  const supabase = createClient();
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  // 加载 Banner 列表（只取 home_banner 开头的）
-  const fetchBanners = async () => {
+  // 加载轮播图配置
+  const loadBanners = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
         .from("site_assets")
         .select("*")
-        .ilike("key", "home_banner%")
-        .order("created_at", { ascending: false });
+        .like("key", "hero_banner%")
+        .order("sort_order", { ascending: true });
+
       if (error) throw error;
       setBanners(data || []);
-    } catch (err: any) {
-      showToast("error", "加载失败：" + err.message);
+    } catch (error: any) {
+      showToast("error", "加载失败：" + error.message);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchBanners(); }, []);
+  useEffect(() => {
+    loadBanners();
+  }, []);
 
-  const openForm = (banner?: Banner) => {
-    if (banner) {
-      setEditingBanner(banner);
-      setForm({
-        title: banner.title || "",
-        image_url: banner.image_url || "",
-        alt_text: banner.alt_text || "",
-        is_active: banner.is_active,
-      });
-    } else {
-      setEditingBanner(null);
-      setForm({ title: "", image_url: "", alt_text: "", is_active: true });
-    }
-    setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditingBanner(null);
-    setForm({ title: "", image_url: "", alt_text: "", is_active: true });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // 新增轮播图
+  const addBanner = async () => {
     try {
-      const payload = {
-        title: form.title || null,
-        image_url: form.image_url || null,
-        alt_text: form.alt_text || null,
-        is_active: form.is_active,
-        updated_at: new Date().toISOString(),
-      };
-
-      let error;
-      if (editingBanner) {
-        ({ error } = await supabase
-          .from("site_assets")
-          .update(payload)
-          .eq("id", editingBanner.id));
-      } else {
-        const key = `home_banner_${Date.now()}`;
-        ({ error } = await supabase
-          .from("site_assets")
-          .insert([{ ...payload, key, image_url: payload.image_url || "" }]));
-      }
+      const newKey = `hero_banner_${Date.now()}`;
+      const { data, error } = await supabase
+        .from("site_assets")
+        .insert({
+          key: newKey,
+          image_url: "",
+          link_url: null,
+          title: "",
+          subtitle: "",
+          sort_order: banners.length,
+          is_active: true,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
-      showToast("success", editingBanner ? "更新成功！" : "创建成功！");
-      closeForm();
-      fetchBanners();
-    } catch (err: any) {
-      showToast("error", "操作失败：" + err.message);
+      setBanners([...banners, data]);
+      showToast("success", "已添加，请填写信息并上传图片");
+    } catch (error: any) {
+      showToast("error", "添加失败：" + error.message);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("确定要删除这个 Banner 吗？")) return;
-    try {
-      const { error } = await supabase.from("site_assets").delete().eq("id", id);
-      if (error) throw error;
-      showToast("success", "删除成功！");
-      fetchBanners();
-    } catch (err: any) {
-      showToast("error", "删除失败：" + err.message);
-    }
-  };
-
-  const toggleActive = async (banner: Banner) => {
+  // 更新轮播图
+  const updateBanner = async (id: string, updates: Partial<Banner>) => {
     try {
       const { error } = await supabase
         .from("site_assets")
-        .update({ is_active: !banner.is_active, updated_at: new Date().toISOString() })
-        .eq("id", banner.id);
+        .update(updates)
+        .eq("id", id);
+
       if (error) throw error;
-      fetchBanners();
-    } catch (err: any) {
-      showToast("error", "操作失败：" + err.message);
+      setBanners(banners.map(b => b.id === id ? { ...b, ...updates } : b));
+    } catch (error: any) {
+      showToast("error", "更新失败：" + error.message);
     }
   };
 
-  const handleImageUpload = async (file: File) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      showToast("error", "图片不能超过 10MB");
-      return;
-    }
-
-    setUploading(true);
+  // 删除轮播图
+  const deleteBanner = async (id: string) => {
+    if (!confirm("确定要删除这张轮播图吗？")) return;
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const fileName = `banners/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("site-assets").upload(fileName, file);
-      if (upErr) throw upErr;
+      const { error } = await supabase
+        .from("site_assets")
+        .delete()
+        .eq("id", id);
 
-      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(fileName);
-      setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
-      showToast("success", "上传成功！");
-    } catch (err: any) {
-      showToast("error", "上传失败：" + err.message);
-    } finally {
-      setUploading(false);
+      if (error) throw error;
+      setBanners(banners.filter(b => b.id !== id));
+      showToast("success", "删除成功");
+    } catch (error: any) {
+      showToast("error", "删除失败：" + error.message);
     }
   };
 
-  return (
-    <div className="min-h-screen">
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className={`fixed top-6 right-6 z-50 px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg ${toast.type === "success" ? "bg-primary" : "bg-red-500"}`}
-          >
-            {toast.message}
-          </motion.div>
-        )}
-      </AnimatePresence>
+  // 上传图片
+  const uploadImage = async (bannerId: string, file: File) => {
+    setSaving(true);
+    try {
+      const filePath = `banners/${Date.now()}_${file.name}`;
+      const { data, error } = await supabase.storage
+        .from("products")
+        .upload(filePath, file, { cacheControl: "3600", upsert: false });
 
-      {/* 标题栏 */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-primary">Banner 轮播图管理</h1>
-          <p className="text-sm text-muted-foreground mt-1">管理首页轮播图，支持上传、启用/禁用</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={fetchBanners}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-primary bg-white border border-border rounded-lg hover:bg-muted transition-colors"
-          >
-            <Loader2 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} /> 刷新
-          </button>
-          <button onClick={() => openForm()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold hover:brightness-110 transition-all shadow-md shadow-accent/20"
-          >
-            <Plus className="w-4 h-4" /> 新增 Banner
-          </button>
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("products")
+        .getPublicUrl(filePath);
+
+      await updateBanner(bannerId, { image_url: urlData.publicUrl });
+      showToast("success", "图片上传成功！");
+    } catch (error: any) {
+      showToast("error", "上传失败：" + error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 上移/下移
+  const moveBanner = async (index: number, direction: "up" | "down") => {
+    const newBanners = [...banners];
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newBanners.length) return;
+
+    // 交换顺序
+    [newBanners[index], newBanners[targetIndex]] = [newBanners[targetIndex], newBanners[index]];
+
+    // 更新 sort_order
+    const updates = newBanners.map((b, i) => ({ ...b, sort_order: i }));
+    setBanners(updates);
+
+    // 保存到数据库
+    for (const banner of updates) {
+      await supabase
+        .from("site_assets")
+        .update({ sort_order: banner.sort_order })
+        .eq("id", banner.id);
+    }
+  };
+
+  // 显示提示
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+          <p className="mt-4 text-gray-500">加载中...</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Banner 列表 */}
-      {loading ? (
-        <div className="p-16 text-center">
-          <Loader2 className="w-10 h-10 animate-spin mx-auto text-accent mb-4" />
-          <p className="text-sm text-muted-foreground">加载中...</p>
-        </div>
-      ) : banners.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-border">
-          <ImageIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">暂无 Banner</h3>
-          <p className="text-sm text-muted-foreground mb-6">点击「新增 Banner」开始添加首页轮播图</p>
-          <button onClick={() => openForm()}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-semibold hover:brightness-110 transition-all"
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* 标题 */}
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+              <ImageIcon className="w-7 h-7 text-primary" />
+              轮播图管理
+            </h1>
+            <p className="text-gray-500 mt-2">配置首页大图区域的轮播广告图</p>
+          </div>
+          <button
+            onClick={addBanner}
+            className="px-5 py-2.5 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2"
           >
-            <Plus className="w-4 h-4" /> 新增 Banner
+            <Plus className="w-5 h-5" />
+            新增轮播图
           </button>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {banners.map((banner, index) => (
-            <motion.div key={banner.id}
-              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white rounded-xl border border-border p-4 flex items-center gap-4 hover:shadow-md transition-shadow"
+
+        {/* 轮播图列表 */}
+        {banners.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-2xl border border-gray-200">
+            <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500 mb-4">暂无轮播图</p>
+            <button
+              onClick={addBanner}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-xl hover:bg-primary/90 transition-colors"
             >
-              {/* 图片预览 */}
-              <div className="w-32 h-20 rounded-lg overflow-hidden bg-gray-100 shrink-0">
-                {banner.image_url ? (
-                  <img src={banner.image_url} alt={banner.alt_text || ""} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-gray-300" />
-                  </div>
-                )}
-              </div>
+              <Plus className="w-5 h-5" />
+              新增第一张轮播图
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {banners.map((banner, index) => (
+              <motion.div
+                key={banner.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden"
+              >
+                <div className="p-6">
+                  <div className="flex items-start gap-6">
+                    {/* 图片预览/上传 */}
+                    <div className="shrink-0">
+                      {banner.image_url ? (
+                        <div className="relative w-64 h-36 rounded-xl overflow-hidden bg-gray-100">
+                          <img
+                            src={banner.image_url}
+                            alt="轮播图"
+                            className="w-full h-full object-cover"
+                          />
+                          <label className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  uploadImage(banner.id, e.target.files[0]);
+                                }
+                              }}
+                              className="hidden"
+                            />
+                            <span className="text-white text-sm font-medium">点击更换图片</span>
+                          </label>
+                        </div>
+                      ) : (
+                        <label className="w-64 h-36 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              if (e.target.files?.[0]) {
+                                uploadImage(banner.id, e.target.files[0]);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <div className="text-center">
+                            <ImageIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                            <span className="text-sm text-gray-500">点击上传图片</span>
+                          </div>
+                        </label>
+                      )}
+                    </div>
 
-              {/* 信息 */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-semibold text-primary truncate">{banner.title || "未命名"}</h3>
-                  {banner.is_active ? (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">启用</span>
-                  ) : (
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">禁用</span>
-                  )}
-                </div>
-                <p className="text-xs text-gray-400 mt-1">{new Date(banner.created_at).toLocaleDateString("zh-CN")}</p>
-              </div>
+                    {/* 配置信息 */}
+                    <div className="flex-1 space-y-4">
+                      {/* 启用/停用 */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => updateBanner(banner.id, { is_active: !banner.is_active })}
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                              banner.is_active
+                                ? "bg-green-50 text-green-600"
+                                : "bg-gray-100 text-gray-400"
+                            }`}
+                          >
+                            {banner.is_active ? (
+                              <>
+                                <Eye className="w-4 h-4" />
+                                已启用
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-4 h-4" />
+                                已停用
+                              </>
+                            )}
+                          </button>
+                          <span className="text-xs text-gray-400">排序：{index + 1}</span>
+                        </div>
 
-              {/* 操作 */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => toggleActive(banner)}
-                  className={`p-2 rounded-lg transition-colors ${banner.is_active ? "text-green-600 hover:bg-green-50" : "text-gray-400 hover:bg-gray-100"}`}
-                  title={banner.is_active ? "禁用" : "启用"}
-                >
-                  {banner.is_active ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
-                <button onClick={() => openForm(banner)}
-                  className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors" title="编辑"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(banner.id)}
-                  className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors" title="删除"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      )}
-
-      {/* 新增/编辑表单弹窗 */}
-      <AnimatePresence>
-        {showForm && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={closeForm}
-          >
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="p-6 border-b border-border">
-                <h2 className="text-xl font-bold text-primary">
-                  {editingBanner ? "编辑 Banner" : "新增 Banner"}
-                </h2>
-              </div>
-
-              <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                {/* 标题 */}
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1.5">标题</label>
-                  <input type="text" value={form.title}
-                    onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm"
-                    placeholder="Banner 标题（可选）" />
-                </div>
-
-                {/* 图片上传 */}
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1.5">图片</label>
-                  <div className="space-y-3">
-                    {form.image_url && (
-                      <div className="w-full h-40 rounded-lg overflow-hidden bg-gray-100">
-                        <img src={form.image_url} alt="预览" className="w-full h-full object-cover" />
+                        {/* 排序按钮 */}
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => moveBanner(index, "up")}
+                            disabled={index === 0}
+                            className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ArrowUp className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => moveBanner(index, "down")}
+                            disabled={index === banners.length - 1}
+                            className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ArrowDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => deleteBanner(banner.id)}
+                            className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center gap-3">
-                      <label className="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="file" accept="image/jpeg,image/png,image/webp"
-                          onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ""; }}
-                          disabled={uploading} className="hidden" />
-                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">
-                          {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                          {uploading ? "上传中..." : "上传图片"}
-                        </span>
-                      </label>
-                      <span className="text-xs text-muted-foreground">或</span>
-                      <input type="text" value={form.image_url}
-                        onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))}
-                        className="flex-1 px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm"
-                        placeholder="输入图片 URL" />
+
+                      {/* 标题 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">标题（选填）</label>
+                        <input
+                          type="text"
+                          value={banner.title || ""}
+                          onChange={(e) => updateBanner(banner.id, { title: e.target.value })}
+                          placeholder="例如：爆款选品"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                        />
+                      </div>
+
+                      {/* 副标题 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">副标题（选填）</label>
+                        <input
+                          type="text"
+                          value={banner.subtitle || ""}
+                          onChange={(e) => updateBanner(banner.id, { subtitle: e.target.value })}
+                          placeholder="例如：拿货精选"
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                        />
+                      </div>
+
+                      {/* 跳转链接 */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">跳转链接（选填）</label>
+                        <input
+                          type="text"
+                          value={banner.link_url || ""}
+                          onChange={(e) => updateBanner(banner.id, { link_url: e.target.value || null })}
+                          placeholder="例如：/buyer 或 https://..."
+                          className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
-
-                {/* 替代文本 */}
-                <div>
-                  <label className="block text-sm font-medium text-primary mb-1.5">替代文本</label>
-                  <input type="text" value={form.alt_text}
-                    onChange={(e) => setForm((prev) => ({ ...prev, alt_text: e.target.value }))}
-                    className="w-full px-4 py-2.5 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/30 text-sm"
-                    placeholder="图片无法显示时的文字描述（可选）" />
-                </div>
-
-                {/* 启用状态 */}
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={form.is_active}
-                      onChange={(e) => setForm((prev) => ({ ...prev, is_active: e.target.checked }))}
-                      className="w-4 h-4 rounded border-border text-accent focus:ring-accent/30" />
-                    <span className="text-sm text-primary">启用</span>
-                  </label>
-                </div>
-
-                {/* 按钮 */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
-                  <button type="button" onClick={closeForm}
-                    className="px-5 py-2.5 text-sm font-medium text-primary bg-white border border-border rounded-lg hover:bg-muted transition-colors"
-                  >取消</button>
-                  <button type="submit"
-                    className="px-5 py-2.5 text-sm font-medium text-white bg-accent rounded-lg hover:brightness-110 transition-all shadow-md shadow-accent/20"
-                  >
-                    {editingBanner ? "保存修改" : "创建 Banner"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
+              </motion.div>
+            ))}
+          </div>
         )}
-      </AnimatePresence>
+
+        {/* 使用说明 */}
+        <div className="mt-8 bg-blue-50 rounded-2xl p-6 border border-blue-100">
+          <h3 className="font-bold text-blue-900 mb-3">💡 使用说明</h3>
+          <ul className="space-y-2 text-sm text-blue-800">
+            <li><strong>图片尺寸</strong>：建议 1600×500px 或 16:5 比例，保证清晰度</li>
+            <li><strong>多张轮播</strong>：新增多张后，首页会自动轮播展示（4秒切换）</li>
+            <li><strong>跳转链接</strong>：可以填站内路径（如 /buyer）或完整 URL</li>
+            <li><strong>排序</strong>：用上下箭头调整展示顺序</li>
+            <li><strong>停用</strong>：不需要展示的轮播图可以暂停，不会删除</li>
+          </ul>
+        </div>
+
+        {/* Toast 提示 */}
+        {toast && (
+          <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 ${
+            toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+          }`}>
+            {toast.type === "success" ? "✅" : "❌"} {toast.message}
+          </div>
+        )}
+
+        {/* 上传 loading */}
+        {saving && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 flex items-center gap-4">
+              <div className="w-6 h-6 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <span className="text-gray-700 font-medium">上传中...</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
