@@ -268,7 +268,7 @@ export default function CampaignDetailPage() {
         <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
           <h3 className="font-bold text-blue-900 mb-3">💡 如何判断潜力爆款？</h3>
           <ul className="space-y-2 text-sm text-blue-800">
-            <li><strong>点击率高</strong>：说明主图吸引人，产品有吸引力（>3% 优秀）</li>
+            <li><strong>点击率高</strong>：说明主图吸引人，产品有吸引力（&gt;3% 优秀）</li>
             <li><strong>加购多</strong>：说明价格合理，用户有购买意向</li>
             <li><strong>询盘多</strong>：说明产品有市场需求，值得重点推广</li>
             <li><strong>下单转化高</strong>：说明产品综合表现好，是真正的爆款</li>

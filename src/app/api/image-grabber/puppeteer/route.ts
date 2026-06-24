@@ -36,9 +36,8 @@ async function launchBrowser(): Promise<Browser> {
     // Serverless 环境：使用 @sparticuz/chromium-min
     return await puppeteer.launch({
       args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
     });
   }
 }
