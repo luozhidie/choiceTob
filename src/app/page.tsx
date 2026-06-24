@@ -168,45 +168,40 @@ export default function Home() {
 
         {/* 内容层（叠在轮播图上） */}
         <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
-          {/* 顶部：标题 + 搜索栏 */}
-          <div className="px-4 pt-6 pointer-events-auto">
-            <div className="max-w-5xl mx-auto">
-              <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-3" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+          {/* 顶部：标题 + 搜索栏 + 分类标签 */}
+          <div className="px-4 pt-5 pointer-events-auto">
+            <div className="max-w-7xl mx-auto">
+              <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
                 <span className="text-[#d8a0c0] text-[10px] tracking-wider">✦</span>
                 <span className="text-white/70 text-[10px] font-medium tracking-widest">数据驱动．智选未来</span>
               </div>
-              <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(22px, 4vw, 36px)" }}>
+              <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
                 骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
               </h1>
-              <form onSubmit={handleSearch} className="flex gap-3 max-w-lg">
+              <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-3">
                 <div className="flex-1 relative">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                   <input
                     type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
                     placeholder="搜索商品名称、描述..."
-                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 text-sm"
+                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 text-sm"
                   />
                 </div>
-                <Link href="/buyer" className="px-6 py-3 bg-white text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
+                <Link href="/buyer" className="px-5 py-2.5 bg-white text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
                   浏览选品 <ArrowRight className="w-4 h-4" />
                 </Link>
               </form>
-            </div>
-          </div>
-
-          {/* 底部：分类标签 + 标题 + 按钮 */}
-          <div className="mt-auto">
-            <div className="max-w-7xl mx-auto px-4 pointer-events-auto">
-              <div className="flex items-center gap-1 py-3 overflow-x-auto scrollbar-hide">
+              {/* 分类标签栏 */}
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
                 {categories.map((cat) => (
                   <Link
                     key={cat.name}
                     href={cat.href}
                     onClick={() => setActiveCategoryName(cat.name)}
-                    className={`px-4 py-1.5 rounded-full text-sm whitespace-nowrap transition-all ${
+                    className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
                       activeCategoryName === cat.name
-                        ? "bg-white/90 backdrop-blur-sm shadow-md font-semibold text-gray-800"
-                        : "text-white/80 hover:bg-white/20 hover:text-white"
+                        ? "bg-white/90 backdrop-blur-sm shadow font-semibold text-gray-800"
+                        : "text-white/70 hover:bg-white/20 hover:text-white"
                     }`}
                   >
                     {cat.name}
@@ -214,45 +209,22 @@ export default function Home() {
                 ))}
               </div>
             </div>
+          </div>
 
-            <div className="max-w-7xl mx-auto px-4 pointer-events-auto">
-              <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-hide">
-                {currentSubCategories.map((sub) => {
-                  const isBuyer = activeCategoryName === "穿搭";
-                  const href = sub.subKey
-                    ? isBuyer
-                      ? `/buyer?category=${encodeURIComponent(activeCategoryName)}&subCategory=${encodeURIComponent(sub.subKey)}`
-                      : `/category/${encodeURIComponent(activeCategoryName)}?subCategory=${encodeURIComponent(sub.subKey)}`
-                    : isBuyer ? "/buyer" : `/category/${encodeURIComponent(activeCategoryName)}`;
-                  return (
-                    <Link
-                      key={sub.name}
-                      href={href}
-                      className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all ${
-                        sub.name === "精选"
-                          ? "bg-white/90 backdrop-blur-sm text-gray-800 font-semibold shadow-md"
-                          : "bg-white/15 backdrop-blur-sm text-white/80 border border-white/20 hover:bg-white/25"
-                      }`}
-                    >
-                      {sub.icon} <span>{sub.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="text-center text-white px-4 pt-6 pb-14 pointer-events-auto">
-              <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(24px, 4vw, 36px)" }}>
+          {/* 底部：标题 + 按钮 */}
+          <div className="mt-auto pointer-events-auto">
+            <div className="text-center text-white px-4 pb-12">
+              <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
                 爆款选品 · 拿货精选
               </h2>
-              <p className="text-white/85 mb-6 tracking-[0.2em] font-light" style={{ fontSize: "15px" }}>
+              <p className="text-white/80 mb-5 tracking-[0.2em] font-light" style={{ fontSize: "14px" }}>
                 骆芷蝶智选 · 专业推荐
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/buyer" className="px-9 py-3 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
+              <div className="flex gap-3 justify-center">
+                <Link href="/buyer" className="px-8 py-2.5 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
                   全部商品
                 </Link>
-                <Link href="/buyer" className="px-9 py-3 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2">
+                <Link href="/buyer" className="px-8 py-2.5 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2">
                   爆款安利 <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

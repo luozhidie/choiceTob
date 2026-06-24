@@ -178,47 +178,8 @@ export default function HeroCarousel() {
         )}
       </div>
 
-      {/* 遮罩层 - 让文字更清晰 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
-      {/* 内容区 - 标题、描述、按钮 */}
-      <div className="absolute inset-0 z-20 flex flex-col justify-end pb-16 px-5">
-        <div className="max-w-lg mx-auto text-center">
-          {/* 标题 */}
-          {currentBanner.title && (
-            <h2 className="text-white font-bold drop-shadow-lg mb-2 leading-tight"
-               style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
-              {currentBanner.title}
-            </h2>
-          )}
-          
-          {/* 副标题/描述 */}
-          {currentBanner.subtitle && (
-            <p className="text-white/90 mb-5 tracking-wide drop-shadow-md"
-               style={{ fontSize: "clamp(13px, 2vw, 16px)" }}>
-              {currentBanner.subtitle}
-            </p>
-          )}
-          
-          {/* 按钮 */}
-          {currentBanner.button_text && (
-            renderLink(
-              <span className="inline-flex items-center gap-2 px-8 py-3 bg-white text-gray-900 font-bold rounded-full hover:bg-gray-100 transition-colors shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 active:translate-y-0">
-                {currentBanner.button_text}
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-              </span>,
-              currentBanner.link_url
-            )
-          )}
-
-          {/* 如果没有按钮但有链接，显示小提示 */}
-          {!currentBanner.button_text && currentBanner.link_url && (
-            <span className="text-white/50 text-xs mt-2 inline-block px-3 py-1 rounded-full border border-white/30">
-              点击查看详情 ↓
-            </span>
-          )}
-        </div>
-      </div>
+      {/* 遮罩层 - 让叠在上面的文字更清晰 */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
 
       {/* 左右箭头 */}
       {banners.length > 1 && (
