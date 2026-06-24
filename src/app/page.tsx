@@ -291,18 +291,6 @@ export default function Home() {
         )}
       </section>
 
-      {/* ====== 底部 CTA ====== */}
-      <section className="mt-8 bg-gradient-to-b from-[#fef9f0] to-[#fdf5e6] py-14 px-4 pb-20">
-        <div className="max-w-md mx-auto text-center">
-          <div className="mb-4 inline-flex justify-center">
-            <Sparkles className="w-7 h-7 text-orange-400" />
-          </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">立即拿货，享受批发价</h3>
-          <p className="text-gray-500 text-sm">开通查看价格会员，满3件起享批发底价</p>
-          <div className="mt-3 w-24 h-0.5 bg-gray-300 mx-auto rounded-full"></div>
-        </div>
-      </section>
-
       <TabBar />
     </div>
   );
