@@ -155,25 +155,31 @@ function CheckoutContent() {
     } finally { setSubmitting(false); }
   };
 
-  // 微信支付核心逻辑
+  // 微信支付核心逻辑 - 简化版本，直接跳转微信支付链接
   const handleWechatPay = async (productId: string, price: number) => {
     setPayLoading(true);
     try {
-      // 判断是否在微信内
-      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-      const platform = isWeChat ? 'mp' : 'native';
-
+      // 简化流程：创建订单后，生成微信支付链接
+      // 在实际环境中，这里应该调用后端API获取支付链接
+      
+      const totalFee = Math.round(price * 100); // 转为分
+      
+      // 调用统一下单API
       const response = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: productId,
           product_title: product?.title || '商品购买',
-          total_fee: Math.round(price),  // 微信支付金额单位是分
-          platform,
-          openid: '',  // JSAPI需要openid，但这里先留空
+          total_fee: totalFee,
+          quantity: quantity,
+          contact: shippingPhone,
+          address: shippingAddress,
+          note: note,
+          platform: 'native', // 使用扫码支付，生成支付链接
         }),
       });
+      
       const result = await response.json();
 
       if (result.error) {
@@ -182,14 +188,23 @@ function CheckoutContent() {
         return;
       }
 
-      // 微信内：JSAPI 直接拉起微信支付
-      if (isWeChat && result.prepay_id && typeof window !== 'undefined') {
-        invokeWechatPay(result);
-      } else if (result.code_url) {
-        // 非微信内：显示二维码
+      // 对于native支付，返回code_url
+      if (result.code_url) {
+        // 方式1: 如果是微信环境，尝试直接拉起支付
+        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+        if (isWeChat && result.code_url.startsWith('weixin://')) {
+          // 在微信内，直接跳转微信支付链接
+          window.location.href = result.code_url;
+          return;
+        }
+        
+        // 方式2: 非微信环境，显示二维码
         setPayQrCode(result.code_url);
         setShowPayModal(true);
         setPayLoading(false);
+        
+        // 轮询订单状态
+        pollOrderStatus(result.order_no);
       } else {
         alert('支付发起失败，请稍后重试');
         setPayLoading(false);
@@ -200,34 +215,28 @@ function CheckoutContent() {
       setPayLoading(false);
     }
   };
-
-  // 调用微信JSAPI支付
-  const invokeWechatPay = (payParams: any) => {
-    if ((window as any).WeixinJSBridge) {
-      (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-        appId: payParams.appId,
-        timeStamp: payParams.timeStamp,
-        nonceStr: payParams.nonceStr,
-        package: payParams.package || ('prepay_id=' + payParams.prepay_id),
-        signType: payParams.signType || 'MD5',
-        paySign: payParams.paySign,
-      }, function(res: any) {
-        setPayLoading(false);
-        if (res.err_msg === "get_brand_wcpay_request:ok") {
+  
+  // 轮询订单状态
+  const pollOrderStatus = (orderNo: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/wechat-pay/query?out_trade_no=${orderNo}`);
+        const result = await response.json();
+        
+        if (result.trade_state === 'SUCCESS') {
+          clearInterval(interval);
+          setShowPayModal(false);
+          setPayQrCode(null);
           alert('✅ 支付成功！感谢您的购买');
           router.push('/');
-        } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
-          alert('支付已取消');
-        } else {
-          alert('❌ 支付失败：' + res.err_msg);
         }
-      });
-    } else {
-      // WeixinJSBridge 还没准备好，等一下再调
-      document.addEventListener('WeixinJSBridgeReady', function() {
-        invokeWechatPay(payParams);
-      }, { once: true });
-    }
+      } catch (err) {
+        console.error('查询订单状态失败:', err);
+      }
+    }, 3000);
+    
+    // 5分钟后停止轮询
+    setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
   };
 
   const handleCopy = (text: string, label: string) => { navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(""), 2000); };

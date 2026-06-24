@@ -206,21 +206,87 @@ export default function DisplayPage() {
     if (!user) { router.push(`/login?redirect=/display`); return; }
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("membership_orders").insert([{
+      // 1. 创建订单
+      const planName = selectedDailyPlan === "yearly" ? "每日搭配灵感·年度订阅" : "每日搭配灵感·月度订阅";
+      const planPrice = selectedDailyPlan === "yearly" ? 1198000 : 99900;
+      
+      const { data: orderData, error } = await supabase.from("membership_orders").insert([{
         user_id: user.id,
         plan_id: "daily_looks",
-        plan_name: selectedDailyPlan === "yearly" ? "每日搭配灵感·年度订阅" : "每日搭配灵感·月度订阅",
-        price: selectedDailyPlan === "yearly" ? 1198000 : 99900,
-        payment_method: payMethod,
+        plan_name: planName,
+        price: planPrice,
+        payment_method: "wechat_pay",
         status: "pending",
-      }]);
+      }]).select().single();
+      
       if (error) throw error;
-      setPayStep("pending");
+
+      // 2. 调用微信支付API
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: "daily_looks",
+          product_title: planName,
+          total_fee: planPrice,
+          quantity: 1,
+          platform: 'native',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert('支付发起失败：' + result.error);
+        setSubmitting(false);
+        return;
+      }
+
+      // 3. 判断是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      
+      if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+        // 在微信内，直接跳转微信支付链接
+        window.location.href = result.code_url;
+      } else if (result.code_url) {
+        // 非微信内，显示二维码
+        setPayStep("scan");
+        setPaymentUrl(result.code_url);
+        // 开始轮询订单状态
+        pollOrderStatus(orderData.id);
+      } else {
+        alert('支付发起失败，请稍后重试');
+        setSubmitting(false);
+      }
     } catch (err: any) {
       alert("提交失败：" + err.message);
-    } finally {
       setSubmitting(false);
     }
+  };
+
+  // 轮询订单状态
+  const pollOrderStatus = (orderId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("membership_orders")
+          .select("status")
+          .eq("id", orderId)
+          .single();
+        
+        if (data && data.status === 'confirmed') {
+          clearInterval(interval);
+          setPayStep("success");
+          setIsSubscribed(true);
+          setSubmitting(false);
+        }
+      } catch (err) {
+        console.error('查询订单状态失败:', err);
+      }
+    }, 3000);
+    
+    // 5分钟后停止轮询
+    setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
   };
 
   const fetchAllData = async () => {

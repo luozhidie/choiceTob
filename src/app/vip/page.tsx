@@ -275,28 +275,92 @@ export default function VIPPage() {
     setPayMethod("wechat");
   };
 
-  // 用户确认已支付，创建订单
+  // 用户确认支付，创建订单并跳转微信支付
   const handleSubmitPaid = async () => {
     if (!selectedPlan || !user) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase.from("membership_orders").insert([
+      // 1. 创建会员订单
+      const { data: orderData, error } = await supabase.from("membership_orders").insert([
         {
           user_id: user.id,
           plan_id: selectedPlan.id,
           plan_name: selectedPlan.name,
           price: selectedPlan.price,
-          payment_method: payMethod,
+          payment_method: "wechat_pay",
           status: "pending",
         },
-      ]);
+      ]).select().single();
+      
       if (error) throw error;
-      setPayStep("pending");
+
+      // 2. 调用微信支付API
+      const totalFee = selectedPlan.price; // 单位已经是分
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: selectedPlan.id,
+          product_title: selectedPlan.name,
+          total_fee: totalFee,
+          quantity: 1,
+          platform: 'native', // 使用native支付(扫码)
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert('支付发起失败：' + result.error);
+        setSubmitting(false);
+        return;
+      }
+
+      // 3. 判断是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      
+      if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+        // 在微信内，直接跳转微信支付链接
+        window.location.href = result.code_url;
+      } else if (result.code_url) {
+        // 非微信内，显示二维码
+        setPayStep("scan");
+        // 保存支付链接,用于显示二维码
+        setPaymentUrl(result.code_url);
+        // 开始轮询订单状态
+        pollOrderStatus(orderData.id || result.order_no);
+      } else {
+        alert('支付发起失败，请稍后重试');
+        setSubmitting(false);
+      }
     } catch (err: any) {
       alert("提交失败：" + err.message);
-    } finally {
       setSubmitting(false);
     }
+  };
+
+  // 轮询订单状态
+  const pollOrderStatus = (orderId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("membership_orders")
+          .select("status")
+          .eq("id", orderId)
+          .single();
+        
+        if (data && data.status === 'confirmed') {
+          clearInterval(interval);
+          setPayStep("success");
+          setSubmitting(false);
+        }
+      } catch (err) {
+        console.error('查询订单状态失败:', err);
+      }
+    }, 3000);
+    
+    // 5分钟后停止轮询
+    setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
   };
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;

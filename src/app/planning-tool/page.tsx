@@ -149,37 +149,99 @@ export default function PlanningToolPage() {
   const getColorLabel = (v: string) => COLOR_PREFERENCES.find(c => c.value === v)?.label || v;
   const getStyleLabel = (v: string) => MARKET_STYLES.find(s => s.value === v)?.label || v;
 
-  /* 模拟支付 */
+  /* 微信支付 */
   const handlePay = async () => {
     if (!user) return;
     const amount = isBasicMember ? AI_REPORT_MEMBER_PRICE : AI_REPORT_PRICE;
+    setGenerating(true); // 使用generating状态显示加载
     try {
-      // 创建支付记录（模拟支付，直接标记paid）
+      // 1. 创建支付记录
       const { data: payment, error } = await supabase
         .from("planning_payments")
         .insert([{
           user_id: user.id,
           amount,
-          status: "paid",
-          paid_at: new Date().toISOString(),
-          payment_method: "mock",
-          mock_paid: true,
+          status: "pending",
+          payment_method: "wechat_pay",
         }])
         .select("id")
         .single();
 
       if (error) {
-        console.error("支付失败:", error);
-        alert("支付失败，请重试");
+        console.error("创建支付记录失败:", error);
+        alert("支付发起失败，请重试");
+        setGenerating(false);
         return;
       }
 
-      setHasPaid(true);
-      setStep("form");
+      // 2. 调用微信支付API
+      const response = await fetch('/api/wechat-pay/unified-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: "planning_report",
+          product_title: "商品企划报告",
+          total_fee: amount,
+          quantity: 1,
+          platform: 'native',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.error) {
+        alert('支付发起失败：' + result.error);
+        setGenerating(false);
+        return;
+      }
+
+      // 3. 判断是否在微信内
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      
+      if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+        // 在微信内，直接跳转微信支付链接
+        window.location.href = result.code_url;
+      } else if (result.code_url) {
+        // 非微信内，显示二维码
+        setPaymentUrl(result.code_url);
+        setShowPayModal(true);
+        // 开始轮询订单状态
+        pollPaymentStatus(payment.id);
+      } else {
+        alert('支付发起失败，请稍后重试');
+        setGenerating(false);
+      }
     } catch (err) {
       console.error("支付异常:", err);
       alert("支付异常，请重试");
+      setGenerating(false);
     }
+  };
+
+  // 轮询支付状态
+  const pollPaymentStatus = (paymentId: string) => {
+    const interval = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("planning_payments")
+          .select("status")
+          .eq("id", paymentId)
+          .single();
+        
+        if (data && data.status === 'paid') {
+          clearInterval(interval);
+          setHasPaid(true);
+          setStep("form");
+          setGenerating(false);
+          setShowPayModal(false);
+        }
+      } catch (err) {
+        console.error('查询支付状态失败:', err);
+      }
+    }, 3000);
+    
+    // 5分钟后停止轮询
+    setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
   };
 
   /* 提交资料 → 调用AI生成报告 */
