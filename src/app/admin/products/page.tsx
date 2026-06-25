@@ -232,23 +232,44 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此商品？")) return;
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) showToast("error", "删除失败");
-    else {
-      showToast("success", "已删除");
-      fetchProducts();
+    // 改用后端API删除（绕过RLS）
+    try {
+      const res = await fetch("/api/admin/products/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "products" }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        showToast("error", `删除失败：${json.error}`);
+      } else {
+        showToast("success", "已删除");
+        fetchProducts();
+      }
+    } catch (err: any) {
+      showToast("error", `删除失败：${err.message}`);
     }
   };
 
   const handleTogglePublish = async (product: Product) => {
-    const { error } = await supabase
-      .from("products")
-      .update({ is_published: !product.is_published })
-      .eq("id", product.id);
-    if (error) showToast("error", "操作失败");
-    else {
-      showToast("success", product.is_published ? "已下架" : "已发布");
-      fetchProducts();
+    // 改用后端API更新（绕过RLS）
+    try {
+      const res = await fetch("/api/admin/products/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: product.id, table: "products", data: { is_published: !product.is_published } }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        showToast("error", `操作失败：${json.error}`);
+      } else {
+        showToast("success", product.is_published ? "已下架" : "已发布");
+        fetchProducts();
+      }
+    } catch (err: any) {
+      showToast("error", `操作失败：${err.message}`);
     }
   };
 
