@@ -244,8 +244,7 @@ function CheckoutContent() {
       // 2. 调用微信支付统一下单API
       // 注意：数据库价格单位已经是"分"，不需要再转换
       const totalFeeInFen = Math.round(totalAmount);
-      // 统一用 Native 支付：微信内跳转 weixin:// 链接拉起支付；外部浏览器显示二维码
-      const platform = 'native';
+      console.log('[支付] 发起请求, 金额(分):', totalFeeInFen, '商品:', product.title);
 
       const payResponse = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
@@ -255,26 +254,51 @@ function CheckoutContent() {
           product_title: product.title,
           total_fee: totalFeeInFen,
           quantity: quantity,
-          platform: platform,
+          platform: 'native',
         }),
       });
 
       const payResult = await payResponse.json();
+      console.log('[支付] API返回:', JSON.stringify(payResult));
 
       if (payResult.error) {
-        // 微信API失败 → 提示用户
-        console.error('[微信支付] API调用失败:', payResult.error, payResult);
-        alert(`微信支付暂时不可用：${payResult.error}\n\n请联系管理员配置微信支付环境变量（WECHAT_MCHID、WECHAT_APIV2_KEY）`);
+        alert(`支付失败：${payResult.error}\n\n如果反复出现此错误，请联系客服`);
         setSubmitting(false);
         return;
       }
 
       // 微信支付API调用成功
       if (payResult.code_url) {
+        console.log('[支付] 拿到code_url:', payResult.code_url);
         const isWeChatBrowser = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
         if (isWeChatBrowser) {
-          // 微信内浏览器 → 直接跳转 weixin:// 链接，拉起微信支付
-          window.location.href = payResult.code_url;
+          // 微信内浏览器 → 用多种方式尝试拉起微信支付（weixin:// 协议链接）
+          const codeUrl = payResult.code_url;
+
+          // 显示"正在调起支付"提示
+          alert('正在调起微信支付，请稍候...');
+
+          // 方式1：创建隐藏 a 标签并点击（最可靠）
+          const linkEl = document.createElement('a');
+          linkEl.href = codeUrl;
+          linkEl.style.display = 'none';
+          document.body.appendChild(linkEl);
+          linkEl.click();
+          document.body.removeChild(linkEl);
+
+          // 方式2：备用 - location 跳转
+          setTimeout(() => {
+            try { window.location.href = codeUrl; } catch (e) {}
+          }, 300);
+
+          // 方式3：最终备用 - 如果3秒还没跳转成功，显示二维码
+          setTimeout(() => {
+            setPayQrCode(codeUrl);
+            setShowPayModal(true);
+            setCurrentOrderNo(payResult.order_no);
+            setSubmitting(false);
+          }, 3000);
+
           return;
         }
         // 外部浏览器 → 显示二维码
@@ -285,6 +309,7 @@ function CheckoutContent() {
       }
 
       // 其他情况：跳转到成功页（降级）
+      alert('订单已创建！正在跳转...');
       router.push(`/checkout/success?amount=${totalAmount}&title=${encodeURIComponent(product.title || '商品')}`);
 
     } catch (err: any) {
