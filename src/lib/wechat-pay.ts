@@ -20,13 +20,15 @@ export const WECHAT_MINI_APPID = process.env.WECHAT_MINI_APPID || "wxe0ffec0a398
 export const WECHAT_MP_APPID = process.env.WECHAT_MP_APPID || "wxe0ffec0a398de8b7";
 
 // 支付平台类型
-export type PayPlatform = 'mini' | 'mp' | 'native';
+export type PayPlatform = 'mini' | 'mp' | 'native' | 'mweb';
 
 // 获取对应平台的appid
 function getAppId(platform: PayPlatform): string {
   switch (platform) {
     case 'mini': return WECHAT_MINI_APPID;
-    case 'mp': return WECHAT_MP_APPID;
+    case 'mp':
+    case 'mweb':
+      return WECHAT_MP_APPID;
     case 'native':
     default:
       // NATIVE默认用小程序appid
@@ -98,6 +100,7 @@ export async function unifiedOrder(params: {
     mini: 'JSAPI',
     mp: 'JSAPI',
     native: 'NATIVE',
+    mweb: 'MWEB',
   };
 
   const data: Record<string, string> = {

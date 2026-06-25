@@ -63,6 +63,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (platform === 'mweb') {
+      // H5支付 - 返回支付链接（微信内外都能用）
+      return NextResponse.json({
+        mweb_url: wxResult.mweb_url,
+        order_no,
+        prepay_id,
+      });
+    }
+
     // JSAPI支付（小程序/公众号）- 返回调起支付的参数
     const payParams = generateJsapiPayParams(prepay_id, platform as PayPlatform);
 

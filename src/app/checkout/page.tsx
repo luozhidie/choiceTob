@@ -242,9 +242,9 @@ function CheckoutContent() {
       }
 
       // 2. 调用微信支付统一下单API
-      // 金额单位：分
-      const totalFeeInFen = Math.round(totalAmount * 100);
-      // 统一用 Native 支付（二维码），微信内外都一样
+      // 注意：数据库价格单位已经是"分"，不需要再转换
+      const totalFeeInFen = Math.round(totalAmount);
+      // 统一用 Native 支付：微信内跳转 weixin:// 链接拉起支付；外部浏览器显示二维码
       const platform = 'native';
 
       const payResponse = await fetch('/api/wechat-pay/unified-order', {
@@ -270,7 +270,20 @@ function CheckoutContent() {
       }
 
       // 微信支付API调用成功
+      // 微信支付API调用成功
       if (payResult.code_url) {
+        const isWeChatBrowser = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
+        if (isWeChatBrowser) {
+          // 微信内浏览器 → 直接跳转 weixin:// 链接，拉起微信支付
+          window.location.href = payResult.code_url;
+          return;
+        }
+        // 外部浏览器 → 显示二维码
+        setPayQrCode(payResult.code_url);
+        setShowPayModal(true);
+        setCurrentOrderNo(payResult.order_no);
+        return;
+      }
         // Native支付（非微信浏览器）→ 显示二维码弹窗
         setPayQrCode(payResult.code_url);
         setShowPayModal(true);
@@ -483,9 +496,15 @@ function CheckoutContent() {
               </div>
 
               {/* 支付方式提示 */}
-              <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
-                💡 点击下方按钮后，将显示微信付款二维码，请用手机扫码完成支付
-              </p>
+              {typeof window !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent) ? (
+                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
+                  ✓ 微信环境检测成功 → 点击"立即支付"将直接拉起微信支付（输入密码即可完成）
+                </p>
+              ) : (
+                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
+                  💡 点击下方按钮后将显示付款二维码，请用微信扫码支付
+                </p>
+              )}
             </div>
           </div>
 
