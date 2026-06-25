@@ -269,38 +269,105 @@ function CheckoutContent() {
 
       // 微信支付API调用成功
       if (payResult.code_url) {
-        console.log('[支付] 拿到code_url:', payResult.code_url);
         const isWeChatBrowser = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
+
+        if (isWeChatBrowser && payResult.jsapi) {
+          // ★ 微信内浏览器 → 用 WeixinJSBridge 直接拉起支付（输入密码界面）
+          const jsapi = payResult.jsapi;
+          console.log('[支付] 微信内环境，尝试用 WeixinJSBridge 直接拉起支付', jsapi);
+
+          // 显示加载提示
+          const loadingEl = document.createElement('div');
+          loadingEl.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:99999"><div style="background:white;border-radius:16px;padding:30px;text-align:center"><div style="font-size:40px;margin-bottom:10px">💳</div><div style="font-size:16px;font-weight:bold;color:#333">正在拉起微信支付</div><div style="font-size:13px;color:#999;margin-top:8px">请稍候，即将跳转到支付界面...</div></div></div>';
+          document.body.appendChild(loadingEl);
+
+          // 尝试用 WeixinJSBridge 调起支付
+          const tryInvokePay = () => {
+            if ((window as any).WeixinJSBridge) {
+              (window as any).WeixinJSBridge.invoke(
+                'getBrandWCPayRequest',
+                {
+                  appId: jsapi.appId,
+                  timeStamp: jsapi.timeStamp,
+                  nonceStr: jsapi.nonceStr,
+                  "package": jsapi.package,
+                  signType: jsapi.signType || 'MD5',
+                  paySign: jsapi.paySign,
+                },
+                (res: any) => {
+                  document.body.removeChild(loadingEl);
+                  if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                    alert('✅ 支付成功！');
+                    router.push('/');
+                  } else if (res.err_msg === 'get_brand_wcpay_request:cancel') {
+                    alert('您已取消支付');
+                    setSubmitting(false);
+                  } else {
+                    console.error('[支付] WeixinJSBridge 返回:', res.err_msg);
+                    // JSAPI 失败 → 降级显示二维码
+                    setPayQrCode(payResult.code_url);
+                    setShowPayModal(true);
+                    setCurrentOrderNo(payResult.order_no);
+                    setSubmitting(false);
+                  }
+                }
+              );
+            } else {
+              // WeixinJSBridge 还没准备好，等待后重试
+              setTimeout(() => {
+                if ((window as any).WeixinJSBridge) {
+                  tryInvokePay();
+                } else {
+                  document.body.removeChild(loadingEl);
+                  // 最终降级：显示二维码
+                  setPayQrCode(payResult.code_url);
+                  setShowPayModal(true);
+                  setCurrentOrderNo(payResult.order_no);
+                  setSubmitting(false);
+                }
+              }, 500);
+            }
+          };
+
+          // 等待 WeixinJSBridge 加载完成
+          if ((window as any).WeixinJSBridge) {
+            tryInvokePay();
+          } else {
+            document.addEventListener('WeixinJSBridgeReady', tryInvokePay, false);
+            // 超时兜底：3秒后如果还没 ready，降级到二维码
+            setTimeout(() => {
+              try { document.removeEventListener('WeixinJSBridgeReady', tryInvokePay); } catch(e) {}
+              if (loadingEl.parentNode) {
+                document.body.removeChild(loadingEl);
+                setPayQrCode(payResult.code_url);
+                setShowPayModal(true);
+                setCurrentOrderNo(payResult.order_no);
+                setSubmitting(false);
+              }
+            }, 3000);
+          }
+          return;
+        }
+
         if (isWeChatBrowser) {
-          // 微信内浏览器 → 用多种方式尝试拉起微信支付（weixin:// 协议链接）
+          // 微信内但无 JSAPI 参数 → 用 weixin:// 链接跳转
           const codeUrl = payResult.code_url;
-
-          // 显示"正在调起支付"提示
-          alert('正在调起微信支付，请稍候...');
-
-          // 方式1：创建隐藏 a 标签并点击（最可靠）
           const linkEl = document.createElement('a');
           linkEl.href = codeUrl;
           linkEl.style.display = 'none';
           document.body.appendChild(linkEl);
           linkEl.click();
           document.body.removeChild(linkEl);
-
-          // 方式2：备用 - location 跳转
-          setTimeout(() => {
-            try { window.location.href = codeUrl; } catch (e) {}
-          }, 300);
-
-          // 方式3：最终备用 - 如果3秒还没跳转成功，显示二维码
+          setTimeout(() => { try { window.location.href = codeUrl; } catch(e) {} }, 300);
           setTimeout(() => {
             setPayQrCode(codeUrl);
             setShowPayModal(true);
             setCurrentOrderNo(payResult.order_no);
             setSubmitting(false);
           }, 3000);
-
           return;
         }
+
         // 外部浏览器 → 显示二维码
         setPayQrCode(payResult.code_url);
         setShowPayModal(true);
