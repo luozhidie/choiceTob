@@ -35,7 +35,7 @@ export default function NewTestCampaignPage() {
       const { data, error } = await supabase
         .from("products")
         .select("id, title, cover_image, price")
-        .eq("is_active", true)
+        .eq("is_published", true)
         .ilike("title", `%${searchQuery}%`)
         .limit(10);
 
