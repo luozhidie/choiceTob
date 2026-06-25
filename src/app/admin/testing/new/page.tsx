@@ -118,6 +118,23 @@ export default function NewTestCampaignPage() {
       if (itemsError) throw itemsError;
 
       alert("测款任务创建成功！");
+      
+      // 生成分享链接（每个商品一个专属链接，用于发给客户测款）
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
+      const shareLinks = selectedProducts.map((p) => ({
+        title: p.title,
+        url: `${baseUrl}/shop/${p.id}?utm_campaign=${campaign.id}&utm_source=testing`,
+      }));
+      
+      // 把分享链接存到剪贴板（方便管理员直接粘贴发送）
+      const linksText = shareLinks.map((l) => `【${l.title}】\n${l.url}`).join("\n\n");
+      navigator.clipboard.writeText(linksText).then(() => {
+        alert(`✅ 测款任务创建成功！\n\n分享链接已复制到剪贴板，请直接粘贴发送给客户：\n\n${linksText}`);
+      }).catch(() => {
+        // 剪贴板失败，弹窗显示链接
+        alert(`✅ 测款任务创建成功！\n\n请复制以下链接发给客户测款：\n\n${linksText}`);
+      });
+      
       router.push(`/admin/testing/${campaign.id}`);
     } catch (error: any) {
       alert("创建失败: " + error.message);
