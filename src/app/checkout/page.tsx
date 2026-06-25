@@ -132,7 +132,6 @@ function CheckoutContent() {
         shipping_address: shippingAddress || shippingPhone,
         note: [
           `备注: ${note}`,
-          `支付方式: 微信支付`,
           `收货人: ${shippingName}`,
           `电话: ${shippingPhone}`,
           product.supplier_name ? `供应商: ${product.supplier_name}` : "",
@@ -161,8 +160,9 @@ function CheckoutContent() {
         await supabase.from("buyer_orders").insert([basicData]);
       }
 
-      // 2. 调用微信支付API
-      await handleWechatPay(product.id, totalAmt);
+      // 2. 订单创建成功 → 跳转到支付成功页/显示付款二维码
+      // 不再调用微信API（MCHID未配置），改为显示付款二维码
+      router.push(`/checkout/success?amount=${totalAmt}&title=${encodeURIComponent(product.title || '商品')}`);
     } catch (err) {
       console.error("提交订单失败:", err); alert("提交订单失败，请稍后重试或联系客服");
     } finally { setSubmitting(false); }

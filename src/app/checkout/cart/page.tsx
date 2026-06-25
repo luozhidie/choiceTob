@@ -82,8 +82,9 @@ export default function CartCheckoutPage() {
         await supabase.from("buyer_orders").insert([orderData]);
       }
 
-      // 调用微信支付（使用总金额）
-      await handleWechatPay('cart_' + Date.now(), totalPrice);
+      // 订单创建成功 → 跳转到付款页（不再调用微信API）
+      const title = items.length === 1 ? items[0].title : `购物车订单(${totalItems}件)`;
+      router.push(`/checkout/success?amount=${totalPrice}&title=${encodeURIComponent(title)}`);
     } catch (err) {
       console.error("提交订单失败:", err);
       alert("提交订单失败，请稍后重试");
