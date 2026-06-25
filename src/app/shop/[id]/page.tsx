@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Layers, Star,
   Clock, ShoppingCart, Share2, Copy, Check,
   Image as ImageIcon, MessageCircle, QrCode,
-  Lock,
+  Lock, LogIn, UserPlus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -53,7 +53,16 @@ export default function ProductDetailPage() {
   const [copied, setCopied] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
+  const [user, setUser] = useState<any>(null); // 用户登录状态
   const { addItem } = useCart();
+
+  // 检查用户登录状态
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      setUser(u || null);
+    });
+  }, []);
 
   // 获取商品数据
   useEffect(() => {
@@ -533,6 +542,11 @@ export default function ProductDetailPage() {
                 <button
                   onClick={() => {
                     if (!product) return;
+                    // 未登录 → 跳转登录
+                    if (!user) {
+                      router.push(`/login?redirect=/shop/${product.id}`);
+                      return;
+                    }
                     addItem({
                       id: product.id,
                       title: product.title,
@@ -549,6 +563,11 @@ export default function ProductDetailPage() {
                 </button>
                 <button
                   onClick={() => {
+                    // 未登录 → 跳转登录
+                    if (!user) {
+                      router.push(`/login?redirect=/shop/${product.id}`);
+                      return;
+                    }
                     if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
                     router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
                   }}

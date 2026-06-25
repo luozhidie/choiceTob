@@ -7,7 +7,7 @@ import { useCart } from "@/lib/cart-context";
 import { createClient } from "@/lib/supabase/client";
 import {
   ShoppingCart, Minus, Plus, Trash2, ArrowLeft,
-  MessageCircle, CheckCircle2, ShoppingBag
+  MessageCircle, CheckCircle2, ShoppingBag, LogIn, UserPlus
 } from "lucide-react";
 import { motion } from "framer-motion";
 import TabBar from "@/components/TabBar";
@@ -16,6 +16,18 @@ export default function CartCheckoutPage() {
   const router = useRouter();
   const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart();
   const supabase = createClient();
+
+  // 🔑 用户登录状态
+  const [user, setUser] = useState<any>(null);
+
+  // 检查登录状态
+  useEffect(() => {
+    let cancelled = false;
+    supabase.auth.getUser().then(({ data: { user: u } }) => {
+      if (!cancelled) setUser(u || null);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   // 表单状态
   const [shippingName, setShippingName] = useState("");
@@ -33,6 +45,11 @@ export default function CartCheckoutPage() {
   const handleSubmit = async () => {
     if (items.length === 0) {
       alert("购物车是空的");
+      return;
+    }
+    // 🔑 未登录 → 跳转登录
+    if (!user) {
+      router.push("/login?redirect=/checkout/cart");
       return;
     }
     if (!shippingName.trim() || !shippingPhone.trim()) {
@@ -354,7 +371,33 @@ export default function CartCheckoutPage() {
           </div>
         )}
       </motion.div>
-      <TabBar />
+
+      {/* 🔑 未登录时显示底部登录提示栏（类似1688） */}
+      {!user && (
+        <div className="fixed bottom-0 left-0 right-0 z-[60] bg-gradient-to-r from-orange-50 via-white to-primary/5 border-t border-orange-200 shadow-lg">
+          <div className="max-w-lg mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-accent to-primary flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-gray-800">Hi,欢迎光临骆芷蝶智选！</p>
+                <p className="text-xs text-gray-500">登录后享受会员价 · 快捷下单</p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push("/login?redirect=/checkout/cart")}
+              className="px-5 py-2 bg-accent text-white text-sm font-bold rounded-full hover:bg-accent/90 active:scale-95 transition-all shadow-md"
+            >
+              一键登录
+            </button>
+            {/* 关闭按钮 */}
+          </div>
+        </div>
+      )}
+
+      {/* 有TabBar的话，给底部留空间避免遮挡 */}
+      {user && <TabBar />}
     </div>
   );
 }

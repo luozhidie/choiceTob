@@ -17,6 +17,7 @@ import {
   ArrowRight,
   ChevronRight,
   Loader2,
+  LogIn, UserPlus, Sparkles, Smartphone,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -118,7 +119,96 @@ export default function MyPage() {
     );
   }
 
-  if (!user) return null;
+  // 🔑 未登录时显示登录引导页（类似1688）
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 via-accent/5 to-white">
+        <div className="max-w-md mx-auto px-4 pt-20 pb-24">
+          {/* 头像区域 */}
+          <div className="text-center mb-8">
+            <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center mb-4 shadow-lg">
+              <UserPlus className="w-12 h-12 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Hi，欢迎来到骆芷蝶智选</h1>
+            <p className="text-gray-500 text-sm">登录后享受会员价 · 查看订单 · 管理账户</p>
+          </div>
+
+          {/* 登录按钮 */}
+          <Link
+            href="/login?redirect=/my"
+            className="w-full flex items-center justify-center gap-3 py-4 bg-accent text-white text-lg font-bold rounded-2xl hover:bg-accent/90 active:scale-[0.98] transition-all shadow-lg shadow-accent/30 mb-4"
+          >
+            <LogIn className="w-6 h-6" />
+            登录此账号
+          </Link>
+
+          {/* 其他登录方式 */}
+          <p className="text-center text-sm text-gray-400 mb-6">其他方式</p>
+
+          <div className="grid grid-cols-3 gap-4 mb-8">
+            <Link
+              href="/login?redirect=/my&mode=phone"
+              className="flex flex-col items-center gap-2 py-4 bg-white rounded-xl border border-gray-200 hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                <Smartphone className="w-5 h-5 text-blue-500" />
+              </div>
+              <span className="text-xs font-medium text-gray-600">手机号</span>
+            </Link>
+            <Link
+              href="/login?redirect=/my&mode=password"
+              className="flex flex-col items-center gap-2 py-4 bg-white rounded-xl border border-gray-200 hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
+                <Package className="w-5 h-5 text-green-500" />
+              </div>
+              <span className="text-xs font-medium text-gray-600">密码</span>
+            </Link>
+            <Link
+              href="/register?redirect=/my"
+              className="flex flex-col items-center gap-2 py-4 bg-white rounded-xl border border-gray-200 hover:border-primary hover:shadow-md transition-all"
+            >
+              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                <UserPlus className="w-5 h-5 text-purple-500" />
+              </div>
+              <span className="text-xs font-medium text-gray-600">注册</span>
+            </Link>
+          </div>
+
+          {/* 功能介绍 */}
+          <div className="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Crown className="w-5 h-5 text-accent" /> 登录后可享受
+            </h3>
+            <div className="space-y-3">
+              {[
+                { icon: Package, title: "查看批发价", desc: "会员专属供货价格" },
+                { icon: ShoppingBag, title: "快捷下单", desc: "一键下单，微信支付" },
+                { icon: Truck, title: "订单追踪", desc: "实时查看物流状态" },
+                { icon: Crown, title: "会员权益", desc: "积分返现、专属折扣" },
+              ].map((item) => (
+                <div key={item.title} className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-primary/5 flex items-center justify-center shrink-0 mt-0.5">
+                    <item.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">{item.title}</p>
+                    <p className="text-xs text-gray-400">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 底部提示 */}
+          <p className="text-center text-xs text-gray-400 mt-6">
+            登录即表示同意《用户协议》和《隐私政策》
+          </p>
+        </div>
+        <TabBar />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

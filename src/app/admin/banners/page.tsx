@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Image as ImageIcon, Upload } from "lucide-react";
 import { motion } from "framer-motion";

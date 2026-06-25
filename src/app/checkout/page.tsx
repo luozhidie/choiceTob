@@ -54,6 +54,19 @@ function CheckoutContent() {
 
   const supabase = createClient();
 
+  // 🔑 登录检查：未登录立即跳转登录页
+  useEffect(() => {
+    let cancelled = false;
+    const checkLogin = async () => {
+      const { data: { user: u } } = await supabase.auth.getUser();
+      if (!u && !cancelled) {
+        router.push(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      }
+    };
+    checkLogin();
+    return () => { cancelled = true; };
+  }, []);
+
   useEffect(() => {
     if (!productId) { setLoading(false); return; }
     let cancelled = false;
