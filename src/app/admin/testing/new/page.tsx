@@ -27,20 +27,23 @@ export default function NewTestCampaignPage() {
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
 
-  // 搜索商品
+  // 搜索商品（通过后端API，绕过RLS）
   const searchProducts = async () => {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const { data, error } = await supabase
-        .from("products")
-        .select("id, title, cover_image, price")
-        .eq("is_published", true)
-        .ilike("title", `%${searchQuery}%`)
-        .limit(10);
-
-      if (error) throw error;
-      setSearchResults(data || []);
+      const res = await fetch("/api/admin/testing/search-products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ query: searchQuery.trim() }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSearchResults(json.products || []);
+      if ((json.products || []).length === 0) {
+        alert("没有找到相关商品，请尝试其他关键词");
+      }
     } catch (error: any) {
       alert("搜索失败: " + error.message);
     } finally {
