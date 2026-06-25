@@ -125,9 +125,15 @@ export default function TestCodesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此测试码？")) return;
-    const { error } = await supabase.from("test_codes").delete().eq("id", id);
-    if (error) {
-      showToast("error", "删除失败");
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "test_codes" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      showToast("error", "删除失败：" + json.error);
     } else {
       showToast("success", "已删除");
       fetchCodes();

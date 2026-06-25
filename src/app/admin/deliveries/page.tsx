@@ -172,9 +172,20 @@ export default function DeliveriesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此交付方案？")) return;
-    const { error } = await supabase.from("delivery_plans").delete().eq("id", id);
-    if (error) showToast("error", "删除失败");
-    else { showToast("success", "已删除"); fetchPlans(); }
+    try {
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "delivery_plans" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      showToast("success", "已删除");
+      fetchPlans();
+    } catch (err: any) {
+      showToast("error", "删除失败：" + err.message);
+    }
   };
 
   const handleStatusChange = async (id: string, newStatus: string) => {

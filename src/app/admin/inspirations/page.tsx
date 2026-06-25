@@ -122,8 +122,14 @@ export default function AdminInspirationsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个搭配灵感吗？")) return;
     try {
-      const { error } = await supabase.from("outfit_matches").delete().eq("id", id);
-      if (error) throw error;
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "outfit_matches" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       showToast("success", "删除成功！");
       fetchInspirations();
     } catch (err: any) {

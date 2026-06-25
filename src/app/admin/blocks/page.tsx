@@ -224,12 +224,21 @@ export default function BlocksAdminPage() {
     if (!confirm("确定要删除这个版块吗？")) return;
 
     try {
-      await supabase.from("page_blocks").delete().eq("id", blockId);
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: blockId, table: "page_blocks" }),
+      });
+      const json = await res.json();
+      if (json.error) {
+        alert("删除失败：" + json.error);
+        return;
+      }
       await fetchBlocks();
     } catch (error) {
       console.error("[删除版块失败]", error);
-      // 从本地状态删除
-      setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+      alert("删除失败，请稍后重试");
     }
   };
 

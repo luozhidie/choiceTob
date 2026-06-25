@@ -170,9 +170,15 @@ const fetchLeads = async () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这条线索吗？")) return;
-    const { error } = await supabase.from("leads").delete().eq("id", id);
-    if (error) {
-      alert("删除失败：" + error.message);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "leads" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      alert("删除失败：" + json.error);
       return;
     }
     fetchLeads();

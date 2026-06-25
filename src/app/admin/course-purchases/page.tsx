@@ -69,8 +69,14 @@ export default function AdminCoursePurchasesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此购买记录？")) return;
     try {
-      const { error } = await supabase.from("course_purchases").delete().eq("id", id);
-      if (error) throw error;
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "course_purchases" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       showToast("success", "已删除");
       fetchPurchases();
     } catch (err: any) {

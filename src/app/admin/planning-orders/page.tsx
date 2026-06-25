@@ -100,7 +100,14 @@ export default function AdminPlanningOrdersPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此订单？")) return;
     try {
-      const { error } = await supabase.from("planning_orders").delete().eq("id", id);
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "planning_orders" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       if (error) throw error;
       showToast("success", "已删除");
       fetchOrders();

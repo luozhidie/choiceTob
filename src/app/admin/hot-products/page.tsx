@@ -125,8 +125,14 @@ export default function HotProductsAdmin() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除该商品？")) return;
-    const { error } = await supabase.from("hot_products").delete().eq("id", id);
-    if (error) alert("删除失败：" + error.message);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "hot_products" }),
+    });
+    const json = await res.json();
+    if (json.error) alert("删除失败：" + json.error);
     else fetchProducts();
   };
 

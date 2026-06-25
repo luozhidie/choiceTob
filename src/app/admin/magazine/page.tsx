@@ -157,8 +157,15 @@ export default function AdminMagazinePage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除？")) return;
     try {
-      await supabase.from("articles").delete().eq("id", id);
-      fetchArticles();
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "articles" }),
+      });
+      const json = await res.json();
+      if (json.error) alert("删除失败：" + json.error);
+      else fetchArticles();
     } catch (err: any) {
       alert("删除失败：" + err.message);
     }

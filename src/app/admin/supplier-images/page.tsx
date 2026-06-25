@@ -142,16 +142,17 @@ const fetchImages = async () => {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这张图片吗？")) return;
 
-    const { error } = await supabase
-      .from("supplier_images")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "supplier_images" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      alert("删除失败：" + json.error);
       return;
     }
-
     fetchImages();
   };
 

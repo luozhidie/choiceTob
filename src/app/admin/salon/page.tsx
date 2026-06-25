@@ -76,8 +76,14 @@ export default function AdminSalonPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个沙龙活动吗？")) return;
-    const { error } = await supabase.from("salon_events").delete().eq("id", id);
-    if (error) { alert("删除失败：" + error.message); return; }
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "salon_events" }),
+    });
+    const json = await res.json();
+    if (json.error) { alert("删除失败：" + json.error); return; }
     fetchData();
   };
 

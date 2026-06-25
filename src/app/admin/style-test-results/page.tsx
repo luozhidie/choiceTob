@@ -112,12 +112,15 @@ const fetchResults = async () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这条测试记录吗？")) return;
-    const { error } = await supabase
-      .from("style_test_results")
-      .delete()
-      .eq("id", id);
-    if (error) {
-      alert("删除失败：" + error.message);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "style_test_results" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      alert("删除失败：" + json.error);
       return;
     }
     fetchResults();

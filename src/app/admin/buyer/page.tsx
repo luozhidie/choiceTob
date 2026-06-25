@@ -149,8 +149,19 @@ export default function AdminBuyerPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除？")) return;
-    const { error } = await supabase.from("buyer_products").delete().eq("id", id);
-    if (error) alert("删除失败：" + error.message); else fetchProducts();
+    try {
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "buyer_products" }),
+      });
+      const json = await res.json();
+      if (json.error) alert("删除失败：" + json.error);
+      else fetchProducts();
+    } catch (err: any) {
+      alert("删除失败：" + err.message);
+    }
   };
   const togglePublish = async (p: BuyerProduct) => {
     const { error } = await supabase.from("buyer_products").update({ is_published: !p.is_published }).eq("id", p.id);

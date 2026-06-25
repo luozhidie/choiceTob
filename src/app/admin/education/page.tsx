@@ -144,17 +144,19 @@ const fetchCourses = async () => {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个课程吗？")) return;
 
-    const { error } = await supabase
-      .from("courses")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
-      return;
+    try {
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "courses" }),
+      });
+      const json = await res.json();
+      if (json.error) alert("删除失败：" + json.error);
+      else fetchCourses();
+    } catch (err: any) {
+      alert("删除失败：" + err.message);
     }
-
-    fetchCourses();
   };
 
   const togglePublish = async (course: Course) => {

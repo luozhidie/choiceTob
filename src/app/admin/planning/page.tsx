@@ -178,8 +178,14 @@ const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个企划报告吗？")) return;
-    const { error } = await supabase.from("planning_reports").delete().eq("id", id);
-    if (error) { alert("删除失败：" + error.message); return; }
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "planning_reports" }),
+    });
+    const json = await res.json();
+    if (json.error) { alert("删除失败：" + json.error); return; }
     fetchReports();
   };
 

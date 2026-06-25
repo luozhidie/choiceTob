@@ -141,9 +141,19 @@ export default function AdminCoursesPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此课程？")) return;
-    const { error } = await supabase.from("courses").delete().eq("id", id);
-    if (error) showToast("error", "删除失败");
-    else { showToast("success", "已删除"); fetchCourses(); }
+    try {
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "courses" }),
+      });
+      const json = await res.json();
+      if (json.error) showToast("error", "删除失败：" + json.error);
+      else { showToast("success", "已删除"); fetchCourses(); }
+    } catch (err: any) {
+      showToast("error", "删除失败：" + err.message);
+    }
   };
 
   const handleTogglePublish = async (course: Course) => {

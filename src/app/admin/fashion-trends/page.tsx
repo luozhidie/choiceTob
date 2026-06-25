@@ -172,17 +172,19 @@ const fetchTrends = async () => {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个趋势报告吗？")) return;
 
-    const { error } = await supabase
-      .from("fashion_trends")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
-      return;
+    try {
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "fashion_trends" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      fetchTrends();
+    } catch (err: any) {
+      alert("删除失败：" + err.message);
     }
-
-    fetchTrends();
   };
 
   const togglePublish = async (trend: FashionTrend) => {

@@ -243,7 +243,17 @@ export default function StoresAdminPage() {
   /* 删除店铺 */
   const handleDelete = async (id: string) => {
     if (!confirm("确认删除此店铺？关联的会员不会被删除，但 store_id 将被清空。")) return;
-    await supabase.from("stores").delete().eq("id", id);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "stores" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      alert("删除失败：" + json.error);
+      return;
+    }
     fetchStores();
   };
 

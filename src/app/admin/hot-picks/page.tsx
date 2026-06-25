@@ -174,12 +174,18 @@ export default function AdminHotPicksDataPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这条爆款记录吗？此操作不可恢复！")) return;
     try {
-      const { error } = await supabase.from("hot_picks").delete().eq("id", id);
-      if (error) throw error;
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "hot_picks" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       setToast({ type: "success", message: "删除成功" });
       fetchData();
     } catch (err: any) {
-      setToast({ type: "error", message: "删除失败: " + err.message });
+      setToast({ type: "error", message: "删除失败：" + err.message });
     }
   };
 

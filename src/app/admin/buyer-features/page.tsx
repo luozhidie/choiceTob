@@ -138,13 +138,15 @@ const fetchFeatures = async () => {
   const handleDelete = async (id: string) => {
     if (!confirm("确定要删除这个功能吗？")) return;
 
-    const { error } = await supabase
-      .from("buyer_features")
-      .delete()
-      .eq("id", id);
-
-    if (error) {
-      alert("删除失败：" + error.message);
+    const res = await fetch("/api/admin/common/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id, table: "buyer_features" }),
+    });
+    const json = await res.json();
+    if (json.error) {
+      alert("删除失败：" + json.error);
       return;
     }
 

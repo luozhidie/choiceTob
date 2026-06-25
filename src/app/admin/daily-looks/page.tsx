@@ -115,8 +115,14 @@ export default function AdminDailyLooksPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此搭配？")) return;
     try {
-      const { error } = await supabase.from("daily_looks").delete().eq("id", id);
-      if (error) throw error;
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "daily_looks" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       showToast("success", "已删除");
       fetchLooks();
     } catch (err: any) {

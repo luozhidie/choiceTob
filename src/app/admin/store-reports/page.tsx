@@ -129,8 +129,14 @@ export default function AdminStoreReportsPage() {
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此条数据？")) return;
     try {
-      const { error } = await supabase.from("store_reports").delete().eq("id", id);
-      if (error) throw error;
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, table: "store_reports" }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
       showToast("success", "已删除");
       fetchReports();
     } catch (err: any) {
