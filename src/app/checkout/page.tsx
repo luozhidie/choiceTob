@@ -270,7 +270,6 @@ function CheckoutContent() {
       }
 
       // 微信支付API调用成功
-      // 微信支付API调用成功
       if (payResult.code_url) {
         const isWeChatBrowser = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
         if (isWeChatBrowser) {
@@ -282,41 +281,6 @@ function CheckoutContent() {
         setPayQrCode(payResult.code_url);
         setShowPayModal(true);
         setCurrentOrderNo(payResult.order_no);
-        return;
-      }
-        // Native支付（非微信浏览器）→ 显示二维码弹窗
-        setPayQrCode(payResult.code_url);
-        setShowPayModal(true);
-        setCurrentOrderNo(payResult.order_no);
-        return;
-      }
-
-      // JSAPI支付（微信内）→ 前端直接拉起（需要返回 paySign 等参数）
-      if (payResult.paySign) {
-        // 微信内浏览器，用 WeixinJSBridge 调起支付
-        if (typeof (window as any).WeixinJSBridge !== 'undefined') {
-          (window as any).WeixinJSBridge.invoke(
-            'getBrandWCPayRequest',
-            {
-              appId: payResult.appId,
-              timeStamp: payResult.timeStamp,
-              nonceStr: payResult.nonceStr,
-              package: payResult.package,
-              signType: payResult.signType,
-              paySign: payResult.paySign,
-            },
-            (res: any) => {
-              if (res.err_msg === 'get_brand_wcpay_request:ok') {
-                alert('✅ 支付成功！');
-                router.push('/');
-              } else {
-                alert('支付失败或已取消');
-              }
-            }
-          );
-        } else {
-          alert('请在微信中打开此页面以完成支付');
-        }
         return;
       }
 
