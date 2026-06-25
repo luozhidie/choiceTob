@@ -244,8 +244,8 @@ function CheckoutContent() {
       // 2. 调用微信支付统一下单API
       // 金额单位：分
       const totalFeeInFen = Math.round(totalAmount * 100);
-      const isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
-      const platform = isWeChat ? 'mp' : 'native';
+      // 统一用 Native 支付（二维码），微信内外都一样
+      const platform = 'native';
 
       const payResponse = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
@@ -482,16 +482,10 @@ function CheckoutContent() {
                 </div>
               </div>
 
-              {/* 环境提示 */}
-              {typeof window !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent) ? (
-                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
-                  ✓ 检测到微信环境，将直接拉起微信支付
-                </p>
-              ) : (
-                <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
-                  💡 将在新窗口显示付款二维码，请用微信扫码支付
-                </p>
-              )}
+              {/* 支付方式提示 */}
+              <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
+                💡 点击下方按钮后，将显示微信付款二维码，请用手机扫码完成支付
+              </p>
             </div>
           </div>
 
