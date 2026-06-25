@@ -11,10 +11,8 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import {
-  calcDiscount, formatPrice, formatDiscountRate, formatRebateRate,
-  MEMBER_TIERS,
+  calcDiscount, formatPrice,
 } from "@/lib/discount";
-import { CATEGORY_MAP } from "@/lib/categories";
 
 interface Product {
   id: string;
@@ -30,6 +28,73 @@ interface Product {
   source?: string | null;
 }
 
+// 二维码弹窗组件 - 用 canvas 动态生成二维码
+function WechatPayModal({ codeUrl, amount, onClose }: { codeUrl: string; amount: number; onClose: () => void }) {
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 动态导入 qrcode 库，生成二维码
+    const generateQr = async () => {
+      try {
+        const QRCode = (await import("qrcode")).toDataURL;
+        const dataUrl = await QRCode(codeUrl, {
+          width: 200,
+          margin: 2,
+          color: { dark: "#000000", light: "#FFFFFF" },
+        });
+        setQrDataUrl(dataUrl);
+      } catch (err) {
+        console.error("生成二维码失败:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    generateQr();
+  }, [codeUrl]);
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative animate-in fade-in zoom-in duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors text-lg"
+        >
+          ✕
+        </button>
+        <h3 className="text-lg font-bold text-center mb-1">微信扫码支付</h3>
+        <p className="text-sm text-center text-gray-500 mb-5">请使用微信扫描下方二维码完成支付</p>
+
+        <div className="bg-white p-4 rounded-xl border-2 border-gray-100 flex items-center justify-center mx-auto w-fit">
+          {loading ? (
+            <div className="w-[200px] h-[200px] flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500" />
+            </div>
+          ) : qrDataUrl ? (
+            <img src={qrDataUrl} alt="支付二维码" className="w-[200px] h-[200px]" />
+          ) : (
+            <div className="w-[200px] h-[200px] flex items-center justify-center bg-gray-50 rounded-lg">
+              <p className="text-xs text-red-500 text-center px-4">二维码生成失败<br />请刷新重试</p>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-4 text-center">
+          <p className="text-xs text-gray-400">支付金额</p>
+          <p className="text-2xl font-bold text-green-600">{formatPrice(amount)}</p>
+        </div>
+
+        <div className="mt-4 p-3 bg-green-50 rounded-lg">
+          <p className="text-xs text-green-700 text-center">
+            ✅ 支付成功后页面会自动跳转<br />
+            或关闭此窗口继续购物
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -39,18 +104,15 @@ function CheckoutContent() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [memberLevel, setMemberLevel] = useState("none");
-  const [paymentMethod, setPaymentMethod] = useState<"wechat_pay">("wechat_pay");  // 默认微信支付
   const [shippingName, setShippingName] = useState("");
   const [shippingPhone, setShippingPhone] = useState("");
   const [shippingAddress, setShippingAddress] = useState("");
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [copied, setCopied] = useState("");
   // 微信支付相关状态
   const [payQrCode, setPayQrCode] = useState<string | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
-  const [payLoading, setPayLoading] = useState(false);
+  const [currentOrderNo, setCurrentOrderNo] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -104,30 +166,49 @@ function CheckoutContent() {
     return () => { cancelled = true; };
   }, [productId, productSource]);
 
-  const discountResult = useMemo(() => {
-    if (!product) return null;
-    return calcDiscount(product.original_price || product.price, memberLevel);
-  }, [product, memberLevel]);
+  const retailPrice = useMemo(() => {
+    if (!product) return 0;
+    return product.original_price || Math.round(product.price * 2);
+  }, [product]);
 
   const totalAmount = useMemo(() => {
-    if (!discountResult) return 0;
-    return discountResult.discountPrice * quantity;
-  }, [discountResult, quantity]);
+    return retailPrice * quantity;
+  }, [retailPrice, quantity]);
+
+  // 轮询订单状态
+  useEffect(() => {
+    if (!currentOrderNo) return;
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/wechat-pay/query?out_trade_no=${currentOrderNo}`);
+        const result = await response.json();
+        if (result.trade_state === 'SUCCESS') {
+          clearInterval(interval);
+          setShowPayModal(false);
+          setPayQrCode(null);
+          alert('✅ 支付成功！');
+          router.push('/');
+        }
+      } catch (err) {
+        console.error('查询订单状态失败:', err);
+      }
+    }, 3000);
+    const timer = setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
+    return () => { clearInterval(interval); clearTimeout(timer); };
+  }, [currentOrderNo, router]);
 
   const handleSubmit = async () => {
     if (!product) return;
     if (!shippingName.trim() || !shippingPhone.trim()) { alert("请填写收货人姓名和联系电话"); return; }
-    const retailPrice = product.original_price || Math.round(product.price * 2);
-    const totalAmt = retailPrice * quantity;
     setSubmitting(true);
     try {
-      // 1. 创建订单
+      // 1. 创建订单（写入数据库）
       const orderData: Record<string, unknown> = {
         product_id: product.id,
         quantity,
         unit_price: retailPrice,
         discount_price: retailPrice,
-        total_amount: totalAmt,
+        total_amount: totalAmount,
         status: "pending",
         shipping_address: shippingAddress || shippingPhone,
         note: [
@@ -152,7 +233,7 @@ function CheckoutContent() {
           quantity,
           unit_price: retailPrice,
           discount_price: retailPrice,
-          total_amount: totalAmt,
+          total_amount: totalAmount,
           status: "pending",
           shipping_address: `${shippingName.trim()} ${shippingPhone.trim()} ${shippingAddress}`,
           note: `微信支付 ${note}`,
@@ -160,99 +241,84 @@ function CheckoutContent() {
         await supabase.from("buyer_orders").insert([basicData]);
       }
 
-      // 2. 订单创建成功 → 跳转到支付成功页/显示付款二维码
-      // 不再调用微信API（MCHID未配置），改为显示付款二维码
-      router.push(`/checkout/success?amount=${totalAmt}&title=${encodeURIComponent(product.title || '商品')}`);
-    } catch (err) {
-      console.error("提交订单失败:", err); alert("提交订单失败，请稍后重试或联系客服");
-    } finally { setSubmitting(false); }
-  };
+      // 2. 调用微信支付统一下单API
+      // 金额单位：分
+      const totalFeeInFen = Math.round(totalAmount * 100);
+      const isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent);
+      const platform = isWeChat ? 'mp' : 'native';
 
-  // 微信支付核心逻辑 - 简化版本，直接跳转微信支付链接
-  const handleWechatPay = async (productId: string, price: number) => {
-    setPayLoading(true);
-    try {
-      // 简化流程：创建订单后，生成微信支付链接
-      // 在实际环境中，这里应该调用后端API获取支付链接
-      
-      const totalFee = Math.round(price * 100); // 转为分
-      
-      // 调用统一下单API
-      const response = await fetch('/api/wechat-pay/unified-order', {
+      const payResponse = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          product_id: productId,
-          product_title: product?.title || '商品购买',
-          total_fee: totalFee,
+          product_id: product.id,
+          product_title: product.title,
+          total_fee: totalFeeInFen,
           quantity: quantity,
-          contact: shippingPhone,
-          address: shippingAddress,
-          note: note,
-          platform: 'native', // 使用扫码支付，生成支付链接
+          platform: platform,
         }),
       });
-      
-      const result = await response.json();
 
-      if (result.error) {
-        alert('支付发起失败：' + result.error);
-        setPayLoading(false);
+      const payResult = await payResponse.json();
+
+      if (payResult.error) {
+        // 微信API失败 → 提示用户
+        console.error('[微信支付] API调用失败:', payResult.error, payResult);
+        alert(`微信支付暂时不可用：${payResult.error}\n\n请联系管理员配置微信支付环境变量（WECHAT_MCHID、WECHAT_APIV2_KEY）`);
+        setSubmitting(false);
         return;
       }
 
-      // 对于native支付，返回code_url
-      if (result.code_url) {
-        // 方式1: 如果是微信环境，尝试直接拉起支付
-        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-        if (isWeChat && result.code_url.startsWith('weixin://')) {
-          // 在微信内，直接跳转微信支付链接
-          window.location.href = result.code_url;
-          return;
-        }
-        
-        // 方式2: 非微信环境，显示二维码
-        setPayQrCode(result.code_url);
+      // 微信支付API调用成功
+      if (payResult.code_url) {
+        // Native支付（非微信浏览器）→ 显示二维码弹窗
+        setPayQrCode(payResult.code_url);
         setShowPayModal(true);
-        setPayLoading(false);
-        
-        // 轮询订单状态
-        pollOrderStatus(result.order_no);
-      } else {
-        alert('支付发起失败，请稍后重试');
-        setPayLoading(false);
+        setCurrentOrderNo(payResult.order_no);
+        return;
       }
-    } catch (error) {
-      console.error('[wechat pay]', error);
-      alert('支付请求失败，请检查网络后重试');
-      setPayLoading(false);
+
+      // JSAPI支付（微信内）→ 前端直接拉起（需要返回 paySign 等参数）
+      if (payResult.paySign) {
+        // 微信内浏览器，用 WeixinJSBridge 调起支付
+        if (typeof (window as any).WeixinJSBridge !== 'undefined') {
+          (window as any).WeixinJSBridge.invoke(
+            'getBrandWCPayRequest',
+            {
+              appId: payResult.appId,
+              timeStamp: payResult.timeStamp,
+              nonceStr: payResult.nonceStr,
+              package: payResult.package,
+              signType: payResult.signType,
+              paySign: payResult.paySign,
+            },
+            (res: any) => {
+              if (res.err_msg === 'get_brand_wcpay_request:ok') {
+                alert('✅ 支付成功！');
+                router.push('/');
+              } else {
+                alert('支付失败或已取消');
+              }
+            }
+          );
+        } else {
+          alert('请在微信中打开此页面以完成支付');
+        }
+        return;
+      }
+
+      // 其他情况：跳转到成功页（降级）
+      router.push(`/checkout/success?amount=${totalAmount}&title=${encodeURIComponent(product.title || '商品')}`);
+
+    } catch (err: any) {
+      console.error("提交订单失败:", err);
+      alert("提交订单失败：" + (err.message || "请稍后重试或联系客服"));
+    } finally {
+      setSubmitting(false);
     }
   };
-  
-  // 轮询订单状态
-  const pollOrderStatus = (orderNo: string) => {
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/wechat-pay/query?out_trade_no=${orderNo}`);
-        const result = await response.json();
-        
-        if (result.trade_state === 'SUCCESS') {
-          clearInterval(interval);
-          setShowPayModal(false);
-          setPayQrCode(null);
-          alert('✅ 支付成功！感谢您的购买');
-          router.push('/');
-        }
-      } catch (err) {
-        console.error('查询订单状态失败:', err);
-      }
-    }, 3000);
-    
-    // 5分钟后停止轮询
-    setTimeout(() => clearInterval(interval), 5 * 60 * 1000);
-  };
 
-  const handleCopy = (text: string, label: string) => { navigator.clipboard.writeText(text); setCopied(label); setTimeout(() => setCopied(""), 2000); };
+  const handleCopy = (text: string, label: string) => { navigator.clipboard.writeText(text); };
 
   if (loading) {
     return (
@@ -270,8 +336,6 @@ function CheckoutContent() {
       </div>
     );
   }
-
-  const originalPrice = product.original_price || product.price;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -313,14 +377,15 @@ function CheckoutContent() {
                 )}
                 <div className="mt-3 flex items-end justify-between flex-wrap gap-3">
                   <div>
-                    {/* 只显示零售价 */}
                     <div className="flex items-end gap-2">
-                      <span className="text-2xl font-bold text-gray-900">{formatPrice(product.original_price || Math.round(product.price * 2))}</span>
+                      <span className="text-2xl font-bold text-gray-900">{formatPrice(retailPrice)}</span>
                       <span className="text-sm text-gray-400 mb-1">零售价</span>
                     </div>
                     {/* 批发价区域 - 隐藏显示 */}
-                    <div className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
-                       onClick={() => window.location.href = '/vip'}>
+                    <div
+                      className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
+                      onClick={() => window.location.href = '/vip'}
+                    >
                       <Lock className="w-4 h-4 text-blue-500 shrink-0" />
                       <span className="text-sm font-medium text-blue-700">批发价</span>
                       <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
@@ -337,22 +402,6 @@ function CheckoutContent() {
                     </button>
                   </div>
                 </div>
-
-                {/* 拿货会员提示 - 选3件以上显示 */}
-                {quantity >= 3 && (
-                  <div className="mt-3 p-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200">
-                    <div className="flex items-start gap-2">
-                      <Truck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-amber-800">提示：同色同款3件起可享拿货折扣</p>
-                        <p className="text-[11px] text-amber-600 mt-0.5">开通拿货会员（充值5万起）可享受批发价和返点服务</p>
-                        <a href="/vip" className="inline-block mt-2 text-[11px] font-medium text-amber-700 hover:text-amber-800 underline">
-                          了解拿货会员 →
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -410,11 +459,11 @@ function CheckoutContent() {
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-gray-500">零售价</span>
-                <span>{formatPrice(product.original_price || Math.round(product.price * 2))} × {quantity}</span>
+                <span>{formatPrice(retailPrice)} × {quantity}</span>
               </div>
               <div className="border-t border-gray-100 pt-3 flex items-center justify-between">
                 <span className="font-bold text-primary">实付金额</span>
-                <span className="text-2xl font-bold text-accent">{formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}</span>
+                <span className="text-2xl font-bold text-accent">{formatPrice(totalAmount)}</span>
               </div>
             </div>
           </div>
@@ -431,22 +480,16 @@ function CheckoutContent() {
                   <div className="font-bold text-green-800 text-base">微信支付</div>
                   <div className="text-xs text-green-600">安全快捷 · 即时到账</div>
                 </div>
-                {payLoading && (
-                  <div className="ml-auto animate-spin rounded-full h-5 w-5 border-b-2 border-green-500" />
-                )}
               </div>
 
-              {/* 非微信环境显示提示 */}
-              {typeof window !== 'undefined' && !/MicroMessenger/i.test(navigator.userAgent) && (
+              {/* 环境提示 */}
+              {typeof window !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent) ? (
                 <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
-                  💡 如需在微信内直接支付，请在微信中打开此页面；当前将显示付款二维码
+                  ✓ 检测到微信环境，将直接拉起微信支付
                 </p>
-              )}
-
-              {/* 微信内显示提示 */}
-              {typeof window !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent) && (
+              ) : (
                 <p className="text-xs text-green-700 bg-green-100 rounded-lg p-2 mt-2">
-                  ✓ 检测到微信环境，点击下方按钮将直接拉起微信支付
+                  💡 将在新窗口显示付款二维码，请用微信扫码支付
                 </p>
               )}
             </div>
@@ -460,60 +503,28 @@ function CheckoutContent() {
 
           <button
             onClick={handleSubmit}
-            disabled={submitting || payLoading || product.stock === 0}
+            disabled={submitting || product.stock === 0}
             className="w-full py-4 bg-green-500 text-white text-lg font-bold rounded-2xl hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg shadow-green-500/30"
           >
-            {payLoading ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                正在调起微信支付...
-              </>
-            ) : submitting ? (
+            {submitting ? (
               <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
             ) : (
               <>
-                <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}
+                <MessageCircle className="w-5 h-5" /> 立即支付 · {formatPrice(totalAmount)}
               </>
             )}
           </button>
           <p className="mt-3 text-xs text-center text-gray-400">
-            点击"立即支付"后将调起微信支付，请在微信中完成付款
+            点击"立即支付"后将调起微信支付
           </p>
 
-          {/* 微信支付二维码弹窗（非微信环境） */}
+          {/* 微信支付二维码弹窗 */}
           {showPayModal && payQrCode && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 relative">
-                <button
-                  onClick={() => { setShowPayModal(false); setPayQrCode(null); }}
-                  className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
-                <h3 className="text-lg font-bold text-center mb-2">微信扫码支付</h3>
-                <p className="text-sm text-center text-gray-500 mb-4">请使用微信扫描二维码完成支付</p>
-                <div className="bg-white p-4 rounded-xl border border-gray-200 flex items-center justify-center">
-                  {/* 使用QRCode组件或img标签显示二维码 */}
-                  {payQrCode.startsWith('weixin://') || payQrCode.startsWith('wxpay://') ? (
-                    <div className="w-48 h-48 bg-gray-100 flex items-center justify-center">
-                      <p className="text-xs text-gray-500 text-center px-4">
-                        请在微信中打开此页面以使用更便捷的JSAPI支付
-                      </p>
-                    </div>
-                  ) : (
-                    // 如果是URL格式的code_url，需要生成二维码图片
-                    <div className="w-48 h-48 bg-gray-100 flex flex-col items-center justify-center gap-2 p-4">
-                      <MessageCircle className="w-12 h-12 text-green-500" />
-                      <p className="text-xs text-center text-gray-500">正在生成支付二维码...</p>
-                      <p className="text-[10px] text-gray-400 break-all">{payQrCode.slice(0, 30)}...</p>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-center text-gray-400 mt-4">
-                  支付金额：<span className="font-bold text-green-600">{formatPrice((product.original_price || Math.round(product.price * 2)) * quantity)}</span>
-                </p>
-              </div>
-            </div>
+            <WechatPayModal
+              codeUrl={payQrCode}
+              amount={totalAmount}
+              onClose={() => { setShowPayModal(false); setPayQrCode(null); setCurrentOrderNo(null); }}
+            />
           )}
         </motion.div>
       </div>

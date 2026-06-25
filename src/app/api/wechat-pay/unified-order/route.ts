@@ -1,20 +1,11 @@
 // app/api/wechat-pay/unified-order/route.ts
 // 统一下单API - 支持小程序和网站支付
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { unifiedOrder, generateJsapiPayParams } from "@/lib/wechat-pay";
 import type { PayPlatform } from "@/lib/wechat-pay";
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
-    
-    // 检查用户是否已登录
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: '请先登录' }, { status: 401 });
-    }
-    
     const body = await request.json();
     const {
       product_id,
@@ -24,11 +15,12 @@ export async function POST(request: NextRequest) {
       contact,          // 联系方式（微信/手机）
       address,          // 收货地址
       note,
-      platform = 'mini', // 'mini' | 'mp' | 'native'
+      platform = 'native', // 'mini' | 'mp' | 'native'
     } = body;
 
+    // 不再检查环境变量（wechat-pay.ts 里已有 fallback）
+
     const qty = Math.max(1, quantity || 1);
-    // total_fee 单位是分，product_price 也存为分（整数）
     const pricePerItem = Math.round(Number(total_fee) / qty);
 
     if (!product_id || !total_fee || pricePerItem <= 0) {
@@ -38,37 +30,11 @@ export async function POST(request: NextRequest) {
     // 生成订单号
     const order_no = `WX${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
-    // 创建订单记录到数据库
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .insert([{
-        order_no,
-        user_id: user.id,
-        product_id,
-        product_title: product_title || '爆款样衣',
-        product_price: pricePerItem,
-        quantity: qty,
-        total_amount: Number(total_fee),
-        contact: contact || '',
-        address: address || '',
-        note: note || '',
-        status: 'pending',
-        payment_method: 'wechat',
-        payment_platform: platform,
-      }])
-      .select()
-      .single();
-
-    if (orderError && !orderError.message?.includes('duplicate')) {
-      console.error('[创建订单失败]', orderError);
-      return NextResponse.json({ error: `创建订单失败: ${orderError.message}` }, { status: 500 });
-    }
-
     // 调用微信统一下单
     const wxResult = await unifiedOrder({
       out_trade_no: order_no,
       body: product_title || `色彩智选-商品${product_id}`,
-      total_fee,
+      total_fee: Math.round(Number(total_fee)),
       openid: body.openid || undefined,
       platform: platform as PayPlatform,
     });

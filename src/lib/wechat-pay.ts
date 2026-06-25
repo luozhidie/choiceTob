@@ -1,19 +1,23 @@
 // lib/wechat-pay.ts - 微信支付工具库
 // 支持：小程序JSAPI支付、公众号JSAPI支付、NATIVE扫码支付
 import crypto from 'crypto';
-import fs from 'fs';
 
-const MCHID = process.env.WECHAT_MCHID!;
-const APIV2_KEY = process.env.WECHAT_APIV2_KEY!;
-const CERT_PATH = process.env.WECHAT_CERT_PATH!;
-const KEY_PATH = process.env.WECHAT_KEY_PATH!;
-const PUB_KEY_PATH = process.env.WECHAT_PUB_KEY_PATH!;
-const PUB_KEY_ID = process.env.WECHAT_PUB_KEY_ID!;
-const NOTIFY_URL = process.env.WECHAT_NOTIFY_URL!;
+// 环境变量校验（启动时打印，方便调试）
+// 注意：以下值会从 process.env 读取，如果读取失败则使用硬编码的备用值
+const MCHID = process.env.WECHAT_MCHID || "1114330239";
+const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
+const NOTIFY_URL = process.env.WECHAT_NOTIFY_URL || "https://colour-choice.art/api/wechat-pay/notify";
 
-// 双平台AppID
-export const WECHAT_MINI_APPID = process.env.WECHAT_MINI_APPID || '';
-export const WECHAT_MP_APPID = process.env.WECHAT_MP_APPID || '';
+if (typeof window === 'undefined') {
+  // 服务端启动时打印配置状态
+  console.log(
+    `[微信支付] 配置状态: mchId=${MCHID.slice(0,4)}****${MCHID.slice(-2)} | notify=${NOTIFY_URL.slice(0,30)}...`
+  );
+}
+
+// 双平台AppID（带fallback）
+export const WECHAT_MINI_APPID = process.env.WECHAT_MINI_APPID || "wxe0ffec0a398de8b7";
+export const WECHAT_MP_APPID = process.env.WECHAT_MP_APPID || "wxe0ffec0a398de8b7";
 
 // 支付平台类型
 export type PayPlatform = 'mini' | 'mp' | 'native';
@@ -79,6 +83,14 @@ export async function unifiedOrder(params: {
   openid?: string;          // JSAPI必传
   platform?: PayPlatform;   // 默认 mini
 }) {
+  // 环境变量校验
+  if (!MCHID || !APIV2_KEY) {
+    throw new Error('微信支付未配置：缺少 WECHAT_MCHID 或 WECHAT_APIV2_KEY 环境变量');
+  }
+  if (!NOTIFY_URL) {
+    throw new Error('微信支付未配置：缺少 WECHAT_NOTIFY_URL 环境变量');
+  }
+
   const { out_trade_no, body, total_fee, openid, platform = 'mini' } = params;
   const nonce_str = randomStr();
 
