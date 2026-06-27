@@ -113,7 +113,7 @@ export default function ImageGrabberPage() {
     const baseIndex = images.length;
     setImages((prev) => [...prev, ...newImages]);
 
-    // 逐个上传（浏览器直传 Supabase Storage）
+    // 逐个上传（走后端API，浏览器直传Storage在Vercel上有兼容问题）
     for (let i = 0; i < validFiles.length; i++) {
       const idx = baseIndex + i;
       const { file } = validFiles[i];
@@ -125,32 +125,39 @@ export default function ImageGrabberPage() {
       );
 
       try {
-        // 浏览器直传 Storage（原始方式，最可靠）
-        const filePath = `grabbed/${Date.now()}_${(file.name || "img").replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-        const { data, error } = await supabase.storage
-          .from("products")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-            contentType: file.type || "image/jpeg",
-          });
+        // FileReader 转 Base64 Data URL
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("文件读取失败"));
+          reader.readAsDataURL(file);
+        });
 
-        if (error) {
-          console.error("[Storage] 错误:", error);
-          throw new Error(error.message || "存储上传失败");
+        // 调用后端API上传（已验证可用）
+        const res = await fetch("/api/image-grabber/upload", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: (file.name || `image_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, "_"),
+            mimeType: file.type || "image/jpeg",
+            dataUrl,
+          }),
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+          throw new Error(json.error || `HTTP ${res.status}`);
         }
-
-        const { data: urlData } = supabase.storage
-          .from("products")
-          .getPublicUrl(filePath);
 
         setImages((prev) =>
           prev.map((img, index) =>
             index === idx ? {
               ...img,
               status: "success" as const,
-              storedUrl: urlData.publicUrl,
-              size: file.size,
+              storedUrl: json.storedUrl,
+              size: json.size || file.size,
             } : img
           )
         );
