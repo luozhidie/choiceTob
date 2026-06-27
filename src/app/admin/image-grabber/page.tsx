@@ -76,6 +76,9 @@ export default function ImageGrabberPage() {
 
   // 处理本地文件上传
   const handleLocalFilesUpload = async (files: FileList) => {
+    // [DEBUG] 版本标记 - 在浏览器Console中搜索"UPLOAD-VER"确认版本
+    console.log("UPLOAD-VER: de6e8931-API-MODE", "文件数:", files.length);
+
     if (!files || files.length === 0) return;
 
     setIsProcessing(true);
@@ -148,7 +151,8 @@ export default function ImageGrabberPage() {
         const json = await res.json();
 
         if (!res.ok || json.error) {
-          throw new Error(json.error || `HTTP ${res.status}`);
+          // [DEBUG] 前缀标记确认走的是API路径
+          throw new Error(`[API] ${json.error || `HTTP ${res.status}`}`);
         }
 
         setImages((prev) =>
