@@ -85,7 +85,8 @@ export default function ImageGrabberPage() {
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (!file.type.startsWith("image/")) continue;
+      // 兼容iOS/微信图片file.type为空的情况
+      if (file.type && !file.type.startsWith("image/") && !file.type.startsWith("application/octet-stream")) continue;
 
       const imageId = Date.now() + i;
       const filename = `wechat_${imageId}.${file.name.split(".").pop() || "jpg"}`;
@@ -117,7 +118,12 @@ export default function ImageGrabberPage() {
       );
 
       try {
-        const file = Array.from(files).filter(f => f.type.startsWith("image/"))[i];
+        // 用与上面相同的宽松过滤逻辑，确保能取到文件
+        const validFiles = Array.from(files).filter(f =>
+          !f.type || f.type.startsWith("image/") || f.type.startsWith("application/octet-stream")
+        );
+        const file = validFiles[i];
+        if (!file) throw new Error(`第${i + 1}个文件不存在（共${validFiles.length}个有效文件）`);
 
         // 通过后端API上传（使用service_role绕过RLS）
         const formData = new FormData();
