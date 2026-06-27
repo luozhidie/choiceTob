@@ -460,29 +460,31 @@ export default function ImageGrabberPage() {
     setIsProcessing(false);
   };
 
-  // ===== 拖拽排序（移动端：长按选中 → 点目标位置交换） =====
+  // ===== 拖拽排序（移动端：点击第一张选中 → 点击第二张交换 → 可继续操作） =====
   const [sortMode, setSortMode] = useState(false); // 是否进入排序模式
-  const [selectedSortIndex, setSelectedSortIndex] = useState<number | null>(null); // 长按选中的图片
+  const [selectedSortIndex, setSelectedSortIndex] = useState<number | null>(null); // 选中的图片
 
-  // 移动端：长按图片进入排序模式
-  const handleLongPress = (index: number) => {
+  // 点击图片（排序模式下）
+  const handleSortClick = (index: number) => {
     if (!images[index] || images[index].status !== "success") return;
-    if (!sortMode) {
-      setSortMode(true);
+    
+    if (selectedSortIndex === null) {
+      // 第一次点击：选中这张图片
       setSelectedSortIndex(index);
       showToast("success", `已选中第${index + 1}张，再点目标位置交换`);
-      return;
-    }
-    // 已在排序模式：点另一张即交换
-    if (selectedSortIndex !== null && selectedSortIndex !== index) {
+    } else if (selectedSortIndex === index) {
+      // 点击已选中的图片：取消选中
+      setSelectedSortIndex(null);
+      showToast("success", "已取消选中");
+    } else {
+      // 点击另一张图片：交换位置（不退出排序模式，可继续操作）
       const newImages = [...images];
       const [moved] = newImages.splice(selectedSortIndex, 1);
       newImages.splice(index, 0, moved);
       setImages(newImages);
+      setSelectedSortIndex(null); // 交换后取消选中，方便继续选择
       showToast("success", `已交换位置`);
     }
-    setSortMode(false);
-    setSelectedSortIndex(null);
   };
 
   // 点击排序模式按钮
@@ -493,7 +495,8 @@ export default function ImageGrabberPage() {
       showToast("success", "已退出排序模式");
     } else {
       setSortMode(true);
-      showToast("success", "排序模式已开启，点选要移动的图片");
+      setSelectedSortIndex(null);
+      showToast("success", "排序模式已开启，点击第一张选中，再点第二张交换");
     }
   };
 
@@ -746,14 +749,14 @@ export default function ImageGrabberPage() {
                   key={`${image.filename}-${index}`}
                   onClick={() => {
                     if (sortMode && image.status === "success") {
-                      handleLongPress(index);
+                      handleSortClick(index);
                     }
                   }}
                   // 桌面端拖拽
                   draggable={image.status === "success" && !sortMode}
                   onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={handleDragOver}
-                  onDrop={(e) => { e.stopPropagation(); handleDrop(e, index); }}
+                  onDragOver={(e) => { e.preventDefault(); }}
+                  onDrop={(e) => { e.preventDefault(); handleDrop(e, index); }}
                   className={`relative rounded-xl overflow-hidden border transition-all duration-150 ${
                     image.status === "success"
                       ? sortMode && selectedSortIndex === index
@@ -766,10 +769,11 @@ export default function ImageGrabberPage() {
                 >
                   {/* 图片预览 */}
                   <div
-                    className="aspect-square bg-gray-100 relative overflow-hidden"
-                    onClick={() => {
+                    className="aspect-square bg-gray-100 relative overflow-hidden cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (sortMode && image.status === "success") {
-                        handleLongPress(index);
+                        handleSortClick(index);
                       } else if (image.status === "success") {
                         // 新开网页查看大图（像别的网站一样）
                         window.open(image.storedUrl || image.url, "_blank");
@@ -812,7 +816,6 @@ export default function ImageGrabberPage() {
                         alt={image.filename}
                         className="w-full h-full object-cover"
                         draggable={false}
-                        onClick={() => setPreviewIndex(index)}
                       />
                     )}
 
