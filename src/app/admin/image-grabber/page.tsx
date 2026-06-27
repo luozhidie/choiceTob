@@ -106,10 +106,10 @@ export default function ImageGrabberPage() {
 
     setImages((prev) => [...prev, ...newImages]);
 
-    // 逐个上传
+    // 逐个上传（走后端API，绕过Storage RLS）
     for (let i = 0; i < newImages.length; i++) {
       const idx = images.length + i;
-      
+
       setImages((prev) =>
         prev.map((img, index) =>
           index === idx ? { ...img, status: "downloading" } : img
@@ -118,33 +118,30 @@ export default function ImageGrabberPage() {
 
       try {
         const file = Array.from(files).filter(f => f.type.startsWith("image/"))[i];
-        
-        // 上传到 Supabase Storage
-        const filePath = `grabbed/${Date.now()}_${file.name}`;
-        const { data, error } = await supabase.storage
-          .from("products")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          });
 
-        if (error) {
-          console.error("Supabase Storage 错误:", error);
-          throw new Error(error.message || "存储上传失败");
+        // 通过后端API上传（使用service_role绕过RLS）
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/image-grabber/upload", {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        });
+
+        const json = await res.json();
+
+        if (!res.ok || json.error) {
+          throw new Error(json.error || `HTTP ${res.status}`);
         }
-
-        // 获取公开 URL
-        const { data: urlData } = supabase.storage
-          .from("products")
-          .getPublicUrl(filePath);
 
         setImages((prev) =>
           prev.map((img, index) =>
             index === idx ? {
               ...img,
               status: "success" as const,
-              storedUrl: urlData.publicUrl,
-              size: file.size,
+              storedUrl: json.storedUrl,
+              size: json.size || file.size,
             } : img
           )
         );
@@ -637,7 +634,11 @@ export default function ImageGrabberPage() {
                       image.status === "error" ? "text-red-600" : "text-gray-400"
                     }`}>
                       {image.status === "success" && `✓ ${(image.size! / 1024).toFixed(1)}KB`}
-                      {image.status === "error" && `✗ 失败`}
+                      {image.status === "error" && (
+                        <span className="text-red-500 text-[10px] leading-tight" title={image.error || "上传失败"}>
+                          ✗ 失败{(image.error ? `: ${image.error.slice(0, 20)}` : "")}
+                        </span>
+                      )}
                       {(image.status === "pending" || image.status === "downloading") && "..."}
                     </span>
                   </div>
