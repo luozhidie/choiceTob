@@ -444,33 +444,50 @@ export default function ImageGrabberPage() {
     setIsProcessing(false);
   };
 
-  // ===== 拖拽排序 =====
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  // ===== 拖拽排序（支持移动端触摸 + 桌面端鼠标） =====
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+
+  // 移动端触摸开始
+  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+    if (!images[index] || images[index].status !== "success") return;
     setDragIndex(index);
-    e.dataTransfer.effectAllowed = "move";
-    e.dataTransfer.setData("text/plain", String(index));
+    setTouchStartY(e.touches[0].clientY);
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+  // 移动端触摸移动
+  const handleTouchMove = (e: React.TouchEvent, index: number) => {
     if (dragIndex === null || dragIndex === index) return;
-    // 实时预览排序效果
+    e.preventDefault(); // 防止页面滚动
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+    const targetCard = element.closest("[data-image-index]");
+    if (!targetCard) return;
+    const targetIndex = parseInt(targetCard.getAttribute("data-image-index") || "-1");
+    if (targetIndex < 0 || targetIndex === dragIndex || targetIndex >= images.length) return;
+    // 交换位置
     const newImages = [...images];
     const [moved] = newImages.splice(dragIndex, 1);
-    newImages.splice(index, 0, moved);
+    newImages.splice(targetIndex, 0, moved);
     setImages(newImages);
-    setDragIndex(index); // 更新拖拽源索引（因为数组已变）
+    setDragIndex(targetIndex);
   };
 
-  const handleDragEnd = () => {
+  // 触摸结束
+  const handleTouchEnd = () => {
     setDragIndex(null);
+    setTouchStartY(null);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragIndex(null);
+  // 桌面端拖拽（备用，PC上用）
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (!images[index] || images[index].status !== "success") return;
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = "move";
   };
+  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDragEnd = () => setDragIndex(null);
 
   // 显示提示
   const showToast = (type: "success" | "error", message: string) => {
@@ -691,38 +708,53 @@ export default function ImageGrabberPage() {
 
             <div
               className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
             >
               {images.map((image, index) => (
                 <div
                   key={`${image.filename}-${index}`}
+                  data-image-index={index}
+                  // 触摸事件（移动端）
+                  onTouchStart={(e) => handleTouchStart(e, index)}
+                  onTouchMove={(e) => handleTouchMove(e, index)}
+                  onTouchEnd={handleTouchEnd}
+                  // 桌面端拖拽事件（PC备用）
                   draggable={image.status === "success"}
                   onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragOver={handleDragOver}
                   onDragEnd={handleDragEnd}
-                  className={`group relative rounded-xl overflow-hidden border cursor-grab active:cursor-grabbing transition-all duration-200 ${
+                  className={`group relative rounded-xl overflow-hidden border transition-all duration-200 ${
                     image.status === "success"
-                      ? dragIndex === index ? "border-primary border-2 shadow-md scale-[1.02] z-10" : "border-green-200 shadow-sm hover:shadow-md"
+                      ? dragIndex === index ? "border-primary border-2 shadow-md scale-[1.03] z-10" : "border-green-200 shadow-sm"
                       : image.status === "error" ? "border-red-200" : "border-gray-200"
                   }`}
                 >
                   {/* 图片预览 */}
                   <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                    {/* 拖拽手柄 - 仅成功图片显示 */}
+                    {/* 序号 + 拖拽手柄 - 成功图片常显 */}
                     {image.status === "success" && (
-                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-0.5">
-                        <span className="text-[10px] font-bold text-white/80 bg-black/40 backdrop-blur-sm px-1 rounded leading-none">{index + 1}</span>
-                        <div className="p-1 rounded-md bg-black/30 backdrop-blur-sm text-white/70 cursor-grab active:cursor-grabbing hover:bg-black/50 transition-colors" title="拖拽调整顺序">
+                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-0.5 select-none">
+                        <span className="text-[10px] font-bold text-white/90 bg-primary/80 backdrop-blur-sm px-1.5 py-0.5 rounded leading-none shadow">{index + 1}</span>
+                        <div className="p-1 rounded bg-black/30 backdrop-blur-sm text-white/70" title="长按拖动调整顺序">
                           <GripVertical className="w-3.5 h-3.5" />
                         </div>
                       </div>
                     )}
+
+                    {/* 删除按钮 - 常显（手机端必须） */}
+                    <button
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1.5 right-1.5 z-10 p-1.5 bg-red-500/80 backdrop-blur-sm rounded-lg text-white hover:bg-red-600 transition-colors shadow"
+                      title="删除此图片"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
                     {(image.storedUrl || image.url) && (
                       <img
                         src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
                         alt={image.filename}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover"
+                        draggable={false}
                       />
                     )}
 
@@ -734,26 +766,9 @@ export default function ImageGrabberPage() {
                         {image.status === "error" && <AlertCircle className="w-12 h-12 text-red-400" />}
                       </div>
                     )}
-
-                    {/* 操作按钮 */}
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {image.status === "success" && (
-                        <>
-                          <button onClick={() => window.open(image.storedUrl || image.url, "_blank")} className="p-1.5 bg-white rounded-lg shadow hover:bg-gray-100" title="查看原图">
-                            <ExternalLink className="w-4 h-4" />
-                          </button>
-                          <button onClick={() => copyUrl(image.storedUrl || image.url)} className="p-1.5 bg-white rounded-lg shadow hover:bg-gray-100" title="复制链接">
-                            <Copy className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      <button onClick={() => removeImage(index)} className="p-1.5 bg-white rounded-lg shadow hover:bg-red-100 text-gray-600 hover:text-red-600" title="删除">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
                   </div>
 
-                  {/* 图片信息 */}
+                  {/* 图片信息 + 操作 */}
                   <div className="p-2 bg-white">
                     <p className="text-[11px] text-gray-500 truncate">{image.filename}</p>
                     <span className={`text-[10px] font-medium block mt-0.5 ${
