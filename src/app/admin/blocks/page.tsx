@@ -81,18 +81,11 @@ export default function BlocksAdminPage() {
   const fetchBlocks = async () => {
     try {
       setLoading(true);
-      // 尝试从数据库获取
-      const { data, error } = await supabase
-        .from("page_blocks")
-        .select("*")
-        .order("sort_order", { ascending: true });
-
-      if (error) {
-        console.error("[加载版块失败]", error);
-        // 使用默认示例数据（如果表不存在）
-        setBlocks(getDefaultBlocks());
-      } else if (data && data.length > 0) {
-        setBlocks(data as Block[]);
+      // 使用后端API获取（绕过RLS）
+      const res = await fetch("/api/admin/page-blocks", { credentials: "include" });
+      const json = await res.json();
+      if (json.success && json.data && json.data.length > 0) {
+        setBlocks(json.data);
       } else {
         setBlocks(getDefaultBlocks());
       }
@@ -178,6 +171,7 @@ export default function BlocksAdminPage() {
     setSaving(true);
     try {
       const blockData = {
+        id: editingBlock?.id,
         title: form.title,
         type: form.type,
         content: form.content,
@@ -187,33 +181,25 @@ export default function BlocksAdminPage() {
         updated_at: new Date().toISOString(),
       };
 
-      if (editingBlock) {
-        // 更新
-        const { error } = await supabase
-          .from("page_blocks")
-          .update(blockData)
-          .eq("id", editingBlock.id);
+      // 使用后端API保存（绕过RLS）
+      const res = await fetch("/api/admin/page-blocks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(blockData),
+      });
 
-        if (error && !error.message?.includes("does not exist")) {
-          throw error;
-        }
-      } else {
-        // 新建
-        const { error } = await supabase.from("page_blocks").insert([
-          { ...blockData, id: `block_${Date.now()}`, created_at: new Date().toISOString() },
-        ]);
-
-        if (error && !error.message?.includes("does not exist")) {
-          throw error;
-        }
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error || `HTTP ${res.status}`);
       }
 
       // 刷新列表
       await fetchBlocks();
       setShowForm(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("[保存版块失败]", error);
-      alert("保存失败，可能是数据库表尚未创建");
+      alert("保存失败：" + error.message);
     } finally {
       setSaving(false);
     }
@@ -254,14 +240,17 @@ export default function BlocksAdminPage() {
     newBlocks.forEach((block, i) => (block.sort_order = i + 1));
     setBlocks(newBlocks);
 
-    // 保存到数据库
+    // 保存到数据库（使用后端API）
     try {
-      for (const block of newBlocks) {
-        await supabase
-          .from("page_blocks")
-          .update({ sort_order: block.sort_order })
-          .eq("id", block.id);
-      }
+      await fetch("/api/admin/page-blocks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          action: "update_sort",
+          items: newBlocks.map(b => ({ id: b.id, sort_order: b.sort_order })),
+        }),
+      });
     } catch (error) {
       console.error("[更新排序失败]", error);
     }
@@ -271,19 +260,18 @@ export default function BlocksAdminPage() {
   const togglePublish = async (block: Block) => {
     const newStatus = !block.is_published;
     try {
-      await supabase
-        .from("page_blocks")
-        .update({ is_published: newStatus, updated_at: new Date().toISOString() })
-        .eq("id", block.id);
+      await fetch("/api/admin/page-blocks", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: block.id, action: "toggle_publish" }),
+      });
 
       setBlocks((prev) =>
         prev.map((b) => (b.id === block.id ? { ...b, is_published: newStatus } : b))
       );
     } catch (error) {
-      console.error([切换发布状态失败], error);
-      setBlocks((prev) =>
-        prev.map((b) => (b.id === block.id ? { ...b, is_published: newStatus } : b))
-      );
+      console.error("[切换发布状态失败]", error);
     }
   };
 
