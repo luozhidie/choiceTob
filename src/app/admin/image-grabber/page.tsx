@@ -635,8 +635,12 @@ export default function ImageGrabberPage() {
                     }`}>
                       {image.status === "success" && `✓ ${(image.size! / 1024).toFixed(1)}KB`}
                       {image.status === "error" && (
-                        <span className="text-red-500 text-[10px] leading-tight" title={image.error || "上传失败"}>
-                          ✗ 失败{(image.error ? `: ${image.error.slice(0, 20)}` : "")}
+                        <span
+                          className="text-red-500 text-[10px] leading-tight cursor-help"
+                          title={image.error || "上传失败"}
+                          onClick={() => image.error && alert("错误详情: " + image.error)}
+                        >
+                          ✗ {image.error ? (image.error.length > 25 ? image.error.slice(0, 22) + "..." : image.error) : "失败"}
                         </span>
                       )}
                       {(image.status === "pending" || image.status === "downloading") && "..."}
