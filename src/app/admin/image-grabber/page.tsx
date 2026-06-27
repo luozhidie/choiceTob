@@ -40,7 +40,7 @@ export default function ImageGrabberPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-  const [products, setProducts] = useState<{ id: string; title: string }[]>([]);
+  const [products, setProducts] = useState<{ id: string; title: string; category?: string; subcategory?: string }[]>([]);
   const [mode, setMode] = useState<"url" | "batch" | "upload">("upload"); // 新增 upload 模式
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -386,11 +386,59 @@ export default function ImageGrabberPage() {
       .filter((img) => img.status === "success")
       .map((img) => img.storedUrl || img.url)
       .join("\n");
-    
+
     if (urls) {
       navigator.clipboard.writeText(urls);
       showToast("success", "已复制所有图片链接");
     }
+  };
+
+  // 全部导入商品库（将已上传的图片关联到选中商品）
+  const handleImportAll = async () => {
+    const successImages = images.filter((img) => img.status === "success" && img.storedUrl);
+    if (successImages.length === 0) {
+      showToast("error", "没有可导入的图片");
+      return;
+    }
+
+    // 检查是否选择了商品
+    if (!selectedProductId) {
+      showToast("error", "请先在上方选择要关联的商品");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      if (selectedProductId === "new") {
+        // 创建新商品：跳转到商品管理页创建
+        showToast("error", "请先选择已有商品，或前往「商品管理」页面新建");
+        setIsProcessing(false);
+        return;
+      }
+
+      const res = await fetch("/api/admin/products/update-images", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productId: selectedProductId,
+          images: successImages.map(img => ({
+            url: img.storedUrl,
+            filename: img.filename,
+            size: img.size,
+          })),
+        }),
+      });
+
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        throw new Error(json.error || `HTTP ${res.status}`);
+      }
+      showToast("success", `已导入 ${successImages.length} 张图片到商品`);
+    } catch (err: any) {
+      showToast("error", `导入失败：${err.message}`);
+    }
+    setIsProcessing(false);
   };
 
   // 显示提示
@@ -577,7 +625,9 @@ export default function ImageGrabberPage() {
             >
               <option value="">不关联</option>
               {products.map((p) => (
-                <option key={p.id} value={p.id}>{p.title}</option>
+                <option key={p.id} value={p.id}>
+                  {p.title}{p.category ? ` [${p.category}${p.subcategory ? '/' + p.subcategory : ''}]` : ''}
+                </option>
               ))}
               <option value="new">创建新商品</option>
             </select>
@@ -677,7 +727,8 @@ export default function ImageGrabberPage() {
             {/* 批量操作 */}
             {images.some((img) => img.status === "success") && (
               <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
-                <button className="px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:bg-primary/90 transition-colors flex items-center gap-2">
+                <button onClick={handleImportAll} disabled={isProcessing || !selectedProductId}
+                  className={`px-6 py-2.5 text-sm font-medium rounded-xl flex items-center gap-2 transition-colors ${isProcessing || !selectedProductId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`}>
                   <Upload className="w-4 h-4" />
                   全部导入商品库
                 </button>
