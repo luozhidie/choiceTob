@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { createClient } from "@/lib/supabase/client";
+// 不再导入 supabase 客户端（Storage SDK 在 Vercel 上有兼容问题）
 import {
   Download,
   Link2,
@@ -32,7 +32,8 @@ interface GrabbedImage {
 }
 
 export default function ImageGrabberPage() {
-  const supabase = createClient();
+  // 不创建 supabase 客户端（避免 Storage SDK 在 Vercel 上的兼容问题）
+  // [版本] v20240627-NUKE - 完全移除 Supabase 浏览器端 SDK
 
   const [inputText, setInputText] = useState("");
   const [images, setImages] = useState<GrabbedImage[]>([]);
@@ -44,18 +45,21 @@ export default function ImageGrabberPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  // 加载商品列表
+  // 加载商品列表（用 fetch 代替 supabase 客户端）
   useEffect(() => {
     const loadProducts = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("id, title")
-        .eq("is_active", true)
-        .limit(100);
-      if (data) setProducts(data);
+      try {
+        const res = await fetch("/api/admin/products-data?limit=100&active=true", {
+          credentials: "include",
+        });
+        const json = await res.json();
+        if (json.data) setProducts(json.data);
+      } catch {
+        // 静默失败，不影响主功能
+      }
     };
     loadProducts();
-  }, [supabase]);
+  }, []);
 
   // 从文本中提取所有图片URL
   const extractImageUrls = (text: string): string[] => {
