@@ -38,14 +38,27 @@ export default function ImageGrabberPage() {
   // [版本] v20240627-NUKE - 完全移除 Supabase 浏览器端 SDK
 
   const [inputText, setInputText] = useState("");
-  const [images, setImages] = useState<GrabbedImage[]>([]);
+  // 图片列表持久化到 sessionStorage（新标签页打开图片后返回不丢失）
+  const [images, setImagesRaw] = useState<GrabbedImage[]>(() => {
+    try {
+      const saved = sessionStorage.getItem("grabber_images");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  const setImages = (v: GrabbedImage[] | ((prev: GrabbedImage[]) => GrabbedImage[])) => {
+    const next = typeof v === "function" ? v(images) : v;
+    setImagesRaw(next);
+    try { sessionStorage.setItem("grabber_images", JSON.stringify(next)); } catch {}
+  };
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [products, setProducts] = useState<{ id: string; title: string; category?: string; subcategory?: string }[]>([]);
   // 拖拽排序状态
   const [dragIndex, setDragIndex] = useState<number | null>(null);
-  // 图片预览状态
+  // 图片预览状态（不再使用Lightbox，改为window.open新开网页）
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<"url" | "batch" | "upload">("upload"); // 新增 upload 模式
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -754,12 +767,12 @@ export default function ImageGrabberPage() {
                   {/* 图片预览 */}
                   <div
                     className="aspect-square bg-gray-100 relative overflow-hidden"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={() => {
                       if (sortMode && image.status === "success") {
                         handleLongPress(index);
                       } else if (image.status === "success") {
-                        setPreviewIndex(index);
+                        // 新开网页查看大图（像别的网站一样）
+                        window.open(image.storedUrl || image.url, "_blank");
                       }
                     }}
                   >
@@ -782,12 +795,12 @@ export default function ImageGrabberPage() {
                       <Trash2 className="w-4 h-4" />
                     </button>
 
-                    {/* 查看大图 - 改为Lightbox */}
+                    {/* 查看大图 - 新开网页 */}
                     {image.status === "success" && (
                       <button
-                        onClick={() => setPreviewIndex(index)}
+                        onClick={(e) => { e.stopPropagation(); window.open(image.storedUrl || image.url, "_blank"); }}
                         className="absolute bottom-1.5 right-1.5 z-10 p-1.5 bg-black/40 backdrop-blur-sm rounded-lg text-white hover:bg-black/60 transition-colors shadow"
-                        title="查看大图"
+                        title="查看大图（新开网页）"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </button>
@@ -886,55 +899,6 @@ export default function ImageGrabberPage() {
             </div>
           </div>
         </div>
-
-        {/* Lightbox 图片预览（当前页面内，不跳走） */}
-        {previewIndex !== null && images[previewIndex] && (
-          <div className="fixed inset-0 z-[100] bg-black/90 flex items-center justify-center" onClick={() => setPreviewIndex(null)}>
-            {/* 关闭按钮 */}
-            <button
-              onClick={(e) => { e.stopPropagation(); setPreviewIndex(null); }}
-              className="absolute top-4 right-4 z-[110] p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-            >
-              ✕
-            </button>
-
-            {/* 左右切换 */}
-            {previewIndex > 0 && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setPreviewIndex(previewIndex - 1); }}
-                className="absolute left-4 z-[110] p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                ‹
-              </button>
-            )}
-            {previewIndex < images.length - 1 && (
-              <button
-                onClick={(e) => { e.stopPropagation(); setPreviewIndex(previewIndex + 1); }}
-                className="absolute right-4 z-[110] p-3 bg-white/10 rounded-full text-white hover:bg-white/20 transition-colors"
-              >
-                ›
-              </button>
-            )}
-
-            {/* 大图 */}
-            <img
-              src={images[previewIndex].storedUrl || images[previewIndex].url}
-              alt={images[previewIndex].filename}
-              className="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-              draggable={false}
-            />
-
-            {/* 底部信息栏 */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[110] bg-black/70 backdrop-blur-sm rounded-full px-5 py-2 text-white text-xs flex items-center gap-3">
-              <span>{previewIndex + 1} / {images.length}</span>
-              <span className="text-white/60">|</span>
-              <span>{(images[previewIndex].size! / 1024).toFixed(1)}KB</span>
-              <span className="text-white/60">|</span>
-              <span className="max-w-[200px] truncate">{images[previewIndex].filename}</span>
-            </div>
-          </div>
-        )}
 
         {/* Toast提示 */}
         {toast && (
