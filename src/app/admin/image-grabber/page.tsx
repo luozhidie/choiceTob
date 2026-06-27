@@ -107,7 +107,7 @@ export default function ImageGrabberPage() {
 
     setImages((prev) => [...prev, ...newImages]);
 
-    // 逐个上传（走后端API，绕过Storage RLS）
+    // 逐个上传（走后端API，绕过Storage RLS，使用Base64+JSON避免formData兼容性问题）
     for (let i = 0; i < newImages.length; i++) {
       const idx = images.length + i;
 
@@ -125,14 +125,24 @@ export default function ImageGrabberPage() {
         const file = validFiles[i];
         if (!file) throw new Error(`第${i + 1}个文件不存在（共${validFiles.length}个有效文件）`);
 
-        // 通过后端API上传（使用service_role绕过RLS）
-        const formData = new FormData();
-        formData.append("file", file);
+        // FileReader 转为 Data URL（Base64）
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("文件读取失败"));
+          reader.readAsDataURL(file);
+        });
 
+        // 通过后端API上传（JSON方式，兼容性最好）
         const res = await fetch("/api/image-grabber/upload", {
           method: "POST",
           credentials: "include",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: file.name,
+            mimeType: file.type || "image/jpeg",
+            dataUrl,
+          }),
         });
 
         const json = await res.json();
