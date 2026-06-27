@@ -447,49 +447,59 @@ export default function ImageGrabberPage() {
     setIsProcessing(false);
   };
 
-  // ===== 拖拽排序（支持移动端触摸 + 桌面端鼠标） =====
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [touchStartY, setTouchStartY] = useState<number | null>(null);
+  // ===== 拖拽排序（移动端：长按选中 → 点目标位置交换） =====
+  const [sortMode, setSortMode] = useState(false); // 是否进入排序模式
+  const [selectedSortIndex, setSelectedSortIndex] = useState<number | null>(null); // 长按选中的图片
 
-  // 移动端触摸开始
-  const handleTouchStart = (e: React.TouchEvent, index: number) => {
+  // 移动端：长按图片进入排序模式
+  const handleLongPress = (index: number) => {
     if (!images[index] || images[index].status !== "success") return;
-    setDragIndex(index);
-    setTouchStartY(e.touches[0].clientY);
+    if (!sortMode) {
+      setSortMode(true);
+      setSelectedSortIndex(index);
+      showToast("success", `已选中第${index + 1}张，再点目标位置交换`);
+      return;
+    }
+    // 已在排序模式：点另一张即交换
+    if (selectedSortIndex !== null && selectedSortIndex !== index) {
+      const newImages = [...images];
+      const [moved] = newImages.splice(selectedSortIndex, 1);
+      newImages.splice(index, 0, moved);
+      setImages(newImages);
+      showToast("success", `已交换位置`);
+    }
+    setSortMode(false);
+    setSelectedSortIndex(null);
   };
 
-  // 移动端触摸移动
-  const handleTouchMove = (e: React.TouchEvent, index: number) => {
-    if (dragIndex === null || dragIndex === index) return;
-    e.preventDefault(); // 防止页面滚动
-    const touch = e.touches[0];
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!element) return;
-    const targetCard = element.closest("[data-image-index]");
-    if (!targetCard) return;
-    const targetIndex = parseInt(targetCard.getAttribute("data-image-index") || "-1");
-    if (targetIndex < 0 || targetIndex === dragIndex || targetIndex >= images.length) return;
-    // 交换位置
-    const newImages = [...images];
-    const [moved] = newImages.splice(dragIndex, 1);
-    newImages.splice(targetIndex, 0, moved);
-    setImages(newImages);
-    setDragIndex(targetIndex);
+  // 点击排序模式按钮
+  const toggleSortMode = () => {
+    if (sortMode) {
+      setSortMode(false);
+      setSelectedSortIndex(null);
+      showToast("success", "已退出排序模式");
+    } else {
+      setSortMode(true);
+      showToast("success", "排序模式已开启，点选要移动的图片");
+    }
   };
 
-  // 触摸结束
-  const handleTouchEnd = () => {
-    setDragIndex(null);
-    setTouchStartY(null);
-  };
-
-  // 桌面端拖拽（备用，PC上用）
+  // 桌面端拖拽（备用）
   const handleDragStart = (e: React.DragEvent, index: number) => {
     if (!images[index] || images[index].status !== "success") return;
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
   const handleDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === targetIndex) return;
+    const newImages = [...images];
+    const [moved] = newImages.splice(dragIndex, 1);
+    newImages.splice(targetIndex, 0, moved);
+    setImages(newImages);
+    setDragIndex(null);
+  };
   const handleDragEnd = () => setDragIndex(null);
 
   // 显示提示
@@ -694,9 +704,15 @@ export default function ImageGrabberPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   {images.some((img) => img.status === "success") && images.length > 1 && (
-                    <span className="text-[10px] text-gray-400 flex items-center gap-0.5 hidden sm:flex">
-                      <GripVertical className="w-3 h-3" /> 拖拽调整顺序
-                    </span>
+                    <button
+                      onClick={toggleSortMode}
+                      className={`text-sm flex items-center gap-1 px-3 py-1.5 rounded-lg transition-colors ${
+                        sortMode ? "bg-primary text-white" : "text-primary hover:text-primary/80 hover:bg-primary/5"
+                      }`}
+                    >
+                      <GripVertical className="w-4 h-4" />
+                      {sortMode ? "取消排序" : "调整顺序"}
+                    </button>
                   )}
                 {images.some((img) => img.status === "success") && (
                   <button onClick={copyAllUrls} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-primary/5">
@@ -715,24 +731,38 @@ export default function ImageGrabberPage() {
               {images.map((image, index) => (
                 <div
                   key={`${image.filename}-${index}`}
-                  data-image-index={index}
-                  // 触摸事件（移动端）
-                  onTouchStart={(e) => handleTouchStart(e, index)}
-                  onTouchMove={(e) => handleTouchMove(e, index)}
-                  onTouchEnd={handleTouchEnd}
-                  // 桌面端拖拽事件（PC备用）
-                  draggable={image.status === "success"}
+                  onClick={() => {
+                    if (sortMode && image.status === "success") {
+                      handleLongPress(index);
+                    }
+                  }}
+                  // 桌面端拖拽
+                  draggable={image.status === "success" && !sortMode}
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragOver={handleDragOver}
-                  onDragEnd={handleDragEnd}
-                  className={`group relative rounded-xl overflow-hidden border transition-all duration-150 ${
+                  onDrop={(e) => { e.stopPropagation(); handleDrop(e, index); }}
+                  className={`relative rounded-xl overflow-hidden border transition-all duration-150 ${
                     image.status === "success"
-                      ? dragIndex === index ? "border-primary border-2 shadow-md z-10" : "border-green-200 shadow-sm"
+                      ? sortMode && selectedSortIndex === index
+                        ? "border-primary border-2 shadow-md ring-2 ring-primary/30"
+                        : sortMode
+                        ? "border-dashed border-primary/40 cursor-pointer active:bg-primary/5"
+                        : "border-green-200 shadow-sm"
                       : image.status === "error" ? "border-red-200" : "border-gray-200"
                   }`}
                 >
                   {/* 图片预览 */}
-                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                  <div
+                    className="aspect-square bg-gray-100 relative overflow-hidden"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (sortMode && image.status === "success") {
+                        handleLongPress(index);
+                      } else if (image.status === "success") {
+                        setPreviewIndex(index);
+                      }
+                    }}
+                  >
                     {/* 序号 + 拖拽手柄 - 成功图片常显 */}
                     {image.status === "success" && (
                       <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-0.5 select-none">
