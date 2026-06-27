@@ -113,10 +113,10 @@ export default function ImageGrabberPage() {
     const baseIndex = images.length;
     setImages((prev) => [...prev, ...newImages]);
 
-    // 逐个上传（遍历同一个 validFiles 数组，索引完全同步）
+    // 逐个上传（浏览器直传 Supabase Storage）
     for (let i = 0; i < validFiles.length; i++) {
       const idx = baseIndex + i;
-      const { file, filename } = validFiles[i]; // 从同一数组取文件，不会undefined
+      const { file } = validFiles[i];
 
       setImages((prev) =>
         prev.map((img, index) =>
@@ -125,44 +125,37 @@ export default function ImageGrabberPage() {
       );
 
       try {
-        // FileReader 转 Base64 Data URL
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error("文件读取失败"));
-          reader.readAsDataURL(file);
-        });
+        // 浏览器直传 Storage（原始方式，最可靠）
+        const filePath = `grabbed/${Date.now()}_${(file.name || "img").replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { data, error } = await supabase.storage
+          .from("products")
+          .upload(filePath, file, {
+            cacheControl: "3600",
+            upsert: false,
+            contentType: file.type || "image/jpeg",
+          });
 
-        // JSON方式发送到后端API（兼容性最好）
-        const res = await fetch("/api/image-grabber/upload", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            filename: file.name || `${filename}`,
-            mimeType: file.type || "image/jpeg",
-            dataUrl,
-          }),
-        });
-
-        const json = await res.json();
-
-        if (!res.ok || json.error) {
-          throw new Error(json.error || `HTTP ${res.status}`);
+        if (error) {
+          console.error("[Storage] 错误:", error);
+          throw new Error(error.message || "存储上传失败");
         }
+
+        const { data: urlData } = supabase.storage
+          .from("products")
+          .getPublicUrl(filePath);
 
         setImages((prev) =>
           prev.map((img, index) =>
             index === idx ? {
               ...img,
               status: "success" as const,
-              storedUrl: json.storedUrl,
-              size: json.size || file.size,
+              storedUrl: urlData.publicUrl,
+              size: file.size,
             } : img
           )
         );
       } catch (error: any) {
-        console.error(`上传失败: ${filename}`, error);
+        console.error(`[上传失败] ${validFiles[i].filename}:`, error);
         setImages((prev) =>
           prev.map((img, index) =>
             index === idx ? { ...img, status: "error" as const, error: String(error.message || error).slice(0, 200) } : img
