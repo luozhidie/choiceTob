@@ -81,51 +81,51 @@ export default function ImageGrabberPage() {
     setIsProcessing(true);
     showToast("success", `正在处理 ${files.length} 张图片...`);
 
-    const newImages: GrabbedImage[] = [];
+    // 统一过滤：一次过滤，两个循环共用（避免索引错位）
+    const validFiles: Array<{ file: File; filename: string }> = [];
+    const baseId = Date.now();
 
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      // 兼容iOS/微信图片file.type为空的情况
-      if (file.type && !file.type.startsWith("image/") && !file.type.startsWith("application/octet-stream")) continue;
-
-      const imageId = Date.now() + i;
-      const filename = `wechat_${imageId}.${file.name.split(".").pop() || "jpg"}`;
-      
-      newImages.push({
-        url: URL.createObjectURL(file),
-        filename,
-        status: "pending",
-        isLocalFile: true,
-      });
+      // 兼容iOS/微信图片file.type为空：空=当图片处理，只拒绝明确的非图片类型
+      if (file.type && !file.type.startsWith("image/") && !file.type !== "" && !file.type.startsWith("application/octet-stream")) {
+        continue;
+      }
+      const filename = `wechat_${baseId + i}.${file.name.split(".").pop() || "jpg"}`;
+      validFiles.push({ file, filename });
     }
 
-    if (newImages.length === 0) {
+    if (validFiles.length === 0) {
       showToast("error", "未找到有效的图片文件");
       setIsProcessing(false);
       return;
     }
 
+    // 构建预览列表（使用统一过滤后的数组）
+    const newImages: GrabbedImage[] = validFiles.map(({ file, filename }) => ({
+      url: URL.createObjectURL(file),
+      filename,
+      status: "pending" as const,
+      isLocalFile: true,
+    }));
+
+    // 获取当前图片总数（用于定位新增项的索引）
+    const baseIndex = images.length;
     setImages((prev) => [...prev, ...newImages]);
 
-    // 逐个上传（走后端API，绕过Storage RLS，使用Base64+JSON避免formData兼容性问题）
-    for (let i = 0; i < newImages.length; i++) {
-      const idx = images.length + i;
+    // 逐个上传（遍历同一个 validFiles 数组，索引完全同步）
+    for (let i = 0; i < validFiles.length; i++) {
+      const idx = baseIndex + i;
+      const { file, filename } = validFiles[i]; // 从同一数组取文件，不会undefined
 
       setImages((prev) =>
         prev.map((img, index) =>
-          index === idx ? { ...img, status: "downloading" } : img
+          index === idx ? { ...img, status: "downloading" as const } : img
         )
       );
 
       try {
-        // 用与上面相同的宽松过滤逻辑，确保能取到文件
-        const validFiles = Array.from(files).filter(f =>
-          !f.type || f.type.startsWith("image/") || f.type.startsWith("application/octet-stream")
-        );
-        const file = validFiles[i];
-        if (!file) throw new Error(`第${i + 1}个文件不存在（共${validFiles.length}个有效文件）`);
-
-        // FileReader 转为 Data URL（Base64）
+        // FileReader 转 Base64 Data URL
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result as string);
@@ -133,13 +133,13 @@ export default function ImageGrabberPage() {
           reader.readAsDataURL(file);
         });
 
-        // 通过后端API上传（JSON方式，兼容性最好）
+        // JSON方式发送到后端API（兼容性最好）
         const res = await fetch("/api/image-grabber/upload", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            filename: file.name,
+            filename: file.name || `${filename}`,
             mimeType: file.type || "image/jpeg",
             dataUrl,
           }),
@@ -162,16 +162,16 @@ export default function ImageGrabberPage() {
           )
         );
       } catch (error: any) {
-        console.error(`上传失败: ${newImages[i].filename}`, error);
+        console.error(`上传失败: ${filename}`, error);
         setImages((prev) =>
           prev.map((img, index) =>
-            index === idx ? { ...img, status: "error" as const, error: error.message } : img
+            index === idx ? { ...img, status: "error" as const, error: String(error.message || error).slice(0, 200) } : img
           )
         );
       }
     }
 
-    showToast("success", `成功处理 ${newImages.length} 张微信图片`);
+    showToast("success", `成功处理 ${validFiles.length} 张图片`);
     setIsProcessing(false);
   };
 
