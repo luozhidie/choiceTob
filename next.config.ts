@@ -6,6 +6,24 @@ const nextConfig: NextConfig = {
   },
   // 强制所有页面动态渲染，禁用所有缓存
   output: "standalone",
+  // 强制刷新浏览器缓存（改版本号就重新部署）
+  generateEtags: false,
+  headers: async () => [
+    {
+      source: "/admin/image-grabber",
+      headers: [
+        { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, max-age=0" },
+        { key: "Pragma", value: "no-cache" },
+        { key: "Expires", value: "0" },
+      ],
+    },
+    {
+      source: "/api/admin/image-grabber/:path*",
+      headers: [
+        { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, max-age=0" },
+      ],
+    },
+  ],
   images: {
     remotePatterns: [
       {
