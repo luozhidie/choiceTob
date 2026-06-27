@@ -19,6 +19,7 @@ import {
   Smartphone,
   Clipboard,
   ImagePlus,
+  GripVertical,
 } from "lucide-react";
 
 interface GrabbedImage {
@@ -41,6 +42,8 @@ export default function ImageGrabberPage() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [products, setProducts] = useState<{ id: string; title: string; category?: string; subcategory?: string }[]>([]);
+  // 拖拽排序状态
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [mode, setMode] = useState<"url" | "batch" | "upload">("upload"); // 新增 upload 模式
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -441,6 +444,34 @@ export default function ImageGrabberPage() {
     setIsProcessing(false);
   };
 
+  // ===== 拖拽排序 =====
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dragIndex === null || dragIndex === index) return;
+    // 实时预览排序效果
+    const newImages = [...images];
+    const [moved] = newImages.splice(dragIndex, 1);
+    newImages.splice(index, 0, moved);
+    setImages(newImages);
+    setDragIndex(index); // 更新拖拽源索引（因为数组已变）
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragIndex(null);
+  };
+
   // 显示提示
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -637,11 +668,16 @@ export default function ImageGrabberPage() {
         {/* 结果展示 */}
         {images.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-gray-900">
-                已处理图片（{images.filter(i => i.status === "success").length}/{images.length}）
-              </h2>
-              <div className="flex gap-2">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-gray-900">
+                  已处理图片（{images.filter(i => i.status === "success").length}/{images.length}）
+                </h2>
+                <div className="flex items-center gap-2">
+                  {images.some((img) => img.status === "success") && images.length > 1 && (
+                    <span className="text-[10px] text-gray-400 flex items-center gap-0.5 hidden sm:flex">
+                      <GripVertical className="w-3 h-3" /> 拖拽调整顺序
+                    </span>
+                  )}
                 {images.some((img) => img.status === "success") && (
                   <button onClick={copyAllUrls} className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 px-3 py-1.5 rounded-lg hover:bg-primary/5">
                     <Copy className="w-4 h-4" /> 复制全部链接
@@ -653,18 +689,35 @@ export default function ImageGrabberPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div
+              className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDrop}
+            >
               {images.map((image, index) => (
                 <div
-                  key={index}
-                  className={`group relative rounded-xl overflow-hidden border ${
-                    image.status === "success" ? "border-green-200 shadow-sm" :
-                    image.status === "error" ? "border-red-200" :
-                    "border-gray-200"
+                  key={`${image.filename}-${index}`}
+                  draggable={image.status === "success"}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`group relative rounded-xl overflow-hidden border cursor-grab active:cursor-grabbing transition-all duration-200 ${
+                    image.status === "success"
+                      ? dragIndex === index ? "border-primary border-2 shadow-md scale-[1.02] z-10" : "border-green-200 shadow-sm hover:shadow-md"
+                      : image.status === "error" ? "border-red-200" : "border-gray-200"
                   }`}
                 >
                   {/* 图片预览 */}
                   <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                    {/* 拖拽手柄 - 仅成功图片显示 */}
+                    {image.status === "success" && (
+                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-0.5">
+                        <span className="text-[10px] font-bold text-white/80 bg-black/40 backdrop-blur-sm px-1 rounded leading-none">{index + 1}</span>
+                        <div className="p-1 rounded-md bg-black/30 backdrop-blur-sm text-white/70 cursor-grab active:cursor-grabbing hover:bg-black/50 transition-colors" title="拖拽调整顺序">
+                          <GripVertical className="w-3.5 h-3.5" />
+                        </div>
+                      </div>
+                    )}
                     {(image.storedUrl || image.url) && (
                       <img
                         src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
