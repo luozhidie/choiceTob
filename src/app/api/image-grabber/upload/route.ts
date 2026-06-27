@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       const formData = await request.formData();
       file = formData.get("file") as File | null;
       // 记录formData基本信息用于调试
-      formDataBody = `file=${file ? `${file.name}(${file.type},${file.size}B)` : "null"}`;
+      formDataBody = `file=${file ? `${fileName}(${mimeType},${file.size}B)` : "null"}`;
     } catch (parseErr: any) {
       console.error("[图片上传] FormData解析失败:", parseErr.message);
       return NextResponse.json(
@@ -55,9 +55,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!file.type || !file.type.startsWith("image/")) {
+    // iOS/微信图片的file.type可能为空，默认按image/jpeg处理
+    const mimeType = (file.type && file.type.startsWith("image/")) ? file.type : "image/jpeg";
+    const fileName = file.name || `image_${Date.now()}.jpg`;
+
+    // 如果明确是非图片类型才拒绝（空的不拒绝）
+    if (file.type && !file.type.startsWith("image/") && !file.type.startsWith("application/octet-stream")) {
       return NextResponse.json(
-        { error: `不支持的文件类型：${file.type || "(空)"}`, step: "validate" },
+        { error: `不支持的文件类型：${file.type}`, step: "validate" },
         { status: 400 }
       );
     }
@@ -67,7 +72,7 @@ export async function POST(request: NextRequest) {
     try {
       const arrayBuffer = await file.arrayBuffer();
       buffer = Buffer.from(arrayBuffer);
-      console.log(`[图片上传] 文件读取成功: ${file.name} (${(buffer.length / 1024).toFixed(1)}KB)`);
+      console.log(`[图片上传] 文件读取成功: ${fileName} (${(buffer.length / 1024).toFixed(1)}KB)`);
     } catch (readErr: any) {
       console.error("[图片上传] 文件读取失败:", readErr);
       return NextResponse.json(
@@ -88,14 +93,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const storagePath = `grabbed/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    
+    const storagePath = `grabbed/${Date.now()}_${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+
     let uploadResult: any;
     try {
       uploadResult = await supabase.storage
         .from("products")
         .upload(storagePath, buffer, {
-          contentType: file.type,
+          contentType: mimeType,
           cacheControl: "3600",
           upsert: false,
         });
@@ -152,7 +157,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      filename: file.name,
+      filename: fileName,
       storedUrl: publicUrl,
       size: buffer.length,
       path: storagePath,
