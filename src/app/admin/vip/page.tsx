@@ -16,6 +16,12 @@ export default function AdminVIPPage() {
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  const showToast = (message: string) => {
+    setToast({ type: "success", message });
+    setTimeout(() => setToast(null), 3000);
+  };
 
   async function fetchMembers() {
     setLoading(true);
@@ -33,14 +39,15 @@ export default function AdminVIPPage() {
     if (!confirm("确定删除此VIP记录？")) return;
     setDeletingId(id);
     try {
-      const res = await fetch("/api/admin/membership-orders-data", {
-        method: "DELETE",
+      const res = await fetch("/api/admin/common/delete", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id, table: "vip_customers" }),
       });
       const json = await res.json();
       if (json.success) {
         setMembers(prev => prev.filter(m => m.id !== id));
+        showToast("删除成功");
       } else {
         alert("删除失败：" + (json.error || ""));
       }
@@ -60,6 +67,13 @@ export default function AdminVIPPage() {
 
   return (
     <div className="min-h-screen">
+      {/* Toast提示 */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 px-5 py-3 rounded-xl shadow-lg text-white text-sm font-medium ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}>
+          {toast.message}
+        </div>
+      )}
+
       {/* 标题 */}
       <div className="flex items-center justify-between mb-6">
         <div>

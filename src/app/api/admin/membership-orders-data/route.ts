@@ -79,6 +79,18 @@ export async function PUT(req: NextRequest) {
               updated_at: now,
             })
             .eq("id", uid);
+        } else {
+          // 如果profile不存在，创建新记录
+          await supabase
+            .from("profiles")
+            .insert({
+              id: uid,
+              membership_type: mType,
+              vip_status: "active",
+              membership_confirmed_at: now,
+              created_at: now,
+              updated_at: now,
+            });
         }
       }
 
