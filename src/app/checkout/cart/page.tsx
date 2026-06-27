@@ -59,7 +59,7 @@ export default function CartCheckoutPage() {
 
     setSubmitting(true);
     try {
-      // 为每个商品创建订单（或者创建一个合并订单）
+      // 为每个商品创建订单（使用后端API绕过RLS）
       for (const item of items) {
         const orderData = {
           product_id: item.id,
@@ -77,17 +77,28 @@ export default function CartCheckoutPage() {
           shipping_name: shippingName.trim(),
           shipping_phone: shippingPhone.trim(),
           payment_method: "wechat_pay",
+          user_id: user.id,
         };
 
-        await supabase.from("buyer_orders").insert([orderData]);
+        const res = await fetch("/api/buyer-orders/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(orderData),
+        });
+
+        const json = await res.json();
+        if (!res.ok || json.error) {
+          throw new Error(json.error || "创建订单失败");
+        }
       }
 
-      // 订单创建成功 → 跳转到付款页（不再调用微信API）
+      // 订单创建成功 → 跳转到付款页
       const title = items.length === 1 ? items[0].title : `购物车订单(${totalItems}件)`;
+      clearCart();
       router.push(`/checkout/success?amount=${totalPrice}&title=${encodeURIComponent(title)}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error("提交订单失败:", err);
-      alert("提交订单失败，请稍后重试");
+      alert("提交订单失败：" + err.message);
     } finally {
       setSubmitting(false);
     }
