@@ -780,18 +780,13 @@ export default function ImageGrabberPage() {
                   </div>
                 </div>
               )})}
-            </div>
-
               {/* ➕ 继续添加图片 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group"
+                className="rounded-xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary bg-blue-50/50 cursor-pointer"
               >
-                <div className="aspect-square bg-gray-50/80 flex flex-col items-center justify-center gap-2 group-hover:bg-primary/5 transition-colors p-4">
-                  <div className="w-14 h-14 rounded-full bg-blue-100 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
-                    <ImagePlus className="w-7 h-7 text-blue-400 group-hover:text-primary transition-colors" />
-                  </div>
-                  <span className="text-xs text-blue-500 group-hover:text-primary font-semibold transition-colors">点击继续添加</span>
+                <div className="aspect-square flex items-center justify-center">
+                  <span className="text-sm text-blue-500">点击继续添加</span>
                 </div>
               </div>
             </div>
