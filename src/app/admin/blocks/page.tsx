@@ -488,6 +488,172 @@ export default function BlocksAdminPage() {
                     </div>
                   </div>
 
+                  {/* 内容配置 - 根据类型动态渲染 */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      内容配置
+                    </label>
+
+                    {/* products 商品展示 */}
+                    {form.type === "products" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">商品分类</label>
+                          <select
+                            value={(form.content as any)?.category || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), category: e.target.value || undefined } as any })}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none bg-white"
+                          >
+                            <option value="">全部分类</option>
+                            <option value="hot_picks">爆款选品</option>
+                            <option value="new_arrivals">新品上架</option>
+                            <option value="sale">折扣专区</option>
+                            <option value="clothing">服装</option>
+                            <option value="accessories">配饰</option>
+                            <option value="shoes">鞋靴</option>
+                            <option value="lingerie">内衣</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">布局方式</label>
+                          <div className="flex gap-2">
+                            {["grid", "waterfall", "carousel"].map(layout => (
+                              <button
+                                key={layout}
+                                type="button"
+                                onClick={() => setForm({ ...form, content: { ...(form.content as object || {}), layout } as any })}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${((form.content as any)?.layout || "grid") === layout ? "bg-primary text-white" : "bg-white border border-gray-200 text-gray-600 hover:border-primary"}`}
+                              >
+                                {{ grid: "网格", waterfall: "瀑布流", carousel: "轮播" }[layout]}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <label className="text-xs text-gray-500">每行</label>
+                          <input
+                            type="number"
+                            min={1}
+                            max={6}
+                            value={(form.content as any)?.columns || 4}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), columns: parseInt(e.target.value) || 4 } as any })}
+                            className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm text-center focus:border-primary outline-none"
+                          />
+                          <label className="text-xs text-gray-500">列</label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* group_buy 团购拼单 */}
+                    {form.type === "group_buy" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div className="flex gap-4">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">最低人数</label>
+                            <input
+                              type="number"
+                              min={2}
+                              value={(form.content as any)?.minPeople || 3}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), minPeople: parseInt(e.target.value) || 3 } as any })}
+                              className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:border-primary outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">折扣（0.1-1）</label>
+                            <input
+                              type="number"
+                              min={0.1}
+                              max={1}
+                              step={0.1}
+                              value={(form.content as any)?.discount || 0.8}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), discount: parseFloat(e.target.value) || 0.8 } as any })}
+                              className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:border-primary outline-none"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400">⚠️ 商品关联功能开发中，保存后前台将显示参与团购的商品</p>
+                      </div>
+                    )}
+
+                    {/* flash_sale 限时秒杀 */}
+                    {form.type === "flash_sale" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div className="flex gap-4">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">活动时长（秒）</label>
+                            <input
+                              type="number"
+                              min={60}
+                              value={(form.content as any)?.duration || 3600}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), duration: parseInt(e.target.value) || 3600 } as any })}
+                              className="w-28 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:border-primary outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">折扣（0.1-1）</label>
+                            <input
+                              type="number"
+                              min={0.1}
+                              max={1}
+                              step={0.1}
+                              value={(form.content as any)?.discount || 0.7}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), discount: parseFloat(e.target.value) || 0.7 } as any })}
+                              className="w-20 px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center focus:border-primary outline-none"
+                            />
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-400">⚠️ 商品关联功能开发中</p>
+                      </div>
+                    )}
+
+                    {/* promotion 营销活动 */}
+                    {form.type === "promotion" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">活动标题</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.promoTitle || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), promoTitle: e.target.value } as any })}
+                            placeholder="如：满300减50"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">活动描述</label>
+                          <textarea
+                            value={(form.content as any)?.promoDesc || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), promoDesc: e.target.value } as any })}
+                            placeholder="活动详细说明..."
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none h-20 resize-y"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* custom 自定义内容 */}
+                    {form.type === "custom" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">自定义内容（HTML）</label>
+                          <textarea
+                            value={(form.content as any)?.html || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), html: e.target.value } as any })}
+                            placeholder="<p>自定义 HTML 内容</p>"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:border-primary outline-none h-32 resize-y"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* recommendation 智能推荐 */}
+                    {form.type === "recommendation" && (
+                      <div className="p-4 bg-gray-50 rounded-xl">
+                        <p className="text-xs text-gray-400">🤖 智能推荐版块将根据用户浏览历史、购买偏好自动推荐商品，无需额外配置。</p>
+                      </div>
+                    )}
+                  </div>
+
                   {/* 样式设置 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
