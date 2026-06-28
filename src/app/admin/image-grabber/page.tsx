@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-// 不再导入 supabase 客户端（Storage SDK 在 Vercel 上有兼容问题）
 import {
   Download,
   Link2,
@@ -22,6 +21,17 @@ import {
   GripVertical,
   X,
 } from "lucide-react";
+
+// 强制显示版本的调试组件
+function DebugPanel({ images, isProcessing }: { images: any[], isProcessing: boolean }) {
+  if (images.length === 0) return null;
+  return (
+    <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs">
+      <p>图片数量: {images.length}</p>
+      <p>状态: {images.map((i: any, idx: number) => ` [${idx+1}]${i.status}`).join(", ")}</p>
+    </div>
+  );
+}
 
 interface GrabbedImage {
   url: string;
@@ -726,132 +736,62 @@ export default function ImageGrabberPage() {
             </div>
 
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {images.map((image, index) => {
-                const imgUrl = image.status === "success"
-                  ? (image.storedUrl || image.url)
-                  : (image.url || "");
-                return (
-                <div
-                  key={`img-${index}-${Date.now()}`}
-                  className="relative rounded-2xl overflow-hidden border border-gray-200 bg-white"
-                >
+              {images.map((image: any, index: number) => (
+                <div key={`img-${index}`} className="border rounded-lg overflow-hidden bg-white">
                   <div className="aspect-square bg-gray-100 relative">
-                    <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br">
-                      {index + 1}
-                    </span>
+                    {image.storedUrl || image.url ? (
+                      <img 
+                        src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
+                        alt={image.filename || "图片"}
+                        className="w-full h-full object-cover"
+                        onError={(e: any) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                        无预览
+                      </div>
+                    )}
                     <button
-                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                      className="absolute top-1 right-1 z-20 p-1.5 bg-red-500 text-white rounded-full shadow-lg text-xs"
+                      onClick={(e: any) => { e.stopPropagation(); removeImage(index); }}
+                      className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 text-xs"
                     >
                       ✕
                     </button>
-                    {imgUrl ? (
-                      <img src={imgUrl} alt={image.filename || "图片"} className="w-full h-full object-cover" draggable={false} />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        {image.status === "downloading" ? "上传中..." : image.status === "error" ? "失败" : "等待"}
-                      </div>
-                    )}
-                    {image.status !== "success" && imgUrl && (
-                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <span className="text-white text-xs">
-                          {image.status === "downloading" ? "⏳" : image.status === "error" ? "✗" : "○"}
-                        </span>
+                    {image.status !== "success" && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-white text-xs">{image.status}</span>
                       </div>
                     )}
                   </div>
                   <div className="p-2">
-                    <p className="text-[11px] text-gray-500 truncate">{image.filename || `图片${index+1}`}</p>
-                    <p className="text-[10px] mt-1">
+                    <p className="text-xs text-gray-500 truncate">{image.filename || `图片${index+1}`}</p>
+                    <p className="text-xs mt-1">
                       {image.status === "success" ? (
-                        <span className="text-green-600">✓ {(image.size || 0) / 1024}KB</span>
+                        <span className="text-green-600">✓ {((image.size || 0) / 1024).toFixed(1)}KB</span>
                       ) : image.status === "error" ? (
-                        <span className="text-red-500">✗ 失败</span>
+                        <span className="text-red-600">✗ 失败</span>
                       ) : (
                         <span className="text-gray-400">{image.status}</span>
                       )}
                     </p>
                     <button
-                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                      onClick={(e: any) => { e.stopPropagation(); removeImage(index); }}
                       className="w-full mt-1 py-1 text-xs text-red-600 bg-red-50 rounded hover:bg-red-100"
                     >
                       删除
                     </button>
                   </div>
                 </div>
-              )})}
-              {/* ➕ 继续添加图片 */}
-              <div
+              ))}
+              
+              {/* 继续添加图片 */}
+              <div 
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-2xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary bg-blue-50/50 cursor-pointer"
+                className="border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-600 transition-colors"
               >
-                <div className="aspect-square flex items-center justify-center">
-                  <span className="text-sm text-blue-500">点击继续添加</span>
+                <div className="text-center p-8">
+                  <p className="text-blue-500">点击继续添加图片</p>
                 </div>
               </div>
             </div>
-
-            {/* 批量操作 */}
-            {images.some((img) => img.status === "success") && (
-              <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
-                <button onClick={handleImportAll} disabled={isProcessing || !selectedProductId}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-2xl flex items-center gap-2 transition-colors ${isProcessing || !selectedProductId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`}>
-                  <Upload className="w-4 h-4" />
-                  全部导入商品库
-                </button>
-                <button onClick={copyAllUrls} className="px-6 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-2xl hover:bg-gray-50 transition-colors flex items-center gap-2">
-                  <Copy className="w-4 h-4" />
-                  复制全部链接
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* 使用说明 */}
-        <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
-          <h3 className="font-bold text-blue-900 mb-3">💡 使用方式一览</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="bg-white rounded-2xl p-4">
-              <p className="font-semibold text-blue-800 mb-2"><Smartphone className="w-4 h-4 inline-block mr-1" /> 方式1：微信图片上传（推荐）</p>
-              <ul className="space-y-1 text-blue-700 text-xs">
-                <li>• 长按保存微信图片到相册</li>
-                <li>• 点击上传区选择多张图片</li>
-                <li>• 支持拖拽、支持 Ctrl+V 粘贴</li>
-                <li>• 直接上传到云端存储</li>
-              </ul>
-            </div>
-            <div className="bg-white rounded-2xl p-4">
-              <p className="font-semibold text-blue-800 mb-2"><Link2 className="w-4 h-4 inline-block mr-1" /> 方式2：批量粘贴链接</p>
-              <ul className="space-y-1 text-blue-700 text-xs">
-                <li>• 右键复制图片地址</li>
-                <li>• 多个链接每行一个粘贴</li>
-                <li>• 自动下载并存储</li>
-                <li>• 适合已有图片链接的场景</li>
-              </ul>
-            </div>
-            <div className="bg-white rounded-2xl p-4">
-              <p className="font-semibold text-blue-800 mb-2"><Globe className="w-4 h-4 inline-block mr-1" /> 方式3：网页自动抓取</p>
-              <ul className="space-y-1 text-blue-700 text-xs">
-                <li>• 粘贴淘宝/1688等商品页链接</li>
-                <li>• 自动提取页面中的所有图片</li>
-                <li>• 适合有商品详情页的来源</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Toast提示 */}
-        {toast && (
-          <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-2xl shadow-lg z-50 flex items-center gap-2 ${
-            toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-          }`}>
-            {toast.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-            {toast.message}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
 // 强制重新部署 - Sat Jun 27 09:08:40 PM CST 2026
