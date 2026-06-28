@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, ExternalLink, ImagePlus, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Trash2, ImagePlus, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 
 interface GrabbedImage {
+  id: string;
   url: string;
   filename: string;
   size?: number;
@@ -13,15 +14,23 @@ interface GrabbedImage {
   isLocalFile?: boolean;
 }
 
-export default function ImageGrabberPage() {
-  const [images, setImages] = useState<any[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [toast, setToast] = useState<any>(null);
-  const fileInputRef = useRef<any>(null);
+let idCounter = 0;
+function nextId() {
+  idCounter += 1;
+  return `img_${Date.now()}_${idCounter}`;
+}
 
-  const showToast = (type: string, message: string) => {
+export default function ImageGrabberPage() {
+  const [images, setImages] = useState<GrabbedImage[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (type: "success" | "error", message: string) => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
     setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
+    toastTimerRef.current = setTimeout(() => setToast(null), 3000);
   };
 
   const handleLocalFilesUpload = async (files: FileList) => {
@@ -29,12 +38,12 @@ export default function ImageGrabberPage() {
     setIsProcessing(true);
     showToast("success", `正在处理 ${files.length} 张图片...`);
 
-    const validFiles: any[] = [];
-    const baseId = Date.now();
+    const validFiles: { file: File; filename: string }[] = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (file.type && !file.type.startsWith("image/") && file.type !== "" && !file.type.startsWith("application/octet-stream")) continue;
-      const filename = `wechat_${baseId + i}.${file.name.split(".").pop() || "jpg"}`;
+      const ext = file.name.split(".").pop() || "jpg";
+      const filename = `wechat_${Date.now() + i}.${ext}`;
       validFiles.push({ file, filename });
     }
 
@@ -44,19 +53,22 @@ export default function ImageGrabberPage() {
       return;
     }
 
-    const newImages = validFiles.map(({ file, filename }) => ({
+    const newImages: GrabbedImage[] = validFiles.map(({ file, filename }) => ({
+      id: nextId(),
       url: URL.createObjectURL(file),
       filename,
       status: "pending" as const,
       isLocalFile: true,
     }));
-    const baseIndex = images.length;
-    setImages((prev: any[]) => [...prev, ...newImages]);
+
+    const startIndex = images.length;
+    setImages((prev) => [...prev, ...newImages]);
 
     for (let i = 0; i < validFiles.length; i++) {
-      const idx = baseIndex + i;
+      const imgId = newImages[i].id;
       const { file } = validFiles[i];
-      setImages((prev: any[]) => prev.map((img: any, index: number) => index === idx ? { ...img, status: "downloading" as const } : img));
+
+      setImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, status: "downloading" as const } : img)));
 
       try {
         const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -78,13 +90,11 @@ export default function ImageGrabberPage() {
         });
 
         const json = await res.json();
-        if (!res.ok || json.error) throw new Error(`[API] ${json.error || `HTTP ${res.status}`}`);
+        if (!res.ok || json.error) throw new Error(`上传失败: ${json.error || `HTTP ${res.status}`}`);
 
-        setImages((prev: any[]) => prev.map((img: any, index: number) => index === idx ? {
-          ...img, status: "success" as const, storedUrl: json.storedUrl, size: json.size || file.size,
-        } : img));
+        setImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, status: "success" as const, storedUrl: json.storedUrl, size: json.size || file.size } : img)));
       } catch (error: any) {
-        setImages((prev: any[]) => prev.map((img: any, index: number) => index === idx ? { ...img, status: "error" as const, error: String(error.message || error).slice(0, 200) } : img));
+        setImages((prev) => prev.map((img) => (img.id === imgId ? { ...img, status: "error" as const, error: String(error.message || error).slice(0, 200) } : img)));
       }
     }
 
@@ -92,12 +102,12 @@ export default function ImageGrabberPage() {
     setIsProcessing(false);
   };
 
-  const handleFileChange = (e: any) => {
-    handleLocalFilesUpload(e.target.files);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleLocalFilesUpload(e.target.files!);
     e.target.value = "";
   };
 
-  const handlePaste = useCallback(async (e: any) => {
+  const handlePaste = useCallback(async (e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
     const files: File[] = [];
@@ -111,25 +121,50 @@ export default function ImageGrabberPage() {
       e.preventDefault();
       showToast("success", `检测到 ${files.length} 张剪贴板图片`);
       const dt = new DataTransfer();
-      files.forEach((f: File) => dt.items.add(f));
+      files.forEach((f) => dt.items.add(f));
       handleLocalFilesUpload(dt.files);
     }
   }, []);
 
-  const removeImage = (index: number) => { setImages((prev: any[]) => prev.filter((_: any, i: number) => i !== index)); };
-  const clearAll = () => { setImages([]); };
+  useEffect(() => {
+    document.addEventListener("paste", handlePaste as any);
+    return () => document.removeEventListener("paste", handlePaste as any);
+  }, [handlePaste]);
+
+  const removeImage = (id: string) => {
+    setImages((prev) => prev.filter((img) => img.id !== id));
+  };
+
+  const clearAll = () => {
+    setImages([]);
+  };
+
+  const successCount = images.filter((i) => i.status === "success").length;
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      <div onPaste={handlePaste} className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-gray-900">图片抓取工具</h1>
           <p className="text-gray-500 mt-2">批量处理供应商朋友圈图片，快速上传到商品库</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="border-2 border-dashed border-blue-300 bg-blue-50/30 rounded-2xl p-10 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition-all mb-4 text-center"
-            onClick={() => fileInputRef.current?.click()}>
+        {/* 上传区域 */}
+        <div
+          className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6"
+        >
+          <div
+            className="border-2 border-dashed border-blue-300 bg-blue-50/30 rounded-2xl p-10 cursor-pointer hover:border-blue-600 hover:bg-blue-50/50 transition-all text-center"
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (e.dataTransfer.files.length > 0) {
+                handleLocalFilesUpload(e.dataTransfer.files);
+              }
+            }}
+          >
             <input ref={fileInputRef} type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
             <div className="flex flex-col items-center gap-3">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -143,52 +178,84 @@ export default function ImageGrabberPage() {
           </div>
         </div>
 
+        {/* 图片网格 */}
         {images.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-900">
-                已处理图片（{images.filter((i: any) => i.status === "success").length}/{images.length}）
+                已处理图片（{successCount}/{images.length}）
               </h2>
-              <button onClick={clearAll} className="px-4 py-2 text-sm text-red-500 hover:text-red-700 transition-colors flex items-center gap-1">
+              <button
+                onClick={clearAll}
+                className="px-4 py-2 text-sm text-red-500 hover:text-red-700 transition-colors flex items-center gap-1"
+              >
                 <Trash2 className="w-4 h-4" /> 清空全部
               </button>
             </div>
 
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {images.map((image: any, index: number) => (
-                <div key={`img-${index}-${Date.now()}`} className="relative rounded-xl overflow-hidden border border-gray-200 bg-white">
+              {images.map((image) => (
+                <div
+                  key={image.id}
+                  className="relative rounded-xl overflow-hidden border border-gray-200 bg-white flex flex-col"
+                >
+                  {/* 图片区域 */}
                   <div className="aspect-square bg-gray-100 relative">
-                    <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br leading-none shadow">{index + 1}</span>
+                    {/* 序号角标 */}
+                    <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br leading-none shadow">
+                      {images.findIndex((i) => i.id === image.id) + 1}
+                    </span>
+
+                    {/* 删除按钮（悬浮） */}
                     <button
-                      onClick={(e: any) => { e.stopPropagation(); removeImage(index); }}
+                      onClick={(e) => { e.stopPropagation(); removeImage(image.id); }}
                       className="absolute top-1 right-1 z-20 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
                       title="删除此图片"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
+
+                    {/* 图片预览 */}
                     {image.storedUrl || image.url ? (
-                      <img src={image.status === "success" ? (image.storedUrl || image.url) : image.url} alt={image.filename} className="w-full h-full object-cover" draggable={false} />
+                      <img
+                        src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
+                        alt={image.filename}
+                        className="w-full h-full object-cover"
+                        draggable={false}
+                      />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">无预览</div>
                     )}
+
+                    {/* 状态遮罩 */}
                     {image.status !== "success" && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        {image.status === "pending" && <Loader2 className="w-12 h-12 text-white animate-spin" />}
-                        {image.status === "downloading" && <Loader2 className="w-12 h-12 text-white animate-spin" />}
-                        {image.status === "error" && <AlertCircle className="w-12 h-12 text-red-400" />}
+                        {(image.status === "pending" || image.status === "downloading") && (
+                          <Loader2 className="w-12 h-12 text-white animate-spin" />
+                        )}
+                        {image.status === "error" && (
+                          <div className="text-center text-white">
+                            <AlertCircle className="w-12 h-12 mx-auto" />
+                            <p className="text-xs mt-1">上传失败</p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                  <div className="p-2 bg-white border-t border-gray-100">
-                    <p className="text-[11px] text-gray-500 truncate">{image.filename || `图片${index + 1}`}</p>
+
+                  {/* 信息区域 */}
+                  <div className="p-2 bg-white border-t border-gray-100 flex-1 flex flex-col">
+                    <p className="text-[11px] text-gray-500 truncate" title={image.filename}>
+                      {image.filename}
+                    </p>
                     <p className={`text-[10px] mt-1 ${image.status === "success" ? "text-green-600" : image.status === "error" ? "text-red-600" : "text-gray-400"}`}>
                       {image.status === "success" && `✓ ${((image.size || 0) / 1024).toFixed(1)}KB`}
-                      {image.status === "error" && <span>✗ 失败</span>}
-                      {(image.status === "pending" || image.status === "downloading") && "..."}
+                      {image.status === "error" && "✗ 失败"}
+                      {(image.status === "pending" || image.status === "downloading") && "处理中..."}
                     </p>
                     <button
-                      onClick={(e: any) => { e.stopPropagation(); removeImage(index); }}
-                      className="w-full mt-1 py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      onClick={(e) => { e.stopPropagation(); removeImage(image.id); }}
+                      className="w-full mt-auto py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                     >
                       删除此图片
                     </button>
@@ -196,6 +263,7 @@ export default function ImageGrabberPage() {
                 </div>
               ))}
 
+              {/* 继续添加按钮 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
                 className="rounded-xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-blue-600 bg-blue-50/50 cursor-pointer transition-all flex items-center justify-center min-h-[180px]"
@@ -212,13 +280,15 @@ export default function ImageGrabberPage() {
         )}
       </div>
 
-        {toast && (
-          <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 ${toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
-            {toast.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-            {toast.message}
-          </div>
-        )}
-      </div>
+      {/* Toast */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 text-white ${toast.type === "success" ? "bg-green-500" : "bg-red-500"}`}
+        >
+          {toast.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }
