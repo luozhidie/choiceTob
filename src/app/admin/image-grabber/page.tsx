@@ -763,58 +763,47 @@ export default function ImageGrabberPage() {
                         ? "border-primary border-2 shadow-md ring-2 ring-primary/30"
                         : sortMode
                         ? "border-dashed border-primary/40 cursor-pointer active:bg-primary/5"
-                        : "border-green-200 shadow-sm"
+                        : "border-green-200 shadow-sm hover:shadow-md"
                       : image.status === "error" ? "border-red-200" : "border-gray-200"
                   }`}
                 >
-                  {/* 图片预览 */}
-                  <div
-                    className="aspect-square bg-gray-100 relative overflow-hidden cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (sortMode && image.status === "success") {
-                        handleSortClick(index);
-                      } else if (image.status === "success") {
-                        // 新开网页查看大图（像别的网站一样）
-                        window.open(image.storedUrl || image.url, "_blank");
-                      }
-                    }}
-                  >
-                    {/* 序号 + 拖拽手柄 - 成功图片常显 */}
-                    {image.status === "success" && (
-                      <div className="absolute top-1.5 left-1.5 z-10 flex items-center gap-0.5 select-none">
-                        <span className="text-[10px] font-bold text-white/90 bg-primary/80 backdrop-blur-sm px-1.5 py-0.5 rounded leading-none shadow">{index + 1}</span>
-                        <div className="p-1 rounded bg-black/30 backdrop-blur-sm text-white/70" title="长按拖动调整顺序">
-                          <GripVertical className="w-3.5 h-3.5" />
-                        </div>
-                      </div>
-                    )}
+                  {/* 图片预览 - 不再直接跳转大图 */}
+                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
+                    {/* 序号标签 */}
+                    <div className="absolute top-0 left-0 z-10 flex items-center gap-0 select-none">
+                      <span className="text-[10px] font-bold text-white bg-primary px-1.5 py-0.5 rounded-br leading-none shadow">{index + 1}</span>
+                    </div>
 
-                    {/* 删除按钮 - 常显（手机端必须） */}
+                    {/* 删除按钮 - 左上角红色大按钮（手机必须够大） */}
                     <button
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1.5 right-1.5 z-10 p-1.5 bg-red-500/80 backdrop-blur-sm rounded-lg text-white hover:bg-red-600 transition-colors shadow"
+                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                      className="absolute top-1 right-1 z-20 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
                       title="删除此图片"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-5 h-5" />
                     </button>
 
-                    {/* 查看大图 - 新开网页 */}
+                    {/* 查看大图按钮 - 右下角小图标 */}
                     {image.status === "success" && (
                       <button
                         onClick={(e) => { e.stopPropagation(); window.open(image.storedUrl || image.url, "_blank"); }}
-                        className="absolute bottom-1.5 right-1.5 z-10 p-1.5 bg-black/40 backdrop-blur-sm rounded-lg text-white hover:bg-black/60 transition-colors shadow"
-                        title="查看大图（新开网页）"
+                        className="absolute bottom-1 right-1 z-10 p-1.5 bg-black/50 backdrop-blur-sm rounded-md text-white hover:bg-black/70 transition-colors shadow"
+                        title="查看大图"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </button>
+                    )}
+
+                    {/* 排序模式下选中标记 */}
+                    {sortMode && selectedSortIndex === index && (
+                      <div className="absolute inset-0 z-10 ring-4 ring-primary/40 pointer-events-none" />
                     )}
 
                     {(image.storedUrl || image.url) && (
                       <img
                         src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
                         alt={image.filename}
-                        className="w-full h-full object-cover"
+                        className={`w-full h-full object-cover ${sortMode ? "" : "cursor-default"}`}
                         draggable={false}
                       />
                     )}
@@ -829,7 +818,7 @@ export default function ImageGrabberPage() {
                     )}
                   </div>
 
-                  {/* 图片信息 + 操作 */}
+                  {/* 图片信息 */}
                   <div className="p-2 bg-white">
                     <p className="text-[11px] text-gray-500 truncate">{image.filename}</p>
                     <span className={`text-[10px] font-medium block mt-0.5 ${
@@ -841,7 +830,7 @@ export default function ImageGrabberPage() {
                         <span
                           className="text-red-500 text-[10px] leading-tight cursor-help"
                           title={image.error || "上传失败"}
-                          onClick={() => image.error && alert("错误详情: " + image.error)}
+                          onClick={(e) => { e.stopPropagation(); image.error && alert("错误详情: " + image.error); }}
                         >
                           ✗ {image.error ? (image.error.length > 25 ? image.error.slice(0, 22) + "..." : image.error) : "失败"}
                         </span>
@@ -851,6 +840,19 @@ export default function ImageGrabberPage() {
                   </div>
                 </div>
               ))}
+
+              {/* ➕ 继续添加图片卡片 */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group min-h-[180px]"
+              >
+                <div className="aspect-square bg-gray-50/80 flex flex-col items-center justify-center gap-2 group-hover:bg-primary/5 transition-colors">
+                  <div className="w-14 h-14 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                    <ImagePlus className="w-7 h-7 text-gray-300 group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className="text-xs text-gray-400 group-hover:text-primary font-medium transition-colors">继续添加</span>
+                </div>
+              </div>
             </div>
 
             {/* 批量操作 */}
