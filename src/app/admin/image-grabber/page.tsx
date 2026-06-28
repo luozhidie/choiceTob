@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, ImagePlus, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Trash2, ImagePlus, Loader2, AlertCircle, CheckCircle2, GripVertical } from "lucide-react";
 
 interface GrabbedImage {
   id: string;
@@ -22,6 +22,8 @@ function nextId() {
 
 export default function ImageGrabberPage() {
   const [images, setImages] = useState<GrabbedImage[]>([]);
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +141,44 @@ export default function ImageGrabberPage() {
     setImages([]);
   };
 
+  // 拖拽排序
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDragIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    // 设置拖拽图片
+    const img = new Image();
+    img.src = images[index].storedUrl || images[index].url;
+    e.dataTransfer.setDragImage(img, 20, 20);
+  };
+
+  const handleDragOverItem = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeaveItem = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDropItem = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (dragIndex === null || dragIndex === dropIndex) return;
+    setImages((prev) => {
+      const updated = [...prev];
+      const [moved] = updated.splice(dragIndex, 1);
+      updated.splice(dropIndex, 0, moved);
+      return updated;
+    });
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragIndex(null);
+    setDragOverIndex(null);
+  };
+
   const successCount = images.filter((i) => i.status === "success").length;
 
   return (
@@ -194,27 +234,34 @@ export default function ImageGrabberPage() {
             </div>
 
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {images.map((image) => (
+              {images.map((image, index) => (
                 <div
                   key={image.id}
-                  className="relative rounded-xl overflow-hidden border border-gray-200 bg-white flex flex-col"
+                  className={`relative rounded-xl overflow-hidden border bg-white flex flex-col transition-all duration-150 ${dragOverIndex === index ? "border-blue-500 border-2 scale-[1.02] shadow-lg" : "border-gray-200"}`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOverItem(e, index)}
+                  onDragLeave={handleDragLeaveItem}
+                  onDrop={(e) => handleDropItem(e, index)}
+                  onDragEnd={handleDragEnd}
                 >
+                  {/* 拖拽手柄 + 序号 */}
+                  <div className="absolute top-0 left-0 z-10 flex items-center gap-1 text-[10px] font-bold text-white bg-blue-500/90 px-1.5 py-0.5 rounded-br leading-none shadow">
+                    <GripVertical className="w-3 h-3 cursor-grab active:cursor-grabbing" />
+                    {index + 1}
+                  </div>
+
+                  {/* 删除按钮（悬浮） */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); removeImage(image.id); }}
+                    className="absolute top-1 right-1 z-20 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
+                    title="删除此图片"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+
                   {/* 图片区域 */}
                   <div className="aspect-square bg-gray-100 relative">
-                    {/* 序号角标 */}
-                    <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br leading-none shadow">
-                      {images.findIndex((i) => i.id === image.id) + 1}
-                    </span>
-
-                    {/* 删除按钮（悬浮） */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); removeImage(image.id); }}
-                      className="absolute top-1 right-1 z-20 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
-                      title="删除此图片"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-
                     {/* 图片预览 */}
                     {image.storedUrl || image.url ? (
                       <img
