@@ -725,115 +725,62 @@ export default function ImageGrabberPage() {
               </div>
             </div>
 
-            <div
-              className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-            >
-              {images.map((image, index) => (
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {images.map((image, index) => {
+                const imgUrl = image.status === "success"
+                  ? (image.storedUrl || image.url)
+                  : (image.url || "");
+                return (
                 <div
-                  key={`${image.filename}-${image.size}-${index}`}
-                  onClick={() => {
-                    if (sortMode && image.status === "success") {
-                      handleSortClick(index);
-                    }
-                  }}
-                  // 桌面端拖拽
-                  draggable={image.status === "success" && !sortMode}
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => { e.preventDefault(); }}
-                  onDrop={(e) => { e.preventDefault(); handleDrop(e, index); }}
-                  className={`relative rounded-xl overflow-hidden border transition-all duration-150 ${
-                    image.status === "success"
-                      ? sortMode && selectedSortIndex === index
-                        ? "border-primary border-2 shadow-md ring-2 ring-primary/30"
-                        : sortMode
-                        ? "border-dashed border-primary/40 cursor-pointer active:bg-primary/5"
-                        : "border-green-200 shadow-sm hover:shadow-md"
-                      : image.status === "error" ? "border-red-200" : "border-gray-200"
-                  }`}
+                  key={`img-${index}-${Date.now()}`}
+                  className="relative rounded-xl overflow-hidden border border-gray-200 bg-white"
                 >
-                  {/* 图片预览 - 不再直接跳转大图 */}
-                  <div className="aspect-square bg-gray-100 relative overflow-hidden">
-                    {/* 序号标签 */}
-                    <div className="absolute top-0 left-0 z-10 flex items-center gap-0 select-none">
-                      <span className="text-[10px] font-bold text-white bg-primary px-1.5 py-0.5 rounded-br leading-none shadow">{index + 1}</span>
-                    </div>
-
-                    {/* 删除按钮 - 左上角红色大按钮（手机必须够大） */}
+                  <div className="aspect-square bg-gray-100 relative">
+                    <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br">
+                      {index + 1}
+                    </span>
                     <button
                       onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                      className="absolute top-1 right-1 z-20 p-2 bg-red-500 text-white rounded-full shadow-lg hover:bg-red-600 active:scale-95 transition-all"
-                      title="删除此图片"
+                      className="absolute top-1 right-1 z-20 p-1.5 bg-red-500 text-white rounded-full shadow-lg text-xs"
                     >
-                      <Trash2 className="w-5 h-5" />
+                      ✕
                     </button>
-
-                    {/* 查看大图按钮 - 右下角小图标 */}
-                    {image.status === "success" && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); window.open(image.storedUrl || image.url, "_blank"); }}
-                        className="absolute bottom-1 right-1 z-10 p-1.5 bg-black/50 backdrop-blur-sm rounded-md text-white hover:bg-black/70 transition-colors shadow"
-                        title="查看大图"
-                      >
-                        <ExternalLink className="w-4 h-4" />
-                      </button>
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={image.filename || "图片"} className="w-full h-full object-cover" draggable={false} />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        {image.status === "downloading" ? "上传中..." : image.status === "error" ? "失败" : "等待"}
+                      </div>
                     )}
-
-                    {/* 排序模式下选中标记 */}
-                    {sortMode && selectedSortIndex === index && (
-                      <div className="absolute inset-0 z-10 ring-4 ring-primary/40 pointer-events-none" />
-                    )}
-
-                    {(image.storedUrl || image.url) && (
-                      <img
-                        src={image.status === "success" ? (image.storedUrl || image.url) : image.url}
-                        alt={image.filename}
-                        className={`w-full h-full object-cover ${sortMode ? "" : "cursor-default"}`}
-                        draggable={false}
-                      />
-                    )}
-
-                    {/* 状态遮罩 */}
-                    {(image.status !== "success") && (
-                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                        {image.status === "pending" && <ImageIcon className="w-12 h-12 text-white/60" />}
-                        {image.status === "downloading" && <Loader2 className="w-12 h-12 text-white animate-spin" />}
-                        {image.status === "error" && <AlertCircle className="w-12 h-12 text-red-400" />}
+                    {image.status !== "success" && imgUrl && (
+                      <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                        <span className="text-white text-xs">
+                          {image.status === "downloading" ? "⏳" : image.status === "error" ? "✗" : "○"}
+                        </span>
                       </div>
                     )}
                   </div>
-
-                  {/* 图片信息 */}
-                  <div className="p-2 bg-white">
-                    <p className="text-[11px] text-gray-500 truncate">{image.filename}</p>
-                    <span className={`text-[10px] font-medium block mt-0.5 ${
-                      image.status === "success" ? "text-green-600" :
-                      image.status === "error" ? "text-red-600" : "text-gray-400"
-                    }`}>
-                      {image.status === "success" && `✓ ${(image.size! / 1024).toFixed(1)}KB`}
-                      {image.status === "error" && (
-                        <span
-                          className="text-red-500 text-[10px] leading-tight cursor-help"
-                          title={image.error || "上传失败"}
-                          onClick={(e) => { e.stopPropagation(); image.error && alert("错误详情: " + image.error); }}
-                        >
-                          ✗ {image.error ? (image.error.length > 25 ? image.error.slice(0, 22) + "..." : image.error) : "失败"}
-                        </span>
+                  <div className="p-2">
+                    <p className="text-[11px] text-gray-500 truncate">{image.filename || `图片${index+1}`}</p>
+                    <p className="text-[10px] mt-1">
+                      {image.status === "success" ? (
+                        <span className="text-green-600">✓ {(image.size || 0) / 1024}KB</span>
+                      ) : image.status === "error" ? (
+                        <span className="text-red-500">✗ 失败</span>
+                      ) : (
+                        <span className="text-gray-400">{image.status}</span>
                       )}
-                      {(image.status === "pending" || image.status === "downloading") && "..."}
-                    </span>
-                  </div>
-
-                  {/* 删除按钮 */}
-                  <div className="p-2 border-t border-gray-100">
+                    </p>
                     <button
                       onClick={(e) => { e.stopPropagation(); removeImage(index); }}
-                      className="w-full py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      className="w-full mt-1 py-1 text-xs text-red-600 bg-red-50 rounded hover:bg-red-100"
                     >
-                      删除此图片
+                      删除
                     </button>
                   </div>
                 </div>
-              ))}
+              )})}
+            </div>
 
               {/* ➕ 继续添加图片 */}
               <div
