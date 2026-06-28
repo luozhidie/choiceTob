@@ -203,30 +203,36 @@ export default function AdminProductsPage() {
       style_conclusion: form.style_conclusion.trim() || null,
     };
 
-    if (editingProduct) {
-      const { error } = await supabase
-        .from("products")
-        .update(payload)
-        .eq("id", editingProduct.id);
-      if (error) showToast("error", "更新失败：" + error.message);
-      else {
+    try {
+      if (editingProduct) {
+        // 编辑：走 update API（service_role 绕过 RLS）
+        const res = await fetch("/api/admin/products/update", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingProduct.id, table: "products", data: payload }),
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
         showToast("success", "商品已更新");
-        setShowForm(false);
-        setEditingProduct(null);
-        resetForm();
-        fetchProducts();
-      }
-    } else {
-      const { error } = await supabase
-        .from("products")
-        .insert([payload]);
-      if (error) showToast("error", "创建失败：" + error.message);
-      else {
+      } else {
+        // 创建：走 create API（service_role 绕过 RLS）
+        const res = await fetch("/api/admin/products/create", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const json = await res.json();
+        if (json.error) throw new Error(json.error);
         showToast("success", "商品已创建");
-        setShowForm(false);
-        resetForm();
-        fetchProducts();
       }
+      setShowForm(false);
+      setEditingProduct(null);
+      resetForm();
+      fetchProducts();
+    } catch (err: any) {
+      showToast("error", err.message || (editingProduct ? "更新失败" : "创建失败"));
     }
   };
 
