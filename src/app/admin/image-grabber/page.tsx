@@ -838,19 +838,29 @@ export default function ImageGrabberPage() {
                       {(image.status === "pending" || image.status === "downloading") && "..."}
                     </span>
                   </div>
+
+                  {/* 删除按钮 */}
+                  <div className="p-2 border-t border-gray-100">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeImage(index); }}
+                      className="w-full py-1.5 text-xs text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                    >
+                      删除此图片
+                    </button>
+                  </div>
                 </div>
               ))}
 
-              {/* ➕ 继续添加图片卡片 */}
+              {/* ➕ 继续添加图片 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl overflow-hidden border-2 border-dashed border-gray-300 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer group min-h-[180px]"
+                className="rounded-xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary hover:bg-blue-50/50 transition-all cursor-pointer group"
               >
-                <div className="aspect-square bg-gray-50/80 flex flex-col items-center justify-center gap-2 group-hover:bg-primary/5 transition-colors">
-                  <div className="w-14 h-14 rounded-full bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                    <ImagePlus className="w-7 h-7 text-gray-300 group-hover:text-primary transition-colors" />
+                <div className="aspect-square bg-gray-50/80 flex flex-col items-center justify-center gap-2 group-hover:bg-primary/5 transition-colors p-4">
+                  <div className="w-14 h-14 rounded-full bg-blue-100 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
+                    <ImagePlus className="w-7 h-7 text-blue-400 group-hover:text-primary transition-colors" />
                   </div>
-                  <span className="text-xs text-gray-400 group-hover:text-primary font-medium transition-colors">继续添加</span>
+                  <span className="text-xs text-blue-500 group-hover:text-primary font-semibold transition-colors">点击继续添加</span>
                 </div>
               </div>
             </div>
