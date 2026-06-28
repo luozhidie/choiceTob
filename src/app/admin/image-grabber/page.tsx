@@ -38,19 +38,11 @@ export default function ImageGrabberPage() {
   // [版本] v20240627-NUKE - 完全移除 Supabase 浏览器端 SDK
 
   const [inputText, setInputText] = useState("");
-  // 图片列表持久化到 sessionStorage（新标签页打开图片后返回不丢失）
-  const [images, setImagesRaw] = useState<GrabbedImage[]>(() => {
-    try {
-      const saved = sessionStorage.getItem("grabber_images");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  // 图片列表（不用 sessionStorage 持久化，避免状态混乱）
+  const [images, setImagesRaw] = useState<GrabbedImage[]>([]);
   const setImages = (v: GrabbedImage[] | ((prev: GrabbedImage[]) => GrabbedImage[])) => {
     const next = typeof v === "function" ? v(images) : v;
     setImagesRaw(next);
-    try { sessionStorage.setItem("grabber_images", JSON.stringify(next)); } catch {}
     console.log("[图片采集器] images 状态更新:", next.length, "张", next.map(i => ({ status: i.status, filename: i.filename })));
   };
   const [isProcessing, setIsProcessing] = useState(false);
@@ -179,6 +171,7 @@ export default function ImageGrabberPage() {
           throw new Error(`[API] ${json.error || `HTTP ${res.status}`}`);
         }
 
+        console.log(`[上传成功] ${validFiles[i].filename} -> ${json.storedUrl}`);
         setImages((prev) =>
           prev.map((img, index) =>
             index === idx ? {
