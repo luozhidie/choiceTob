@@ -38,20 +38,8 @@ export default function ImageGrabberPage() {
   // [版本] v20240627-NUKE - 完全移除 Supabase 浏览器端 SDK
 
   const [inputText, setInputText] = useState("");
-  // 图片列表持久化到 sessionStorage（新标签页打开图片后返回不丢失）
-  const [images, setImagesRaw] = useState<GrabbedImage[]>(() => {
-    try {
-      const saved = sessionStorage.getItem("grabber_images");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
-  const setImages = (v: GrabbedImage[] | ((prev: GrabbedImage[]) => GrabbedImage[])) => {
-    const next = typeof v === "function" ? v(images) : v;
-    setImagesRaw(next);
-    try { sessionStorage.setItem("grabber_images", JSON.stringify(next)); } catch {}
-  };
+  // 图片列表（不用 sessionStorage 避免序列化导致渲染异常）
+  const [images, setImages] = useState<GrabbedImage[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
