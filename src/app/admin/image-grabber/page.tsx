@@ -501,13 +501,13 @@ export default function ImageGrabberPage() {
   };
 
   // 桌面端拖拽（备用）
-  const handleDragStart = (e: React.DragEvent, index: number) => {
+  const handleCardDragStart = (e: React.DragEvent, index: number) => {
     if (!images[index] || images[index].status !== "success") return;
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+  const handleCardDragOver = (e: React.DragEvent) => e.preventDefault();
+  const handleCardDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     if (dragIndex === null || dragIndex === targetIndex) return;
     const newImages = [...images];
@@ -516,7 +516,7 @@ export default function ImageGrabberPage() {
     setImages(newImages);
     setDragIndex(null);
   };
-  const handleDragEnd = () => setDragIndex(null);
+  const handleCardDragEnd = () => setDragIndex(null);
 
   // 显示提示
   const showToast = (type: "success" | "error", message: string) => {
@@ -754,9 +754,9 @@ export default function ImageGrabberPage() {
                   }}
                   // 桌面端拖拽
                   draggable={image.status === "success" && !sortMode}
-                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragStart={(e) => handleCardDragStart(e, index)}
                   onDragOver={(e) => { e.preventDefault(); }}
-                  onDrop={(e) => { e.preventDefault(); handleDrop(e, index); }}
+                  onDrop={(e) => { e.preventDefault(); handleCardDrop(e, index); }}
                   className={`relative rounded-xl overflow-hidden border transition-all duration-150 ${
                     image.status === "success"
                       ? sortMode && selectedSortIndex === index
