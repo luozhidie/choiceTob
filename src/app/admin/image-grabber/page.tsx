@@ -506,16 +506,6 @@ export default function ImageGrabberPage() {
     setDragIndex(index);
     e.dataTransfer.effectAllowed = "move";
   };
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    if (dragIndex === null || dragIndex === targetIndex) return;
-    const newImages = [...images];
-    const [moved] = newImages.splice(dragIndex, 1);
-    newImages.splice(targetIndex, 0, moved);
-    setImages(newImages);
-    setDragIndex(null);
-  };
   const handleDragEnd = () => setDragIndex(null);
 
   // 显示提示
