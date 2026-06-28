@@ -51,6 +51,7 @@ export default function ImageGrabberPage() {
     const next = typeof v === "function" ? v(images) : v;
     setImagesRaw(next);
     try { sessionStorage.setItem("grabber_images", JSON.stringify(next)); } catch {}
+    console.log("[图片采集器] images 状态更新:", next.length, "张", next.map(i => ({ status: i.status, filename: i.filename })));
   };
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState("");
@@ -736,7 +737,7 @@ export default function ImageGrabberPage() {
             >
               {images.map((image, index) => (
                 <div
-                  key={`${image.filename}-${index}`}
+                  key={`${image.filename}-${image.size}-${index}`}
                   onClick={() => {
                     if (sortMode && image.status === "success") {
                       handleSortClick(index);
