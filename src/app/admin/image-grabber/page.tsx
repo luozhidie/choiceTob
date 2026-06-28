@@ -612,7 +612,7 @@ export default function ImageGrabberPage() {
               </div>
 
               {/* 快捷操作提示 */}
-              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-4 flex items-center gap-4">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-4 flex items-center gap-4">
                 <Clipboard className="w-8 h-8 text-green-600 shrink-0" />
                 <div className="text-sm text-green-800">
                   <p className="font-semibold">💡 微信朋友圈图片快速上传流程：</p>
@@ -643,7 +643,7 @@ export default function ImageGrabberPage() {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="支持：直接图片链接、淘宝/1688/微信文章等..."
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                     onKeyDown={(e) => e.key === "Enter" && handleGrab()}
                   />
                 ) : (
@@ -651,7 +651,7 @@ export default function ImageGrabberPage() {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder={"请粘贴图片链接，每行一个：\nhttps://example.com/image1.jpg\nhttps://example.com/image2.jpg"}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none h-32 resize-y font-mono text-sm"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none h-32 resize-y font-mono text-sm"
                   />
                 )}
               </div>
@@ -660,7 +660,7 @@ export default function ImageGrabberPage() {
                 <button
                   onClick={handleGrab}
                   disabled={isProcessing || !inputText.trim()}
-                  className="px-8 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="px-8 py-3 bg-primary text-white font-semibold rounded-2xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isProcessing ? (<><Loader2 className="w-5 h-5 animate-spin" /> 抓取中...</>) : (<><Sparkles className="w-5 h-5" /> 开始抓取</>)}
                 </button>
@@ -682,7 +682,7 @@ export default function ImageGrabberPage() {
             <select
               value={selectedProductId}
               onChange={(e) => setSelectedProductId(e.target.value)}
-              className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:border-primary outline-none bg-white"
+              className="w-full px-3 py-3 border border-gray-200 rounded-2xl focus:border-primary outline-none bg-white"
             >
               <option value="">不关联</option>
               {products.map((p) => (
@@ -733,7 +733,7 @@ export default function ImageGrabberPage() {
                 return (
                 <div
                   key={`img-${index}-${Date.now()}`}
-                  className="relative rounded-xl overflow-hidden border border-gray-200 bg-white"
+                  className="relative rounded-2xl overflow-hidden border border-gray-200 bg-white"
                 >
                   <div className="aspect-square bg-gray-100 relative">
                     <span className="absolute top-0 left-0 z-10 text-[10px] font-bold text-white bg-blue-500 px-1.5 py-0.5 rounded-br">
@@ -783,7 +783,7 @@ export default function ImageGrabberPage() {
               {/* ➕ 继续添加图片 */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary bg-blue-50/50 cursor-pointer"
+                className="rounded-2xl overflow-hidden border-2 border-dashed border-blue-300 hover:border-primary bg-blue-50/50 cursor-pointer"
               >
                 <div className="aspect-square flex items-center justify-center">
                   <span className="text-sm text-blue-500">点击继续添加</span>
@@ -795,11 +795,11 @@ export default function ImageGrabberPage() {
             {images.some((img) => img.status === "success") && (
               <div className="mt-6 pt-6 border-t border-gray-200 flex gap-3">
                 <button onClick={handleImportAll} disabled={isProcessing || !selectedProductId}
-                  className={`px-6 py-2.5 text-sm font-medium rounded-xl flex items-center gap-2 transition-colors ${isProcessing || !selectedProductId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`}>
+                  className={`px-6 py-2.5 text-sm font-medium rounded-2xl flex items-center gap-2 transition-colors ${isProcessing || !selectedProductId ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-primary text-white hover:bg-primary/90'}`}>
                   <Upload className="w-4 h-4" />
                   全部导入商品库
                 </button>
-                <button onClick={copyAllUrls} className="px-6 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-2">
+                <button onClick={copyAllUrls} className="px-6 py-2.5 border border-gray-200 text-gray-700 text-sm font-medium rounded-2xl hover:bg-gray-50 transition-colors flex items-center gap-2">
                   <Copy className="w-4 h-4" />
                   复制全部链接
                 </button>
@@ -812,7 +812,7 @@ export default function ImageGrabberPage() {
         <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100">
           <h3 className="font-bold text-blue-900 mb-3">💡 使用方式一览</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-            <div className="bg-white rounded-xl p-4">
+            <div className="bg-white rounded-2xl p-4">
               <p className="font-semibold text-blue-800 mb-2"><Smartphone className="w-4 h-4 inline-block mr-1" /> 方式1：微信图片上传（推荐）</p>
               <ul className="space-y-1 text-blue-700 text-xs">
                 <li>• 长按保存微信图片到相册</li>
@@ -821,7 +821,7 @@ export default function ImageGrabberPage() {
                 <li>• 直接上传到云端存储</li>
               </ul>
             </div>
-            <div className="bg-white rounded-xl p-4">
+            <div className="bg-white rounded-2xl p-4">
               <p className="font-semibold text-blue-800 mb-2"><Link2 className="w-4 h-4 inline-block mr-1" /> 方式2：批量粘贴链接</p>
               <ul className="space-y-1 text-blue-700 text-xs">
                 <li>• 右键复制图片地址</li>
@@ -830,7 +830,7 @@ export default function ImageGrabberPage() {
                 <li>• 适合已有图片链接的场景</li>
               </ul>
             </div>
-            <div className="bg-white rounded-xl p-4">
+            <div className="bg-white rounded-2xl p-4">
               <p className="font-semibold text-blue-800 mb-2"><Globe className="w-4 h-4 inline-block mr-1" /> 方式3：网页自动抓取</p>
               <ul className="space-y-1 text-blue-700 text-xs">
                 <li>• 粘贴淘宝/1688等商品页链接</li>
@@ -843,7 +843,7 @@ export default function ImageGrabberPage() {
 
         {/* Toast提示 */}
         {toast && (
-          <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-2 ${
+          <div className={`fixed bottom-6 right-6 px-6 py-3 rounded-2xl shadow-lg z-50 flex items-center gap-2 ${
             toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
           }`}>
             {toast.type === "success" ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
