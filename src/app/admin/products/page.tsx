@@ -301,23 +301,54 @@ export default function AdminProductsPage() {
     setShowForm(true);
   };
 
+  // 批量图片上传（调用 image-grabber API，走 service_role 绕过 RLS）
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { showToast("error", "图片不能超过5MB"); return; }
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
     setUploading(true);
-    try {
-      const fileName = `products/${Date.now()}_${file.name}`;
-      const { error: upErr } = await supabase.storage.from("products").upload(fileName, file);
-      if (upErr) throw upErr;
-      const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
-      setForm(f => ({ ...f, images: [...f.images, urlData.publicUrl] }));
-      showToast("success", "图片上传成功");
-    } catch (err: any) {
-      showToast("error", "上传失败：" + (err.message || "请重试"));
-    } finally {
-      setUploading(false);
+    showToast("success", `正在上传 ${files.length} 张图片...`);
+
+    let successCount = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.size > 5 * 1024 * 1024) continue; // 跳过超过5MB的
+
+      try {
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("文件读取失败"));
+          reader.readAsDataURL(file);
+        });
+
+        const res = await fetch("/api/image-grabber/upload", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: (file.name || `product_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, "_"),
+            mimeType: file.type || "image/jpeg",
+            dataUrl,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+
+        setForm(f => ({ ...f, images: [...f.images, json.storedUrl] }));
+        successCount++;
+      } catch (err: any) {
+        console.error(`商品图片[${i}] 上传失败:`, err);
+      }
     }
+
+    if (successCount > 0) {
+      showToast("success", `成功上传 ${successCount}/${files.length} 张图片`);
+    } else {
+      showToast("error", "所有图片上传失败");
+    }
+    setUploading(false);
+    e.target.value = "";
   };
 
   const removeImage = (idx: number) => {
@@ -809,10 +840,10 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* 商品图片上传 */}
+              {/* 商品图片上传 - 支持批量多选 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  商品图片
+                  商品图片 <span className="text-xs text-gray-400 font-normal">（支持多选，一次可上传多张）</span>
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {form.images.map((img, idx) => (
@@ -824,9 +855,12 @@ export default function AdminProductsPage() {
                       </button>
                     </div>
                   ))}
-                  <label className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
-                    <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
+                  <label className={`w-16 h-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? "border-accent bg-accent/10" : "border-gray-300 hover:border-accent hover:bg-accent/5"}`}>
+                    {uploading
+                      ? <><Loader2 className="w-4 h-4 animate-spin text-accent mb-0.5" /><span className="text-[9px] text-accent">上传中</span></>
+                      : <><Upload className="w-4 h-4 text-gray-400 mb-0.5" /><span className="text-[9px] text-gray-400">添加图片</span></>
+                    }
+                    <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} className="hidden" />
                   </label>
                 </div>
               </div>
