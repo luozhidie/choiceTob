@@ -59,6 +59,145 @@ const DEFAULT_STYLES = {
   borderRadius: 12,
 };
 
+/* ===== 商品选择器组件 ===== */
+function ProductPicker({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const supabase = createClient();
+
+  const selectedIds = value ? value.split(",").map((s) => s.trim()).filter(Boolean) : [];
+
+  // 加载商品列表
+  useEffect(() => {
+    if (!open) return;
+    setLoading(true);
+    fetch("/api/admin/products-data?limit=100", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && json.data) setProducts(json.data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [open]);
+
+  // 过滤
+  const filtered = products.filter(
+    (p) =>
+      !selectedIds.includes(p.id) &&
+      (p.title || p.name || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedProducts = products.filter((p) => selectedIds.includes(p.id));
+
+  const toggle = (id: string) => {
+    const next = selectedIds.includes(id)
+      ? selectedIds.filter((i) => i !== id)
+      : [...selectedIds, id];
+    onChange(next.join(","));
+  };
+
+  return (
+    <div className="border border-gray-200 rounded-lg overflow-hidden">
+      {/* 已选商品 */}
+      {selectedProducts.length > 0 && (
+        <div className="p-2 bg-gray-50 flex flex-wrap gap-2 min-h-[44px]">
+          {selectedProducts.map((p) => (
+            <span
+              key={p.id}
+              className="inline-flex items-center gap-1 px-2 py-1 bg-white border border-gray-200 rounded-md text-xs"
+            >
+              {p.name || p.title || "商品"}
+              <button
+                type="button"
+                onClick={() => toggle(p.id)}
+                className="text-gray-400 hover:text-red-500 ml-1"
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* 搜索 + 展开 */}
+      {!open ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="w-full px-3 py-2 text-left text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 flex items-center gap-1.5"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {selectedIds.length > 0
+            ? `已选 ${selectedIds.length} 件，点击继续添加`
+            : "点击选择商品"}
+        </button>
+      ) : (
+        <div className="border-t border-gray-200">
+          {/* 搜索框 */}
+          <div className="px-3 pt-2">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="搜索商品名称..."
+              className="w-full px-3 py-1.5 border border-gray-200 rounded text-sm focus:border-primary outline-none mb-2"
+              autoFocus
+            />
+          </div>
+
+          {/* 商品列表 */}
+          <div className="max-h-[220px] overflow-y-auto px-3 pb-2 space-y-1">
+            {loading ? (
+              <div className="py-6 text-center text-xs text-gray-400">加载中...</div>
+            ) : filtered.length === 0 ? (
+              <div className="py-6 text-center text-xs text-gray-400">没有更多可选商品</div>
+            ) : (
+              filtered.slice(0, 30).map((p) => (
+                <label
+                  key={p.id}
+                  className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-gray-50 cursor-pointer text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    onChange={() => toggle(p.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  {p.image_url || p.cover_image ? (
+                    <img
+                      src={p.image_url || p.cover_image}
+                      alt=""
+                      className="w-8 h-8 object-cover rounded"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-gray-300 text-xs">图</div>
+                  )}
+                  <span className="flex-1 truncate">{p.name || p.title || "商品"}</span>
+                  <span className="text-[10px] text-gray-400">¥{(p.price || 0) / 100}</span>
+                </label>
+              ))
+            )}
+          </div>
+
+          {/* 底部操作栏 */}
+          <div className="px-3 py-2 border-t border-gray-100 flex justify-between items-center bg-gray-50">
+            <span className="text-[11px] text-gray-500">已选 {selectedIds.length} 件</span>
+            <button
+              type="button"
+              onClick={() => { setOpen(false); setSearch(""); }}
+              className="px-3 py-1 text-xs font-medium text-primary hover:bg-primary/5 rounded"
+            >
+              完成
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BlocksAdminPage() {
   const supabase = createClient();
 
@@ -560,15 +699,12 @@ export default function BlocksAdminPage() {
                           <label className="text-xs text-gray-500">列</label>
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">指定商品ID（可选）</label>
-                          <input
-                            type="text"
+                          <label className="block text-xs text-gray-500 mb-1">选择商品（可选）</label>
+                          <ProductPicker
                             value={(form.content as any)?.productIds || ""}
-                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: e.target.value } as any })}
-                            placeholder="留空=自动按分类加载；或填：id1,id2,id3"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
                           />
-                          <p className="text-[10px] text-gray-400 mt-1">填写后只显示指定的商品，留空则根据分类自动加载</p>
+                          <p className="text-[10px] text-gray-400 mt-1">不选则自动按分类加载；选中后只显示这些商品</p>
                         </div>
                       </div>
                     )}
