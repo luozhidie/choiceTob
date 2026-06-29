@@ -45,14 +45,8 @@ export default function AdminPlanningOrdersPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [supabase, setSupabase] = useState<any>(null);
+  const supabase = createClient();
   const router = useRouter();
-
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -60,7 +54,6 @@ export default function AdminPlanningOrdersPage() {
   };
 
   const fetchOrders = async () => {
-    if (!supabase) return;
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -88,7 +81,7 @@ export default function AdminPlanningOrdersPage() {
     }
   };
 
-  useEffect(() => { fetchOrders(); }, [supabase]);
+  useEffect(() => { fetchOrders(); }, []);
 
   const handleUpdateStatus = async (id: string, status: string) => {
     try {
@@ -115,6 +108,7 @@ export default function AdminPlanningOrdersPage() {
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
+      if (error) throw error;
       showToast("success", "已删除");
       fetchOrders();
     } catch (err: any) {
