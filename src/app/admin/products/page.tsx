@@ -34,6 +34,7 @@ interface Product {
   images: string[] | null;
   price: number;
   original_price: number | null;
+  wholesale_price: number | null;
   category: string | null;
   subcategory: string | null;
   tags: string[] | null;
@@ -73,6 +74,7 @@ export default function AdminProductsPage() {
     images: [] as string[],
     price: "",
     original_price: "",
+    wholesale_price: "",
     category: "",
     subcategory: "",
     stock: "0",
@@ -182,6 +184,9 @@ export default function AdminProductsPage() {
       original_price: form.original_price
         ? parseInt(form.original_price) * 100
         : null,
+      wholesale_price: form.wholesale_price
+        ? parseInt(form.wholesale_price) * 100
+        : null,
       category: form.category || null,
       subcategory: form.subcategory || null,
       stock: parseInt(form.stock) || 0,
@@ -289,6 +294,9 @@ export default function AdminProductsPage() {
       price: (product.price / 100).toString(),
       original_price: product.original_price
         ? (product.original_price / 100).toString()
+        : "",
+      wholesale_price: product.wholesale_price
+        ? (product.wholesale_price / 100).toString()
         : "",
       category: product.category || "",
       subcategory: product.subcategory || "",
@@ -565,6 +573,7 @@ export default function AdminProductsPage() {
                   <th className="px-5 py-3 font-medium">商品</th>
                   <th className="px-5 py-3 font-medium">品类</th>
                   <th className="px-5 py-3 font-medium">价格</th>
+                  <th className="px-5 py-3 font-medium">批发价</th>
                   <th className="px-5 py-3 font-medium">库存</th>
                   <th className="px-5 py-3 font-medium">状态</th>
                   <th className="px-5 py-3 font-medium text-right">操作</th>
@@ -631,6 +640,15 @@ export default function AdminProductsPage() {
                             {formatPrice(product.original_price)}
                           </div>
                         )}
+                    </td>
+                    <td className="px-5 py-3.5">
+                      {product.wholesale_price ? (
+                        <span className="text-sm font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                          {formatPrice(product.wholesale_price)}
+                        </span>
+                      ) : (
+                        <span className="text-gray-300 text-sm">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <span
@@ -715,10 +733,10 @@ export default function AdminProductsPage() {
                   placeholder="商品标题"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    价格（元）*
+                    零售价（元）*
                   </label>
                   <input
                     type="number"
@@ -729,6 +747,20 @@ export default function AdminProductsPage() {
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="如 99"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    批发价（元）
+                  </label>
+                  <input
+                    type="number"
+                    value={form.wholesale_price}
+                    onChange={(e) =>
+                      setForm({ ...form, wholesale_price: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="价格会员可见"
                   />
                 </div>
                 <div>

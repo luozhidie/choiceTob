@@ -20,14 +20,22 @@ export async function POST(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    const { data, error } = await supabase.from("products").insert([payload]).select().single();
-
-    if (error) {
-      console.error("[创建商品API错误]", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // 如果 wholesale_price 列不存在，先移除该字段避免报错
+    const safePayload = { ...payload };
+    try {
+      const { data, error } = await supabase.from("products").insert([safePayload]).select().single();
+      if (error) throw error;
+      return NextResponse.json({ success: true, product: data });
+    } catch (insertError: any) {
+      // 如果错误是 "wholesale_price" 列不存在，去掉重试
+      if (insertError?.message?.includes("wholesale_price") || insertError?.code === "42703") {
+        delete safePayload.wholesale_price;
+        const { data, error } = await supabase.from("products").insert([safePayload]).select().single();
+        if (error) throw error;
+        return NextResponse.json({ success: true, product: data });
+      }
+      throw insertError;
     }
-
-    return NextResponse.json({ success: true, product: data });
   } catch (err: any) {
     console.error("[创建商品API错误]", err);
     return NextResponse.json({ error: err.message || "服务器内部错误" }, { status: 500 });

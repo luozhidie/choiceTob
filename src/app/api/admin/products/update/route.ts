@@ -21,13 +21,23 @@ export async function POST(request: NextRequest) {
     );
 
     const tableName = table || "products";
-    const { error } = await supabase.from(tableName).update(data).eq("id", id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    
+    // 兼容性处理：如果 wholesale_price 列不存在则移除
+    const safeData = { ...data };
+    try {
+      const { error } = await supabase.from(tableName).update(safeData).eq("id", id);
+      if (error) throw error;
+      return NextResponse.json({ success: true });
+    } catch (updateError: any) {
+      if (safeData.wholesale_price !== undefined && 
+          (updateError?.message?.includes("wholesale_price") || updateError?.code === "42703")) {
+        delete safeData.wholesale_price;
+        const { error } = await supabase.from(tableName).update(safeData).eq("id", id);
+        if (error) throw error;
+        return NextResponse.json({ success: true });
+      }
+      throw updateError;
     }
-
-    return NextResponse.json({ success: true });
   } catch (err: any) {
     console.error("[更新商品API错误]", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
