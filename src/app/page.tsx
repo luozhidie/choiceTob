@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
@@ -101,6 +101,15 @@ const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subK
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+
+/* ===== 价格格式化：智能判断分/元 ===== */
+function formatPrice(price: number | null | undefined): string {
+  if (!price) return "0";
+  // 价格 >= 10000 认为是"分"，需要除以100；否则认为已经是"元"
+  const p = Number(price);
+  if (p >= 10000) return Math.round(p / 100).toLocaleString();
+  return p.toLocaleString();
+}
 
 // ProductBlock：根据版块配置加载并渲染商品
 function ProductBlock({ block, bg, textColor, pad, radius, content, layout, columns }: {
@@ -210,7 +219,7 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
                   )}
                 </div>
                 <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{Math.round((product.price || 0) / 100) || product.price || 0}</p>
+                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{formatPrice(product.price)}</p>
               </Link>
             ))}
           </div>
@@ -387,7 +396,7 @@ function RecommendationBlock({ block, content, bg, textColor, pad, radius, colum
                   <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] px-2 py-0.5 rounded-full font-medium">AI推荐</div>
                 </div>
                 <h4 className="font-medium text-[13px] line-clamp-2 group-hover:text-rose-500 transition-colors">{p.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[14px]">¥{Math.round((p.price || 0) / 100)}</p>
+                <p className="text-red-500 font-bold mt-1 text-[14px]">¥{formatPrice(p.price)}</p>
               </Link>
             ))}
           </div>
@@ -539,9 +548,15 @@ export default function Home() {
     );
   };
 
+  // 是否有商品类型的版块（有则隐藏中间硬编码的商品列表区）
+  const hasProductBlocks = useMemo(() =>
+    blocks.some((b) => b.type === "products"),
+    [blocks]
+  );
+
   return (
     <div className="min-h-screen bg-white">
-      {/* ===== 全屏轮播图区域（搜索栏 + 分类 + 标题全部叠在上面） ===== */}
+      {/* ===== 全屏轮播图区域 ===== */}
       <section className="relative overflow-hidden" style={{ height: "90vh", minHeight: "600px" }}>
         {/* 轮播图背景 */}
         <HeroCarousel />
@@ -619,7 +634,8 @@ export default function Home() {
       {/* ===== 商品列表上方版块 ===== */}
       {blocksByPosition("product_top").map(renderBlock)}
 
-      {/* ===== 商品列表区 ===== */}
+      {/* ===== 商品列表区（仅当没有商品类型版块时显示，避免重复） ===== */}
+      {!hasProductBlocks && (
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-gray-900">
@@ -667,7 +683,7 @@ export default function Home() {
                   )}
                 </div>
                 <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{product.price}</p>
+                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{formatPrice(product.price)}</p>
                 <Link href={`/shop/${product.id}`} className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all">
                   下单
                 </Link>
@@ -676,6 +692,7 @@ export default function Home() {
           </div>
         )}
       </section>
+      )}
 
       {/* ===== 商品列表下方版块 ===== */}
       {blocksByPosition("product_bottom").map(renderBlock)}
