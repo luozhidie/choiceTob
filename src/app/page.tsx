@@ -138,10 +138,16 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
           if (ids.length > 0) {
             const res = await fetch(`/api/public/products?ids=${ids.join(",")}&limit=${ids.length}`);
             const json = await res.json();
-            if (json.success && json.data) {
-              // 按ID顺序排列
+            if (json.success && json.data && json.data.length > 0) {
               const ordered = ids.map((id: string) => (json.data as any[]).find((p: any) => p.id === id)).filter(Boolean);
               setBlockProducts(ordered);
+            } else if (categoryParam) {
+              // fallback到分类加载
+              const catRes = await fetch(`/api/public/products?category=${encodeURIComponent(categoryParam)}&limit=20`);
+              const catJson = await catRes.json();
+              setBlockProducts(catJson.success ? (catJson.data || []) : []);
+            } else {
+              setBlockProducts([]);
             }
           } else {
             setBlockProducts([]);
