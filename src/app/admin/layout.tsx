@@ -31,30 +31,52 @@ const menuGroups = [
     { label: "测试码管理", href: "/admin/test-codes" },
   ]},
 
-  // ─── 充值管理（保留） ───
+  // ─── 充值管理 ───
   { label: "充值管理", items: [
     { label: "充值订单", href: "/admin/charge-orders" },
   ]},
 
-  // ─── 商品&企划 ───
-  { label: "商品&企划", items: [
-    { label: "企划需求处理", href: "/admin/planning-requests" },
-    { label: "企划订单管理", href: "/admin/planning-orders" },
+  // ══════════════════════════════════════
+  //   商品相关（拆分为5个逻辑分组）
+  // ══════════════════════════════════════
+
+  // ─── 商品管理（基础CRUD） ───
+  { label: "商品管理", items: [
+    { label: "商品列表", href: "/admin/products" },
     { label: "商品企划", href: "/admin/product-plan" },
-    { label: "生成企划报告", href: "/admin/report" },
-    { label: "商品管理", href: "/admin/products" },
     { label: "测款管理", href: "/admin/testing" },
     { label: "轮播图管理", href: "/admin/banners" },
+  ]},
+
+  // ─── 爆款管理 ───
+  { label: "爆款管理", items: [
     { label: "爆款样衣", href: "/admin/hot-products" },
     { label: "爆款货盘", href: "/admin/hot-picks" },
     { label: "爆款图片", href: "/admin/hot-picks-images" },
+  ]},
+
+  // ─── 买手选品 ───
+  { label: "买手选品", items: [
     { label: "买手选品", href: "/admin/buyer" },
-    { label: "选品步骤", href: "/admin/planning-steps" },
-    { label: "选品功能", href: "/admin/assortment" },
     { label: "买手中心", href: "/admin/buyer-center" },
     { label: "买手步骤", href: "/admin/buyer-steps" },
-    { label: "货盘规划", href: "/admin/product-evaluation" },
+    { label: "选品步骤", href: "/admin/planning-steps" },
   ]},
+
+  // ─── 货盘&评估（修正路由对应） ───
+  { label: "货盘&评估", items: [
+    { label: "货盘规划", href: "/admin/assortment" },           // ✅ assortment = 货盘规划（基于VIP画像+爆款数据+库存）
+    { label: "选品评估", href: "/admin/product-evaluation" },    // ✅ product-evaluation = 选品评估（五维评分）
+  ]},
+
+  // ─── 企划服务 ───
+  { label: "企划服务", items: [
+    { label: "企划需求处理", href: "/admin/planning-requests" },
+    { label: "企划订单管理", href: "/admin/planning-orders" },
+    { label: "生成企划报告", href: "/admin/report" },
+  ]},
+
+  // ══════════════════════════════════════
 
   // ─── 采购&供应链 ───
   { label: "采购&供应链", items: [
@@ -129,14 +151,14 @@ const menuGroups = [
     { label: "杂志", href: "/admin/magazine" },
   ]},
 
-  // ─── 趋势（保留额外分组） ───
+  // ─── 趋势 ───
   { label: "趋势", items: [
     { label: "趋势预测", href: "/admin/trend-predict" },
     { label: "趋势中心", href: "/admin/trend-center" },
     { label: "明星同款", href: "/admin/celebrity" },
   ]},
 
-  // ─── 其他（保留） ───
+  // ─── 其他 ───
   { label: "其他", items: [
     { label: "访客管理", href: "/admin/visitors" },
     { label: "待审", href: "/admin/pending" },
@@ -150,7 +172,6 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // ── 所有 hooks 必须在组件顶层无条件调用 ──
   const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -160,7 +181,6 @@ export default function AdminLayout({
     setMounted(true);
   }, []);
 
-  // 根据当前路径自动展开对应分组
   useEffect(() => {
     if (!mounted || collapsed) return;
     const autoExpand = new Set<string>();
@@ -171,7 +191,7 @@ export default function AdminLayout({
           break;
         }
       }
-      if (autoExpand.has(group.label)) break; // 找到就停止外层循环
+      if (autoExpand.has(group.label)) break;
     }
     setExpandedGroups(autoExpand);
   }, [pathname, mounted, collapsed]);
@@ -192,12 +212,10 @@ export default function AdminLayout({
     setExpandedGroups(new Set());
   }, []);
 
-  // 登录页直接渲染子内容（无侧边栏）
   if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
-  // 首次渲染未挂载时显示加载占位（SSR安全）
   if (!mounted) {
     return (
       <div style={{ minHeight: "100vh", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -214,7 +232,6 @@ export default function AdminLayout({
     return "数据概览";
   };
 
-  // ── 主布局 ──
   return (
     <div style={{ minHeight: "100vh", background: "#1a1a2e", display: "flex" }}>
       {/* 侧边栏 */}
@@ -300,7 +317,6 @@ export default function AdminLayout({
 
             return (
               <div key={group.label} style={{ marginBottom: 2 }}>
-                {/* 分组标题 */}
                 {!collapsed && (
                   <button
                     onClick={() => toggleGroup(group.label)}
@@ -324,7 +340,6 @@ export default function AdminLayout({
                   </button>
                 )}
 
-                {/* 菜单项 */}
                 {(isExpanded || collapsed) && (
                   <div style={{ opacity: 1 }}>
                     {group.items.map((item) => {
