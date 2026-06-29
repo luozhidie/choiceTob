@@ -26,6 +26,7 @@ interface Product {
   images: string[] | null;
   price: number;
   original_price: number | null;
+  wholesale_price: number | null;   // 批发价
   category: string | null;
   subcategory: string | null;
   tags: string[] | null;
@@ -63,12 +64,12 @@ export default function ProductDetailPage() {
     supabase.auth.getUser().then(({ data: { user: u } }) => {
       setUser(u || null);
       if (u) {
-        // 查是否有价格会员订单
+        // 查是否有价格会员订单（用 plan_id 判断，status 包含 confirmed/paid/completed）
         supabase.from("membership_orders")
-          .select("id")
+          .select("id, plan_id, status")
           .eq("user_id", u.id)
-          .in("status", ["paid", "completed"])
-          .in("type", ["view_price", "price_member"])
+          .in("status", ["paid", "completed", "confirmed"])
+          .in("plan_id", ["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3", "daily_looks"])
           .then(({ data }: any) => {
             setIsPriceMember(data && data.length > 0);
           });
@@ -108,6 +109,7 @@ export default function ProductDetailPage() {
               images: p.images || null,
               price: p.price || 0,
               original_price: p.original_price || null,
+              wholesale_price: p.wholesale_price || null,   // 批发价
               category: p.category || null,
               subcategory: p.subcategory || null,
               tags: p.tags || null,
@@ -141,6 +143,7 @@ export default function ProductDetailPage() {
               images: p.images || null,
               price: p.price || 0,
               original_price: p.original_price || null,
+              wholesale_price: p.wholesale_price || null,   // 批发价
               category: p.category || null,
               subcategory: p.subcategory || null,
               tags: p.tags || null,
@@ -478,7 +481,7 @@ export default function ProductDetailPage() {
                 <div className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${isPriceMember && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
                    onClick={() => {
                      if (!user) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
-                     if (!isPriceMember) setShowVipModal(true);
+                     if (!isPriceMember) setShowWholesalePrompt(true);
                    }}
                 >
                   <Lock className="w-4 h-4 text-blue-500 shrink-0" />
@@ -870,6 +873,85 @@ export default function ProductDetailPage() {
                   分享给好友，一起发现好物<br />
                   每次分享都可能获得推荐奖励
                 </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ====== VIP会员购买弹窗 ====== */}
+      <AnimatePresence>
+        {showWholesalePrompt && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowWholesalePrompt(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+            >
+              {/* 头部 */}
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-bold text-gray-900">开通价格会员</h3>
+                </div>
+                <button
+                  onClick={() => setShowWholesalePrompt(false)}
+                  className="p-1.5 rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* 内容 */}
+              <div className="px-6 py-5">
+                <p className="text-sm text-gray-500 mb-4">
+                  开通价格会员后，可查看所有商品批发价，享受专属采购权益
+                </p>
+
+                {/* 套餐选项 */}
+                <div className="space-y-3">
+                  {[
+                    { id: "price_trial", name: "体验会员", price: "¥19.9", days: "14天", desc: "短期体验批发价查看" },
+                    { id: "price_1y", name: "年度会员", price: "¥399", days: "1年", desc: "查看批发价 + 趋势报告" },
+                    { id: "price_2y", name: "双年会员", price: "¥599", days: "2年", desc: "省¥199，性价比最高" },
+                    { id: "price_3y", name: "三年会员", price: "¥699", days: "3年", desc: "省¥498，长期经营首选" },
+                  ].map((plan) => (
+                    <Link
+                      key={plan.id}
+                      href={`/vip?plan=${plan.id}&redirect=${encodeURIComponent(window.location.pathname)}`}
+                      className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-primary/50 hover:bg-primary/5 transition-all group"
+                    >
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm">{plan.name}</div>
+                        <div className="text-xs text-gray-400 mt-0.5">{plan.desc}</div>
+                        <div className="text-[10px] text-gray-300 mt-1">有效期：{plan.days}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-black">{plan.price}</div>
+                        <div className="text-[10px] text-primary font-medium group-hover:text-accent transition-colors">
+                          立即开通 →
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <Link
+                    href="/vip"
+                    className="block w-full py-3 text-center text-sm font-medium text-white bg-gradient-to-r from-primary to-accent rounded-xl hover:shadow-lg transition-all"
+                  >
+                    查看全部会员套餐 →
+                  </Link>
+                </div>
               </div>
             </motion.div>
           </motion.div>

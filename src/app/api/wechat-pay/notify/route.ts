@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
 async function autoActivateMembership(supabase: any, userId: string, productId: string, orderNo: string) {
   console.log('[自动开通会员]', { userId, productId, orderNo });
 
-  // 根据 product_id 判断会员类型和有效期
+  // 根据 productId/planId 判断会员类型和有效期
   let membershipType = 'none';
   let expiresAt = new Date();
 
@@ -92,25 +92,30 @@ async function autoActivateMembership(supabase: any, userId: string, productId: 
     membershipType = 'hotpicks';
     expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30天
   }
-  // 查看价格会员 - 体验卡
-  else if (productId === 'view_price_trial') {
+  // 查看价格会员 - 体验卡 (支持新旧 plan_id 格式)
+  else if (productId === 'view_price_trial' || productId === 'price_trial') {
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000); // 14天
   }
   // 查看价格会员 - 1年
-  else if (productId === 'view_price_year1') {
+  else if (productId === 'view_price_year1' || productId === 'price_1y') {
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1年
   }
   // 查看价格会员 - 2年
-  else if (productId === 'view_price_year2') {
+  else if (productId === 'view_price_year2' || productId === 'price_2y') {
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000); // 2年
   }
   // 查看价格会员 - 3年
-  else if (productId === 'view_price_year3') {
+  else if (productId === 'view_price_year3' || productId === 'price_3y') {
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000); // 3年
+  }
+  // 每日穿搭查看
+  else if (productId === 'daily_looks') {
+    membershipType = 'view_price';
+    expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1年
   }
   // 其他类型...
 

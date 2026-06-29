@@ -58,9 +58,12 @@ export async function PUT(req: NextRequest) {
       if (orders && orders.length > 0 && orders[0].user_id) {
         const uid = orders[0].user_id;
         /* 根据套餐类型确定 membership_type */
-        let mType = "deposit_discount"; // 默认高阶
+        let mType = "deposit_discount"; // 默认商城会员（拿货折扣）
         const planId = orders[0].plan_id || "";
-        if (planId === "daily_looks") mType = "view_price";
+        // 价格会员（查看批发价权限）
+        if (["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3", "daily_looks"].includes(planId)) {
+          mType = "view_price";
+        }
 
         /* 更新或创建profile记录（让前台能识别到VIP状态）*/
         const { data: existingProfile } = await supabase
