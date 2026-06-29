@@ -29,9 +29,9 @@ const seasons = ["春季", "夏季", "秋季", "冬季"];
 export default function AdminSalesPlanPage() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(true);
-  const supabase = createClient();
+  const [supabase, setSupabase] = useState<any>(null);
 
-  // 客户端权限检查
+  // 客户端权限检查 + 初始化 Supabase
   useEffect(() => {
     if (typeof document !== "undefined") {
       const hasCookie = document.cookie.includes("admin_logged_in=true");
@@ -39,6 +39,7 @@ export default function AdminSalesPlanPage() {
         setIsAdmin(false);
         router.replace("/admin/login");
       }
+      setSupabase(createClient());
     }
   }, [router]);
 
@@ -68,11 +69,12 @@ export default function AdminSalesPlanPage() {
   const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
 
   const fetchStores = async () => {
+    if (!supabase) return;
     const { data } = await supabase.from("stores").select("id, name").order("name");
     if (data) setStores(data);
   };
 
-  useEffect(() => { fetchStores(); }, []);
+  useEffect(() => { fetchStores(); }, [supabase]);
 
   return (
     <div className="min-h-screen bg-gray-50">
