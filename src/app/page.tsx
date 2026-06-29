@@ -104,11 +104,12 @@ const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subK
 
 /* ===== 价格格式化：智能判断分/元 ===== */
 function formatPrice(price: number | null | undefined): string {
+  // 数据库存的是分（整数），统一除以100显示
   if (!price) return "0";
-  // 价格 >= 10000 认为是"分"，需要除以100；否则认为已经是"元"
   const p = Number(price);
-  if (p >= 10000) return Math.round(p / 100).toLocaleString();
-  return p.toLocaleString();
+  // 如果值很小（< 200），认为已经是元，直接返回
+  if (p < 200) return p.toFixed(p % 1 === 0 ? 0 : 2);
+  return Math.round(p / 100).toLocaleString();
 }
 
 // ProductBlock：根据版块配置加载并渲染商品
@@ -165,14 +166,7 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
           }
         }
 
-        // 第三级：加载全部商品（兜底）
-        if (result.length === 0) {
-          const allRes = await fetch("/api/public/products?limit=20");
-          const allJson = await allRes.json();
-          if (allJson.success && allJson.data) {
-            result = allJson.data;
-          }
-        }
+        // 没有指定商品也没设置分类 → 不加载（空版块）
 
         setBlockProducts(result);      } catch {
         setBlockProducts([]);
