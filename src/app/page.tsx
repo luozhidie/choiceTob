@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 import HeroCarousel from "@/components/HeroCarousel";
+import ProductBlock from "@/components/ProductBlock";
 
 /* ------------------------------------------------------------------ */
 /*  Block 接口                                                        */
@@ -104,125 +105,13 @@ const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subK
 
 /* ===== 价格格式化：智能判断分/元 ===== */
 function formatPrice(price: number | null | undefined): string {
-  // 数据库存的是分（整数），统一除以100显示
   if (!price) return "0";
   const p = Number(price);
-  // 如果值很小（< 200），认为已经是元，直接返回
-  if (p < 200) return p.toFixed(p % 1 === 0 ? 0 : 2);
-  return Math.round(p / 100).toLocaleString();
-}
-
-// ProductBlock：根据版块配置加载并渲染商品
-function ProductBlock({ block, bg, textColor, pad, radius, content, layout, columns }: {
-  block: any;
-  bg: string;
-  textColor: string;
-  pad: number;
-  radius: number;
-  content: any;
-  layout: string;
-  columns: number;
-}) {
-  const [blockProducts, setBlockProducts] = useState<any[]>([]);
-  const [loadingBlock, setLoadingBlock] = useState(true);
-
-  useEffect(() => {
-    const loadProducts = async () => {
-      setLoadingBlock(true);
-      try {
-        // 映射后台分类值到中文分类名
-        const catMap: Record<string, string> = {
-          clothing: "穿搭", accessories: "穿搭", shoes: "穿搭", lingerie: "穿搭",
-          skincare: "护肤", makeup: "彩妆", wellness: "养生",
-          food: "食品", home: "家居", creative: "文创", art: "艺术",
-        };
-
-                let categoryParam = "";
-        if (content.category && content.category !== "hot_picks") {
-          categoryParam = catMap[content.category] || content.category;
-        }
-
-        // 三级降级策略：指定ID → 分类 → 全部商品
-        let result: any[] = [];
-
-        // 第一级：按指定ID查
-        if (content.productIds) {
-          const ids = content.productIds.split(",").map((s: string) => s.trim()).filter(Boolean);
-          if (ids.length > 0) {
-            const res = await fetch(`/api/public/products?ids=${ids.join(",")}&limit=${ids.length}`);
-            const json = await res.json();
-            if (json.success && json.data && json.data.length > 0) {
-              result = ids.map((id: string) => (json.data as any[]).find((p: any) => p.id === id)).filter(Boolean);
-            }
-          }
-        }
-
-        // 第二级：按分类加载
-        if (result.length === 0 && categoryParam) {
-          const catRes = await fetch(`/api/public/products?category=${encodeURIComponent(categoryParam)}&limit=20`);
-          const catJson = await catRes.json();
-          if (catJson.success && catJson.data && catJson.data.length > 0) {
-            result = catJson.data;
-          }
-        }
-
-        // 没有指定商品也没设置分类 → 不加载（空版块）
-
-        setBlockProducts(result);      } catch {
-        setBlockProducts([]);
-      }
-      setLoadingBlock(false);
-    };
-    loadProducts();
-  }, [content.category, content.productIds, block.id]);
-
-  const gridCls = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6" }[columns] || "grid-cols-4";
-
-  return (
-    <section style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }} className="w-full">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="font-bold text-lg mb-4">{block.title}</h2>
-        {loadingBlock ? (
-          <div className={`grid ${gridCls} gap-4`}>
-            {[1,2,3,4].map(i => (
-              <div key={i} className="animate-pulse">
-                <div className="bg-gray-100 rounded-xl aspect-[3/4] mb-2"></div>
-                <div className="bg-gray-100 h-3 rounded w-3/4 mb-1"></div>
-                <div className="bg-gray-100 h-3 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : blockProducts.length === 0 ? (
-          <div className="py-8 text-center">
-            <p className="text-sm text-gray-400 mb-3">暂无商品，请在后台添加商品并发布</p>
-
-          </div>
-        ) : (
-          <div className={layout === "carousel" ? "flex gap-4 overflow-x-auto" : `grid ${gridCls} gap-4`}>
-            {blockProducts.map((product: any) => (
-              <Link key={product.id} href={`/shop/${product.id}`} className="group block min-w-[180px]">
-                <div className="relative overflow-hidden rounded-xl bg-gray-50 mb-2 aspect-[3/4]">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
-                  )}
-                </div>
-                <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{formatPrice(product.price)}</p>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
-  );
+  const yuan = p >= 100 ? Math.round(p / 100) : p;
+  return "¥" + (yuan % 1 === 0 ? yuan.toString() : yuan.toFixed(2));
 }
 
 
-/* ===== 各版块类型的前台展示组件 ===== */
-
-// 团购拼单卡片
 function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; bgColor: string }) {
   const minPeople = content.minPeople || 3;
   const discount = content.discount || 0.8;
