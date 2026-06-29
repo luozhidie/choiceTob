@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
-  Droplets, PenTool, Palette, Sun, Package, Users,
+  Droplets, PenTool, Palette, Sun, Package, Users, X,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 import HeroCarousel from "@/components/HeroCarousel";
@@ -19,6 +19,8 @@ interface Block {
   type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation";
   content?: Record<string, any>;
   style?: { bgColor?: string; textColor?: string; padding?: number; borderRadius?: number };
+  section_title?: string | null;
+  section_subtitle?: string | null;
   is_published: boolean;
   sort_order: number;
 }
@@ -293,6 +295,8 @@ export default function Home() {
   const [heroBgUrl, setHeroBgUrl] = useState<string>("");
   const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [homePopup, setHomePopup] = useState<any>(null);
+  const [showPopup, setShowPopup] = useState(false);
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
@@ -345,6 +349,31 @@ export default function Home() {
     fetchProducts();
   }, []);
 
+  // 加载首页弹窗（localStorage 控制当天不再显示）
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const dismissed = localStorage.getItem("home_popup_dismissed");
+    if (dismissed === today) return;
+
+    const fetchPopup = async () => {
+      try {
+        const res = await fetch("/api/public/popups");
+        const json = await res.json();
+        if (json.success && json.data) {
+          setHomePopup(json.data);
+          setShowPopup(true);
+        }
+      } catch {}
+    };
+    fetchPopup();
+  }, []);
+
+  const dismissPopup = () => {
+    const today = new Date().toISOString().slice(0, 10);
+    localStorage.setItem("home_popup_dismissed", today);
+    setShowPopup(false);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (keyword.trim()) {
@@ -371,6 +400,18 @@ export default function Home() {
         style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }}
         className="w-full"
       >
+        {/* ===== 板块标题 ===== */}
+        {(block.section_title || block.section_subtitle) && (
+          <div className="max-w-7xl mx-auto px-4 mb-4">
+            {block.section_title && (
+              <h2 className="font-bold text-xl md:text-2xl" style={{ color: textColor }}>{block.section_title}</h2>
+            )}
+            {block.section_subtitle && (
+              <p className="text-sm mt-1 opacity-60" style={{ color: textColor }}>{block.section_subtitle}</p>
+            )}
+          </div>
+        )}
+
         {/* ===== products 商品展示 ===== */}
         {block.type === "products" && (
           <ProductBlock
@@ -436,6 +477,56 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-white">
       {/* ===== 全屏轮播图区域 ===== */}
+      {/* ===== 首页弹窗 ===== */}
+      {showPopup && homePopup && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={dismissPopup}>
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            <button
+              onClick={dismissPopup}
+              className="absolute top-3 right-3 z-10 p-1.5 bg-black/30 hover:bg-black/50 text-white rounded-full transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            {homePopup.image_url && (
+              <div className="w-full max-h-60 overflow-hidden rounded-t-2xl">
+                {homePopup.link_url ? (
+                  <Link href={homePopup.link_url} className="block">
+                    <img src={homePopup.image_url} alt={homePopup.title} className="w-full h-full object-cover" />
+                  </Link>
+                ) : (
+                  <img src={homePopup.image_url} alt={homePopup.title} className="w-full h-full object-cover" />
+                )}
+              </div>
+            )}
+            <div className="p-6">
+              <h3 className="text-lg font-bold text-gray-900 mb-3">{homePopup.title}</h3>
+              {homePopup.keywords && (
+                <div className="space-y-1.5">
+                  {homePopup.keywords.split("\n").filter(Boolean).map((kw: string, i: number) => (
+                    <p key={i} className="text-sm text-gray-600 leading-relaxed flex items-start gap-2">
+                      <span className="text-primary mt-0.5">•</span>
+                      {kw.trim()}
+                    </p>
+                  ))}
+                </div>
+              )}
+              {homePopup.link_url && !homePopup.image_url && (
+                <Link
+                  href={homePopup.link_url}
+                  className="mt-4 inline-block px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-primary/90 transition-colors"
+                >
+                  查看详情 →
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <section className="relative overflow-hidden" style={{ height: "90vh", minHeight: "600px" }}>
         {/* 轮播图背景 */}
         <HeroCarousel />

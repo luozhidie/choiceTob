@@ -37,6 +37,8 @@ interface Block {
     padding?: number;
     borderRadius?: number;
   };
+  section_title?: string | null;
+  section_subtitle?: string | null;
   is_published: boolean;
   sort_order: number;
   created_at: string;
@@ -213,6 +215,8 @@ export default function BlocksAdminPage() {
     type: "products" as Block["type"],
     content: {} as Record<string, any>,
     style: { ...DEFAULT_STYLES } as Block["style"],
+    section_title: "",
+    section_subtitle: "",
     is_published: true,
   });
 
@@ -298,6 +302,8 @@ export default function BlocksAdminPage() {
       type: block.type || "products",
       content: block.content || {},
       style: block.style || { ...DEFAULT_STYLES },
+      section_title: block.section_title || "",
+      section_subtitle: block.section_subtitle || "",
       is_published: block.is_published,
     });
     setShowForm(true);
@@ -315,6 +321,8 @@ export default function BlocksAdminPage() {
         type: form.type,
         content: form.content,
         style: form.style,
+        section_title: form.section_title || null,
+        section_subtitle: form.section_subtitle || null,
         is_published: form.is_published,
         sort_order: editingBlock ? editingBlock.sort_order : blocks.length + 1,
         updated_at: new Date().toISOString(),
@@ -597,6 +605,34 @@ export default function BlocksAdminPage() {
                       placeholder="如：爆款选品、团购拼单..."
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                     />
+                  </div>
+
+                  {/* 板块标题（首页显示） */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        板块大标题（可选）
+                      </label>
+                      <input
+                        type="text"
+                        value={form.section_title}
+                        onChange={(e) => setForm({ ...form, section_title: e.target.value })}
+                        placeholder="如：今日特惠"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        板块小标题（可选）
+                      </label>
+                      <input
+                        type="text"
+                        value={form.section_subtitle}
+                        onChange={(e) => setForm({ ...form, section_subtitle: e.target.value })}
+                        placeholder="如：限时限量，先到先得"
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                      />
+                    </div>
                   </div>
 
                   {/* 版块类型选择 */}

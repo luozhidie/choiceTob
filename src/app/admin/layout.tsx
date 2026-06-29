@@ -142,6 +142,7 @@ const menuGroups = [
     { label: "待审", href: "/admin/pending" },
     { label: "图片抓取工具", href: "/admin/image-grabber" },
     { label: "版块管理器", href: "/admin/blocks" },
+    { label: "弹窗管理", href: "/admin/popups" },
   ]},
 ];
 

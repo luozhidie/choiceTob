@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, title, type, content, style, is_published, sort_order } = body;
+    const { id, title, type, content, style, section_title, section_subtitle, is_published, sort_order } = body;
 
     if (!title || !type) {
       return NextResponse.json({ error: "缺少版块名称或类型" }, { status: 400 });
@@ -67,6 +67,8 @@ export async function POST(request: NextRequest) {
       type,
       content: content || {},
       style: style || {},
+      section_title: section_title || null,
+      section_subtitle: section_subtitle || null,
       is_published: is_published !== undefined ? is_published : true,
       sort_order: sort_order || 0,
       updated_at: now,
