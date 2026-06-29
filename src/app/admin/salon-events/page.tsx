@@ -36,7 +36,7 @@ const STATUS_COLOR_MAP: Record<string, string> = {
 };
 
 export default function SalonEventsPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);

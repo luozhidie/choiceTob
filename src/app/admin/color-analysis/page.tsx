@@ -162,7 +162,7 @@ export default function ColorAnalysisPage() {
   const [historySearch, setHistorySearch] = useState("");
   const [showHistory, setShowHistory] = useState(true);
 
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);

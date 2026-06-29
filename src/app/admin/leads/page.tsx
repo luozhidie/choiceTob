@@ -84,7 +84,7 @@ export default function AdminLeadsPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

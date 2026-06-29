@@ -21,7 +21,7 @@ export default function CrmImportPage() {
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importType, setImportType] = useState<"stores" | "contacts">("stores");
   const router = useRouter();
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

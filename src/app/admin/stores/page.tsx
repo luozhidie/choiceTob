@@ -144,7 +144,7 @@ const PIE_COLORS = [
 
 /* ==================== 页面 ==================== */
 export default function StoresAdminPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [filterStatus, filterCity, supabase]);

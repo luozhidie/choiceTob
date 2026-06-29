@@ -45,7 +45,7 @@ export default function AdminSalesImagesPage() {
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("all");
   const [tab, setTab] = useState<string>("all");
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

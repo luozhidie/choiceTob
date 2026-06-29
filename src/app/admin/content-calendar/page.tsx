@@ -25,7 +25,7 @@ interface Post {
 }
 
 export default function ContentCalendarPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);
@@ -35,4 +35,4 @@ export default function ContentCalendarPage() {
     const { data } = await supabase.from("content_calendar").select("*").eq("store_id", storeId).order("post_date");
     setPosts(data || []);
   };
-  useEffect(() => { load(); }, [storeId]);
+  useEffect(() => { load(); }, [storeId, supabase]);

@@ -94,7 +94,7 @@ function CrmContactsPageInner() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

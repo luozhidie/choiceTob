@@ -61,7 +61,7 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchOrders(); }, [activeTab, supabase]);

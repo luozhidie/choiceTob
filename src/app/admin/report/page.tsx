@@ -16,7 +16,7 @@ const REPORT_TYPES = [
 ];
 
 export default function ReportPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);
@@ -44,4 +44,4 @@ export default function ReportPage() {
       orders: o || 0,
     });
   };
-  useEffect(() => { loadStats(); }, [storeId]);
+  useEffect(() => { loadStats(); }, [storeId, supabase]);

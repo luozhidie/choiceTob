@@ -48,7 +48,7 @@ export default function AdminStoreReportsPage() {
     notes: "",
   });
 
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchReports(); }, [filterStore, sortBy, sortDir, supabase]);

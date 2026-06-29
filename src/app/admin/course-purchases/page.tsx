@@ -23,7 +23,7 @@ export default function AdminCoursePurchasesPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchPurchases(); }, [supabase]);

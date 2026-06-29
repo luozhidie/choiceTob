@@ -44,7 +44,7 @@ export default function CrmWechatTemplatesPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedCategory, setExpandedCategory] = useState<string>("首次添加");
   const router = useRouter();
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

@@ -27,10 +27,14 @@ interface SaleRecord {
 }
 
 export default function SalesDataPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
+
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-  }, [supabase]);
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   /* ── 加载销售记录 ───────────────── */
   const loadRecords = async () => {
@@ -43,4 +47,4 @@ export default function SalesDataPage() {
     setRecords(data || []);
   };
 
-  useEffect(() => { loadRecords(); }, [storeId]);
+  useEffect(() => { loadRecords(); }, [storeId, supabase]);

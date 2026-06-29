@@ -19,7 +19,7 @@ interface BudgetItem {
 }
 
 export default function BudgetTrackerPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);
@@ -29,4 +29,4 @@ export default function BudgetTrackerPage() {
     const { data } = await supabase.from("budget_tracker").select("*").eq("store_id", storeId).order("created_at");
     setItems(data || []);
   };
-  useEffect(() => { load(); }, [storeId]);
+  useEffect(() => { load(); }, [storeId, supabase]);

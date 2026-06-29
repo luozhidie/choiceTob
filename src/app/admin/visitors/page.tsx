@@ -43,7 +43,7 @@ export default function AdminVisitors() {
   
   const router = useRouter();
   const limit = 20;
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [page, statusFilter, sourceFilter, supabase]);

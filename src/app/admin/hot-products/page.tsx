@@ -27,7 +27,7 @@ const SEASONS = ["春夏", "秋冬", "四季"];
 const CATEGORIES = ["连衣裙", "上衣", "裤装", "外套", "套装", "配饰"];
 
 export default function HotProductsAdmin() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

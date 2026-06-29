@@ -99,7 +99,7 @@ export default function CrmStoresPage() {
   const [wechatStore, setWechatStore] = useState<CrmStore | null>(null);
   const [wechatForm, setWechatForm] = useState({ wechat_id: "", remark: "" });
   const router = useRouter();
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
     if (typeof document !== "undefined") {

@@ -113,7 +113,7 @@ function CrmWechatAddInner() {
   const [copiedBatch, setCopiedBatch] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [updating, setUpdating] = useState(false);
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchFunnelStats().then(setFunnel); }, [loading, supabase]);

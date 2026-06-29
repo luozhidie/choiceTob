@@ -40,7 +40,7 @@ export default function AdminStyleTestsPage() {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const pageSize = 20;
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchData(); }, [filter, page, supabase]);

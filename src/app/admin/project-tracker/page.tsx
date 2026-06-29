@@ -24,7 +24,7 @@ interface Project {
 }
 
 export default function ProjectTrackerPage() {
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   }, [supabase]);
@@ -34,4 +34,4 @@ export default function ProjectTrackerPage() {
     const { data } = await supabase.from("project_tracker").select("*").eq("store_id", storeId).order("due_date");
     setTasks(data || []);
   };
-  useEffect(() => { load(); }, [storeId]);
+  useEffect(() => { load(); }, [storeId, supabase]);

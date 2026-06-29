@@ -95,7 +95,7 @@ export default function DeliveriesPage() {
     store_id: "" as string,
   });
 
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchStores(); }, [supabase]);

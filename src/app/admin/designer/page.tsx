@@ -28,7 +28,7 @@ export default function AdminDesignerPage() {
     name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0,
   });
   const [uploading, setUploading] = useState(false);
-  [supabase, setSupabase] = useState<any>(null);
+  const [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
   useEffect(() => { fetchData(); }, [supabase]);
