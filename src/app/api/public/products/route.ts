@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // 支持按ID筛选（管理员指定商品时不过滤发布状态）
+    // 按ID查：不过滤任何状态
     if (idsParam) {
       const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
       if (ids.length > 0) {
@@ -30,33 +30,43 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 按分类加载（只显示已发布的）
+    // 分类/全部查询：先尝试已发布，为空则返回全部
     let query = supabase
       .from("products")
       .select("id, name, title, price, image_url, cover_image, category, sub_category, subcategory, is_published")
-      .eq("is_published", true)
       .order("created_at", { ascending: false })
       .limit(limit);
 
     if (category) query = query.eq("category", category);
 
-    const { data, error } = await query;
+    let { data, error } = await query;
 
-    if (error) {
-      // is_published 列不存在时 fallback（不过滤）
-      if (error.code === "42703") {
-        const fallbackQuery = supabase
-          .from("products")
-          .select("id, name, title, price, image_url, cover_image, category, sub_category, subcategory")
-          .limit(limit);
-        if (category) fallbackQuery.eq("category", category);
-        const { data: fd, error: fe } = await fallbackQuery;
-        if (fe) return NextResponse.json({ error: fe.message }, { status: 500 });
-        return NextResponse.json({ success: true, data: formatProducts(fd || []) });
-      }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // 第一级结果为空 → 去掉 is_published 过滤再试
+    if ((!data || data.length === 0) && !error) {
+      let fallbackQuery = supabase
+        .from("products")
+        .select("id, name, title, price, image_url, cover_image, category, sub_category, subcategory")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (category) fallbackQuery = fallbackQuery.eq("category", category);
+      const fb = await fallbackQuery;
+      data = fb.data;
+      error = fb.error;
     }
 
+    // 再不行，is_published 列可能不存在
+    if ((!data || data.length === 0) && error?.code === "42703") {
+      let rawQuery = supabase
+        .from("products")
+        .select("*")
+        .limit(limit);
+      if (category) rawQuery = rawQuery.eq("category", category);
+      const rw = await rawQuery;
+      data = rw.data;
+      error = rw.error;
+    }
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, data: formatProducts(data || []) });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

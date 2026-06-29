@@ -127,41 +127,45 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
           food: "食品", home: "家居", creative: "文创", art: "艺术",
         };
 
-        let categoryParam = "";
+                let categoryParam = "";
         if (content.category && content.category !== "hot_picks") {
           categoryParam = catMap[content.category] || content.category;
         }
 
-        // 支持指定商品ID
+        // 三级降级策略：指定ID → 分类 → 全部商品
+        let result: any[] = [];
+
+        // 第一级：按指定ID查
         if (content.productIds) {
           const ids = content.productIds.split(",").map((s: string) => s.trim()).filter(Boolean);
           if (ids.length > 0) {
             const res = await fetch(`/api/public/products?ids=${ids.join(",")}&limit=${ids.length}`);
             const json = await res.json();
             if (json.success && json.data && json.data.length > 0) {
-              const ordered = ids.map((id: string) => (json.data as any[]).find((p: any) => p.id === id)).filter(Boolean);
-              setBlockProducts(ordered);
-            } else if (categoryParam) {
-              // fallback到分类加载
-              const catRes = await fetch(`/api/public/products?category=${encodeURIComponent(categoryParam)}&limit=20`);
-              const catJson = await catRes.json();
-              setBlockProducts(catJson.success ? (catJson.data || []) : []);
-            } else {
-              setBlockProducts([]);
+              result = ids.map((id: string) => (json.data as any[]).find((p: any) => p.id === id)).filter(Boolean);
             }
-          } else {
-            setBlockProducts([]);
           }
-        } else {
-          // 按分类自动加载
-          const params = new URLSearchParams();
-          if (categoryParam) params.set("category", categoryParam);
-          params.set("limit", "20");
-          const res = await fetch(`/api/public/products?${params.toString()}`);
-          const json = await res.json();
-          if (json.success && json.data) setBlockProducts(json.data);
         }
-      } catch {
+
+        // 第二级：按分类加载
+        if (result.length === 0 && categoryParam) {
+          const catRes = await fetch(`/api/public/products?category=${encodeURIComponent(categoryParam)}&limit=20`);
+          const catJson = await catRes.json();
+          if (catJson.success && catJson.data && catJson.data.length > 0) {
+            result = catJson.data;
+          }
+        }
+
+        // 第三级：加载全部商品（兜底）
+        if (result.length === 0) {
+          const allRes = await fetch("/api/public/products?limit=20");
+          const allJson = await allRes.json();
+          if (allJson.success && allJson.data) {
+            result = allJson.data;
+          }
+        }
+
+        setBlockProducts(result);      } catch {
         setBlockProducts([]);
       }
       setLoadingBlock(false);
