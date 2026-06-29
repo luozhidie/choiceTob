@@ -11,6 +11,19 @@ import TabBar from "@/components/TabBar";
 import HeroCarousel from "@/components/HeroCarousel";
 
 /* ------------------------------------------------------------------ */
+/*  Block 接口                                                        */
+/* ------------------------------------------------------------------ */
+interface Block {
+  id: string;
+  title: string;
+  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation";
+  content?: Record<string, any>;
+  style?: { bgColor?: string; textColor?: string; padding?: number; borderRadius?: number };
+  is_published: boolean;
+  sort_order: number;
+}
+
+/* ------------------------------------------------------------------ */
 /*  主分类                                                            */
 /*  穿搭 → /buyer（买手选品）                                         */
 /*  其他 → /category/[category]（商品列表页，带综合/销量/价格/上新tab）*/
@@ -96,6 +109,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [heroBgUrl, setHeroBgUrl] = useState<string>("");
   const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
+  const [blocks, setBlocks] = useState<Block[]>([]);
 
   const supabase = createClient();
 
@@ -114,6 +128,21 @@ export default function Home() {
       } catch {}
     };
     fetchHeroBgs();
+  }, []);
+
+  // 加载版块（按 position + sort_order 排序）
+  useEffect(() => {
+    const fetchBlocks = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("page_blocks")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
+        if (!error && data) setBlocks(data as Block[]);
+      } catch {}
+    };
+    fetchBlocks();
   }, []);
 
   const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
@@ -138,10 +167,10 @@ export default function Home() {
 
         const merged: any[] = [];
         if (!platformRes.error && platformRes.data) {
-          (platformRes.data as any[]).forEach((p) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
+          (platformRes.data as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
         }
         if (Array.isArray(buyerRes)) {
-          (buyerRes as any[]).forEach((p) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
+          (buyerRes as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
         }
         setProducts(merged);
       } catch (err) {
@@ -159,9 +188,62 @@ export default function Home() {
     }
   };
 
+  // 按 position 分组版块
+  const blocksByPosition = (pos: string) =>
+    blocks.filter((b: Block) => (b.content as any)?.position === pos);
+
+  // 渲染单个版块
+  const renderBlock = (block: Block) => {
+    const content: any = block.content || {};
+    const style = block.style || {};
+    const bg = style.bgColor || "#ffffff";
+    const textColor = style.textColor || "#333333";
+    const pad = style.padding ?? 16;
+    const radius = style.borderRadius ?? 12;
+
+    return (
+      <section
+        key={block.id}
+        style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }}
+        className="w-full"
+      >
+        <div className="max-w-7xl mx-auto">
+          <h2 className="font-bold text-lg mb-4">{block.title}</h2>
+          {block.type === "products" && (
+            <p className="text-sm text-gray-400">
+              分类：{content.category || "全部"} ｜ 布局：{content.layout || "grid"} ｜ 列数：{content.columns || 4}
+            </p>
+          )}
+          {block.type === "group_buy" && (
+            <p className="text-sm text-gray-400">
+              最低 {content.minPeople || 3}人 ｜ 折扣 {(content.discount || 0.8) * 10}折
+            </p>
+          )}
+          {block.type === "flash_sale" && (
+            <p className="text-sm text-gray-400">
+              活动时长 {((content.duration || 3600) / 60)}分钟 ｜ 折扣 {(content.discount || 0.7) * 10}折
+            </p>
+          )}
+          {block.type === "promotion" && content.promoTitle && (
+            <div>
+              <h3 className="font-semibold">{content.promoTitle}</h3>
+              <p className="text-sm text-gray-500">{content.promoDesc}</p>
+            </div>
+          )}
+          {block.type === "custom" && content.html && (
+            <div dangerouslySetInnerHTML={{ __html: content.html }} />
+          )}
+          {block.type === "recommendation" && (
+            <p className="text-sm text-gray-400">🤖 智能推荐版块</p>
+          )}
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* ====== 全屏轮播图区域（搜索栏 + 分类 + 标题全部叠在上面） ====== */}
+      {/* ===== 全屏轮播图区域（搜索栏 + 分类 + 标题全部叠在上面） ===== */}
       <section className="relative overflow-hidden" style={{ height: "90vh", minHeight: "600px" }}>
         {/* 轮播图背景 */}
         <HeroCarousel />
@@ -233,7 +315,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ====== 商品列表区 ====== */}
+      {/* ===== 轮播图下方版块 ===== */}
+      {blocksByPosition("hero_bottom").map(renderBlock)}
+
+      {/* ===== 商品列表上方版块 ===== */}
+      {blocksByPosition("product_top").map(renderBlock)}
+
+      {/* ===== 商品列表区 ===== */}
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-bold text-gray-900">
@@ -291,7 +379,13 @@ export default function Home() {
         )}
       </section>
 
+      {/* ===== 商品列表下方版块 ===== */}
+      {blocksByPosition("product_bottom").map(renderBlock)}
+
       <TabBar />
+
+      {/* ===== 底部上方版块 ===== */}
+      {blocksByPosition("footer_top").map(renderBlock)}
     </div>
   );
 }
