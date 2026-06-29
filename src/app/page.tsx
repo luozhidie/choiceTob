@@ -195,11 +195,7 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
         ) : blockProducts.length === 0 ? (
           <div className="py-8 text-center">
             <p className="text-sm text-gray-400 mb-3">暂无商品，请在后台添加商品并发布</p>
-            {/* 调试信息 - 上线后删除此块 */}
-            <details className="text-left mx-6 text-[10px] bg-red-50 rounded p-2 border border-red-200">
-              <summary className="cursor-pointer font-mono text-red-600">🔧 调试信息（点开查看）</summary>
-              <pre className="whitespace-pre-wrap mt-2 text-[10px] leading-tight overflow-auto max-h-[200px] text-red-700 break-all">{JSON.stringify({blockId: block.id, productIds: content.productIds, category: content.category, position: content.position, type: block.type, keys: Object.keys(content), fullContent: content}, null, 2)}</pre>
-            </details>
+
           </div>
         ) : (
           <div className={layout === "carousel" ? "flex gap-4 overflow-x-auto" : `grid ${gridCls} gap-4`}>
