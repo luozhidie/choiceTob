@@ -494,6 +494,24 @@ export default function BlocksAdminPage() {
                       内容配置
                     </label>
 
+                    {/* 展示位置（所有类型通用） */}
+                    <div className="space-y-4 p-4 bg-gray-50 rounded-xl mb-4">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">展示位置 *</label>
+                        <select
+                          value={(form.content as any)?.position || "product_bottom"}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), position: e.target.value } as any })}
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none bg-white"
+                        >
+                          <option value="hero_bottom">轮播图下方</option>
+                          <option value="product_top">商品列表上方</option>
+                          <option value="product_bottom">商品列表下方</option>
+                          <option value="footer_top">底部上方</option>
+                        </select>
+                        <p className="text-[10px] text-gray-400 mt-1">选择该版块在首页的展示位置</p>
+                      </div>
+                    </div>
+
                     {/* products 商品展示 */}
                     {form.type === "products" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">

@@ -475,7 +475,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* 批发价区域 */}
-                <div className={`mt-2 flex items-center gap-2 p-2.5 rounded-lg border transition-all cursor-pointer ${isPriceMember && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}\}
+                <div className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${isPriceMember && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
                    onClick={() => {
                      if (!user) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
                      if (!isPriceMember) setShowVipModal(true);

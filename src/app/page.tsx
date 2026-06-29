@@ -102,6 +102,87 @@ const subCategoryMap: Record<string, { name: string; icon: React.ReactNode; subK
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 
+
+// ProductBlock：根据版块配置加载并渲染商品
+function ProductBlock({ block, bg, textColor, pad, radius, content, layout, columns }: {
+  block: any;
+  bg: string;
+  textColor: string;
+  pad: number;
+  radius: number;
+  content: any;
+  layout: string;
+  columns: number;
+}) {
+  const [blockProducts, setBlockProducts] = useState<any[]>([]);
+  const [loadingBlock, setLoadingBlock] = useState(true);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      setLoadingBlock(true);
+      try {
+        let query = supabase.from("products").select("id, name, price, image_url, category, sub_category").eq("is_published", true).limit(20);
+        if (content.category && content.category !== "hot_picks") {
+          const catMap: Record<string, string> = {
+            clothing: "穿搭", accessories: "穿搭", shoes: "穿搭", lingerie: "穿搭",
+            skincare: "护肤", makeup: "彩妆", wellness: "养生",
+            food: "食品", home: "家居", creative: "文创", art: "艺术",
+          };
+          const mapped = catMap[content.category];
+          if (mapped) query = query.eq("category", mapped);
+        }
+        const { data } = await query;
+        setBlockProducts(data || []);
+      } catch {
+        setBlockProducts([]);
+      }
+      setLoadingBlock(false);
+    };
+    loadProducts();
+  }, [content.category, block.id]);
+
+  const gridCls = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6" }[columns] || "grid-cols-4";
+
+  return (
+    <section style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }} className="w-full">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="font-bold text-lg mb-4">{block.title}</h2>
+        {loadingBlock ? (
+          <div className={`grid ${gridCls} gap-4`}>
+            {[1,2,3,4].map(i => (
+              <div key={i} className="animate-pulse">
+                <div className="bg-gray-100 rounded-xl aspect-[3/4] mb-2"></div>
+                <div className="bg-gray-100 h-3 rounded w-3/4 mb-1"></div>
+                <div className="bg-gray-100 h-3 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        ) : blockProducts.length === 0 ? (
+          <p className="text-sm text-gray-400 py-8 text-center">暂无商品，请在后台添加商品并发布</p>
+        ) : (
+          <div className={layout === "carousel" ? "flex gap-4 overflow-x-auto" : `grid ${gridCls} gap-4`}>
+            {blockProducts.map((product: any) => (
+              <Link key={product.id} href={`/shop/${product.id}`} className="group block min-w-[180px]">
+                <div className="relative overflow-hidden rounded-xl bg-gray-50 mb-2 aspect-[3/4]">
+                  {product.image_url ? (
+                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
+                  )}
+                </div>
+                <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
+                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{Math.round((product.price || 0) / 100) || product.price || 0}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+
 export default function Home() {
   const [keyword, setKeyword] = useState("");
   const [activeCategoryName, setActiveCategoryName] = useState("全部");
