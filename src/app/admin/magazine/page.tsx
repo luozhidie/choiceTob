@@ -60,10 +60,21 @@ export default function AdminMagazinePage() {
   const [importing, setImporting] = useState<string | null>(null);
   const [fetchContent, setFetchContent] = useState(false);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchArticles(); }, [supabase]);
+  const supabase = createClient();
+
+  // ── 所有函数定义在组件顶层（不在其他函数内部）──
+  const fetchArticles = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.from("articles").select("*").order("created_at", { ascending: false });
+      if (!error) setArticles(data || []);
+    } catch (e) {
+      console.error("获取文章失败:", e);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchArticles(); }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

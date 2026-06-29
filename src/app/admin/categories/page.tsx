@@ -15,13 +15,7 @@ interface Category {
 }
 
 export default function CategoriesPage() {
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
   const [categories, setCategories] = useState<Category[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);

@@ -30,10 +30,17 @@ export default function AdminSalonPage() {
     title: "", description: "", event_date: "", location: "", price_individual: 0, price_group: 0, capacity: 30, registered: 0, image_url: "", is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchData(); }, [supabase]);
+  const supabase = createClient();
+
+  const fetchData = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("salon_events").select("*").order("event_date", { ascending: false });
+    if (error) console.error(error);
+    else setEvents(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

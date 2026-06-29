@@ -35,10 +35,44 @@ interface TestItem {
 export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+  
+  const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [items, setItems] = useState<TestItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const campaignId = params.id as string;
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      // 加载任务信息
+      const { data: campaignData } = await supabase
+        .from("product_test_campaigns")
+        .select("*")
+        .eq("id", campaignId)
+        .single();
+
+      if (campaignData) setCampaign(campaignData);
+
+      // 加载测试商品
+      const { data: itemsData } = await supabase
+        .from("product_test_items")
+        .select("*")
+        .eq("campaign_id", campaignId)
+        .order("clicks", { ascending: false });
+
+      if (itemsData) setItems(itemsData);
+    } catch (error: any) {
+      alert("加载失败: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-  }, [campaignId, supabase]);
+    if (campaignId) loadData();
+  }, [campaignId]);
 
   // 模拟添加测试数据（演示用）
   const addMockData = async () => {

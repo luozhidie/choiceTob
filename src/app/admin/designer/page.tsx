@@ -28,10 +28,18 @@ export default function AdminDesignerPage() {
     name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0,
   });
   const [uploading, setUploading] = useState(false);
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchData(); }, [supabase]);
+  const supabase = createClient();
+
+  // 加载数据
+  const fetchData = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("designer_packages").select("*").order("sort_order", { ascending: true });
+    if (error) console.error(error);
+    else setPackages(data || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
 
   // 上传图片
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

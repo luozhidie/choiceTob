@@ -27,6 +27,7 @@ const menuGroups = [
     { label: "色彩季型录入", href: "/admin/color-analysis" },
     { label: "色彩季型对比", href: "/admin/color-compare" },
     { label: "风格测试记录", href: "/admin/style-tests" },
+    { label: "风格测试结果", href: "/admin/style-test-results" },
     { label: "测试码管理", href: "/admin/test-codes" },
   ]},
 
@@ -42,6 +43,8 @@ const menuGroups = [
     { label: "商品企划", href: "/admin/product-plan" },
     { label: "生成企划报告", href: "/admin/report" },
     { label: "商品管理", href: "/admin/products" },
+    { label: "测款管理", href: "/admin/testing" },
+    { label: "轮播图管理", href: "/admin/banners" },
     { label: "爆款样衣", href: "/admin/hot-products" },
     { label: "爆款货盘", href: "/admin/hot-picks" },
     { label: "爆款图片", href: "/admin/hot-picks-images" },
@@ -67,7 +70,6 @@ const menuGroups = [
     { label: "库存管理", href: "/admin/inventory" },
     { label: "销售数据", href: "/admin/sales-data" },
     { label: "门店经营数据", href: "/admin/store-reports" },
-    { label: "订单管理", href: "/admin/orders" },
     { label: "市场需求统计", href: "/admin/market-demand" },
   ]},
 
@@ -84,7 +86,6 @@ const menuGroups = [
   { label: "营销&内容", items: [
     { label: "营销策划", href: "/admin/marketing" },
     { label: "营销图片", href: "/admin/marketing-images" },
-    { label: "Banner轮播图", href: "/admin/banners" },
     { label: "搭配灵感", href: "/admin/inspirations" },
     { label: "销售服务", href: "/admin/sales" },
     { label: "销售图片", href: "/admin/sales-images" },
@@ -125,7 +126,7 @@ const menuGroups = [
     { label: "课程管理", href: "/admin/courses" },
     { label: "课程购买记录", href: "/admin/course-purchases" },
     { label: "流行资讯", href: "/admin/fashion-trends" },
-    { label: "服装趋势", href: "/admin/trend-predict" },
+    { label: "杂志", href: "/admin/magazine" },
   ]},
 
   // ─── 趋势（保留额外分组） ───
@@ -138,9 +139,9 @@ const menuGroups = [
   // ─── 其他（保留） ───
   { label: "其他", items: [
     { label: "访客管理", href: "/admin/visitors" },
-    { label: "杂志", href: "/admin/magazine" },
     { label: "待审", href: "/admin/pending" },
-    { label: "风格测试结果", href: "/admin/style-test-results" },
+    { label: "图片抓取工具", href: "/admin/image-grabber" },
+    { label: "版块管理器", href: "/admin/blocks" },
   ]},
 ];
 
@@ -293,7 +294,7 @@ export default function AdminLayout({
         )}
 
         {/* 菜单导航 */}
-        <nav style={{ padding: "8px", flex: 1 }}>
+        <nav style={{ padding: "4px 8px", flex: 1, overflowY: "auto" }}>
           {menuGroups.map((group) => {
             const isExpanded = expandedGroups.has(group.label);
 
@@ -305,20 +306,20 @@ export default function AdminLayout({
                     onClick={() => toggleGroup(group.label)}
                     style={{
                       width: "100%",
-                      padding: "7px 12px 5px",
-                      fontSize: 10, fontWeight: 600,
-                      textTransform: "uppercase", letterSpacing: "0.08em",
+                      padding: "6px 12px 4px",
+                      fontSize: 11, fontWeight: 600,
+                      textTransform: "uppercase", letterSpacing: "0.05em",
                       color: "#64748b", border: "none", background: "transparent",
                       cursor: "pointer", textAlign: "left",
-                      display: "flex", alignItems: "center", gap: 5,
+                      display: "flex", alignItems: "center", gap: 4,
                     }}
                   >
                     <span style={{
                       display: "inline-block",
-                      transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)",
+                      transform: isExpanded ? "rotate(90deg)" : "rotate(0deg)",
                       transition: "transform 0.2s ease",
                       fontSize: 10,
-                    }}>▼</span>
+                    }}>▶</span>
                     {group.label}
                   </button>
                 )}
@@ -335,7 +336,7 @@ export default function AdminLayout({
                           title={collapsed ? item.label : undefined}
                           style={{
                             display: "flex", alignItems: "center",
-                            padding: collapsed ? "5px 0" : "5px 12px 5px 20px",
+                            padding: collapsed ? "6px 0" : "5px 12px 5px 20px",
                             borderRadius: 4, marginBottom: 1,
                             textDecoration: "none",
                             fontSize: collapsed ? 0 : 13,
@@ -343,10 +344,11 @@ export default function AdminLayout({
                             background: isActive ? "#3b82f6" : "transparent",
                             transition: "all 0.15s",
                             justifyContent: collapsed ? "center" : "flex-start",
+                            lineHeight: "20px",
                           }}
                         >
                           {collapsed
-                            ? <span style={{ fontSize: 14 }}>{item.label.charAt(0)}</span>
+                            ? <span style={{ fontSize: 14, width: 24, textAlign: "center" }}>{item.label.charAt(0)}</span>
                             : item.label}
                         </a>
                       );

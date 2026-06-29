@@ -47,13 +47,7 @@ interface OutfitMatch {
 export default function OutfitDetailPage() {
   const { id } = useParams();
   const router = useRouter();
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
 
   const [outfit, setOutfit] = useState<OutfitMatch | null>(null);
   const [products, setProducts] = useState<Product[]>([]);

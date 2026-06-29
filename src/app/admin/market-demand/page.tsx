@@ -65,13 +65,7 @@ export default function MarketDemandPage() {
   const [totalTests, setTotalTests] = useState(0);
   const [totalLeads, setTotalLeads] = useState(0);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
 
   useEffect(() => {
     fetchAllData();

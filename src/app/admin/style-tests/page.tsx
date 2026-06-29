@@ -40,10 +40,36 @@ export default function AdminStyleTestsPage() {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const pageSize = 20;
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchData(); }, [filter, page, supabase]);
+  const supabase = createClient();
+  const router = useRouter();
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("style_diagnoses")
+        .select("*, profiles(full_name, company_name, email, phone)", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(page * pageSize, (page + 1) * pageSize - 1);
+      if (filter !== "all") query = query.eq("status", filter);
+      const { data, error, count } = await query;
+      if (error) throw error;
+      let filtered = data || [];
+      if (search) {
+        const s = search.toLowerCase();
+        filtered = filtered.filter((item: any) =>
+          (item.full_name?.toLowerCase().includes(s)) ||
+          (item.profiles?.company_name?.toLowerCase().includes(s)) ||
+          (item.profiles?.email?.toLowerCase().includes(s))
+        );
+      }
+      setItems(filtered);
+      setTotal(count || 0);
+    } catch (err) { console.error(err); }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, [filter, page]);
 
   const updateStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("style_diagnoses").update({ status }).eq("id", id);

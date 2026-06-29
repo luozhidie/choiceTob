@@ -101,10 +101,33 @@ export default function AdminSiteAssetsPage() {
   const [uploadingKey, setUploadingKey] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchAssets(); }, [supabase]);
+  const supabase = createClient();
+  const router = useRouter();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // 加载所有资源
+  const fetchAssets = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("site_assets")
+        .select("*");
+      if (error) throw error;
+      const map: Record<string, SiteAsset> = {};
+      (data || []).forEach((a: any) => { map[a.key] = a; });
+      setAssets(map);
+    } catch (err: any) {
+      showToast("error", "加载失败：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAssets(); }, []);
 
   // 上传图片（通过服务端 API，使用 service_role 绕过 RLS）
   const handleUpload = async (key: string, file: File) => {

@@ -137,13 +137,7 @@ export default function CrmScrapePage() {
   const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", industry: "服装店" });
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
 
   // API 搜索（走后端路由，避免浏览器CORS）
   const handleApiSearch = async (targetPage?: number) => {

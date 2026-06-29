@@ -67,10 +67,19 @@ export default function AdminBuyerPage() {
     is_published: false,
   });
   const [uploading, setUploading] = useState(false);
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
+  // 加载数据
+  const fetchProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from("buyer_products").select("*").order("created_at", { ascending: false });
+    if (!error && data) setProducts(data as BuyerProduct[]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-  }, [supabase]);
+    fetchProducts();
+  }, []);
 
   const openCreate = () => {
     setEditing(null);

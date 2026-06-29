@@ -23,10 +23,48 @@ export default function AdminCoursePurchasesPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchPurchases(); }, [supabase]);
+  const supabase = createClient();
+  const router = useRouter();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const fetchPurchases = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("course_purchases")
+        .select("*")
+        .order("purchased_at", { ascending: false });
+      if (error) throw error;
+      // 获取用户邮箱和课程标题
+      const userIds = [...new Set(data?.map((p: any) => p.user_id) || [])];
+      const courseIds = [...new Set(data?.map((p: any) => p.course_id) || [])];
+      
+      const [usersRes, coursesRes] = await Promise.all([
+        userIds.length > 0 ? supabase.from("profiles").select("id, email").in("id", userIds) : { data: [] },
+        courseIds.length > 0 ? supabase.from("courses").select("id, title").in("id", courseIds) : { data: [] },
+      ]);
+
+      const userMap = new Map((usersRes.data || []).map((u: any) => [u.id, u.email]));
+      const courseMap = new Map((coursesRes.data || []).map((c: any) => [c.id, c.title]));
+
+      const enriched = (data || []).map((p: any) => ({
+        ...p,
+        user_email: userMap.get(p.user_id) || "未知",
+        course_title: courseMap.get(p.course_id) || p.course_id,
+      }));
+      setPurchases(enriched);
+    } catch (err: any) {
+      showToast("error", "加载失败：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchPurchases(); }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此购买记录？")) return;

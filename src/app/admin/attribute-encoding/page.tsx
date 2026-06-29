@@ -18,10 +18,77 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+const supabase = createClient();
+
+/* ── 表配置 ── */
+const TABLES = [
+  { name: "attribute_fabrics", label: "面料编码", icon: Layers, prefix: "F", expected: 8, desc: "8大风格 × 适合/回避面料" },
+  { name: "attribute_patterns", label: "图案编码", icon: Palette, prefix: "P", expected: 8, desc: "8大风格 × 适合/回避图案" },
+  { name: "attribute_cuts", label: "剪裁编码", icon: Scissors, prefix: "B/C/CA/EA", expected: 45, desc: "日常+职业+休闲+晚装 45条" },
+  { name: "attribute_color_seasons", label: "色彩季型", icon: Sparkles, prefix: "S", expected: 12, desc: "12季色彩 + 用色原则/理想色" },
+  { name: "attribute_match_rules", label: "搭配规则", icon: BookOpen, prefix: "R", expected: 7, desc: "7大配色规则" },
+];
+
+/* ── Migration SQL ── */
+const MIGRATION_SQL = `-- 色彩季型表扩展字段（6个新列）
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS category_group text;
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS matrix_position text;
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS color_principle text;
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS test_colors text;
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS suitable_accessories text;
+ALTER TABLE attribute_color_seasons ADD COLUMN IF NOT EXISTS ideal_colors text[];
+SELECT pg_notify('pgrst', 'reload schema');`;
+
+interface TableStatus {
+  count: number;
+  loading: boolean;
+  error?: string;
+}
+
+export default function AttributeEncodingPage() {
+  const [statuses, setStatuses] = useState<Record<string, TableStatus>>({});
+  const [seeding, setSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<any>(null);
+  const [seedError, setSeedError] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const [migrationDone, setMigrationDone] = useState(false);
+
+  // 加载各表数据量
+  const loadStatuses = async () => {
+    const newStatuses: Record<string, TableStatus> = {};
+    for (const table of TABLES) {
+      newStatuses[table.name] = { count: -1, loading: true };
+    }
+    setStatuses(newStatuses);
+
+    for (const table of TABLES) {
+      try {
+        const { count, error } = await supabase
+          .from(table.name)
+          .select("*", { count: "exact", head: true });
+        if (error) {
+          setStatuses((prev) => ({
+            ...prev,
+            [table.name]: { count: -1, loading: false, error: error.message },
+          }));
+        } else {
+          setStatuses((prev) => ({
+            ...prev,
+            [table.name]: { count: count ?? 0, loading: false },
+          }));
+        }
+      } catch (e: any) {
+        setStatuses((prev) => ({
+          ...prev,
+          [table.name]: { count: -1, loading: false, error: e.message },
+        }));
+      }
+    }
+  };
+
   useEffect(() => {
-  }, [supabase]);
+    loadStatuses();
+  }, []);
 
   // 复制 SQL
   const copySQL = async () => {

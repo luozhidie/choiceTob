@@ -52,10 +52,20 @@ export default function AdminDisplayPage() {
   });
   const [uploading, setUploading] = useState(false);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchDisplays(); }, [supabase]);
+  const supabase = createClient();
+
+  /* ---- 加载数据 ---- */
+  const fetchDisplays = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("display_images")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (!error && data) setDisplays(data as Display[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchDisplays(); }, []);
 
   /* ---- 上传图片 ---- */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

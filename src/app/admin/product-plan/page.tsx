@@ -103,10 +103,92 @@ function KeywordLink({ keyword, index }: { keyword: string; index?: number }) {
 }
 
 export default function ProductPlanPage() {
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+  const { categories: categoryOptions } = useCategories();
+  const [storeId, setStoreId] = useState("");
+  const [stores, setStores] = useState<any[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<"ai" | "manual">("ai");
+
+  // ── AI 生成相关状态 ──────────────────
+  const [aiForm, setAiForm] = useState({
+    brandName: "",
+    season: "2026夏季",
+    colorPref: "",
+    colorLabel: "",
+    marketStyle: "",
+    styleLabel: "",
+    priceBand: "199-399元",
+    targetAge: "25-40岁",
+    shopSize: "60-100㎡",
+    notes: "",
+  });
+  const [generating, setGenerating] = useState(false);
+  const [aiReport, setAiReport] = useState<AIReport | null>(null);
+  const [aiSource, setAiSource] = useState<string>("");
+  const [exportingWord, setExportingWord] = useState(false);
+  const [exportingKeywords, setExportingKeywords] = useState(false);
+
+  /* ── 色系选项 ─────────────────────── */
+  const COLOR_SEASON_OPTIONS: { value: string; label: string }[] = COLOR_SEASONS_PRO.map((c) => ({
+    value: String(c.value),
+    label: `${String(c.label)}（${String(c.group)}）`,
+  }));
+
+  /* ── 风格选项 ─────────────────────── */
+  const STYLE_OPTIONS: { value: string; label: string }[] = [
+    ...FEMALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（女士）` })),
+    ...MALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（男士）` })),
+  ];
+
+  // ── 商品结构规划 ────────────────────────
+  const [structure, setStructure] = useState<StructureItem[]>([
+    { category: "TX-T恤针织衫", pct: 15, sku: 30, margin: 55, sales: 90000, season: "春夏/秋冬" },
+    { category: "DY-大衣", pct: 15, sku: 15, margin: 65, sales: 120000, season: "秋冬" },
+    { category: "YR-羽绒服（真毛领）", pct: 12, sku: 12, margin: 60, sales: 108000, season: "秋冬" },
+    { category: "KZ-裤装（仔裤/西裤/休闲裤/牛仔外套）", pct: 10, sku: 20, margin: 55, sales: 60000, season: "全年" },
+    { category: "LQ-连衣裙", pct: 8, sku: 15, margin: 65, sales: 50000, season: "春夏" },
+    { category: "FY-风衣/外套/单西装", pct: 10, sku: 10, margin: 65, sales: 70000, season: "秋冬" },
+    { category: "MS-毛衫（上衣/连衣裙）", pct: 8, sku: 15, margin: 60, sales: 48000, season: "秋冬" },
+    { category: "MF-棉服", pct: 5, sku: 8, margin: 55, sales: 35000, season: "秋冬" },
+    { category: "WY-卫衣", pct: 5, sku: 10, margin: 55, sales: 30000, season: "秋冬" },
+    { category: "SZ-梭织上装（小衫/打底衫）", pct: 4, sku: 10, margin: 60, sales: 24000, season: "全年" },
+    { category: "MJ-马甲（羊绒/毛呢时尚款）", pct: 3, sku: 8, margin: 60, sales: 20000, season: "秋冬" },
+    { category: "TZ-套装（1套1-2件）", pct: 2, sku: 5, margin: 65, sales: 15000, season: "全年" },
+    { category: "KL-夹克衫", pct: 2, sku: 5, margin: 60, sales: 12000, season: "秋冬" },
+    { category: "BQ-半身裙", pct: 1, sku: 7, margin: 60, sales: 8000, season: "春夏/秋冬" },
+  ]);
+
+  // ── 96 格矩阵数据 ────────────────────────
+  // matrix[seasonType][styleValue] = { sku, pct, budget }
+  const [matrix, setMatrix] = useState<Record<string, any>>(() => {
+    const m: Record<string, any> = {};
+    SEASON_TYPES.forEach((s) => {
+      m[s] = {};
+      ALL_STYLES.forEach((st) => {
+        m[s][st.value] = { sku: 0, pct: 0, budget: 0 };
+      });
+    });
+    return m;
+  });
+
+  // ── 波段计划 ────────────────────────────
+  const [waves, setWaves] = useState<WaveItem[]>([
+    { wave: 1, date: "2月第1周", pct: 15, sku: 30, amount: 150000, categories: ["春装上衣", "裙装"], seasonFocus: ["春早春", "春中"], styleFocus: ["优雅", "浪漫"], activity: "春季新品发布" },
+    { wave: 2, date: "3月第1周", pct: 20, sku: 40, amount: 200000, categories: ["全套春装"], seasonFocus: ["春中", "春末"], styleFocus: ["休闲", "通勤"], activity: "女神节促销" },
+    { wave: 3, date: "4月第1周", pct: 25, sku: 50, amount: 250000, categories: ["春夏过渡款"], seasonFocus: ["春末", "初夏"], styleFocus: ["简约", "优雅"], activity: "会员专享日" },
+    { wave: 4, date: "5月第1周", pct: 40, sku: 80, amount: 400000, categories: ["夏装全套"], seasonFocus: ["盛夏"], styleFocus: ["运动", "前卫"], activity: "夏季焕新大促" },
+  ]);
+
+  /* ── 加载店铺列表 ──────────────────────── */
   useEffect(() => {
-  }, [supabase]);
+    (async () => {
+      const { data } = await supabase.from("stores").select("id, name").order("name");
+      setStores(data || []);
+      if (data && data.length > 0) setStoreId(data[0].id);
+    })();
+  }, []);
 
   /* ── 自动填充 96 格矩阵（基于 VIP 数据）── */
   const autoFillMatrix = async () => {

@@ -45,10 +45,68 @@ export default function AdminStyleTestResultsPage() {
   const [total, setTotal] = useState(0);
   const [detailResult, setDetailResult] = useState<StyleTestResult | null>(null);
   const [mainStyles, setMainStyles] = useState<string[]>([]);
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
   useEffect(() => {
-  }, [supabase]);
+    
+}, []);
+
+  useEffect(() => {
+    fetchResults();
+  }, [page, search, filterGender, filterMainStyle]);
+const fetchResults = async () => {
+    setLoading(true);
+    let query = supabase
+      .from("style_test_results")
+      .select("*", { count: "exact" })
+      .order("created_at", { ascending: false });
+
+    if (search) {
+      query = query.or(`name.ilike.%${search}%,phone.ilike.%${search}%`);
+    }
+    if (filterGender) {
+      query = query.eq("gender", filterGender);
+    }
+    if (filterMainStyle) {
+      query = query.eq("main_style", filterMainStyle);
+    }
+
+    const from = (page - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      console.error("Error fetching results:", error);
+    } else {
+      setResults(data || []);
+      setTotal(count || 0);
+      // Extract unique main styles for filter dropdown
+      if (data && data.length > 0) {
+        const styles = Array.from(new Set(data.map((r) => r.main_style).filter(Boolean)));
+        setMainStyles((prev) => {
+          const merged = Array.from(new Set([...prev, ...styles])).sort();
+          return merged;
+        });
+      }
+    }
+    setLoading(false);
+  };
+
+  // Also fetch distinct main styles for filter on mount
+  useEffect(() => {
+    const fetchStyles = async () => {
+      const { data } = await supabase
+        .from("style_test_results")
+        .select("main_style")
+        .not("main_style", "is", null);
+      if (data) {
+        setMainStyles(Array.from(new Set(data.map((r) => r.main_style))).sort());
+      }
+    };
+    fetchStyles();
+  }, []);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 

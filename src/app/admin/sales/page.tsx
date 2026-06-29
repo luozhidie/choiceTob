@@ -2,16 +2,11 @@
 
 import { useRouter } from "next/navigation";
 
-/**
- * 销售服务页面 - 简化版（与 dashboard 保持一致的模式）
- * 不使用 Supabase client，不检查 cookie，避免 SSR/hydration 问题
- */
 export default function AdminSalesPlanPage() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 顶部 */}
       <header className="bg-white border-b border-gray-100 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
@@ -27,7 +22,6 @@ export default function AdminSalesPlanPage() {
         </div>
       </header>
 
-      {/* 内容区 */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
           <p className="text-gray-600">销售服务页面内容（待完善）</p>

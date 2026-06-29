@@ -39,10 +39,23 @@ export default function AdminVipAddonsPage() {
     sort_order: 0,
   });
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
+  /* ---- 加载数据 ---- */
+  const fetchData = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("vip_addon_packages")
+      .select("*")
+      .order("sort_order", { ascending: true });
+    if (error) console.error(error);
+    else setAddons(data || []);
+    setLoading(false);
+  };
+
   useEffect(() => {
-  }, [supabase]);
+    fetchData();
+  }, []);
 
   /* ---- 提交表单 ---- */
   const handleSubmit = async (e: React.FormEvent) => {

@@ -33,10 +33,31 @@ export default function AdminInspirationsPage() {
     is_published: true,
   });
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchInspirations(); }, [supabase]);
+  const supabase = createClient();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  // 加载搭配灵感列表
+  const fetchInspirations = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("outfit_matches")
+        .select("id, title, style_tags, is_published")
+        .order("id", { ascending: false });
+      if (error) throw error;
+      setInspirations(data || []);
+    } catch (err: any) {
+      showToast("error", "加载失败：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchInspirations(); }, []);
 
   // 打开新增/编辑表单
   const openForm = (inspiration?: Inspiration) => {

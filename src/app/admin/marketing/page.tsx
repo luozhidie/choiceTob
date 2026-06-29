@@ -51,13 +51,7 @@ export default function AdminMarketingPlanPage() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({ budgetPlan: true, vipStrategies: true, timeline: true, productFocus: true });
   const [savedCampaigns, setSavedCampaigns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
 
   useEffect(() => {
     

@@ -114,10 +114,39 @@ export default function AdminCustomers() {
   
   const router = useRouter();
   const limit = 20;
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
+  // 加载客户数据
+  const loadCustomers = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("customers")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (search.trim()) {
+        query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`);
+      }
+      if (statusFilter) {
+        query = query.eq("status", statusFilter);
+      }
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+      setCustomers(data || []);
+      setTotal(count || 0);
+    } catch (err: any) {
+      console.error("Load customers error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-  }, [page, statusFilter, supabase]);
+    loadCustomers();
+  }, [page, statusFilter]);
   
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();

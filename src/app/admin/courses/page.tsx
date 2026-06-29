@@ -72,10 +72,25 @@ export default function AdminCoursesPage() {
   });
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const fetchCourses = async () => {
+    setLoading(true);
+    let query = supabase.from("courses").select("*").order("sort_order", { ascending: true });
+    if (filterCategory) query = query.eq("category", filterCategory);
+    const { data, error } = await query;
+    if (!error && data) setCourses(data as Course[]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-  }, [filterCategory, supabase]);
+    fetchCourses();
+  }, [filterCategory]);
 
   const resetForm = () => {
     setForm({

@@ -48,10 +48,26 @@ export default function TestCodesPage() {
     note: "",
   });
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  const supabase = createClient();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const fetchCodes = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("test_codes")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (!error && data) setCodes(data as TestCode[]);
+    setLoading(false);
+  };
+
   useEffect(() => {
-  }, [supabase]);
+    fetchCodes();
+  }, []);
 
   const generateCode = () => {
     const part1 = Math.random().toString(36).substring(2, 6).toUpperCase();

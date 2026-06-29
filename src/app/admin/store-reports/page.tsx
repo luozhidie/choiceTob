@@ -48,10 +48,33 @@ export default function AdminStoreReportsPage() {
     notes: "",
   });
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchReports(); }, [filterStore, sortBy, sortDir, supabase]);
+  const supabase = createClient();
+  const router = useRouter();
+
+  const showToast = (type: "success" | "error", message: string) => {
+    setToast({ type, message });
+    setTimeout(() => setToast(null), 3000);
+  };
+
+  const fetchReports = async () => {
+    setLoading(true);
+    try {
+      let query = supabase.from("store_reports").select("*");
+      if (filterStore) {
+        query = query.eq("store_name", filterStore);
+      }
+      query = query.order(sortBy, { ascending: sortDir === "asc" });
+      const { data, error } = await query;
+      if (error) throw error;
+      setReports((data || []) as StoreReport[]);
+    } catch (err: any) {
+      showToast("error", "加载失败：" + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchReports(); }, [filterStore, sortBy, sortDir]);
 
   // 获取所有门店名称列表用于筛选
   const storeNames = [...new Set(reports.map((r) => r.store_name))];

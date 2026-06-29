@@ -60,13 +60,7 @@ const DEFAULT_STYLES = {
 };
 
 export default function BlocksAdminPage() {
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
+  const supabase = createClient();
 
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [loading, setLoading] = useState(true);
@@ -499,25 +493,6 @@ export default function BlocksAdminPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       内容配置
                     </label>
-
-                    {/* 通用：显示位置选择 */}
-                    <div className="mb-4 p-3 bg-blue-50 rounded-xl border border-blue-100">
-                      <label className="block text-xs text-blue-700 font-medium mb-2">📍 显示位置</label>
-                      <select
-                        value={(form.content as any)?.position || "product_top"}
-                        onChange={(e) => {
-                          const pos = e.target.value;
-                          setForm({ ...form, content: { ...(form.content as object || {}), position: pos } as any });
-                        }}
-                        className="w-full px-3 py-2 bg-white border border-blue-200 rounded-lg text-sm focus:border-primary outline-none"
-                      >
-                        <option value="hero_bottom">轮播图下方</option>
-                        <option value="product_top">商品列表上方 ✨ 默认</option>
-                        <option value="product_bottom">商品列表下方</option>
-                        <option value="footer_top">底部上方</option>
-                      </select>
-                      <p className="text-[10px] text-blue-400 mt-1">选择此版块在首页的显示位置</p>
-                    </div>
 
                     {/* products 商品展示 */}
                     {form.type === "products" && (

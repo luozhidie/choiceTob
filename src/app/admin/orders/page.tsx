@@ -61,10 +61,42 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const [supabase, setSupabase] = useState<any>(null);
-  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
-  useEffect(() => {
-  useEffect(() => { fetchOrders(); }, [activeTab, supabase]);
+  const supabase = createClient();
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("buyer_orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(200);
+
+      if (activeTab === "refund_pending") {
+        query = supabase.from("buyer_orders").select("*").eq("status", "refund_pending").order("created_at", { ascending: false }).limit(200);
+      } else if (activeTab !== "all") {
+        query = query.eq("status", activeTab);
+      }
+
+      // 搜索过滤
+      if (searchTerm.trim()) {
+        query = query.or(`product_title.ilike.%${searchTerm.trim()}%,shipping_name.ilike.%${searchTerm.trim()}%,shipping_phone.ilike.%${searchTerm.trim()}%,note.ilike.%${searchTerm.trim()}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (!error && data) {
+        setOrders(data as BuyerOrder[]);
+      } else if (error) {
+        console.error("获取订单失败:", error.message);
+      }
+    } catch (err) {
+      console.error("获取订单异常:", err);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchOrders(); }, [activeTab]);
 
   // 更新订单状态
   const updateStatus = async (orderId: string, status: string, extra?: Record<string, unknown>) => {
