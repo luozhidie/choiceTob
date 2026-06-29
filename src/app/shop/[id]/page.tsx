@@ -54,13 +54,25 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
   const [user, setUser] = useState<any>(null); // 用户登录状态
+  const [isPriceMember, setIsPriceMember] = useState(false); // 是否价格会员
   const { addItem } = useCart();
 
-  // 检查用户登录状态
+  // 检查用户登录状态 + 是否价格会员
   useEffect(() => {
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user: u } }) => {
       setUser(u || null);
+      if (u) {
+        // 查是否有价格会员订单
+        supabase.from("membership_orders")
+          .select("id")
+          .eq("user_id", u.id)
+          .in("status", ["paid", "completed"])
+          .in("type", ["view_price", "price_member"])
+          .then(({ data }: any) => {
+            setIsPriceMember(data && data.length > 0);
+          });
+      }
     });
   }, []);
 
@@ -462,13 +474,27 @@ export default function ProductDetailPage() {
                   <span className="text-sm text-gray-400 mb-1">零售价</span>
                 </div>
 
-                {/* 批发价区域 - 只显示问号，不弹会员明细 */}
-                <div className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
-                   onClick={() => router.push("/vip")}>
+                {/* 批发价区域 */}
+                <div className={`mt-2 flex items-center gap-2 p-2.5 rounded-lg border transition-all cursor-pointer ${isPriceMember && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}\}
+                   onClick={() => {
+                     if (!user) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                     if (!isPriceMember) setShowVipModal(true);
+                   }}
+                >
                   <Lock className="w-4 h-4 text-blue-500 shrink-0" />
                   <span className="text-sm font-medium text-blue-700">批发价</span>
-                  <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
-                  <span className="text-[10px] text-blue-400 ml-1">会员可见</span>
+                  {!user ? (
+                    <span className="text-lg font-bold text-blue-600 ml-auto">登录可见</span>
+                  ) : isPriceMember && product.wholesale_price ? (
+                    <span className="text-lg font-bold text-green-600 ml-auto">{formatPrice(product.wholesale_price)}</span>
+                  ) : isPriceMember ? (
+                    <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
+                  ) : (
+                    <span className="text-lg font-bold text-blue-600 ml-auto">会员可见</span>
+                  )}
+                  <span className="text-[10px] text-blue-400 ml-1">{
+                    !user ? "去登录" : isPriceMember ? "批发价" : "开通会员"
+                  }</span>
                 </div>
               </div>
 
