@@ -126,24 +126,42 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
           skincare: "护肤", makeup: "彩妆", wellness: "养生",
           food: "食品", home: "家居", creative: "文创", art: "艺术",
         };
+
         let categoryParam = "";
         if (content.category && content.category !== "hot_picks") {
           categoryParam = catMap[content.category] || content.category;
         }
-        const params = new URLSearchParams();
-        if (categoryParam) params.set("category", categoryParam);
-        params.set("limit", "20");
 
-        const res = await fetch(`/api/public/products?${params.toString()}`);
-        const json = await res.json();
-        if (json.success && json.data) setBlockProducts(json.data);
+        // 支持指定商品ID
+        if (content.productIds) {
+          const ids = content.productIds.split(",").map((s: string) => s.trim()).filter(Boolean);
+          if (ids.length > 0) {
+            const res = await fetch(`/api/public/products?ids=${ids.join(",")}&limit=${ids.length}`);
+            const json = await res.json();
+            if (json.success && json.data) {
+              // 按ID顺序排列
+              const ordered = ids.map((id: string) => (json.data as any[]).find((p: any) => p.id === id)).filter(Boolean);
+              setBlockProducts(ordered);
+            }
+          } else {
+            setBlockProducts([]);
+          }
+        } else {
+          // 按分类自动加载
+          const params = new URLSearchParams();
+          if (categoryParam) params.set("category", categoryParam);
+          params.set("limit", "20");
+          const res = await fetch(`/api/public/products?${params.toString()}`);
+          const json = await res.json();
+          if (json.success && json.data) setBlockProducts(json.data);
+        }
       } catch {
         setBlockProducts([]);
       }
       setLoadingBlock(false);
     };
     loadProducts();
-  }, [content.category, block.id]);
+  }, [content.category, content.productIds, block.id]);
 
   const gridCls = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5", 6: "grid-cols-6" }[columns] || "grid-cols-4";
 
@@ -185,6 +203,182 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
   );
 }
 
+
+/* ===== 各版块类型的前台展示组件 ===== */
+
+// 团购拼单卡片
+function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; bgColor: string }) {
+  const minPeople = content.minPeople || 3;
+  const discount = content.discount || 0.8;
+  const [joined, setJoined] = useState(0);
+  const desc = content.desc || `满${minPeople}人成团，享受${Math.round(discount * 10)}折优惠`;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl" style={{ background: bgColor === "#ffffff" ? "linear-gradient(135deg,#fff5f5 0%,#fff 100%)" : bgColor }}>
+      <div className="p-5 md:p-6">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-lg">👥</div>
+          <div>
+            <h3 className="font-bold text-base">{block.title}</h3>
+            <p className="text-xs text-gray-500 mt-0.5">{desc}</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between bg-white/60 rounded-xl p-4 mb-4">
+          <div className="text-center">
+            <div className="text-2xl font-black text-orange-500">{minPeople}</div>
+            <div className="text-[11px] text-gray-400">人成团</div>
+          </div>
+          <div className="w-px h-8 bg-gray-200"></div>
+          <div className="text-center">
+            <div className="text-2xl font-black text-red-500">{Math.round(discount * 10)}</div>
+            <div className="text-[11px] text-gray-400">折起</div>
+          </div>
+          <div className="w-px h-8 bg-gray-200"></div>
+          <div className="text-center">
+            <div className="text-2xl font-black text-green-500">{joined}</div>
+            <div className="text-[11px] text-gray-400">已参团</div>
+          </div>
+        </div>
+        <Link href="/buyer" className="block w-full py-3 text-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm">
+          立即参团拼单 →
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// 限时秒杀卡片
+function FlashSaleCard({ block, content, bgColor }: { block: any; content: any; bgColor: string }) {
+  const duration = content.duration || 3600;
+  const discount = content.discount || 0.7;
+  const [timeLeft, setTimeLeft] = useState(duration);
+
+  useEffect(() => {
+    const timer = setInterval(() => setTimeLeft((t) => Math.max(0, t - 1)), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const h = Math.floor(timeLeft / 3600);
+  const m = Math.floor((timeLeft % 3600) / 60);
+  const s = timeLeft % 60;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl" style={{ background: bgColor === "#ffffff" ? "linear-gradient(135deg,#fef2f2 0%,#fff 100%)" : bgColor }}>
+      <div className="absolute top-0 right-0 px-3 py-1 bg-red-500 text-white text-[10px] font-bold rounded-bl-lg">⚡ 限量秒杀</div>
+      <div className="p-5 md:p-6 pt-7">
+        <h3 className="font-bold text-base mb-2">{block.title}</h3>
+        <p className="text-xs text-gray-500 mb-4">{content.desc || `全场${Math.round(discount * 10)}折，手慢无！`}</p>
+        <div className="flex items-center gap-2 mb-4">
+          {[
+            { label: "时", val: pad(h) },
+            { label: "分", val: pad(m) },
+            { label: "秒", val: pad(s) },
+          ].map(({ label, val }) => (
+            <div key={label} className="flex flex-col items-center">
+              <div className={`w-12 h-12 md:w-14 md:h-14 rounded-lg ${val !== "00" ? "bg-gray-900" : "bg-gray-300"} text-white flex items-center justify-center text-xl md:text-2xl font-mono font-bold leading-none`}>
+                {val}
+              </div>
+              <span className="text-[10px] text-gray-400 mt-1">{label}</span>
+            </div>
+          ))}
+        </div>
+        <Link href="/buyer" className={`block w-full py-3 text-center font-bold rounded-xl text-sm text-white transition-all ${timeLeft > 0 ? "bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg animate-pulse" : "bg-gray-300 cursor-not-allowed"}`}>
+          {timeLeft > 0 ? "🔥 马上抢购 →" : "⏰ 已结束"}
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+// 营销活动/宣传主题卡片（可编辑的宣传内容）
+function PromotionCard({ block, content, bgColor, textColor }: { block: any; content: any; bgColor: string; textColor: string }) {
+  if (!content.promoTitle && !content.promoDesc && !content.imageUrl) {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-sm opacity-50">{block.title}（暂无宣传内容）</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: bgColor }}>
+      {content.imageUrl && (
+        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-40 md:h-52 object-cover" />
+      )}
+      <div className="p-5 md:p-6">
+        {content.promoTitle && (
+          <h3 className="font-bold text-lg md:text-xl mb-2" style={{ color: textColor }}>{content.promoTitle}</h3>
+        )}
+        {content.promoDesc && (
+          <p className="text-sm opacity-70 leading-relaxed mb-4" style={{ color: textColor }}>{content.promoDesc}</p>
+        )}
+        {(content.buttonText || content.linkUrl) && (
+          <Link
+            href={content.linkUrl || "/buyer"}
+            className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all"
+            style={{ background: textColor === "#333333" ? "linear-gradient(135deg,#e89aac 0%,#d8a0c0 100%)" : undefined }}
+          >
+            {content.buttonText || "立即查看"} <ArrowRight className="w-4 h-4" />
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 智能推荐版块（显示推荐商品）
+function RecommendationBlock({ block, content, bg, textColor, pad, radius, columns }: {
+  block: any; content: any; bg: string; textColor: string; pad: number; radius: number; columns: number;
+}) {
+  const [recProducts, setRecProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/public/products?limit=${columns * 2}`)
+      .then(r => r.json())
+      .then(json => json.success ? setRecProducts(json.data.slice(0, columns * 2) || []) : null)
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [columns]);
+
+  const gridCls = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4", 5: "grid-cols-5" }[columns] || "grid-cols-4";
+
+  return (
+    <section style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }} className="w-full">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-bold text-lg">{block.title}</h2>
+          <span className="text-[11px] text-gray-400">✦ AI 精选推荐</span>
+        </div>
+        {loading ? (
+          <div className={`grid ${gridCls} gap-4`}>
+            {[1,2,3,4].map(i => <div key={i} className="animate-pulse"><div className="bg-white/50 rounded-xl aspect-[3/4]"></div></div>)}
+          </div>
+        ) : recProducts.length === 0 ? (
+          <p className="text-sm opacity-40 py-8 text-center">暂无推荐商品</p>
+        ) : (
+          <div className={`grid ${gridCls} gap-4`}>
+            {recProducts.map((p: any) => (
+              <Link key={p.id} href={`/shop/${p.id}`} className="group block">
+                <div className="rounded-xl overflow-hidden mb-2 aspect-[3/4] relative bg-white/30">
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
+                  )}
+                  <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] px-2 py-0.5 rounded-full font-medium">AI推荐</div>
+                </div>
+                <h4 className="font-medium text-[13px] line-clamp-2 group-hover:text-rose-500 transition-colors">{p.name}</h4>
+                <p className="text-red-500 font-bold mt-1 text-[14px]">¥{Math.round((p.price || 0) / 100)}</p>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
 export default function Home() {
   const [keyword, setKeyword] = useState("");
@@ -272,36 +466,58 @@ export default function Home() {
         style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }}
         className="w-full"
       >
-        <div className="max-w-7xl mx-auto">
-          <h2 className="font-bold text-lg mb-4">{block.title}</h2>
-          {block.type === "products" && (
-            <p className="text-sm text-gray-400">
-              分类：{content.category || "全部"} ｜ 布局：{content.layout || "grid"} ｜ 列数：{content.columns || 4}
-            </p>
-          )}
-          {block.type === "group_buy" && (
-            <p className="text-sm text-gray-400">
-              最低 {content.minPeople || 3}人 ｜ 折扣 {(content.discount || 0.8) * 10}折
-            </p>
-          )}
-          {block.type === "flash_sale" && (
-            <p className="text-sm text-gray-400">
-              活动时长 {((content.duration || 3600) / 60)}分钟 ｜ 折扣 {(content.discount || 0.7) * 10}折
-            </p>
-          )}
-          {block.type === "promotion" && content.promoTitle && (
-            <div>
-              <h3 className="font-semibold">{content.promoTitle}</h3>
-              <p className="text-sm text-gray-500">{content.promoDesc}</p>
-            </div>
-          )}
-          {block.type === "custom" && content.html && (
-            <div dangerouslySetInnerHTML={{ __html: content.html }} />
-          )}
-          {block.type === "recommendation" && (
-            <p className="text-sm text-gray-400">🤖 智能推荐版块</p>
-          )}
-        </div>
+        {/* ===== products 商品展示 ===== */}
+        {block.type === "products" && (
+          <ProductBlock
+            block={block}
+            bg={bg}
+            textColor={textColor}
+            pad={pad}
+            radius={radius}
+            content={content}
+            layout={content.layout || "grid"}
+            columns={content.columns || 4}
+          />
+        )}
+
+        {/* ===== group_buy 团购拼单 ===== */}
+        {block.type === "group_buy" && (
+          <div className="max-w-7xl mx-auto">
+            <GroupBuyCard block={block} content={content} bgColor={bg} />
+          </div>
+        )}
+
+        {/* ===== flash_sale 限时秒杀 ===== */}
+        {block.type === "flash_sale" && (
+          <div className="max-w-7xl mx-auto">
+            <FlashSaleCard block={block} content={content} bgColor={bg} />
+          </div>
+        )}
+
+        {/* ===== promotion 营销活动/宣传主题 ===== */}
+        {block.type === "promotion" && (
+          <div className="max-w-7xl mx-auto">
+            <PromotionCard block={block} content={content} bgColor={bg} textColor={textColor} />
+          </div>
+        )}
+
+        {/* ===== custom 自定义HTML内容 ===== */}
+        {block.type === "custom" && (
+          <div className="max-w-7xl mx-auto">
+            {content.html ? (
+              <div dangerouslySetInnerHTML={{ __html: content.html }} />
+            ) : (
+              <p className="text-sm text-gray-400 py-8 text-center">暂无内容</p>
+            )}
+          </div>
+        )}
+
+        {/* ===== recommendation 智能推荐 ===== */}
+        {block.type === "recommendation" && (
+          <div className="max-w-7xl mx-auto">
+            <RecommendationBlock block={block} content={content} bg={bg} textColor={textColor} pad={pad} radius={radius} columns={content.columns || 4} />
+          </div>
+        )}
       </section>
     );
   };

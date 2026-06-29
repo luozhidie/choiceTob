@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get("category") || "";
     const limit = parseInt(searchParams.get("limit") || "20");
+    const idsParam = searchParams.get("ids") || "";
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -21,6 +22,12 @@ export async function GET(request: NextRequest) {
       .limit(limit);
 
     if (category) query = query.eq("category", category);
+
+    // 支持按ID筛选（逗号分隔）
+    if (idsParam) {
+      const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
+      if (ids.length > 0) query = query.in("id", ids);
+    }
 
     const { data, error } = await query;
 

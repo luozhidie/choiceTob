@@ -559,12 +559,33 @@ export default function BlocksAdminPage() {
                           />
                           <label className="text-xs text-gray-500">列</label>
                         </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">指定商品ID（可选）</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.productIds || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: e.target.value } as any })}
+                            placeholder="留空=自动按分类加载；或填：id1,id2,id3"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">填写后只显示指定的商品，留空则根据分类自动加载</p>
+                        </div>
                       </div>
                     )}
 
                     {/* group_buy 团购拼单 */}
                     {form.type === "group_buy" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">活动描述</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.desc || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), desc: e.target.value } as any })}
+                            placeholder="如：满5人成团，超值优惠"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
                         <div className="flex gap-4">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">最低人数</label>
@@ -596,6 +617,16 @@ export default function BlocksAdminPage() {
                     {/* flash_sale 限时秒杀 */}
                     {form.type === "flash_sale" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">活动描述</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.desc || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), desc: e.target.value } as any })}
+                            placeholder="如：每日10点准时开抢"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
                         <div className="flex gap-4">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">活动时长（秒）</label>
@@ -624,27 +655,59 @@ export default function BlocksAdminPage() {
                       </div>
                     )}
 
-                    {/* promotion 营销活动 */}
+                    {/* promotion 营销活动 / 宣传主题 */}
                     {form.type === "promotion" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">活动标题</label>
+                          <label className="block text-xs text-gray-500 mb-1">宣传标题 <span className="text-red-400">*</span></label>
                           <input
                             type="text"
                             value={(form.content as any)?.promoTitle || ""}
                             onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), promoTitle: e.target.value } as any })}
-                            placeholder="如：满300减50"
+                            placeholder="如：新品首发 · 限时特惠"
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">活动描述</label>
+                          <label className="block text-xs text-gray-500 mb-1">宣传描述</label>
                           <textarea
                             value={(form.content as any)?.promoDesc || ""}
                             onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), promoDesc: e.target.value } as any })}
-                            placeholder="活动详细说明..."
+                            placeholder="吸引人的活动文案..."
                             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none h-20 resize-y"
                           />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">封面图片URL</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.imageUrl || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), imageUrl: e.target.value } as any })}
+                            placeholder="https://... 或留空不显示图片"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">按钮文字</label>
+                            <input
+                              type="text"
+                              value={(form.content as any)?.buttonText || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), buttonText: e.target.value } as any })}
+                              placeholder="如：立即查看"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">跳转链接</label>
+                            <input
+                              type="text"
+                              value={(form.content as any)?.linkUrl || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), linkUrl: e.target.value } as any })}
+                              placeholder="/buyer"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                            />
+                          </div>
                         </div>
                       </div>
                     )}
