@@ -827,15 +827,28 @@ export default function AdminProductsPage() {
                       if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
                       setUploading(true);
                       try {
-                        const supabase = createClient();
-                        const ext = file.name.split('.').pop();
-                        const fileName = `cover_${Date.now()}.${ext}`;
-                        const { error } = await supabase.storage.from("products").upload(fileName, file);
-                        if (error) throw error;
-                        const { data: urlData } = supabase.storage.from("products").getPublicUrl(fileName);
-                        setForm({ ...form, cover_image: urlData.publicUrl });
-                      } catch (err) { console.error(err); alert("上传失败"); }
+                        const dataUrl = await new Promise<string>((resolve, reject) => {
+                          const reader = new FileReader();
+                          reader.onload = () => resolve(reader.result as string);
+                          reader.onerror = () => reject(new Error("文件读取失败"));
+                          reader.readAsDataURL(file);
+                        });
+                        const res = await fetch("/api/image-grabber/upload", {
+                          method: "POST",
+                          credentials: "include",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"),
+                            mimeType: file.type || "image/jpeg",
+                            dataUrl,
+                          }),
+                        });
+                        const json = await res.json();
+                        if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+                        setForm(f => ({ ...f, cover_image: json.storedUrl }));
+                      } catch (err: any) { console.error(err); alert("上传失败：" + err.message); }
                       setUploading(false);
+                      e.target.value = "";
                     }} className="hidden" />
                   </label>
                   {form.cover_image && (
