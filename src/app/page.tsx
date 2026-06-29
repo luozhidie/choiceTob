@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import {
   Search, ArrowRight, Star, Shirt, Scissors, Sparkles, Gem, Footprints, ShoppingCart,
   Droplets, PenTool, Palette, Sun, Package, Users,
@@ -116,24 +115,28 @@ function ProductBlock({ block, bg, textColor, pad, radius, content, layout, colu
 }) {
   const [blockProducts, setBlockProducts] = useState<any[]>([]);
   const [loadingBlock, setLoadingBlock] = useState(true);
-  const supabase = createClient();
 
   useEffect(() => {
     const loadProducts = async () => {
       setLoadingBlock(true);
       try {
-        let query = supabase.from("products").select("id, name, price, image_url, category, sub_category").eq("is_published", true).limit(20);
+        // 映射后台分类值到中文分类名
+        const catMap: Record<string, string> = {
+          clothing: "穿搭", accessories: "穿搭", shoes: "穿搭", lingerie: "穿搭",
+          skincare: "护肤", makeup: "彩妆", wellness: "养生",
+          food: "食品", home: "家居", creative: "文创", art: "艺术",
+        };
+        let categoryParam = "";
         if (content.category && content.category !== "hot_picks") {
-          const catMap: Record<string, string> = {
-            clothing: "穿搭", accessories: "穿搭", shoes: "穿搭", lingerie: "穿搭",
-            skincare: "护肤", makeup: "彩妆", wellness: "养生",
-            food: "食品", home: "家居", creative: "文创", art: "艺术",
-          };
-          const mapped = catMap[content.category];
-          if (mapped) query = query.eq("category", mapped);
+          categoryParam = catMap[content.category] || content.category;
         }
-        const { data } = await query;
-        setBlockProducts(data || []);
+        const params = new URLSearchParams();
+        if (categoryParam) params.set("category", categoryParam);
+        params.set("limit", "20");
+
+        const res = await fetch(`/api/public/products?${params.toString()}`);
+        const json = await res.json();
+        if (json.success && json.data) setBlockProducts(json.data);
       } catch {
         setBlockProducts([]);
       }
@@ -192,35 +195,33 @@ export default function Home() {
   const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
   const [blocks, setBlocks] = useState<Block[]>([]);
 
-  const supabase = createClient();
-
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
-  // 从 site_assets 读取 Hero 背景图（顶部区域 + 大图区域）
+  // 从 site_assets 读取 Hero 背景图
   useEffect(() => {
     const fetchHeroBgs = async () => {
       try {
-        const [topRes, mainRes] = await Promise.all([
-          supabase.from("site_assets").select("image_url").eq("key", "hero_top_bg").maybeSingle(),
-          supabase.from("site_assets").select("image_url").eq("key", "hero_bg").maybeSingle(),
-        ]);
-        if (topRes.data?.image_url) setHeroTopBgUrl(topRes.data.image_url);
-        if (mainRes.data?.image_url) setHeroBgUrl(mainRes.data.image_url);
+        const res = await fetch("/api/public/site-assets?keys=hero_top_bg,hero_bg");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            const map: Record<string, string> = json.data;
+            if (map["hero_top_bg"]) setHeroTopBgUrl(map["hero_top_bg"]);
+            if (map["hero_bg"]) setHeroBgUrl(map["hero_bg"]);
+          }
+        }
       } catch {}
     };
     fetchHeroBgs();
   }, []);
 
-  // 加载版块（按 position + sort_order 排序）
+  // 加载版块（走公开API，绕过RLS）
   useEffect(() => {
     const fetchBlocks = async () => {
       try {
-        const { data, error } = await supabase
-          .from("page_blocks")
-          .select("*")
-          .eq("is_published", true)
-          .order("sort_order", { ascending: true });
-        if (!error && data) setBlocks(data as Block[]);
+        const res = await fetch("/api/public/blocks");
+        const json = await res.json();
+        if (json.success && json.data) setBlocks(json.data as Block[]);
       } catch {}
     };
     fetchBlocks();
@@ -229,31 +230,14 @@ export default function Home() {
   const defaultHeroBg = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format";
   const bgImage = heroBgUrl || defaultHeroBg;
 
-  // 加载商品（穿搭精选：从 buyer_products + products 加载服装类）
+  // 加载商品（走公开API，绕过RLS）
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const headers: Record<string, string> = {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
-        };
-
-        const [platformRes, buyerRes] = await Promise.all([
-          supabase.from("products").select("id, name, price, image_url, category, sub_category").limit(20),
-          fetch(`${supabaseUrl}/rest/v1/buyer_products?is_published=eq.true&order=sort_order.asc&select=id,title,name,price,cover_image,image_url,category,subcategory&limit=20`, { headers }).then(r => r.ok ? r.json() : []),
-        ]);
-
-        const merged: any[] = [];
-        if (!platformRes.error && platformRes.data) {
-          (platformRes.data as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.name || p.title || "商品", price: p.price || 0, image_url: p.image_url || p.cover_image, category: p.category, sub_category: p.sub_category }));
-        }
-        if (Array.isArray(buyerRes)) {
-          (buyerRes as any[]).forEach((p: any) => merged.push({ id: p.id, name: p.title || p.name || "选品", price: p.price || 0, image_url: p.cover_image || p.image_url, category: p.category, sub_category: p.subcategory }));
-        }
-        setProducts(merged);
+        const res = await fetch("/api/public/products?limit=20");
+        const json = await res.json();
+        if (json.success && json.data) setProducts(json.data);
       } catch (err) {
         console.error("加载商品失败:", err);
       }
@@ -269,9 +253,9 @@ export default function Home() {
     }
   };
 
-  // 按 position 分组版块
+  // 按 position 分组版块（兼容旧数据：没有 position 的默认放到 product_bottom）
   const blocksByPosition = (pos: string) =>
-    blocks.filter((b: Block) => (b.content as any)?.position === pos);
+    blocks.filter((b: Block) => ((b.content as any)?.position || "product_bottom") === pos);
 
   // 渲染单个版块
   const renderBlock = (block: Block) => {
