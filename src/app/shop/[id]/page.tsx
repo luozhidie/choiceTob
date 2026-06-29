@@ -469,11 +469,14 @@ export default function ProductDetailPage() {
 
               {/* 价格 - 只显示零售价，批发价隐藏 */}
               <div className="mb-2">
-                {/* 零售价 */}
+                {/* 价格 - 显示优惠价（与首页一致），原价用删除线 */}
                 <div className="flex items-end gap-2">
                   <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(product.original_price || Math.round(product.price * 2))}
+                    {formatPrice(product.price)}
                   </span>
+                  {product.original_price && product.original_price > product.price && (
+                    <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
+                  )}
                   <span className="text-sm text-gray-400 mb-1">零售价</span>
                 </div>
 
@@ -580,7 +583,7 @@ export default function ProductDetailPage() {
                       id: product.id,
                       title: product.title,
                       image: product.cover_image,
-                      price: product.original_price || Math.round(product.price * 2),
+                      price: product.price,
                       originalPrice: null,
                       source: product.source || "buyer",
                     });
