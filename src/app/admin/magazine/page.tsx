@@ -60,7 +60,13 @@ export default function AdminMagazinePage() {
   const [importing, setImporting] = useState<string | null>(null);
   const [fetchContent, setFetchContent] = useState(false);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   // ── 所有函数定义在组件顶层（不在其他函数内部）──
   const fetchArticles = async () => {

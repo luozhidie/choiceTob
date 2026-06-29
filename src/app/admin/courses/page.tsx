@@ -72,7 +72,13 @@ export default function AdminCoursesPage() {
   });
   const [uploadingVideo, setUploadingVideo] = useState(false);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });

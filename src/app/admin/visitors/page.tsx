@@ -43,7 +43,13 @@ export default function AdminVisitors() {
   
   const router = useRouter();
   const limit = 20;
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   // 加载访客数据
   const loadVisitors = async () => {

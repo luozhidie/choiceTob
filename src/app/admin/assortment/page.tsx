@@ -19,7 +19,13 @@ export default function AssortmentPage() {
   const [error, setError] = useState("");
   const [stores, setStores] = useState<any[]>([]);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   // 加载店铺列表
   useState(() => {

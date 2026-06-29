@@ -23,7 +23,13 @@ export default function AdminCoursePurchasesPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   const router = useRouter();
 
   const showToast = (type: "success" | "error", message: string) => {

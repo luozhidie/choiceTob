@@ -14,7 +14,13 @@ interface Product {
 }
 
 export default function NewTestCampaignPage() {
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   const router = useRouter();
 
   const [title, setTitle] = useState("");

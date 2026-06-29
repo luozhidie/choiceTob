@@ -19,7 +19,13 @@ interface TestCampaign {
 }
 
 export default function TestingPage() {
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   const [campaigns, setCampaigns] = useState<TestCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");

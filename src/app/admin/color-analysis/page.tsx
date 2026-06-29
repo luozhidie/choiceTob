@@ -162,7 +162,13 @@ export default function ColorAnalysisPage() {
   const [historySearch, setHistorySearch] = useState("");
   const [showHistory, setShowHistory] = useState(true);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   useEffect(() => {
     supabase.from("stores").select("id, name, city").eq("status", "active").order("name")

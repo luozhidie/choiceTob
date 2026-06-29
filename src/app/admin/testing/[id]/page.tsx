@@ -35,7 +35,13 @@ interface TestItem {
 export default function CampaignDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [items, setItems] = useState<TestItem[]>([]);

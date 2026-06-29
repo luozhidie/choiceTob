@@ -48,7 +48,13 @@ export default function ColorComparePage() {
   const [customerStats, setCustomerStats] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(false);
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   useEffect(() => {
     fetchStats();

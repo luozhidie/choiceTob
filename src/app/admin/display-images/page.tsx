@@ -46,7 +46,13 @@ export default function AdminDisplayImagesPage() {
   const [uploading, setUploading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("all");
   const [tab, setTab] = useState<string>("all");
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   useEffect(() => {
     

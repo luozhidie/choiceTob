@@ -75,7 +75,13 @@ const PIE_COLORS = [
 
 /* ── 组件 ─────────────────────────────────────────────────── */
 export default function StoreBuyerPage() {
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   const [stores, setStores] = useState<StoreOption[]>([]);
   const [selectedStore, setSelectedStore] = useState("");
   const [members, setMembers] = useState<VipMember[]>([]);

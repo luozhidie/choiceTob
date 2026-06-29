@@ -43,7 +43,13 @@ export default function CrmRemindersPage() {
   const [filterType, setFilterType] = useState("");
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const router = useRouter();
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   useEffect(() => { fetchData(); }, [filterType, showUnreadOnly]);
 

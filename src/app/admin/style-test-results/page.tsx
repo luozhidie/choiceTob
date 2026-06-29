@@ -45,7 +45,13 @@ export default function AdminStyleTestResultsPage() {
   const [total, setTotal] = useState(0);
   const [detailResult, setDetailResult] = useState<StyleTestResult | null>(null);
   const [mainStyles, setMainStyles] = useState<string[]>([]);
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   useEffect(() => {
     

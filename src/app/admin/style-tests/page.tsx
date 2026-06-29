@@ -40,7 +40,13 @@ export default function AdminStyleTestsPage() {
   const [page, setPage] = useState(0);
   const [total, setTotal] = useState(0);
   const pageSize = 20;
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
   const router = useRouter();
 
   const fetchData = async () => {

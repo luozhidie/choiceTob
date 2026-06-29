@@ -61,7 +61,13 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<BuyerOrder | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const supabase = createClient();
+  [supabase, setSupabase] = useState<any>(null);
+  // 延迟初始化 Supabase（避免 SSR hydration mismatch）
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      setSupabase(createClient());
+    }
+  }, []);
 
   const fetchOrders = async () => {
     setLoading(true);
