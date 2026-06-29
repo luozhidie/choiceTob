@@ -1,80 +1,50 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import {
-  Loader2,
-  Headphones,
-  Target,
-  Users,
-  Package,
-  TrendingUp,
-  Save,
-  Sparkles,
-  BarChart3,
-  ChevronDown,
-  ChevronRight,
-  AlertTriangle,
-  MessageSquare,
-  DollarSign,
-  Crown,
-} from "lucide-react";
 
 interface Store { id: string; name: string; business_goals?: Record<string, any>; }
 
-const serviceCategories = ["综合销售策略", "话术培训", "VIP服务", "连带提升"];
-const seasons = ["春季", "夏季", "秋季", "冬季"];
-
 export default function AdminSalesPlanPage() {
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(true);
-  const [supabase, setSupabase] = useState<any>(null);
 
-  // 客户端权限检查 + 初始化 Supabase
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      const hasCookie = document.cookie.includes("admin_logged_in=true");
-      if (!hasCookie) {
-        setIsAdmin(false);
-        router.replace("/admin/login");
-      }
-      setSupabase(createClient());
-    }
-  }, [router]);
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-4 text-gray-500">正在跳转登录...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 原有页面内容开始
+  // ── 所有 hooks 必须在任何条件 return 之前 ──
+  const [mounted, setMounted] = useState(false);
   const [stores, setStores] = useState<Store[]>([]);
   const [selectedStore, setSelectedStore] = useState("");
   const [season, setSeason] = useState("夏季");
   const [serviceCategory, setServiceCategory] = useState("综合销售策略");
   const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Record<string, any> | null>(null);
-  const [dataSources, setDataSources] = useState<Record<string, any> | null>(null);
-  const [storeGoals, setStoreGoals] = useState<Record<string, any> | null>(null);
-  const [expanded, setExpanded] = useState<Record<string, boolean>>({ vipStrategies: true, salesScripts: true, productMatrix: true });
-  const [savedPlans, setSavedPlans] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"generate" | "saved">("generate");
 
-  const fetchStores = async () => {
-    if (!supabase) return;
-    const { data } = await supabase.from("stores").select("id, name").order("name");
-    if (data) setStores(data);
-  };
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  useEffect(() => { fetchStores(); }, [supabase]);
+  useEffect(() => {
+    if (!mounted) return;
+    if (typeof document !== "undefined") {
+      const hasCookie = document.cookie.includes("admin_logged_in=true");
+      if (!hasCookie) {
+        router.replace("/admin/login");
+      }
+      // 加载店铺列表（使用 dummy client 即可）
+      import("@/lib/supabase/client").then(({ createClient }) => {
+        const sb = createClient();
+        sb.from("stores").select("id, name").order("name").then(({ data }) => {
+          if (data) setStores(data);
+        });
+      });
+    }
+  }, [mounted, router]);
+
+  // SSR 安全：未挂载时显示占位
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400">加载中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
