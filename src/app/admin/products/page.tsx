@@ -119,15 +119,22 @@ export default function AdminProductsPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
-    let query = supabase
-      .from("products")
-      .select("*")
-      .order("sort_order", { ascending: true });
-    if (filterCategory) query = query.eq("category", filterCategory);
-    if (filterSubcategory)
-      query = query.eq("subcategory", filterSubcategory);
-    const { data, error } = await query;
-    if (!error && data) setProducts(data as Product[]);
+    try {
+      const params = new URLSearchParams();
+      if (filterCategory) params.set("category", filterCategory);
+      if (filterSubcategory) params.set("subcategory", filterSubcategory);
+      const res = await fetch(`/api/admin/products-data?${params.toString()}`, {
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setProducts(json.data as Product[]);
+      } else {
+        setProducts([]);
+      }
+    } catch {
+      setProducts([]);
+    }
     setLoading(false);
   };
 
