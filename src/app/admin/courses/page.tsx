@@ -75,28 +75,7 @@ export default function AdminCoursesPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const fetchCourses = async () => {
-    setLoading(true);
-    let query = supabase.from("courses").select("*").order("sort_order", { ascending: true });
-    if (filterCategory) query = query.eq("category", filterCategory);
-    const { data, error } = await query;
-    if (!error && data) setCourses(data as Course[]);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchCourses();
-  }, [filterCategory]);
+  }, [filterCategory, supabase]);
 
   const resetForm = () => {
     setForm({

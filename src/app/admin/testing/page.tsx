@@ -22,35 +22,7 @@ export default function TestingPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const [campaigns, setCampaigns] = useState<TestCampaign[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "active" | "completed" | "cancelled">("all");
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  const loadCampaigns = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("product_test_campaigns")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      setCampaigns(data || []);
-    } catch (error: any) {
-      alert("加载失败: " + (error.message || "未知错误"));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadCampaigns();
-  }, []);
+  }, [supabase]);
 
   const cancelCampaign = async (id: string) => {
     if (!confirm("确定要取消这个测款任务吗？")) return;

@@ -28,60 +28,7 @@ export default function AdminHotPicksDataPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const [hotPicks, setHotPicks] = useState<HotPick[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingPick, setEditingPick] = useState<HotPick | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
-
-  /* 筛选 */
-  const [filterType, setFilterType] = useState<HotPickType | "">("");
-  const [filterChannel, setFilterChannel] = useState<SourceChannel | "">("");
-  const [search, setSearch] = useState("");
-
-  /* 表单 */
-  const [form, setForm] = useState({
-    styleNumber: "",
-    name: "",
-    price: "",
-    colors: "",
-    style: "",
-    sourceChannel: "" as SourceChannel | "",
-    hotPickType: "" as HotPickType | "",
-  });
-
-  // Toast 自动消失
-  useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(t);
-    }
-  }, [toast]);
-
-  // 加载数据
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("hot_picks")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      setHotPicks((data || []) as HotPick[]);
-    } catch (err: any) {
-      console.error("加载失败:", err);
-      setToast({ type: "error", message: "加载失败: " + err.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [supabase]);
 
   /* 统计 */
   const stats = useMemo(() => {

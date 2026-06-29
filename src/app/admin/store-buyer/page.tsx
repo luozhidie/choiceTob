@@ -78,31 +78,7 @@ export default function StoreBuyerPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const [stores, setStores] = useState<StoreOption[]>([]);
-  const [selectedStore, setSelectedStore] = useState("");
-  const [members, setMembers] = useState<VipMember[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [generating, setGenerating] = useState(false);
-  const [report, setReport] = useState<BuyerReport | null>(null);
-  const [expandedSection, setExpandedSection] = useState("overview");
-  const [budgetInput, setBudgetInput] = useState("");
-
-  /* 加载店铺列表 */
-  useEffect(() => { fetchStores(); }, []);
-  const fetchStores = async () => {
-    const { data } = await supabase.from("stores").select("id, name, city, district").order("name");
-    if (data) setStores(data);
-  };
-
-  /* 加载会员 */
-  useEffect(() => {
-    if (!selectedStore) { setMembers([]); setReport(null); return; }
-    fetchMembers(selectedStore);
-  }, [selectedStore]);
+  }, [selectedStore, supabase]);
 
   const fetchMembers = async (storeId: string) => {
     setLoading(true);

@@ -1,50 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-interface Store { id: string; name: string; business_goals?: Record<string, any>; }
-
+/**
+ * 销售服务页面 - 简化版（与 dashboard 保持一致的模式）
+ * 不使用 Supabase client，不检查 cookie，避免 SSR/hydration 问题
+ */
 export default function AdminSalesPlanPage() {
   const router = useRouter();
-
-  // ── 所有 hooks 必须在任何条件 return 之前 ──
-  const [mounted, setMounted] = useState(false);
-  const [stores, setStores] = useState<Store[]>([]);
-  const [selectedStore, setSelectedStore] = useState("");
-  const [season, setSeason] = useState("夏季");
-  const [serviceCategory, setServiceCategory] = useState("综合销售策略");
-  const [notes, setNotes] = useState("");
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!mounted) return;
-    if (typeof document !== "undefined") {
-      const hasCookie = document.cookie.includes("admin_logged_in=true");
-      if (!hasCookie) {
-        router.replace("/admin/login");
-      }
-      // 加载店铺列表（使用 dummy client 即可）
-      import("@/lib/supabase/client").then(({ createClient }) => {
-        const sb = createClient();
-        sb.from("stores").select("id, name").order("name").then(({ data }) => {
-          if (data) setStores(data);
-        });
-      });
-    }
-  }, [mounted, router]);
-
-  // SSR 安全：未挂载时显示占位
-  if (!mounted) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-400">加载中...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -116,66 +116,7 @@ function CrmWechatAddInner() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const router = useRouter();
-
-  useEffect(() => { fetchData(); }, [filterIndustry]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    let query = supabase
-      .from("crm_contacts")
-      .select("*, crm_stores!inner(name, industry)")
-      .eq("wechat_status", "NOT_ADDED")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true });
-
-    if (filterIndustry) query = query.eq("crm_stores.industry", filterIndustry);
-    const { data, error } = await query;
-
-    if (!error && data) {
-      const enriched = data.map((c: any) => ({
-        ...c,
-        store_name: c.crm_stores?.name,
-        store_industry: c.crm_stores?.industry,
-      }));
-      setContacts(enriched);
-    }
-
-    const { data: tplData } = await supabase
-      .from("crm_wechat_templates")
-      .select("id, title, content, industry")
-      .eq("category", "首次添加")
-      .order("sort_order");
-    setTemplates(tplData || []);
-
-    setLoading(false);
-  };
-
-  const fetchFunnelStats = async () => {
-    const { data: allContacts } = await supabase
-      .from("crm_contacts")
-      .select("wechat_status, phone")
-      .is("deleted_at", null);
-
-    const stats = {
-      total: allContacts?.length || 0,
-      notAdded: allContacts?.filter(c => c.wechat_status === "NOT_ADDED").length || 0,
-      added: allContacts?.filter(c => c.wechat_status === "ADDED").length || 0,
-      deal: allContacts?.filter(c => c.wechat_status === "DEAL").length || 0,
-      refused: allContacts?.filter(c => c.wechat_status === "REFUSED").length || 0,
-      invalid: allContacts?.filter(c => c.wechat_status === "INVALID").length || 0,
-      searchable: allContacts?.filter(c => c.wechat_status === "NOT_ADDED" && validatePhone(c.phone).wechatable).length || 0,
-    };
-    return stats;
-  };
-
-  const [funnel, setFunnel] = useState({ total: 0, notAdded: 0, added: 0, deal: 0, refused: 0, invalid: 0, searchable: 0 });
-
-  useEffect(() => { fetchFunnelStats().then(setFunnel); }, [loading]);
+  useEffect(() => { fetchFunnelStats().then(setFunnel); }, [loading, supabase]);
 
   // 筛选后的列表
   const filteredContacts = contacts.filter(c => {

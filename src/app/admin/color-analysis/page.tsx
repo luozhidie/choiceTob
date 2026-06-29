@@ -165,16 +165,7 @@ export default function ColorAnalysisPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-
-  useEffect(() => {
-    supabase.from("stores").select("id, name, city").eq("status", "active").order("name")
-      .then(({ data }) => { if (data) setStoreOptions(data as any[]); });
-    fetchHistory();
-  }, []);
+  }, [supabase]);
 
   // 获取色彩季型历史记录
   const fetchHistory = async () => {

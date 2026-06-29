@@ -37,37 +37,7 @@ export default function AdminDailyLooksPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const router = useRouter();
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const fetchLooks = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from("daily_looks")
-        .select("*")
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      setLooks((data || []).map((d: any) => ({
-        ...d,
-        colors: Array.isArray(d.colors) ? d.colors : JSON.parse(d.colors || "[]"),
-      })));
-    } catch (err: any) {
-      showToast("error", "加载失败：" + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { fetchLooks(); }, []);
+  useEffect(() => { fetchLooks(); }, [supabase]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

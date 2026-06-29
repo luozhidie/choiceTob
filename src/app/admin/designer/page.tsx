@@ -31,21 +31,7 @@ export default function AdminDesignerPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-
-  // 加载数据
-  const fetchData = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("designer_packages").select("*").order("sort_order", { ascending: true });
-    if (error) console.error(error);
-    else setPackages(data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [supabase]);
 
   // 上传图片
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

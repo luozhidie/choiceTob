@@ -65,30 +65,7 @@ export default function AdminPlanningRequestsPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-  const router = useRouter();
-
-  const showToast = (type: "success" | "error", message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 3000);
-  };
-
-  const fetchRequests = async () => {
-    setLoading(true);
-    let query = supabase
-      .from("planning_requests")
-      .select("*")
-      .order("created_at", { ascending: false });
-    if (filterStatus) query = query.eq("status", filterStatus);
-    const { data, error } = await query;
-    if (!error && data) setRequests(data as PlanningRequest[]);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchRequests(); }, [filterStatus]);
+  useEffect(() => { fetchRequests(); }, [filterStatus, supabase]);
 
   const filtered = requests.filter((r) => {
     if (!searchTerm) return true;

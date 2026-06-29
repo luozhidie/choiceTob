@@ -33,20 +33,7 @@ export default function AdminSalonPage() {
   [supabase, setSupabase] = useState<any>(null);
   // 延迟初始化 Supabase（避免 SSR hydration mismatch）
   useEffect(() => {
-    if (typeof document !== "undefined") {
-      setSupabase(createClient());
-    }
-  }, []);
-
-  const fetchData = async () => {
-    setLoading(true);
-    const { data, error } = await supabase.from("salon_events").select("*").order("event_date", { ascending: false });
-    if (error) console.error(error);
-    else setEvents(data || []);
-    setLoading(false);
-  };
-
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); }, [supabase]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
