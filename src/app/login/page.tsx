@@ -18,6 +18,15 @@ function UserLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/buyer";
+  const pendingPlan = searchParams.get("plan"); // 要购买的套餐（登录后自动触发支付）
+
+  /* 构建完整跳转地址（包含 plan 参数） */
+  const buildRedirectUrl = () => {
+    if (!pendingPlan) return redirect;
+    // redirect 已含查询参数时用 &，否则用 ?
+    if (redirect.includes("?")) return `${redirect}&plan=${pendingPlan}`;
+    return `${redirect}?plan=${pendingPlan}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +71,7 @@ function UserLoginForm() {
 
         // 登录成功！跳转
         alert("登录成功！正在跳转...");
-        window.location.href = redirect || "/hot-picks";
+        window.location.href = buildRedirectUrl();
         return;
       } else {
         // 普通浏览器：直接用Supabase客户端
@@ -73,15 +82,16 @@ function UserLoginForm() {
           setLoading(false);
           return;
         }
-        router.push(redirect);
+        router.push(buildRedirectUrl());
       }
 
       if (result.error) {
-        setError(result.error.message === "Invalid login credentials" ? "邮箱或密码错误，请重试" : result.error.message);
+        const msg = result.error.message === "Invalid login credentials" ? "邮箱或密码错误，请重试" : result.error.message;
+        setError(msg);
         setLoading(false);
         return;
       }
-      router.push(redirect);
+      router.push(buildRedirectUrl());
     } catch (err: any) {
       console.error("[Login Error]", err);
       setError("网络错误，请稍后重试");

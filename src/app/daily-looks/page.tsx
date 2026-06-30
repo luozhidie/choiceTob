@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Palette, Sparkles, Calendar, ChevronRight,
   Lock, Unlock, Crown, Loader2,
@@ -37,6 +37,7 @@ const PLANS = [
 
 export default function DailyLooksPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [looks, setLooks] = useState<DailyLook[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStyle, setActiveStyle] = useState("全部");
@@ -48,6 +49,8 @@ export default function DailyLooksPage() {
 
   /* 支付状态 */
   const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
+  /* 标记是否已经自动触发过支付（防止重复） */
+  const autoPayTriggered = useRef(false);
 
   const supabase = createClient();
 
@@ -56,6 +59,20 @@ export default function DailyLooksPage() {
     fetchUser();
     fetchLooks();
   }, []);
+
+  /* 登录完成后，检测 URL 上是否有 ?plan=xxx 参数，自动触发支付 */
+  useEffect(() => {
+    if (user && !autoPayTriggered.current) {
+      const pendingPlan = searchParams.get("plan");
+      if (pendingPlan && PLANS.some(p => p.id === pendingPlan)) {
+        autoPayTriggered.current = true;
+        // 清除 URL 参数（避免刷新重复触发）
+        window.history.replaceState({}, "", "/daily-looks");
+        // 延迟一点确保状态已更新
+        setTimeout(() => handleBuyNow(pendingPlan), 500);
+      }
+    }
+  }, [user]);
 
   /* 获取用户登录状态 + 每日搭配会员状态 */
   const fetchUser = async () => {
@@ -112,9 +129,9 @@ export default function DailyLooksPage() {
 
   /* 直接购买：创建订单 + 调起微信支付 */
   const handleBuyNow = async (planId: string) => {
-    // 未登录 → 跳登录页，带上返回路径
+    // 未登录 → 跳登录页，带上返回路径 + 要购买的套餐
     if (!user) {
-      router.push(`/login?redirect=${encodeURIComponent("/daily-looks")}`);
+      router.push(`/login?redirect=${encodeURIComponent("/daily-looks")}&plan=${planId}`);
       return;
     }
 
