@@ -49,6 +49,8 @@ export default function DailyLooksPage() {
 
   /* 支付状态 */
   const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
+  const [payStatus, setPayStatus] = useState(""); // 支付状态提示
+  const [payQrUrl, setPayQrUrl] = useState(""); // 二维码链接
   /* 标记是否已经自动触发过支付（防止重复） */
   const autoPayTriggered = useRef(false);
 
@@ -133,6 +135,8 @@ export default function DailyLooksPage() {
     if (!plan) return;
 
     setPayingPlanId(planId);
+    setPayStatus("正在创建订单...");
+    setPayQrUrl("");
 
     try {
       // 1. 创建会员订单
@@ -144,10 +148,10 @@ export default function DailyLooksPage() {
         payment_method: "wechat_pay",
         status: "pending",
       });
-      if (insertError) throw insertError;
+      if (insertError) throw new Error("创建订单失败：" + (insertError.message || insertError.code));
 
       // 2. 调用微信支付统一下单（NATIVE模式，不需要openid）
-      console.log('[支付] 开始下单', { planId: plan.id, price: plan.price });
+      setPayStatus("正在调起支付...");
       const payRes = await fetch("/api/wechat-pay/unified-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -160,56 +164,46 @@ export default function DailyLooksPage() {
         }),
       });
       const payResult = await payRes.json();
-      console.log('[支付] 下单返回', payResult);
-
-      setPayingPlanId(null);
 
       if (payResult.error) {
-        alert("支付发起失败：" + (payResult.error || "未知错误"));
-        return;
+        throw new Error(payResult.error || "下单失败");
       }
 
-      // 3. 根据环境处理（和商品结算页一致）
+      // 3. 根据环境处理
       const isWeChatBrowser = /MicroMessenger/i.test(navigator.userAgent);
-      console.log('[支付] 环境检测', { isWeChatBrowser, code_url: payResult.code_url });
 
-      if (isWeChatBrowser && payResult.code_url) {
-        /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
-        console.log('[支付] 微信内，触发支付协议', payResult.code_url);
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = payResult.code_url;
-        document.body.appendChild(iframe);
-        // 5秒后清理 iframe
-        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
-      } else if (payResult.code_url) {
-        /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
-        const iframe = document.createElement("iframe");
-        iframe.style.display = "none";
-        iframe.src = payResult.code_url;
-        document.body.appendChild(iframe);
-        // 5秒后清理 iframe
-        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
-      } else if (payResult.code_url) {
-        /* ── 普通浏览器/电脑：显示支付二维码弹窗 ── */
-        // 弹窗提示 + 打开二维码页面
-        const confirmed = confirm(
-          `订单已创建！\n\n套餐：${plan.name}\n金额：${plan.label}\n订单号：${payResult.order_no || ""}\n\n请使用微信「扫一扫」功能扫描即将打开的二维码完成支付。\n\n点击「确定」打开支付二维码`
-        );
-        if (confirmed) {
+      if (payResult.code_url) {
+        if (isWeChatBrowser) {
+          /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
+          setPayStatus("正在唤起微信支付...");
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = payResult.code_url;
+          document.body.appendChild(iframe);
+          setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 8000);
+          // 微信内不清除 payStatus，让用户手动关闭弹窗
+        } else {
+          /* ── 普通浏览器：生成二维码链接供扫码 ── */
+          setPayStatus("scan_qr");
           const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(payResult.code_url)}&size=280&margins=0`;
-          window.open(qrUrl, "_blank");
+          setPayQrUrl(qrUrl);
+          try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
         }
-        // 复制 code_url 到剪贴板
-        try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
       } else {
-        alert("支付链接生成失败，请联系客服");
+        throw new Error("未返回支付链接");
       }
     } catch (err: any) {
-      console.error("支付错误:", err);
-      alert("支付出错：" + (err.message || "请重试"));
+      console.error("[支付错误]", err);
+      setPayStatus("支付失败：" + (err.message || "请重试"));
+    } finally {
       setPayingPlanId(null);
     }
+  };
+
+  /* 关闭支付弹窗 */
+  const closePayModal = () => {
+    setPayStatus("");
+    setPayQrUrl("");
   };
 
   const filteredLooks =
@@ -489,6 +483,62 @@ export default function DailyLooksPage() {
           )}
         </div>
       </section>
+
+      {/* ── 支付弹窗 ── */}
+      {payStatus !== "" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={closePayModal}>
+          <div className="bg-white rounded-2xl shadow-2xl w-[92vw] max-w-sm mx-4 p-6 relative animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            {/* 关闭按钮 */}
+            <button onClick={closePayModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 text-lg font-bold transition-colors">×</button>
+
+            <div className="text-center">
+              {/* 加载中状态 */}
+              {payStatus !== "scan_qr" && payStatus !== "正在唤起微信支付..." && !payStatus.startsWith("支付失败") && (
+                <div className="py-6">
+                  <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
+                  <p className="text-sm text-gray-600">{payStatus}</p>
+                </div>
+              )}
+
+              {/* 二维码状态（非微信浏览器） */}
+              {payStatus === "scan_qr" && payQrUrl && (
+                <div className="py-4">
+                  <h3 className="text-base font-bold text-gray-900 mb-1">扫码支付</h3>
+                  <p className="text-xs text-gray-400 mb-4">请��微信扫一扫下方二维码</p>
+                  <div className="flex justify-center">
+                    <img src={payQrUrl} alt="支付二维码" className="w-[220px] h-[220px] rounded-lg border border-gray-100" />
+                  </div>
+                  <p className="text-[11px] text-gray-300 mt-3">支付完成后页面会自动刷新</p>
+                </div>
+              )}
+
+              {/* 微信内浏览器状态（iframe已注入，等待用户支付） */}
+              {payStatus === "正在唤起微信支付..." && (
+                <div className="py-6">
+                  <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900">正在唤起微信支付</p>
+                  <p className="text-xs text-gray-400 mt-1">请按照微信提示完成支付</p>
+                  <button onClick={closePayModal} className="mt-5 px-6 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors">关闭</button>
+                </div>
+              )}
+
+              {/* 支付失败状态 */}
+              {payStatus.startsWith("支付失败") && (
+                <div className="py-6">
+                  <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </div>
+                  <p className="text-sm font-semibold text-red-600 mb-1">支付失败</p>
+                  <p className="text-xs text-gray-400">{payStatus.replace("支付失败：", "")}</p>
+                  <button onClick={closePayModal} className="mt-5 px-6 py-2 bg-primary text-white text-sm rounded-lg">我知道了</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── 底部引导 ── */}
       <section className="py-12 bg-gradient-to-r from-primary/5 to-accent/5">
