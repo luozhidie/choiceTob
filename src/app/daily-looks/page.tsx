@@ -147,6 +147,7 @@ export default function DailyLooksPage() {
       if (insertError) throw insertError;
 
       // 2. 调用微信支付统一下单（NATIVE模式，不需要openid）
+      console.log('[支付] 开始下单', { planId: plan.id, price: plan.price });
       const payRes = await fetch("/api/wechat-pay/unified-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,6 +160,7 @@ export default function DailyLooksPage() {
         }),
       });
       const payResult = await payRes.json();
+      console.log('[支付] 下单返回', payResult);
 
       setPayingPlanId(null);
 
@@ -169,8 +171,18 @@ export default function DailyLooksPage() {
 
       // 3. 根据环境处理（和商品结算页一致）
       const isWeChatBrowser = /MicroMessenger/i.test(navigator.userAgent);
+      console.log('[支付] 环境检测', { isWeChatBrowser, code_url: payResult.code_url });
 
       if (isWeChatBrowser && payResult.code_url) {
+        /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
+        console.log('[支付] 微信内，触发支付协议', payResult.code_url);
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = payResult.code_url;
+        document.body.appendChild(iframe);
+        // 5秒后清理 iframe
+        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
+      } else if (payResult.code_url) {
         /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
         const iframe = document.createElement("iframe");
         iframe.style.display = "none";
