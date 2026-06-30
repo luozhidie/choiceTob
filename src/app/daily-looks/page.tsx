@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 import {
   Palette, Sparkles, Calendar, ChevronRight,
-  Lock, Unlock, Crown
+  Lock, Unlock, Crown, Loader2,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Link from "next/link";
 
 /* ── 搭配类型 ── */
@@ -28,7 +29,14 @@ const STYLE_TABS = ["全部", "温柔知性", "职场通勤", "休闲随性", "�
 /* 非会员免费查看数量 */
 const FREE_LOOKS_LIMIT = 3;
 
+/* 套餐定义 */
+const PLANS = [
+  { id: "daily_looks_monthly", name: "搭配灵感·月度会员", price: 99900, label: "¥999/月", desc: "30天" },
+  { id: "daily_looks_yearly", name: "搭配灵感·年度会员", price: 1198000, label: "¥11,980/年", desc: "365天（省¥199/年）" },
+];
+
 export default function DailyLooksPage() {
+  const router = useRouter();
   const [looks, setLooks] = useState<DailyLook[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeStyle, setActiveStyle] = useState("全部");
@@ -37,6 +45,9 @@ export default function DailyLooksPage() {
   /* 会员状态 */
   const [user, setUser] = useState<any>(null);
   const [isDailyLooksMember, setIsDailyLooksMember] = useState(false);
+
+  /* 支付状态 */
+  const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
 
   const supabase = createClient();
 
@@ -61,7 +72,6 @@ export default function DailyLooksPage() {
         .in("status", ["paid", "completed", "confirmed"]);
 
       if (memberOrders && memberOrders.length > 0) {
-        // daily_looks 订阅 或 任意 VIP 套餐都可解锁
         const hasDailyLookAccess = memberOrders.some(
           (o: any) =>
             ["daily_looks", "daily_looks_monthly", "daily_looks_yearly",
@@ -100,6 +110,92 @@ export default function DailyLooksPage() {
     }
   };
 
+  /* 直接购买：创建订单 + 调起微信支付 */
+  const handleBuyNow = async (planId: string) => {
+    // 未登录 → 跳登录页，带上返回路径
+    if (!user) {
+      router.push(`/login?redirect=${encodeURIComponent("/daily-looks")}`);
+      return;
+    }
+
+    const plan = PLANS.find(p => p.id === planId);
+    if (!plan) return;
+
+    setPayingPlanId(planId);
+
+    try {
+      // 1. 创建会员订单
+      const { error: insertError } = await supabase.from("membership_orders").insert({
+        user_id: user.id,
+        plan_id: plan.id,
+        plan_name: plan.name,
+        price: plan.price,
+        payment_method: "wechat_pay",
+        status: "pending",
+      });
+      if (insertError) throw insertError;
+
+      // 2. 调用微信支付统一下单
+      const payRes = await fetch("/api/wechat-pay/unified-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          product_id: plan.id,
+          product_title: plan.name,
+          total_fee: plan.price,
+          quantity: 1,
+          platform: "jsapi",
+        }),
+      });
+      const payResult = await payRes.json();
+
+      if (payResult.error) {
+        alert("支付发起失败：" + (payResult.error || "未知错误"));
+        setPayingPlanId(null);
+        return;
+      }
+
+      // 3. 微信内 JSAPI 唤起支付
+      if (typeof window !== "undefined" && (window as any).WeixinJSBridge) {
+        (window as any).WeixinJSBridge.invoke(
+          "getBrandWCPayRequest",
+          {
+            appId: payResult.appId,
+            timeStamp: payResult.timeStamp,
+            nonceStr: payResult.nonceStr,
+            package: payResult.package,
+            signType: payResult.signType || "MD5",
+            paySign: payResult.paySign,
+          },
+          (res: any) => {
+            setPayingPlanId(null);
+            if (res.err_msg === "get_brand_wcpay_request:ok") {
+              alert("支付成功！页面即将刷新...");
+              setTimeout(() => location.reload(), 1500);
+            } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
+              alert("支付已取消");
+            } else {
+              alert("支付失败，请重试");
+            }
+          }
+        );
+      } else {
+        // 非微信环境：显示二维码或提示
+        if (payResult.code_url) {
+          // 可以展示二维码让用户扫码
+          alert("请在微信中打开此页面完成支付\n或扫描以下二维码：\n" + payResult.code_url);
+        } else {
+          alert("请在微信浏览器中打开此页面进行支付");
+        }
+        setPayingPlanId(null);
+      }
+    } catch (err: any) {
+      console.error("支付错误:", err);
+      alert("支付出错：" + (err.message || "请重试"));
+      setPayingPlanId(null);
+    }
+  };
+
   const filteredLooks =
     activeStyle === "全部"
       ? looks
@@ -112,6 +208,36 @@ export default function DailyLooksPage() {
 
   /* 是否需要限制（非会员且超过3条） */
   const needLimit = !user || !isDailyLooksMember;
+
+  /* 支付按钮组件 */
+  const PayButtons = ({ size = "normal" }: { size?: "normal" | "small" }) => (
+    <div className={`flex items-center gap-2 ${size === "small" ? "flex-wrap" : ""}`}>
+      {PLANS.map((plan) => (
+        <button
+          key={plan.id}
+          onClick={() => handleBuyNow(plan.id)}
+          disabled={!!payingPlanId}
+          className={`
+            ${size === "normal"
+              ? "px-4 py-2 text-xs font-bold rounded-full shadow-sm"
+              : "px-3 py-1.5 text-[11px] font-bold rounded-lg"}
+            bg-gradient-to-r from-red-500 to-pink-500
+            text-white
+            hover:from-red-600 hover:to-pink-600
+            transition-all
+            disabled:opacity-50 disabled:cursor-not-allowed
+            inline-flex items-center gap-1 shrink-0
+          `}
+        >
+          {payingPlanId === plan.id ? (
+            <><Loader2 className="w-3 h-3 animate-spin" /> 支付中</>
+          ) : (
+            <>{plan.label} 立即开通</>
+          )}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -140,26 +266,17 @@ export default function DailyLooksPage() {
       {/* ── 会员专享提示栏 ── */}
       {!isDailyLooksMember && (
         <div className="bg-gradient-to-r from-red-50 via-pink-50 to-orange-50 border-b border-red-100">
-          <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
+          <div className="container mx-auto px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3">
+            <div className="flex items-center gap-2.5 min-w-0 flex-wrap">
               <Lock className="w-5 h-5 text-red-500 shrink-0" />
-              <span className="text-sm font-semibold text-gray-800 truncate">
-                每日搭配灵感 · 会员专享
-              </span>
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-red-600 bg-red-100 px-2.5 py-1 rounded-full">
-                ¥999/月
-                <span className="text-gray-400">·</span>
-                ¥11,980/年
-                <span className="text-gray-400">·</span>
-                VIP免费
+              <span className="text-sm font-semibold text-gray-800">每日搭配灵感 · 会员专享</span>
+              <span className="hidden lg:inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-full">
+                进阶VIP 8折
+                <span className="text-gray-300">·</span>
+                高阶VIP 7折
               </span>
             </div>
-            <Link
-              href="/vip?plan=daily_looks"
-              className="shrink-0 inline-flex items-center gap-1 px-4 py-1.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full hover:from-red-600 hover:to-pink-600 transition-colors shadow-sm"
-            >
-              立即解锁
-            </Link>
+            <PayButtons size="small" />
           </div>
         </div>
       )}
@@ -173,10 +290,7 @@ export default function DailyLooksPage() {
               <Crown className="w-4 h-4 text-amber-500" />
               <span className="text-sm font-semibold text-green-700">已解锁全部搭配灵感</span>
             </div>
-            <Link
-              href="/vip"
-              className="text-xs text-green-600 font-medium hover:text-green-700"
-            >
+            <Link href="/vip" className="text-xs text-green-600 font-medium hover:text-green-700">
               管理订阅 →
             </Link>
           </div>
@@ -216,13 +330,8 @@ export default function DailyLooksPage() {
             <div className="text-center py-20">
               <Palette className="w-16 h-16 text-gray-200 mx-auto mb-4" />
               <h3 className="text-lg font-bold text-primary mb-2">暂无搭配灵感</h3>
-              <p className="text-sm text-muted-foreground">
-                搭配灵感正在筹备中，敬请期待
-              </p>
-              <Link
-                href="/courses"
-                className="inline-flex items-center gap-2 mt-6 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors"
-              >
+              <p className="text-sm text-muted-foreground">搭配灵感正在筹备中，敬请期待</p>
+              <Link href="/courses" className="inline-flex items-center gap-2 mt-6 px-6 py-2.5 bg-accent text-white text-sm font-semibold rounded-lg hover:bg-accent/90 transition-colors">
                 <Sparkles className="w-4 h-4" />
                 浏览教学课程
               </Link>
@@ -257,17 +366,13 @@ export default function DailyLooksPage() {
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 backdrop-blur-[2px] z-10">
                             <Lock className="w-10 h-10 text-white mb-3 drop-shadow-md" />
                             <span className="text-white font-bold text-sm drop-shadow-md">订阅后查看完整搭配</span>
-                            <span className="text-white/80 text-xs mt-1 drop-shadow-md">¥999/月 · ¥11,980/年 · VIP免费</span>
+                            <span className="text-white/80 text-xs mt-1 drop-shadow-md">进阶VIP 8折 · 高阶VIP 7折</span>
                           </div>
                         )}
                         {/* 色彩条 */}
                         <div className="absolute bottom-2 right-2 flex gap-1 z-10">
                           {look.colors.slice(0, isLocked ? 0 : undefined).map((c: string) => (
-                            <div
-                              key={c}
-                              className="w-5 h-5 rounded-full border-2 border-white shadow-sm"
-                              style={{ backgroundColor: c }}
-                            />
+                            <div key={c} className="w-5 h-5 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: c }} />
                           ))}
                         </div>
                       </div>
@@ -278,11 +383,7 @@ export default function DailyLooksPage() {
                         ) : (
                           <div className="flex gap-2">
                             {look.colors.map((c: string) => (
-                              <div
-                                key={c}
-                                className="w-10 h-10 rounded-full border-2 border-white shadow-md"
-                                style={{ backgroundColor: c }}
-                              />
+                              <div key={c} className="w-10 h-10 rounded-full border-2 border-white shadow-md" style={{ backgroundColor: c }} />
                             ))}
                           </div>
                         )}
@@ -300,22 +401,14 @@ export default function DailyLooksPage() {
                         {isLocked ? "已锁定" : look.title}
                       </h3>
                       {look.description && !isLocked && (
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">
-                          {look.description}
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2">{look.description}</p>
                       )}
                       {isLocked && (
-                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 text-transparent select-none">
-                          {" ".repeat(20)}
-                        </p>
+                        <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 text-transparent select-none">{" ".repeat(20)}</p>
                       )}
                       <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-50">
                         {look.colors.slice(0, isLocked ? 0 : undefined).map((c: string) => (
-                          <div
-                            key={c}
-                            className="w-4 h-4 rounded-full shadow-sm border border-gray-100"
-                            style={{ backgroundColor: c }}
-                          />
+                          <div key={c} className="w-4 h-4 rounded-full shadow-sm border border-gray-100" style={{ backgroundColor: c }} />
                         ))}
                       </div>
                     </div>
@@ -330,34 +423,50 @@ export default function DailyLooksPage() {
                 );
               })}
 
-              {/* 非会员末尾：解锁引导卡 */}
+              {/* 非会员末尾：解锁引导卡（含支付按钮） */}
               {needLimit && filteredLooks.length > FREE_LOOKS_LIMIT && (
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="group relative bg-white rounded-2xl border-2 border-dashed border-red-200 hover:border-red-300 transition-all overflow-hidden flex flex-col items-center justify-center min-h-[320px]"
+                  className="group relative bg-white rounded-2xl border-2 border-dashed border-red-200 hover:border-red-300 transition-all overflow-hidden flex flex-col items-center justify-center p-6 min-h-[360px]"
                 >
-                  <Link
-                    href="/vip?plan=daily_looks"
-                    className="flex flex-col items-center justify-center p-8 text-center w-full h-full"
-                  >
-                    <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
-                      <Unlock className="w-7 h-7 text-red-500" />
+                  <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mb-4 group-hover:bg-red-100 transition-colors">
+                    <Unlock className="w-7 h-7 text-red-500" />
+                  </div>
+
+                  <h3 className="font-bold text-gray-900 mb-1.5 text-center">解锁更多搭配灵感</h3>
+                  <p className="text-sm text-gray-500 mb-1 leading-relaxed text-center">
+                    订阅后查看完整搭配方案 · 每日更新
+                  </p>
+                  <p className="text-xs text-gray-400 text-center mb-4">
+                    专业买手精选 · 风格陈列 · 场景搭配 · 门店布局
+                  </p>
+
+                  {/* 套餐价格信息 */}
+                  <div className="space-y-2 text-center mb-5 w-full max-w-[220px]">
+                    <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-gray-50 border border-gray-100">
+                      <div className="text-left">
+                        <div className="text-sm font-bold text-gray-900">月度会员</div>
+                        <div className="text-[11px] text-gray-400">30天有效期</div>
+                      </div>
+                      <span className="text-base font-black text-red-500">¥999</span>
                     </div>
-                    <h3 className="font-bold text-gray-900 mb-2">解锁更多搭配灵感</h3>
-                    <p className="text-sm text-gray-500 mb-4 leading-relaxed">
-                      订阅后查看完整搭配方案<br />每日更新 · 专业买手精选
-                    </p>
-                    <div className="space-y-1.5 text-xs text-gray-400 mb-4">
-                      <div>¥999/月 · 月付灵活</div>
-                      <div className="text-red-500 font-bold">¥11,980/年 · 省¥199/年</div>
-                      <div>VIP会员 · 免费畅看</div>
+                    <div className="flex items-center justify-between px-4 py-2.5 rounded-xl bg-red-50 border border-red-200 relative overflow-hidden">
+                      <div className="absolute top-0 right-0 bg-red-500 text-white text-[9px] px-2 py-0.5 rounded-bl-lg font-bold">推荐</div>
+                      <div className="text-left">
+                        <div className="text-sm font-bold text-gray-900">年度会员</div>
+                        <div className="text-[11px] text-gray-400">365天 · 省¥199/年</div>
+                      </div>
+                      <span className="text-base font-black text-red-600">¥11,980</span>
                     </div>
-                    <span className="inline-flex items-center gap-1 px-5 py-2.5 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm font-bold rounded-xl hover:from-red-600 hover:to-pink-600 transition-all shadow-sm">
-                      立即解锁
-                    </span>
-                  </Link>
+                    <div className="flex items-center gap-2 justify-center text-[11px] text-gray-400">
+                      <span>进阶VIP 8折</span> <span className="text-gray-200">|</span> <span>高阶VIP 7折</span>
+                    </div>
+                  </div>
+
+                  {/* 直接支付按钮 */}
+                  <PayButtons />
                 </motion.div>
               )}
             </div>
@@ -373,18 +482,12 @@ export default function DailyLooksPage() {
             从色彩诊断到风格定位，专业课程帮你系统提升穿搭能力
           </p>
           <div className="mt-6 flex items-center justify-center gap-4 flex-wrap">
-            <Link
-              href="/courses"
-              className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors"
-            >
+            <Link href="/courses" className="inline-flex items-center gap-2 px-6 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-primary/90 transition-colors">
               <Sparkles className="w-4 h-4" />
               浏览教学课程
               <ChevronRight className="w-4 h-4" />
             </Link>
-            <Link
-              href="/style-test"
-              className="inline-flex items-center gap-2 px-6 py-2.5 border-2 border-primary text-primary text-sm font-semibold rounded-lg hover:bg-primary hover:text-white transition-colors"
-            >
+            <Link href="/style-test" className="inline-flex items-center gap-2 px-6 py-2.5 border-2 border-primary text-primary text-sm font-semibold rounded-lg hover:bg-primary hover:text-white transition-colors">
               <Palette className="w-4 h-4" />
               风格测试
             </Link>
