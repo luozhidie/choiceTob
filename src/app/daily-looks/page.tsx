@@ -107,21 +107,15 @@ export default function DailyLooksPage() {
   const fetchLooks = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("daily_looks")
-        .select("*")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: true });
+      // 使用公共 API 查询（服务端绕过 RLS）
+      const res = await fetch("/api/public/daily-looks");
+      const json = await res.json();
 
-      if (error) throw error;
-      setLooks(
-        (data || []).map((d: any) => ({
-          ...d,
-          colors: Array.isArray(d.colors) ? d.colors : JSON.parse(d.colors || "[]"),
-        }))
-      );
+      if (json.success && json.data) {
+        setLooks(json.data);
+      }
     } catch {
-      // 表可能不存在，静默处理
+      // 查询失败时静默处理
     } finally {
       setLoading(false);
     }
