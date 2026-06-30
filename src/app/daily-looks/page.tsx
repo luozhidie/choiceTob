@@ -146,7 +146,7 @@ export default function DailyLooksPage() {
       });
       if (insertError) throw insertError;
 
-      // 2. 统一使用 NATIVE 扫码支付（不需要 openid，兼容所有环境）
+      // 2. 调用微信支付统一下单（NATIVE模式，不需要openid）
       const payRes = await fetch("/api/wechat-pay/unified-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -167,18 +167,28 @@ export default function DailyLooksPage() {
         return;
       }
 
-      // 3. 显示支付二维码（所有环境统一）
-      if (payResult.code_url) {
-        // 生成二维码图片 URL
-        const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(payResult.code_url)}&size=280&margins=0`;
-        // 弹窗展示
-        const confirmed = window.confirm(
-          `订单已创建！\n\n套餐：${plan.name}\n金额：${plan.label}\n订单号：${payResult.order_no}\n\n请用微信「扫一扫」功能扫描即将打开的二维码完成支付。\n\n点击「确定」打开支付二维码`
+      // 3. 根据环境处理（和商品结算页一致）
+      const isWeChatBrowser = /MicroMessenger/i.test(navigator.userAgent);
+
+      if (isWeChatBrowser && payResult.code_url) {
+        /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
+        const iframe = document.createElement("iframe");
+        iframe.style.display = "none";
+        iframe.src = payResult.code_url;
+        document.body.appendChild(iframe);
+        // 5秒后清理 iframe
+        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 5000);
+      } else if (payResult.code_url) {
+        /* ── 普通浏览器/电脑：显示支付二维码弹窗 ── */
+        // 弹窗提示 + 打开二维码页面
+        const confirmed = confirm(
+          `订单已创建！\n\n套餐：${plan.name}\n金额：${plan.label}\n订单号：${payResult.order_no || ""}\n\n请使用微信「扫一扫」功能扫描即将打开的二维码完成支付。\n\n点击「确定」打开支付二维码`
         );
         if (confirmed) {
+          const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(payResult.code_url)}&size=280&margins=0`;
           window.open(qrUrl, "_blank");
         }
-        // 尝试复制 code_url 到剪贴板
+        // 复制 code_url 到剪贴板
         try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
       } else {
         alert("支付链接生成失败，请联系客服");
