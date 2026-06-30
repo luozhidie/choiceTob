@@ -146,11 +146,7 @@ export default function DailyLooksPage() {
       });
       if (insertError) throw insertError;
 
-      // 2. 判断环境：微信内浏览器 vs 普通浏览器
-      const isWechat = /MicroMessenger/i.test(navigator.userAgent);
-      const payPlatform = isWechat ? "mp" : "native";
-
-      // 3. 调用微信支付统一下单
+      // 2. 统一使用 NATIVE 扫码支付（不需要 openid，兼容所有环境）
       const payRes = await fetch("/api/wechat-pay/unified-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -159,63 +155,33 @@ export default function DailyLooksPage() {
           product_title: plan.name,
           total_fee: plan.price,
           quantity: 1,
-          platform: payPlatform,
-          openid: user.id || "",
+          platform: "native",
         }),
       });
       const payResult = await payRes.json();
 
+      setPayingPlanId(null);
+
       if (payResult.error) {
         alert("支付发起失败：" + (payResult.error || "未知错误"));
-        setPayingPlanId(null);
         return;
       }
 
-      // 4. 根据环境处理支付结果
-      if (isWechat && payResult.appId) {
-        /* ── 微信内浏览器：JSAPI 唤起支付密码框 ── */
-        if ((window as any).WeixinJSBridge) {
-          (window as any).WeixinJSBridge.invoke(
-            "getBrandWCPayRequest",
-            {
-              appId: payResult.appId,
-              timeStamp: payResult.timeStamp,
-              nonceStr: payResult.nonceStr,
-              package: payResult.package,
-              signType: payResult.signType || "MD5",
-              paySign: payResult.paySign,
-            },
-            (res: any) => {
-              setPayingPlanId(null);
-              if (res.err_msg === "get_brand_wcpay_request:ok") {
-                alert("支付成功！页面即将刷新...");
-                setTimeout(() => location.reload(), 1500);
-              } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
-                alert("支付已取消");
-              } else {
-                alert("支付失败，请重试");
-              }
-            }
-          );
-        } else {
-          // WeixinJSBridge 还没就绪，等待后重试
-          ((window as any).document as any).addEventListener("WeixinJSBridgeReady", () => {
-            handleBuyNow(planId);
-          });
+      // 3. 显示支付二维码（所有环境统一）
+      if (payResult.code_url) {
+        // 生成二维码图片 URL
+        const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(payResult.code_url)}&size=280&margins=0`;
+        // 弹窗展示
+        const confirmed = window.confirm(
+          `订单已创建！\n\n套餐：${plan.name}\n金额：${plan.label}\n订单号：${payResult.order_no}\n\n请用微信「扫一扫」功能扫描即将打开的二维码完成支付。\n\n点击「确定」打开支付二维码`
+        );
+        if (confirmed) {
+          window.open(qrUrl, "_blank");
         }
+        // 尝试复制 code_url 到剪贴板
+        try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
       } else {
-        /* ── 普通浏览器：显示支付二维码 ── */
-        setPayingPlanId(null);
-        if (payResult.code_url) {
-          alert(
-            "请在微信中打开此页面完成支付\n\n" +
-            "或用微信扫描以下二维码（已复制到剪贴板）：\n" + payResult.code_url +
-            "\n\n订单号：" + (payResult.order_no || "")
-          );
-          try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
-        } else {
-          alert("请在微信中打开页面进行支付");
-        }
+        alert("支付链接生成失败，请联系客服");
       }
     } catch (err: any) {
       console.error("支付错误:", err);
