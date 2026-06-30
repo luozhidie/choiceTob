@@ -60,8 +60,9 @@ export async function PUT(req: NextRequest) {
         /* 根据套餐类型确定 membership_type */
         let mType = "deposit_discount"; // 默认商城会员（拿货折扣）
         const planId = orders[0].plan_id || "";
-        // 价格会员（查看批发价权限）
-        if (["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3", "daily_looks"].includes(planId)) {
+        // 价格会员（查看批发价权限 + 每日搭配灵感）
+        if (["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3",
+             "daily_looks", "daily_looks_monthly", "daily_looks_yearly"].includes(planId)) {
           mType = "view_price";
         }
 

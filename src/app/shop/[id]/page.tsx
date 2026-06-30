@@ -69,7 +69,8 @@ export default function ProductDetailPage() {
           .select("id, plan_id, status")
           .eq("user_id", u.id)
           .in("status", ["paid", "completed", "confirmed"])
-          .in("plan_id", ["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3", "daily_looks"])
+          .in("plan_id", ["price_trial", "price_1y", "price_2y", "price_3y", "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3",
+                        "daily_looks", "daily_looks_monthly", "daily_looks_yearly"])
           .then(({ data }: any) => {
             setIsPriceMember(data && data.length > 0);
           });

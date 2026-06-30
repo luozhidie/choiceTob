@@ -112,8 +112,18 @@ async function autoActivateMembership(supabase: any, userId: string, productId: 
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 3 * 365 * 24 * 60 * 60 * 1000); // 3年
   }
-  // 每日穿搭查看
+  // 每日穿搭查看（兼容旧 plan_id）
   else if (productId === 'daily_looks') {
+    membershipType = 'view_price';
+    expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1年
+  }
+  // 每日搭配灵感 - 月度会员
+  else if (productId === 'daily_looks_monthly') {
+    membershipType = 'view_price';
+    expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30天
+  }
+  // 每日搭配灵感 - 年度会员
+  else if (productId === 'daily_looks_yearly') {
     membershipType = 'view_price';
     expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1年
   }

@@ -228,6 +228,49 @@ const plans: Plan[] = [
       "开通拿货会员享拿货折扣和退换服务",
     ],
   },
+  // ========================================
+  // 第四类：每日搭配灵感订阅
+  // ========================================
+  {
+    id: "daily_looks_monthly",
+    name: "搭配灵感·月度会员",
+    price: 99900,         // ¥999/月
+    originalPrice: 0,
+    priceLabel: "¥999/月",
+    discountLabel: "每月解锁",
+    newCustomerLabel: "每日搭配灵感",
+    membershipType: "view_price",
+    icon: Sparkles,
+    highlight: false,
+    features: [
+      "每日精选3-5套专业搭配方案",
+      "色彩搭配 + 场景适配 + 门店陈列建议",
+      "买手团队每日更新",
+      "风格陈列 · 场景搭配 · 门店布局",
+      "支持按风格、色彩筛选浏览",
+    ],
+  },
+  {
+    id: "daily_looks_yearly",
+    name: "搭配灵感·年度会员",
+    price: 1198000,       // ¥11,980/年
+    originalPrice: 1198800,
+    priceLabel: "¥11,980/年",
+    discountLabel: "省¥199/年，超值！",
+    newCustomerLabel: "日均仅 ¥33",
+    membershipType: "view_price",
+    icon: Sparkles,
+    highlight: true,
+    features: [
+      "每日精选3-5套专业搭配方案",
+      "色彩搭配 + 场景适配 + 门店陈列建议",
+      "买手团队每日更新",
+      "风格陈列 · 场景搭配 · 门店布局",
+      "支持按风格、色彩筛选浏览",
+      "年度会员专属1v1搭配咨询（2次）",
+      "新品优先查看权",
+    ],
+  },
 ];
 
 /* ── 支付步骤 ── */
