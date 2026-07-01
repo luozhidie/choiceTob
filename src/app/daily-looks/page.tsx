@@ -150,7 +150,7 @@ export default function DailyLooksPage() {
       });
       if (insertError) throw new Error("创建订单失败：" + (insertError.message || insertError.code));
 
-      // 2. 调用微信支付统一下单（NATIVE模式，不需要openid）
+      // 2. 调用微信支付统一下单（NATIVE模式）
       setPayStatus("正在调起支付...");
       const payRes = await fetch("/api/wechat-pay/unified-order", {
         method: "POST",
@@ -169,29 +169,60 @@ export default function DailyLooksPage() {
         throw new Error(payResult.error || "下单失败");
       }
 
-      // 3. 根据环境处理
+      const codeUrl = payResult.code_url;
       const isWeChatBrowser = /MicroMessenger/i.test(navigator.userAgent);
 
-      if (payResult.code_url) {
-        if (isWeChatBrowser) {
-          /* ── 微信内浏览器：用 iframe 触发 weixin:// 协议跳转 → 自动唤起支付密码框 ── */
-          setPayStatus("正在唤起微信支付...");
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          iframe.src = payResult.code_url;
-          document.body.appendChild(iframe);
-          setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 8000);
-          // 微信内不清除 payStatus，让用户手动关闭弹窗
-        } else {
-          /* ── 普通浏览器：生成二维码链接供扫码 ── */
-          setPayStatus("scan_qr");
-          const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(payResult.code_url)}&size=280&margins=0`;
+      // ── 方案 A：微信内浏览器 ──
+      if (isWeChatBrowser && codeUrl) {
+        setPayStatus("正在唤起微信支付...");
+
+        /* A1: 显示全屏提示 */
+        const loadingEl = document.createElement('div');
+        loadingEl.id = '__wx_pay_loading_dl__';
+        loadingEl.innerHTML = '<div style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:99999"><div style="background:#fff;border-radius:16px;padding:28px;text-align:center;max-width:280px;margin:16px"><div style="font-size:36px;margin-bottom:10px">💳</div><div style="font-size:17px;font-weight:bold;color:#333;margin-bottom:6px">正在调起微信支付</div><div style="font-size:13px;color:#888">即将跳转到支付界面...</div></div></div>';
+        document.body.appendChild(loadingEl);
+
+        /* A2: 用 iframe 触发 weixin:// 协议 */
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = codeUrl;
+        document.body.appendChild(iframe);
+
+        /* A3: 800ms 后备用 location 跳转 */
+        setTimeout(() => {
+          try { window.location.href = codeUrl; } catch(e) {}
+        }, 800);
+
+        /* A4: 5 秒后若还在页面 → 降级显示二维码 */
+        setTimeout(() => {
+          const el = document.getElementById('__wx_pay_loading_dl__');
+          if (el && el.parentNode) { el.parentNode.removeChild(el); }
+          // 降级到二维码模式
+          const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(codeUrl)}&size=280&margins=0`;
           setPayQrUrl(qrUrl);
-          try { navigator.clipboard?.writeText(payResult.code_url); } catch {}
-        }
-      } else {
-        throw new Error("未返回支付链接");
+          setPayStatus("scan_qr");
+        }, 5000);
+
+        /* 清理 iframe */
+        setTimeout(() => {
+          try { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); } catch(e) {}
+        }, 8000);
+
+        setPayingPlanId(null);
+        return;
       }
+
+      // ── 方案 B：普通浏览器 / 降级二维码 ──
+      if (codeUrl) {
+        setPayStatus("scan_qr");
+        const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(codeUrl)}&size=280&margins=0`;
+        setPayQrUrl(qrUrl);
+        try { navigator.clipboard?.writeText(codeUrl); } catch {}
+        return;
+      }
+
+      throw new Error("未返回支付链接");
+
     } catch (err: any) {
       console.error("[支付错误]", err);
       setPayStatus("支付失败：" + (err.message || "请重试"));
