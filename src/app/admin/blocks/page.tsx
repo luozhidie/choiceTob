@@ -29,7 +29,7 @@ import { motion, AnimatePresence } from "framer-motion";
 interface Block {
   id: string;
   title: string;
-  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation";
+  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -52,6 +52,7 @@ const BLOCK_TYPES = [
   { value: "group_buy", label: "团购拼单", icon: Users, description: "团购活动，多人拼单优惠" },
   { value: "flash_sale", label: "限时秒杀", icon: Clock, description: "倒计时秒杀活动" },
   { value: "recommendation", label: "智能推荐", icon: Star, description: "基于用户偏好的个性化推荐" },
+  { value: "featured_banner", label: "精选横幅", icon: Gift, description: "大图+3小图，可跳转买手选品或商品" },
 ];
 
 const DEFAULT_STYLES = {
@@ -969,6 +970,97 @@ export default function BlocksAdminPage() {
                     {form.type === "recommendation" && (
                       <div className="p-4 bg-gray-50 rounded-xl">
                         <p className="text-xs text-gray-400">🤖 智能推荐版块将根据用户浏览历史、购买偏好自动推荐商品，无需额外配置。</p>
+                      </div>
+                    )}
+
+                    {/* featured_banner 精选横幅（大图+3小图） */}
+                    {form.type === "featured_banner" && (
+                      <div className="space-y-5 p-4 bg-gray-50 rounded-xl">
+                        <div className="text-xs font-semibold text-primary flex items-center gap-1.5">
+                          📌 主横幅（大图）
+                          <span className="font-normal text-gray-400">— 点击跳转到买手选品页</span>
+                        </div>
+                        <BlockImageUpload
+                          value={(form.content as any)?.mainImage || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), mainImage: url } as any })}
+                        />
+                        <div>
+                          <label className="block text-[11px] text-gray-500 mb-1">主图跳转链接</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.mainLink || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), mainLink: e.target.value } as any })}
+                            placeholder="/buyer"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+
+                        <hr className="border-gray-200" />
+
+                        <div className="text-xs font-semibold text-primary">📷 副图（3张小图，点击跳转商品）</div>
+
+                        {[0, 1, 2].map((i) => {
+          const subKey = `sub${i + 1}`;
+          const defaults = (form.content as any) || {};
+          return (
+            <div key={subKey} className="border border-dashed border-gray-300 rounded-xl p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-medium text-gray-600">副图 {i + 1}</span>
+                {(defaults[subKey]?.image || defaults[subKey]?.title || defaults[subKey]?.price) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nc = { ...defaults };
+                      delete nc[subKey];
+                      setForm({ ...form, content: nc as any });
+                    }}
+                    className="text-[10px] text-red-500 hover:text-red-700"
+                  >删除</button>
+                )}
+              </div>
+              <BlockImageUpload
+                value={(defaults[subKey] as any)?.image || ""}
+                onChange={(url: string) => setForm({
+                  ...form,
+                  content: { ...defaults, [subKey]: { ...((defaults[subKey] as object) || {}), image: url } } as any
+                })}
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="text"
+                  value={(defaults[subKey] as any)?.title || ""}
+                  onChange={(e) => setForm({
+                    ...form,
+                    content: { ...defaults, [subKey]: { ...((defaults[subKey] as object) || {}), title: e.target.value } } as any
+                  })}
+                  placeholder={`副图${i+1}标题`}
+                  className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+                />
+                <input
+                  type="text"
+                  value={(defaults[subKey] as any)?.price || ""}
+                  onChange={(e) => setForm({
+                    ...form,
+                    content: { ...defaults, [subKey]: { ...((defaults[subKey] as object) || {}), price: e.target.value } } as any
+                  })}
+                  placeholder="价格如 ¥99 或留空"
+                  className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+                />
+              </div>
+              <input
+                type="text"
+                value={(defaults[subKey] as any)?.link || ""}
+                onChange={(e) => setForm({
+                  ...form,
+                  content: { ...defaults, [subKey]: { ...((defaults[subKey] as object) || {}), link: e.target.value } } as any
+                })}
+                placeholder={`跳转链接，如 /shop/xxx`}
+                className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+              />
+            </div>
+          );
+        })}
+
                       </div>
                     )}
                   </div>

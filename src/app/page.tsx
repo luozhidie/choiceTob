@@ -287,6 +287,47 @@ function RecommendationBlock({ block, content, bg, textColor, pad, radius, colum
   );
 }
 
+/* ===== 精选横幅：大图 + 3小图 ===== */
+function FeaturedBannerBlock({ content }: { content: any }) {
+  const mainImage = content.mainImage || "";
+  const mainLink = content.mainLink || "/buyer";
+
+  return (
+    <section className="w-full">
+      {/* 大图横幅 */}
+      {mainImage && (
+        <a href={mainLink} className="block w-full mb-3">
+          <img src={mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm hover:shadow-md transition-shadow" style={{ minHeight: "180px", maxHeight: "400px" }} />
+        </a>
+      )}
+      {/* 3张小图 */}
+      <div className={`grid gap-3 ${mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
+        {[1, 2, 3].map((i) => {
+          const sub = content[`sub${i}`] as any;
+          if (!sub?.image) return null;
+          return (
+            <a key={i} href={sub.link || `/buyer`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
+              <div className="aspect-[4/5] relative">
+                <img
+                  src={sub.image}
+                  alt={sub.title || ""}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              {(sub.title || sub.price) && (
+                <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/60 to-transparent text-white">
+                  {sub.title && <p className="text-[11px] font-medium truncate">{sub.title}</p>}
+                  {sub.price && <p className="text-xs font-bold">{sub.price}</p>}
+                </div>
+              )}
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
   const [keyword, setKeyword] = useState("");
   const [activeCategoryName, setActiveCategoryName] = useState("全部");
@@ -462,6 +503,13 @@ export default function Home() {
         {block.type === "recommendation" && (
           <div className="max-w-7xl mx-auto">
             <RecommendationBlock block={block} content={content} bg={bg} textColor={textColor} pad={pad} radius={radius} columns={content.columns || 4} />
+          </div>
+        )}
+
+        {/* ===== featured_banner 精选横幅（大图+3小图） ===== */}
+        {block.type === "featured_banner" && (
+          <div className="max-w-7xl mx-auto">
+            <FeaturedBannerBlock content={content} />
           </div>
         )}
       </section>

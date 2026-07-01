@@ -776,6 +776,40 @@ export default function BuyerPage() {
                     </div>
                   </div>
                 )}
+
+                {/* featured_banner 精选横幅（大图+3小图） */}
+                {block.type === "featured_banner" && (
+                  <div className="max-w-7xl mx-auto">
+                    {content.mainImage && (
+                      <a href={content.mainLink || "/buyer"} className="block w-full mb-3">
+                        <img src={content.mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm" style={{ minHeight: "180px", maxHeight: "400px" }} />
+                      </a>
+                    )}
+                    <div className={`grid gap-3 ${content.mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
+                      {[1, 2, 3].map((i) => {
+                        const sub = content[`sub${i}`] as any;
+                        if (!sub?.image) return null;
+                        return (
+                          <a key={i} href={sub.link || `/shop/${sub.productId || ""}`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
+                            <div className="aspect-[4/5] relative">
+                              <img
+                                src={sub.image}
+                                alt={sub.title || ""}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                              />
+                            </div>
+                            {(sub.title || sub.price) && (
+                              <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/60 to-transparent text-white">
+                                {sub.title && <p className="text-[11px] font-medium truncate">{sub.title}</p>}
+                                {sub.price && <p className="text-xs font-bold">{sub.price}</p>}
+                              </div>
+                            )}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </section>
             );
           })}
