@@ -782,7 +782,7 @@ export default function BuyerPage() {
                   <div className="max-w-7xl mx-auto">
                     {content.mainImage && (
                       <a href={content.mainLink || "/buyer"} className="block w-full mb-3">
-                        <img src={content.mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm" style={{ minHeight: "180px", maxHeight: "400px" }} />
+                        <img src={content.mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm" />
                       </a>
                     )}
                     <div className={`grid gap-3 ${content.mainImage ? "grid-cols-3" : "grid-cols-4"}`}>

@@ -297,7 +297,7 @@ function FeaturedBannerBlock({ content }: { content: any }) {
       {/* 大图横幅 */}
       {mainImage && (
         <a href={mainLink} className="block w-full mb-3">
-          <img src={mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm hover:shadow-md transition-shadow" style={{ minHeight: "180px", maxHeight: "400px" }} />
+          <img src={mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm hover:shadow-md transition-shadow" />
         </a>
       )}
       {/* 3张小图 */}
@@ -585,7 +585,6 @@ export default function Home() {
           <div className="px-4 pt-5 pointer-events-auto">
             <div className="max-w-7xl mx-auto">
               <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                <span className="text-[#d8a0c0] text-[10px] tracking-wider">✦</span>
                 <span className="text-white/70 text-[10px] font-medium tracking-widest">数据驱动．智选未来</span>
               </div>
               <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
