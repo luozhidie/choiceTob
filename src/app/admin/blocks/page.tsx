@@ -200,6 +200,74 @@ function ProductPicker({ value, onChange }: { value: string; onChange: (val: str
   );
 }
 
+/* ===== 图片上传组件 ===== */
+function BlockImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+
+  const doUpload = async (file: File) => {
+    if (!file.type.startsWith("image/")) { alert("请选择图片文件"); return; }
+    if (file.size > 5 * 1024 * 1024) { alert("图片不能超过 5MB"); return; }
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd, credentials: "include" });
+      const json = await res.json();
+      if (json.success && json.url) {
+        onChange(json.url);
+      } else {
+        alert("上传失败：" + (json.error || "未知错误"));
+      }
+    } catch (err: any) {
+      alert("上传失败：" + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) doUpload(file);
+  };
+
+  return (
+    <div>
+      {/* 预览 */}
+      {value && (
+        <div className="mb-2 relative group">
+          <img src={value} alt="" className="w-full h-32 object-cover rounded-lg border border-gray-200" />
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="absolute top-1 right-1 bg-black/50 text-white w-5 h-5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+          >×</button>
+        </div>
+      )}
+      {/* 上传区域 */}
+      {!value && (
+        <div
+          className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors ${dragOver ? "border-primary bg-primary/5" : "border-gray-300"}`}
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) doUpload(f); }}
+          onClick={() => document.getElementById("block-img-upload")?.click()}
+        >
+          {uploading ? (
+            <div className="py-2"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+          ) : (
+            <>
+              <p className="text-xs text-gray-500">点击或拖拽上传图片</p>
+              <p className="text-[10px] text-gray-400 mt-1">JPG/PNG/WEBP，≤5MB</p>
+            </>
+          )}
+          <input id="block-img-upload" type="file" accept="image/*" className="hidden" onChange={handleFile} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BlocksAdminPage() {
   const supabase = createClient();
 
@@ -681,9 +749,10 @@ export default function BlocksAdminPage() {
                           <option value="hero_bottom">轮播图下方</option>
                           <option value="product_top">商品列表上方</option>
                           <option value="product_bottom">商品列表下方</option>
+                          <option value="buyer_page">买手选品页</option>
                           <option value="footer_top">底部上方</option>
                         </select>
-                        <p className="text-[10px] text-gray-400 mt-1">选择该版块在首页的展示位置</p>
+                        <p className="text-[10px] text-gray-400 mt-1">选择该版块在首页或买手选品页的展示位置</p>
                       </div>
                     </div>
 
@@ -850,13 +919,10 @@ export default function BlocksAdminPage() {
                           />
                         </div>
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">封面图片URL</label>
-                          <input
-                            type="text"
+                          <label className="block text-xs text-gray-500 mb-1">封面图片</label>
+                          <BlockImageUpload
                             value={(form.content as any)?.imageUrl || ""}
-                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), imageUrl: e.target.value } as any })}
-                            placeholder="https://... 或留空不显示图片"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                            onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), imageUrl: url } as any })}
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">

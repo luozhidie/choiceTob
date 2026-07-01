@@ -18,6 +18,7 @@ import { CATEGORY_MAP, SUBCATEGORY_MAP, CATEGORIES } from "@/lib/categories";
 import { useBuyerPageData } from "@/hooks/useBuyerPageData";
 import PaymentQRCode from "@/components/PaymentQRCode";
 import TabBar from "@/components/TabBar";
+import ProductBlock from "@/components/ProductBlock";
 
 /* ==================== 品类选项（只保留服装穿搭）==================== */
 const STATIC_CATEGORY_OPTIONS = CATEGORIES.filter((c) => c.key === "fashion" || c.key === "clothing" || c.key === "accessory").map((c) => ({ value: c.key, label: c.label }));
@@ -172,6 +173,9 @@ export default function BuyerPage() {
     updatePageViewDuration
   } = useBuyerPageData();
 
+  /* 买手选品页区块 */
+  const [buyerBlocks, setBuyerBlocks] = useState<any[]>([]);
+
   useEffect(() => {
     setVisible(true);
     fetchAllData();
@@ -235,6 +239,16 @@ export default function BuyerPage() {
     setAllProducts(merged);
     if (!supplierRes.error && supplierRes.data) setSuppliers(supplierRes.data as Supplier[]);
     if (!hotPickRes.error && hotPickRes.data) setHotPicks(hotPickRes.data as HotPick[]);
+
+    /* 加载买手选品页区块 */
+    try {
+      const blocksRes = await fetch("/api/public/blocks");
+      const blocksJson = await blocksRes.json();
+      if (blocksJson.success && blocksJson.data) {
+        setBuyerBlocks(blocksJson.data.filter((b: any) => (b.content as any)?.position === "buyer_page"));
+      }
+    } catch {}
+
     setLoading(false);
   };
 
@@ -624,6 +638,147 @@ export default function BuyerPage() {
             </p>
             <button onClick={clearFilters} className="text-xs text-amber-600 hover:text-amber-800 font-medium">清除筛选</button>
           </div>
+        </div>
+      )}
+
+      {/* ====== 买手选品页区块 ====== */}
+      {buyerBlocks.length > 0 && (
+        <div className="w-full">
+          {buyerBlocks.map((block: any) => {
+            const content: any = block.content || {};
+            const style = block.style || {};
+            const bg = style.bgColor || "#ffffff";
+            const textColor = style.textColor || "#333333";
+            const pad = style.padding ?? 16;
+            const radius = style.borderRadius ?? 12;
+
+            return (
+              <section
+                key={block.id}
+                style={{ backgroundColor: bg, padding: `${pad}px`, color: textColor, borderRadius: `${radius}px` }}
+                className="w-full"
+              >
+                {(block.section_title || block.section_subtitle) && (
+                  <div className="max-w-7xl mx-auto px-4 mb-4">
+                    {block.section_title && (
+                      <h2 className="font-bold text-xl md:text-2xl" style={{ color: textColor }}>{block.section_title}</h2>
+                    )}
+                    {block.section_subtitle && (
+                      <p className="text-sm mt-1 opacity-60" style={{ color: textColor }}>{block.section_subtitle}</p>
+                    )}
+                  </div>
+                )}
+
+                {/* products 商品展示 */}
+                {block.type === "products" && (
+                  <div className="max-w-7xl mx-auto">
+                    <ProductBlock
+                      block={block}
+                      bg={bg}
+                      textColor={textColor}
+                      pad={pad}
+                      radius={radius}
+                      content={content}
+                      layout={content.layout || "grid"}
+                      columns={content.columns || 4}
+                    />
+                  </div>
+                )}
+
+                {/* promotion 营销活动 */}
+                {block.type === "promotion" && (
+                  <div className="max-w-7xl mx-auto">
+                    <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: bg }}>
+                      {content.imageUrl && (
+                        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-40 md:h-52 object-cover" />
+                      )}
+                      <div className="p-5 md:p-6">
+                        {content.promoTitle && (
+                          <h3 className="font-bold text-lg md:text-xl mb-2" style={{ color: textColor }}>{content.promoTitle}</h3>
+                        )}
+                        {content.promoDesc && (
+                          <p className="text-sm opacity-70 leading-relaxed mb-4" style={{ color: textColor }}>{content.promoDesc}</p>
+                        )}
+                        {(content.buttonText || content.linkUrl) && (
+                          <a
+                            href={content.linkUrl || "/buyer"}
+                            className="inline-flex items-center gap-1.5 px-6 py-2.5 text-white text-sm font-semibold rounded-xl transition-all"
+                            style={{ background: "linear-gradient(135deg,#e89aac 0%,#d8a0c0 100%)" }}
+                          >
+                            {content.buttonText || "立即查看"} <ArrowRight className="w-4 h-4" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* custom 自定义HTML */}
+                {block.type === "custom" && content.html && (
+                  <div className="max-w-7xl mx-auto" dangerouslySetInnerHTML={{ __html: content.html }} />
+                )}
+
+                {/* group_buy 团购拼单 */}
+                {block.type === "group_buy" && (
+                  <div className="max-w-7xl mx-auto">
+                    <div className="relative overflow-hidden rounded-2xl" style={{ background: bg === "#ffffff" ? "linear-gradient(135deg,#fff5f5 0%,#fff 100%)" : bg }}>
+                      <div className="p-5 md:p-6">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-orange-500 text-white flex items-center justify-center text-lg">👥</div>
+                          <div>
+                            <h3 className="font-bold text-base">{block.title}</h3>
+                            <p className="text-xs text-gray-500 mt-0.5">{content.desc || `满${content.minPeople || 3}人成团，享受${Math.round((content.discount || 0.8) * 10)}折优惠`}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between bg-white/60 rounded-xl p-4 mb-4">
+                          <div className="text-center">
+                            <div className="text-2xl font-black text-orange-500">{content.minPeople || 3}</div>
+                            <div className="text-[11px] text-gray-400">人成团</div>
+                          </div>
+                          <div className="w-px h-8 bg-gray-200"></div>
+                          <div className="text-center">
+                            <div className="text-2xl font-black text-red-500">{Math.round((content.discount || 0.8) * 10)}</div>
+                            <div className="text-[11px] text-gray-400">折起</div>
+                          </div>
+                        </div>
+                        <a href="/buyer" className="block w-full py-3 text-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm">
+                          立即参团拼单 →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* flash_sale 限时秒杀 */}
+                {block.type === "flash_sale" && (
+                  <div className="max-w-7xl mx-auto">
+                    <div className="relative overflow-hidden rounded-2xl" style={{ background: bg === "#ffffff" ? "linear-gradient(135deg,#fef2f2 0%,#fff 100%)" : bg }}>
+                      <div className="absolute top-0 right-0 px-3 py-1 bg-red-500 text-white text-[10px] font-bold rounded-bl-lg">⚡ 限量秒杀</div>
+                      <div className="p-5 md:p-6 pt-7">
+                        <h3 className="font-bold text-base mb-2">{block.title}</h3>
+                        <p className="text-xs text-gray-500 mb-4">{content.desc || `全场${Math.round((content.discount || 0.7) * 10)}折，手慢无！`}</p>
+                        <div className="flex items-center gap-2 mb-4">
+                          {[3600, 60, 1].map((unit, i) => {
+                            const labels = ["时", "分", "秒"];
+                            const val = unit === 3600 ? Math.floor((content.duration || 3600) / 3600) : unit === 60 ? Math.floor(((content.duration || 3600) % 3600) / 60) : (content.duration || 3600) % 60;
+                            return (
+                              <div key={i} className="flex flex-col items-center">
+                                <div className="w-12 h-12 md:w-14 md:h-14 rounded-lg bg-gray-900 text-white flex items-center justify-center text-xl md:text-2xl font-mono font-bold">{String(val).padStart(2, "0")}</div>
+                                <span className="text-[10px] text-gray-400 mt-1">{labels[i]}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <a href="/buyer" className="block w-full py-3 text-center font-bold rounded-xl text-sm text-white bg-gradient-to-r from-red-500 to-pink-500 hover:shadow-lg transition-all">
+                          🔥 马上抢购 →
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
 
