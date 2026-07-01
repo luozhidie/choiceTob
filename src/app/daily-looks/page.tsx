@@ -50,7 +50,7 @@ export default function DailyLooksPage() {
   /* 支付状态 */
   const [payingPlanId, setPayingPlanId] = useState<string | null>(null);
   const [payStatus, setPayStatus] = useState(""); // 支付状态提示
-  const [payQrUrl, setPayQrUrl] = useState(""); // 二维码链接
+  const [payQrCode, setPayQrCode] = useState<string | null>(null); // 二维码 dataURL（qrcode 库生成）
   /* 标记是否已经自动触发过支付（防止重复） */
   const autoPayTriggered = useRef(false);
 
@@ -83,7 +83,7 @@ export default function DailyLooksPage() {
       if (!u) return;
       setUser(u);
 
-      // 检查是否购买了每日搭配套餐 或 是VIP会员
+      // 检查是否购买了每日搭配专属套餐（不与普通VIP共享）
       const { data: memberOrders } = await supabase
         .from("membership_orders")
         .select("plan_id, status")
@@ -93,11 +93,7 @@ export default function DailyLooksPage() {
       if (memberOrders && memberOrders.length > 0) {
         const hasDailyLookAccess = memberOrders.some(
           (o: any) =>
-            ["daily_looks", "daily_looks_monthly", "daily_looks_yearly",
-             "price_trial", "price_1y", "price_2y", "price_3y",
-             "view_price_trial", "view_price_year1", "view_price_year2", "view_price_year3",
-             "basic", "pro", "premium",
-             "wholesale_5w", "wholesale_10w", "wholesale_30w"].includes(o.plan_id)
+            ["daily_looks", "daily_looks_monthly", "daily_looks_yearly"].includes(o.plan_id)
         );
         setIsDailyLooksMember(hasDailyLookAccess);
       }
@@ -136,7 +132,7 @@ export default function DailyLooksPage() {
 
     setPayingPlanId(planId);
     setPayStatus("正在创建订单...");
-    setPayQrUrl("");
+    setPayQrCode(null);
 
     try {
       // 1. 创建会员订单
@@ -194,13 +190,18 @@ export default function DailyLooksPage() {
         }, 800);
 
         /* A4: 5 秒后若还在页面 → 降级显示二维码 */
-        setTimeout(() => {
+        setTimeout(async () => {
           const el = document.getElementById('__wx_pay_loading_dl__');
           if (el && el.parentNode) { el.parentNode.removeChild(el); }
-          // 降级到二维码模式
-          const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(codeUrl)}&size=280&margins=0`;
-          setPayQrUrl(qrUrl);
-          setPayStatus("scan_qr");
+          // 用本地 qrcode 库生成二维码
+          try {
+            const QRCode = (await import("qrcode")).toDataURL;
+            const dataUrl = await QRCode(codeUrl, { width: 220, margin: 2 });
+            setPayQrCode(dataUrl);
+            setPayStatus("scan_qr");
+          } catch {
+            setPayStatus("支付失败：二维码生成失败");
+          }
         }, 5000);
 
         /* 清理 iframe */
@@ -214,10 +215,16 @@ export default function DailyLooksPage() {
 
       // ── 方案 B：普通浏览器 / 降级二维码 ──
       if (codeUrl) {
-        setPayStatus("scan_qr");
-        const qrUrl = `https://cli.im/api/qrcode/code?data=${encodeURIComponent(codeUrl)}&size=280&margins=0`;
-        setPayQrUrl(qrUrl);
-        try { navigator.clipboard?.writeText(codeUrl); } catch {}
+        setPayStatus("正在生成二维码...");
+        try {
+          const QRCode = (await import("qrcode")).toDataURL;
+          const dataUrl = await QRCode(codeUrl, { width: 220, margin: 2 });
+          setPayQrCode(dataUrl);
+          setPayStatus("scan_qr");
+          try { navigator.clipboard?.writeText(codeUrl); } catch {}
+        } catch {
+          setPayStatus("支付失败：二维码生成失败");
+        }
         return;
       }
 
@@ -234,7 +241,7 @@ export default function DailyLooksPage() {
   /* 关闭支付弹窗 */
   const closePayModal = () => {
     setPayStatus("");
-    setPayQrUrl("");
+    setPayQrCode(null);
   };
 
   const filteredLooks =
@@ -523,7 +530,7 @@ export default function DailyLooksPage() {
             <button onClick={closePayModal} className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 text-lg font-bold transition-colors">×</button>
 
             <div className="text-center">
-              {/* 加载中状态 */}
+              {/* 加载中状态（含二维码生成中） */}
               {payStatus !== "scan_qr" && payStatus !== "正在唤起微信支付..." && !payStatus.startsWith("支付失败") && (
                 <div className="py-6">
                   <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
@@ -531,13 +538,13 @@ export default function DailyLooksPage() {
                 </div>
               )}
 
-              {/* 二维码状态（非微信浏览器） */}
-              {payStatus === "scan_qr" && payQrUrl && (
+              {/* 二维码状态（非微信浏览器 / 微信内降级） */}
+              {payStatus === "scan_qr" && payQrCode && (
                 <div className="py-4">
                   <h3 className="text-base font-bold text-gray-900 mb-1">扫码支付</h3>
-                  <p className="text-xs text-gray-400 mb-4">请��微信扫一扫下方二维码</p>
+                  <p className="text-xs text-gray-400 mb-4">请用微信扫一扫下方二维码</p>
                   <div className="flex justify-center">
-                    <img src={payQrUrl} alt="支付二维码" className="w-[220px] h-[220px] rounded-lg border border-gray-100" />
+                    <img src={payQrCode} alt="支付二维码" className="w-[220px] h-[220px] rounded-lg border border-gray-100 p-2 bg-white" />
                   </div>
                   <p className="text-[11px] text-gray-300 mt-3">支付完成后页面会自动刷新</p>
                 </div>
