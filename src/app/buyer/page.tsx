@@ -810,6 +810,122 @@ export default function BuyerPage() {
                     </div>
                   </div>
                 )}
+
+                {/* card_single 单格卡片 */}
+                {block.type === "card_single" && (
+                  <div className="max-w-7xl mx-auto">
+                    <a href={content.link || "/buyer"} className="group block rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white">
+                      {content.image && (
+                        <img src={content.image} alt={content.title || ""} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500" style={{ minHeight: "200px" }} />
+                      )}
+                      {(content.title || content.subtitle || content.buttonText) && (
+                        <div className="p-4 text-center">
+                          {content.title && <h3 className="font-bold text-base text-gray-900 mb-1">{content.title}</h3>}
+                          {content.subtitle && <p className="text-xs text-gray-500 mb-2">{content.subtitle}</p>}
+                          {content.buttonText && (
+                            <span className="inline-block px-4 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold rounded-full">{content.buttonText}</span>
+                          )}
+                        </div>
+                      )}
+                    </a>
+                  </div>
+                )}
+
+                {/* card_quad 四宫格 */}
+                {block.type === "card_quad" && (
+                  <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[0,1,2,3].map((i) => {
+                      const c = content[`card${i}`] as any;
+                      if (!c?.image) return null;
+                      return (
+                        <a key={i} href={c.link || "/buyer"} className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all bg-white">
+                          <div className="aspect-[4/5] relative"><img src={c.image} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /></div>
+                          {(c.title || c.subtitle) && (
+                            <div className="p-2.5 text-center">
+                              {c.title && <h4 className="font-bold text-sm truncate">{c.title}</h4>}
+                              {c.subtitle && <p className="text-[11px] text-gray-400 truncate">{c.subtitle}</p>}
+                            </div>
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* circle_row 圆形卡片行 */}
+                {block.type === "circle_row" && (
+                  <div className="max-w-7xl mx-auto overflow-x-auto scrollbar-hide pb-1">
+                    <div className="flex items-center gap-4 min-w-max pr-2">
+                      {[0,1,2,3,4,5].map((i) => {
+                        const it = content[`item${i}`] as any;
+                        if (!it?.image) return null;
+                        return (
+                          <a key={i} href={it.link || "#"} className="shrink-0 flex flex-col items-center gap-1.5 group">
+                            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm group-hover:border-primary/30 transition-colors">
+                              <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                            </div>
+                            {it.label && <span className="text-[11px] font-medium text-gray-600 whitespace-nowrap">{it.label}</span>}
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* banner_large 大横幅 */}
+                {block.type === "banner_large" && (
+                  <div className="max-w-7xl mx-auto">
+                    <a href={content.link || "/buyer"} className="group block relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                      {content.image ? (
+                        <img src={content.image} alt="" className="w-full h-auto block" />
+                      ) : (
+                        <div className="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 py-10 md:py-16 text-center">
+                          {content.title && <h2 className="text-white font-black text-2xl md:text-4xl tracking-tight drop-shadow-lg">{content.title}</h2>}
+                        </div>
+                      )}
+                      {(content.title || content.subtitle) && (
+                        <div className={`absolute inset-0 flex flex-col items-center justify-center ${content.image ? 'bg-black/20' : ''}`}>
+                          {content.title && <h2 className="text-white font-black text-xl md:text-3xl tracking-tight drop-shadow-lg px-4 text-center leading-tight">{content.title}</h2>}
+                          {content.subtitle && <p className="text-white/90 text-xs md:text-sm mt-2 px-4 drop-shadow">{content.subtitle}</p>}
+                        </div>
+                      )}
+                    </a>
+                  </div>
+                )}
+
+                {/* banner_small 小横幅 */}
+                {block.type === "banner_small" && (
+                  <div className="max-w-7xl mx-auto">
+                    <a href={content.link || "/buyer"} className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
+                      {content.image ? (
+                        <img src={content.image} alt="" className="w-full h-auto max-h-[120px] object-cover" />
+                      ) : (
+                        <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center">
+                          {content.title && <span className="text-sm font-bold text-amber-700">{content.title}</span>}
+                        </div>
+                      )}
+                    </a>
+                  </div>
+                )}
+
+                {/* category_nav 分类目录 */}
+                {block.type === "category_nav" && (
+                  <div className="max-w-7xl mx-auto bg-white/80 backdrop-blur-sm border-b border-gray-100 sticky top-[57px] z-30">
+                    <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide py-3 px-1">
+                      {[0,1,2,3,4,5,6,7,8,9].map((i) => {
+                        const t = content[`tab${i}`] as any;
+                        if (!t?.label) return null;
+                        return (
+                          <a key={i} href={t.link || "#"}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                              i === 0 ? "bg-primary text-white shadow" : "text-gray-600 hover:bg-primary/5 hover:text-primary border border-transparent hover:border-primary/10"
+                            }`}
+                          >{t.label}</a>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </section>
             );
           })}

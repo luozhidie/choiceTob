@@ -23,13 +23,19 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  Grid3X3,
+  CircleDot,
+  ImageIcon,
+  Image,
+  ListFilter,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface Block {
   id: string;
   title: string;
-  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner";
+  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner"
+    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -53,6 +59,12 @@ const BLOCK_TYPES = [
   { value: "flash_sale", label: "限时秒杀", icon: Clock, description: "倒计时秒杀活动" },
   { value: "recommendation", label: "智能推荐", icon: Star, description: "基于用户偏好的个性化推荐" },
   { value: "featured_banner", label: "精选横幅", icon: Gift, description: "大图+3小图，可跳转买手选品或商品" },
+  { value: "card_single", label: "单格卡片", icon: LayoutGrid, description: "一张大图+标题+按钮（好评档口榜等）" },
+  { value: "card_quad", label: "四宫格卡片", icon: Grid3X3, description: "4张卡片横排，每张含图+标题+副标题+链接" },
+  { value: "circle_row", label: "圆形卡片行", icon: CircleDot, description: "圆形头像/品牌图+文字标签（十三行、沙河等）" },
+  { value: "banner_large", label: "大横幅", icon: ImageIcon, description: "全宽大图Banner（新客指南、周年庆等）" },
+  { value: "banner_small", label: "小横幅", icon: Image, description: "较小尺寸的横幅Banner（满减提示等）" },
+  { value: "category_nav", label: "分类目录", icon: ListFilter, description: "横向标签导航栏（全部、十三行、24h发货等）" },
 ];
 
 const DEFAULT_STYLES = {
@@ -1059,11 +1071,331 @@ export default function BlocksAdminPage() {
               />
             </div>
           );
-        })}
+        }        )}
 
                       </div>
                     )}
+
+                    {/* card_single 单格卡片 */}
+                    {form.type === "card_single" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.title || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), title: e.target.value } as any })}
+                          placeholder="主标题，如：好评档口榜"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.subtitle || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: e.target.value } as any })}
+                          placeholder="副标题，如：高评分店铺>"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <input
+                            type="text"
+                            value={(form.content as any)?.buttonText || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), buttonText: e.target.value } as any })}
+                            placeholder="按钮文字"
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                          <input
+                            type="text"
+                            value={(form.content as any)?.link || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), link: e.target.value } as any })}
+                            placeholder="跳转链接 /buyer"
+                            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* card_quad 四宫格 */}
+                    {/* card_quad 四宫格 */}
+                    {/* card_quad 四宫格 */}
+                    {form.type === "card_quad" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3].map((i) => {
+                          const k = "card" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="border border-dashed border-gray-300 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center justify-between text-xs font-medium text-gray-600">
+                                <span>Card {i+1}</span>
+                                {(d[k]?.title || d[k]?.image) && (
+                                  <button type="button" onClick={() => {
+                                    const nc = { ...d }; delete nc[k]; setForm({ ...form, content: nc as any });
+                                  }} className="text-red-500">X</button>
+                                )}
+                              </div>
+                              <BlockImageUpload
+                                value={(d[k] as any)?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                <input type="text" value={(d[k] as any)?.title||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),title:e.target.value}}as any })} placeholder={"Title_" + String(i+1)} className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                                <input type="text" value={(d[k] as any)?.subtitle||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),subtitle:e.target.value}}as any })} placeholder="Subtitle/Price" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                              </div>
+                              <input type="text" value={(d[k] as any)?.link||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),link:e.target.value}}as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {/* circle_row 圆形卡片行 */}
+                    {form.type === "circle_row" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3,4,5].map((i) => {
+                          const k = "item" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
+                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
+                              <BlockImageUpload
+                                value={(d[k] as any)?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                              />
+                              <div className="flex-1 space-y-1.5 min-w-0">
+                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* circle_row 圆形卡片行 */}
+                    {/* circle_row 圆形卡片行 */}
+                    {form.type === "circle_row" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3,4,5].map((i) => {
+                          const k = "item" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
+                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
+                              <BlockImageUpload
+                                value={(d[k] as any)?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                              />
+                              <div className="flex-1 space-y-1.5 min-w-0">
+                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* banner_large 大横幅 */}
+                    {form.type === "banner_large" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.title || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), title: e.target.value } as any })}
+                          placeholder="大标题（叠加在图上），如：一手新客拿货指南"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none font-bold"
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.subtitle || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: e.target.value } as any })}
+                          placeholder="副标题，如：一件起批 · 真实货源 · 1w+档口 · 自动化售后"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.link || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), link: e.target.value } as any })}
+                          placeholder="点击跳转链接"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* banner_small 小横幅 */}
+                    {form.type === "banner_small" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.title || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), title: e.target.value } as any })}
+                          placeholder="标题，如：满339减30 首单包邮"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                        <input
+                          type="text"
+                          value={(form.content as any)?.link || ""}
+                          onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), link: e.target.value } as any })}
+                          placeholder="跳转链接"
+                          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                        />
+                      </div>
+                    )}
+
+                    {/* category_nav 分类目录 */}
+                    {form.type === "category_nav" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3,4,5,6,7,8,9].map((i) => {
+                          const k = `tab${i}`;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="flex items-center gap-2">
+                              <span className="text-[10px] text-gray-400 w-6 shrink-0">{i+1}</span>
+                              <input
+                                type="text"
+                                value={(d[k] as any)?.label || ""}
+                                onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })}
+                                placeholder="标签名（全部、猜你喜欢、十三行...）"
+                                className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={(d[k] as any)?.link || ""}
+                                onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })}
+                                placeholder="链接"
+                                className="w-32 px-2 py-2 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
+                    {/* card_single 单格卡片 */}
+                    {form.type === "card_single" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...((form.content as object)||{}), image: url } as any })}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input type="text" value={(form.content as any)?.title||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},title:e.target.value}} as any)} placeholder="Main title" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          <input type="text" value={(form.content as any)?.subtitle||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},subtitle:e.target.value}} as any)} placeholder="Subtitle / CTA" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <input type="text" value={(form.content as any)?.btn_text||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},btn_text:e.target.value}} as any)} placeholder="Button text" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          <input type="text" value={(form.content as any)?.link||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},link:e.target.value}} as any)} placeholder="Link URL" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* card_quad 四宫格 */}
+                    {form.type === "card_quad" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3].map((i) => {
+                          const k = "card" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="border border-dashed border-gray-300 rounded-xl p-3 space-y-2">
+                              <div className="flex items-center justify-between text-xs font-medium text-gray-600">
+                                <span>Card {i+1}</span>
+                                {(d[k]?.title || d[k]?.image) && (
+                                  <button type="button" onClick={() => {
+                                    const nc = { ...d }; delete nc[k]; setForm({ ...form, content: nc as any });
+                                  }} className="text-red-500 text-xs">X</button>
+                                )}
+                              </div>
+                              <BlockImageUpload
+                                value={(d[k] as any)?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                              />
+                              <div className="grid grid-cols-2 gap-2">
+                                <input type="text" value={(d[k] as any)?.title||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),title:e.target.value}} as any })} placeholder={"Title " + String(i+1)} className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                                <input type="text" value={(d[k] as any)?.subtitle||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),subtitle:e.target.value}} as any })} placeholder="Subtitle / Price" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                              </div>
+                              <input type="text" value={(d[k] as any)?.link||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),link:e.target.value}} as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* circle_row 圆形卡片行 */}
+                    {form.type === "circle_row" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {[0,1,2,3,4,5].map((i) => {
+                          const k = "item" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
+                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
+                              <BlockImageUpload
+                                value={(d[k] as any)?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                              />
+                              <div className="flex-1 space-y-1.5 min-w-0">
+                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* banner_large 大横幅 */}
+                    {form.type === "banner_large" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...((form.content as object)||{}), image: url } as any })}
+                        />
+                        <div className="grid grid-cols-2 gap-2">
+                          <input type="text" value={(form.content as any)?.title||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},title:e.target.value}} as any)} placeholder="Main title (on image)" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          <input type="text" value={(form.content as any)?.subtitle||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},subtitle:e.target.value}} as any)} placeholder="Subtitle" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        </div>
+                        <input type="text" value={(form.content as any)?.link||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},link:e.target.value}} as any)} placeholder="Click link" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                      </div>
+                    )}
+
+                    {/* banner_small 小横幅 */}
+                    {form.type === "banner_small" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...((form.content as object)||{}), image: url } as any })}
+                        />
+                        <input type="text" value={(form.content as any)?.title||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},title:e.target.value}} as any)} placeholder="Title" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <input type="text" value={(form.content as any)?.link||""} onChange={(e)=>setForm({...form,content:{...(form.content as object)||{},link:e.target.value}} as any)} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                      </div>
+                    )}
+
+                    {/* category_nav 分类目录 */}
+                    {form.type === "category_nav" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <p className="text-xs font-semibold text-primary">Category tabs</p>
+                        {[0,1,2,3,4].map((i) => {
+                          const k = "tab" + i;
+                          const d = (form.content as any) || {};
+                          return (
+                            <div key={k} className="flex items-center gap-2 border border-dashed border-gray-300 rounded-lg p-2">
+                              <span className="text-xs text-gray-400 w-6 shrink-0">{i+1}</span>
+                              <input type="text" value={(d[k] as any)?.label||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),label:e.target.value}} as any })} placeholder="Tab label" className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                              <input type="text" value={(d[k] as any)?.link||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),link:e.target.value}} as any })} placeholder="Link" className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
 
                   {/* 样式设置 */}
                   <div>
