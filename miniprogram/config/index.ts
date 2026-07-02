@@ -2,6 +2,7 @@ import { defineConfig } from '@tarojs/cli';
 
 export default defineConfig({
   projectName: 'luozhidie-choice',
+  framework: 'react',
   date: '2026-7-2',
   designWidth: 750,
   deviceRatio: {
