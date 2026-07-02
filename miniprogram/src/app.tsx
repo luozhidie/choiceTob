@@ -6,10 +6,3 @@ export default class App extends Component {
     return this.props.children;
   }
 }
-// v2
-// trigger
-v4
-v5
-v6
-v7
-v8
