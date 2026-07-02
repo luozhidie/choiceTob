@@ -27,7 +27,6 @@
     "@babel/core": "^7.26.10",
     "@babel/preset-env": "^7.26.10",
     "@babel/preset-react": "^7.26.10",
-    "@tarojs/babel-preset": "^4.0.12",
     "@tarojs/cli": "^4.0.12",
     "@tarojs/webpack5-runner": "^4.0.12",
     "@types/react": "^18.3.19",
