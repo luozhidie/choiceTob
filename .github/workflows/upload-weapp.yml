@@ -77,3 +77,10 @@ jobs:
           
           echo "✅ 使用编译输出: $DIST"
           node upload.js "$DIST"
+
+      - name: Upload dist as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: miniprogram-dist
+          path: ./miniprogram/dist/
+          retention-days: 7
