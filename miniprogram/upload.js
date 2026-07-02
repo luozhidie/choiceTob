@@ -1,9 +1,9 @@
 const ci = require('miniprogram-ci');
 const fs = require('fs');
+const path = require('path');
 
 const appid = process.env.WECHAT_APPID || '';
 const keyPath = './private.key';
-// 支持从命令行参数传入 dist 路径
 const distPath = process.argv[2] || './dist';
 
 console.log(`=== Upload Config ===`);
@@ -29,7 +29,6 @@ if (!fs.existsSync(`${distPath}/app.json`)) {
 }
 
 // 修复 Taro v4 编译 bug: comp 组件无限自引用导致页面空白
-const path = require('path');
 function fixCompJson(dir) {
   const compJsonPath = path.join(dir, 'comp.json');
   if (fs.existsSync(compJsonPath)) {
@@ -59,11 +58,6 @@ function fixCompJson(dir) {
   } catch(e) {}
 }
 
-console.log('🔧 修复 comp.json 自引用 + 页面 comp 引用...');
-fixCompJson(distPath);
-
-// 额外修复：所有页面的 index.json 里的 comp 引用（Taro v4 bug）
-const path = require('path');
 function fixPageIndexJson(dir) {
   const indexPath = path.join(dir, 'index.json');
   if (fs.existsSync(indexPath)) {
@@ -71,7 +65,6 @@ function fixPageIndexJson(dir) {
       const json = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
       if (json.usingComponents && json.usingComponents.comp) {
         delete json.usingComponents.comp;
-        // 如果 usingComponents 空了就删掉整个字段
         if (Object.keys(json.usingComponents).length === 0) {
           delete json.usingComponents;
         }
@@ -90,7 +83,9 @@ function fixPageIndexJson(dir) {
     }
   } catch(e) {}
 }
-console.log('🔧 修复页面 index.json comp 引用...');
+
+console.log('🔧 修复 comp.json 自引用 + 页面 comp 引用...');
+fixCompJson(distPath);
 fixPageIndexJson(distPath);
 
 const project = new ci.Project({
