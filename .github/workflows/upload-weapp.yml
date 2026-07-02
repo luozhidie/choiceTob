@@ -7,6 +7,7 @@ on:
       - 'miniprogram/src/**'
       - 'miniprogram/config/**'
       - 'miniprogram/package.json'
+      - 'miniprogram/upload.js'
 
 jobs:
   build-and-upload:
@@ -22,31 +23,57 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install deps
         run: npm install 2>&1
 
-      - name: Build (full log)
+      - name: Build Taro weapp
         id: build
         run: |
-          echo "=== Starting Taro Build ==="
-          npx taro build --type weapp 2>&1
-          BUILD_EXIT=$?
+          set -e
+          echo "=========================================="
+          echo "PWD=$(pwd)"
+          echo "Node=$(node -v)"
+          echo "Npm=$(npm -v)"
+          echo "=========================================="
+          npm run build:weapp 2>&1 || true
           echo ""
-          echo "=== Build Exit Code: $BUILD_EXIT ==="
-          echo "=== Files in miniprogram dir ==="
-          ls -la
-          echo "=== Looking for any dist-like dirs ==="
-          find . -maxdepth 2 -type d -name "*dist*" -o -name "*weapp*" -o -name "*output*" 2>/dev/null
-          echo "=== Looking for app.json anywhere ==="
-          find . -maxdepth 3 -name "app.json" 2>/dev/null
-          exit $BUILD_EXIT
+          echo "=========================================="
+          echo "BUILD RESULT:"
+          echo "=========================================="
+          echo "All dirs:"
+          ls -la .
+          echo "---"
+          echo "Looking for dist/weapp/output:"
+          find . -maxdepth 2 -type d 2>/dev/null
+          echo "---"
+          echo "app.json locations:"
+          find . -name "app.json" 2>/dev/null
+          echo "=========================================="
 
       - name: Upload to WeChat
-        if: success()
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
         run: |
-          npm i miniprogram-ci@latest --silent
+          set -e
+          
+          npm i miniprogram-ci@latest --silent 2>/dev/null || true
+          
           echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
-          node upload.js
+          
+          # 找到真正的编译输出目录
+          DIST="./dist"
+          for d in ./dist ./weapp ./output; do
+            if [ -f "$d/app.json" ]; then
+              DIST="$d"
+              break
+            fi
+          done
+          
+          if [ ! -f "$DIST/app.json" ]; then
+            echo "❌ 编译输出不存在！无法上传。"
+            exit 1
+          fi
+          
+          echo "✅ 使用编译输出: $DIST"
+          node upload.js "$DIST"
