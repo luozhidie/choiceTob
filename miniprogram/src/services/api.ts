@@ -45,16 +45,19 @@ async function request(path, options = {}) {
 export default request;
 export { API_BASE, getToken };
 
-/* ========== 公开接口 ========== */
+/* ========== 公开接口（使用正确的后端路由路径）========== */
 
+// 首页版块
 export async function getBlocks() {
   return request('/public/blocks');
 }
 
+// 营销活动
 export async function getPromotions(limit = 4) {
   return request(`/promotions?status=active&limit=${limit}`);
 }
 
+// 商品列表 - 使用 /public/products 路由
 export async function getProducts(params) {
   const qs = new URLSearchParams();
   if (params && params.category) qs.set('category', params.category);
@@ -62,24 +65,28 @@ export async function getProducts(params) {
   if (params && params.limit) qs.set('limit', String(params.limit));
   if (params && params.page) qs.set('page', String(params.page));
   const q = qs.toString();
-  return request(`/products${q ? '?' + q : ''}`);
+  return request(`/public/products${q ? '?' + q : ''}`);
 }
 
+// 商品详情
 export async function getProduct(id) {
-  return request(`/products/${id}`);
+  return request(`/public/products/${id}`);
 }
 
+// 课程列表
 export async function getCourses(params) {
   const qs = new URLSearchParams();
   if (params && params.category) qs.set('category', params.category);
   const q = qs.toString();
-  return request(`/courses${q ? '?' + q : ''}`);
+  return request(`/public/daily-looks${q ? '?' + q : ''}`);
 }
 
+// 每日穿搭
 export async function getDailyLooks() {
-  return request('/daily-looks');
+  return request('/public/daily-looks');
 }
 
+// 分类列表
 export async function getCategories() {
   return request('/categories');
 }
