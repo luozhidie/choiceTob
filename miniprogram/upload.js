@@ -29,19 +29,38 @@ if (!fs.existsSync(`${distPath}/app.json`)) {
 }
 
 // 修复 Taro v4 编译 bug: comp 组件无限自引用导致页面空白
-const compJsonPath = `${distPath}/comp.json`;
-if (fs.existsSync(compJsonPath)) {
-  try {
-    const compJson = JSON.parse(fs.readFileSync(compJsonPath, 'utf8'));
-    if (compJson.usingComponents && compJson.usingComponents.comp) {
-      delete compJson.usingComponents.comp;
-      fs.writeFileSync(compJsonPath, JSON.stringify(compJson));
-      console.log('✅ 已修复 comp.json 自引用问题');
+const path = require('path');
+function fixCompJson(dir) {
+  const compJsonPath = path.join(dir, 'comp.json');
+  if (fs.existsSync(compJsonPath)) {
+    try {
+      const compJson = JSON.parse(fs.readFileSync(compJsonPath, 'utf8'));
+      let changed = false;
+      if (compJson.usingComponents && compJson.usingComponents.comp) {
+        delete compJson.usingComponents.comp;
+        changed = true;
+      }
+      if (changed) {
+        fs.writeFileSync(compJsonPath, JSON.stringify(compJson, null, 2));
+        console.log('✅ 已修复 comp.json 自引用问题:', compJsonPath);
+      }
+    } catch(e) {
+      console.log('⚠️ comp.json 修复跳过:', e.message);
     }
-  } catch(e) {
-    console.log('⚠️ comp.json 修复跳过:', e.message);
   }
+  // 递归修复子目录
+  try {
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      if (item.isDirectory() && item.name !== 'node_modules') {
+        fixCompJson(path.join(dir, item.name));
+      }
+    }
+  } catch(e) {}
 }
+
+console.log('🔧 修复 comp.json 自引用...');
+fixCompJson(distPath);
 
 const project = new ci.Project({
   appid,
