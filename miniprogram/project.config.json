@@ -1,0 +1,15 @@
+{
+  "miniprogramRoot": "dist/",
+  "projectname": "luozhidie-choice",
+  "description": "骆芷蝶智选 - 服装门店一站式赋能平台",
+  "appid": "wxe0ffec0a398de8b7",
+  "setting": {
+    "urlCheck": false,
+    "es6": false,
+    "enhance": false,
+    "compileHotLoad": false,
+    "postcss": false,
+    "minified": false
+  },
+  "compileType": "miniprogram"
+}

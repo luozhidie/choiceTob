@@ -1,0 +1,66 @@
+name: Upload WeChat Mini Program
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'miniprogram/src/**'
+      - 'miniprogram/config/**'
+      - 'miniprogram/package.json'
+
+env:
+  APPID: ${{ secrets.WECHAT_APPID }}
+
+jobs:
+  build-and-upload:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./miniprogram
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Taro Mini Program
+        run: npx taro build --type weapp
+
+      - name: Install miniprogram-ci
+        run: npm install miniprogram-ci --save-dev
+
+      - name: Upload to WeChat
+        env:
+          PRIVATE_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
+        run: |
+          cat > upload.js << 'EOF'
+          const ci = require('miniprogram-ci');
+          const project = new ci.Project({
+            appid: process.env.APPID,
+            type: 'miniProgram',
+            projectPath: './dist',
+            ignoreDevFiles: true,
+            privateKeyPath: './private_upload_key',
+          });
+          ci.upload({
+            project,
+            version: process.env.GITHUB_RUN_NUMBER || '1.0.1',
+            desc: '自动部署 v' + (process.env.GITHUB_RUN_NUMBER || '1'),
+            setting: {
+              es6: true,
+              es7: true,
+              enhance: true,
+              compileHotReLoad: false,
+              autoAudits: false,
+            },
+            robot: 1,
+          }).then(() => console.log('上传成功!')).catch(e => { console.error('上传失败:', e); process.exit(1); });
+          EOF
+          echo "$PRIVATE_KEY" > private_upload_key
+          chmod 600 private_upload_key
+          node upload.js

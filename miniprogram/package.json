@@ -1,19 +1,36 @@
 {
-  "name": "miniprogram",
+  "name": "luozhidie-choice",
   "version": "1.0.0",
-  "description": "",
-  "main": "upload.js",
-  "directories": {
-    "doc": "docs"
-  },
+  "private": true,
+  "description": "骆芷蝶智选 - 服装门店一站式赋能平台（Taro 小程序版）",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev:weapp": "taro build --type weapp --watch",
+    "dev:h5": "taro build --type h5 --watch",
+    "build:weapp": "taro build --type weapp",
+    "build:h5": "taro build --type h5",
+    "dev": "npm run dev:h5"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
   "dependencies": {
-    "miniprogram-ci": "^2.1.31"
+    "@tarojs/components": "^4.0.12",
+    "@tarojs/helper": "^4.0.12",
+    "@tarojs/plugin-framework-react": "^4.0.12",
+    "@tarojs/plugin-platform-h5": "^4.0.12",
+    "@tarojs/plugin-platform-weapp": "^4.0.12",
+    "@tarojs/react": "^4.0.12",
+    "@tarojs/runtime": "^4.0.12",
+    "@tarojs/shared": "^4.0.12",
+    "@tarojs/taro": "^4.0.12",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "lucide-react": "^0.469.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.10",
+    "@babel/preset-react": "^7.26.10",
+    "@tarojs/cli": "^4.0.12",
+    "@tarojs/webpack5-runner": "^4.0.12",
+    "@types/react": "^18.3.19",
+    "typescript": "^5.6.3"
   }
 }

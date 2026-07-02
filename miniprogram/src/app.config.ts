@@ -1,0 +1,30 @@
+{
+  "pages": [
+    "pages/home/index",
+    "pages/buyer/index",
+    "pages/cart/index",
+    "pages/my/index",
+    "pages/courses/index",
+    "pages/daily-looks/index",
+    "pages/shop/index",
+    "pages/login/index"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#2d1b2e",
+    "navigationBarTitleText": "骆芷蝶智选",
+    "navigationBarTextStyle": "white"
+  },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#2d1b2e",
+    "borderStyle": "white",
+    "backgroundColor": "#ffffff",
+    "list": [
+      { "pagePath": "pages/home/index", "text": "首页", "iconPath": "assets/tabbar/home.png", "selectedIconPath": "assets/tabbar/home-active.png" },
+      { "pagePath": "pages/buyer/index", "text": "选品", "iconPath": "assets/tabbar/stock.png", "selectedIconPath": "assets/tabbar/stock-active.png" },
+      { "pagePath": "pages/cart/index", "text": "购物车", "iconPath": "assets/tabbar/cart.png", "selectedIconPath": "assets/tabbar/cart-active.png" },
+      { "pagePath": "pages/my/index", "text": "我的", "iconPath": "assets/tabbar/user.png", "selectedIconPath": "assets/tabbar/user-active.png" }
+    ]
+  }
+}
