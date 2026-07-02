@@ -28,6 +28,21 @@ if (!fs.existsSync(`${distPath}/app.json`)) {
   process.exit(1);
 }
 
+// 修复 Taro v4 编译 bug: comp 组件无限自引用导致页面空白
+const compJsonPath = `${distPath}/comp.json`;
+if (fs.existsSync(compJsonPath)) {
+  try {
+    const compJson = JSON.parse(fs.readFileSync(compJsonPath, 'utf8'));
+    if (compJson.usingComponents && compJson.usingComponents.comp) {
+      delete compJson.usingComponents.comp;
+      fs.writeFileSync(compJsonPath, JSON.stringify(compJson));
+      console.log('✅ 已修复 comp.json 自引用问题');
+    }
+  } catch(e) {
+    console.log('⚠️ comp.json 修复跳过:', e.message);
+  }
+}
+
 const project = new ci.Project({
   appid,
   type: 'miniProgram',
