@@ -65,6 +65,7 @@ const BLOCK_TYPES = [
   { value: "banner_large", label: "大横幅", icon: ImageIcon, description: "全宽大图Banner（新客指南、周年庆等）" },
   { value: "banner_small", label: "小横幅", icon: Image, description: "较小尺寸的横幅Banner（满减提示等）" },
   { value: "category_nav", label: "分类目录", icon: ListFilter, description: "横向标签导航栏（全部、十三行、24h发货等）" },
+  { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
 ];
 
 const DEFAULT_STYLES = {
@@ -1430,6 +1431,54 @@ export default function BlocksAdminPage() {
                       </div>
                     )}
 
+                    {/* pre_sale 预售模块 */}
+                    {form.type === "pre_sale" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">预售标题</label>
+                          <input type="text" value={(form.content as any)?.title || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), title: e.target.value } as any })} placeholder="如：2025秋冬新品预售" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">预售描述</label>
+                          <textarea value={(form.content as any)?.desc || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), desc: e.target.value } as any })} placeholder="说明预售规则、发货时间等..." className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none h-20 resize-y" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">预售截止日期</label>
+                            <input type="date" value={(form.content as any)?.endDate || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), endDate: e.target.value } as any })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">预计发货时间</label>
+                            <input type="text" value={(form.content as any)?.shipDate || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), shipDate: e.target.value } as any })} placeholder="如：10月15日起发货" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">定金金额（元，可选）</label>
+                            <input type="number" min={0} step={0.01} value={(form.content as any)?.deposit || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), deposit: parseFloat(e.target.value) || 0 } as any })} placeholder="不填则无定金模式" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">预售折扣（0.1-1）</label>
+                            <input type="number" min={0.1} max={1} step={0.05} value={(form.content as any)?.discount || 1} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), discount: parseFloat(e.target.value) || 1 } as any })} placeholder="1=原价" className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">预售宣传图</label>
+                          <BlockImageUpload
+                            value={(form.content as any)?.bannerImage || ""}
+                            onChange={(url) => setForm({ ...form, content: { ...(form.content as object || {}), bannerImage: url } as any })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">挂载预售商品（必选）</label>
+                          <ProductPicker
+                            value={(form.content as any)?.productIds || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">选择参与预售的商品</p>
+                        </div>
+                      </div>
+                    )}
 
                   {/* 样式设置 */}
                   <div>

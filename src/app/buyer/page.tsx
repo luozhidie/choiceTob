@@ -231,6 +231,104 @@ function GroupBuyBlock({ content, block, bg }: { content: any; block: any; bg: s
   );
 }
 
+/* ==================== 预售模块（倒计时 + 商品） ==================== */
+function PreSaleBlock({ content, block, bg }: { content: any; block: any; bg: string }) {
+  const [preProducts, setPreProducts] = useState<any[]>([]);
+  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, mins: 0, secs: 0 });
+  const [ended, setEnded] = useState(false);
+
+  useEffect(() => {
+    const ids = (content.productIds || "").trim();
+    if (!ids) { setPreProducts([]); return; }
+    const idList = ids.split(",").map((s: string) => s.trim()).filter(Boolean);
+    if (idList.length === 0) { setPreProducts([]); return; }
+    fetch(`/api/public/products?limit=${idList.length}`)
+      .then(r => r.json())
+      .then(json => { if (json.success && json.data) setPreProducts(json.data.filter((p: any) => idList.includes(p.id))); })
+      .catch(() => {});
+  }, [content.productIds]);
+
+  useEffect(() => {
+    const target = content.endDate ? new Date(content.endDate + "T23:59:59") : null;
+    if (!target || target.getTime() <= Date.now()) { setEnded(true); return; }
+    const tick = () => {
+      const diff = Math.max(0, target!.getTime() - Date.now());
+      if (diff <= 0) { setEnded(true); return; }
+      setTimeLeft({ days: Math.floor(diff / 86400000), hours: Math.floor((diff % 86400000) / 3600000), mins: Math.floor((diff % 3600000) / 60000), secs: Math.floor((diff % 60000) / 1000) });
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [content.endDate]);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const fmtPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: bg === "#ffffff" ? "linear-gradient(135deg,#f0e6ff 0%,#fff5ff 100%)" : bg }}>
+        {content.bannerImage && (
+          <img src={content.bannerImage} alt="" className="w-full h-auto" />
+        )}
+        <div className="p-5 md:p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="font-bold text-lg md:text-xl">{block.title || content.title || "新品预售"}</h3>
+              {content.desc && <p className="text-xs text-gray-500 mt-1">{content.desc}</p>}
+            </div>
+            {(content.deposit > 0 || content.discount < 1) && (
+              <div className="flex gap-2 flex-wrap justify-end">
+                {content.deposit > 0 && <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-bold">定金 ¥{content.deposit}</span>}
+                {content.discount < 1 && <span className="px-2 py-1 bg-pink-100 text-pink-700 rounded-full text-xs font-bold">{Math.round(content.discount * 10)}折</span>}
+              </div>
+            )}
+          </div>
+          {!ended ? (
+            <div className="flex items-center gap-2 mb-4 p-3 bg-white/60 rounded-xl">
+              <span className="text-xs font-bold text-purple-700 whitespace-nowrap shrink-0">⏰ 距截止</span>
+              {[
+                { val: timeLeft.days, label: "天" },
+                { val: timeLeft.hours, label: "时" },
+                { val: timeLeft.mins, label: "分" },
+                { val: timeLeft.secs, label: "秒" },
+              ].map(({ val, label }) => (
+                <div key={label} className="flex flex-col items-center shrink-0">
+                  <div className={`w-10 h-10 rounded-lg ${val !== 0 ? "bg-gradient-to-br from-purple-500 to-pink-500 text-white" : "bg-gray-200 text-gray-400"} flex items-center justify-center text-base font-mono font-bold`}>{val}</div>
+                  <span className="text-[9px] text-gray-400 mt-0.5">{label}</span>
+                </div>
+              ))}
+              {content.shipDate && <span className="ml-auto text-[11px] text-gray-400 whitespace-nowrap">{content.shipDate}起发</span>}
+            </div>
+          ) : (
+            <div className="mb-4 px-4 py-2.5 bg-gray-200/80 text-center rounded-xl text-sm font-bold text-gray-400">预售已结束</div>
+          )}
+          {preProducts.length > 0 ? (
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {preProducts.map((p: any) => (
+                <a key={p.id} href={`/shop/${p.id}`} className="group block">
+                  <div className="rounded-xl overflow-hidden bg-white/50 mb-1.5 aspect-[3/4] relative">
+                    {p.image_url ? (
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">暂无图片</div>
+                    )}
+                    {content.discount < 1 && <div className="absolute top-1.5 left-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-medium">预售</div>}
+                  </div>
+                  <h4 className="font-medium text-[11px] line-clamp-1 group-hover:text-purple-500 transition-colors">{p.name || p.title}</h4>
+                  <p className="text-accent font-bold text-xs">{fmtPrice(p.price)}</p>
+                  {content.discount < 1 && <p className="text-gray-400 text-[9px] line-through">{fmtPrice(Math.round(p.price / (content.discount || 1)))}</p>}
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-300 py-6 text-center">暂未配置预售商品</p>
+          )}
+          <a href="/buyer" className="block w-full mt-4 py-3 text-center bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm">立即预订 →</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ==================== 页面 ==================== */
 export default function BuyerPage() {
   const router = useRouter();
@@ -836,6 +934,11 @@ export default function BuyerPage() {
                 {/* group_buy 团购拼单 */}
                 {block.type === "group_buy" && (
                   <GroupBuyBlock content={content} block={block} bg={bg} />
+                )}
+
+                {/* pre_sale 预售模块 */}
+                {block.type === "pre_sale" && (
+                  <PreSaleBlock content={content} block={block} bg={bg} />
                 )}
 
                 {/* flash_sale 限时秒杀 */}
