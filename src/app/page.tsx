@@ -277,7 +277,7 @@ function RecommendationBlock({ block, content, bg, textColor, pad, radius, colum
                   <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] px-2 py-0.5 rounded-full font-medium">AI推荐</div>
                 </div>
                 <h4 className="font-medium text-[13px] line-clamp-2 group-hover:text-rose-500 transition-colors">{p.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[14px]">¥{formatPrice(p.price)}</p>
+                <p className="text-red-500 font-bold mt-1 text-[14px]">{formatPrice(p.price)}</p>
               </Link>
             ))}
           </div>
@@ -830,7 +830,7 @@ export default function Home() {
                   )}
                 </div>
                 <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
-                <p className="text-red-500 font-bold mt-1 text-[15px]">¥{formatPrice(product.price)}</p>
+                <p className="text-red-500 font-bold mt-1 text-[15px]">{formatPrice(product.price)}</p>
                 <Link href={`/shop/${product.id}`} className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all">
                   下单
                 </Link>
