@@ -8,9 +8,6 @@ on:
       - 'miniprogram/config/**'
       - 'miniprogram/package.json'
 
-env:
-  APPID: ${{ secrets.WECHAT_APPID }}
-
 jobs:
   build-and-upload:
     runs-on: ubuntu-latest
@@ -34,19 +31,23 @@ jobs:
       - name: Install miniprogram-ci
         run: npm install miniprogram-ci --save-dev
 
-      - name: Upload to WeChat
-        env:
-          PRIVATE_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
+      - name: Write upload key
         run: |
-          cat > upload.js << 'EOF'
+          echo "${{ secrets.WECHAT_UPLOAD_KEY }}" > private_upload_key
+          chmod 600 private_upload_key
+
+      - name: Upload to WeChat
+        run: |
+          cat > upload.js << 'UPLOADER'
           const ci = require('miniprogram-ci');
           const project = new ci.Project({
-            appid: process.env.APPID,
+            appid: '${{ secrets.WECHAT_APPID }}',
             type: 'miniProgram',
             projectPath: './dist',
             ignoreDevFiles: true,
             privateKeyPath: './private_upload_key',
           });
+          console.log('开始上传...');
           ci.upload({
             project,
             version: process.env.GITHUB_RUN_NUMBER || '1.0.1',
@@ -59,8 +60,12 @@ jobs:
               autoAudits: false,
             },
             robot: 1,
-          }).then(() => console.log('上传成功!')).catch(e => { console.error('上传失败:', e); process.exit(1); });
-          EOF
-          echo "$PRIVATE_KEY" > private_upload_key
-          chmod 600 private_upload_key
+          }).then(() => {
+            console.log('上传成功!');
+          }).catch(e => {
+            console.error('上传失败:', e.message || e);
+            if (e.errMsg) console.error('错误详情:', e.errMsg);
+            process.exit(1);
+          });
+          UPLOADER
           node upload.js
