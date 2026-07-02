@@ -4,7 +4,12 @@ export default defineConfig({
   projectName: 'luozhidie-choice',
   date: '2026-7-2',
   designWidth: 750,
-  deviceRatio: 3,
+  deviceRatio: {
+    680: 2 / 750,
+    812: 2 / 750,
+    375: 2 / 750,
+    414: 2 / 750,
+  },
   sourceRoot: 'src',
   outputRoot: 'dist',
   plugins: [
