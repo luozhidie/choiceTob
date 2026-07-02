@@ -26,6 +26,9 @@ jobs:
       - name: Install deps
         run: npm install 2>&1
 
+      - name: Install miniprogram-ci
+        run: npm install miniprogram-ci --save-dev 2>&1 || true
+
       - name: Build Taro weapp
         id: build
         run: |
