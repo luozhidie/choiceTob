@@ -1163,50 +1163,36 @@ export default function BlocksAdminPage() {
                         })}
                       </div>
                     )}
-                    {/* circle_row 圆形卡片行 */}
+                    {/* circle_row 圆形卡片行（动态增减） */}
                     {form.type === "circle_row" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
-                        {[0,1,2,3,4,5].map((i) => {
-                          const k = "item" + i;
+                        {(() => {
                           const d = (form.content as any) || {};
-                          return (
+                          const itemKeys = Object.keys(d).filter(k => k.startsWith("item") && /^\d+$/.test(k.replace("item",""))).sort((a,b) => parseInt(a.replace("item","")) - parseInt(b.replace("item","")));
+                          if (itemKeys.length === 0) itemKeys.push("item0");
+                          return itemKeys.map((k, idx) => (
                             <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
-                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
+                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(idx+1)}</span>
                               <BlockImageUpload
-                                value={(d[k] as any)?.image || ""}
-                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
+                                value={d[k]?.image || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...(d[k]||{}), image:url } } as any })}
                               />
                               <div className="flex-1 space-y-1.5 min-w-0">
-                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
-                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                                <input type="text" value={d[k]?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...(d[k]||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
+                                <input type="text" value={d[k]?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...(d[k]||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
                               </div>
+                              <button type="button" onClick={() => { const nd = { ...d }; delete nd[k]; setForm({ ...form, content: nd as any }); }} className="shrink-0 w-8 h-8 flex items-center justify-center text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors text-lg">−</button>
                             </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* circle_row 圆形卡片行 */}
-                    {/* circle_row 圆形卡片行 */}
-                    {form.type === "circle_row" && (
-                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
-                        {[0,1,2,3,4,5].map((i) => {
-                          const k = "item" + i;
+                          ));
+                        })()}
+                        <button type="button" onClick={() => {
                           const d = (form.content as any) || {};
-                          return (
-                            <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
-                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
-                              <BlockImageUpload
-                                value={(d[k] as any)?.image || ""}
-                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
-                              />
-                              <div className="flex-1 space-y-1.5 min-w-0">
-                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
-                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
-                              </div>
-                            </div>
-                          );
-                        })}
+                          const keys = Object.keys(d).filter(k => k.startsWith("item") && /^\d+$/.test(k.replace("item","")));
+                          const nextIdx = keys.length > 0 ? Math.max(...keys.map(k => parseInt(k.replace("item","")))) + 1 : 0;
+                          setForm({ ...form, content: { ...d, [`item${nextIdx}`]: {} } as any });
+                        }} className="w-full py-2.5 border-2 border-dashed border-primary/30 text-primary rounded-xl text-sm font-medium hover:bg-primary/5 transition-colors">
+                          + 添加圆形卡片
+                        </button>
                       </div>
                     )}
 
@@ -1337,29 +1323,6 @@ export default function BlocksAdminPage() {
                                 <input type="text" value={(d[k] as any)?.subtitle||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),subtitle:e.target.value}} as any })} placeholder="Subtitle / Price" className="px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                               </div>
                               <input type="text" value={(d[k] as any)?.link||""} onChange={(e)=>setForm({...form,content:{...d,[k]:{...((d[k] as object)||{}),link:e.target.value}} as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {/* circle_row 圆形卡片行 */}
-                    {form.type === "circle_row" && (
-                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
-                        {[0,1,2,3,4,5].map((i) => {
-                          const k = "item" + i;
-                          const d = (form.content as any) || {};
-                          return (
-                            <div key={k} className="flex items-center gap-3 border border-dashed border-gray-300 rounded-xl p-2">
-                              <span className="text-xs text-gray-500 w-8 shrink-0">{String(i+1)}</span>
-                              <BlockImageUpload
-                                value={(d[k] as any)?.image || ""}
-                                onChange={(url: string) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), image:url } } as any })}
-                              />
-                              <div className="flex-1 space-y-1.5 min-w-0">
-                                <input type="text" value={(d[k] as any)?.label||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), label:e.target.value } } as any })} placeholder="Label name" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
-                                <input type="text" value={(d[k] as any)?.link||""} onChange={(e) => setForm({ ...form, content: { ...d, [k]: { ...((d[k] as object)||{}), link:e.target.value } } as any })} placeholder="Link URL" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none" />
-                              </div>
                             </div>
                           );
                         })}

@@ -902,11 +902,11 @@ export default function BuyerPage() {
                 {block.type === "circle_row" && (
                   <div className="max-w-7xl mx-auto overflow-x-auto scrollbar-hide pb-1">
                     <div className="flex items-center gap-4 min-w-max pr-2">
-                      {[0,1,2,3,4,5].map((i) => {
-                        const it = content[`item${i}`] as any;
+                      {Object.keys(content).filter(k => k.startsWith("item") && /^\d+$/.test(k.replace("item",""))).sort((a,b) => parseInt(a.replace("item","")) - parseInt(b.replace("item",""))).map((k) => {
+                        const it = content[k] as any;
                         if (!it?.image) return null;
                         return (
-                          <a key={i} href={it.link || "#"} className="shrink-0 flex flex-col items-center gap-1.5 group">
+                          <a key={k} href={it.link || "#"} className="shrink-0 flex flex-col items-center gap-1.5 group">
                             <div className="w-16 h-16 md:w-20 md:h-20 rounded-full overflow-hidden border-2 border-gray-100 shadow-sm group-hover:border-primary/30 transition-colors">
                               <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                             </div>
