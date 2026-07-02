@@ -29,7 +29,14 @@ export default defineConfig({
   weapp: {
     appid: 'wxe0ffec0a398de8b7',
     compileType: 'miniapp',
-    baseLevel: 2,
+    baseLevel: 3,
+    setting: {
+      urlCheck: false,
+      es6: true,
+      enhance: true,
+      minified: false,
+      postcss: false,
+    },
   },
   css: {
     postcss: {

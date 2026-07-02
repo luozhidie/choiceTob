@@ -5,9 +5,15 @@ import Taro from '@tarojs/taro';
 export default class HomePage extends Component {
   state = {
     products: [],
+    showContent: false,
   };
 
   componentDidMount() {
+    // 用 showToast 验证 render 是否执行
+    setTimeout(() => {
+      this.setState({ showContent: true });
+    }, 100);
+    
     Taro.request({
       url: 'https://colour-choice.art/api/public/products?limit=6',
       method: 'GET',
@@ -19,10 +25,18 @@ export default class HomePage extends Component {
   }
 
   render() {
-    const { products } = this.state;
-    return (
-      <View style={{ backgroundColor: '#f8f7f4', minHeight: '100%' }}>
+    const { products, showContent } = this.state;
+    
+    if (!showContent) {
+      return (
+        <View style={{ padding: 40, alignItems: 'center', backgroundColor: '#f8f7f4' }}>
+          <Text style={{ fontSize: 20, color: '#2d1b2e' }}>正在加载...</Text>
+        </View>
+      );
+    }
 
+    return (
+      <View style={{ backgroundColor: '#f8f7f4' }}>
         {/* Hero */}
         <View style={{ backgroundColor: '#2d1b2e', paddingTop: 50, paddingBottom: 30, paddingLeft: 20, paddingRight: 20 }}>
           <Text style={{ fontSize: 24, fontWeight: 'bold', color: '#ffffff' }}>骆芷蝶供应链</Text>
@@ -32,9 +46,9 @@ export default class HomePage extends Component {
             <Text style={{ fontSize: 14, color: '#fff' }}>🔍 搜索商品...</Text>
           </View>
 
-          <View style={{ flexDirection: 'row', marginTop: 20 }}>
+          <View style={{ flexDirection: 'row', marginTop: 20, flexWrap: 'wrap' }}>
             {['全部', '服装', '护肤', '彩妆'].map(tag => (
-              <View key={tag} style={{ paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginRight: 8 }}>
+              <View key={tag} style={{ paddingVertical: 6, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', marginRight: 8, marginBottom: 8 }}>
                 <Text style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)' }}>{tag}</Text>
               </View>
             ))}
@@ -84,7 +98,7 @@ export default class HomePage extends Component {
           ) : (
             <View style={{ paddingVertical: 40, alignItems: 'center' }}>
               <Text style={{ fontSize: 30 }}>📦</Text>
-              <Text style={{ color: '#999999', fontSize: 13, marginTop: 10 }}>暂无商品数据，加载中...</Text>
+              <Text style={{ color: '#999999', fontSize: 13, marginTop: 10 }}>暂无商品数据</Text>
             </View>
           )}
         </View>
@@ -94,7 +108,6 @@ export default class HomePage extends Component {
           <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#2d1b2e' }}>爆款选品 · 拿货精选</Text>
           <Text style={{ fontSize: 12, color: '#888888', marginTop: 6 }}>骆芷蝶智选 · 专业推荐</Text>
         </View>
-
       </View>
     );
   }
