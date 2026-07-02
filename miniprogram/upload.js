@@ -59,8 +59,39 @@ function fixCompJson(dir) {
   } catch(e) {}
 }
 
-console.log('🔧 修复 comp.json 自引用...');
+console.log('🔧 修复 comp.json 自引用 + 页面 comp 引用...');
 fixCompJson(distPath);
+
+// 额外修复：所有页面的 index.json 里的 comp 引用（Taro v4 bug）
+const path = require('path');
+function fixPageIndexJson(dir) {
+  const indexPath = path.join(dir, 'index.json');
+  if (fs.existsSync(indexPath)) {
+    try {
+      const json = JSON.parse(fs.readFileSync(indexPath, 'utf8'));
+      if (json.usingComponents && json.usingComponents.comp) {
+        delete json.usingComponents.comp;
+        // 如果 usingComponents 空了就删掉整个字段
+        if (Object.keys(json.usingComponents).length === 0) {
+          delete json.usingComponents;
+        }
+        fs.writeFileSync(indexPath, JSON.stringify(json, null, 2));
+        console.log('✅ 已修复页面 index.json comp 引用:', indexPath);
+      }
+    } catch(e) {}
+  }
+  // 递归子目录
+  try {
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      if (item.isDirectory() && item.name !== 'node_modules' && item.name !== '.git') {
+        fixPageIndexJson(path.join(dir, item.name));
+      }
+    }
+  } catch(e) {}
+}
+console.log('🔧 修复页面 index.json comp 引用...');
+fixPageIndexJson(distPath);
 
 const project = new ci.Project({
   appid,
