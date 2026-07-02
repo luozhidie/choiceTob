@@ -31,41 +31,49 @@ jobs:
       - name: Install miniprogram-ci
         run: npm install miniprogram-ci --save-dev
 
-      - name: Write upload key
+      - name: Prepare upload script
         run: |
-          echo "${{ secrets.WECHAT_UPLOAD_KEY }}" > private_upload_key
+          printf '%s\n' "${{ secrets.WECHAT_UPLOAD_KEY }}" > private_upload_key
           chmod 600 private_upload_key
+          echo "Key file size: $(wc -c < private_upload_key) bytes"
+          echo "Key first line: $(head -1 private_upload_key)"
+          ls -la dist/ | head -5
 
       - name: Upload to WeChat
+        env:
+          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
         run: |
-          cat > upload.js << 'UPLOADER'
-          const ci = require('miniprogram-ci');
-          const project = new ci.Project({
-            appid: '${{ secrets.WECHAT_APPID }}',
-            type: 'miniProgram',
-            projectPath: './dist',
-            ignoreDevFiles: true,
-            privateKeyPath: './private_upload_key',
-          });
-          console.log('开始上传...');
-          ci.upload({
-            project,
-            version: process.env.GITHUB_RUN_NUMBER || '1.0.1',
-            desc: '自动部署 v' + (process.env.GITHUB_RUN_NUMBER || '1'),
-            setting: {
-              es6: true,
-              es7: true,
-              enhance: true,
-              compileHotReLoad: false,
-              autoAudits: false,
-            },
-            robot: 1,
-          }).then(() => {
-            console.log('上传成功!');
-          }).catch(e => {
-            console.error('上传失败:', e.message || e);
-            if (e.errMsg) console.error('错误详情:', e.errMsg);
-            process.exit(1);
-          });
-          UPLOADER
-          node upload.js
+          node -e "
+            const ci = require('miniprogram-ci');
+            const fs = require('fs');
+            console.log('APPID:', process.env.WECHAT_APPID);
+            console.log('KEY exists:', fs.existsSync('./private_upload_key'));
+            console.log('DIST exists:', fs.existsSync('./dist'));
+
+            const project = new ci.Project({
+              appid: process.env.WECHAT_APPID,
+              type: 'miniProgram',
+              projectPath: './dist',
+              ignoreDevFiles: true,
+              privateKeyPath: './private_upload_key',
+            });
+
+            ci.upload({
+              project,
+              version: process.env.GITHUB_RUN_NUMBER || '1.0.1',
+              desc: '自动部署 v' + (process.env.GITHUB_RUN_NUMBER || '1'),
+              setting: {
+                es6: true,
+                es7: true,
+                enhance: true,
+                compileHotReLoad: false,
+                autoAudits: false,
+              },
+              robot: 1,
+            }).then(() => {
+              console.log('✅ 上传成功!');
+            }).catch(e => {
+              console.error('❌ 上传失败:', JSON.stringify(e));
+              process.exit(1);
+            });
+          "
