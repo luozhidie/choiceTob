@@ -51,7 +51,7 @@ export default class DailyLooksPage extends Component {
     const { looks, loading, activeSeason } = this.state;
     const filtered = activeSeason === '全部'
       ? looks
-      : looks.filter((l: any) => (l.season || '').includes(activeSeason));
+      : looks.filter((l) => (l.season || '').includes(activeSeason));
 
     return (
       <ScrollView scrollY style={{ backgroundColor: '#f8f7f4', minHeight: '100vh' }}>

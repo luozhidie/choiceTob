@@ -52,7 +52,7 @@ export default class BuyerPage extends Component {
   // 筛选商品
   getFilteredProducts() {
     const { products, activeCategory, activeStyle, activeColor } = this.state;
-    return products.filter((p: any) => {
+    return products.filter(p => {
       if (activeCategory !== '全部' && p.category !== activeCategory) return false;
       if (activeStyle && p.style !== activeStyle) return false;
       if (activeColor && p.color_family !== activeColor) return false;
@@ -90,7 +90,7 @@ export default class BuyerPage extends Component {
             <Input
               placeholder="搜索商品名称、描述..."
               value={keyword}
-              onInput={(e: any) => this.setState({ keyword: e.detail.value })}
+              onInput={(e) => this.setState({ keyword: e.detail.value })}
               onConfirm={this.onSearch}
               style={{ flex: 1, fontSize: 13, color: '#fff' }}
               placeholderStyle={{ color: 'rgba(255,255,255,0.3)' }}
@@ -126,7 +126,7 @@ export default class BuyerPage extends Component {
             <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#333', marginBottom: 10 }}>🎁 优惠活动</Text>
             <ScrollView scrollX showScrollbar={false}>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                {promotions.map((promo: any) => (
+                {promotions.map((promo) => (
                   <View
                     key={promo.id}
                     onClick={() => {

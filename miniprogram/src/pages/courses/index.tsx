@@ -28,7 +28,7 @@ export default class CoursesPage extends Component {
     const { courses, loading, activeCategory } = this.state;
     const filtered = activeCategory === '全部'
       ? courses
-      : courses.filter((c: any) => c.category === activeCategory);
+      : courses.filter((c) => c.category === activeCategory);
 
     return (
       <ScrollView scrollY style={{ backgroundColor: '#f8f7f4', minHeight: '100vh' }}>

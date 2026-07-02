@@ -26,7 +26,7 @@ export default class ShopPage extends Component {
 
       // 加载相关商品
       const relRes = await getProducts({ category: product?.category, limit: 6 });
-      this.setState({ relatedProducts: (relRes.data || []).filter((p: any) => p.id !== id) });
+      this.setState({ relatedProducts: (relRes.data || []).filter((p) => p.id !== id) });
     } catch {
       this.setState({ loading: false });
     }
@@ -37,7 +37,7 @@ export default class ShopPage extends Component {
     if (!product) return;
     try {
       const cart = JSON.parse(Taro.getStorageSync('lzdzhixuan_cart') || '[]');
-      const existIdx = cart.findIndex((item: any) => item.id === product.id);
+      const existIdx = cart.findIndex((item) => item.id === product.id);
       if (existIdx >= 0) {
         cart[existIdx].quantity += quantity;
       } else {
@@ -93,7 +93,7 @@ export default class ShopPage extends Component {
             indicatorActiveColor="#e89a5c"
             style={{ width: '100%', height: 350 }}
             current={activeImg}
-            onChange={(e: any) => this.setState({ activeImg: e.detail.current })}
+            onChange={(e) => this.setState({ activeImg: e.detail.current })}
           >
             {(images.length > 0 ? images : ['']).map((img: string, i: number) => (
               <SwiperItem key={i}>
@@ -166,7 +166,7 @@ export default class ShopPage extends Component {
               <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#333', marginBottom: 12 }}>相关推荐</Text>
               <ScrollView scrollX showScrollbar={false}>
                 <View style={{ flexDirection: 'row', gap: 10 }}>
-                  {relatedProducts.map((p: any) => (
+                  {relatedProducts.map((p) => (
                     <View
                       key={p.id}
                       onClick={() => Taro.navigateTo({ url: `/pages/shop/index?id=${p.id}` })}

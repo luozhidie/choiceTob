@@ -33,14 +33,14 @@ export default class CartPage extends Component {
 
   updateQuantity(id: string, qty: number) {
     if (qty <= 0) { this.removeItem(id); return; }
-    const items = this.state.items.map((item: any) =>
+    const items = this.state.items.map((item) =>
       item.id === id ? { ...item, quantity: qty } : item
     );
     this.setState({ items }, () => this.saveCart(items));
   }
 
   removeItem(id: string) {
-    const items = this.state.items.filter((item: any) => item.id !== id);
+    const items = this.state.items.filter((item) => item.id !== id);
     this.setState({ items }, () => this.saveCart(items));
   }
 
@@ -94,7 +94,7 @@ export default class CartPage extends Component {
           ) : (
             <>
               {/* 商品列表 */}
-              {items.map((item: any) => (
+              {items.map((item) => (
                 <View key={item.id} style={{
                   flexDirection: 'row', backgroundColor: '#fff',
                   borderRadius: 12, padding: 12, marginBottom: 10,

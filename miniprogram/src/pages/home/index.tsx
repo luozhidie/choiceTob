@@ -25,7 +25,7 @@ export default class HomePage extends Component {
       ]);
       this.setState({
         blocks: blocksRes.data || [],
-        promotions: (promosRes.data || []).filter((p: any) => p.status === 'active'),
+        promotions: (promosRes.data || []).filter((p) => p.status === 'active'),
         hotProducts: (productsRes.data || []).slice(0, 6),
         loading: false,
       });
@@ -154,7 +154,7 @@ export default class HomePage extends Component {
           </View>
         ) : (
           <View style={{ marginTop: 16 }}>
-            {blocks.map((block: any) => (
+            {blocks.map((block) => (
               <BlockRenderer key={block.id} block={block} />
             ))}
           </View>
@@ -168,7 +168,7 @@ export default class HomePage extends Component {
               <Text onClick={() => Taro.navigateTo({ url: '/pages/buyer/index' })} style={{ fontSize: 12, color: '#e89a5c' }}>查看更多 →</Text>
             </View>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
-              {hotProducts.map((prod: any) => (
+              {hotProducts.map((prod) => (
                 <View key={prod.id} onClick={() => Taro.navigateTo({ url: `/pages/shop/index?id=${prod.id}` })} style={{
                   width: '48%', backgroundColor: '#f8f7f4', borderRadius: 12, overflow: 'hidden',
                 }}>
@@ -197,7 +197,7 @@ export default class HomePage extends Component {
             <Text style={{ fontSize: 15, fontWeight: 'bold', color: '#2d1b2e', marginBottom: 12 }}>🎁 优惠活动</Text>
             <ScrollView scrollX showScrollbar={false}>
               <View style={{ flexDirection: 'row', gap: 10 }}>
-                {promotions.map((promo: any) => (
+                {promotions.map((promo) => (
                   <View key={promo.id} onClick={() => {
                     if (promo.link_url) Taro.navigateTo({ url: promo.link_url });
                   }} style={{
