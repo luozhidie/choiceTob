@@ -7,7 +7,6 @@ on:
       - 'miniprogram/src/**'
       - 'miniprogram/config/**'
       - 'miniprogram/package.json'
-      - 'miniprogram/upload.js'
 
 jobs:
   build-and-upload:
@@ -23,16 +22,31 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install & Build
-        run: |
-          npm install 2>&1 | tail -3
-          npx taro build --type weapp 2>&1
+      - name: Install dependencies
+        run: npm install 2>&1
 
-      - name: Install ci & Upload
+      - name: Build (full log)
+        id: build
+        run: |
+          echo "=== Starting Taro Build ==="
+          npx taro build --type weapp 2>&1
+          BUILD_EXIT=$?
+          echo ""
+          echo "=== Build Exit Code: $BUILD_EXIT ==="
+          echo "=== Files in miniprogram dir ==="
+          ls -la
+          echo "=== Looking for any dist-like dirs ==="
+          find . -maxdepth 2 -type d -name "*dist*" -o -name "*weapp*" -o -name "*output*" 2>/dev/null
+          echo "=== Looking for app.json anywhere ==="
+          find . -maxdepth 3 -name "app.json" 2>/dev/null
+          exit $BUILD_EXIT
+
+      - name: Upload to WeChat
+        if: success()
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
         run: |
-          npm i miniprogram-ci@latest 2>&1 | tail -2
+          npm i miniprogram-ci@latest --silent
           echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
           node upload.js
