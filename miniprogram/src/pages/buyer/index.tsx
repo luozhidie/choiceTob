@@ -31,8 +31,8 @@ export default class BuyerPage extends Component {
         getProducts({ limit: 20 }),
       ]);
       this.setState({
-        blocks: (blocksRes.data || []).filter((b: any) => (b.content || {}).position === 'buyer_page'),
-        promotions: (promosRes.data || []).filter((p: any) => p.status === 'active'),
+        blocks: (blocksRes.data || []).filter(b => (b.content || {}).position === 'buyer_page'),
+        promotions: (promosRes.data || []).filter(p => p.status === 'active'),
         products: prodsRes.data || [],
         loading: false,
       });
