@@ -28,7 +28,10 @@ export default defineConfig({
   },
   weapp: {
     appid: 'wxe0ffec0a398de8b7',
-    compileType: 'miniapp'
+    compileType: 'miniapp',
+    compile: {
+      baseLevel: 3,
+    }
   },
   css: {
     postcss: {
