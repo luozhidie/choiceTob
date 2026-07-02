@@ -32,7 +32,8 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      autoprefixer: {}
+      autoprefixer: {},
+      tailwindcss: false,
     }
   }
 });
