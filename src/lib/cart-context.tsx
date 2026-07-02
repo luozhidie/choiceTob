@@ -34,6 +34,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   // 从localStorage加载购物车
   useEffect(() => {
     try {
+      if (typeof window === 'undefined') return;
       const stored = localStorage.getItem(CART_STORAGE_KEY);
       if (stored) {
         setItems(JSON.parse(stored));
@@ -46,6 +47,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   // 保存到localStorage
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (loaded) {
       localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
     }
