@@ -119,6 +119,24 @@ function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; b
   const discount = content.discount || 0.8;
   const [joined, setJoined] = useState(0);
   const desc = content.desc || `满${minPeople}人成团，享受${Math.round(discount * 10)}折优惠`;
+  const [groupProducts, setGroupProducts] = useState<any[]>([]);
+
+  // 加载挂载商品
+  useEffect(() => {
+    const ids = (content.productIds || "").trim();
+    if (!ids) { setGroupProducts([]); return; }
+    const idList = ids.split(",").map((s: string) => s.trim()).filter(Boolean);
+    if (idList.length === 0) { setGroupProducts([]); return; }
+    fetch(`/api/public/products?limit=${idList.length}`)
+      .then(r => r.json())
+      .then(json => {
+        if (json.success && json.data) {
+          const filtered = json.data.filter((p: any) => idList.includes(p.id));
+          setGroupProducts(filtered);
+        }
+      })
+      .catch(() => {});
+  }, [content.productIds]);
 
   return (
     <div className="relative overflow-hidden rounded-2xl" style={{ background: bgColor === "#ffffff" ? "linear-gradient(135deg,#fff5f5 0%,#fff 100%)" : bgColor }}>
@@ -149,6 +167,25 @@ function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; b
         <Link href="/buyer" className="block w-full py-3 text-center bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm">
           立即参团拼单 →
         </Link>
+
+        {/* 挂载商品 */}
+        {groupProducts.length > 0 && (
+          <div className="mt-5 grid grid-cols-3 md:grid-cols-4 gap-3">
+            {groupProducts.map((p: any) => (
+              <Link key={p.id} href={`/shop/${p.id}`} className="group block">
+                <div className="rounded-xl overflow-hidden bg-white/50 mb-1.5 aspect-[3/4] relative">
+                  {p.image_url ? (
+                    <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">暂无图片</div>
+                  )}
+                </div>
+                <h4 className="font-medium text-[11px] line-clamp-1 group-hover:text-orange-500 transition-colors">{p.name}</h4>
+                <p className="text-red-500 font-bold text-xs">{formatPrice(p.price)}</p>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

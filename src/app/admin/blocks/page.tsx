@@ -400,7 +400,7 @@ export default function BlocksAdminPage() {
 
   // 保存版块
   const handleSave = async () => {
-    if (!form.title.trim()) return;
+    if (!form.type) return;
 
     setSaving(true);
     try {
@@ -685,7 +685,7 @@ export default function BlocksAdminPage() {
                   {/* 基本信息 */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      版块名称 *
+                      版块名称（选填）
                     </label>
                     <input
                       type="text"
@@ -872,7 +872,14 @@ export default function BlocksAdminPage() {
                             />
                           </div>
                         </div>
-                        <p className="text-xs text-gray-400">⚠️ 商品关联功能开发中，保存后前台将显示参与团购的商品</p>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">挂载商品（可选）</label>
+                          <ProductPicker
+                            value={(form.content as any)?.productIds || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">选中的商品将显示在团购卡片下方</p>
+                        </div>
                       </div>
                     )}
 
@@ -1501,7 +1508,7 @@ export default function BlocksAdminPage() {
                   </button>
                   <button
                     onClick={handleSave}
-                    disabled={saving || !form.title.trim()}
+                    disabled={saving || !form.type}
                     className="px-6 py-2.5 bg-primary text-white font-medium rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     {saving ? (
