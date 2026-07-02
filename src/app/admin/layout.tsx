@@ -90,6 +90,7 @@ const menuGroups = [
     { label: "销售服务", href: "/admin/sales" },
     { label: "销售图片", href: "/admin/sales-images" },
     { label: "内容日历", href: "/admin/content-calendar" },
+    { label: "营销活动", href: "/admin/promotions" },
     { label: "沙龙活动", href: "/admin/salon" },
     { label: "沙龙流程", href: "/admin/salon-events" },
     { label: "爆款样衣(设计)", href: "/admin/designer" },
