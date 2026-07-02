@@ -31,26 +31,32 @@ jobs:
       - name: Install miniprogram-ci
         run: npm install miniprogram-ci --save-dev
 
-      - name: Upload to WeChat
+      - name: Upload to WeChat (with debug)
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
         run: |
-          # 写入私钥文件（双引号heredoc展开变量）
-          printf '%s' "$WECHAT_KEY" > ./private.key
-          chmod 600 ./private.key
+          python3 -c "
+          import os
+          key = os.environ.get('WECHAT_KEY','')
+          with open('./private.key','w') as f:
+              f.write(key)
+          os.chmod('./private.key',0o600)
           
-          # 调试信息
-          echo "=== DEBUG ==="
-          echo "APPID=$WECHAT_APPID"
-          echo "Key lines=$(wc -l < ./private.key) size=$(wc -c < ./private.key)"
-          test -d ./dist && echo "Dist=OK" || echo "Dist=MISSING"
-          ls ./dist/ 2>/dev/null | head -5
-          head -1 ./private.key
-          tail -1 ./private.key
-          echo "=========="
+          print('=== DEBUG ===')
+          print(f'APPID={os.environ.get(\"WECHAT_APPID\",\"MISSING\")}')
+          print(f'Key len={len(key)} bytes')
+          print(f'Key starts with: {key[:30]}')
+          print(f'Key ends with: {key[-20:]}')
+          import os.path
+          print(f'Dist exists={os.path.isdir(\"./dist\")}')
+          if os.path.isdir('./dist'):
+              items = os.listdir('./dist')[:5]
+              print(f'Dist files: {items}')
+          print('==========')
+          "
 
-          node << 'NODEOF'
+          node -e '
           const ci = require("miniprogram-ci");
           const project = new ci.Project({
             appid: process.env.WECHAT_APPID,
@@ -65,9 +71,10 @@ jobs:
             desc: "auto v" + (process.env.GITHUB_RUN_NUMBER || "2"),
             setting: { es6:true, es7:true, enhance:true, compileHotReLoad:false, autoAudits:false },
             robot: 1
-          }).then(() => console.log("✅ OK"))
-            .catch(e => {
-              console.error("❌ FAIL:", JSON.stringify({msg:e.message, code:e.errCode||e.code, detail:e.errMsg}));
-              process.exit(1);
-            });
-          NODEOF
+          }).then(() => console.log("✅ 上传成功!"))
+          .catch(e => {
+            console.error("❌ 失败:", e.message || JSON.stringify(e));
+            if(e.errMsg) console.error("详情:", e.errMsg);
+            process.exit(1);
+          });
+          '
