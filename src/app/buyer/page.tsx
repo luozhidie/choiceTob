@@ -690,7 +690,7 @@ export default function BuyerPage() {
                   <div className="max-w-7xl mx-auto">
                     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: bg }}>
                       {content.imageUrl && (
-                        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-40 md:h-52 object-cover" />
+                        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-auto" />
                       )}
                       <div className="p-5 md:p-6">
                         {content.promoTitle && (
@@ -782,7 +782,7 @@ export default function BuyerPage() {
                   <div className="max-w-7xl mx-auto">
                     {content.mainImage && (
                       <a href={content.mainLink || "/buyer"} className="block w-full mb-3">
-                        <img src={content.mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm" />
+                        <img src={content.mainImage} alt="" className="w-full h-auto rounded-xl shadow-sm" />
                       </a>
                     )}
                     <div className={`grid gap-3 ${content.mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
@@ -898,7 +898,7 @@ export default function BuyerPage() {
                   <div className="max-w-7xl mx-auto">
                     <a href={content.link || "/buyer"} className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
                       {content.image ? (
-                        <img src={content.image} alt="" className="w-full h-auto max-h-[120px] object-cover" />
+                        <img src={content.image} alt="" className="w-full h-auto" />
                       ) : (
                         <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center">
                           {content.title && <span className="text-sm font-bold text-amber-700">{content.title}</span>}

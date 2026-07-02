@@ -211,7 +211,7 @@ function PromotionCard({ block, content, bgColor, textColor }: { block: any; con
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: bgColor }}>
       {content.imageUrl && (
-        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-40 md:h-52 object-cover" />
+        <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-auto" />
       )}
       <div className="p-5 md:p-6">
         {content.promoTitle && (
@@ -297,7 +297,7 @@ function FeaturedBannerBlock({ content }: { content: any }) {
       {/* 大图横幅 */}
       {mainImage && (
         <a href={mainLink} className="block w-full mb-3">
-          <img src={mainImage} alt="" className="w-full h-auto rounded-xl object-cover shadow-sm hover:shadow-md transition-shadow" />
+          <img src={mainImage} alt="" className="w-full h-auto rounded-xl shadow-sm hover:shadow-md transition-shadow" />
         </a>
       )}
       {/* 3张小图 */}
@@ -604,7 +604,7 @@ export default function Home() {
           <div className="max-w-7xl mx-auto">
             <a href={content.link || "/buyer"} className="group block rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow bg-white">
               {content.image ? (
-                <img src={content.image} alt="" className="w-full h-auto max-h-[120px] object-cover group-hover:scale-[1.02] transition-transform duration-300" />
+                <img src={content.image} alt="" className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-300" />
               ) : (
                 <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center">
                   {content.title && <span className="text-sm font-bold text-amber-700">{content.title}</span>}

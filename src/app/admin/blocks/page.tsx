@@ -217,6 +217,7 @@ function ProductPicker({ value, onChange }: { value: string; onChange: (val: str
 function BlockImageUpload({ value, onChange }: { value: string; onChange: (url: string) => void }) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const inputId = "block-img-upload-" + Math.random().toString(36).slice(2, 8);
 
   const doUpload = async (file: File) => {
     if (!file.type.startsWith("image/")) { alert("请选择图片文件"); return; }
@@ -249,34 +250,41 @@ function BlockImageUpload({ value, onChange }: { value: string; onChange: (url: 
       {/* 预览 */}
       {value && (
         <div className="mb-2 relative group">
-          <img src={value} alt="" className="w-full h-32 object-cover rounded-lg border border-gray-200" />
-          <button
-            type="button"
-            onClick={() => onChange("")}
-            className="absolute top-1 right-1 bg-black/50 text-white w-5 h-5 rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-          >×</button>
+          <img src={value} alt="" className="w-full h-auto rounded-lg border border-gray-200" />
+          <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={() => document.getElementById(inputId)?.click()}
+              className="bg-primary text-white w-6 h-6 rounded-full text-xs font-bold"
+              title="更换图片"
+            >✎</button>
+            <button
+              type="button"
+              onClick={() => onChange("")}
+              className="bg-black/50 text-white w-6 h-6 rounded-full text-xs"
+              title="删除"
+            >×</button>
+          </div>
         </div>
       )}
       {/* 上传区域 */}
-      {!value && (
-        <div
-          className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors ${dragOver ? "border-primary bg-primary/5" : "border-gray-300"}`}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) doUpload(f); }}
-          onClick={() => document.getElementById("block-img-upload")?.click()}
-        >
-          {uploading ? (
-            <div className="py-2"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
-          ) : (
-            <>
-              <p className="text-xs text-gray-500">点击或拖拽上传图片</p>
-              <p className="text-[10px] text-gray-400 mt-1">JPG/PNG/WEBP，≤5MB</p>
-            </>
-          )}
-          <input id="block-img-upload" type="file" accept="image/*" className="hidden" onChange={handleFile} />
-        </div>
-      )}
+      <div
+        className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-primary transition-colors ${dragOver ? "border-primary bg-primary/5" : "border-gray-300"} ${value ? "mt-2" : ""}`}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files[0]; if (f) doUpload(f); }}
+        onClick={() => document.getElementById(inputId)?.click()}
+      >
+        {uploading ? (
+          <div className="py-2"><Loader2 className="w-5 h-5 animate-spin mx-auto text-primary" /></div>
+        ) : (
+          <>
+            <p className="text-xs text-gray-500">{value ? "点击更换图片" : "点击或拖拽上传图片"}</p>
+            {!value && <p className="text-[10px] text-gray-400 mt-1">JPG/PNG/WEBP，≤5MB</p>}
+          </>
+        )}
+        <input id={inputId} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+      </div>
     </div>
   );
 }
