@@ -22,35 +22,39 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
-        run: npm install 2>&1 | tail -3
-
-      - name: Build
-        run: npx taro build --type weapp 2>&1 | tail -10
-
-      - name: Verify dist
+      - name: Install & Build
         run: |
-          echo "=== Checking dist ==="
-          test -f ./dist/app.json && echo "✅ app.json found" || echo "❌ no app.json"
-          ls ./dist/ | head -10
-          test -d ./dist || { echo "❌ NO DIST"; exit 1; }
+          npm install 2>&1 | tail -3
+          npx taro build --type weapp 2>&1 | tail -10
+          echo "BUILD_DONE"
+          ls ./dist/ | head -5 || echo "NO_DIST"
 
-      - name: Install ci
-        run: npm i miniprogram-ci@latest --save-dev 2>&1 | tail -3
-
-      - name: Write key
-        run: printf '%s' "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
-        env:
-          WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
-
-      - name: Upload
-        run: |
-          npx miniprogram-ci upload \
-            --pp ./dist \
-            --pkp ./private.key \
-            --appid $WECHAT_APPID \
-            -r 1 \
-            -v $(date +%Y.%m.%d) \
-            --desc "auto-deploy"
+      - name: Upload to WeChat
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
+          WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
+        run: |
+          npm i miniprogram-ci@latest 2>&1 | tail -2
+          
+          # 写入密钥
+          node -e "require('fs').writeFileSync('./private.key', process.env.WECHAT_KEY); require('fs').chmodSync('./private.key', 0o600)"
+          
+          # 执行上传（纯JS，不用heredoc）
+          node -e '
+          const ci = require("miniprogram-ci");
+          const p = new ci.Project({
+            appid: "'"$WECHAT_APPID"'"',
+            type: "miniProgram",
+            projectPath: "./dist",
+            ignoreDevFiles: true,
+            privateKeyPath: "./private.key"
+          });
+          console.log("Project created, uploading...");
+          ci.upload({
+            project: p,
+            version: "1.0." + (process.env.GITHUB_RUN_NUMBER||"3"),
+            desc: "auto v3",
+            setting: {es6:true, es7:true, enhance:true, compileHotReLoad:false, autoAudits:false},
+            robot: 1
+          }).then(()=>console.log("OK")).catch(e=>{console.error("FAIL:", e.message||e); process.exit(1)})
+          '
