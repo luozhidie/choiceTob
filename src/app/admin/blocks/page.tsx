@@ -824,6 +824,14 @@ export default function BlocksAdminPage() {
                           />
                           <label className="text-xs text-gray-500">列</label>
                         </div>
+                        {/* 版块宣传横幅图 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">版块宣传横幅（可选，显示在商品上方）</label>
+                          <BlockImageUpload
+                            value={(form.content as any)?.promoBanner || ""}
+                            onChange={(url) => setForm({ ...form, content: { ...(form.content as object || {}), promoBanner: url } as any })}
+                          />
+                        </div>
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">选择商品（可选）</label>
                           <ProductPicker
@@ -978,17 +986,65 @@ export default function BlocksAdminPage() {
                       </div>
                     )}
 
-                    {/* custom 自定义内容 */}
+                    {/* custom 自定义内容（富编辑器 + 挂商品） */}
                     {form.type === "custom" && (
                       <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        {/* 富文本工具栏 */}
+                        <div className="flex flex-wrap items-center gap-1 border border-gray-200 rounded-t-lg px-2 py-1.5 bg-white">
+                          {[
+                            { cmd: "bold", label: "B", title: "粗体" },
+                            { cmd: "italic", label: "I", title: "斜体" },
+                            { cmd: "underline", label: "U", title: "下划线" },
+                          ].map(btn => (
+                            <button key={btn.cmd} type="button" onClick={(e) => { e.preventDefault(); document.execCommand(btn.cmd, false, ""); }} title={btn.title} className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-sm font-bold" style={{ fontStyle: btn.cmd === "italic" ? "italic" : "normal", textDecoration: btn.cmd === "underline" ? "underline" : "none" }}>{btn.label}</button>
+                          ))}
+                          <span className="w-px h-5 bg-gray-200 mx-1"></span>
+                          <select onChange={(e) => document.execCommand("formatBlock", false, e.target.value)} className="h-7 text-xs border border-gray-200 rounded px-1">
+                            <option value="">正文</option>
+                            <option value="h2">标题H2</option>
+                            <option value="h3">标题H3</option>
+                          </select>
+                          <span className="w-px h-5 bg-gray-200 mx-1"></span>
+                          <label className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 cursor-pointer" title="插入图片">
+                            🖼️
+                            <input type="file" accept="image/*" className="hidden" onChange={async(e) => {
+                              const file = e.target.files?.[0]; if(!file)return;
+                              const fd = new FormData(); fd.append("file",file);
+                              const res = await fetch("/api/upload",{method:"POST",body:fd,credentials:"include"});
+                              const json=await res.json();
+                              if(json.success&&json.url){ document.execCommand("insertImage",false,json.url); }
+                              e.target.value="";
+                            }} />
+                          </label>
+                          <button type="button" onClick={() => {
+                            const url = prompt("输入视频URL：");
+                            if(url){
+                              const html = `<div style="position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:12px;margin:8px 0"><iframe src="${url}" style="position:absolute;top:0;left:0;width:100%;height:100%;border:0" allowfullscreen></iframe></div><p></p>`;
+                              document.execCommand("insertHTML", false, html);
+                            }
+                          }} title="插入视频(YouTube/Bilibili)" className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-sm">▶</button>
+                          <button type="button" onClick={() => {
+                            const url=prompt("输入链接URL:"),text=prompt("显示文字:");
+                            if(url)document.execCommand("createLink",false,url);
+                          }} title="插入链接" className="w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 text-sm">🔗</button>
+                        </div>
+                        {/* 编辑区 */}
+                        <div
+                          contentEditable
+                          suppressContentEditableWarning
+                          dangerouslySetInnerHTML={{ __html: (form.content as any)?.html || "<p>在此编辑内容，支持文字、图片、视频混排...</p>" }}
+                          onInput={(e) => setForm({ ...form, content: { ...(form.content as object || {}), html: (e.target as HTMLElement).innerHTML } as any })}
+                          className="w-full min-h-[160px] px-3 py-3 border-x border-b border-gray-200 rounded-b-lg text-sm focus:border-primary focus:outline-none bg-white prose max-w-none"
+                          style={{ minHeight: "160px" }}
+                        />
+                        {/* 挂载商品 */}
                         <div>
-                          <label className="block text-xs text-gray-500 mb-1">自定义内容（HTML）</label>
-                          <textarea
-                            value={(form.content as any)?.html || ""}
-                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), html: e.target.value } as any })}
-                            placeholder="<p>自定义 HTML 内容</p>"
-                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm font-mono focus:border-primary outline-none h-32 resize-y"
+                          <label className="block text-xs text-gray-500 mb-1">挂载商品（可选，显示在内容下方）</label>
+                          <ProductPicker
+                            value={(form.content as any)?.productIds || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
                           />
+                          <p className="text-[10px] text-gray-400 mt-1">选中的商品将以卡片形式展示在自定义内容下方</p>
                         </div>
                       </div>
                     )}

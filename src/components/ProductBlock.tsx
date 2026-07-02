@@ -131,6 +131,12 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
     <section style={{ backgroundColor: bg, padding: `${pad}px`, borderRadius: `${radius}px` }} className="w-full">
       <div className="max-w-7xl mx-auto">
         <h2 className="font-bold text-lg mb-4">{block.title}</h2>
+        {/* 版块宣传横幅 */}
+        {content.promoBanner && (
+          <div className="mb-4 rounded-xl overflow-hidden shadow-sm">
+            <img src={content.promoBanner} alt="" className="w-full h-auto" />
+          </div>
+        )}
         <div className={layout === "carousel" ? "flex gap-4 overflow-x-auto" : `grid ${gridCls} gap-4`}>
           {blockProducts.map((product: any) => (
             <Link key={product.id} href={`/shop/${product.id}`} className="group block min-w-[180px]">

@@ -324,6 +324,50 @@ function RecommendationBlock({ block, content, bg, textColor, pad, radius, colum
   );
 }
 
+/* ===== 自定义内容（富文本 + 挂载商品） ===== */
+function CustomContentBlock({ content }: { content: any }) {
+  const [customProducts, setCustomProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const ids = (content.productIds || "").trim();
+    if (!ids) { setCustomProducts([]); return; }
+    const idList = ids.split(",").map((s: string) => s.trim()).filter(Boolean);
+    if (idList.length === 0) { setCustomProducts([]); return; }
+    fetch(`/api/public/products?limit=${idList.length}`)
+      .then(r => r.json())
+      .then(json => { if (json.success && json.data) setCustomProducts(json.data.filter((p: any) => idList.includes(p.id))); })
+      .catch(() => {});
+  }, [content.productIds]);
+
+  return (
+    <div className="max-w-7xl mx-auto">
+      {content.html ? (
+        <div dangerouslySetInnerHTML={{ __html: content.html }} />
+      ) : (
+        <p className="text-sm text-gray-400 py-8 text-center">暂无内容</p>
+      )}
+      {/* 挂载商品 */}
+      {customProducts.length > 0 && (
+        <div className="mt-6 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {customProducts.map((p: any) => (
+            <Link key={p.id} href={`/shop/${p.id}`} className="group block">
+              <div className="rounded-xl overflow-hidden bg-gray-50 mb-2 aspect-[3/4] relative">
+                {p.image_url ? (
+                  <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
+                )}
+              </div>
+              <h4 className="font-medium text-[13px] line-clamp-2 group-hover:text-rose-500 transition-colors">{p.name}</h4>
+              <p className="text-red-500 font-bold mt-1 text-[14px]">{formatPrice(p.price)}</p>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ===== 精选横幅：大图 + 3小图 ===== */
 function FeaturedBannerBlock({ content }: { content: any }) {
   const mainImage = content.mainImage || "";
@@ -525,15 +569,9 @@ export default function Home() {
           </div>
         )}
 
-        {/* ===== custom 自定义HTML内容 ===== */}
+        {/* ===== custom 自定义内容（富文本+挂载商品） ===== */}
         {block.type === "custom" && (
-          <div className="max-w-7xl mx-auto">
-            {content.html ? (
-              <div dangerouslySetInnerHTML={{ __html: content.html }} />
-            ) : (
-              <p className="text-sm text-gray-400 py-8 text-center">暂无内容</p>
-            )}
-          </div>
+          <CustomContentBlock content={content} />
         )}
 
         {/* ===== recommendation 智能推荐 ===== */}
