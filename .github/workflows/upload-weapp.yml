@@ -23,85 +23,34 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install 2>&1 | tail -5
+        run: npm install 2>&1 | tail -3
 
-      - name: Build Taro Mini Program
-        id: build
+      - name: Build
+        run: npx taro build --type weapp 2>&1 | tail -10
+
+      - name: Verify dist
         run: |
-          echo "=== Before Build ==="
-          ls -la
-          echo "---"
-          npx taro build --type weapp 2>&1 || true
-          echo "=== After Build ==="
-          ls -la
-          if test -d ./dist; then
-            echo "DIST EXISTS:"
-            ls ./dist/ | head -10
-            echo "dist file count: $(find ./dist -type f | wc -l)"
-          else
-            echo "NO DIST DIR - checking alternatives..."
-            for d in weapp dist_weapp output; do
-              if test -d ./$d; then echo "FOUND: $d"; fi
-            done
-            find . -maxdepth 2 -name "app.json" 2>/dev/null
-          fi
+          echo "=== Checking dist ==="
+          test -f ./dist/app.json && echo "✅ app.json found" || echo "❌ no app.json"
+          ls ./dist/ | head -10
+          test -d ./dist || { echo "❌ NO DIST"; exit 1; }
 
-      - name: Install miniprogram-ci
-        run: npm install miniprogram-ci --save-dev
+      - name: Install ci
+        run: npm i miniprogram-ci@latest --save-dev 2>&1 | tail -3
 
-      - name: Upload to WeChat
+      - name: Write key
+        run: printf '%s' "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
+        env:
+          WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
+
+      - name: Upload
+        run: |
+          npx miniprogram-ci upload \
+            --pp ./dist \
+            --pkp ./private.key \
+            --appid $WECHAT_APPID \
+            -r 1 \
+            -v $(date +%Y.%m.%d) \
+            --desc "auto-deploy"
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
-          WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
-        run: |
-          python3 -c "
-          import os
-          key = os.environ.get('WECHAT_KEY','')
-          with open('./private.key','w') as f:
-              f.write(key)
-          os.chmod('./private.key',0o600)
-          print(f'Key len={len(key)}')
-          "
-
-          # 找到实际的 dist 目录
-          DIST="./dist"
-          if ! test -d "$DIST"; then
-            # 尝试其他可能的位置
-            for d in ./weapp ./dist_weapp; do
-              if test -d "$d" && test -f "$d/app.json"; then
-                DIST="$d"; break
-              fi
-            done
-          fi
-
-          if ! test -f "$DIST/app.json"; then
-            echo "❌ 找不到有效的编译输出目录！"
-            echo "当前目录内容:"
-            ls -laR . 2>/dev/null | head -50
-            exit 1
-          fi
-
-          echo "✅ 使用目录: $DIST"
-
-          node -e '
-          const ci = require("miniprogram-ci");
-          const project = new ci.Project({
-            appid: process.env.WECHAT_APPID,
-            type: "miniProgram",
-            projectPath: "'"$DIST"'"",
-            ignoreDevFiles: true,
-            privateKeyPath: "./private.key"
-          });
-          ci.upload({
-            project,
-            version: process.env.GITHUB_RUN_NUMBER || "1.0.3",
-            desc: "auto v" + (process.env.GITHUB_RUN_NUMBER || "3"),
-            setting: { es6:true, es7:true, enhance:true, compileHotReLoad:false, autoAudits:false },
-            robot: 1
-          }).then(() => console.log("✅ 上传成功!"))
-          .catch(e => {
-            console.error("❌ 失败:", e.message);
-            if(e.errMsg) console.error("详情:", e.errMsg);
-            process.exit(1);
-          });
-          '
