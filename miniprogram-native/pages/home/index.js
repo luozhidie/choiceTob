@@ -16,7 +16,6 @@ Page({
   },
 
   onLoad:function(){this.loadP();this.loadB();this.chkLogin();},
-
   onPullDownRefresh:function(){var t=this;this.loadP(function(){wx.stopPullDownRefresh();});},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
 
@@ -24,19 +23,101 @@ Page({
   togMenu:function(){this.setData({mo:!this.data.mo});},
   clsMenu:function(){this.setData({mo:false});},
   noop:function(){},
-  chkLogin:function(){var t=this;wx.getSetting({success:function(r){if(r.authSetting['scope.userInfo'])t.setData({li:true,un:'已登录'});}});},
-  doLogin:function(){var t=this;wx.getUserProfile({desc:'完善会员资料',success:function(r){t.setData({un:r.userInfo.nickName||'已登录',li:true,mo:false});wx.showToast({title:'登录成功',icon:'success'});},fail:function(){wx.showToast({title:'取消登录',icon:'none'});}});},
 
-  goVipPage:function(){this.setData({mo:false});wx.showToast({title:'VIP开发中',icon:'none'});},
+  /* 登录 */
+  chkLogin:function(){
+    var t=this;
+    var info=wx.getStorageSync('user_info');
+    if(info&&info.nickName){t.setData({li:true,un:info.nickName||'已登录'});}
+    else{t.setData({li:false,un:''});}
+  },
+  doLogin:function(){
+    var t=this;
+    wx.login({
+      success:function(lr){
+        if(!lr.code){wx.showToast({title:'登录失败',icon:'none'});return;}
+        wx.getUserProfile({
+          desc:'用于完善会员资料',
+          success:function(pr){
+            var ui={code:lr.code,nickName:pr.userInfo.nickName,avatarUrl:pr.userInfo.avatarUrl};
+            wx.setStorageSync('user_info',ui);
+            t.setData({un:ui.nickName||'已登录',li:true,mo:false});
+            wx.showToast({title:'登录成功',icon:'success'});
+          },
+          fail:function(){wx.showToast({title:'需要授权才能登录',icon:'none'});}
+        });
+      }
+    });
+  },
+
+  /* 导航跳转 */
+  goBuyer:function(e){
+    if(e&&e.currentTarget&&e.currentTarget.dataset.from==='menu')this.setData({mo:false});
+    wx.switchTab({url:'/pages/buyer/index'});
+  },
+  goCourses:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/courses/index'});},
+  goLooks:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/looks/index'});},
+  goVipPage:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/vip/index'});},
+  goMy:function(){this.setData({mo:false});wx.switchTab({url:'/pages/my/index'});},
+  goStyleTest:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/style-test/index'});},
+  goArticles:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/articles/index'});},
   goContact:function(){this.setData({mo:false});wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
 
-  loadB:function(){var t=this;wx.request({url:'https://colour-choice.art/api/public/banners',method:'GET',success:function(r){if(r.data&&Array.isArray(r.data.data)&&r.data.data.length>0)t.setData({banners:r.data.data});}});},
-  loadP:function(cb){var t=this;t.setData({ld:true});wx.request({url:'https://colour-choice.art/api/public/products?limit=20',method:'GET',success:function(r){var l=[];if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];else if(Array.isArray(r.data))l=r.data;l.forEach(function(p){var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;});t.setData({products:l,ld:false});},fail:function(){t.setData({ld:false});},complete:function(){if(cb)cb();}});},
+  /* 数据加载 */
+  loadB:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/banners',
+      method:'GET',
+      success:function(r){if(r.data&&Array.isArray(r.data.data)&&r.data.data.length>0)t.setData({banners:r.data.data});}
+    });
+  },
 
-  swCat:function(e){this.setData({ac:e.currentTarget.dataset.c});},
-  goBuyer:function(e){if(e&&e.currentTarget&&e.currentTarget.dataset.from==='menu')this.setData({mo:false});wx.switchTab({url:'/pages/buyer/index'});},
-  goCourses:function(){this.setData({mo:false});wx.showToast({title:'课程开发中',icon:'none'});},
-  goLooks:function(){this.setData({mo:false});wx.showToast({title:'搭配开发中',icon:'none'});},
-  goMy:function(){this.setData({mo:false});wx.switchTab({url:'/pages/my/index'});},
-  goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id,fail:function(){wx.showToast({title:'详情开发中',icon:'none'});}});}
+  loadP:function(cb){
+    var t=this;
+    t.setData({ld:true,products:[]});
+    var cat=t.data.ac==='全部'?'':t.data.ac;
+    var url='https://colour-choice.art/api/public/products?limit=20';
+    if(cat) url+='&category='+encodeURIComponent(cat);
+    wx.request({
+      url:url,
+      method:'GET',
+      success:function(r){
+        var l=[];
+        if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
+        else if(Array.isArray(r.data))l=r.data;
+        l.forEach(function(p){
+          var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
+          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+          p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;
+          /* 记录浏览历史 */
+          t.saveViewHistory(p);
+        });
+        t.setData({products:l,ld:false});
+      },
+      fail:function(){t.setData({ld:false});},
+      complete:function(){if(cb)cb();}
+    });
+  },
+
+  saveViewHistory:function(p){
+    if(!p.id)return;
+    var hists=wx.getStorageSync('view_history')||[];
+    var idx=hists.findIndex(function(h){return h.id===p.id;});
+    if(idx>=0)hists.splice(idx,1);
+    hists.unshift({id:p.id,name:p.name||p.title,image:p.image_url||p.cover_image,time:Date.now()});
+    if(hists.length>50)hists=hists.slice(0,50);
+    wx.setStorageSync('view_history',hists);
+  },
+
+  swCat:function(e){
+    var cat=e.currentTarget.dataset.c;
+    this.setData({ac:cat});
+    this.loadP();
+  },
+
+  goShop:function(e){
+    var id=e.currentTarget.dataset.id;
+    if(id)wx.navigateTo({url:'/pages/shop/index?id='+id,fail:function(){wx.showToast({title:'详情开发中',icon:'none'});}});
+  }
 });

@@ -19,7 +19,7 @@
 
   <!-- Tab 切换 -->
   <view class="tabs">
-    <view class="tab {{activeTab==='price'?'tab-on':''}}" bindtap="switchTab" data-tab="price">查看价会员</view>
+    <view class="tab {{activeTab==='price'?'tab-on':''}}" bindtap="switchTab" data-tab="price">价格会员</view>
     <view class="tab {{activeTab==='deposit'?'tab-on':''}}" bindtap="switchTab" data-tab="deposit">拿货会员</view>
   </view>
 

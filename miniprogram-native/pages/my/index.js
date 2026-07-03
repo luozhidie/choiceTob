@@ -1,68 +1,63 @@
 Page({
-  data: {
-    userInfo: {},
-    isVip: false
-  },
+  data:{userInfo:{},isVip:false,historyCount:0},
 
-  onShow: function() {
+  onShow:function(){
     this.checkLogin();
     this.checkVip();
+    this.countHistory();
   },
 
-  checkLogin: function() {
-    var that = this;
-    wx.getSetting({
-      success: function(res) {
-        if (res.authSetting['scope.userInfo']) {
-          // 已授权，获取用户信息
-          wx.getUserInfo({
-            success: function(userRes) {
-              that.setData({ userInfo: userRes.userInfo || {} });
-            }
-          });
-        } else {
-          that.setData({ userInfo: {} });
-        }
-      },
-      fail: function() {
-        that.setData({ userInfo: {} });
+  checkLogin:function(){
+    var t=this;
+    var ui=wx.getStorageSync('user_info');
+    if(ui&&ui.nickName){
+      t.setData({userInfo:ui});
+    }else{
+      t.setData({userInfo:{}});
+    }
+  },
+
+  checkVip:function(){
+    var vip=wx.getStorageSync('vip_status')==='active';
+    this.setData({isVip:vip});
+  },
+
+  countHistory:function(){
+    var hists=wx.getStorageSync('view_history')||[];
+    this.setData({historyCount:hists.length});
+  },
+
+  doLogin:function(){
+    var t=this;
+    wx.login({
+      success:function(lr){
+        if(!lr.code){wx.showToast({title:'登录失败',icon:'none'});return;}
+        wx.getUserProfile({
+          desc:'用于完善会员资料',
+          success:function(pr){
+            var ui={code:lr.code,nickName:pr.userInfo.nickName,avatarUrl:pr.userInfo.avatarUrl};
+            wx.setStorageSync('user_info',ui);
+            t.setData({userInfo:ui});
+            wx.showToast({title:'登录成功',icon:'success'});
+          },
+          fail:function(){wx.showToast({title:'需要授权才能登录',icon:'none'});}
+        });
       }
     });
   },
 
-  checkVip: function() {
-    var vip = wx.getStorageSync('vip_status') === 'active';
-    this.setData({ isVip: vip });
+  goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
+
+  goOrders:function(e){
+    var s=e.currentTarget.dataset.status||'all';
+    wx.navigateTo({url:'/pages/orders/index?status='+s});
   },
 
-  doLogin: function() {
-    var that = this;
-    wx.getUserProfile({
-      desc: '用于完善会员资料',
-      success: function(res) {
-        that.setData({ userInfo: res.userInfo });
-        wx.showToast({ title: '登录成功', icon: 'success' });
-        // TODO: 发送code到后端换取session
-      },
-      fail: function() {
-        wx.showToast({ title: '取消登录', icon: 'none' });
-      }
-    });
-  },
-
-  goVip: function() { wx.navigateTo({ url: '/pages/vip/index' }); },
-
-  goOrders: function(e) {
-    var status = e.currentTarget.dataset.status || 'all';
-    wx.navigateTo({
-      url: '/pages/orders/index?status=' + status,
-      fail: function() { wx.showToast({ title: '订单页开发中', icon: 'none' }); }
-    });
-  },
-
-  goFavorites: function() { wx.showToast({ title: '开发中', icon: 'none' }); },
-  goHistory: function() { wx.showToast({ title: '开发中', icon: 'none' }); },
-  goAddress: function() { wx.showToast({ title: '开发中', icon: 'none' }); },
-  goContact: function() { wx.showModal({ title: '客服', content: '微信：luozhidie\n工作时间 9:00-18:00', showCancel: false, confirmText: '知道了' }); },
-  goAbout: function() { wx.showModal({ title: '骆芷蝶智选', content: '版本 1.0.0\n服装门店一站式赋能平台', showCancel: false, confirmText: '知道了' }); }
-})
+  goFavorites:function(){wx.showToast({title:'收藏功能开发中',icon:'none'});},
+  goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},
+  goAddress:function(){wx.showToast({title:'地址管理开发中',icon:'none'});},
+  goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00\n邮箱：luozhidie@live.cn',showCancel:false,confirmText:'知道了'});},
+  goAbout:function(){wx.showModal({title:'骆芷蝶智选',content:'版本 1.1.0\n服装门店一站式赋能平台\n©2026 骆芷蝶智选',showCancel:false,confirmText:'知道了'});},
+  goArticles:function(){wx.navigateTo({url:'/pages/articles/index'});},
+  goStyleTest:function(){wx.navigateTo({url:'/pages/style-test/index'});},
+});

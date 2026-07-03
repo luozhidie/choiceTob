@@ -1,0 +1,30 @@
+page{background:#f8f6f3;min-height:100vh;}
+.hd{text-align:center;padding:40rpx 30rpx 20rpx;}
+.ht{font-size:42rpx;font-weight:bold;color:#1a1a2e;display:block;margin-bottom:10rpx;}
+.hs{font-size:26rpx;color:#888;display:block;}
+
+.q-card{margin:20rpx 24rpx;padding:36rpx 28rpx;background:#fff;border-radius:24rpx;box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);}
+.qn{font-size:26rpx;color:#e91e63;font-weight:bold;display:block;margin-bottom:16rpx;}
+.qt{font-size:32rpx;font-weight:600;color:#1a1a2e;display:block;margin-bottom:28rpx;line-height:1.5;}
+
+.opts{display:flex;flex-direction:column;gap:16rpx;margin-bottom:36rpx;}
+.opt{padding:24rpx 28rpx;border-radius:16rpx;border:2rpx solid #eee;font-size:28rpx;color:#333;background:#fafafa;transition:.2s;}
+.opt-on{border-color:#e91e63;color:#e91e63;background:#fce4ec;font-weight:600;}
+
+.btn-row{display:flex;gap:20rpx;}
+.btn-prev,.btn-next{flex:1;text-align:center;padding:22rpx 0;border-radius:14rpx;font-size:28rpx;font-weight:600;}
+.btn-prev{background:#f0f0f0;color:#666;}
+.btn-next{background:linear-gradient(135deg,#e91e63,#9c27b0);color:#fff;}
+.btn-dis{opacity:.4;}
+
+/* 结果 */
+.res{text-align:center;padding:60rpx 40rpx;}
+.ri{font-size:100rpx;display:block;margin-bottom:20rpx;}
+.rt{font-size:28rpx;color:#888;display:block;margin-bottom:12rpx;}
+.rname{font-size:44rpx;font-weight:bold;color:#e91e63;display:block;margin-bottom:16rpx;}
+.rdesc{font-size:28rpx;color:#555;display:block;margin-bottom:30rpx;line-height:1.5;}
+.rtips{margin-bottom:40rpx;}
+.rtip{display:inline-block;background:#fff0f5;color:#c2185b;font-size:24rpx;padding:8rpx 20rpx;border-radius:20rpx;margin:4rpx 6rpx;}
+
+.rb{background:linear-gradient(135deg,#e91e63,#9c27b0);color:#fff;padding:24rpx 60rpx;border-radius:40rpx;font-size:30rpx;font-weight:600;display:inline-block;margin:8rpx auto;}
+.rb2{background:#f0f0f0;color:#666;}

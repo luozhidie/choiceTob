@@ -1,0 +1,38 @@
+<view class="page">
+  <view class="hd">
+    <text class="ht">🎨 风格测试</text>
+    <text class="hs">3道题，测出你的穿搭风格</text>
+  </view>
+
+  <!-- 题目区 -->
+  <view class="q-card" wx:if="{{step<questions.length}}">
+    <text class="qn">Q{{step+1}} / {{questions.length}}</text>
+    <text class="qt">{{questions[step].q}}</text>
+    <view class="opts">
+      <view
+        wx:for="{{questions[step].options}}"
+        wx:key="*this"
+        class="opt {{answer[step]===item?'opt-on':''}}"
+        bindtap="pickOpt"
+        data-idx="{{index}}"
+      >{{item}}</view>
+    </view>
+    <view class="btn-row">
+      <view class="btn-prev" wx:if="{{step>0}}" bindtap="prevStep">上一题</view>
+      <view class="btn-next {{!answer[step]?'btn-dis':''}}" bindtap="nextStep">{{step===questions.length-1?'查看结果':'下一题'}}</view>
+    </view>
+  </view>
+
+  <!-- 结果区 -->
+  <view class="res" wx:else>
+    <text class="ri">🌟</text>
+    <text class="rt">你的穿搭风格</text>
+    <text class="rname">{{result.name}}</text>
+    <text class="rdesc">{{result.desc}}</text>
+    <view class="rtips">
+      <text wx:for="{{result.tips}}" wx:key="*this" class="rtip">{{item}}</text>
+    </view>
+    <view class="rb" bindtap="goBuyer">去选品看看 →</view>
+    <view class="rb rb2" bindtap="reTest">重新测试</view>
+  </view>
+</view>

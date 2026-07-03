@@ -10,7 +10,10 @@
     "pages/search/index",
     "pages/deposit/index",
     "pages/looks/index",
-    "pages/courses/index"
+    "pages/courses/index",
+    "pages/style-test/index",
+    "pages/articles/index",
+    "pages/history/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

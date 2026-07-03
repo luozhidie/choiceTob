@@ -1,0 +1,42 @@
+<view class="page">
+  <!-- 头 -->
+  <view class="hd">
+    <text class="ht">📰 时尚资讯</text>
+    <text class="hs">行业动态 · 流行趋势 · 选品灵感</text>
+  </view>
+
+  <!-- 分类Tab -->
+  <view class="tabs">
+    <view wx:for="{{cats}}" wx:key="*this"
+      class="tab {{activeCat===item?'tab-on':''}}"
+      bindtap="swCat"
+      data-c="{{item}}">{{item}}</view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="ld" wx:if="{{loading}}">
+    <view class="sp"></view>
+    <text>加载中...</text>
+  </view>
+
+  <!-- 文章列表 -->
+  <view class="list" wx:elif="{{articles.length>0}}">
+    <view class="card" wx:for="{{articles}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+      <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
+      <view class="cb">
+        <text class="ct">{{item.title||'文章标题'}}</text>
+        <text class="cd">{{item.summary||item.description||''}}</text>
+        <view class="cm">
+          <text class="cdate">{{item.published_at||item.created_at||''}}</text>
+          <text class="ctag" wx:if="{{item.category}}">{{item.category}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空 -->
+  <view class="emp" wx:else>
+    <text class="ei">📰</text>
+    <text class="et">暂无资讯</text>
+  </view>
+</view>

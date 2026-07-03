@@ -82,6 +82,7 @@
       <view class="menu-item" bindtap="goHistory">
         <view class="menu-icon-wrap menu-icon-hist"><text>📋</text></view>
         <text class="menu-text">浏览记录</text>
+        <text class="menu-count" wx:if="{{historyCount>0}}">{{historyCount}}</text>
         <text class="menu-arrow">›</text>
       </view>
       <view class="menu-item" bindtap="goAddress">
@@ -92,6 +93,16 @@
     </view>
 
     <view class="menu-group">
+      <view class="menu-item" bindtap="goArticles">
+        <view class="menu-icon-wrap menu-icon-fav"><text>📰</text></view>
+        <text class="menu-text">时尚资讯</text>
+        <text class="menu-arrow">›</text>
+      </view>
+      <view class="menu-item" bindtap="goStyleTest">
+        <view class="menu-icon-wrap menu-icon-hist"><text>🎨</text></view>
+        <text class="menu-text">风格测试</text>
+        <text class="menu-arrow">›</text>
+      </view>
       <view class="menu-item" bindtap="goContact">
         <view class="menu-icon-wrap menu-icon-contact"><text>💬</text></view>
         <text class="menu-text">联系客服</text>

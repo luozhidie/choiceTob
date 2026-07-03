@@ -65,8 +65,9 @@
         <view class="mi" bindtap="goCourses"><text>📚</text><text>线上课程</text></view>
         <view class="mi" bindtap="goLooks"><text>🎨</text><text>每日搭配</text></view>
         <view class="mi" bindtap="goVipPage"><text>👑</text><text>VIP会员中心</text></view>
+        <view class="mi" bindtap="goArticles"><text>📰</text><text>时尚资讯</text></view>
         <view class="mdv"></view>
-        <view class="mi" bindtap="goMy"><text>📋</text><text>风格测试</text></view>
+        <view class="mi" bindtap="goStyleTest"><text>📋</text><text>风格测试</text></view>
         <view class="mi" bindtap="goContact"><text>💬</text><text>联系我们</text></view>
       </scroll-view>
       <view class="mpf">
