@@ -2,10 +2,10 @@
   <!-- 空状态 -->
   <block wx:if="{{cartItems.length === 0 && !loading}}">
     <view class="empty-state">
-      <text class="empty-icon">&#x1f6d2;</text>
+      <text class="empty-icon">📦</text>
       <text class="empty-text">购物车空空如也</text>
       <view class="empty-btn" bindtap="goBuyer">
-        <text>去选品 &#x2192;</text>
+        <text>去选品 →</text>
       </view>
     </view>
   </block>
