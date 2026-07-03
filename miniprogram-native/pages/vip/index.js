@@ -46,7 +46,6 @@ Page({
     var plan = this.data.selectedPlan;
     if (!plan) return;
     wx.showLoading({ title: '正在调起支付...' });
-    // 调用后端创建支付订单
     wx.request({
       url: 'https://colour-choice.art/api/wechat-pay/unified-order',
       method: 'POST',
@@ -55,21 +54,33 @@ Page({
         product_title: plan.name,
         total_fee: plan.id.indexOf('price_') >= 0 ? (plan.id === 'price_trial' ? 1990 : 39900) : 5000000,
         quantity: 1,
-        platform: 'native',
+        platform: 'mini',
       },
       success: function (r) {
         wx.hideLoading();
-        if (r.data && r.data.code_url) {
-          // 微信内跳转
-          if (/MicroMessenger/i.test(navigator.userAgent)) {
-            window.location.href = r.data.code_url;
-          } else {
-            // 外部显示二维码
-            that.setData({ qrUrl: r.data.code_url });
-          }
-        } else {
-          wx.showToast({ title: '支付发起失败', icon: 'none' });
+        var d = r.data || {};
+        if (d.error) {
+          wx.showModal({ title: '下单失败', content: d.error, showCancel: false });
+          return;
         }
+        // 调起微信支付
+        var params = d.jsapi || d;
+        wx.requestPayment({
+          timeStamp: params.timestamp || params.timeStamp,
+          nonceStr: params.nonceStr,
+          package: params.package,
+          signType: params.signType || 'RSA',
+          paySign: params.paySign,
+          success: function () {
+            wx.showToast({ title: '支付成功', icon: 'success' });
+            that.setData({ showPay: false, selectedPlan: null });
+            // 刷新会员状态
+            that.chkLogin();
+          },
+          fail: function (err) {
+            wx.showToast({ title: '支付取消', icon: 'none' });
+          }
+        });
       },
       fail: function () {
         wx.hideLoading();

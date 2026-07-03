@@ -160,6 +160,7 @@ export default function AdminProductsPage() {
       images: [],
       price: "",
       original_price: "",
+      wholesale_price: "",
       category: "",
       subcategory: "",
       stock: "0",

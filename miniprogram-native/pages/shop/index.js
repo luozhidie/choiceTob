@@ -79,18 +79,99 @@ Page({
   },
 
   buyNow: function () {
+    var that = this;
     var p = this.data.product;
     if (!p) return;
-    // 直接跳转微信支付（调 order API）
-    wx.showToast({ title: '正在调起支付...', icon: 'loading', duration: 2000 });
-    // TODO: 调用微信支付统一下单接口
-    setTimeout(function () {
-      wx.showModal({
-        title: '功能开发中',
-        content: '支付功能正在对接，请联系客服下单\n微信：luozhidie',
-        showCancel: false,
-      });
-    }, 1500);
+    wx.showLoading({ title: "正在调起支付" });
+    wx.request({
+      url: "https://colour-choice.art/api/wechat-pay/unified-order",
+      method: "POST",
+      header: { "Content-Type": "application/json" },
+      data: {
+        product_id: p.id,
+        product_title: p.title || p.name,
+        total_fee: p.price,
+        quantity: that.data.quantity,
+        platform: "mini",
+      },
+      success: function (r) {
+        wx.hideLoading();
+        var d = r.data || {};
+        if (d.error) {
+          wx.showModal({ title: "下单失败", content: d.error, showCancel: false });
+          return;
+        }
+        var params = d.jsapi || d;
+        wx.requestPayment({
+          timeStamp: params.timestamp || params.timeStamp,
+          nonceStr: params.nonceStr,
+          package: params.package,
+          signType: params.signType || "RSA",
+          paySign: params.paySign,
+          success: function () {
+            wx.showToast({ title: "支付成功", icon: "success" });
+            setTimeout(function () { wx.navigateBack(); }, 1500);
+          },
+          fail: function (err) {
+            wx.showToast({ title: "支付取消", icon: "none" });
+          }
+        });
+      },
+      fail: function () {
+        wx.hideLoading();
+        wx.showToast({ title: "网络错误", icon: "none" });
+      }
+    });
+  },
+      data: {
+        product_id: p.id,
+        product_title: p.title || p.name,
+        total_fee: p.price,
+        quantity: that.data.quantity,
+      },
+      success: function (r) {
+        wx.hideLoading();
+        if (r.data && r.data.order_no) {
+          // 2. 调用微信支付
+          var orderNo = r.data.order_no;
+          wx.requestPayment({
+            timeStamp: r.data.timeStamp,
+            nonceStr: r.data.nonceStr,
+            package: r.data.package,
+            signType: r.data.signType,
+            paySign: r.data.paySign,
+            success: function () {
+              wx.showToast({ title: '支付成功', icon: 'success' });
+              setTimeout(function () { wx.navigateBack(); }, 1500);
+            },
+            fail: function (err) {
+              wx.showToast({ title: '支付取消', icon: 'none' });
+            }
+          });
+        } else {
+          // 降级：显示收款二维码
+          that.showQrCode(r.data && r.data.code_url);
+        }
+      },
+      fail: function () {
+        wx.hideLoading();
+        wx.showToast({ title: '下单失败', icon: 'none' });
+      }
+    });
+  },
+
+  showQrCode: function (codeUrl) {
+    if (!codeUrl) {
+      wx.showModal({ title: '支付指南', content: '请在电脑端访问 colour-choice.art 完成支付\n或联系客服：luozhidie', showCancel: false });
+      return;
+    }
+    // 复制链接让用户用微信扫
+    wx.setClipboardData({
+      data: codeUrl,
+      success: function () {
+        wx.showModal({ title: '已复制支付链接', content: '请在微信中打开此链接完成支付\n或截图二维码给客服', showCancel: false });
+      }
+    });
   },
 
   goCart: function () {
