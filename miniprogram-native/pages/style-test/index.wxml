@@ -8,57 +8,74 @@
   <!-- 表单 -->
   <scroll-view scroll-y class="form-scroll">
     <view class="form">
-      <!-- 1. 姓名 -->
+      <!-- 1-4 填空题 -->
       <view class="q"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{form.name}}" bindinput="onName"/></view>
-
-      <!-- 2. 微信号 -->
       <view class="q"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{form.wechat}}" bindinput="onWechat"/></view>
-
-      <!-- 3. 年龄 -->
       <view class="q"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{form.age}}" bindinput="onAge"/></view>
-
-      <!-- 4. 视频课学员群 -->
       <view class="q"><text class="ql">4. 是否视频课学员，你在几号社群，微信名？（优先连）<text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{form.group}}" bindinput="onGroup"/></view>
 
-      <!-- 5. 看上去比同龄人？ -->
+      <!-- 5. 看起来年龄感 -->
       <view class="q"><text class="ql">5. 看上去会比同龄人（）？<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{['显老','差不多','显年轻']}}" wx:key="*this" class="opt {{form.q5===item?'opt-on':''}}" bindtap="pickQ5" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optAgeLook}}" wx:key="*this" class="opt {{form.q5===item?'opt-on':''}}" bindtap="pickQ5" data-v="{{item}}">{{item}}</view>
+      </view>
 
-      <!-- 6. 身高对比 -->
+      <!-- 6. 身高 -->
       <view class="q"><text class="ql">6. 身高：<text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{form.height}}" bindinput="onHeight"/></view>
 
-      <!-- 7. 身高视觉 vs 实际 -->
+      <!-- 7. 身高视觉 -->
       <view class="q"><text class="ql">7. 你看起来的身高和实际身高相比会：<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{['A. 显高','B. 显矮','C. 正常']}}" wx:key="*this" class="opt {{form.q7===item?'opt-on':''}}" bindtap="pickQ7" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optHeightVisual}}" wx:key="*this" class="opt {{form.q7===item?'opt-on':''}}" bindtap="pickQ7" data-v="{{item}}">{{item}}</view>
+      </view>
 
-      <!-- 8-17 题目简化版（关键题） -->
+      <!-- 8. 体型 -->
       <view class="q"><text class="ql">8. 你的体型偏：<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{'偏瘦|标准|偏胖|丰满'.split('|')}}" wx:key="*this" class="opt {{form.q8===item?'opt-on':''}}" bindtap="pickQ8" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optBodyType}}" wx:key="*this" class="opt {{form.q8===item?'opt-on':''}}" bindtap="pickQ8" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 9. 脸型 -->
       <view class="q"><text class="ql">9. 脸型偏向：</text></view>
-      <view class="opts"><view wx:for="'圆脸|方脸|鹅蛋脸|长脸|瓜子脸'.split('|')" wx:key="*this" class="opt {{form.q9===item?'opt-on':''}}" bindtap="pickQ9" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optFaceType}}" wx:key="*this" class="opt {{form.q9===item?'opt-on':''}}" bindtap="pickQ9" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 10. 肤色 -->
       <view class="q"><text class="ql">10. 肤色倾向：</text></view>
-      <view class="opts"><view wx:for="'白皙|自然黄|小麦色|暗沉'.split('|')" wx:key="*this" class="opt {{form.q10===item?'opt-on':''}}" bindtap="pickQ10" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optSkinColor}}" wx:key="*this" class="opt {{form.q10===item?'opt-on':''}}" bindtap="pickQ10" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 11. 发育 -->
       <view class="q"><text class="ql">11. 青春期发育（前凸后翘）相比同龄人：<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{'会早些|正常发育|较晚'}}" wx:key="*this" class="opt {{form.q11===item?'opt-on':''}}" bindtap="pickQ11" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optDevlop}}" wx:key="*this" class="opt {{form.q11===item?'opt-on':''}}" bindtap="pickQ11" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 12. 洗脸后皮肤 -->
       <view class="q"><text class="ql">12. 洗完脸后皮肤会不会白一些，过一段时间又恢复：<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{'会|不会'}}" wx:key="*this" class="opt {{form.q12===item?'opt-on':''}}" bindtap="pickQ12" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optSkinAfterWash}}" wx:key="*this" class="opt {{form.q12===item?'opt-on':''}}" bindtap="pickQ12" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 13. 脸红 -->
       <view class="q"><text class="ql">13. 平时会不会容易脸红（不包括运动、害羞、喝酒）：<text class="req">*</text></text></view>
-      <view class="opts"><view wx:for="{{'容易|不容易'}}" wx:key="*this" class="opt {{form.q13===item?'opt-on':''}}" bindtap="pickQ13" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optBlush}}" wx:key="*this" class="opt {{form.q13===item?'opt-on':''}}" bindtap="pickQ13" data-v="{{item}}">{{item}}</view>
+      </view>
 
+      <!-- 14. 风格偏好 -->
       <view class="q"><text class="ql">14. 你平时穿衣风格偏好：</text></view>
-      <view class="opts"><view wx:for="'简约中性|甜美可爱|知性优雅|时尚前卫|运动休闲|复古文艺'.split('|')" wx:key="*this" class="opt {{form.q14===item?'opt-on':''}}" bindtap="pickQ14" data-v="{{item}}">{{item}}</view></view>
+      <view class="opts">
+        <view wx:for="{{optStylePref}}" wx:key="*this" class="opt {{form.q14===item?'opt-on':''}}" bindtap="pickQ14" data-v="{{item}}">{{item}}</view>
+      </view>
 
-      <!-- 提交按钮 -->
+      <!-- 提交 -->
       <view class="submit-btn {{canSubmit?'sb-ok':'sb-dis'}}" bindtap="submitQuiz"><text>⊙ 提交</text></view>
     </view>
   </scroll-view>
 
-  <!-- 提示 -->
   <view class="tip"><text>所有信息仅用于色彩风格诊断，严格保密</text></view>
 
   <!-- 底部测试卡 -->

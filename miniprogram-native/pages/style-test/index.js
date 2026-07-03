@@ -2,12 +2,20 @@ Page({
   data:{
     form:{
       name:'',wechat:'',age:'',group:'',
-      q5:'',q7:'',q8:'',q9:'',q10:'',q11:'',q12:'',q13:'',q14:''
+      q5:'',q7:'',q8:'',q9:'',q10:'',q11:'',q12:'',q13:'',q14:'',height:''
     },
     canSubmit:false,
+    optAgeLook:['显老','差不多','显年轻'],
+    optHeightVisual:['A. 显高','B. 显矮','C. 正常'],
+    optBodyType:['偏瘦','标准','偏胖','丰满'],
+    optFaceType:['圆脸','方脸','鹅蛋脸','长脸','瓜子脸'],
+    optSkinColor:['白皙','自然黄','小麦色','暗沉'],
+    optDevlop:['会早些','正常发育','较晚'],
+    optSkinAfterWash:['会','不会'],
+    optBlush:['容易','不容易'],
+    optStylePref:['简约中性','甜美可爱','知性优雅','时尚前卫','运动休闲','复古文艺'],
   },
 
-  /* 输入 */
   onName:function(e){this.setF('name',e.detail.value);},
   onWechat:function(e){this.setF('wechat',e.detail.value);},
   onAge:function(e){this.setF('age',e.detail.value);},
@@ -43,20 +51,17 @@ Page({
     var t=this;
     setTimeout(function(){
       wx.hideLoading();
-      wx.showModal({
-        title:'提交成功',
-        content:'我们将在24小时内通过微信（'+t.data.form.wechat+'）发送你的色彩风格诊断结果\n\n感谢参与！',
-        showCancel:false,
-        confirmText:'知道了',
-        success:function(){
-          /* 清空表单 */
-          t.setData({
-            form:{name:'',wechat:'',age:'',group:'',q5:'',q7:'',q8:'',q9:'',q10:'',q11:'',q12:'',q13:'',q14:'',height:''},
-            canSubmit:false
-          });
-        }
+      wx.showModal({title:'提交成功',content:'我们将在24小时内通过微信（'+t.data.form.wechat+'）发送你的色彩风格诊断结果\n\n感谢参与！',showCancel:false,confirmText:'知道了',
+        success:function(){t.resetForm();}
       });
     },800);
+  },
+
+  resetForm:function(){
+    this.setData({
+      form:{name:'',wechat:'',age:'',group:'',q5:'',q7:'',q8:'',q9:'',q10:'',q11:'',q12:'',q13:'',q14:'',height:''},
+      canSubmit:false
+    });
   },
 
   goTestFem:function(){wx.showToast({title:'女士风格测试 ¥99 开发中',icon:'none'});},
