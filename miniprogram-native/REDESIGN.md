@@ -71,3 +71,5 @@ miniprogram-native/
 - [ ] 订单列表/详情页
 - [ ] 收货地址管理
 - [ ] 课程页/每日搭配页
+- [ ] 图片裁剪修复 (object-cover → h-auto, 2026-07)
+- [ ] 首页布局重构: 顶栏导航 + 汉堡菜单 + 分类标签移入Banner (commit 341cc718)
