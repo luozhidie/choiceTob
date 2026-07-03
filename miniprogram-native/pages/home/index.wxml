@@ -1,171 +1,145 @@
 <view class="page">
-  <!-- 全屏Hero Banner -->
-  <view class="hero-fullscreen">
-    <!-- 轮播 -->
-    <swiper class="hero-swiper" autoplay circular indicator-dots="{{false}}" interval="5000" duration="600" bindchange="onBannerChange">
+  <!-- ===== 顶部导航栏 ===== -->
+  <view class="nav-bar">
+    <view class="brand">
+      <text class="brand-icon">骆</text>
+      <view class="brand-texts">
+        <text class="brand-name">骆芷蝶智选</text>
+        <text class="brand-sub">CHOICETOB</text>
+      </view>
+    </view>
+    <!-- 汉堡菜单 -->
+    <view class="hamburger {{menuOpen ? 'open' : ''}}" bindtap="toggleMenu">
+      <view class="bar"></view>
+      <view class="bar"></view>
+      <view class="bar"></view>
+    </view>
+  </view>
+
+  <!-- ===== 分类标签（屏幕最上方，导航栏下方）===== -->
+  <scroll-view scroll-x class="top-tags-scroll" show-scrollbar="{{false}}">
+    <view class="tag-row-top">
+      <view wx:for="{{categories}}" wx:key="*this"
+        class="tag-item-top {{activeCategory === item ? 'tag-active' : ''}}"
+        bindtap="switchCategory" data-cat="{{item}}">
+        {{item}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- ===== 搜索栏 ===== -->
+  <view class="search-wrap">
+    <view class="search-bar" bindtap="goBuyer">
+      <text class="search-icon">🔍</text>
+      <text class="search-placeholder">搜索商品名称、描述...</text>
+      <view class="search-btn">浏览选品 →</view>
+    </view>
+  </view>
+
+  <!-- ===== 全屏大图Banner（搜索栏下方填满剩余空间） ===== -->
+  <view class="banner-area">
+    <swiper class="banner-swiper" autoplay circular indicator-dots="{{false}}" interval="5000" duration="600" bindchange="onBannerChange">
       <swiper-item wx:for="{{banners}}" wx:key="id">
-        <image class="hero-img" src="{{item.image}}" mode="aspectFill" />
+        <image class="banner-img" src="{{item.image}}" mode="aspectFill" />
       </swiper-item>
       <swiper-item wx:if="{{banners.length === 0}}">
-        <view class="hero-placeholder"></view>
+        <view class="banner-placeholder"></view>
       </swiper-item>
     </swiper>
 
-    <!-- 指示点(自定义位置) -->
+    <!-- 自定义指示点 -->
     <view class="dots-wrap" wx:if="{{banners.length > 1}}">
       <view wx:for="{{banners}}" wx:key="*this"
-        class="dot {{currentBanner === index ? 'dot-active' : ''}}">
-      </view>
+        class="dot {{currentBanner === index ? 'dot-active' : ''}}"></view>
     </view>
 
-    <!-- ===== 右上角汉堡菜单按钮 ===== -->
-    <!-- 导航栏区域 -->
-    <view class="nav-bar">
-      <view class="brand">
-        <text class="brand-icon">骆</text>
-        <view class="brand-texts">
-          <text class="brand-name">骆芷蝶智选</text>
-          <text class="brand-sub">CHOICETOB</text>
-        </view>
-      </view>
-      <!-- 汉堡按钮 -->
-      <view class="hamburger {{menuOpen ? 'open' : ''}}" bindtap="toggleMenu">
-        <view class="bar"></view>
-        <view class="bar"></view>
-        <view class="bar"></view>
-      </view>
+    <!-- 文字覆盖层（在图片上） -->
+    <view class="banner-overlay">
+      <view class="badge-pill">数据驱动 · 智选未来</view>
+      <text class="overlay-title">骆芷蝶供应链<text class="title-accent">智选</text>平台</text>
+      <text class="overlay-sub">服装门店一站式赋能平台</text>
     </view>
 
-    <!-- ===== 内容区(叠加在图片上) ===== -->
-    <view class="hero-content">
-
-      <!-- 标题文字区 -->
-      <view class="hero-text-block">
-        <view class="hero-badge">数据驱动 · 智选未来</view>
-        <text class="hero-title">骆芷蝶供应链<text class="hero-accent">智选</text>平台</text>
-        <text class="hero-subtitle">服装门店一站式赋能平台</text>
-      </view>
-
-      <!-- 搜索栏 -->
-      <view class="search-bar" bindtap="goBuyer">
-        <text class="search-icon">🔍</text>
-        <text class="search-placeholder">搜索商品名称、描述...</text>
-        <view class="search-btn">浏览选品 →</view>
-      </view>
-
-      <!-- 分类标签（在图片底部） -->
-      <scroll-view scroll-x class="tag-scroll" show-scrollbar="{{false}}">
-        <view class="tag-row">
-          <view wx:for="{{categories}}" wx:key="*this"
-            class="tag-item {{activeCategory === item ? 'tag-active' : ''}}"
-            bindtap="switchCategory" data-cat="{{item}}">
-            {{item}}
-          </view>
-        </view>
-      </scroll-view>
-    </view>
-
-    <!-- 底部渐变遮罩（让标签更清晰） -->
-    <view class="bottom-fade"></view>
+    <!-- 底部渐变（衔接商品区） -->
+    <view class="banner-bottom-fade"></view>
   </view>
 
-  <!-- ===== 汉堡菜单展开面板(覆盖层) ===== -->
-  <view class="menu-overlay {{menuOpen ? 'show' : ''}}" bindtap="closeMenu">
-    <view class="menu-panel {{menuOpen ? 'slide-in' : ''}}" catchtap="preventClose">
-      <view class="menu-header-row">
-        <text class="menu-brand">骆芷蝶智选</text>
-        <view class="menu-close" bindtap="closeMenu"><text>✕</text></view>
+  <!-- ===== 汉堡菜单面板 ===== -->
+  <view class="menu-mask {{menuOpen ? 'show' : ''}}" bindtap="closeMenu">
+    <view class="menu-panel {{menuOpen ? 'in' : ''}}" catchtap="stopProp">
+      <view class="panel-head">
+        <text class="panel-brand">骆芷蝶智选</text>
+        <view class="panel-close" bindtap="closeMenu"><text>✕</text></view>
       </view>
-
-      <view class="menu-list">
-        <view class="menu-link" bindtap="goBuyer" data-from="menu">
-          <text class="menu-emoji">🛍</text><text>买手选品</text>
-        </view>
-        <view class="menu-link" bindtap="goCourses" data-from="menu">
-          <text class="menu-emoji">📚</text><text>线上课程</text>
-        </view>
-        <view class="menu-link" bindtap="goLooks" data-from="menu">
-          <text class="menu-emoji">🎨</text><text>每日搭配</text>
-        </view>
-        <view class="menu-link" bindtap="goVip" data-from="menu">
-          <text class="menu-emoji">👑</text><text>VIP会员中心</text>
-        </view>
-        <view class="menu-divider"></view>
-        <view class="menu-link" bindtap="goMy">
-          <text class="menu-emoji">📋</text><text>风格测试</text>
-        </view>
-        <view class="menu-link" bindtap="goContact">
-          <text class="menu-emoji">💬</text><text>联系我们</text>
-        </view>
-      </view>
-
-      <view class="menu-footer">
-        <text class="menu-user">{{userInfoName || '未登录'}}</text>
-        <view class="menu-login-btn" bindtap="doLogin" wx:if="{{!isLoggedIn}}">微信登录</view>
+      <scroll-view scroll-y class="panel-body">
+        <view class="m-link" bindtap="goBuyer"><text class="m-e">🛍</text><text>买手选品</text></view>
+        <view class="m-link" bindtap="goCourses"><text class="m-e">📚</text><text>线上课程</text></view>
+        <view class="m-link" bindtap="goLooks"><text class="m-e">🎨</text><text>每日搭配</text></view>
+        <view class="m-link" bindtap="goVipPage"><text class="m-e">👑</text><text>VIP会员中心</text></view>
+        <view class="m-line"></view>
+        <view class="m-link" bindtap="goMy"><text class="m-e">📋</text><text>风格测试</text></view>
+        <view class="m-link" bindtap="goContact"><text class="m-e">💬</text><text>联系我们</text></view>
+      </scroll-view>
+      <view class="panel-foot">
+        <text class="p-user">{{userName || '未登录'}}</text>
+        <view class="p-login" wx:if="{{!loggedIn}}" bindtap="doLogin"><text>微信登录</text></view>
       </view>
     </view>
   </view>
 
   <!-- ===== 商品列表区 ===== -->
   <view class="product-section">
-    <view class="section-header">
-      <text class="section-title">{{activeCategory === '全部' ? '穿搭' : activeCategory}} · 精选</text>
-      <text class="section-count">({{products.length}}件)</text>
-      <view class="clear-filter" wx:if="{{activeCategory !== '全部'}}" bindtap="switchCategory" data-cat="全部">
-        <text>✕ 清除筛选</text>
-      </view>
+    <view class="sec-head">
+      <text class="sec-title">{{activeCategory === '全部' ? '穿搭' : activeCategory}} · 精选</text>
+      <text class="sec-count">({{products.length}}件)</text>
+      <view class="sec-clear" wx:if="{{activeCategory !== '全部'}}" bindtap="switchCategory" data-cat="全部"><text>✕ 清除筛选</text></view>
     </view>
 
-    <!-- 骨架屏 -->
     <block wx:if="{{loading}}">
-      <view class="product-grid">
-        <view class="skeleton-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
-          <view class="skeleton-img"></view>
-          <view class="skeleton-line skeleton-line-long"></view>
-          <view class="skeleton-line skeleton-line-short"></view>
+      <view class="grid">
+        <view class="sk-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+          <view class="sk-img"></view><view class="sk-l1"></view><view class="sk-l2"></view>
         </view>
       </view>
     </block>
 
-    <!-- 空状态 -->
     <block wx:elif="{{products.length === 0}}">
-      <view class="empty-state">
+      <view class="empty-box">
         <text class="empty-icon">📦</text>
-        <text class="empty-text">暂无选品</text>
+        <text class="empty-txt">暂无选品</text>
         <view class="empty-btn" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
       </view>
     </block>
 
-    <!-- 商品网格 -->
     <block wx:else>
-      <view class="product-grid">
-        <view class="product-card" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-          <view class="card-img-wrap">
-            <image wx:if="{{item.image_url || item.cover_image}}" src="{{item.image_url || item.cover_image}}" mode="aspectFill" class="card-img" lazy-load />
-            <view wx:else class="card-img-placeholder"><text class="placeholder-text">暂无图片</text></view>
-            <view wx:if="{{item.is_hot}}" class="badge-hot">HOT</view>
-            <view wx:if="{{item.is_new}}" class="badge-new">NEW</view>
+      <view class="grid">
+        <view class="card" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+          <view class="c-img-w">
+            <image wx:if="{{item.image_url || item.cover_image}}" src="{{item.image_url || item.cover_image}}" mode="aspectFill" class="c-img" lazy-load />
+            <view wx:else class="c-img-ph"><text class="ph-t">暂无图片</text></view>
+            <view wx:if="{{item.is_hot}}" class="bd-hot">HOT</view>
+            <view wx:if="{{item.is_new}}" class="bd-new">NEW</view>
           </view>
-          <view class="card-info">
-            <text class="card-name">{{item.name || item.title || '商品'}}</text>
-            <text class="card-price">{{item.priceText}}</text>
-            <view class="card-btn">下单</view>
+          <view class="c-info">
+            <text class="c-name">{{item.name || item.title || '商品'}}</text>
+            <text class="c-price">{{item.priceText}}</text>
+            <view class="c-btn">下单</view>
           </view>
         </view>
       </view>
     </block>
   </view>
 
-  <!-- 底部大图CTA -->
-  <view class="bottom-banner-wrap">
-    <view class="bottom-banner">
-      <view class="bottom-bg"></view>
-      <view class="bottom-content">
-        <text class="cta-title">爆款选品 · 拿货精选</text>
-        <text class="cta-subtitle">骆芷蝶智选 · 专业推荐</text>
-        <view class="cta-btns">
-          <view class="cta-btn cta-primary" bindtap="goBuyer"><text>全部商品</text></view>
-          <view class="cta-btn cta-outline" bindtap="goBuyer"><text>爆款安利 →</text></view>
+  <!-- 底部CTA大图 -->
+  <view class="cta-area">
+    <view class="cta-box">
+      <view class="cta-bg"></view>
+      <view class="cta-inner">
+        <text class="cta-t">爆款选品 · 拿货精选</text>
+        <text class="cta-s">骆芷蝶智选 · 专业推荐</text>
+        <view class="cta-row">
+          <view class="cta-b cta-b1" bindtap="goBuyer"><text>全部商品</text></view>
+          <view class="cta-b cta-b2" bindtap="goBuyer"><text>爆款安利 →</text></view>
         </view>
       </view>
     </view>
