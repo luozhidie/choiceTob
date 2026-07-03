@@ -20,13 +20,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '18'
 
       - name: Install miniprogram-ci
         run: |
-          cd /tmp
-          npm init -y 2>/dev/null
-          npm install miniprogram-ci --save 2>&1
+          cd "$GITHUB_WORKSPACE"
+          npm install miniprogram-ci --save-dev 2>&1
 
       - name: Prepare dist from native code
         run: |
@@ -44,8 +43,8 @@ jobs:
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
         run: |
           set -e
-          cat > /tmp/upload-native.js << 'UPLOADSCRIPT'
-          const ci = require('/tmp/node_modules/miniprogram-ci');
+          cat > upload-native.js << 'UPLOADSCRIPT'
+          const ci = require('./node_modules/miniprogram-ci');
           const fs = require('fs');
           const path = require('path');
 
@@ -90,4 +89,4 @@ jobs:
           UPLOADSCRIPT
 
           echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
-          node /tmp/upload-native.js
+          node upload-native.js
