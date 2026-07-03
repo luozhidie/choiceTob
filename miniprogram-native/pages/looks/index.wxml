@@ -1,0 +1,40 @@
+<view class="page">
+  <!-- Hero -->
+  <view class="hero">
+    <view class="h-inner">
+      <text class="h-icon">🎨</text>
+      <text class="h-title">每日搭配灵感</text>
+      <text class="h-desc">买手团队每日精选，3-5套专业搭配方案</text>
+    </view>
+  </view>
+
+  <!-- 会员提示 -->
+  <view class="vip-tip" wx:if="{{!isVip}}">
+    <text class="vt-text">开通搭配灵感会员，每日解锁新搭配</text>
+    <view class="vt-btn" bindtap="goVip">去开通</view>
+  </view>
+
+  <!-- 搭配列表 -->
+  <view class="list" wx:if="{{looks.length>0}}">
+    <view class="look-card" wx:for="{{looks}}" wx:key="id">
+      <view class="lc-images">
+        <image src="{{item.image1}}" mode="aspectFill" class="lc-img" wx:if="{{item.image1}}" />
+        <image src="{{item.image2}}" mode="aspectFill" class="lc-img" wx:if="{{item.image2}}" />
+      </view>
+      <view class="lc-info">
+        <text class="lc-title">{{item.title}}</text>
+        <text class="lc-desc">{{item.description}}</text>
+        <view class="lc-tags">
+          <text class="lc-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && looks.length===0}}">
+    <text class="ec">🎨</text>
+    <text class="et">暂无搭配</text>
+    <view class="eb" bindtap="goVip">开通会员查看</view>
+  </view>
+</view>

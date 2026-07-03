@@ -7,7 +7,10 @@
     "pages/shop/index",
     "pages/vip/index",
     "pages/orders/index",
-    "pages/search/index"
+    "pages/search/index",
+    "pages/deposit/index",
+    "pages/looks/index",
+    "pages/courses/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

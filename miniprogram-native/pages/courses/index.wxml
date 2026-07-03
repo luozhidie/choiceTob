@@ -1,0 +1,34 @@
+<view class="page">
+  <!-- 分类 -->
+  <view class="tabs">
+    <view class="tab {{activeCat==='all'?'on':''}}" bindtap="switchCat" data-cat="all">全部</view>
+    <view class="tab {{activeCat==='video'?'on':''}}" bindtap="switchCat" data-cat="video">视频课</view>
+    <view class="tab {{activeCat==='live'?'on':''}}" bindtap="switchCat" data-cat="live">直播回放</view>
+  </view>
+
+  <!-- 课程列表 -->
+  <view class="list" wx:if="{{courses.length>0}}">
+    <view class="course-card" wx:for="{{courses}}" wx:key="id" bindtap="playCourse" data-id="{{item.id}}">
+      <view class="cc-cover">
+        <image src="{{item.cover}}" mode="aspectFill" class="cc-img" />
+        <view class="cc-duration">{{item.duration}}</view>
+        <view class="cc-play">▶</view>
+      </view>
+      <view class="cc-info">
+        <text class="cc-title">{{item.title}}</text>
+        <text class="cc-desc">{{item.description}}</text>
+        <view class="cc-footer">
+          <text class="cc-price" wx:if="{{item.price>0}}">¥{{item.priceLabel}}/节</text>
+          <text class="cc-free" wx:else>免费</text>
+          <text class="cc-count">{{item.studyCount}}人在学</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && courses.length===0}}">
+    <text class="ec">📚</text>
+    <text class="et">暂无课程</text>
+  </view>
+</view>

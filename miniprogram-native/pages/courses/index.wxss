@@ -1,0 +1,28 @@
+page { background: #faf8f6; }
+
+/* Tabs */
+.tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1rpx solid #f0ede9; }
+.tab { flex: 1; text-align: center; padding: 24rpx 0; font-size: 26rpx; color: #888; position: relative; font-weight: 500; }
+.tab.on { color: #2d1b2e; font-weight: 700; }
+.tab.on::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 48rpx; height: 4rpx; background: #2d1b2e; border-radius: 2rpx; }
+
+/* 列表 */
+.list { padding: 16rpx 24rpx; }
+.course-card { display: flex; gap: 20rpx; background: #fff; border-radius: 20rpx; padding: 20rpx; margin-bottom: 20rpx; }
+.cc-cover { position: relative; width: 240rpx; height: 160rpx; border-radius: 12rpx; overflow: hidden; flex-shrink: 0; background: #f5f3f1; }
+.cc-img { width: 100%; height: 100%; }
+.cc-duration { position: absolute; bottom: 8rpx; right: 8rpx; background: rgba(0,0,0,0.6); color: #fff; font-size: 20rpx; padding: 4rpx 12rpx; border-radius: 8rpx; }
+.cc-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 40rpx; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); }
+
+.cc-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.cc-title { font-size: 26rpx; font-weight: 600; color: #1a1a2e; line-height: 1.4; }
+.cc-desc { font-size: 22rpx; color: #999; margin-top: 8rpx; }
+.cc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12rpx; }
+.cc-price { font-size: 28rpx; font-weight: 700; color: #e91e63; }
+.cc-free { font-size: 24rpx; color: #22c55e; font-weight: 600; }
+.cc-count { font-size: 20rpx; color: #bbb; }
+
+/* 空状态 */
+.empty { text-align: center; padding: 120rpx 0; }
+.ec { display: block; font-size: 80rpx; margin-bottom: 20rpx; }
+.et { display: block; font-size: 28rpx; color: #ccc; }
