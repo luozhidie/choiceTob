@@ -35,20 +35,16 @@
         <text class="st">服装门店一站式赋能平台</text>
       </view>
 
-      <!-- 下部：标签 + 搜索 -->
+      <!-- 下部：标签白底条 -->
       <view class="bot-area">
-        <scroll-view scroll-x show-scrollbar="{{false}}">
-          <view class="tg-row">
-            <view wx:for="{{categories}}" wx:key="*this"
-              class="tg {{ac===item?'tg-on':''}}"
-              bindtap="swCat" data-c="{{item}}">{{item}}</view>
-          </view>
-        </scroll-view>
-
-        <view class="srch" bindtap="goBuyer">
-          <text class="sri">🔍</text>
-          <text class="srp">搜索商品名称、描述...</text>
-          <view class="srb">浏览选品 →</view>
+        <view class="tg-bar">
+          <scroll-view scroll-x show-scrollbar="{{false}}">
+            <view class="tg-row">
+              <view wx:for="{{categories}}" wx:key="*this"
+                class="tg {{ac===item?'tg-on':''}}"
+                bindtap="swCat" data-c="{{item}}">{{item}}</view>
+            </view>
+          </scroll-view>
         </view>
       </view>
     </view>
