@@ -1,13 +1,13 @@
 /* ===== 我的页面 ===== */
 page { background: #f5f2ef; }
 
-/* 用户区域 */
-.user-section { position: relative; padding-bottom: 24rpx; }
+/* 用户区域 - 预留顶部安全区域 */
+.user-section { position: relative; padding-bottom: 24rpx; padding-top: 100rpx; }
 .user-bg {
   height: 280rpx;
   background: linear-gradient(135deg, #2d1b2e 0%, #4a3a4b 60%, #6b5570 100%);
 }
-.user-content { position: absolute; top: 180rpx; left: 32rpx; display: flex; align-items: flex-end; gap: 20rpx; }
+.user-content { position: relative; margin-top: -160rpx; left: 32rpx; display: flex; align-items: flex-end; gap: 20rpx; }
 
 .avatar-wrap { position: relative; }
 .avatar-img { width: 120rpx; height: 120rpx; border-radius: 50%; border: 5rpx solid #fff; box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.12); }
