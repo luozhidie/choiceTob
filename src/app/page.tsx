@@ -1003,13 +1003,13 @@ export default function Home() {
                         }`}
                       >
                         {cat.name}
-                      </Link>
-                    ))}
-                  </div>
+                    </Link>
+                  ))}
                 </div>
               </div>
           </div>
         </div>
+      </div>
       </section>
 
       {/* ===== 轮播图下方版块 ===== */}
