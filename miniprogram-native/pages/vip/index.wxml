@@ -1,0 +1,65 @@
+<view class="page">
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-inner">
+      <text class="h-icon">👑</text>
+      <text class="h-title">骆芷蝶 · VIP会员</text>
+      <text class="h-desc">企划定品控方向，供应链稳货源</text>
+    </view>
+  </view>
+
+  <!-- 当前会员状态 -->
+  <view class="status-card" wx:if="{{isMember}}">
+    <view class="sc-left">
+      <text class="sc-type">{{memberLabel}}</text>
+      <text class="sc-exp">有效期至 {{expireDate}}</text>
+    </view>
+    <view class="sc-badge">✓ 已开通</view>
+  </view>
+
+  <!-- Tab 切换 -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='price'?'tab-on':''}}" bindtap="switchTab" data-tab="price">查看价会员</view>
+    <view class="tab {{activeTab==='deposit'?'tab-on':''}}" bindtap="switchTab" data-tab="deposit">拿货会员</view>
+  </view>
+
+  <!-- 价格会员 -->
+  <view class="plans" wx:if="{{activeTab==='price'}}">
+    <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{pricePlans}}" wx:key="id">
+      <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
+      <text class="pc-name">{{item.name}}</text>
+      <text class="pc-price">{{item.priceLabel}}</text>
+      <text class="pc-ori" wx:if="{{item.originalPrice}}">{{item.originalPrice}}</text>
+      <view class="pc-features">
+        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+      </view>
+      <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即开通</view>
+    </view>
+  </view>
+
+  <!-- 拿货会员 -->
+  <view class="plans" wx:if="{{activeTab==='deposit'}}">
+    <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{depositPlans}}" wx:key="id">
+      <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
+      <text class="pc-name">{{item.name}}</text>
+      <text class="pc-price">{{item.priceLabel}}</text>
+      <text class="pc-desc">{{item.discountLabel}}</text>
+      <view class="pc-features">
+        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+      </view>
+      <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即充值</view>
+    </view>
+  </view>
+
+  <!-- 支付弹窗 -->
+  <view class="modal-mask" wx:if="{{showPay}}" bindtap="closePay">
+    <view class="modal" catchtap="noop">
+      <view class="modal-close" bindtap="closePay">✕</view>
+      <text class="m-title">确认开通</text>
+      <text class="m-name">{{selectedPlan.name}}</text>
+      <text class="m-price">{{selectedPlan.priceLabel}}</text>
+      <text class="m-tip">支付成功后即刻生效</text>
+      <view class="m-btn" bindtap="confirmPay">微信支付</view>
+    </view>
+  </view>
+</view>

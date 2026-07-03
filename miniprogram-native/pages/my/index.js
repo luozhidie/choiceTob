@@ -50,7 +50,7 @@ Page({
     });
   },
 
-  goVip: function() { wx.showToast({ title: 'VIP功能开发中', icon: 'none' }); },
+  goVip: function() { wx.navigateTo({ url: '/pages/vip/index' }); },
 
   goOrders: function(e) {
     var status = e.currentTarget.dataset.status;
