@@ -1096,7 +1096,6 @@ export default function Home() {
                 <Link href="/buyer" className="px-8 py-2.5 bg-transparent border-2 border-[rgba(45,27,46,0.1)] text-gray-800 font-bold rounded-xl hover:bg-[rgba(45,27,46,0.03)] transition-all text-sm flex items-center justify-center gap-1.5">
                   爆款安利 <ArrowRight className="w-4 h-4" />
                 </Link>
-              </div>
             </div>
           </div>
         </div>
