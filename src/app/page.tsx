@@ -1008,27 +1008,6 @@ export default function Home() {
                   </div>
                 </div>
               </div>
-
-              {/* 底部：标题 + 按钮 */}
-              <div className="mt-auto pb-8">
-                <div className="text-center text-white px-4">
-                  <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(20px, 3.5vw, 28px)" }}>
-                    爆款选品 · 拿货精选
-                  </h2>
-                  <p className="text-white/70 mb-5 tracking-[0.2em] font-light text-xs md:text-sm">
-                    骆芷蝶智选 · 专业推荐
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <Link href="/buyer" className="px-7 py-2.5 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
-                      全部商品
-                    </Link>
-                    <Link href="/buyer" className="px-7 py-2.5 bg-transparent border-2 border-white/40 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-1.5">
-                      爆款安利 <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -1101,6 +1080,27 @@ export default function Home() {
 
       {/* ===== 商品列表下方版块 ===== */}
       {blocksByPosition("product_bottom").map(renderBlock)}
+
+      {/* CTA：爆款选品 · 拿货精选 */}
+      <section className="py-6">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="rounded-[22px] overflow-hidden relative" style={{height: "280px"}}>
+            <div className="absolute inset-0 bg-gradient-to-br from-[#faf5f0] to-[#efe6dc]"></div>
+            <div className="relative z-10 text-center pt-14">
+              <h2 className="text-3xl font-extrabold text-[#2d1b2e] tracking-wider">爆款选品 · 拿货精选</h2>
+              <p className="text-gray-400 mt-1.5 tracking-[0.25em] font-light text-xs md:text-sm">骆芷蝶智选 · 专业推荐</p>
+              <div className="flex gap-4 justify-center mt-7">
+                <Link href="/buyer" className="px-8 py-2.5 bg-white text-gray-800 font-bold rounded-xl hover:shadow-md transition-all text-sm shadow-[0_6px_22px_rgba(0,0,0,0.06)]">
+                  全部商品
+                </Link>
+                <Link href="/buyer" className="px-8 py-2.5 bg-transparent border-2 border-[rgba(45,27,46,0.1)] text-gray-800 font-bold rounded-xl hover:bg-[rgba(45,27,46,0.03)] transition-all text-sm flex items-center justify-center gap-1.5">
+                  爆款安利 <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <TabBar />
 
