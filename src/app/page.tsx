@@ -612,13 +612,6 @@ export default function Home() {
     setShowPopup(false);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (keyword.trim()) {
-      window.location.href = `/buyer?keyword=${encodeURIComponent(keyword.trim())}`;
-    }
-  };
-
   // 按 position 分组版块（兼容旧数据：没有 position 的默认放到 product_bottom）
   const blocksByPosition = (pos: string) =>
     blocks.filter((b: Block) => ((b.content as any)?.position || "product_bottom") === pos);
@@ -974,22 +967,7 @@ export default function Home() {
                   </h1>
                   <p className="text-sm md:text-base text-white/80 mb-4 font-light tracking-wide">服装门店一站式赋能平台</p>
 
-                  {/* 搜索栏 */}
-                  <form onSubmit={handleSearch} className="flex gap-2 max-w-lg mb-3">
-                    <div className="flex-1 relative">
-                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                      <input
-                        type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
-                        placeholder="搜索商品名称、描述..."
-                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/25 focus:border-white/40 text-sm"
-                      />
-                    </div>
-                    <Link href="/buyer" className="px-4 py-2.5 bg-white text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-lg">
-                      浏览 <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </form>
-
-                  {/* 分类标签栏（紧贴搜索栏下方，在大图上） */}
+                  {/* 分类标签栏（在大图上） */}
                   <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">
                     {categories.map((cat) => (
                       <Link
