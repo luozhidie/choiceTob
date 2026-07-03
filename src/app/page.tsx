@@ -1048,7 +1048,7 @@ export default function Home() {
                 </div>
                 <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name}</h4>
                 <p className="text-red-500 font-bold mt-1 text-[15px]">{formatPrice(product.price)}</p>
-                <Link href={`/shop/${product.id}`} className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all">
+                <Link href={`/checkout?id=${product.id}&source=home`} className="mt-2 block w-full py-2 text-center bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs font-semibold rounded-lg hover:shadow-md transition-all">
                   下单
                 </Link>
               </Link>
