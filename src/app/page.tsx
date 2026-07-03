@@ -534,6 +534,7 @@ export default function Home() {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [homePopup, setHomePopup] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
@@ -851,7 +852,58 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ===== 全屏轮播图区域 ===== */}
+      {/* ===== 固定顶栏导航 ===== */}
+      <header className="fixed top-0 left-0 right-0 z-[60] bg-white/90 backdrop-blur-md border-b border-gray-100 safe-area-top">
+        <div className="max-w-7xl mx-auto px-4 h-12 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <span className="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-purple-500 flex items-center justify-center text-white text-xs font-bold">骆</span>
+            <span className="text-sm font-bold text-gray-800 tracking-wide whitespace-nowrap">骆芷蝶智选</span>
+          </Link>
+          <button
+            onClick={() => setDrawerOpen((v) => !v)}
+            className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            {drawerOpen ? <X className="w-5 h-5 text-gray-700" /> : (
+              <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-gray-700"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            )}
+          </button>
+        </div>
+      </header>
+
+      {/* ===== 右侧滑出菜单抽屉 ===== */}
+      {drawerOpen && (
+        <>
+          <div className="fixed inset-0 z-[65] bg-black/30" onClick={() => setDrawerOpen(false)} />
+          <aside className="fixed top-0 right-0 bottom-0 w-[260px] z-[66] bg-white shadow-2xl transform transition-transform duration-300">
+            <div className="flex flex-col h-full">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 h-12">
+                <span className="font-bold text-sm text-gray-800">菜单</span>
+                <button onClick={() => setDrawerOpen(false)} className="p-1 rounded-lg hover:bg-gray-100"><X className="w-4 h-4 text-gray-500" /></button>
+              </div>
+              <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
+              {[
+                { icon: "👑", label: "VIP会员中心", href: "/vip" },
+                { icon: "🛍", label: "买手选品", href: "/buyer" },
+                { icon: "📚", label: "线上课程", href: "/courses" },
+                { icon: "🎨", label: "每日搭配", href: "/daily-looks" },
+                { icon: "📋", label: "风格测试", href: "#" },
+                { icon: "💬", label: "联系我们", href: "#" },
+              ].map((item) => (
+                <Link key={item.label} href={item.href} onClick={() => setDrawerOpen(false)}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors"
+                >
+                  <span className="text-base">{item.icon}</span>{item.label}
+                </Link>
+              ))}
+              </nav>
+              <div className="px-4 py-3 border-t border-gray-100 space-y-2">
+                <p className="text-[10px] text-gray-400 text-center">用户状态 / 微信登录</p>
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
+
       {/* ===== 首页弹窗 ===== */}
       {showPopup && homePopup && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={dismissPopup}>
@@ -902,70 +954,79 @@ export default function Home() {
       )}
 
 
-      <section className="relative overflow-hidden" style={{ height: "90vh", minHeight: "600px" }}>
-        {/* 轮播图背景 */}
-        <HeroCarousel />
+      {/* ===== Hero 全屏轮播区域（含搜索+分类标签） ===== */}
+      <section className="relative overflow-hidden pt-12" style={{ height: "100vh", minHeight: "600px" }}>
+        <div style={{ height: "calc(100% - 48px)", minHeight: "552px", position: "relative", overflow: "hidden" }}>
+          {/* 轮播图背景 */}
+          <HeroCarousel />
 
-        {/* 内容层（叠在轮播图上） */}
-        <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
-          {/* 顶部：标题 + 搜索栏 + 分类标签 */}
-          <div className="px-4 pt-5 pointer-events-auto">
-            <div className="max-w-7xl mx-auto">
-              <div className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                <span className="text-white/70 text-[10px] font-medium tracking-widest">数据驱动．智选未来</span>
-              </div>
-              <h1 className="font-black text-white leading-[1.12] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
-                骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
-              </h1>
-              <form onSubmit={handleSearch} className="flex gap-3 max-w-lg mb-3">
-                <div className="flex-1 relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-                  <input
-                    type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
-                    placeholder="搜索商品名称、描述..."
-                    className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/15 text-sm"
-                  />
+          {/* 内容层（叠在轮播图上） */}
+          <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
+            <div className="flex flex-col h-full px-4 pointer-events-auto">
+              {/* 顶部区域：标语 + 主标题 */}
+              <div className="pt-5 pb-2">
+                <div className="max-w-7xl mx-auto">
+                  <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <span className="text-white/70 text-[10px] font-medium tracking-widest">🏷 数据驱动·智选未来</span>
+                  </span>
+                  <h1 className="font-black text-white leading-[1.15] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(22px, 4vw, 36px)" }}>
+                    骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
+                  </h1>
+                  <p className="text-sm md:text-base text-white/80 mb-4 font-light tracking-wide">服装门店一站式赋能平台</p>
+
+                  {/* 搜索栏 */}
+                  <form onSubmit={handleSearch} className="flex gap-2 max-w-lg mb-3">
+                    <div className="flex-1 relative">
+                      <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input
+                        type="text" value={keyword} onChange={(e) => setKeyword(e.target.value)}
+                        placeholder="搜索商品名称、描述..."
+                        className="w-full pl-11 pr-4 py-2.5 rounded-xl bg-white/15 backdrop-blur-md border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:bg-white/25 focus:border-white/40 text-sm"
+                      />
+                    </div>
+                    <Link href="/buyer" className="px-4 py-2.5 bg-white text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0 shadow-lg">
+                      浏览 <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </form>
+
+                  {/* 分类标签栏（紧贴搜索栏下方，在大图上） */}
+                  <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.name}
+                        href={cat.href}
+                        onClick={() => setActiveCategoryName(cat.name)}
+                        className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${
+                          activeCategoryName === cat.name
+                            ? "bg-white text-gray-800 shadow font-bold"
+                            : "bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20"
+                        }`}
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <Link href="/buyer" className="px-5 py-2.5 bg-white text-gray-800 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0">
-                  浏览选品 <ArrowRight className="w-4 h-4" />
-                </Link>
-              </form>
-              {/* 分类标签栏 */}
-              <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.name}
-                    href={cat.href}
-                    onClick={() => setActiveCategoryName(cat.name)}
-                    className={`px-3 py-1 rounded-full text-xs whitespace-nowrap transition-all ${
-                      activeCategoryName === cat.name
-                        ? "bg-white/90 backdrop-blur-sm shadow font-semibold text-gray-800"
-                        : "text-white/70 hover:bg-white/20 hover:text-white"
-                    }`}
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
               </div>
-            </div>
-          </div>
 
-          {/* 底部：标题 + 按钮 */}
-          <div className="mt-auto pointer-events-auto">
-            <div className="text-center text-white px-4 pb-12">
-              <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(22px, 4vw, 34px)" }}>
-                爆款选品 · 拿货精选
-              </h2>
-              <p className="text-white/80 mb-5 tracking-[0.2em] font-light" style={{ fontSize: "14px" }}>
-                骆芷蝶智选 · 专业推荐
-              </p>
-              <div className="flex gap-3 justify-center">
-                <Link href="/buyer" className="px-8 py-2.5 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
-                  全部商品
-                </Link>
-                <Link href="/buyer" className="px-8 py-2.5 bg-transparent border-2 border-white/50 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-2">
-                  爆款安利 <ArrowRight className="w-4 h-4" />
-                </Link>
+              {/* 底部：标题 + 按钮 */}
+              <div className="mt-auto pb-8">
+                <div className="text-center text-white px-4">
+                  <h2 className="font-bold tracking-wide drop-shadow-md mb-2" style={{ fontSize: "clamp(20px, 3.5vw, 28px)" }}>
+                    爆款选品 · 拿货精选
+                  </h2>
+                  <p className="text-white/70 mb-5 tracking-[0.2em] font-light text-xs md:text-sm">
+                    骆芷蝶智选 · 专业推荐
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Link href="/buyer" className="px-7 py-2.5 bg-white text-gray-800 font-bold rounded-lg hover:bg-gray-50 transition-colors text-sm shadow-lg">
+                      全部商品
+                    </Link>
+                    <Link href="/buyer" className="px-7 py-2.5 bg-transparent border-2 border-white/40 text-white font-bold rounded-lg hover:bg-white/10 transition-colors text-sm flex items-center justify-center gap-1.5">
+                      爆款安利 <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
