@@ -79,7 +79,7 @@ jobs:
             project: project,
             version: String(process.env.GITHUB_RUN_NUMBER || '1'),
             desc: 'native v' + (process.env.GITHUB_RUN_NUMBER || '1') + ' auto upload',
-            setting: { es6: true, es7: true, enhance: true, minify: true },
+            setting: { es6: true, es7: true, enhance: true, minify: false },
             robot: 1
           }).then(function() {
             console.log('=== UPLOAD SUCCESS ===');
