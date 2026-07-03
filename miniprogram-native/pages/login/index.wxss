@@ -1,0 +1,39 @@
+page{background:#f5f3f0;}
+
+/* 头 */
+.hd{text-align:center;padding:50rpx 30rpx 30rpx;}
+.ht{font-size:44rpx;font-weight:bold;color:#1a4d3e;display:block;}
+.hs{font-size:26rpx;color:#888;display:block;margin-top:8rpx;}
+
+/* 卡片 */
+.card{margin:20rpx 28rpx;padding:36rpx 28rpx;background:#fff;border-radius:24rpx;box-shadow:0 4rpx 24rpx rgba(0,0,0,.06);}
+.ct{font-size:32rpx;font-weight:bold;color:#1a4d3e;display:block;margin-bottom:6rpx;}
+.cs{font-size:24rpx;color:#999;display:block;margin-bottom:28rpx;}
+
+.fg{display:flex;justify-content:space-between;align-items:center;margin-bottom:8rpx;margin-top:20rpx;}
+.fl{font-size:25rpx;color:#333;font-weight:500;}
+.fr{font-size:23rpx;color:#e91e63;}
+
+.inp{width:100%;height:84rpx;background:#f7f5f2;border-radius:14rpx;padding:0 24rpx;font-size:27rpx;color:#333;border:1rpx solid #eee;}
+
+.btn-login{width:100%;height:88rpx;background:linear-gradient(135deg,#1a4d3e,#2d7a5e);color:#fff;border-radius:16rpx;font-size:30rpx;font-weight:bold;text-align:center;line-height:88rpx;margin-top:32rpx;}
+
+.reg-row{margin-top:20rpx;text-align:center;font-size:25rpx;color:#888;}
+.reg-link{color:#e91e63;font-weight:600;}
+
+/* 分割线 */
+.divider{text-align:center;padding:10rpx 0;font-size:23rpx;color:#bbb;position:relative;}
+.divider::before,.divider::after{content:'';position:absolute;top:50%;width:30%;height:1rpx;background:#eee;}
+.divider::before{left:60rpx;}
+.divider::after{right:60rpx;}
+
+/* 管理员卡片 */
+.card-admin{background:linear-gradient(160deg,#1a3c35 0%,#2a5549 100%);padding:36rpx 28rpx;}
+.ct-a{color:#ffd54f !important;}
+.cs-a{color:rgba(255,255,255,.6) !important;}
+.fg-a{margin-top:18rpx;}
+.fl-a{color:#fff !important;}
+.inp-a{background:rgba(255,255,255,.12) !important;color:#fff !important;border:none !important;placeholder-color:rgba(255,255,255,.45)}
+.btn-admin{width:100%;height:88rpx;background:linear-gradient(135deg,#ffc107,#ffb300);color:#1a3c35;border-radius:16rpx;font-size:30rpx;font-weight:bold;text-align:center;line-height:88rpx;margin-top:24rpx;}
+
+.back-home{text-align:center;padding:30rpx 0 40rpx;font-size:25rpx;color:#999;}

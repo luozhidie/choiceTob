@@ -1,45 +1,50 @@
 <view class="page">
-  <!-- Hero -->
-  <view class="hero">
-    <view class="h-inner">
-      <text class="h-icon">📦</text>
-      <text class="h-title">拿货会员</text>
-      <text class="h-desc">同色同款三件起批，享批发价+折扣</text>
+  <!-- 标题区 -->
+  <view class="header">
+    <view class="htitle"><text>📦 预存货款 · 折扣拿货</text></view>
+    <text class="hdesc">预存越多，折扣越低。预存款可用于采购下单，随时退。</text>
+  </view>
+
+  <!-- 3档卡片 -->
+  <view class="cards">
+    <view class="card" bindtap="selectPlan" data-plan="{{plans[0]}}">
+      <text class="camt">{{plans[0].amount}}</text>
+      <text class="csub">预存金额</text>
+      <text class="cdisc">{{plans[0].discount}}</text>
+      <text class="crefund">退{{plans[0].refund}}%</text>
+      <view class="cexample"><text>{{plans[0].example}}</text></view>
+    </view>
+
+    <view class="card" bindtap="selectPlan" data-plan="{{plans[1]}}">
+      <text class="camt">{{plans[1].amount}}</text>
+      <text class="csub">预存金额</text>
+      <text class="cdisc">{{plans[1].discount}}</text>
+      <text class="crefund">退{{plans[1].refund}}%</text>
+      <view class="cexample"><text>{{plans[1].example}}</text></view>
+    </view>
+
+    <view class="card card-rec" bindtap="selectPlan" data-plan="{{plans[2]}}">
+      <view class="rec-tag">推荐</view>
+      <text class="camt">{{plans[2].amount}}</text>
+      <text class="csub">预存金额</text>
+      <text class="cdisc">{{plans[2].discount}}</text>
+      <text class="crefund">退{{plans[2].refund}}%</text>
+      <view class="cexample"><text>{{plans[2].example}}</text></view>
     </view>
   </view>
 
-  <!-- 当前状态 -->
-  <view class="status-card" wx:if="{{isDeposit}}">
-    <view class="sc-left">
-      <text class="sc-type">拿货会员</text>
-      <text class="sc-exp">退换额度 {{refundRate}}%</text>
-    </view>
-    <view class="sc-badge">✓ 已开通</view>
-  </view>
-
-  <!-- 充值套餐 -->
-  <view class="plans">
-    <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{plans}}" wx:key="id">
-      <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
-      <text class="pc-name">{{item.name}}</text>
-      <text class="pc-price">{{item.priceLabel}}</text>
-      <text class="pc-desc">{{item.discountLabel}}</text>
-      <view class="pc-features">
-        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
-      </view>
-      <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即充值</view>
-    </view>
-  </view>
+  <!-- 提示 -->
+  <view class="tip"><text>💡 预存款支持全额退还（扣除已用部分），详情请联系客服</text></view>
+  <view class="contact"><text>如有疑问或需要帮助，请 </text><text class="clink" bindtap="goContact">联系客服</text></view>
 
   <!-- 支付弹窗 -->
-  <view class="modal-mask" wx:if="{{showPay}}" bindtap="closePay">
+  <view class="mask" wx:if="{{showPay}}" bindtap="closePay">
     <view class="modal" catchtap="noop">
-      <view class="modal-close" bindtap="closePay">✕</view>
-      <text class="m-title">确认充值</text>
-      <text class="m-name">{{selectedPlan.name}}</text>
-      <text class="m-price">{{selectedPlan.priceLabel}}</text>
-      <text class="m-tip">充值后享拿货折扣和退换服务</text>
-      <view class="m-btn" bindtap="confirmPay">微信支付</view>
+      <text class="mtit">确认充值</text>
+      <text class="mname">{{selectedPlan.name}}</text>
+      <text class="mpr">{{selectedPlan.amountLabel}}</text>
+      <text class="mdesc">{{selectedPlan.discount}} · 退{{selectedPlan.refund}}%可退</text>
+      <view class="mbtn" bindtap="confirmPay"><text>微信支付</text></view>
     </view>
   </view>
 </view>

@@ -1,116 +1,55 @@
 <view class="page">
   <!-- 搜索栏 -->
   <view class="search-bar">
-    <text class="search-icon">🔍</text>
-    <input
-      class="search-input"
-      placeholder="搜索商品..."
-      value="{{keyword}}"
-      bindinput="onSearchInput"
-      confirm-type="search"
-      bindconfirm="doSearch" />
-    <text class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</text>
+    <text class="si">🔍</text>
+    <input class="sinput" placeholder="搜索商品..." value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" bindconfirm="doSearch" />
+    <text class="sclr" wx:if="{{keyword}}" bindtap="clearSearch">✕</text>
   </view>
 
-  <!-- 筛选栏 -->
-  <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
-    <view class="filter-row">
-      <view
-        wx:for="{{tabs}}"
-        wx:key="*this"
-        class="filter-tab {{activeTab === item ? 'filter-tab-active' : ''}}"
-        bindtap="switchTab"
-        data-tab="{{item}}">
-        {{item}}
-      </view>
+  <!-- Tab行：列表/推荐 + 分类 -->
+  <view class="tab-row">
+    <view class="vtabs">
+      <text class="vtab {{viewMode==='list'?'vtab-on':''}}" bindtap="switchViewMode">列表</text>
+      <text class="vtab {{viewMode==='grid'?'vtab-on':''}}" bindtap="switchViewMode">推荐</text>
     </view>
-  </scroll-view>
+    <text class="gicon" bindtap="switchViewMode">⊞</text>
+  </view>
 
   <!-- 排序 -->
   <view class="sort-bar">
-    <view class="sort-item {{sortType === 'default' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="default">
-      <text>综合</text>
-    </view>
-    <view class="sort-item {{sortType === 'sales' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="sales">
-      <text>销量</text>
-    </view>
-    <view class="sort-item {{sortType === 'price_asc' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="price_asc">
-      <text>价格 ▲</text>
-    </view>
-    <view class="sort-item {{sortType === 'price_desc' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="price_desc">
-      <text>价格 ▼</text>
+    <text class="st {{sortType==='default'?'st-on':''}}" bindtap="setSort" data-sort="default">综合</text>
+    <text class="st {{sortType==='sales'?'st-on':''}}" bindtap="setSort" data-sort="sales">销量</text>
+    <text class="st {{sortType==='price_asc'||sortType==='price_desc'?'st-on':''}}" bindtap="setSort" data-sort="price">价格{{sortType==='price_desc'?'↓':(sortType==='price_asc'?'↑':'')}}</text>
+    <text class="st {{sortType==='newest'?'st-on':''}}" bindtap="setSort" data-sort="newest">上新</text>
+  </view>
+
+  <!-- 商品数 -->
+  <view class="count-bar"><text>共{{products.length}}件</text></view>
+
+  <!-- 加载骨架 -->
+  <view class="grid" wx:if="{{loading && products.length===0}}">
+    <view wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" class="sk"><view class="ski"></view><view class="skl1"></view><view class="skl2"></view></view>
+  </view>
+
+  <!-- 空 -->
+  <view class="emp" wx:elif="{{!loading && products.length===0}}">
+    <text class="ei">📦</text><text class="et">暂无商品</text>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="grid" wx:else>
+    <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
+      <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
+      <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
+      <text class="cn">{{item.name||item.title||'商品'}}</text>
+      <text class="cpri">{{item.priceText}}</text>
+      <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
     </view>
   </view>
 
-  <!-- 商品网格 -->
-  <view class="product-area">
-    <!-- 加载中 -->
-    <block wx:if="{{loading}}">
-      <view class="product-grid">
-        <view class="skeleton-card" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
-          <view class="skeleton-img"></view>
-          <view class="skeleton-line skeleton-line-long"></view>
-          <view class="skeleton-line skeleton-line-short"></view>
-        </view>
-      </view>
-    </block>
+  <!-- 底部 -->
+  <view class="more" wx:if="{{hasMore&&products.length>0}}"><text>上拉加载更多</text></view>
+  <view class="nomore" wx:if="{{!hasMore&&products.length>0}}"><text>— 已展示全部 —</text></view>
 
-    <!-- 空状态 -->
-    <block wx:elif="{{products.length === 0}}">
-      <view class="empty-state">
-        <text class="empty-icon">📦</text>
-        <text class="empty-text">暂无相关商品</text>
-      </view>
-    </block>
-
-    <!-- 商品列表 -->
-    <block wx:else>
-      <view class="product-grid">
-        <view
-          class="product-card"
-          wx:for="{{products}}"
-          wx:key="id"
-          bindtap="goShop"
-          data-id="{{item.id}}">
-          <view class="card-img-wrap">
-            <image
-              wx:if="{{item.image_url || item.cover_image}}"
-              src="{{item.image_url || item.cover_image}}"
-              mode="aspectFill"
-              class="card-img"
-              lazy-load />
-            <view wx:else class="card-img-placeholder">
-              <text class="placeholder-text">暂无图片</text>
-            </view>
-            <view wx:if="{{index < 2}}" class="badge-hot">HOT</view>
-          </view>
-          <view class="card-info">
-            <text class="card-name">{{item.name || item.title || '商品'}}</text>
-            <view class="card-meta">
-              <text class="card-price">{{item.priceText}}</text>
-              <text class="card-sales" wx:if="{{item.sales_count}}">已售{{item.sales_count}}</text>
-            </view>
-            <view class="card-btn-row">
-              <view class="card-btn-add" catchtap="addToCart" data-product="{{item}}">
-                <text>+ 加购</text>
-              </view>
-              <view class="card-btn-buy" catchtap="buyNow" data-product="{{item}}">
-                <text>下单</text>
-              </view>
-            </view>
-          </view>
-        </view>
-      </view>
-
-      <!-- 加载更多 -->
-      <view class="load-more" wx:if="{{hasMore && !loading}}">
-        <text>上拉加载更多</text>
-      </view>
-      <view class="no-more" wx:if="{{!hasMore && products.length > 0}}">
-        <text>— 已展示全部 —</text>
-      </view>
-    </block>
-  </view>
-
-  <view class="safe-bottom"></view>
+  <view class="sb"></view>
 </view>

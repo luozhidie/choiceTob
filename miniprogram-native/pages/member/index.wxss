@@ -1,0 +1,54 @@
+page{background:#f5f3f0;}
+
+/* Hero */
+.hero{background:linear-gradient(160deg,#4a1a6b 0%,#7b3f9e 35%,#c44a8c 70%,#e85d6e 100%);padding:50rpx 28rpx 36rpx;}
+.h-badge{display:inline-block;background:rgba(255,255,255,.18);color:#fff;font-size:23rpx;padding:8rpx 24rpx;border-radius:30rpx;margin-bottom:20rpx;}
+.ht{font-size:42rpx;font-weight:bold;color:#fff;display:block;margin-bottom:10rpx;letter-spacing:2rpx;}
+.hs{font-size:25rpx;color:rgba(255,255,255,.82);display:block;line-height:1.5;}
+
+/* 用户卡 */
+.ucard{display:flex;align-items:center;background:rgba(255,255,255,.15);border-radius:20rpx;padding:24rpx 24rpx;margin-top:30rpx;backdrop-filter:blur(10rpx);}
+.uav{width:80rpx;height:80rpx;border-radius:50%;overflow:hidden;border:3rpx solid rgba(255,255,255,.5);flex-shrink:0;margin-right:20rpx;}
+.uai{width:100%;height:100%;}
+.uap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.2);font-size:36rpx;color:#fff;}
+.uinfo{flex:1;}
+.uname{font-size:28rpx;font-weight:600;color:#fff;display:block;}
+.ustatus{font-size:23rpx;color:#69f0ae;display:block;margin-top:4rpx;}
+.ustatus.off{color:rgba(255,255,255,.55);}
+.ugobtn{padding:10rpx 28rpx;background:#ffeb3b;color:#333;font-size:25rpx;font-weight:700;border-radius:20rpx;}
+
+/* 功能区标题 */
+.sect-title{padding:28rpx 24rpx 16rpx;display:flex;align-items:center;gap:8rpx;}
+.st-icon{font-size:32rpx;color:#e91e63;}
+.sect-title text:nth-child(2){font-size:30rpx;font-weight:bold;color:#1a1a2e;}
+
+/* 卡片网格 */
+.cards{padding:0 20rpx;display:flex;flex-wrap:wrap;gap:16rpx;}
+.card{width:calc(50% - 8rpx);border-radius:20rpx;padding:28rpx 22rpx;position:relative;}
+
+/* 热门-橙 */
+.card-hot{background:linear-gradient(135deg,#fff9f0,#fff3e0);}
+/* AI-蓝 */
+.card-ai{background:linear-gradient(135deg,#f0f4ff,#e8efff);}
+/* 独家-粉 */
+.card-hot-item{background:linear-gradient(135deg,#fef0f5,#fce4ec);}
+/* 智能-绿 */
+.card-marketing{background:linear-gradient(135deg,#f0fdf4,#dcfce7);}
+
+.ctag{position:absolute;top:14rpx;right:14rpx;font-size:19rpx;font-weight:700;padding:4rpx 14rpx;border-radius:12rpx;color:#fff;}
+.ctag-hot{background:#ff9800;}
+.ctag-ai{background:#2196f3;}
+.ctag-excl{background:#e91e63;}
+.ctag-smart{background:#4caf50;}
+
+.cicon{width:60rpx;height:60rpx;border-radius:14rpx;display:flex;align-items:center;justify-content:center;font-size:26rpx;font-weight:bold;color:#fff;margin-bottom:12rpx;}
+.card-hot .cicon{background:linear-gradient(135deg,#ff9800,#f57c00);}
+.card-ai .cicon{background:linear-gradient(135deg,#2196f3,#1565c0);}
+.card-hot-item .cicon{background:linear-gradient(135deg,#e91e63,#c2185b);}
+.card-marketing .cicon{background:linear-gradient(135deg,#4caf50,#388e3c);}
+
+.cname{font-size:28rpx;font-weight:700;color:#1a1a2e;display:block;margin-bottom:6rpx;}
+.cdesc{font-size:22rpx;color:#888;display:block;line-height:1.45;margin-bottom:16rpx;}
+.cbtn{font-size:24rpx;color:#666;font-weight:500;}
+
+.sbtm{height:40rpx;}

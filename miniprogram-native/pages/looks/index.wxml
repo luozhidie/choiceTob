@@ -1,40 +1,62 @@
 <view class="page">
-  <!-- Hero -->
+  <!-- 顶部Hero -->
   <view class="hero">
-    <view class="h-inner">
-      <text class="h-icon">🎨</text>
-      <text class="h-title">每日搭配灵感</text>
-      <text class="h-desc">买手团队每日精选，3-5套专业搭配方案</text>
+    <text class="hdate">📅 {{todayStr}}</text>
+    <text class="htitle">每日色彩搭配灵感</text>
+    <text class="hsub">每一天都值得精心搭配，让色彩为你点亮好心情</text>
+  </view>
+
+  <!-- VIP订阅条 -->
+  <view class="vip-bar" wx:if="{{!isVip}}">
+    <text class="vb-left"><text>🔒 每日搭配灵感 · 会员专享</text></text>
+    <view class="vb-btns">
+      <text class="vbm" bindtap="subMonthly">¥999/月 立即开通</text>
+      <text class="vby" bindtap="subYearly">¥11,980/年 立即开通</text>
     </view>
   </view>
 
-  <!-- 会员提示 -->
-  <view class="vip-tip" wx:if="{{!isVip}}">
-    <text class="vt-text">开通搭配灵感会员，每日解锁新搭配</text>
-    <view class="vt-btn" bindtap="goVip">去开通</view>
-  </view>
+  <!-- 分类Tab -->
+  <scroll-view scroll-x class="cats" show-scrollbar="{{false}}">
+    <text wx:for="{{cats}}" wx:key="*this"
+      class="cat {{activeCat===item?'cat-on':''}}"
+      bindtap="swCat"
+      data-c="{{item}}">{{item}}</text>
+  </scroll-view>
 
-  <!-- 搭配列表 -->
-  <view class="list" wx:if="{{looks.length>0}}">
-    <view class="look-card" wx:for="{{looks}}" wx:key="id">
-      <view class="lc-images">
-        <image src="{{item.image1}}" mode="aspectFill" class="lc-img" wx:if="{{item.image1}}" />
-        <image src="{{item.image2}}" mode="aspectFill" class="lc-img" wx:if="{{item.image2}}" />
+  <!-- 配色卡片网格 -->
+  <view class="grid" wx:if="{{looks.length>0}}">
+    <view wx:for="{{looks}}" wx:key="id" class="lcard {{item.locked&&!isVip?'lcard-locked':''}}">
+      <!-- 锁定图标 -->
+      <view class="lock-icn" wx:if="{{item.locked&&!isVip}}" bindtap="goVip"><text>🔒</text></view>
+
+      <!-- 色块区 -->
+      <view class="colors">
+        <view wx:for="{{item.colors}}" wx:key="*this" wx:for-item="c"
+          class="ccircle" style="background:{{c}}"></view>
       </view>
-      <view class="lc-info">
-        <text class="lc-title">{{item.title}}</text>
-        <text class="lc-desc">{{item.description}}</text>
-        <view class="lc-tags">
-          <text class="lc-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text>
+
+      <!-- 信息区 -->
+      <view class="linfo">
+        <text class="ltag">{{item.category||'精选'}}</text>
+        <text class="lname">{{item.title}}</text>
+        <text class="ldesc">{{item.desc}}</text>
+
+        <!-- 底部色点 -->
+        <view class="cdots">
+          <view wx:for="{{item.colors}}" wx:key="*this" wx:for-item="c"
+            class="cdot" style="background:{{c}}"></view>
         </view>
       </view>
     </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty" wx:if="{{!loading && looks.length===0}}">
-    <text class="ec">🎨</text>
-    <text class="et">暂无搭配</text>
-    <view class="eb" bindtap="goVip">开通会员查看</view>
+  <!-- 空 -->
+  <view class="emp" wx:elif="{{!loading}}">
+    <text class="ei">🎨</text><text class="et">暂无搭配灵感</text>
   </view>
+
+  <!-- 加载 -->
+  <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
+
+  <view class="sbtm"></view>
 </view>

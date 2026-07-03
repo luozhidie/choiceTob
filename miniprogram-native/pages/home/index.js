@@ -31,24 +31,7 @@ Page({
     if(info&&info.nickName){t.setData({li:true,un:info.nickName||'已登录'});}
     else{t.setData({li:false,un:''});}
   },
-  doLogin:function(){
-    var t=this;
-    wx.login({
-      success:function(lr){
-        if(!lr.code){wx.showToast({title:'登录失败',icon:'none'});return;}
-        wx.getUserProfile({
-          desc:'用于完善会员资料',
-          success:function(pr){
-            var ui={code:lr.code,nickName:pr.userInfo.nickName,avatarUrl:pr.userInfo.avatarUrl};
-            wx.setStorageSync('user_info',ui);
-            t.setData({un:ui.nickName||'已登录',li:true,mo:false});
-            wx.showToast({title:'登录成功',icon:'success'});
-          },
-          fail:function(){wx.showToast({title:'需要授权才能登录',icon:'none'});}
-        });
-      }
-    });
-  },
+  doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
 
   /* 导航跳转 */
   goBuyer:function(e){

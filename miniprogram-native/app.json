@@ -13,7 +13,9 @@
     "pages/courses/index",
     "pages/style-test/index",
     "pages/articles/index",
-    "pages/history/index"
+    "pages/history/index",
+    "pages/member/index",
+    "pages/login/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -1,0 +1,62 @@
+<view class="page">
+  <!-- Hero -->
+  <view class="hero">
+    <view class="h-badge"><text>🛡 会员专享服务中心</text></view>
+    <text class="ht">骆芷蝶智选 · 会员中心</text>
+    <text class="hs">整合VIP服务、商品企划、爆款样衣、营销策划的一站式赋能平台</text>
+
+    <!-- 用户卡 -->
+    <view class="ucard">
+      <view class="uav">
+        <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" class="uai" mode="aspectFill"/>
+        <view wx:else class="uap"><text>👤</text></view>
+      </view>
+      <view class="uinfo">
+        <text class="uname">{{userInfo.nickName||'会员用户'}}</text>
+        <text class="ustatus" wx:if="{{isVip}}">✓ VIP 已激活</text>
+        <text class="ustatus off" wx:else>未开通VIP</text>
+      </view>
+      <view class="ugobtn" bindtap="goVip" wx:if="{{!isVip}}"><text>开通</text></view>
+    </view>
+  </view>
+
+  <!-- 功能区标题 -->
+  <view class="sect-title"><text class="st-icon">☆</text><text>会员专享功能</text></view>
+
+  <!-- 4个功能卡片 -->
+  <view class="cards">
+    <view class="card card-hot" bindtap="goVip">
+      <view class="ctag ctag-hot">热门</view>
+      <view class="cicon"><text>VIP</text></view>
+      <text class="cname">VIP 会员服务</text>
+      <text class="cdesc">专属选品权、设计稿优先、大数据爆款推荐</text>
+      <view class="cbtn"><text>立即进入 →</text></view>
+    </view>
+
+    <view class="card card-ai" bindtap="noop">
+      <view class="ctag ctag-ai">AI驱动</view>
+      <view class="cicon"><text>企</text></view>
+      <text class="cname">商品企划中心</text>
+      <text class="cdesc">AI驱动的商品开发决策、96格货盘矩阵、采购清单生成</text>
+      <view class="cbtn"><text>立即进入 →</text></view>
+    </view>
+
+    <view class="card card-hot-item" bindtap="goBuyer">
+      <view class="ctag ctag-excl">独家</view>
+      <view class="cicon"><text>爆</text></view>
+      <text class="cname">爆款样衣展厅</text>
+      <text class="cdesc">精选市场最新爆款样衣，会员可查看详情与价格，看中即咨询下单</text>
+      <view class="cbtn"><text>立即进入 →</text></view>
+    </view>
+
+    <view class="card card-marketing" bindtap="noop">
+      <view class="ctag ctag-smart">智能</view>
+      <view class="cicon"><text>营</text></view>
+      <text class="cname">营销策划工具</text>
+      <text class="cdesc">AI营销方案生成、推广策略建议、投放效果预估</text>
+      <view class="cbtn"><text>立即进入 →</text></view>
+    </view>
+  </view>
+
+  <view class="sbtm"></view>
+</view>
