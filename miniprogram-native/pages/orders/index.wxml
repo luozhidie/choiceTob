@@ -1,0 +1,39 @@
+<view class="page">
+  <!-- Tab 筛选 -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='all'?'on':''}}" bindtap="switchTab" data-tab="all">全部</view>
+    <view class="tab {{activeTab==='paid'?'on':''}}" bindtap="switchTab" data-tab="paid">待发货</view>
+    <view class="tab {{activeTab==='shipped'?'on':''}}" bindtap="switchTab" data-tab="shipped">待收货</view>
+    <view class="tab {{activeTab==='refund'?'on':''}}" bindtap="switchTab" data-tab="refund">退换</view>
+  </view>
+
+  <!-- 订单列表 -->
+  <view class="list" wx:if="{{orders.length>0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="id">
+      <view class="oc-header">
+        <text class="oc-id">订单 {{item.id}}</text>
+        <text class="oc-status {{item.status}}">{{item.statusLabel}}</text>
+      </view>
+      <view class="oc-product">
+        <image src="{{item.product_image || ''}}" mode="aspectFill" class="oc-img" />
+        <view class="oc-info">
+          <text class="oc-name">{{item.product_title || '商品'}}</text>
+          <text class="oc-qty">×{{item.quantity}}</text>
+          <text class="oc-price">¥{{item.totalAmountLabel}}</text>
+        </view>
+      </view>
+      <view class="oc-actions">
+        <view class="oc-btn" wx:if="{{item.status==='shipped'}}" bindtap="confirmReceive" data-id="{{item.id}}">确认收货</view>
+        <view class="oc-btn outline" wx:if="{{item.status==='completed'}}" bindtap="reorder" data-id="{{item.id}}">再买一单</view>
+        <view class="oc-btn red" wx:if="{{item.status==='completed'}}" bindtap="applyRefund" data-id="{{item.id}}">申请退换</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && orders.length===0}}">
+    <text class="ec">📦</text>
+    <text class="et">暂无订单</text>
+    <view class="eb" bindtap="goBuyer">去选品 →</view>
+  </view>
+</view>

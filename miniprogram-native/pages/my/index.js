@@ -53,15 +53,11 @@ Page({
   goVip: function() { wx.navigateTo({ url: '/pages/vip/index' }); },
 
   goOrders: function(e) {
-    var status = e.currentTarget.dataset.status;
-    if (status) {
-      wx.navigateTo({ url: '/pages/orders/index?status=' + status });
-    } else {
-      wx.navigateTo({
-        url: '/pages/orders/index',
-        fail: function() { wx.showToast({ title: '订单页开发中', icon: 'none' }); }
-      });
-    }
+    var status = e.currentTarget.dataset.status || 'all';
+    wx.navigateTo({
+      url: '/pages/orders/index?status=' + status,
+      fail: function() { wx.showToast({ title: '订单页开发中', icon: 'none' }); }
+    });
   },
 
   goFavorites: function() { wx.showToast({ title: '开发中', icon: 'none' }); },
