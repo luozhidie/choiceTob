@@ -1,69 +1,47 @@
-/* ===== 我的页面 ===== */
-page { background: #f5f2ef; }
+page{background:#f5f2ef;}
 
-/* 用户区域 - 预留顶部安全区域 */
-.user-section { position: relative; padding-bottom: 24rpx; padding-top: 100rpx; }
-.user-bg {
-  height: 280rpx;
-  background: linear-gradient(135deg, #2d1b2e 0%, #4a3a4b 60%, #6b5570 100%);
+/* 用户头部 */
+.user-hero{
+  background:linear-gradient(160deg,#4a1a6b 0%,#7b3f9e 40%,#c44a8c 100%);
+  padding:50rpx 28rpx 36rpx;
+  display:flex;
+  align-items:center;
 }
-.user-content { position: relative; margin-top: -160rpx; left: 32rpx; display: flex; align-items: flex-end; gap: 20rpx; }
+.avatar-box{flex-shrink:0;margin-right:24rpx;}
+.avatar{width:100rpx;height:100rpx;border-radius:50%;border:3rpx solid rgba(255,255,255,.5);}
+.avatar-ph{width:100rpx;height:100rpx;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:44rpx;color:#fff;font-weight:bold;}
+.uname{font-size:34rpx;font-weight:bold;color:#fff;display:block;}
+.uemail{font-size:23rpx;color:rgba(255,255,255,.65);display:block;margin-top:6rpx;}
 
-.avatar-wrap { position: relative; }
-.avatar-img { width: 120rpx; height: 120rpx; border-radius: 50%; border: 5rpx solid #fff; box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.12); }
-.avatar-placeholder { width: 120rpx; height: 120rpx; border-radius: 50%; background: linear-gradient(135deg,#fff9ec,#fff0cc); display: flex; align-items: center; justify-content: center; font-size: 52rpx; border: 5rpx solid #fff; box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.12); }
-.vip-badge { position: absolute; bottom: -4rpx; right: -10rpx; background: linear-gradient(to right,#f59e0b,#d97706); color: #fff; font-size: 18rpx; font-weight: 700; padding: 3rpx 12rpx; border-radius: 12rpx; border: 2rpx solid #fff; }
+/* 快捷入口 */
+.quick-cards{display:flex;padding:16rpx 20rpx;background:#fff;margin:-24rpx 20rpx 0;border-radius:18rpx;box-shadow:0 4rpx 20rpx rgba(0,0,0,.08);position:relative;z-index:2;}
+.qc{flex:1;display:flex;flex-direction:column;align-items:center;padding:20rpx 0;position:relative;}
+.qci{width:52rpx;height:52rpx;background:#f5f3f0;border-radius:14rpx;display:flex;align-items:center;justify-content:center;font-size:28rpx;margin-bottom:8rpx;}
+.qct{font-size:25rpx;color:#333;font-weight:500;}
+.qc-badge{font-size:19rpx;color:#e91e63;position:absolute;top:12rpx;}
 
-.user-name { font-size: 34rpx; font-weight: 700; color: #333; display: block; margin-bottom: 4rpx; }
-.user-id { font-size: 23rpx; color: #999; display: block; }
-.login-btn { display: inline-flex; padding: 10rpx 30rpx; background: #fff; border-radius: 24rpx; font-size: 25rpx; color: #2d1b2e; font-weight: 600; box-shadow: 0 4rpx 16rpx rgba(45,27,46,0.08); }
+/* 会员卡片 */
+.vip-card{margin:20rpx 20rpx 0;background:#fff;border-radius:22rpx;overflow:hidden;box-shadow:0 2rpx 14rpx rgba(0,0,0,.04);}
+.vip-active{border:2rpx solid #ffd54f;}
+.vc-header{display:flex;align-items:center;padding:22rpx 24rpx;border-bottom:1rpx solid #f5f2ef;}
+.vc-icon{font-size:30rpx;margin-right:10rpx;}
+.vc-title{font-size:28rpx;font-weight:bold;color:#333;flex:1;}
+.vc-link{font-size:25rpx;color:#e91e63;font-weight:600;}
+.vc-status{font-size:25rpx;color:#4caf50;font-weight:600;}
+.vc-body{padding:24rpx;text-align:center;}
+.vc-tip{font-size:26rpx;color:#888;display:block;margin-bottom:20rpx;line-height:1.5;}
+.vc-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a5a);color:#fff;padding:22rpx 80rpx;border-radius:40rpx;font-size:29rpx;font-weight:bold;display:inline-block;}
+.vc-btn-renew{background:linear-gradient(135deg,#ffc107,#ffb300);color:#333;}
 
-/* VIP卡片 */
-.vip-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: linear-gradient(135deg,#fff9ec,#fff3d4);
-  border: 1rpx solid #ffe8a0;
-  border-radius: 18rpx;
-  margin: 16rpx 24rpx 0;
-  padding: 26rpx 28rpx;
-}
+/* 功能区 */
+.func-section{margin:24rpx 20rpx 0;}
+.fs-title{font-size:28rpx;font-weight:bold;color:#1a1a2e;display:block;margin-bottom:16rpx;padding-left:4rpx;}
+.flist{background:#fff;border-radius:20rpx;overflow:hidden;box-shadow:0 2rpx 10rpx rgba(0,0,0,.03);}
+.fi{display:flex;align-items:center;padding:26rpx 24rpx;border-bottom:1rpx solid #f8f6f3;}
+.fi:last-child{border:none;}
+.fi-icon{font-size:32rpx;width:48rpx;flex-shrink:0;}
+.fi-text{flex:1;font-size:28rpx;color:#333;margin-left:16rpx;}
+.fi-arrow{font-size:34rpx;color:#ccc;}
+.fi-count{font-size:21rpx;color:#e91e63;background:#fce4ec;padding:2rpx 12rpx;border-radius:12rpx;margin-right:8rpx;}
 
-.vip-left { display: flex; align-items: center; gap: 14rpx; flex: 1; }
-.vip-icon { font-size: 36rpx; color: #f59e0b; }
-.vip-title { font-size: 27rpx; font-weight: 700; color: #78350f; display: block; }
-.vip-desc { font-size: 22rpx; color: #a16207; display: block; margin-top: 4rpx; }
-.vip-arrow { font-size: 28rpx; color: #bbb; }
-
-/* 订单区 */
-.order-section { background: #fff; margin-top: 24rpx; border-radius: 22rpx; margin-left: 24rpx; margin-right: 24rpx; overflow: hidden; }
-
-.section-header { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 28rpx 16rpx; }
-.section-title { font-size: 31rpx; font-weight: 700; color: #1a1a2e; }
-.more-btn { font-size: 24rpx; color: #999; }
-
-.order-tabs { display: flex; padding-bottom: 28rpx; padding: 0 16rpx 28rpx; }
-.order-tab { flex: 1; text-align: center; padding: 16rpx 0; }
-.order-icon { font-size: 42rpx; display: block; margin-bottom: 8rpx; filter: grayscale(0.15); }
-.order-label { font-size: 23rpx; color: #666; font-weight: 500; }
-
-/* 菜单区 */
-.menu-section { margin-top: 24rpx; padding: 0 24rpx; }
-.menu-group { background: #fff; border-radius: 22rpx; overflow: hidden; margin-bottom: 16rpx; }
-
-.menu-item { display: flex; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #f5f2ef; }
-.menu-item:last-child { border-bottom: none; }
-
-.menu-icon-wrap { width: 56rpx; height: 56rpx; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; font-size: 26rpx; margin-right: 20rpx; flex-shrink: 0; }
-.menu-icon-fav { background: #fef2f2; color: #ef4444; }
-.menu-icon-hist { background: #eff6ff; color: #3b82f6; }
-.menu-icon-addr { background: #f0fdf4; color: #22c55e; }
-.menu-icon-contact { background: #fefce8; color: #eab308; }
-.menu-icon-about { background: #faf5ff; color: #a855f7; }
-
-.menu-text { flex: 1; font-size: 28rpx; color: #333; }
-.menu-arrow { font-size: 32rpx; color: #ccc; }
-.menu-count { font-size: 22rpx; color: #e91e63; background: #fce4ec; padding: 2rpx 12rpx; border-radius: 14rpx; margin-right: 8rpx; }
-
-.safe-bottom { height: 40rpx; }
+.sbtm{height:30rpx;}

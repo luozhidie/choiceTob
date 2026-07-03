@@ -1,120 +1,87 @@
 <view class="page">
-  <!-- 用户信息区 -->
-  <view class="user-section">
-    <view class="user-bg"></view>
-    <view class="user-content">
-      <!-- 头像 -->
-      <view class="avatar-wrap">
-        <image
-          wx:if="{{userInfo.avatarUrl}}"
-          src="{{userInfo.avatarUrl}}"
-          class="avatar-img"
-          mode="aspectFill" />
-        <view wx:else class="avatar-placeholder">
-          <text>👑</text>
-        </view>
-        <view class="vip-badge" wx:if="{{isVip}}">VIP</view>
-      </view>
-
-      <!-- 昵称/登录状态 -->
-      <block wx:if="{{userInfo.nickName}}">
-        <text class="user-name">{{userInfo.nickName}}</text>
-        <text class="user-id">ID: {{userInfo.userId || '会员'}}</text>
-      </block>
-      <block wx:else>
-        <text class="user-name">未登录</text>
-        <view class="login-btn" bindtap="doLogin">
-          <text>微信登录</text>
-        </view>
-      </block>
+  <!-- 用户头部 -->
+  <view class="user-hero">
+    <view class="avatar-box">
+      <image wx:if="{{userInfo.avatarUrl}}" src="{{userInfo.avatarUrl}}" class="avatar" mode="aspectFill"/>
+      <view wx:else class="avatar-ph"><text>{{userInfo.nickName?userInfo.nickName[0]:'?'}}</text></view>
     </view>
-
-    <!-- 会员卡片 -->
-    <view class="vip-card" bindtap="goVip">
-      <view class="vip-left">
-        <text class="vip-icon">★</text>
-        <view class="vip-info">
-          <text class="vip-title">{{isVip ? '尊享VIP会员' : '开通VIP享拿货价'}}</text>
-          <text class="vip-desc">{{isVip ? '已享受进货折扣' : '3件以上触发进货会员价'}}</text>
-        </view>
-      </view>
-      <text class="vip-arrow">→</text>
+    <view class="user-info">
+      <text class="uname">{{userInfo.nickName||'用户'}}</text>
+      <text class="uemail">{{userInfo.email||''}}</text>
     </view>
   </view>
 
-  <!-- 订单快捷入口 -->
-  <view class="order-section">
-    <view class="section-header">
-      <text class="section-title">我的订单</text>
-      <view class="more-btn" bindtap="goOrders">
-        <text>全部</text>
-        <text style="margin-left:6rpx;">→</text>
-      </view>
+  <!-- 快捷入口 -->
+  <view class="quick-cards">
+    <view class="qc" bindtap="goCart">
+      <view class="qci"><text>🛒</text></view>
+      <text class="qct">购物车</text>
     </view>
-    <view class="order-tabs">
-      <view class="order-tab" bindtap="goOrders" data-status="pending">
-        <text class="order-icon">📦</text>
-        <text class="order-label">待付款</text>
-      </view>
-      <view class="order-tab" bindtap="goOrders" data-status="shipped">
-        <text class="order-icon">🚚</text>
-        <text class="order-label">待发货</text>
-      </view>
-      <view class="order-tab" bindtap="goOrders" data-status="shipping">
-        <text class="order-icon">📨</text>
-        <text class="order-label">待收货</text>
-      </view>
-      <view class="order-tab" bindtap="goOrders" data-status="completed">
-        <text class="order-icon">✅</text>
-        <text class="order-label">已完成</text>
-      </view>
+    <view class="qc" bindtap="goOrders">
+      <view class="qci"><text>📦</text></view>
+      <text class="qct">我的订单</text>
+      <text class="qc-badge" wx:if="{{orderCount>0}}">{{orderCount}}笔</text>
+    </view>
+    <view class="qc" bindtap="goVip">
+      <view class="qci"><text>👑</text></view>
+      <text class="qct">会员服务</text>
     </view>
   </view>
 
-  <!-- 功能菜单 -->
-  <view class="menu-section">
-    <view class="menu-group">
-      <view class="menu-item" bindtap="goFavorites">
-        <view class="menu-icon-wrap menu-icon-fav"><text>❤</text></view>
-        <text class="menu-text">我的收藏</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="goHistory">
-        <view class="menu-icon-wrap menu-icon-hist"><text>📋</text></view>
-        <text class="menu-text">浏览记录</text>
-        <text class="menu-count" wx:if="{{historyCount>0}}">{{historyCount}}</text>
-        <text class="menu-arrow">›</text>
-      </view>
-      <view class="menu-item" bindtap="goAddress">
-        <view class="menu-icon-wrap menu-icon-addr"><text>📍</text></view>
-        <text class="menu-text">收货地址</text>
-        <text class="menu-arrow">›</text>
-      </view>
+  <!-- 会员状态卡片 -->
+  <view class="vip-card" wx:if="{{!isVip}}">
+    <view class="vc-header">
+      <text class="vc-icon">👑</text>
+      <text class="vc-title">会员状态</text>
+      <text class="vc-link" bindtap="goVip">立即开通 ›</text>
     </view>
+    <view class="vc-body">
+      <text class="vc-tip">还不是会员？开通后可享受 ¥19.9起 的超值权益！</text>
+      <view class="vc-btn" bindtap="goVip"><text>立即开通</text></view>
+    </view>
+  </view>
 
-    <view class="menu-group">
-      <view class="menu-item" bindtap="goArticles">
-        <view class="menu-icon-wrap menu-icon-fav"><text>📰</text></view>
-        <text class="menu-text">时尚资讯</text>
-        <text class="menu-arrow">›</text>
+  <!-- 已是会员卡片 -->
+  <view class="vip-card vip-active" wx:if="{{isVip}}">
+    <view class="vc-header">
+      <text class="vc-icon">👑</text>
+      <text class="vc-title">会员状态</text>
+      <text class="vc-status">✓ 已开通</text>
+    </view>
+    <view class="vc-body">
+      <text class="vc-tip">{{memberType||'价格会员'}} · 有效期至 {{expireDate||'2027-07-03'}}</text>
+      <view class="vc-btn vc-btn-renew" bindtap="goVip"><text>续费/升级</text></view>
+    </view>
+  </view>
+
+  <!-- 常用功能 -->
+  <view class="func-section">
+    <text class="fs-title">常用功能</text>
+    <view class="flist">
+      <view class="fi" bindtap="goBuyer">
+        <text class="fi-icon">🛍️</text><text class="fi-text">继续选购</text><text class="fi-arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="goStyleTest">
-        <view class="menu-icon-wrap menu-icon-hist"><text>🎨</text></view>
-        <text class="menu-text">风格测试</text>
-        <text class="menu-arrow">›</text>
+      <view class="fi" bindtap="goMember">
+        <text class="fi-icon">👑</text><text class="fi-text">会员功能中心</text><text class="fi-arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="goContact">
-        <view class="menu-icon-wrap menu-icon-contact"><text>💬</text></view>
-        <text class="menu-text">联系客服</text>
-        <text class="menu-arrow">›</text>
+      <view class="fi" bindtap="goContact">
+        <text class="fi-icon">📍</text><text class="fi-text">联系客服</text><text class="fi-arrow">›</text>
       </view>
-      <view class="menu-item" bindtap="goAbout">
-        <view class="menu-icon-wrap menu-icon-about"><text>ℹ</text></view>
-        <text class="menu-text">关于我们</text>
-        <text class="menu-arrow">›</text>
+      <view class="fi" bindtap="goHistory">
+        <text class="fi-icon">📋</text><text class="fi-text">浏览记录</text>
+        <text class="fi-count" wx:if="{{historyCount>0}}">{{historyCount}}</text><text class="fi-arrow">›</text>
+      </view>
+      <view class="fi" bindtap="goArticles">
+        <text class="fi-icon">📰</text><text class="fi-text">时尚资讯</text><text class="fi-arrow">›</text>
+      </view>
+      <view class="fi" bindtap="goStyleTest">
+        <text class="fi-icon">🎨</text><text class="fi-text">风格测试</text><text class="fi-arrow">›</text>
+      </view>
+      <view class="fi" bindtap="goAbout">
+        <text class="fi-icon">ℹ️</text><text class="fi-text">关于我们</text><text class="fi-arrow">›</text>
       </view>
     </view>
   </view>
 
-  <view class="safe-bottom"></view>
+  <view class="sbtm"></view>
 </view>

@@ -32,6 +32,7 @@ Page({
     else{t.setData({li:false,un:''});}
   },
   doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
+  goLoginPage:function(){wx.navigateTo({url:'/pages/login/index'});},
 
   /* 导航跳转 */
   goBuyer:function(e){
@@ -41,6 +42,7 @@ Page({
   goCourses:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/courses/index'});},
   goLooks:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/looks/index'});},
   goVipPage:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/vip/index'});},
+  goMember:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/member/index'});},
   goMy:function(){this.setData({mo:false});wx.switchTab({url:'/pages/my/index'});},
   goStyleTest:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/style-test/index'});},
   goArticles:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/articles/index'});},

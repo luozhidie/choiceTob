@@ -1,28 +1,49 @@
-page { background: #faf8f6; }
+page{background:#faf8f6;}
+
+/* Hero */
+.hero{background:linear-gradient(160deg,#2d1b2e 0%,#4a3a5a 100%);padding:50rpx 28rpx 36rpx;text-align:center;}
+.ht{font-size:40rpx;font-weight:bold;color:#fff;display:block;letter-spacing:2rpx;}
+.hs{font-size:25rpx;color:rgba(255,255,255,.75);display:block;margin-top:10rpx;}
 
 /* Tabs */
-.tabs { display: flex; background: #fff; position: sticky; top: 0; z-index: 10; border-bottom: 1rpx solid #f0ede9; }
-.tab { flex: 1; text-align: center; padding: 24rpx 0; font-size: 26rpx; color: #888; position: relative; font-weight: 500; }
-.tab.on { color: #2d1b2e; font-weight: 700; }
-.tab.on::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 48rpx; height: 4rpx; background: #2d1b2e; border-radius: 2rpx; }
+.tabs{display:flex;padding:16rpx 24rpx;background:#fff;border-bottom:1rpx solid #eee;}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8rpx;padding:18rpx 0;border-radius:14rpx;font-size:27rpx;color:#666;background:#f5f3f0;margin-right:16rpx;}
+.tab:last-child{margin-right:0;}
+.tab-on{background:#2d1b2e;color:#fff;font-weight:700;}
+.ticon{font-size:26rpx;}
+
+/* 筛选 */
+.filters{display:flex;gap:20rpx;padding:16rpx 24rpx;background:#fff;border-bottom:1rpx solid #f0ece8;}
+.fil{display:flex;align-items:center;gap:6rpx;padding:10rpx 22rpx;border-radius:30rpx;border:1rpx solid #ddd;font-size:25rpx;color:#666;background:#fff;}
+.fi{font-size:22rpx;color:#999;}
+.ft{font-size:25rpx;}
 
 /* 列表 */
-.list { padding: 16rpx 24rpx; }
-.course-card { display: flex; gap: 20rpx; background: #fff; border-radius: 20rpx; padding: 20rpx; margin-bottom: 20rpx; }
-.cc-cover { position: relative; width: 240rpx; height: 160rpx; border-radius: 12rpx; overflow: hidden; flex-shrink: 0; background: #f5f3f1; }
-.cc-img { width: 100%; height: 100%; }
-.cc-duration { position: absolute; bottom: 8rpx; right: 8rpx; background: rgba(0,0,0,0.6); color: #fff; font-size: 20rpx; padding: 4rpx 12rpx; border-radius: 8rpx; }
-.cc-play { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 40rpx; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.3); }
+.list{padding:16rpx 20rpx;}
+.card{display:flex;background:#fff;border-radius:18rpx;margin-bottom:18rpx;overflow:hidden;box-shadow:0 2rpx 12rpx rgba(0,0,0,.04);}
+.ci{width:220rpx;height:180rpx;flex-shrink:0;background:#eee;}
+.cb{flex:1;padding:20rpx;display:flex;flex-direction:column;justify-content:space-between;}
+.ct{font-size:29rpx;font-weight:600;color:#1a1a2e;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
+.cd{font-size:23rpx;color:#888;margin-top:6rpx;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
+.cm{display:flex;align-items:center;margin-top:10rpx;}
+.ccat{font-size:20rpx;color:#e91e63;background:#fce4ec;padding:3rpx 14rpx;border-radius:12rpx;margin-right:10rpx;}
+.cdur{font-size:21rpx;color:#aaa;margin-left:auto;margin-right:12rpx;}
+.cprice{font-size:30rpx;color:#e91e63;font-weight:bold;}
+.cfree{font-size:27rpx;color:#4caf50;font-weight:600;}
+.cbuy{margin-left:auto;font-size:24rpx;color:#e91e63;font-weight:600;}
 
-.cc-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-.cc-title { font-size: 26rpx; font-weight: 600; color: #1a1a2e; line-height: 1.4; }
-.cc-desc { font-size: 22rpx; color: #999; margin-top: 8rpx; }
-.cc-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 12rpx; }
-.cc-price { font-size: 28rpx; font-weight: 700; color: #e91e63; }
-.cc-free { font-size: 24rpx; color: #22c55e; font-weight: 600; }
-.cc-count { font-size: 20rpx; color: #bbb; }
+/* 空/加载 */
+.emp{text-align:center;padding:120rpx 0;}
+.et{font-size:28rpx;color:#ccc;display:block;}
+.ld{text-align:center;padding:80rpx 0;color:#999;font-size:26rpx;}
 
-/* 空状态 */
-.empty { text-align: center; padding: 120rpx 0; }
-.ec { display: block; font-size: 80rpx; margin-bottom: 20rpx; }
-.et { display: block; font-size: 28rpx; color: #ccc; }
+/* CTA区 */
+.cta-section{text-align:center;padding:40rpx 30rpx 60rpx;}
+.cta-title{font-size:34rpx;font-weight:bold;color:#1a1a2e;display:block;margin-bottom:10rpx;}
+.cta-sub{font-size:25rpx;color:#888;display:block;margin-bottom:32rpx;}
+.cta-btns{display:flex;gap:16rpx;justify-content:center;}
+.cta-btn{padding:22rpx 40rpx;border-radius:16rpx;font-size:27rpx;font-weight:600;}
+.cta-dark{background:#2d1b2e;color:#fff;}
+.cta-pink{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;}
+
+.sbtm{height:30rpx;}

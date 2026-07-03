@@ -1,34 +1,84 @@
 <view class="page">
-  <!-- 分类 -->
-  <view class="tabs">
-    <view class="tab {{activeCat==='all'?'on':''}}" bindtap="switchCat" data-cat="all">全部</view>
-    <view class="tab {{activeCat==='video'?'on':''}}" bindtap="switchCat" data-cat="video">视频课</view>
-    <view class="tab {{activeCat==='live'?'on':''}}" bindtap="switchCat" data-cat="live">直播回放</view>
+  <!-- Hero -->
+  <view class="hero">
+    <text class="ht">线上课程 & 工具商城</text>
+    <text class="hs">专业色彩形象课程 + 色彩工具、书籍资料、专业工具一站购齐</text>
   </view>
 
-  <!-- 课程列表 -->
-  <view class="list" wx:if="{{courses.length>0}}">
-    <view class="course-card" wx:for="{{courses}}" wx:key="id" bindtap="playCourse" data-id="{{item.id}}">
-      <view class="cc-cover">
-        <image src="{{item.cover}}" mode="aspectFill" class="cc-img" />
-        <view class="cc-duration">{{item.duration}}</view>
-        <view class="cc-play">▶</view>
-      </view>
-      <view class="cc-info">
-        <text class="cc-title">{{item.title}}</text>
-        <text class="cc-desc">{{item.description}}</text>
-        <view class="cc-footer">
-          <text class="cc-price" wx:if="{{item.price>0}}">¥{{item.priceLabel}}/节</text>
-          <text class="cc-free" wx:else>免费</text>
-          <text class="cc-count">{{item.studyCount}}人在学</text>
-        </view>
-      </view>
+  <!-- 双Tab -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='course'?'tab-on':''}}" bindtap="swTab" data-t="course">
+      <text class="ticon">📖</text><text>线上课程</text>
+    </view>
+    <view class="tab {{activeTab==='tool'?'tab-on':''}}" bindtap="swTab" data-t="tool">
+      <text class="ticon">🛒</text><text>工具商城</text>
     </view>
   </view>
 
-  <!-- 空状态 -->
-  <view class="empty" wx:if="{{!loading && courses.length===0}}">
-    <text class="ec">📚</text>
-    <text class="et">暂无课程</text>
+  <!-- 筛选器 -->
+  <view class="filters" wx:if="{{activeTab==='course'}}">
+    <view class="fil"><text class="fi">🔽</text><text class="ft">{{catLabel}} ▾</text></view>
+    <view class="fil"><text class="ft">{{diffLabel}} ◆</text></view>
   </view>
+
+  <!-- 课程列表 -->
+  <block wx:if="{{activeTab==='course'}}">
+    <!-- 有数据 -->
+    <view class="list" wx:if="{{courses.length>0}}">
+      <view wx:for="{{courses}}" wx:key="id" class="card" bindtap="playCourse" data-id="{{item.id}}">
+        <image src="{{item.cover||''}}" mode="aspectFill" class="ci"/>
+        <view class="cb">
+          <text class="ct">{{item.title}}</text>
+          <text class="cd">{{item.description}}</text>
+          <view class="cm">
+            <text class="ccat" wx:if="{{item.category}}">{{item.category}}</text>
+            <text class="cdur" wx:if="{{item.duration}}">{{item.duration}}</text>
+            <text class="cprice" wx:if="{{item.price>0}}">¥{{item.price}}</text>
+            <text class="cfree" wx:else>免费</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="emp" wx:elif="{{!loading}}">
+      <text class="et">暂无已发布的课程</text>
+    </view>
+
+    <!-- 加载 -->
+    <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
+
+    <!-- 底部CTA -->
+    <view class="cta-section">
+      <text class="cta-title">还在等什么？</text>
+      <text class="cta-sub">专业课程 + 工具商城，一站式解决你的色彩形象需求</text>
+      <view class="cta-btns">
+        <view class="cta-btn cta-dark" bindtap="swTab" data-t="course"><text>📖 浏览课程 →</text></view>
+        <view class="cta-btn cta-pink" bindtap="swTab" data-t="tool"><text>🛒 浏览工具 →</text></view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 工具商城 -->
+  <block wx:if="{{activeTab==='tool'}}">
+    <view class="list">
+      <view wx:for="{{tools}}" wx:key="id" class="card" bindtap="goTool" data-id="{{item.id}}">
+        <image src="{{item.image||''}}" mode="aspectFill" class="ci"/>
+        <view class="cb">
+          <text class="ct">{{item.name||item.title}}</text>
+          <text class="cd">{{item.desc||item.description}}</text>
+          <view class="cm">
+            <text class="cprice">¥{{item.price||0}}</text>
+            <text class="cbuy">立即购买</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view class="emp" wx:if="{{tools.length===0&&!loading}}">
+      <text class="et">暂无工具商品</text>
+    </view>
+    <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
+  </block>
+
+  <view class="sbtm"></view>
 </view>
