@@ -6,7 +6,8 @@
     "pages/my/index",
     "pages/shop/index",
     "pages/vip/index",
-    "pages/orders/index"
+    "pages/orders/index",
+    "pages/search/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -1,0 +1,70 @@
+<view class="page">
+  <!-- 搜索框 -->
+  <view class="search-bar">
+    <view class="sb-inner">
+      <text class="sb-icon">🔍</text>
+      <input
+        class="sb-input"
+        placeholder="搜索商品名称、描述..."
+        value="{{keyword}}"
+        onInput="onInput"
+        bindconfirm="onSearch"
+      />
+      <text class="sb-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</text>
+    </view>
+    <text class="sb-cancel" bindtap="goBack">取消</text>
+  </view>
+
+  <!-- 搜索历史 -->
+  <view class="section" wx:if="{{!keyword && history.length > 0}}">
+    <view class="sec-header">
+      <text class="sec-title">搜索历史</text>
+      <text class="sec-clear" bindtap="clearHistory">清空</text>
+    </view>
+    <view class="tags">
+      <view class="tag" wx:for="{{history}}" wx:key="*this" bindtap="useHistory" data-kw="{{item}}">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门搜索 -->
+  <view class="section" wx:if="{{!keyword && !loading}}">
+    <view class="sec-header">
+      <text class="sec-title">热门搜索</text>
+    </view>
+    <view class="tags">
+      <view class="tag" wx:for="{{hots}}" wx:key="*this" bindtap="useHistory" data-kw="{{item}}">
+        {{item}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 搜索结果 -->
+  <view class="results" wx:if="{{keyword && !loading}}">
+    <view class="res-count" wx:if="{{!loading}}">
+      找到 {{total}} 件相关商品
+    </view>
+
+    <view class="res-list">
+      <view class="res-item" wx:for="{{results}}" wx:key="id" bindtap="goDetail" data-id="{{item.id}}">
+        <image src="{{item.image_url || item.cover_image}}" mode="aspectFill" class="ri-img" lazy-load />
+        <view class="ri-info">
+          <text class="ri-name">{{item.name || item.title}}</text>
+          <text class="ri-price">¥{{item.priceLabel}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="res-empty" wx:if="{{!loading && results.length === 0}}">
+      <text class="re-icon">📦</text>
+      <text class="re-text">没有找到相关商品</text>
+    </view>
+  </view>
+
+  <!-- Loading -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="load-spinner"></view>
+    <text class="load-text">搜索中...</text>
+  </view>
+</view>
