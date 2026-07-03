@@ -35,7 +35,8 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
   border-bottom: 1rpx solid #f0ede9;
 }
 .tag-row-top {
-  display: inline-flex;
+  display: flex;
+  justify-content: center;
   gap: 12rpx;
   padding: 18rpx 24rpx;
 }
