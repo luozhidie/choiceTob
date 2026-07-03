@@ -1,20 +1,19 @@
-name: Upload WeChat Mini Program
+name: Upload WeChat Mini Program (Native)
 
 on:
   push:
     branches: [main]
     paths:
-      - 'miniprogram/src/**'
-      - 'miniprogram/config/**'
-      - 'miniprogram/package.json'
-      - 'miniprogram/upload.js'
+      - 'miniprogram-native/**'
+      - '.github/workflows/upload-weapp.yml'
+  workflow_dispatch:
 
 jobs:
-  build-and-upload:
+  upload-native:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./miniprogram
+        working-directory: .
     steps:
       - uses: actions/checkout@v4
 
@@ -23,28 +22,72 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install deps
-        run: npm install 2>&1
-
       - name: Install miniprogram-ci
-        run: npm install miniprogram-ci --save-dev 2>&1 || true
+        run: |
+          cd /tmp
+          npm init -y 2>/dev/null
+          npm install miniprogram-ci --save 2>&1
 
-      - name: Build Taro weapp
-        id: build
+      - name: Prepare dist from native code
         run: |
           set -e
-          npm run build:weapp 2>&1 || true
-          echo "BUILD_DONE"
-
-      - name: Overwrite ALL pages with native code
-        run: |
-          set -e
-          node upload.js
+          rm -rf ./dist-upload
+          mkdir -p ./dist-upload
+          cp -r ./miniprogram-native/* ./dist-upload/
+          cp -r ./miniprogram-native/.??* ./dist-upload/ 2>/dev/null || true
+          echo "dist files:"
+          find ./dist-upload -type f | head -30
 
       - name: Upload to WeChat
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
         run: |
+          set -e
+          cat > /tmp/upload-native.js << 'UPLOADSCRIPT'
+          const ci = require('/tmp/node_modules/miniprogram-ci');
+          const fs = require('fs');
+          const path = require('path');
+
+          var appid = process.env.WECHAT_APPID || '';
+          var keyPath = './private.key';
+          var distPath = './dist-upload';
+
+          console.log('Upload start...');
+          console.log('appid:', appid ? 'OK' : 'MISSING');
+          console.log('key:', fs.existsSync(keyPath) ? 'OK' : 'MISSING');
+          console.log('dist:', fs.existsSync(distPath) ? 'OK' : 'MISSING');
+          console.log('app.json exists:', fs.existsSync(distPath + '/app.json') ? 'YES' : 'NO');
+
+          if (!fs.existsSync(keyPath)) {
+            console.error('ERROR: private.key missing');
+            process.exit(1);
+          }
+          if (!fs.existsSync(distPath + '/app.json')) {
+            console.error('ERROR: app.json missing in dist');
+            process.exit(1);
+          }
+
+          var project = new ci.Project({
+            appid: appid,
+            type: 'miniProgram',
+            projectPath: path.resolve(distPath),
+            privateKeyPath: path.resolve(keyPath)
+          });
+
+          ci.upload({
+            project: project,
+            version: String(process.env.GITHUB_RUN_NUMBER || '1'),
+            desc: 'native v' + (process.env.GITHUB_RUN_NUMBER || '1') + ' auto upload',
+            setting: { es6: true, es7: true, enhance: true, minify: true },
+            robot: 1
+          }).then(function() {
+            console.log('=== UPLOAD SUCCESS ===');
+          }).catch(function(e) {
+            console.error('=== UPLOAD FAIL ===', e.message || e);
+            process.exit(1);
+          });
+          UPLOADSCRIPT
+
           echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
-          node upload.js ./dist
+          node /tmp/upload-native.js

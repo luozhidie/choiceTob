@@ -1,0 +1,115 @@
+/* ===== 买手选品页 ===== */
+
+page { background: #faf8f6; }
+
+/* 搜索栏 */
+.search-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  background: #fff;
+  border-bottom: 1rpx solid #f0ece8;
+}
+
+.search-icon { font-size: 28rpx; color: #bbb; margin-right: 12rpx; }
+
+.search-input {
+  flex: 1;
+  height: 64rpx;
+  background: #f5f2ef;
+  border-radius: 20rpx;
+  padding: 0 24rpx;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.search-clear {
+  font-size: 26rpx;
+  color: #999;
+  margin-left: 16rpx;
+  padding: 6rpx;
+}
+
+/* 筛选标签 */
+.filter-scroll { background: #fff; white-space: nowrap; }
+
+.filter-row { display: inline-flex; padding: 16rpx 24rpx 4rpx; gap: 16rpx; }
+
+.filter-tab {
+  display: inline-block;
+  padding: 10rpx 28rpx;
+  border-radius: 30rpx;
+  font-size: 24rpx;
+  color: #666;
+  white-space: nowrap;
+  background: #f5f2ef;
+}
+
+.filter-tab-active {
+  background: #2d1b2e;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* 排序栏 */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 24rpx;
+  background: #fff;
+  margin-top: 4rpx;
+  border-bottom: 1rpx solid #f0ece8;
+}
+
+.sort-item {
+  font-size: 25rpx;
+  color: #888;
+  padding: 6rpx 20rpx;
+  position: relative;
+}
+
+.sort-active { color: #2d1b2e; font-weight: 700; }
+.sort-arrow { font-size: 16rpx; color: inherit; margin-left: 4rpx; }
+.arrow-up, .arrow-down { opacity: 0.3; }
+.sort-active .arrow-up, .sort-active .arrow-down { opacity: 1; }
+
+/* 商品区 */
+.product-area { padding: 16rpx 24rpx; }
+
+.product-grid { display: flex; flex-wrap: wrap; justify-content: space-between; }
+
+.skeleton-card { width: 47%; margin-bottom: 24rpx; }
+.skeleton-img { width: 100%; height: 340rpx; background: #f5f2ef; border-radius: 20rpx; animation: pulse 1.5s infinite; }
+.skeleton-line-long { width: 75%; height: 22rpx; background: #f5f2ef; border-radius: 8rpx; margin-top: 14rpx; animation: pulse 1.5s infinite; }
+.skeleton-line-short { width: 42%; height: 22rpx; background: #f5f2ef; border-radius: 8rpx; margin-top: 10rpx; animation: pulse 1.5s infinite 0.15s; }
+
+@keyframes pulse { 0%{opacity:1}50%{opacity:0.45}100%{opacity:1} }
+
+/* 空状态 */
+.empty-state { text-align: center; padding: 120rpx 0; }
+.empty-icon { font-size: 90rpx; display: block; filter: grayscale(1); opacity: 0.25; }
+.empty-text { font-size: 28rpx; color: #ccc; display: block; margin-top: 16rpx; }
+
+/* 商品卡片 */
+.product-card { width: 47%; margin-bottom: 24rpx; border-radius: 20rpx; overflow: hidden; background: #fff; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); }
+
+.card-img-wrap { width: 100%; height: 340rpx; position: relative; overflow: hidden; }
+.card-img { width: 100%; height: 100%; }
+.card-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #f0ede9; }
+.placeholder-text { font-size: 22rpx; color: #ccc; }
+.badge-hot { position: absolute; top: 10rpx; left: 10rpx; background: linear-gradient(135deg,#ff5722,#ff9800); color: #fff; font-size: 17rpx; font-weight: 700; padding: 4rpx 14rpx; border-radius: 8rpx; }
+
+.card-info { padding: 16rpx 14rpx 18rpx; }
+.card-name { font-size: 24rpx; color: #333; font-weight: 500; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
+
+.card-meta { display: flex; align-items: baseline; justify-content: space-between; margin-top: 8rpx; }
+.card-price { font-size: 30rpx; color: #e91e63; font-weight: 800; }
+.card-sales { font-size: 20rpx; color: #aaa; }
+
+/* 操作按钮 */
+.card-btn-row { display: flex; gap: 10rpx; margin-top: 14rpx; }
+.card-btn-add { flex: 1; text-align: center; padding: 11rpx 0; background: #fff3ee; color: #ff6b35; font-size: 23rpx; font-weight: 600; border-radius: 10rpx; border: 1rpx solid #ffd8c8; }
+.card-btn-buy { flex: 1; text-align: center; padding: 11rpx 0; background: linear-gradient(to right,#ec4899,#ef4444); color: #fff; font-size: 23rpx; font-weight: 600; border-radius: 10rpx; }
+
+.load-more, .no-more { text-align: center; padding: 32rpx 0; font-size: 24rpx; color: #bbb; }
+.safe-bottom { height: 40rpx; }

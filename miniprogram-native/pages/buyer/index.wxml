@@ -1,0 +1,118 @@
+<view class="page">
+  <!-- 搜索栏 -->
+  <view class="search-bar">
+    <text class="search-icon">&#x1f50d;</text>
+    <input
+      class="search-input"
+      placeholder="搜索商品..."
+      value="{{keyword}}"
+      bindinput="onSearchInput"
+      confirm-type="search"
+      bindconfirm="doSearch" />
+    <text class="search-clear" wx:if="{{keyword}}" bindtap="clearSearch">✕</text>
+  </view>
+
+  <!-- 筛选栏 -->
+  <scroll-view scroll-x class="filter-scroll" show-scrollbar="{{false}}">
+    <view class="filter-row">
+      <view
+        wx:for="{{tabs}}"
+        wx:key="*this"
+        class="filter-tab {{activeTab === item ? 'filter-tab-active' : ''}}"
+        bindtap="switchTab"
+        data-tab="{{item}}">
+        {{item}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 排序 -->
+  <view class="sort-bar">
+    <view class="sort-item {{sortType === 'default' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="default">
+      <text>综合</text>
+    </view>
+    <view class="sort-item {{sortType === 'sales' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="sales">
+      <text>销量</text>
+    </view>
+    <view class="sort-item {{sortType === 'price_asc' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="price_asc">
+      <text>价格</text>
+      <text class="sort-arrow {{sortType === 'price_asc' ? 'arrow-up' : ''}}">&#x25B2;</text>
+    </view>
+    <view class="sort-item {{sortType === 'price_desc' ? 'sort-active' : ''}}" bindtap="setSort" data-sort="price_desc">
+      <text>价格</text>
+      <text class="sort-arrow arrow-down">&#x25BC;</text>
+    </view>
+  </view>
+
+  <!-- 商品网格 -->
+  <view class="product-area">
+    <!-- 加载中 -->
+    <block wx:if="{{loading}}">
+      <view class="product-grid">
+        <view class="skeleton-card" wx:for="[1,2,3,4,5,6]" wx:key="*this">
+          <view class="skeleton-img"></view>
+          <view class="skeleton-line skeleton-line-long"></view>
+          <view class="skeleton-line skeleton-line-short"></view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 空状态 -->
+    <block wx:elif="{{products.length === 0}}">
+      <view class="empty-state">
+        <text class="empty-icon">&#x1f6d2;</text>
+        <text class="empty-text">暂无相关商品</text>
+      </view>
+    </block>
+
+    <!-- 商品列表 -->
+    <block wx:else>
+      <view class="product-grid">
+        <view
+          class="product-card"
+          wx:for="{{products}}"
+          wx:key="id"
+          bindtap="goShop"
+          data-id="{{item.id}}">
+          <view class="card-img-wrap">
+            <image
+              wx:if="{{item.image_url || item.cover_image}}"
+              src="{{item.image_url || item.cover_image}}"
+              mode="aspectFill"
+              class="card-img"
+              lazy-load />
+            <view wx:else class="card-img-placeholder">
+              <text class="placeholder-text">暂无图片</text>
+            </view>
+            <view wx:if="{{index < 2}}" class="badge-hot">HOT</view>
+          </view>
+          <view class="card-info">
+            <text class="card-name">{{item.name || item.title || '商品'}}</text>
+            <view class="card-meta">
+              <text class="card-price">{{item.priceText}}</text>
+              <text class="card-sales" wx:if="{{item.sales_count}}">已售{{item.sales_count}}</text>
+            </view>
+            <view class="card-btn-row">
+              <view class="card-btn-add" catchtap="addToCart" data-product="{{item}}">
+                <text>+ 加购</text>
+              </view>
+              <view class="card-btn-buy" catchtap="buyNow" data-product="{{item}}">
+                <text>下单</text>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 加载更多 -->
+      <view class="load-more" wx:if="{{hasMore && !loading}}">
+        <text>上拉加载更多</text>
+      </view>
+      <view class="no-more" wx:if="{{!hasMore && products.length > 0}}">
+        <text>— 已展示全部 —</text>
+      </view>
+    </block>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

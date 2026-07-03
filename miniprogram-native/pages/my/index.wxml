@@ -1,0 +1,109 @@
+<view class="page">
+  <!-- 用户信息区 -->
+  <view class="user-section">
+    <view class="user-bg"></view>
+    <view class="user-content">
+      <!-- 头像 -->
+      <view class="avatar-wrap">
+        <image
+          wx:if="{{userInfo.avatarUrl}}"
+          src="{{userInfo.avatarUrl}}"
+          class="avatar-img"
+          mode="aspectFill" />
+        <view wx:else class="avatar-placeholder">
+          <text>&#x1F451;</text>
+        </view>
+        <view class="vip-badge" wx:if="{{isVip}}">VIP</view>
+      </view>
+
+      <!-- 昵称/登录状态 -->
+      <block wx:if="{{userInfo.nickName}}">
+        <text class="user-name">{{userInfo.nickName}}</text>
+        <text class="user-id">ID: {{userInfo.userId || '会员'}}</text>
+      </block>
+      <block wx:else>
+        <text class="user-name">未登录</text>
+        <view class="login-btn" bindtap="doLogin">
+          <text>微信登录</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 会员卡片 -->
+    <view class="vip-card" bindtap="goVip">
+      <view class="vip-left">
+        <text class="vip-icon">&#x2605;</text>
+        <view class="vip-info">
+          <text class="vip-title">{{isVip ? '尊享VIP会员' : '开通VIP享拿货价'}}</text>
+          <text class="vip-desc">{{isVip ? '已享受进货折扣' : '3件以上触发进货会员价'}}</text>
+        </view>
+      </view>
+      <text class="vip-arrow">&#x2192;</text>
+    </view>
+  </view>
+
+  <!-- 订单快捷入口 -->
+  <view class="order-section">
+    <view class="section-header">
+      <text class="section-title">我的订单</text>
+      <view class="more-btn" bindtap="goOrders">
+        <text>全部</text>
+        <text style="margin-left:6rpx;">&#x2192;</text>
+      </view>
+    </view>
+    <view class="order-tabs">
+      <view class="order-tab" bindtap="goOrders" data-status="pending">
+        <text class="order-icon">&#x1F4E6;</text>
+        <text class="order-label">待付款</text>
+      </view>
+      <view class="order-tab" bindtap="goOrders" data-status="shipped">
+        <text class="order-icon">&#x1F69A;</text>
+        <text class="order-label">待发货</text>
+      </view>
+      <view class="order-tab" bindtap="goOrders" data-status="shipping">
+        <text class="order-icon">&#x1F4E8;</text>
+        <text class="order-label">待收货</text>
+      </view>
+      <view class="order-tab" bindtap="goOrders" data-status="completed">
+        <text class="order-icon">&#x2705;</text>
+        <text class="order-label">已完成</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="menu-section">
+    <view class="menu-group">
+      <view class="menu-item" bindtap="goFavorites">
+        <view class="menu-icon-wrap menu-icon-fav"><text>&#x2764;</text></view>
+        <text class="menu-text">我的收藏</text>
+        <text class="menu-arrow">&#x203A;</text>
+      </view>
+      <view class="menu-item" bindtap="goHistory">
+        <view class="menu-icon-wrap menu-icon-hist"><text>&#x1F4CB;</text></view>
+        <text class="menu-text">浏览记录</text>
+        <text class="menu-arrow">&#x203A;</text>
+      </view>
+      <view class="menu-item" bindtap="goAddress">
+        <view class="menu-icon-wrap menu-icon-addr"><text>&#x1F4CD;</text></view>
+        <text class="menu-text">收货地址</text>
+        <text class="menu-arrow">&#x203A;</text>
+      </view>
+    </view>
+
+    <view class="menu-group">
+      <view class="menu-item" bindtap="goContact">
+        <view class="menu-icon-wrap menu-icon-contact"><text>&#x1F4AC;</text></view>
+        <text class="menu-text">联系客服</text>
+        <text class="menu-arrow">&#x203A;</text>
+      </view>
+      <view class="menu-item" bindtap="goAbout">
+        <view class="menu-icon-wrap menu-icon-about"><text">&#x2139;</text></view>
+        <text class="menu-text">关于我们</text>
+        <text class="menu-arrow">&#x203A;</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="safe-bottom"></view>
+</view>

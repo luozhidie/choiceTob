@@ -1,0 +1,68 @@
+/* ===== 我的页面 ===== */
+page { background: #f5f2ef; }
+
+/* 用户区域 */
+.user-section { position: relative; padding-bottom: 24rpx; }
+.user-bg {
+  height: 280rpx;
+  background: linear-gradient(135deg, #2d1b2e 0%, #4a3a4b 60%, #6b5570 100%);
+}
+.user-content { position: absolute; top: 180rpx; left: 32rpx; display: flex; align-items: flex-end; gap: 20rpx; }
+
+.avatar-wrap { position: relative; }
+.avatar-img { width: 120rpx; height: 120rpx; border-radius: 50%; border: 5rpx solid #fff; box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.12); }
+.avatar-placeholder { width: 120rpx; height: 120rpx; border-radius: 50%; background: linear-gradient(135deg,#fff9ec,#fff0cc); display: flex; align-items: center; justify-content: center; font-size: 52rpx; border: 5rpx solid #fff; box-shadow: 0 8rpx 28rpx rgba(0,0,0,0.12); }
+.vip-badge { position: absolute; bottom: -4rpx; right: -10rpx; background: linear-gradient(to right,#f59e0b,#d97706); color: #fff; font-size: 18rpx; font-weight: 700; padding: 3rpx 12rpx; border-radius: 12rpx; border: 2rpx solid #fff; }
+
+.user-name { font-size: 34rpx; font-weight: 700; color: #333; display: block; margin-bottom: 4rpx; }
+.user-id { font-size: 23rpx; color: #999; display: block; }
+.login-btn { display: inline-flex; padding: 10rpx 30rpx; background: #fff; border-radius: 24rpx; font-size: 25rpx; color: #2d1b2e; font-weight: 600; box-shadow: 0 4rpx 16rpx rgba(45,27,46,0.08); }
+
+/* VIP卡片 */
+.vip-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg,#fff9ec,#fff3d4);
+  border: 1rpx solid #ffe8a0;
+  border-radius: 18rpx;
+  margin: 16rpx 24rpx 0;
+  padding: 26rpx 28rpx;
+}
+
+.vip-left { display: flex; align-items: center; gap: 14rpx; flex: 1; }
+.vip-icon { font-size: 36rpx; color: #f59e0b; }
+.vip-title { font-size: 27rpx; font-weight: 700; color: #78350f; display: block; }
+.vip-desc { font-size: 22rpx; color: #a16207; display: block; margin-top: 4rpx; }
+.vip-arrow { font-size: 28rpx; color: #bbb; }
+
+/* 订单区 */
+.order-section { background: #fff; margin-top: 24rpx; border-radius: 22rpx; margin-left: 24rpx; margin-right: 24rpx; overflow: hidden; }
+
+.section-header { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 28rpx 16rpx; }
+.section-title { font-size: 31rpx; font-weight: 700; color: #1a1a2e; }
+.more-btn { font-size: 24rpx; color: #999; }
+
+.order-tabs { display: flex; padding-bottom: 28rpx; padding: 0 16rpx 28rpx; }
+.order-tab { flex: 1; text-align: center; padding: 16rpx 0; }
+.order-icon { font-size: 42rpx; display: block; margin-bottom: 8rpx; filter: grayscale(0.15); }
+.order-label { font-size: 23rpx; color: #666; font-weight: 500; }
+
+/* 菜单区 */
+.menu-section { margin-top: 24rpx; padding: 0 24rpx; }
+.menu-group { background: #fff; border-radius: 22rpx; overflow: hidden; margin-bottom: 16rpx; }
+
+.menu-item { display: flex; align-items: center; padding: 28rpx 24rpx; border-bottom: 1rpx solid #f5f2ef; }
+.menu-item:last-child { border-bottom: none; }
+
+.menu-icon-wrap { width: 56rpx; height: 56rpx; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; font-size: 26rpx; margin-right: 20rpx; flex-shrink: 0; }
+.menu-icon-fav { background: #fef2f2; color: #ef4444; }
+.menu-icon-hist { background: #eff6ff; color: #3b82f6; }
+.menu-icon-addr { background: #f0fdf4; color: #22c55e; }
+.menu-icon-contact { background: #fefce8; color: #eab308; }
+.menu-icon-about { background: #faf5ff; color: #a855f7; }
+
+.menu-text { flex: 1; font-size: 28rpx; color: #333; }
+.menu-arrow { font-size: 32rpx; color: #ccc; }
+
+.safe-bottom { height: 40rpx; }
