@@ -1,18 +1,32 @@
 <view class="page">
   <!-- 导航栏 -->
   <view class="nav">
-    <view class="brand"><text class="bicon">骆</text><view class="bt"><text class="bn">骆芷蝶智选</text><text class="bs">CHOICETOB</text></view></view>
-    <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
+    <view class="brand">
+      <text class="bicon">骆</text>
+      <view class="bt">
+        <text class="bn">骆芷蝶智选</text>
+        <text class="bs">CHOICETOB</text>
+      </view>
+    </view>
+    <view class="ham {{mo?'on':''}}" bindtap="togMenu">
+      <view class="l"></view>
+      <view class="l"></view>
+      <view class="l"></view>
+    </view>
   </view>
 
   <!-- 大图Hero -->
   <view class="hero">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
-      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
-      <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
+      <swiper-item wx:for="{{banners}}" wx:key="id">
+        <image src="{{item.image}}" mode="aspectFill" class="si"/>
+      </swiper-item>
+      <swiper-item wx:if="{{banners.length===0}}">
+        <view class="ph"></view>
+      </swiper-item>
     </swiper>
 
-    <!-- 所有内容叠在图上 -->
+    <!-- 叠加层 -->
     <view class="ov">
       <!-- 上部：标题 -->
       <view class="top-txt">
@@ -23,8 +37,6 @@
 
       <!-- 下部：标签 + 搜索 -->
       <view class="bot-area">
-
-        <!-- 标签 - 直接在图上，无白底条 -->
         <scroll-view scroll-x show-scrollbar="{{false}}">
           <view class="tg-row">
             <view wx:for="{{categories}}" wx:key="*this"
@@ -33,9 +45,10 @@
           </view>
         </scroll-view>
 
-        <!-- 搜索栏 -->
         <view class="srch" bindtap="goBuyer">
-          <text class="sri">🔍</text><text class="srp">搜索商品名称、描述...</text><view class="srb">浏览选品 →</view>
+          <text class="sri">🔍</text>
+          <text class="srp">搜索商品名称、描述...</text>
+          <view class="srb">浏览选品 →</view>
         </view>
       </view>
     </view>
@@ -47,7 +60,10 @@
   <!-- 菜单面板 -->
   <view class="mk {{mo?'show':''}}" bindtap="clsMenu">
     <view class="mp {{mo?'in':''}}" catchtap="noop">
-      <view class="mph"><text class="mpb">骆芷蝶智选</text><view class="mpc" bindtap="clsMenu"><text>✕</text></view></view>
+      <view class="mph">
+        <text class="mpb">骆芷蝶智选</text>
+        <view class="mpc" bindtap="clsMenu"><text>✕</text></view>
+      </view>
       <scroll-view scroll-y class="mpb2">
         <view class="mi" bindtap="goBuyer"><text>🛍</text><text>买手选品</text></view>
         <view class="mi" bindtap="goCourses"><text>📚</text><text>线上课程</text></view>
@@ -67,26 +83,62 @@
   <!-- 商品区 -->
   <view class="sec">
     <view class="sh">
-      <text class="stt">{{ac==='全部'?'穿搭':ac}} · 精选</text><text class="stc">({{products.length}}件)</text>
+      <text class="stt">{{ac==='全部'?'穿搭':ac}} · 精选</text>
+      <text class="stc">({{products.length}}件)</text>
       <view class="clr" wx:if="{{ac!=='全部'}}" bindtap="swCat" data-c="全部"><text>✕ 清除筛选</text></view>
     </view>
+
     <block wx:if="{{ld}}">
-      <view class="gd"><view class="sc" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this"><view class="sci"/><view class="sl1"/><view class="sl2"/></view></view>
+      <view class="gd">
+        <view class="sc" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+          <view class="sci"></view>
+          <view class="sl1"></view>
+          <view class="sl2"></view>
+        </view>
+      </view>
     </block>
+
     <block wx:elif="{{products.length===0}}">
-      <view class="emp"><text class="ei">📦</text><text class="et">暂无选品</text><view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view></view>
+      <view class="emp">
+        <text class="ei">📦</text>
+        <text class="et">暂无选品</text>
+        <view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
+      </view>
     </block>
+
     <block wx:else>
       <view class="gd">
         <view class="cd" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-          <view class="cw"><image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="ci" lazy-load/><view wx:else class="cp"><text class="cpt">暂无图片</text></view><view wx:if="{{item.is_hot}}" class="bh">HOT</view><view wx:if="{{item.is_new}}" class="bn">NEW</view></view>
-          <view class="cnf"><text class="cnm">{{item.name||item.title||'商品'}}</text><text class="cnp">{{item.priceText}}</text><view class="cbn">下单</view></view>
+          <view class="cw">
+            <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="ci" lazy-load/>
+            <view wx:else class="cp"><text class="cpt">暂无图片</text></view>
+            <view wx:if="{{item.is_hot}}" class="bh">HOT</view>
+            <view wx:if="{{item.is_new}}" class="bn">NEW</view>
+          </view>
+          <view class="cnf">
+            <text class="cnm">{{item.name||item.title||'商品'}}</text>
+            <text class="cnp">{{item.priceText}}</text>
+            <view class="cbn">下单</view>
+          </view>
         </view>
       </view>
     </block>
   </view>
 
-  <!-- CTA -->
-  <view class="cta"><view class="cbx"><view class="cbg"/><view class="cin"><text class="ctt">爆款选品 · 拿货精选</text><text class="cts">骆芷蝶智选 · 专业推荐</text><view class="cr"><view class="c1" bindtap="goBuyer"><text>全部商品</text></view><view class="c2" bindtap="goBuyer"><text>爆款安利 →</text></view></view></view></view>
-  <view class="sbtm"/>
+  <!-- CTA区 -->
+  <view class="cta">
+    <view class="cbx">
+      <view class="cbg"></view>
+      <view class="cin">
+        <text class="ctt">爆款选品 · 拿货精选</text>
+        <text class="cts">骆芷蝶智选 · 专业推荐</text>
+        <view class="cr">
+          <view class="c1" bindtap="goBuyer"><text>全部商品</text></view>
+          <view class="c2" bindtap="goBuyer"><text>爆款安利 →</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sbtm"></view>
 </view>
