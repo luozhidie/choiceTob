@@ -1,0 +1,51 @@
+<view class="page">
+  <!-- 商品图片 -->
+  <swiper class="swiper" indicator-dots="{{images.length>1}}" autoplay circular>
+    <swiper-item wx:for="{{images}}" wx:key="*this">
+      <image src="{{item}}" mode="aspectFill" class="slide-img" />
+    </swiper-item>
+    <swiper-item wx:if="{{!images || images.length===0}}">
+      <view class="ph">暂无图片</view>
+    </swiper-item>
+  </swiper>
+
+  <!-- 商品信息 -->
+  <view class="info">
+    <text class="name">{{product.title || '商品名称'}}</text>
+    <view class="price-row">
+      <text class="price">{{priceText}}</text>
+      <text class="ori" wx:if="{{product.original_price}}">{{originalPriceText}}</text>
+    </view>
+    <text class="desc">{{product.description || ''}}</text>
+
+    <!-- 库存 -->
+    <view class="stock" wx:if="{{product.stock}}">
+      <text>库存：{{product.stock}} 件</text>
+    </view>
+  </view>
+
+  <!-- 数量选择 -->
+  <view class="qty">
+    <text class="ql">数量</text>
+    <view class="qb">
+      <view class="btn" bindtap="dec">-</view>
+      <text class="num">{{quantity}}</text>
+      <view class="btn" bindtap="inc">+</view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bar">
+    <view class="bar-left">
+      <view class="bar-icon" bindtap="goCart">
+        <text class="ic">🛒</text>
+        <text class="badge" wx:if="{{cartCount>0}}">{{cartCount}}</text>
+        <text class="lab">购物车</text>
+      </view>
+    </view>
+    <view class="bar-right">
+      <view class="btn-cart" bindtap="addCart">加入购物车</view>
+      <view class="btn-buy" bindtap="buyNow">立即购买</view>
+    </view>
+  </view>
+</view>
