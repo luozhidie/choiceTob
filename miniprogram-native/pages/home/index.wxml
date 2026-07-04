@@ -127,10 +127,10 @@
               <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
                 <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
                   <view class="cr-row">
-                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="label"
+                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="image"
                       bindtap="goBlockLink" data-link="{{item.link}}">
                       <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
-                      <text class="cr-label">{{item.label}}</text>
+                      <text class="cr-label" wx:if="{{item.label}}">{{item.label}}</text>
                     </view>
                   </view>
                 </scroll-view>

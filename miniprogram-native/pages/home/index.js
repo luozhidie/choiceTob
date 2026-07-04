@@ -82,7 +82,7 @@ Page({
             var keys=Object.keys(ct).sort();
             for(var m=0;m<keys.length;m++){
               var key=keys[m];
-              if(key.indexOf('item')===0&&ct[key]&&ct[key].label)citems.push(ct[key]);
+              if(key.indexOf('item')===0&&ct[key]&&ct[key].image)citems.push(ct[key]);
             }
             if(citems.length>0)circleData[i]=citems;
           }
