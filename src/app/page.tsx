@@ -879,8 +879,8 @@ export default function Home() {
                 { icon: "🛍", label: "买手选品", href: "/buyer" },
                 { icon: "📚", label: "线上课程", href: "/courses" },
                 { icon: "🎨", label: "每日搭配", href: "/daily-looks" },
-                { icon: "📋", label: "风格测试", href: "#" },
-                { icon: "💬", label: "联系我们", href: "#" },
+                { icon: "📋", label: "风格测试", href: "/style-test" },
+                { icon: "💬", label: "联系我们", href: "/contact" },
               ].map((item) => (
                 <Link key={item.label} href={item.href} onClick={() => setDrawerOpen(false)}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors"
