@@ -106,3 +106,87 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .c1{padding:18rpx 44rpx;border-radius:16rpx;font-size:26rpx;font-weight:700;background:#fff;color:#333;box-shadow:0 6rpx 22rpx rgba(0,0,0,.06);}
 .c2{padding:18rpx 44rpx;border-radius:16rpx;font-size:26rpx;font-weight:700;background:rgba(45,27,46,.03);color:#333;border:2rpx solid rgba(45,27,46,.1);}
 .sbtm{height:110rpx;}
+
+/* ========== 动态模块样式 ========== */
+.blk{min-height:1rpx;}
+
+/* featured_banner 精选横幅(大图+3小图) */
+.fb-wrap{padding:0 24rpx;}
+.fb-main{width:100%;height:380rpx;border-radius:20rpx;overflow:hidden;position:relative;margin-bottom:12rpx;}
+.fb-img{width:100%;height:100%;}
+.fb-ov{position:absolute;bottom:16rpx;right:16rpx;background:rgba(0,0,0,.5);color:#fff;padding:8rpx 22rpx;border-radius:14rpx;font-size:21rpx;}
+.fb-tap{font-weight:600;}
+.fb-subs{display:flex;gap:10rpx;}
+.fb-sub{flex:1;border-radius:14rpx;overflow:hidden;position:relative;}
+.fb-si{width:100%;height:160rpx;}
+.fb-st{position:absolute;bottom:6rpx;left:8rpx;right:8rpx;background:rgba(255,255,255,.92);border-radius:10rpx;padding:4rpx 10rpx;display:flex;justify-content:space-between;}
+.fb-sn{font-size:19rpx;color:#333;font-weight:600;}
+.fb-sp{font-size:18rpx;color:#e91e63;font-weight:700;}
+
+/* banner_large 大横幅 */
+.bl-wrap{margin:0 24rpx;border-radius:20rpx;overflow:hidden;}
+.bl-img{width:100%;height:300rpx;}
+.bl-bg{width:100%;height:240rpx;background:linear-gradient(135deg,#2d1b2e,#6b3f70);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30rpx;}
+.bl-title{font-size:36rpx;font-weight:bold;color:#fff;text-align:center;line-height:1.4;}
+.bl-sub{font-size:23rpx;color:rgba(255,255,255,.75);margin-top:8rpx;}
+
+/* banner_small 小横幅 */
+.bs-wrap{margin:0 24rpx;border-radius:14rpx;overflow:hidden;background:#fff9ed;border:1rpx solid #ffe082;}
+.bs-img{width:100%;}
+.bs-bar{padding:14rpx 20rpx;display:flex;align-items:center;gap:10rpx;}
+.bs-title{font-size:25rpx;font-weight:700;color:#f57c00;}
+
+/* category_nav 分类目录 */
+.cn-wrap{padding:8rpx 0 4rpx;}
+.cn-scroll{white-space:nowrap;}
+.cn-row{display:inline-flex;gap:8rpx;padding:0 20rpx;}
+.cn-tab{padding:14rpx 26rpx;border-radius:28rpx;font-size:24rpx;white-space:nowrap;background:#f5f2ef;color:#666;font-weight:500;transition:all .2s;}
+.cn-on{background:#2d1b2e;color:#fff;font-weight:700;}
+
+/* card_single 单格卡片 */
+.cs-wrap{margin:0 24rpx;border-radius:20rpx;overflow:hidden;box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);background:#fff;}
+.cs-img{width:100%;height:260rpx;}
+.cs-body{padding:22rpx 24rpx;}
+.cs-title{font-size:29rpx;font-weight:bold;color:#333;display:block;margin-bottom:6rpx;}
+.cs-sub{font-size:22rpx;color:#999;display:block;margin-bottom:14rpx;}
+.cs-btn{display:inline-block;padding:12rpx 32rpx;background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;font-size:24rpx;font-weight:600;border-radius:14rpx;}
+
+/* card_quad 四宫格 */
+.cq-wrap{padding:0 24rpx;}
+.cq-row{display:flex;gap:12rpx;}
+.cq-card{flex:1;border-radius:16rpx;overflow:hidden;background:#fff;box-shadow:0 2rpx 12rpx rgba(0,0,0,.05);}
+.cq-img{width:100%;height:140rpx;}
+.cq-title{font-size:22rpx;font-weight:600;color:#333;display:block;padding:8rpx 10rpx 2rpx;text-align:center;}
+.cq-sub{font-size:18rpx;color:#aaa;display:block;padding:0 10rpx 10rpx;text-align:center;}
+
+/* circle_row 圆形卡片行 */
+.cr-wrap{padding:16rpx 0 8rpx;}
+.cr-scroll{white-space:nowrap;}
+.cr-row{display:inline-flex;gap:24rpx;padding:0 20rpx 10rpx;}
+.cr-item{display:flex;flex-direction:column;align-items:center;width:120rpx;flex-shrink:0;}
+.cr-icon{width:90rpx;height:90rpx;border-radius:50%;background:#f5f2ef;}
+.cr-label{font-size:21rpx;color:#555;margin-top:8rpx;font-weight:500;}
+
+/* promotion 营销活动 */
+.pm-wrap{margin:0 24rpx;border-radius:18rpx;overflow:hidden;background:linear-gradient(135deg,#fce4ec,#f8bbd0);}
+.pm-img{width:100%;}
+.pm-body{padding:24rpx;}
+.pm-title{font-size:30rpx;font-weight:bold;color:#c2185b;display:block;margin-bottom:6rpx;}
+.pm-desc{font-size:23rpx;color:#555;display:block;margin-bottom:16rpx;line-height:1.5;}
+.pm-btn{display:inline-block;padding:14rpx 40rpx;background:#e91e63;color:#fff;font-size:26rpx;font-weight:700;border-radius:16rpx;}
+
+/* group_buy 团购拼单 */
+.gb-wrap{margin:0 24rpx;border-radius:18rpx;background:linear-gradient(135deg,#fff3e0,#ffe0b2);padding:24rpx;display:flex;align-items:center;gap:16rpx;}
+.gb-tag{background:#ff9800;color:#fff;padding:6rpx 18rpx;border-radius:10rpx;font-size:21rpx;font-weight:700;}
+.gb-desc{font-size:25rpx;color:#e65100;font-weight:600;}
+.gb-info{margin-left:auto;font-size:22rpx;color:#ef6c00;}
+
+/* flash_sale 秒杀 */
+.fs-wrap{margin:0 24rpx;border-radius:18rpx;background:linear-gradient(135deg,#fce4ec,#ffcdd2);padding:24rpx;display:flex;align-items:center;gap:16rpx;}
+.fs-tag{background:#e91e63;color:#fff;padding:6rpx 18rpx;border-radius:10rpx;font-size:21rpx;font-weight:700;}
+.fs-desc{font-size:25rpx;color:#c2185b;font-weight:600;}
+.fs-info{margin-left:auto;font-size:22rpx;color:#ad1457;}
+
+/* 商品上方模块缩略版 */
+.blk-pt{padding:12rpx 0 !important;}
+.fbs-img{width:100%;height:200rpx;border-radius:16rpx;}

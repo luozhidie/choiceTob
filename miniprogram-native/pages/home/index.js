@@ -1,10 +1,6 @@
 Page({
-  data: {
-    banners: [
-      { id:1, image:'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900&q=80' },
-      { id:2, image:'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=900&q=80' },
-      { id:3, image:'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900&q=80' }
-    ],
+  data:{
+    banners:[],
     curB:0,
     categories:['全部','穿搭','护肤','彩妆','养生','食品','家居','文创','艺术'],
     ac:'全部',
@@ -12,14 +8,108 @@ Page({
     ld:true,
     mo:false,
     un:'',
-    li:false
+    li:false,
+    /* 动态模块 */
+    blocks:[],          // 全部已发布模块
+    heroBlocks:[],      // 轮播图下方模块
+    productBlocks:[],   // 商品区上方/下方模块
+    catNavItems:[],     // 分类导航预解析数据
+    quadItems:{},       // 四宫格预解析 {blockIndex: [card0,card1,card2,card3]}
+    circleItems:{},     // 圆形卡片行预解析 {blockIndex: [item0,item1,...]}
   },
 
-  onLoad:function(){this.loadP();this.loadB();this.chkLogin();},
-  onPullDownRefresh:function(){var t=this;this.loadP(function(){wx.stopPullDownRefresh();});},
+  onLoad:function(){
+    var t=this;
+    t.loadB();
+    t.loadP();
+    t.loadBlocks();
+    t.chkLogin();
+  },
+  onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
 
-  /* 菜单 */
+  /* ====== 加载动态模块 ====== */
+  loadBlocks:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/blocks',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success)return;
+        var all=d.data||[];
+        var hb=[],pb=[];
+        var catNavs=[],quadData={},circleData={};
+        for(var i=0;i<all.length;i++){
+          var b=all[i];
+          var ct=b.content||{};
+          var pos=ct.position||'product_bottom';
+          if(pos==='hero_bottom')hb.push(b);
+          else pb.push(b);
+          /* 预处理分类导航 */
+          if(b.type==='category_nav'){
+            var items=[];
+            items.push({label:'全部',link:''});
+            for(var j=0;j<=9;j++){
+              var tab=ct['tab'+j];
+              if(tab&&tab.label)items.push(tab);
+            }
+            catNavs=items;
+          }
+          /* 预处理四宫格 */
+          if(b.type==='card_quad'){
+            var cards=[];
+            for(var k=0;k<=3;k++){
+              if(ct['card'+k])cards.push(ct['card'+k]);
+            }
+            if(cards.length>0)quadData[i]=cards;
+          }
+          /* 预处理圆形卡片行 */
+          if(b.type==='circle_row'){
+            var citems=[];
+            var keys=Object.keys(ct).sort();
+            for(var m=0;m<keys.length;m++){
+              var key=keys[m];
+              if(key.indexOf('item')===0&&ct[key]&&ct[key].label)citems.push(ct[key]);
+            }
+            if(citems.length>0)circleData[i]=citems;
+          }
+        }
+        t.setData({
+          blocks:all,heroBlocks:hb,productBlocks:pb,
+          catNavItems:catNavs,quadItems:quadData,circleItems:circleData
+        });
+        /* 如果有 category_nav，也更新 categories 列表 */
+        if(catNavs.length>1){
+          var cats=catNavs.map(function(x){return x.label;});
+          t.setData({categories:cats});
+        }
+      }
+    });
+  },
+
+  /* ====== 模块点击跳转 ====== */
+  goBlockLink:function(e){
+    var link=e.currentTarget.dataset.link;
+    if(!link)return;
+    if(link.indexOf('/')===0){
+      /* 站内路径 */
+      if(link==='/buyer'||link==='/pages/buyer/index'){wx.switchTab({url:'/pages/buyer/index'});return;}
+      wx.navigateTo({url:link,fail:function(){wx.switchTab({url:link.replace('/','/pages/')+'/index',fail:function(){}})}});
+    } else {
+      /* 外链用 web-view 或提示 */
+      wx.setClipboardData({data:link,success:function(){
+        wx.showToast({title:'链接已复制',icon:'none'});
+      }});
+    }
+  },
+
+  goShop:function(e){
+    var id=e.currentTarget.dataset.id;
+    if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});
+  },
+
+  /* ====== 菜单 ====== */
   togMenu:function(){this.setData({mo:!this.data.mo});},
   clsMenu:function(){this.setData({mo:false});},
   noop:function(){},
@@ -28,8 +118,8 @@ Page({
   chkLogin:function(){
     var t=this;
     var info=wx.getStorageSync('user_info');
-    if(info&&info.nickName){t.setData({li:true,un:info.nickName||'已登录'});}
-    else{t.setData({li:false,un:''});}
+    if(info&&info.nickName)t.setData({li:true,un:info.nickName||'已登录'});
+    else t.setData({li:false,un:''});
   },
   doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
   goLoginPage:function(){wx.navigateTo({url:'/pages/login/index'});},
@@ -48,7 +138,7 @@ Page({
   goArticles:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/articles/index'});},
   goContact:function(){this.setData({mo:false});wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
 
-  /* 数据加载 */
+  /* ====== 数据加载 ====== */
   loadB:function(){
     var t=this;
     wx.request({
@@ -78,7 +168,6 @@ Page({
           var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
           p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
           p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;
-          /* 记录浏览历史 */
           t.saveViewHistory(p);
         });
         t.setData({products:l,ld:false});
@@ -103,9 +192,4 @@ Page({
     this.setData({ac:cat});
     this.loadP();
   },
-
-  goShop:function(e){
-    var id=e.currentTarget.dataset.id;
-    if(id)wx.navigateTo({url:'/pages/shop/index?id='+id,fail:function(){wx.showToast({title:'详情开发中',icon:'none'});}});
-  }
 });
