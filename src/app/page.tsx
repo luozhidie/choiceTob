@@ -487,6 +487,14 @@ function PreSaleCard({ block, content, bgColor }: { block: any; content: any; bg
 function FeaturedBannerBlock({ content }: { content: any }) {
   const mainImage = content.mainImage || "";
   const mainLink = content.mainLink || "/buyer";
+  // 检查副图中至少有多少张有效图片
+  const validSubs = [1, 2, 3].map((i) => {
+    const sub = content[`sub${i}`] as any;
+    return sub?.image ? { ...sub, key: i } : null;
+  }).filter(Boolean);
+
+  // 如果既没有主图也没有副图，不渲染
+  if (!mainImage && validSubs.length === 0) return null;
 
   return (
     <section className="w-full">
@@ -496,13 +504,11 @@ function FeaturedBannerBlock({ content }: { content: any }) {
           <img src={mainImage} alt="" className="w-full h-auto rounded-xl shadow-sm hover:shadow-md transition-shadow" />
         </a>
       )}
-      {/* 3张小图 */}
-      <div className={`grid gap-3 ${mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
-        {[1, 2, 3].map((i) => {
-          const sub = content[`sub${i}`] as any;
-          if (!sub?.image) return null;
-          return (
-            <a key={i} href={sub.link || `/buyer`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
+      {/* 小图（仅渲染有图片的） */}
+      {validSubs.length > 0 && (
+        <div className={`grid gap-3 ${mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
+          {validSubs.map((sub: any) => (
+            <a key={sub.key} href={sub.link || `/buyer`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
               <div className="aspect-[4/5] relative">
                 <img
                   src={sub.image}
@@ -517,9 +523,9 @@ function FeaturedBannerBlock({ content }: { content: any }) {
                 </div>
               )}
             </a>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
