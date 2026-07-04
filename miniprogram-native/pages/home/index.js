@@ -10,12 +10,10 @@ Page({
     un:'',
     li:false,
     /* 动态模块 */
-    blocks:[],          // 全部已发布模块
-    heroBlocks:[],      // 轮播图下方模块
-    productBlocks:[],   // 商品区上方/下方模块
+    blocks:[],          // 全部已发布模块（按 sort_order 排序）
     catNavItems:[],     // 分类导航预解析数据
-    quadItems:{},       // 四宫格预解析 {blockIndex: [card0,card1,card2,card3]}
-    circleItems:{},     // 圆形卡片行预解析 {blockIndex: [item0,item1,...]}
+    quadItems:{},       // 四宫格预解析
+    circleItems:{},     // 圆形卡片行预解析
   },
 
   onLoad:function(){
@@ -38,18 +36,15 @@ Page({
         var d=r.data;
         if(!d||!d.success)return;
         var all=d.data||[];
-        var hb=[],pb=[];
         var catNavs=[],quadData={},circleData={};
+
         for(var i=0;i<all.length;i++){
           var b=all[i];
           var ct=b.content||{};
-          var pos=ct.position||'product_bottom';
-          if(pos==='hero_bottom')hb.push(b);
-          else pb.push(b);
+
           /* 预处理分类导航 */
           if(b.type==='category_nav'){
-            var items=[];
-            items.push({label:'全部',link:''});
+            var items=[{label:'全部',link:''}];
             for(var j=0;j<=9;j++){
               var tab=ct['tab'+j];
               if(tab&&tab.label)items.push(tab);
@@ -59,9 +54,7 @@ Page({
           /* 预处理四宫格 */
           if(b.type==='card_quad'){
             var cards=[];
-            for(var k=0;k<=3;k++){
-              if(ct['card'+k])cards.push(ct['card'+k]);
-            }
+            for(var k=0;k<=3;k++){if(ct['card'+k])cards.push(ct['card'+k]);}
             if(cards.length>0)quadData[i]=cards;
           }
           /* 预处理圆形卡片行 */
@@ -75,14 +68,15 @@ Page({
             if(citems.length>0)circleData[i]=citems;
           }
         }
+
         t.setData({
-          blocks:all,heroBlocks:hb,productBlocks:pb,
+          blocks:all,
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
-        /* 如果有 category_nav，也更新 categories 列表 */
+
+        /* 有分类导航时更新 categories 列表 */
         if(catNavs.length>1){
-          var cats=catNavs.map(function(x){return x.label;});
-          t.setData({categories:cats});
+          t.setData({categories:catNavs.map(function(x){return x.label;})});
         }
       }
     });
