@@ -1,25 +1,29 @@
 <view class="page">
   <!-- Hero - 全屏大图 + 文字叠加 -->
   <view class="hero">
+    <!-- 状态栏占位（custom导航栏需要） -->
+    <view class="status-bar"></view>
+
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
 
-    <!-- 右上角菜单按钮（浮在图上） -->
-    <view class="hero-menu">
+    <!-- 顶栏：菜单按钮（浮在图右上角） -->
+    <view class="hero-top">
+      <view></view><!-- 左侧占位 -->
       <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
     </view>
 
-    <!-- 文字叠加在图上（左上） -->
+    <!-- 文字叠加在图上（左靠上） -->
     <view class="hero-ol">
       <text class="ht-small">数据趋动·智选未来</text>
       <text class="ht-big">骆芷蝶｜供应链智选平台</text>
       <text class="ht-sub">服装门店一站式赋能平台</text>
     </view>
 
-    <!-- 搜索框 + 分类标签（浮在图底部，叠在图上） -->
-    <view class="hero-bottom">
+    <!-- 搜索框 + 分类标签（叠在图上部，文字下方） -->
+    <view class="hero-mid">
       <view class="hero-search" bindtap="goSearch">
         <text class="hs-icon">🔍</text>
         <text class="hs-ph">搜索</text>
