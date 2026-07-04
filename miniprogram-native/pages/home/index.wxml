@@ -5,10 +5,14 @@
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
 
-    <!-- 顶栏：小标题 + 菜单（同行右对齐） -->
+    <!-- 顶栏：只有小标题 -->
     <view class="hero-top">
       <text class="ht-small">数据趋动·智选未来</text>
-      <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
+    </view>
+
+    <!-- ☰菜单按钮（右上角下方，独立定位） -->
+    <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
+      <text class="ham-icon">☰</text>
     </view>
 
     <!-- 文字叠加在图上 -->
