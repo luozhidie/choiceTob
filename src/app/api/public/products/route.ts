@@ -5,6 +5,9 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = 'force-dynamic';
 
+// 正确的 publishable key（公开安全，作为环境变量缺失时的兜底）
+const FALLBACK_PUBLISHABLE = "sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW";
+
 function formatProducts(data: any[]) {
   return data.map((p: any) => ({
     id: p.id,
@@ -31,11 +34,10 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
   const category = searchParams.get("category") || "";
   const limit = parseInt(searchParams.get("limit") || "20");
   const idsParam = searchParams.get("ids") || "";
-  const singleId = searchParams.get("id") || ""; // 商品详情页用
+  const singleId = searchParams.get("id") || "";
 
   // 按 ID 单条查询（给商品详情页用）
   if (singleId) {
-    // 先查 products 表
     let { data, error } = await supabase
       .from("products")
       .select("*")
@@ -107,7 +109,7 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
-  // 方式1: service_role_key
+  // 方式1: service_role_key（必须从环境变量读取，不能硬编码）
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -118,17 +120,16 @@ export async function GET(request: NextRequest) {
     } catch {}
   }
 
-  // 方式2: 降级到 anon key
-  if (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    try {
-      const supabase = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
-      const result = await queryWithClient(supabase, request);
-      if (result.error) {
-        return NextResponse.json({ error: result.error.message }, { status: 500 });
-      }
-      return NextResponse.json(result);
-    } catch {}
-  }
+  // 方式2: 降级到 publishable key（可以硬编码，因为是公开的）
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_PUBLISHABLE;
+  try {
+    const supabase = createClient(supabaseUrl, publishableKey);
+    const result = await queryWithClient(supabase, request);
+    if (result.error) {
+      return NextResponse.json({ error: result.error.message }, { status: 500 });
+    }
+    return NextResponse.json(result);
+  } catch {}
 
   return NextResponse.json({ success: true, data: [] });
 }

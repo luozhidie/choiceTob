@@ -3,10 +3,14 @@ import { createClient } from "@supabase/supabase-js";
 
 export const dynamic = 'force-dynamic';
 
-function getServiceRoleClient() {
+// 正确的 publishable key（公开安全，作为环境变量缺失时的兜底）
+const FALLBACK_PUBLISHABLE = "sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW";
+
+function getClient() {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_PUBLISHABLE;
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    key,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 }
@@ -14,7 +18,7 @@ function getServiceRoleClient() {
 /** 公开接口：获取首页行业标签（小程序首页分类 tab 使用） */
 export async function GET() {
   try {
-    const supabase = getServiceRoleClient();
+    const supabase = getClient();
 
     const { data, error } = await supabase
       .from("home_categories")
@@ -23,7 +27,6 @@ export async function GET() {
       .order("sort_order", { ascending: true });
 
     if (error) {
-      // 表不存在时返回默认数据
       if (error.code === "42P01") {
         return NextResponse.json([
           { id: "1", label: "全部", sort_order: 0 },
