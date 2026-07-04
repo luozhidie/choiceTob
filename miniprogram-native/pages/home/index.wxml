@@ -67,15 +67,16 @@
         <image src="{{item.content.mainImage}}" mode="aspectFit" class="fb-main-img"/>
         <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
-      <view class="fb-subs">
-        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:key="*this"
-          bindtap="goBlockLink" data-link="{{item.content['sub'+(index+0)]&&item.content['sub'+(index+0)].link}}">
-          <image wx:if="{{item.content['sub'+(index+0)].image}}" src="{{item.content['sub'+(index+0)].image}}" mode="aspectFill" class="fb-sub-img"/>
-          <view wx:if="{{item.content['sub'+(index+0)].title||item.content['sub'+(index+0)].price}}" class="fb-sub-info">
-            <text class="fb-sn">{{item.content['sub'+(index+0)].title}}</text>
-            <text class="fb-sp">{{item.content['sub'+(index+0)].price}}</text>
+      <view class="fb-subs" wx:if="{{fbSubItems[bIdx]}}">
+        <view class="fb-sub" wx:for="{{fbSubItems[bIdx]}}" wx:key="image"
+          bindtap="goBlockLink" data-link="{{item.link}}">
+          <image src="{{item.image}}" mode="aspectFill" class="fb-sub-img"/>
+          <view wx:if="{{item.title||item.price}}" class="fb-sub-info">
+            <text class="fb-sn">{{item.title}}</text>
+            <text class="fb-sp">{{item.price}}</text>
           </view>
         </view>
+      </view>
       </view>
     </view>
 
