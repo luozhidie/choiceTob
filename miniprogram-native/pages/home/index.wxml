@@ -1,39 +1,39 @@
 <view class="page">
   <!-- 大图Hero - 文字叠加在图上 -->
   <view class="hero">
-    <!-- 顶部叠加：品牌 + 搜索 + 菜单 -->
-    <view class="hero-top">
-      <text class="hero-brand">骆芷蝶智选</text>
-      <view class="hero-search" bindtap="goSearch">
-        <text class="hs-icon">🔍</text>
-        <text class="hs-ph">搜索商品</text>
-      </view>
-      <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
-    </view>
-
     <!-- 轮播图满屏 -->
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
 
-    <!-- 图中叠加文字（品牌标语） -->
+    <!-- 顶部右侧：菜单按钮 -->
+    <view class="hero-menu">
+      <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
+    </view>
+
+    <!-- 图中叠加文字 -->
     <view class="hero-txt">
-      <text class="ht-main">数据趋动 · 智选未来</text>
-      <text class="ht-sub">服装门店一站式赋能平台</text>
+      <text class="ht1">数据趋动·智选未来</text>
+      <text class="ht2">骆芷蝶｜供应链智选平台</text>
+      <text class="ht3">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 搜索框 -->
+    <view class="hero-search" bindtap="goSearch">
+      <text class="hs-icon">🔍</text>
+      <text class="hs-ph">搜索</text>
     </view>
 
     <!-- 底部分类标签 -->
     <view class="ov">
-      <div class="tg-bar">
-        <scroll-view scroll-x show-scrollbar="{{false}}">
-          <view class="tg-row">
-            <view wx:for="{{categories}}" wx:key="*this"
-              class="tg {{ac===item?'tg-on':''}}"
-              bindtap="swCat" data-c="{{item}}">{{item}}</view>
-          </view>
-        </scroll-view>
-      </div>
+      <scroll-view scroll-x show-scrollbar="{{false}}">
+        <view class="tg-row">
+          <view wx:for="{{categories}}" wx:key="*this"
+            class="tg {{ac===item?'tg-on':''}}"
+            bindtap="swCat" data-c="{{item}}">{{item}}</view>
+        </view>
+      </scroll-view>
     </view>
     <view class="fade"></view>
   </view>
