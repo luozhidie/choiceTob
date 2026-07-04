@@ -58,26 +58,30 @@ export function HotProductsSection() {
 
   const isMember = isHotPicksMember;
 
-  // 统一微信支付
+  // 统一微信支付（native 模式，微信内自动跳转拉起）
   const handleWechatPay = async (productId: string, price: number) => {
     if (!user) { window.location.href = '/login?redirect=/hot-picks'; return; }
     try {
       const res = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ product_id: productId, total_fee: price, platform: 'mp', openid: user.id || '' }),
+        body: JSON.stringify({ product_id: productId, total_fee: price, platform: 'native' }),
       });
       const result = await res.json();
-      if (result.prepay_id && typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
-        (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-          appId: result.appId, timeStamp: result.timeStamp, nonceStr: result.nonceStr,
-          package: result.package, signType: result.signType || 'MD5', paySign: result.paySign,
-        }, (res: any) => {
-          if (res.err_msg === "get_brand_wcpay_request:ok") { alert('支付成功！已开通会员'); window.location.reload(); }
-          else if (res.err_msg === "get_brand_wcpay_request:cancel") alert('支付已取消');
-          else alert('支付失败：' + res.err_msg);
-        });
-      } else alert('请在微信中打开此页面进行支付');
+      if (result.error) {
+        alert('下单失败：' + result.error);
+        return;
+      }
+      // 微信内：用 weixin:// 链接直接跳转
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+        window.location.href = result.code_url;
+      } else if (result.code_url) {
+        alert('请使用微信扫码支付');
+        // 可选：显示二维码弹窗
+      } else {
+        alert('下单失败，请稍后重试');
+      }
     } catch (e) { console.error('[pay]', e); alert('支付发起失败'); }
   };
 
@@ -296,30 +300,20 @@ export function HotProductsSection() {
                           headers: { 'Content-Type': 'application/json' },
                           body: JSON.stringify({
                             product_id: 'hotpicks_monthly',
+                            product_title: '色彩智选-爆款会员',
                             total_fee: 99800,
-                            platform: 'mp',
-                            openid: user?.id || ''
+                            platform: 'native',
                           })
                         });
                         const result = await response.json();
-                        if (result.prepay_id && typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
-                          (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-                            appId: result.appId,
-                            timeStamp: result.timeStamp,
-                            nonceStr: result.nonceStr,
-                            package: result.package,
-                            signType: result.signType,
-                            paySign: result.paySign
-                          }, function(res: any) {
-                            if (res.err_msg === "get_brand_wcpay_request:ok") {
-                              alert('支付成功！已开通会员');
-                              window.location.reload();
-                            }
-                          });
-                        } else if (!user) {
-                          window.location.href = '/login?redirect=/hot-picks';
+                        if (result.error) { alert('下单失败：' + result.error); setSelectedProduct(null); return; }
+                        const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+                        if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+                          window.location.href = result.code_url;
+                        } else if (result.code_url) {
+                          alert('请使用微信扫码支付');
                         } else {
-                          alert('请在微信中打开此页面进行支付');
+                          alert('下单失败，请稍后重试');
                         }
                       } catch (error) {
                         console.error('[wechat pay]', error);

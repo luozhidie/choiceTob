@@ -156,7 +156,7 @@ export default function HotPicksPage() {
   const [payQrCode, setPayQrCode] = useState<string | null>(null);
   const [showPayModal, setShowPayModal] = useState(false);
 
-  // 微信支付：自动判断环境，微信内用JSAPI直接拉起，其他环境显示二维码
+  // 微信支付：统一用 native 模式，微信内浏览器自动跳转 weixin:// 拉起支付
   const handleWechatPay = async (productId: string, price: number) => {
     if (!user) {
       alert('请先登录');
@@ -164,10 +164,6 @@ export default function HotPicksPage() {
       return;
     }
     try {
-      // 判断是否在微信内
-      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-      const platform = isWeChat ? 'mp' : 'native';
-
       const response = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -175,49 +171,26 @@ export default function HotPicksPage() {
           product_id: productId,
           product_title: '色彩智选-会员开通',
           total_fee: price,
-          platform,
-          openid: user?.id || '',
+          platform: 'native',
         }),
       });
       const result = await response.json();
 
       if (result.error) {
-        alert('支付发起失败：' + result.error);
+        alert('下单失败：' + result.error);
         return;
       }
 
-      if (isWeChat && result.prepay_id && typeof window !== 'undefined') {
-        // 微信内：JSAPI 直接拉起微信支付
-        if ((window as any).WeixinJSBridge) {
-          (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-            appId: result.appId,
-            timeStamp: result.timeStamp,
-            nonceStr: result.nonceStr,
-            package: result.package || ('prepay_id=' + result.prepay_id),
-            signType: result.signType || 'MD5',
-            paySign: result.paySign,
-          }, function(res: any) {
-            if (res.err_msg === "get_brand_wcpay_request:ok") {
-              alert('支付成功！已开通会员');
-              window.location.reload();
-            } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
-              alert('支付已取消');
-            } else {
-              alert('支付失败：' + res.err_msg);
-            }
-          });
-        } else {
-          // WeixinJSBridge 还没准备好，等一下再调
-          document.addEventListener('WeixinJSBridgeReady', function() {
-            handleWechatPay(productId, price);
-          }, { once: true });
-        }
+      // 微信内：用 code_url（weixin:// 开头）直接跳转拉起支付
+      const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+      if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+        window.location.href = result.code_url;
       } else if (result.code_url) {
         // 非微信内：显示二维码
         setPayQrCode(result.code_url);
         setShowPayModal(true);
       } else {
-        alert('支付发起失败，请稍后重试');
+        alert('下单失败，请稍后重试');
       }
     } catch (error) {
       console.error('[wechat pay]', error);
@@ -310,37 +283,20 @@ export default function HotPicksPage() {
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                               product_id: 'hotpicks_monthly',
-                              total_fee: 99800, // ¥998 = 99800分
-                              platform: 'mp', // 网站用公众号JSAPI
-                              openid: user.id || ''
+                              product_title: '色彩智选-爆款会员',
+                              total_fee: 99800,
+                              platform: 'native',
                             })
                           });
                           const result = await response.json();
-                          if (result.prepay_id) {
-                            // 网页端调起微信支付
-                            if (typeof window !== 'undefined' && (window as any).WeixinJSBridge) {
-                              (window as any).WeixinJSBridge.invoke('getBrandWCPayRequest', {
-                                appId: result.appId,
-                                timeStamp: result.timeStamp,
-                                nonceStr: result.nonceStr,
-                                package: result.package,
-                                signType: result.signType,
-                                paySign: result.paySign
-                              }, function(res: any) {
-                                if (res.err_msg === "get_brand_wcpay_request:ok") {
-                                  alert('支付成功！已开通会员');
-                                  window.location.reload();
-                                } else if (res.err_msg === "get_brand_wcpay_request:cancel") {
-                                  alert('支付已取消');
-                                } else {
-                                  alert('支付失败：' + res.err_msg);
-                                }
-                              });
-                            } else {
-                              alert('请在微信中打开此页面进行支付');
-                            }
+                          if (result.error) { alert('下单失败：' + result.error); return; }
+                          const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
+                          if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
+                            window.location.href = result.code_url;
+                          } else if (result.code_url) {
+                            alert('请使用微信扫码支付');
                           } else {
-                            alert('支付发起失败：' + (result.error || '未知错误'));
+                            alert('下单失败，请稍后重试');
                           }
                         } catch (error) {
                           console.error('[wechat pay]', error);
