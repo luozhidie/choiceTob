@@ -54,7 +54,10 @@ Page({
     wx.request({
       url:'https://colour-choice.art/api/public/banners',
       method:'GET',
-      success:function(r){if(r.data&&Array.isArray(r.data.data)&&r.data.data.length>0)t.setData({banners:r.data.data});}
+      success:function(r){
+        var d=r.data;
+        if(Array.isArray(d)&&d.length>0)t.setData({banners:d});
+      },
     });
   },
 
