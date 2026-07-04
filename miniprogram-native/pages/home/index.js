@@ -27,20 +27,17 @@ Page({
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
 
-  /* ====== 从后台加载分类标签 ====== */
+  /* ====== 从后台加载首页行业标签 ====== */
   loadCategories:function(){
     var t=this;
     wx.request({
-      url:'https://colour-choice.art/api/public/categories',
+      url:'https://colour-choice.art/api/public/home-categories',
       method:'GET',
       success:function(r){
         var d=r.data;
         if(Array.isArray(d)&&d.length>0){
           t.setData({categories:d.map(function(x){return x.label;})});
         }
-      },
-      fail:function(){
-        // 失败时保持硬编码默认值
       }
     });
   },
