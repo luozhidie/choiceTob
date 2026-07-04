@@ -11,7 +11,7 @@
   <!-- 大图Hero -->
   <view class="hero">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
-      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
+      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFit" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
     <view class="ov">
@@ -64,18 +64,21 @@
     <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
-        <image src="{{item.content.mainImage}}" mode="aspectFill" class="fb-main-img"/>
+        <image src="{{item.content.mainImage}}" mode="aspectFit" class="fb-main-img"/>
         <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
       <view class="fb-subs">
-        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:key="*this"
-          bindtap="goBlockLink" data-link="{{item.content['sub'+(index+0)]&&item.content['sub'+(index+0)].link}}">
-          <image src="{{item.content['sub'+(index+0)].image}}" mode="aspectFill" class="fb-sub-img"/>
-          <view class="fb-sub-info">
-            <text class="fb-sn">{{item.content['sub'+(index+0)].title}}</text>
-            <text class="fb-sp">{{item.content['sub'+(index+0)].price}}</text>
+        <block wx:for="{{[0,1,2]}}" wx:key="*this" wx:for-item="subIdx">
+          <view wx:if="{{item.content['sub'+(subIdx+0)]&&item.content['sub'+(subIdx+0)].image}}"
+            class="fb-sub"
+            bindtap="goBlockLink" data-link="{{item.content['sub'+(subIdx+0)].link}}">
+            <image src="{{item.content['sub'+(subIdx+0)].image}}" mode="aspectFill" class="fb-sub-img"/>
+            <view wx:if="{{item.content['sub'+(subIdx+0)].title||item.content['sub'+(subIdx+0)].price}}" class="fb-sub-info">
+              <text class="fb-sn">{{item.content['sub'+(subIdx+0)].title}}</text>
+              <text class="fb-sp">{{item.content['sub'+(subIdx+0)].price}}</text>
+            </view>
           </view>
-        </view>
+        </block>
       </view>
     </view>
 
