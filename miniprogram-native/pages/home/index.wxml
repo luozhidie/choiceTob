@@ -14,9 +14,9 @@
 
     <!-- 图中叠加文字 -->
     <view class="hero-txt">
-      <text class="ht1">数据趋动·智选未来</text>
-      <text class="ht2">骆芷蝶｜供应链智选平台</text>
-      <text class="ht3">服装门店一站式赋能平台</text>
+      <text class="ht-small">数据趋动·智选未来</text>
+      <text class="ht-big">骆芷蝶｜供应链智选平台</text>
+      <text class="ht-sub">服装门店一站式赋能平台</text>
     </view>
 
     <!-- 搜索框 -->
