@@ -90,10 +90,11 @@ export async function POST(request: NextRequest) {
       }
       result = data;
     } else {
-      // 新建版块
+      // 新建版块 - 始终生成有效 ID
+      const newId = crypto.randomUUID();
       const { data, error } = await supabase
         .from("page_blocks")
-        .insert([{ ...blockData, id: id?.startsWith("demo-") ? undefined : id || `block_${Date.now()}`, created_at: now }])
+        .insert([{ ...blockData, id: newId, created_at: now }])
         .select()
         .single();
 
