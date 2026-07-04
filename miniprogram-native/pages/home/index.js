@@ -2,7 +2,7 @@ Page({
   data:{
     banners:[],
     curB:0,
-    categories:['全部','穿搭','护肤','彩妆','养生','食品','家居','文创','艺术'],
+    categories:[],  // 从 API 加载，失败时为空
     ac:'全部',
     products:[],
     ld:true,
@@ -20,11 +20,30 @@ Page({
     var t=this;
     t.loadB();
     t.loadP();
+    t.loadCategories();  // 从后台读取分类标签
     t.loadBlocks();
     t.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
+
+  /* ====== 从后台加载分类标签 ====== */
+  loadCategories:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/categories',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(Array.isArray(d)&&d.length>0){
+          t.setData({categories:d.map(function(x){return x.label;})});
+        }
+      },
+      fail:function(){
+        // 失败时保持硬编码默认值
+      }
+    });
+  },
 
   /* ====== 加载动态模块 ====== */
   loadBlocks:function(){
