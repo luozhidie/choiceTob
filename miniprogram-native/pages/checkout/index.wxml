@@ -1,0 +1,48 @@
+<view class="page">
+  <!-- 收货地址 -->
+  <view class="addr-sec" bindtap="goAddress">
+    <view class="addr-icon">📍</view>
+    <view class="addr-info" wx:if="{{address}}">
+      <text class="addr-name">{{address.name}} {{address.phone}}</text>
+      <text class="addr-detail">{{address.province}}{{address.city}}{{address.district}}{{address.detail}}</text>
+    </view>
+    <view class="addr-info" wx:else>
+      <text class="addr-tip">请选择收货地址</text>
+    </view>
+    <text class="addr-arrow">›</text>
+  </view>
+
+  <!-- 商品列表 -->
+  <view class="goods-sec">
+    <view class="goods-item" wx:for="{{items}}" wx:key="id">
+      <image src="{{item.image||''}}" mode="aspectFill" class="gi"/>
+      <view class="gi-info">
+        <text class="gi-name">{{item.name||item.title}}</text>
+        <view class="gi-meta">
+          <text class="gi-price">¥{{item.priceText}}</text>
+          <text class="gi-qty">x{{item.quantity}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 备注 -->
+  <view class="remark-sec">
+    <text class="rl">备注</text>
+    <input class="ri" placeholder="选填，可备注颜色/尺码等" value="{{remark}}" bindinput="onRemark"/>
+  </view>
+
+  <!-- 金额明细 -->
+  <view class="fee-sec">
+    <view class="fee-row"><text>商品合计</text><text>¥{{subtotal}}</text></view>
+    <view class="fee-row"><text>运费</text><text>¥{{shipping}}</text></view>
+    <view class="fee-row fee-total"><text>应付总额</text><text class="fee-num">¥{{total}}</text></view>
+  </view>
+
+  <!-- 提交订单 -->
+  <view class="submit-bar">
+    <text class="st-label">应付：</text>
+    <text class="st-total">¥{{total}}</text>
+    <view class="st-btn" bindtap="submitOrder">提交订单</view>
+  </view>
+</view>

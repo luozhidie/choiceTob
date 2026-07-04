@@ -9,29 +9,87 @@
     </swiper-item>
   </swiper>
 
-  <!-- 商品信息 -->
-  <view class="info">
-    <text class="name">{{product.title || '商品名称'}}</text>
-    <view class="price-row">
-      <text class="price">{{priceText}}</text>
-      <text class="ori" wx:if="{{product.original_price}}">{{originalPriceText}}</text>
-    </view>
-    <text class="desc">{{product.description || ''}}</text>
+  <!-- 收藏按钮 -->
+  <view class="fav-btn {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
 
-    <!-- 库存 -->
-    <view class="stock" wx:if="{{product.stock}}">
-      <text>库存：{{product.stock}} 件</text>
+  <!-- 价格区 -->
+  <view class="price-sec">
+    <view class="pr-row">
+      <text class="price">{{priceText}}</text>
+      <text class="ori" wx:if="{{originalPriceText}}">{{originalPriceText}}</text>
+      <text class="disc" wx:if="{{discountText}}">{{discountText}}</text>
+    </view>
+    <text class="sales" wx:if="{{product.sales_count}}">已售 {{product.sales_count}}</text>
+  </view>
+
+  <!-- 商品名 -->
+  <view class="name-sec">
+    <text class="name">{{product.title || product.name || '商品名称'}}</text>
+    <text class="desc">{{product.description || ''}}</text>
+  </view>
+
+  <!-- Tab区 -->
+  <view class="tab-sec">
+    <view class="tabs">
+      <text class="tab {{activeTab==='detail'?'tab-on':''}}" bindtap="swTab" data-t="detail">商品详情</text>
+      <text class="tab {{activeTab==='spec'?'tab-on':''}}" bindtap="swTab" data-t="spec">规格参数</text>
+      <text class="tab {{activeTab==='review'?'tab-on':''}}" bindtap="swTab" data-t="review">用户评价</text>
+    </view>
+
+    <!-- 详情 -->
+    <view class="tab-body" wx:if="{{activeTab==='detail'}}">
+      <view wx:if="{{product.detail_images && product.detail_images.length>0}}">
+        <image wx:for="{{product.detail_images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="detail-img"/>
+      </view>
+      <view wx:else class="tab-empty"><text>暂无详情图文</text></view>
+    </view>
+
+    <!-- 规格 -->
+    <view class="tab-body" wx:if="{{activeTab==='spec'}}">
+      <view class="spec-table" wx:if="{{specList.length>0}}">
+        <view class="spec-row" wx:for="{{specList}}" wx:key="label">
+          <text class="spec-label">{{item.label}}</text>
+          <text class="spec-value">{{item.value}}</text>
+        </view>
+      </view>
+      <view wx:else class="tab-empty"><text>暂无规格参数</text></view>
+    </view>
+
+    <!-- 评价 -->
+    <view class="tab-body" wx:if="{{activeTab==='review'}}">
+      <view wx:if="{{reviews.length>0}}">
+        <view class="review" wx:for="{{reviews}}" wx:key="id">
+          <view class="rv-header">
+            <text class="rv-name">{{item.nickname||'匿名'}}</text>
+            <text class="rv-date">{{item.created_at||''}}</text>
+          </view>
+          <text class="rv-content">{{item.content||''}}</text>
+        </view>
+      </view>
+      <view wx:else class="tab-empty"><text>暂无评价</text></view>
     </view>
   </view>
 
   <!-- 数量选择 -->
-  <view class="qty">
+  <view class="qty-sec">
     <text class="ql">数量</text>
     <view class="qb">
-      <view class="btn" bindtap="dec">-</view>
-      <text class="num">{{quantity}}</text>
-      <view class="btn" bindtap="inc">+</view>
+      <view class="qbtn" bindtap="dec">-</view>
+      <text class="qnum">{{quantity}}</text>
+      <view class="qbtn" bindtap="inc">+</view>
     </view>
+  </view>
+
+  <!-- 推荐商品 -->
+  <view class="rec-sec" wx:if="{{recList.length>0}}">
+    <text class="rec-title">搭配推荐</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{recList}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">¥{{item.price>100?Math.round(item.price/100):item.price}}</text>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 底部操作栏 -->
@@ -41,6 +99,10 @@
         <text class="ic">🛒</text>
         <text class="badge" wx:if="{{cartCount>0}}">{{cartCount}}</text>
         <text class="lab">购物车</text>
+      </view>
+      <view class="bar-icon" bindtap="toggleFav">
+        <text class="ic">{{isFav?'♥':'♡'}}</text>
+        <text class="lab">{{isFav?'已收藏':'收藏'}}</text>
       </view>
     </view>
     <view class="bar-right">

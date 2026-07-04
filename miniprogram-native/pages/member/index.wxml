@@ -33,7 +33,7 @@
       <view class="cbtn"><text>立即进入 →</text></view>
     </view>
 
-    <view class="card card-ai" bindtap="noop">
+    <view class="card card-ai" bindtap="goPlan">
       <view class="ctag ctag-ai">AI驱动</view>
       <view class="cicon"><text>企</text></view>
       <text class="cname">商品企划中心</text>
@@ -49,7 +49,7 @@
       <view class="cbtn"><text>立即进入 →</text></view>
     </view>
 
-    <view class="card card-marketing" bindtap="noop">
+    <view class="card card-marketing" bindtap="goMarketing">
       <view class="ctag ctag-smart">智能</view>
       <view class="cicon"><text>营</text></view>
       <text class="cname">营销策划工具</text>

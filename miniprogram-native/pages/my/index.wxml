@@ -67,6 +67,9 @@
       <view class="fi" bindtap="goContact">
         <text class="fi-icon">📍</text><text class="fi-text">联系客服</text><text class="fi-arrow">›</text>
       </view>
+      <view class="fi" bindtap="goFavorites">
+        <text class="fi-icon">♡</text><text class="fi-text">我的收藏</text><text class="fi-arrow">›</text>
+      </view>
       <view class="fi" bindtap="goHistory">
         <text class="fi-icon">📋</text><text class="fi-text">浏览记录</text>
         <text class="fi-count" wx:if="{{historyCount>0}}">{{historyCount}}</text><text class="fi-arrow">›</text>

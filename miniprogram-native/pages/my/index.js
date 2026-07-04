@@ -29,6 +29,7 @@ Page({
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
   goMember:function(){wx.navigateTo({url:'/pages/member/index'});},
+  goFavorites:function(){wx.navigateTo({url:'/pages/favorites/index'});},
   goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00\n邮箱：luozhidie@live.cn',showCancel:false,confirmText:'知道了'});},
   goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},
   goArticles:function(){wx.navigateTo({url:'/pages/articles/index'});},

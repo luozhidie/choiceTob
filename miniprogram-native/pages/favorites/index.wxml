@@ -1,0 +1,26 @@
+<view class="page">
+  <!-- 标题 -->
+  <view class="hd"><text class="ht">我的收藏</text></view>
+
+  <!-- 列表 -->
+  <view class="list" wx:if="{{list.length>0}}">
+    <view class="card" wx:for="{{list}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+      <image src="{{item.image||''}}" mode="aspectFill" class="ci"/>
+      <view class="cb">
+        <text class="ct">{{item.name||item.title||'商品'}}</text>
+        <text class="cp">¥{{item.price}}</text>
+      </view>
+      <text class="del" catchtap="delOne" data-id="{{item.id}}">✕</text>
+    </view>
+  </view>
+
+  <!-- 空 -->
+  <view class="emp" wx:elif="{{!loading}}">
+    <text class="ei">♡</text>
+    <text class="et">暂无收藏</text>
+    <view class="eb" bindtap="goBuyer">去逛逛 →</view>
+  </view>
+
+  <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
+  <view class="sbtm"></view>
+</view>
