@@ -1,7 +1,7 @@
 page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; }
 
 /* ========== Hero大图 - 全屏叠加版（隐藏系统导航栏） ========== */
-.hero{position:relative;width:100%;height:900rpx;overflow:hidden;}
+.hero{position:relative;width:100%;height:calc(100vh - 120rpx);overflow:hidden;}
 .sw{width:100%;height:100%;}
 .si{width:100%;height:100%;}
 .ph{width:100%;height:100%;background:#1a1225;}
@@ -37,13 +37,14 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 }
 .hero-search{
   display:flex;align-items:center;
-  background:rgba(255,255,255,.92);border-radius:44rpx;
+  background:rgba(255,255,255,.18);border-radius:44rpx;
   padding:20rpx 36rpx;gap:12rpx;
-  box-shadow:0 4rpx 24rpx rgba(0,0,0,.15);
+  backdrop-filter:blur(12px);
+  border:1rpx solid rgba(255,255,255,.25);
   margin-bottom:16rpx;
 }
 .hs-icon{font-size:28rpx;flex-shrink:0;}
-.hs-ph{font-size:27rpx;color:#bbb;}
+.hs-ph{font-size:27rpx;color:rgba(255,255,255,.8);}
 
 /* 分类标签（横滑，半透明底叠在图上） */
 .cat-scroll{white-space:nowrap;}
@@ -51,8 +52,8 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .tg{padding:10rpx 24rpx;border-radius:32rpx;font-size:23rpx;white-space:nowrap;color:rgba(255,255,255,.95);background:rgba(0,0,0,.3);backdrop-filter:blur(8px);border:1rpx solid rgba(255,255,255,.2);transition:all .2s;font-weight:500;}
 .tg-on{color:#fff;background:rgba(26,26,46,.85);border-color:#fff;font-weight:700;}
 
-/* 底部渐变（接商品区） */
-.fade{position:absolute;bottom:0;left:0;right:0;height:60rpx;background:linear-gradient(to top,#faf8f6 0%,transparent 100%);pointer-events:none;z-index:3;}
+/* 底部渐变（接商品区） - 满屏模式不需要 */
+.fade{display:none;}
 
 /* 菜单 */
 .mk{position:fixed;top:0;left:0;right:0;bottom:0;background:transparent;z-index:99;opacity:0;visibility:hidden;transition:all .3s;}
@@ -87,7 +88,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .mlg{display:inline-block;padding:13rpx 34rpx;background:linear-gradient(to right,#2d1b2e,#4a3a4b);color:#fff;font-size:25rpx;font-weight:600;border-radius:20rpx;}
 
 /* 商品区 */
-.sec{background:#fff;padding:32rpx 24rpx;border-radius:28rpx 28rpx 0 0;margin-top:-40rpx;position:relative;z-index:6;}
+.sec{background:#fff;padding:32rpx 24rpx;border-radius:28rpx 28rpx 0 0;margin-top:-24rpx;position:relative;z-index:6;}
 .sh{display:flex;align-items:baseline;gap:10rpx;margin-bottom:24rpx;flex-wrap:wrap;}
 .stt{font-size:32rpx;font-weight:700;color:#1a1a2e;}
 .stc{font-size:23rpx;color:#bbb;}
