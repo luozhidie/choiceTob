@@ -58,129 +58,147 @@
     </view>
   </view>
 
-  <!-- ========== 动态模块区（轮播图下方）========== -->
+  <!-- ========== 动态模块区 ========== -->
   <block wx:for="{{blocks}}" wx:key="id" wx:for-index="bIdx">
 
-    <!-- featured_banner 精选横幅：大图+3小图 -->
+    <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
         <image src="{{item.content.mainImage}}" mode="aspectFill" class="fb-main-img"/>
-        <view class="fb-ov" wx:if="{{item.content.mainLink}}">
-          <text class="fb-tap">点击跳转 →</text>
-        </view>
+        <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
       <view class="fb-subs">
-        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:key="*this"
-          bindtap="goBlockLink" data-link="{{item.content['sub'+index]&&item.content['sub'+index].link}}">
-          <image src="{{item.content['sub'+index].image}}" mode="aspectFill" class="fb-sub-img"/>
+        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:for-item="subItem" wx:key="*this"
+          bindtap="goBlockLink" data-link="{{item.content['sub'+subItem.index]&&item.content['sub'+subItem.index].link}}">
+          <image src="{{item.content['sub'+subItem.index].image}}" mode="aspectFill" class="fb-sub-img"/>
           <view class="fb-sub-info">
-            <text class="fb-sn">{{item.content['sub'+index].title}}</text>
-            <text class="fb-sp">{{item.content['sub'+index].price}}</text>
+            <text class="fb-sn">{{item.content['sub'+subItem.index].title}}</text>
+            <text class="fb-sp">{{item.content['sub'+subItem.index].price}}</text>
           </view>
         </view>
       </view>
     </view>
 
-    <!-- banner_large 大横幅 -->
-    <view wx:elif="{{item.type==='banner_large'}}" class="blk-bl" style="padding:{{item.style.padding||16}}rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
-      <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="bl-img"/>
-      <view wx:else class="bl-bg">
-        <text class="bl-title">{{item.content.title}}</text>
-        <text class="bl-sub">{{item.content.subtitle}}</text>
-      </view>
-    </view>
-
-    <!-- banner_small 小横幅 -->
-    <view wx:elif="{{item.type==='banner_small'}}" class="blk-bs" style="padding:8rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
-      <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="widthFix" class="bs-img"/>
-      <view class="bs-bar"><text class="bs-title">{{item.content.title}}</text></view>
-    </view>
-
-    <!-- card_single 单格卡片 -->
-    <view wx:elif="{{item.type==='card_single'}}" class="blk-cs" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
-      <view class="cs-card">
-        <image src="{{item.content.image}}" mode="aspectFill" class="cs-img"/>
-        <view class="cs-body">
-          <text class="cs-title">{{item.content.title}}</text>
-          <text class="cs-sub">{{item.content.subtitle}}</text>
-          <view class="cs-btn">{{item.content.buttonText||'查看详情'}}</view>
+    <view wx:else>
+      <!-- banner_large -->
+      <view wx:if="{{item.type==='banner_large'}}" class="blk-bl" style="padding:{{item.style.padding||16}}rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+        <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="bl-img"/>
+        <view wx:else class="bl-bg">
+          <text class="bl-title">{{item.content.title}}</text>
+          <text class="bl-sub">{{item.content.subtitle}}</text>
         </view>
       </view>
-    </view>
 
-    <!-- card_quad 四宫格 -->
-    <view wx:elif="{{item.type==='card_quad'}}" class="blk-cq" style="padding:16rpx 24rpx;background:{{item.style.bgColor||'#fff'}};">
-      <view class="cq-row">
-        <view class="cq-card" wx:for="{{quadItems[bIdx]}}" wx:key="title"
-          bindtap="goBlockLink" data-link="{{item.link}}">
-          <image src="{{item.image}}" mode="aspectFill" class="cq-img"/>
-          <text class="cq-title">{{item.title}}</text>
-          <text class="cq-sub">{{item.subtitle}}</text>
+      <view wx:else>
+        <!-- banner_small -->
+        <view wx:if="{{item.type==='banner_small'}}" class="blk-bs" style="padding:8rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+          <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="widthFix" class="bs-img"/>
+          <view class="bs-bar"><text class="bs-title">{{item.content.title}}</text></view>
         </view>
-      </view>
-    </view>
 
-    <!-- circle_row 圆形图标行 -->
-    <view wx:elif="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
-      <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
-        <view class="cr-row">
-          <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="label"
-            bindtap="goBlockLink" data-link="{{item.link}}">
-            <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
-            <text class="cr-label">{{item.label}}</text>
+        <view wx:else>
+          <!-- card_single -->
+          <view wx:if="{{item.type==='card_single'}}" class="blk-cs" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+            <view class="cs-card">
+              <image src="{{item.content.image}}" mode="aspectFill" class="cs-img"/>
+              <view class="cs-body">
+                <text class="cs-title">{{item.content.title}}</text>
+                <text class="cs-sub">{{item.content.subtitle}}</text>
+                <view class="cs-btn">{{item.content.buttonText||'查看详情'}}</view>
+              </view>
+            </view>
+          </view>
+
+          <view wx:else>
+            <!-- card_quad -->
+            <view wx:if="{{item.type==='card_quad'}}" class="blk-cq" style="padding:16rpx 24rpx;background:{{item.style.bgColor||'#fff'}};">
+              <view class="cq-row">
+                <view class="cq-card" wx:for="{{quadItems[bIdx]}}" wx:for-item="qcItem" wx:key="title"
+                  bindtap="goBlockLink" data-link="{{qcItem.link}}">
+                  <image src="{{qcItem.image}}" mode="aspectFill" class="cq-img"/>
+                  <text class="cq-title">{{qcItem.title}}</text>
+                  <text class="cq-sub">{{qcItem.subtitle}}</text>
+                </view>
+              </view>
+            </view>
+
+            <view wx:else>
+              <!-- circle_row -->
+              <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
+                <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
+                  <view class="cr-row">
+                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:for-item="crItem" wx:key="label"
+                      bindtap="goBlockLink" data-link="{{crItem.link}}">
+                      <image src="{{crItem.image}}" mode="aspectFill" class="cr-icon"/>
+                      <text class="cr-label">{{crItem.label}}</text>
+                    </view>
+                  </view>
+                </scroll-view>
+              </view>
+
+              <view wx:else>
+                <!-- category_nav -->
+                <view wx:if="{{item.type==='category_nav'}}" class="blk-cn">
+                  <scroll-view scroll-x show-scrollbar="{{false}}" class="cn-scroll">
+                    <view class="cn-row">
+                      <view wx:for="{{catNavItems}}" wx:key="label"
+                        class="cn-tab {{ac===item.label?'cn-on':''}}"
+                        bindtap="swCat" data-c="{{item.label}}">
+                        <text>{{item.label}}</text>
+                      </view>
+                    </view>
+                  </scroll-view>
+                </view>
+
+                <view wx:else>
+                  <!-- promotion -->
+                  <view wx:if="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">
+                    <view class="pm-card">
+                      <image wx:if="{{item.content.imageUrl}}" src="{{item.content.imageUrl}}" mode="widthFix" class="pm-img"/>
+                      <view class="pm-body">
+                        <text class="pm-title">{{item.content.promoTitle}}</text>
+                        <text class="pm-desc">{{item.content.promoDesc}}</text>
+                        <view class="pm-btn" wx:if="{{item.content.buttonText}}">{{item.content.buttonText}}</view>
+                      </view>
+                    </view>
+                  </view>
+
+                  <view wx:else>
+                    <!-- group_buy -->
+                    <view wx:if="{{item.type==='group_buy'}}" class="blk-gb" style="padding:16rpx 24rpx;">
+                      <view class="gb-card">
+                        <text class="gb-tag">团购</text>
+                        <text class="gb-desc">{{item.content.desc||'多人拼单·超值优惠'}}</text>
+                        <text class="gb-info">{{item.content.minPeople||3}}人成团 · {{Math.round((1-(item.content.discount||0.8))*100)}}折</text>
+                      </view>
+                    </view>
+
+                    <view wx:else>
+                      <!-- flash_sale -->
+                      <view wx:if="{{item.type==='flash_sale'}}" class="blk-fs" style="padding:16rpx 24rpx;">
+                        <view class="fs-card">
+                          <text class="fs-tag">秒杀</text>
+                          <text class="fs-desc">{{item.content.desc||'限时抢购'}}</text>
+                          <text class="fs-info">低至{{Math.round((item.content.discount||0.7)*10)}}折</text>
+                        </view>
+                      </view>
+
+                      <view wx:else>
+                        <!-- products 标题行 -->
+                        <view wx:if="{{item.type==='products'&&item.section_title}}" class="blk-pt" style="padding:12rpx 24rpx;">
+                          <view class="pt-head">
+                            <text class="pt-title">{{item.section_title}}</text>
+                            <text class="pt-sub" wx:if="{{item.section_subtitle}}">{{item.section_subtitle}}</text>
+                          </view>
+                        </view>
+                      </view>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
           </view>
         </view>
-      </scroll-view>
-    </view>
-
-    <!-- category_nav 分类目录 -->
-    <view wx:elif="{{item.type==='category_nav'}}" class="blk-cn">
-      <scroll-view scroll-x show-scrollbar="{{false}}" class="cn-scroll">
-        <view class="cn-row">
-          <view wx:for="{{catNavItems}}" wx:key="label"
-            class="cn-tab {{ac===item.label?'cn-on':''}}"
-            bindtap="swCat" data-c="{{item.label}}">
-            <text>{{item.label}}</text>
-          </view>
-        </view>
-      </scroll-view>
-    </view>
-
-    <!-- promotion 营销活动 -->
-    <view wx:elif="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">
-      <view class="pm-card">
-        <image wx:if="{{item.content.imageUrl}}" src="{{item.content.imageUrl}}" mode="widthFix" class="pm-img"/>
-        <view class="pm-body">
-          <text class="pm-title">{{item.content.promoTitle}}</text>
-          <text class="pm-desc">{{item.content.promoDesc}}</text>
-          <view class="pm-btn" wx:if="{{item.content.buttonText}}">{{item.content.buttonText}}</view>
-        </view>
-      </view>
-    </view>
-
-    <!-- group_buy 团购 -->
-    <view wx:elif="{{item.type==='group_buy'}}" class="blk-gb" style="padding:16rpx 24rpx;">
-      <view class="gb-card">
-        <text class="gb-tag">团购</text>
-        <text class="gb-desc">{{item.content.desc||'多人拼单·超值优惠'}}</text>
-        <text class="gb-info">{{item.content.minPeople||3}}人成团 · {{Math.round((1-(item.content.discount||0.8))*100)}}折</text>
-      </view>
-    </view>
-
-    <!-- flash_sale 秒杀 -->
-    <view wx:elif="{{item.type==='flash_sale'}}" class="blk-fs" style="padding:16rpx 24rpx;">
-      <view class="fs-card">
-        <text class="fs-tag">秒杀</text>
-        <text class="fs-desc">{{item.content.desc||'限时抢购'}}</text>
-        <text class="fs-info">低至{{Math.round((item.content.discount||0.7)*10)}}折</text>
-      </view>
-    </view>
-
-    <!-- products 商品模块：显示为标题行，不重复渲染商品 -->
-    <view wx:elif="{{item.type==='products'}}" class="blk-pt" style="padding:12rpx 24rpx;" wx:if="{{item.section_title}}">
-      <view class="pt-head">
-        <text class="pt-title">{{item.section_title}}</text>
-        <text class="pt-sub" wx:if="{{item.section_subtitle}}">{{item.section_subtitle}}</text>
       </view>
     </view>
 
@@ -194,25 +212,24 @@
       <view class="clr" wx:if="{{ac!=='全部'}}" bindtap="swCat" data-c="全部"><text>✕ 清除筛选</text></view>
     </view>
 
-    <!-- 加载骨架 / 空 / 列表 -->
-    <block wx:if="{{ld}}">
-      <view class="gd">
-        <view class="sc" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
-          <view class="sci"></view><view class="sl1"></view><view class="sl2"></view>
-        </view>
+    <!-- 加载骨架 -->
+    <view wx:if="{{ld}}" class="gd">
+      <view class="sc" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+        <view class="sci"></view><view class="sl1"></view><view class="sl2"></view>
       </view>
-    </block>
+    </view>
 
-    <block wx:elif="{{products.length===0}}">
-      <view class="emp">
+    <!-- 非加载状态 -->
+    <view wx:else>
+      <!-- 空 -->
+      <view wx:if="{{products.length===0}}" class="emp">
         <text class="ei">📦</text>
         <text class="et">暂无选品</text>
         <view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
       </view>
-    </block>
 
-    <block wx:else>
-      <view class="gd">
+      <!-- 列表 -->
+      <view wx:else class="gd">
         <view class="cd" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
           <view class="cw">
             <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="ci" lazy-load/>
@@ -227,7 +244,7 @@
           </view>
         </view>
       </view>
-    </block>
+    </view>
   </view>
 
   <!-- CTA区 -->
