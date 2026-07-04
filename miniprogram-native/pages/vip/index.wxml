@@ -53,15 +53,22 @@
     </view>
   </view>
 
-  <!-- 测试会员 -->
-  <view class="plans" wx:if="{{activeTab==='test'}}">
-    <view class="plan-card" wx:for="{{testPlans}}" wx:key="id">
-      <text class="pc-name">{{item.name}}</text>
-      <text class="pc-price">{{item.priceLabel}}</text>
-      <view class="pc-features">
-        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+  <!-- 测试会员 - 双卡布局 -->
+  <view class="test-section" wx:if="{{activeTab==='test'}}">
+    <text class="ts-title">色彩风格测试</text>
+    <view class="ts-cards">
+      <view class="ts-card" wx:for="{{testPlans}}" wx:key="id">
+        <view class="tsc-icon" style="background:{{item.color}}15;color:{{item.color}};">{{item.icon}}</view>
+        <text class="tsc-name">{{item.name}}</text>
+        <text class="tsc-sub">{{item.sub}}</text>
+        <view class="tsc-features">
+          <text class="tsc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+        </view>
+        <view class="tsc-row">
+          <text class="tsc-price" style="color:{{item.color}};">{{item.priceLabel}}</text>
+          <text class="tsc-btn" style="color:{{item.color}};" bindtap="goTest" data-plan="{{item}}">立即测试 →</text>
+        </view>
       </view>
-      <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即测试</view>
     </view>
   </view>
 

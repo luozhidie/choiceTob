@@ -15,7 +15,10 @@ Page({
       {id:'wholesale_30w',name:'拿货会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.4折起',features:['同色同款三件起批','拿货折扣2.4折','退换额度15%','优先发货权','专属配货师','账期支持30天'],highlight:true},
     ],
     testPlans:[
-      {id:'test_style',name:'色彩风格测试',priceLabel:'¥99/次',features:['17道专业诊断题','色彩风格匹配报告','搭配建议方案','结果微信通知']},
+      {id:'test_female',name:'女士风格测试',sub:'14道题·自动出结果',priceLabel:'¥99',price:99,icon:'👩',color:'#e91e63',
+        features:['17道专业诊断题','色彩风格匹配报告','搭配建议方案','结果微信通知']},
+      {id:'test_male',name:'男士风格测试',sub:'14道题·自动出结果',priceLabel:'¥99',price:99,icon:'👨',color:'#1976d2',
+        features:['14道专业诊断题','色彩风格匹配报告','穿搭建议方案','结果微信通知']},
     ],
     compareRows:[
       {name:'批发价查看',trial:true,quarterly:true,yearly:true},
@@ -44,6 +47,50 @@ Page({
   selectPlan:function(e){
     var plan=e.currentTarget.dataset.plan;
     this.setData({selectedPlan:plan,showPay:true});
+  },
+
+  /* 测试会员 - 点击立即测试 */
+  goTest:function(e){
+    var plan=e.currentTarget.dataset.plan;
+    var t=this;
+    wx.showLoading({title:'发起支付...'});
+    wx.request({
+      url:'https://colour-choice.art/api/wechat-pay/unified-order',
+      method:'POST',
+      header:{'Content-Type':'application/json'},
+      data:{
+        product_id:plan.id,
+        product_title:plan.name,
+        total_fee:plan.price*100,
+        quantity:1,
+        platform:'mini',
+      },
+      success:function(r){
+        wx.hideLoading();
+        var d=r.data||{};
+        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+        var params=d.jsapi||d.payParams||d;
+        wx.requestPayment({
+          timeStamp:params.timeStamp||params.timestamp,
+          nonceStr:params.nonceStr,
+          package:params.package,
+          signType:params.signType||'RSA',
+          paySign:params.paySign,
+          success:function(){
+            /* 支付成功后跳转到风格测试页面 */
+            wx.navigateTo({
+              url:'/pages/style-test/index?mode='+(plan.id==='test_female'?'female':'male')
+            });
+          },
+          fail:function(err){
+            if(!err.errMsg || err.errMsg.indexOf('cancel')===-1){
+              wx.showToast({title:'支付取消',icon:'none'});
+            }
+          }
+        });
+      },
+      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+    });
   },
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
 
@@ -93,6 +140,8 @@ Page({
     if(pid==='wholesale_10w')return 10000000;
     if(pid==='wholesale_30w')return 30000000;
     if(pid==='test_style')return 9900;
+    if(pid==='test_female')return 9900;
+    if(pid==='test_male')return 9900;
     return 100;
   }
 });
