@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = 'force-dynamic';
+
+
 /** 公开接口：获取首页分类标签（小程序首页使用） */
 export async function GET() {
   const supabase = await createClient();

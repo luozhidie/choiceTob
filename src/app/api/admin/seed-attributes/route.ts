@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = 'force-dynamic';
+
+
 // 种子数据：面料 F01-F08
 const fabrics = [
   { code: 'F01', style_type: '少女型', suitable_fabrics: ['细棉', '软质毛料', '细呢料', '窄灯芯绒', '平绒', '丝绒', '苏格兰呢', '真丝', '纱'], avoid_fabrics: ['硬皮装', '粗毛线', '粗毛线衣等带有粗糙感的面料'], description: '少女型适合轻柔细腻的面料，回避粗糙硬挺的材质' },

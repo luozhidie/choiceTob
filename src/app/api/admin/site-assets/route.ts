@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 
+export const dynamic = 'force-dynamic';
+
+
 /**
  * 站点图片上传 API（服务端，使用 service_role 绕过 RLS）
  * POST /api/admin/site-assets

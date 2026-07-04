@@ -3,11 +3,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+export const dynamic = 'force-dynamic';
+
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 // 验证管理员 cookie
 async function verifyAdmin(request: NextRequest) {
@@ -21,6 +25,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
+  const supabase = getServiceRoleClient();
   const { data, error } = await supabase
     .from("site_assets")
     .select("*")
@@ -37,6 +42,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
+  const supabase = getServiceRoleClient();
   const body = await request.json();
   const { data, error } = await supabase
     .from("site_assets")
@@ -54,6 +60,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
+  const supabase = getServiceRoleClient();
   const { id, ...updates } = await request.json();
   const { data, error } = await supabase
     .from("site_assets")
@@ -72,9 +79,10 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ error: "未授权" }, { status: 401 });
   }
 
+  const supabase = getServiceRoleClient();
   const { searchParams } = new URL(request.url);
   const id = searchParams.get("id");
-  
+
   if (!id) return NextResponse.json({ error: "缺少id" }, { status: 400 });
 
   const { error } = await supabase
