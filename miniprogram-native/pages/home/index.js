@@ -14,7 +14,6 @@ Page({
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
-    fbSubItems:{},      // featured_banner 副图预解析
   },
 
   onLoad:function(){
@@ -37,7 +36,7 @@ Page({
         var d=r.data;
         if(!d||!d.success)return;
         var all=d.data||[];
-        var catNavs=[],quadData={},circleData={},fbSubData={};
+        var catNavs=[],quadData={},circleData={};
 
         for(var i=0;i<all.length;i++){
           var b=all[i];
@@ -75,13 +74,13 @@ Page({
               var sub=ct['sub'+s];
               if(sub&&sub.image)subs.push(sub);
             }
-            if(subs.length>0)fbSubData[i]=subs;
+            ct._subs=subs;
           }
         }
 
         t.setData({
           blocks:all,
-          catNavItems:catNavs,quadItems:quadData,circleItems:circleData,fbSubItems:fbSubData
+          catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
 
         /* 有分类导航时更新 categories 列表 */
