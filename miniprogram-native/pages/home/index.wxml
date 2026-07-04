@@ -1,26 +1,28 @@
 <view class="page">
-  <!-- Hero - 全屏大图 + 文字叠加 -->
+  <!-- 顶部导航栏 -->
+  <view class="nav">
+    <text class="nav-brand">骆芷蝶智选</text>
+    <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
+  </view>
+
+  <!-- Hero - 大图 + 文字叠加 -->
   <view class="hero">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
 
-    <!-- 叠加层 -->
+    <!-- 文字叠加在图上 -->
     <view class="hero-ol">
-      <!-- 第一行：小标题 + 搜索框 + 菜单 -->
-      <view class="hero-row1">
-        <text class="ht-small">数据趋动·智选未来</text>
-        <view class="hero-search" bindtap="goSearch">
-          <text class="hs-icon">🔍</text>
-          <text class="hs-ph">搜索</text>
-        </view>
-        <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
-      </view>
-      <!-- 第二行：大标题 -->
+      <text class="ht-small">数据趋动·智选未来</text>
       <text class="ht-big">骆芷蝶｜供应链智选平台</text>
-      <!-- 第三行：副标题 -->
       <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 搜索框 -->
+    <view class="hero-search" bindtap="goSearch">
+      <text class="hs-icon">🔍</text>
+      <text class="hs-ph">搜索</text>
     </view>
 
     <!-- 底部分类标签 -->
