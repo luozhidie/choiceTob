@@ -31,21 +31,24 @@
     <view wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" class="sk"><view class="ski"></view><view class="skl1"></view><view class="skl2"></view></view>
   </view>
 
-  <!-- 空 -->
-  <view class="emp" wx:elif="{{!loading && products.length===0}}">
-    <text class="ei">📦</text><text class="et">暂无商品</text>
-  </view>
-
-  <!-- 商品列表 -->
-  <view class="grid" wx:else>
-    <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
-      <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
-      <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
-      <text class="cn">{{item.name||item.title||'商品'}}</text>
-      <text class="cpri">{{item.priceText}}</text>
-      <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
+  <!-- 非加载状态 -->
+  <block wx:else>
+    <!-- 空 -->
+    <view class="emp" wx:if="{{!loading && products.length===0}}">
+      <text class="ei">📦</text><text class="et">暂无商品</text>
     </view>
-  </view>
+
+    <!-- 商品列表 -->
+    <view class="grid" wx:else>
+      <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
+        <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
+        <text class="cn">{{item.name||item.title||'商品'}}</text>
+        <text class="cpri">{{item.priceText}}</text>
+        <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
+      </view>
+    </view>
+  </block>
 
   <!-- 底部 -->
   <view class="more" wx:if="{{hasMore&&products.length>0}}"><text>上拉加载更多</text></view>

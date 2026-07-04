@@ -41,8 +41,8 @@
     </view>
 
     <!-- 空状态 -->
-    <view class="emp" wx:elif="{{!loading}}">
-      <text class="et">暂无已发布的课程</text>
+    <view class="emp" wx:if="{{courses.length===0 && !loading}}">
+      <text class="et">暂无已��布的课程</text>
     </view>
 
     <!-- 加载 -->

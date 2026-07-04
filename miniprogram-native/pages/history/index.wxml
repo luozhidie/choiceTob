@@ -22,7 +22,7 @@
   </view>
 
   <!-- 空 -->
-  <view class="emp" wx:elif="{{!loading}}">
+  <view class="emp" wx:if="{{!loading && list.length===0}}">
     <text class="ei">📭</text>
     <text class="et">暂无浏览记录</text>
     <view class="eb" bindtap="goHome">去逛逛 →</view>

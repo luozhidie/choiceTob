@@ -33,7 +33,7 @@
   </view>
 
   <!-- 空状态 -->
-  <view class="empty" wx:elif="{{!loading}}">
+  <view class="empty" wx:if="{{!loading && orders.length===0}}">
     <text class="ei">📦</text>
     <text class="et">暂无订单</text>
     <view class="eb" bindtap="goBuyer">去选品 →</view>
