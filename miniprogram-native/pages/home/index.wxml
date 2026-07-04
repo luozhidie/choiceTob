@@ -1,36 +1,31 @@
 <view class="page">
-  <!-- 导航栏 -->
+  <!-- 导航栏：品牌 + 搜索框 + 菜单 -->
   <view class="nav">
-    <view class="brand">
-      <text class="bicon">骆</text>
-      <view class="bt"><text class="bn">骆芷蝶智选</text><text class="bs">CHOICETOB</text></view>
+    <text class="nav-brand">骆芷蝶智选</text>
+    <view class="nav-search" bindtap="goSearch">
+      <text class="ns-icon">🔍</text>
+      <text class="ns-ph">搜索商品</text>
     </view>
     <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
   </view>
 
-  <!-- 大图Hero -->
+  <!-- 大图Hero - 紧凑版 -->
   <view class="hero">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFit" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
+    <!-- 底部仅保留分类标签 -->
     <view class="ov">
-      <view class="top-txt">
-        <view class="badge">数据驱动 · 智选未来</view>
-        <text class="mt">骆芷蝶供应链<text class="ma">智选</text>平台</text>
-        <text class="st">服装门店一站式赋能平台</text>
-      </view>
-      <view class="bot-area">
-        <view class="tg-bar">
-          <scroll-view scroll-x show-scrollbar="{{false}}">
-            <view class="tg-row">
-              <view wx:for="{{categories}}" wx:key="*this"
-                class="tg {{ac===item?'tg-on':''}}"
-                bindtap="swCat" data-c="{{item}}">{{item}}</view>
-            </view>
-          </scroll-view>
-        </view>
-      </view>
+      <div class="tg-bar">
+        <scroll-view scroll-x show-scrollbar="{{false}}">
+          <view class="tg-row">
+            <view wx:for="{{categories}}" wx:key="*this"
+              class="tg {{ac===item?'tg-on':''}}"
+              bindtap="swCat" data-c="{{item}}">{{item}}</view>
+          </view>
+        </scroll-view>
+      </div>
     </view>
     <view class="fade"></view>
   </view>
