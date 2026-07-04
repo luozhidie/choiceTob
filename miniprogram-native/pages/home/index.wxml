@@ -68,12 +68,12 @@
         <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
       <view class="fb-subs">
-        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:for-item="subItem" wx:key="*this"
-          bindtap="goBlockLink" data-link="{{item.content['sub'+subItem.index]&&item.content['sub'+subItem.index].link}}">
-          <image src="{{item.content['sub'+subItem.index].image}}" mode="aspectFill" class="fb-sub-img"/>
+        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:key="*this"
+          bindtap="goBlockLink" data-link="{{item.content['sub'+(index+0)]&&item.content['sub'+(index+0)].link}}">
+          <image src="{{item.content['sub'+(index+0)].image}}" mode="aspectFill" class="fb-sub-img"/>
           <view class="fb-sub-info">
-            <text class="fb-sn">{{item.content['sub'+subItem.index].title}}</text>
-            <text class="fb-sp">{{item.content['sub'+subItem.index].price}}</text>
+            <text class="fb-sn">{{item.content['sub'+(index+0)].title}}</text>
+            <text class="fb-sp">{{item.content['sub'+(index+0)].price}}</text>
           </view>
         </view>
       </view>
@@ -113,11 +113,11 @@
             <!-- card_quad -->
             <view wx:if="{{item.type==='card_quad'}}" class="blk-cq" style="padding:16rpx 24rpx;background:{{item.style.bgColor||'#fff'}};">
               <view class="cq-row">
-                <view class="cq-card" wx:for="{{quadItems[bIdx]}}" wx:for-item="qcItem" wx:key="title"
-                  bindtap="goBlockLink" data-link="{{qcItem.link}}">
-                  <image src="{{qcItem.image}}" mode="aspectFill" class="cq-img"/>
-                  <text class="cq-title">{{qcItem.title}}</text>
-                  <text class="cq-sub">{{qcItem.subtitle}}</text>
+                <view class="cq-card" wx:for="{{quadItems[bIdx]}}" wx:key="title"
+                  bindtap="goBlockLink" data-link="{{item.link}}">
+                  <image src="{{item.image}}" mode="aspectFill" class="cq-img"/>
+                  <text class="cq-title">{{item.title}}</text>
+                  <text class="cq-sub">{{item.subtitle}}</text>
                 </view>
               </view>
             </view>
@@ -127,10 +127,10 @@
               <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
                 <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
                   <view class="cr-row">
-                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:for-item="crItem" wx:key="label"
-                      bindtap="goBlockLink" data-link="{{crItem.link}}">
-                      <image src="{{crItem.image}}" mode="aspectFill" class="cr-icon"/>
-                      <text class="cr-label">{{crItem.label}}</text>
+                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="label"
+                      bindtap="goBlockLink" data-link="{{item.link}}">
+                      <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
+                      <text class="cr-label">{{item.label}}</text>
                     </view>
                   </view>
                 </scroll-view>
