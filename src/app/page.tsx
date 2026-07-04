@@ -990,8 +990,8 @@ export default function Home() {
 
 
       {/* ===== Hero 全屏轮播区域（含搜索+分类标签） ===== */}
-      <section className="relative overflow-hidden pt-12" style={{ height: "100vh", minHeight: "600px" }}>
-        <div style={{ height: "calc(100% - 48px)", minHeight: "552px", position: "relative", overflow: "hidden" }}>
+      <section className="relative overflow-hidden pt-12" style={{ height: "100svh", minHeight: "500px" }}>
+        <div style={{ height: "calc(100% - 48px)", minHeight: "452px", position: "relative", overflow: "hidden" }}>
           {/* 轮播图背景 */}
           <HeroCarousel />
 
