@@ -93,7 +93,15 @@ export async function unifiedOrder(params: {
     throw new Error('微信支付未配置：缺少 WECHAT_NOTIFY_URL 环境变量');
   }
 
-  const { out_trade_no, body, total_fee, openid, platform = 'mini' } = params;
+  let { out_trade_no, body, total_fee, openid, platform = 'native' } = params;
+
+  // 防御：如果平台是 JSAPI（mini/mp）但没有传合法的微信 openid，
+  // 强制降级为 native 模式，避免微信 API 报 "JSAPI支付必须传 openid"
+  // 注意：Supabase 的 user.id 是 UUID，不是微信 openid，不能传给微信 API
+  if ((platform === 'mini' || platform === 'mp') && !openid) {
+    console.warn(`[微信支付] 平台=${platform} 但 openid 为空，自动降级为 native 模式`);
+    platform = 'native';
+  }
   const nonce_str = randomStr();
 
   const tradeTypeMap: Record<PayPlatform, string> = {
