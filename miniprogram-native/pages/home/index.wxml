@@ -1,21 +1,29 @@
 <view class="page">
-  <!-- 导航栏：品牌 + 搜索框 + 菜单 -->
-  <view class="nav">
-    <text class="nav-brand">骆芷蝶智选</text>
-    <view class="nav-search" bindtap="goSearch">
-      <text class="ns-icon">🔍</text>
-      <text class="ns-ph">搜索商品</text>
-    </view>
-    <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
-  </view>
-
-  <!-- 大图Hero - 紧凑版 -->
+  <!-- 大图Hero - 文字叠加在图上 -->
   <view class="hero">
+    <!-- 顶部叠加：品牌 + 搜索 + 菜单 -->
+    <view class="hero-top">
+      <text class="hero-brand">骆芷蝶智选</text>
+      <view class="hero-search" bindtap="goSearch">
+        <text class="hs-icon">🔍</text>
+        <text class="hs-ph">搜索商品</text>
+      </view>
+      <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
+    </view>
+
+    <!-- 轮播图满屏 -->
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
-      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFit" class="si"/></swiper-item>
+      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
-    <!-- 底部仅保留分类标签 -->
+
+    <!-- 图中叠加文字（品牌标语） -->
+    <view class="hero-txt">
+      <text class="ht-main">数据趋动 · 智选未来</text>
+      <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 底部分类标签 -->
     <view class="ov">
       <div class="tg-bar">
         <scroll-view scroll-x show-scrollbar="{{false}}">
