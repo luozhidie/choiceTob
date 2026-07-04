@@ -2,7 +2,7 @@ Page({
   data:{
     banners:[],
     curB:0,
-    categories:[],  // 从 API 加载，失败时为空
+    categories:['全部','穿搭','护肤','彩妆','养生','食品','家居','文创','艺术'],  // 默认值，API成功后覆盖
     ac:'全部',
     products:[],
     ld:true,
