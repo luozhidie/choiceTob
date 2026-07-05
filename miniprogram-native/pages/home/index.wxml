@@ -16,7 +16,7 @@
     </view>
 
     <!-- 文字叠加在图上 -->
-    <view class="hero-ol">
+    <view class="hero-ol" style="display:none;">
       <text class="ht-big">骆芷蝶·智选｜供应链平台</text>
       <text class="ht-sub">服装门店一站式赋能平台</text>
     </view>
