@@ -86,8 +86,12 @@ export default function ProductDetailPage() {
     const fetchProduct = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/public/products?id=${encodeURIComponent(productId)}`);
+        const url = `/api/public/products?id=${encodeURIComponent(productId)}`;
+        console.log('[ProductDetail] 开始获取商品:', url);
+        const res = await fetch(url);
+        console.log('[ProductDetail] API响应状态:', res.status);
         const json = await res.json();
+        console.log('[ProductDetail] API返回数据:', JSON.stringify(json).slice(0, 200));
         if (json.success && json.data && json.data.length > 0 && !cancelled) {
           const p = json.data[0];
           setProduct({
@@ -110,8 +114,12 @@ export default function ProductDetailPage() {
           });
           setLoading(false);
           return;
+        } else {
+          console.warn('[ProductDetail] 商品数据为空或格式错误:', json);
         }
-      } catch (e) { console.error("查询商品失败:", e); }
+      } catch (e) { 
+        console.error("查询商品失败:", e); 
+      }
 
       if (!cancelled) {
         setProduct(null);
