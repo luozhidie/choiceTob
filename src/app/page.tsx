@@ -1001,6 +1001,10 @@ export default function Home() {
               {/* 顶部区域：品牌标题（左上角固定样式） */}
               <div className="pt-5 pb-2">
                 <div className="max-w-7xl mx-auto">
+                  {/* 标语标签 */}
+                  <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
+                    <span className="text-white/70 text-[10px] font-medium tracking-widest">🏷 数据驱动·智选未来</span>
+                  </span>
                   {/* 品牌名称 - 大字 */}
                   <h1 className="font-black text-white leading-[1.15] tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
                     骆芷蝶·智选<span className="text-[#e89aac] mx-1">|</span>供应链平台
