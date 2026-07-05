@@ -68,10 +68,14 @@ Page({
   /* ===== 从后端加载「我的」全部数据 ====== */
   loadApiData:function(){
     var t=this;
+    var token=wx.getStorageSync('token')||'';
     wx.request({
       url:'https://colour-choice.art/api/user/me',
       method:'GET',
-      header:{'Content-Type':'application/json'},
+      header:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+token,
+      },
       success:function(r){
         var d=r.data;
         if(!d||!d.success)return;
@@ -107,13 +111,13 @@ Page({
   goSettings:function(){
     var ui=wx.getStorageSync('user_info');
     if(ui&&ui.nickName){
-      /* 已登录：跳转设置页（后续开发）*/
       wx.showToast({title:'设置页开发中',icon:'none'});
     } else {
-      /* 未登录：跳转登录页 */
       wx.navigateTo({url:'/pages/login/index'});
     }
   },
+  goCoupons:function(){wx.navigateTo({url:'/pages/coupons/index'});},
+  goRedPackets:function(){wx.navigateTo({url:'/pages/red-packets/index'});},
   goContact:function(){
     wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});
   },

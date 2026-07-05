@@ -1,0 +1,37 @@
+<view class="page">
+  <!-- 标签切换 -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='unused'?'tab-on':''}}" bindtap="switchTab" data-tab="unused">未使用</view>
+    <view class="tab {{activeTab==='used'?'tab-on':''}}" bindtap="switchTab" data-tab="used">已使用</view>
+    <view class="tab {{activeTab==='expired'?'tab-on':''}}" bindtap="switchTab" data-tab="expired">已过期</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="list" wx:if="{{!loading && list.length>0}}">
+    <view class="c-card {{item.status!=='unused'?'c-card-used':''}}" wx:for="{{list}}" wx:key="id">
+      <view class="cc-left">
+        <text class="cc-amount">¥{{item.discount_amount/100}}</text>
+        <text class="cc-condition">{{item.minLabel}}</text>
+      </view>
+      <view class="cc-right">
+        <text class="cc-title">{{item.title}}</text>
+        <text class="cc-desc">{{item.discount_desc||'通用优惠券'}}</text>
+        <text class="cc-expire" wx:if="{{item.expire_at}}">有效期至 {{item.expire_at}}</text>
+      </view>
+      <view class="cc-btn" wx:if="{{item.status==='unused'}}" bindtap="useCoupon" data-id="{{item.id}}">立即使用</view>
+      <view class="cc-status" wx:if="{{item.status==='used'}}">已使用</view>
+      <view class="cc-status cc-status-expire" wx:if="{{item.status==='expired'}}">已过期</view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && list.length===0}}">
+    <text class="empty-icon">🎫</text>
+    <text class="empty-text">暂无{{activeTab==='unused'?'未使用':activeTab==='used'?'已使用':'已过期'}}优惠券</text>
+  </view>
+
+  <!-- loading -->
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+  </view>
+</view>

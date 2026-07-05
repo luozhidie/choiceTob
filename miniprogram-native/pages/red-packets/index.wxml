@@ -1,0 +1,35 @@
+<view class="page">
+  <!-- 标签切换 -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='unused'?'tab-on':''}}" bindtap="switchTab" data-tab="unused">未使用</view>
+    <view class="tab {{activeTab==='used'?'tab-on':''}}" bindtap="switchTab" data-tab="used">已使用</view>
+    <view class="tab {{activeTab==='expired'?'tab-on':''}}" bindtap="switchTab" data-tab="expired">已过期</view>
+  </view>
+
+  <!-- 列表 -->
+  <view class="list" wx:if="{{!loading && list.length>0}}">
+    <view class="rp-card {{item.status!=='unused'?'rp-card-used':''}}" wx:for="{{list}}" wx:key="id">
+      <view class="rp-left">
+        <text class="rp-amount">¥{{item.amount/100}}</text>
+        <text class="rp-type">{{item.packet_type==='vip_gift'?'VIP赠送':item.packet_type==='festival'?'节日活动':'通用红包'}}</text>
+      </view>
+      <view class="rp-right">
+        <text class="rp-title">{{item.title}}</text>
+        <text class="rp-expire" wx:if="{{item.expire_at}}">有效期至 {{item.expire_at}}</text>
+      </view>
+      <view class="rp-btn" wx:if="{{item.status==='unused'}}" bindtap="useRedPacket" data-id="{{item.id}}">去使用</view>
+      <view class="rp-status" wx:if="{{item.status==='used'}}">已使用</view>
+      <view class="rp-status rp-status-expired" wx:if="{{item.status==='expired'}}">已过期</view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty" wx:if="{{!loading && list.length===0}}">
+    <text class="empty-icon">🧧</text>
+    <text class="empty-text">暂无红包</text>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+  </view>
+</view>

@@ -87,16 +87,16 @@
   <view class="section">
     <text class="sec-title">我的资产</text>
     <view class="asset-row">
-      <view class="asset-item">
-        <text class="asset-num">0</text><text class="asset-label">钱包</text>
+      <view class="asset-item" bindtap="goSettings">
+        <text class="asset-num">{{walletBalance}}</text><text class="asset-label">钱包</text>
       </view>
       <view class="asset-divider"></view>
-      <view class="asset-item">
-        <text class="asset-num">0</text><text class="asset-label">卡券</text>
+      <view class="asset-item" bindtap="goCoupons">
+        <text class="asset-num">{{couponCount}}</text><text class="asset-label">卡券</text>
       </view>
       <view class="asset-divider"></view>
-      <view class="asset-item">
-        <text class="asset-num">0</text><text class="asset-label">红包</text>
+      <view class="asset-item" bindtap="goRedPackets">
+        <text class="asset-num">{{redPackCount}}</text><text class="asset-label">红包</text>
       </view>
     </view>
   </view>
