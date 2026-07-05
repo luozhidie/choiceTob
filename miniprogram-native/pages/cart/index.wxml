@@ -39,7 +39,7 @@
         <!-- 信息 -->
         <view class="item-info">
           <text class="item-name">{{item.name}}</text>
-          <text class="item-price">{{item.price}}</text>
+          <text class="item-price">{{item.priceDisplay}}</text>
         </view>
 
         <!-- 数量控制 -->

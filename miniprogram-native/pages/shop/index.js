@@ -150,7 +150,7 @@ Page({
     var idx=-1;
     cart.forEach(function(i,ii){if(i.id===p.id)idx=ii;});
     if(idx>=0){cart[idx].quantity=(cart[idx].quantity||1)+t.data.quantity;}
-    else{cart.push({id:p.id,title:p.title||p.name,price:p.price,image:p.image_url||'',quantity:t.data.quantity});}
+    else{cart.push({id:p.id,title:p.title||p.name,price:(Number(p.price)>=100?Math.round(Number(p.price)/100):Number(p.price)),image:p.image_url||'',quantity:t.data.quantity});}
     wx.setStorageSync('cart',cart);
     t.loadCartCount();
     wx.showToast({title:'已加购物车',icon:'success'});

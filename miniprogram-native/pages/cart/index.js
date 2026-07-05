@@ -17,6 +17,10 @@ Page({
     cart.forEach(function(item) {
       if (item.checked === undefined) item.checked = false;
       if (!item.quantity) item.quantity = 1;
+      /* 统一价格格式：分→元 + 加¥前缀 */
+      var p = Number(item.price) || 0;
+      if (p >= 100) { p = Math.round(p / 100); item.price = p; }
+      item.priceDisplay = '¥' + (p % 1 === 0 ? p : p.toFixed(2));
     });
     this.setData({ cartItems: cart, loading: false });
     this.recalc();
@@ -31,8 +35,10 @@ Page({
       count += (item.quantity || 1);
       if (item.checked) {
         selected += (item.quantity || 1);
-        var pStr = String(item.price || '¥0').replace('¥','');
-        total += Number(pStr) * (item.quantity || 1);
+        var p = Number(item.price || 0);
+        /* 防御：如果价格>=100说明是分单位（数据库原始值），需转元 */
+        if (p >= 100) p = Math.round(p / 100);
+        total += p * (item.quantity || 1);
       }
     });
     var all = items.length > 0 && items.every(function(i){ return i.checked; });
