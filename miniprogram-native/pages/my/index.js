@@ -19,17 +19,18 @@ Page({
     /* 资产 */
     walletBalance:0,
     couponCount:0,
-    redpackCount:0,
+    redPackCount:0,
   },
 
   onShow:function(){
     this.loadUser();
     this.loadVip();
-    this.countSubs();
     this.countFavs();
     this.countHistory();
+    this.loadApiData();
   },
 
+  /* ===== 用户信息 ====== */
   loadUser:function(){
     var t=this;
     var ui=wx.getStorageSync('user_info');
@@ -40,10 +41,11 @@ Page({
         avatarUrl:ui.avatarUrl||''
       });
     } else {
-      t.setData({userId:'未登录',roleText:'点击登录/注册'});
+      t.setData({userId:'未登录',roleText:'点击登录/注册',avatarUrl:''});
     }
   },
 
+  /* ===== VIP 状态 ====== */
   loadVip:function(){
     var t=this;
     var vip=wx.getStorageSync('vip_status');
@@ -52,32 +54,65 @@ Page({
     var level=wx.getStorageSync('vip_level')||'';
 
     if(vip==='active'){
-      var ln='', lv=level||'V1', pt='';
+      var ln='',lv=level||'V1',pt='';
       if(lv==='V1'||lv==='trial'){ln='体验会员';pt='当月拿货额 0.00，还差 2000.00 元升级白银会员';}
       else if(lv==='V2'||lv==='quarter'){ln='季卡会员';pt='当月拿货额 5000.00，还差 15000.00 元升级年卡会员';}
       else if(lv==='V3'||lv==='year'){ln='年卡会员';pt='已享受全部权益';}
       else{ln=mt||'价格会员';pt='会员权益有效中';}
-
       t.setData({isVip:true,levelName:ln,vipLevel:lv,progressText:pt});
     } else {
-      var ln='普通会员', lv='', pt='开通会员享专属权益';
-      t.setData({isVip:false,levelName:ln,vipLevel:lv,progressText:pt});
+      t.setData({isVip:false,levelName:'普通会员',vipLevel:'',progressText:'开通会员享专属权益'});
     }
   },
 
-  countSubs:function(){/* TODO: API */this.setData({subCount:0});},
+  /* ===== 从后端加载「我的」全部数据 ====== */
+  loadApiData:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/user/me',
+      method:'GET',
+      header:{'Content-Type':'application/json'},
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success)return;
+        var data=d.data||{};
+
+        t.setData({
+          /* 订单统计 */
+          subCount:data.orderStats? data.orderStats.unpaid||0:0,
+          /* 资产 */
+          walletBalance:data.walletBalance||0,
+          couponCount:data.couponCount||0,
+          redPackCount:data.redPackCount||0,
+          /* 收藏数（后端优先，本地兜底）*/
+          favCount:data.favCount||(wx.getStorageSync('favorites')||[]).length,
+          historyCount:data.historyCount||(wx.getStorageSync('view_history')||[]).length,
+        });
+      },
+      fail:function(){/* 静默失败，用本地数据 */}
+    });
+  },
+
+  /* ===== 本地统计（兜底）====== */
   countFavs:function(){
     var favs=wx.getStorageSync('favorites')||[];
-    this.setData({favCount:favs.length});
+    if(this.data.favCount===0){this.setData({favCount:favs.length});}
   },
   countHistory:function(){
     var hists=wx.getStorageSync('view_history')||[];
-    this.setData({historyCount:hists.length});
+    if(this.data.historyCount===0){this.setData({historyCount:hists.length});}
   },
 
   /* ===== 导航跳转 ====== */
   goSettings:function(){
-    wx.showToast({title:'设置页开发中',icon:'none'});
+    var ui=wx.getStorageSync('user_info');
+    if(ui&&ui.nickName){
+      /* 已登录：跳转设置页（后续开发）*/
+      wx.showToast({title:'设置页开发中',icon:'none'});
+    } else {
+      /* 未登录：跳转登录页 */
+      wx.navigateTo({url:'/pages/login/index'});
+    }
   },
   goContact:function(){
     wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});
@@ -86,7 +121,10 @@ Page({
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
   goFavorites:function(){wx.navigateTo({url:'/pages/favorites/index'});},
   goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},
-  goOrders:function(e){var s=e?e.currentTarget.dataset.status:'all';wx.navigateTo({url:'/pages/orders/index?status='+s});},
+  goOrders:function(e){
+    var s=e?e.currentTarget.dataset.status:'all';
+    wx.navigateTo({url:'/pages/orders/index?status='+s});
+  },
   goPromo:function(){wx.switchTab({url:'/pages/home/index'});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
