@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Gift, Search, Users, Send } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/discount";
 
 // 优惠券类型标签
 const couponTypeLabels: Record<string, string> = {

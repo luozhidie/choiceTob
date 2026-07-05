@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Heart, Search, Send } from "lucide-react";
-import { formatPrice } from "@/lib/utils";
+import { formatPrice } from "@/lib/discount";
 
 export default function AdminRedPacketsPage() {
   const [packets, setPackets] = useState<any[]>([]);
