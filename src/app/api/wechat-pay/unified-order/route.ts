@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
     const prepay_id = wxResult.prepay_id;
 
     // 无论哪种模式，都计算 JSAPI 支付参数（供微信内浏览器直接拉起支付）
-    const jsapiParams = generateJsapiPayParams(prepay_id, 'mp');
+    // 注意：mini=小程序，mp=公众号，需要根据实际 platform 传
+    const jsapiParams = generateJsapiPayParams(prepay_id, platform as PayPlatform);
 
     // 根据平台返回不同格式
     if (platform === 'native') {

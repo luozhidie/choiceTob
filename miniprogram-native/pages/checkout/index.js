@@ -100,10 +100,10 @@ Page({
         if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
         var params=d.jsapi||d;
         wx.requestPayment({
-          timeStamp:params.timestamp||params.timeStamp,
+          timeStamp:params.timeStamp,
           nonceStr:params.nonceStr,
           package:params.package,
-          signType:params.signType||'RSA',
+          signType:params.signType||'MD5',
           paySign:params.paySign,
           success:function(){
             /* 清除购物车中已结算商品 */

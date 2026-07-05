@@ -214,6 +214,10 @@ export async function closeOrder(out_trade_no: string) {
 
 /**
  * 生成JSAPI调起支付的参数（前端调用 wx.requestPayment 使用）
+ *
+ * 微信支付 JSAPI v2 签名规则：
+ * 签名参数名：appId, timeStamp, nonceStr, package, signType（注意大小写）
+ * 签名字符串格式：appId=xxx&nonceStr=xxx&package=prepay_id=xxx&signType=MD5&timeStamp=xxx&key=API密钥
  */
 export function generateJsapiPayParams(
   prepay_id: string,
@@ -225,18 +229,23 @@ export function generateJsapiPayParams(
   const package_str = `prepay_id=${prepay_id}`;
   const signType = 'MD5';
 
-  const paySignData = {
+  // 用于签名的参数（字段名必须符合微信要求）
+  const signParams: Record<string, string> = {
     appId,
     timeStamp,
     nonceStr,
     package: package_str,
     signType,
   };
-  
-  const paySign = signMd5(paySignData as unknown as Record<string, string>);
+
+  const paySign = signMd5(signParams);
 
   return {
-    ...paySignData,
+    appId,
+    timeStamp,
+    nonceStr,
+    package: package_str,
+    signType,
     paySign,
   };
 }
