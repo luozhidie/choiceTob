@@ -8,6 +8,8 @@ Page({
     priceText:'',
     originalPriceText:'',
     discountText:'',
+    wholesalePriceText:'',   // 批发价显示文本
+    isPriceMember:false,      // 是否为价格会员
     quantity:1,
     cartCount:0,
     isFav:false,
@@ -18,7 +20,11 @@ Page({
   },
 
   onLoad:function(opt){
-    this.setData({productId:opt.id||''});
+    var app = getApp();
+    this.setData({
+      productId:opt.id||'',
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+    });
     this.loadProduct(opt.id);
     this.loadCartCount();
     this.loadFav(opt.id);
@@ -38,13 +44,24 @@ Page({
         if(p.image_url)images.push(p.image_url);
         if(p.images&&Array.isArray(p.images))images=images.concat(p.images);
         if(images.length===0)images=[''];
-        /* 价格 */
+        /* 零售价 */
         var price=Number(p.price)||0;
         if(price>=100)price=Math.round(price/100);
         var ori=p.original_price?Number(p.original_price):0;
         if(ori>=100)ori=Math.round(ori/100);
         var disc='';
         if(ori>0&&price>0)disc='省¥'+(ori-price);
+        /* 批发价（分单位，需/100展示） */
+        var isPriceMember = t.data.isPriceMember;
+        var wholesaleText = '';
+        var wp = Number(p.wholesale_price)||0;
+        if(wp > 0){
+          if(isPriceMember){
+            wholesaleText = '¥' + Math.round(wp/100);
+          } else {
+            wholesaleText = '¥???';
+          }
+        }
         /* 规格 */
         var specList=[];
         if(p.category)specList.push({label:'分类',value:p.category});
@@ -58,6 +75,7 @@ Page({
           priceText:price?'¥'+price:'¥0',
           originalPriceText:ori?'¥'+ori:'',
           discountText:disc,
+          wholesalePriceText:wholesaleText,
           specList:specList,
         });
         t.loadReviews(id);
@@ -181,4 +199,5 @@ Page({
 
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
+  goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
 });

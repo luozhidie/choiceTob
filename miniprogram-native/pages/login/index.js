@@ -28,14 +28,22 @@ Page({
         wx.setStorageSync('auth_token',d.token);
         wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
+        /* 保存会员状态（用于批发价可见） */
+        var isPrice = !!(d.is_price_member);
+        wx.setStorageSync('is_price_member', isPrice);
+        var app = getApp();
+        if(app && app.globalData) app.globalData.isPriceMember = isPrice;
         wx.showToast({title:'登录成功',icon:'success'});
         setTimeout(function(){wx.navigateBack();},1200);
       },
       fail:function(){
         wx.hideLoading();
-        /* 本地模拟登录 */
+        /* 本地模拟登录：默认视为价格会员 */
         wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
+        wx.setStorageSync('is_price_member', true);
+        var app = getApp();
+        if(app && app.globalData) app.globalData.isPriceMember = true;
         wx.showToast({title:'已登录（本地）',icon:'success'});
         setTimeout(function(){wx.navigateBack();},1000);
       }

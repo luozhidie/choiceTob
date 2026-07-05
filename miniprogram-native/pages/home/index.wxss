@@ -96,6 +96,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .cnf{padding:16rpx 14rpx 18rpx;}
 .cnm{font-size:24rpx;color:#333;font-weight:500;line-height:1.38;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .cnp{font-size:28rpx;color:#e91e63;font-weight:800;display:block;margin-top:8rpx;}
+.cwp{font-size:20rpx;color:#4caf50;display:block;margin-top:2rpx;}
 .cbn{margin-top:12rpx;text-align:center;padding:12rpx 0;background:linear-gradient(to right,#ec4899,#ef4444);color:#fff;font-size:23rpx;font-weight:600;border-radius:10rpx;}
 /*CTA*/
 .cta{padding:20rpx 0 0 0;}

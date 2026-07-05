@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: NextRequest) {
   try {
@@ -39,12 +40,43 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 401 });
     }
 
+    // 登录成功！用 service_role 查 profiles 表获取会员信息
+    let membershipType = null;
+    let membershipExpiresAt = null;
+    try {
+      const serviceClient = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+      const { data: profile } = await serviceClient
+        .from("profiles")
+        .select("membership_type, membership_expires_at")
+        .eq("id", data.user!.id)
+        .maybeSingle();
+      if (profile) {
+        membershipType = profile.membership_type;
+        membershipExpiresAt = profile.membership_expires_at;
+      }
+    } catch (e) {
+      console.error("[Auth Login] 查会员信息失败:", e);
+    }
+
+    // 判断是否为价格会员（用于小程序端批发价显示）
+    const isPriceMember = !!(
+      membershipType === "view_price" &&
+      membershipExpiresAt &&
+      new Date(membershipExpiresAt) > new Date()
+    );
+
     // 登录成功！Supabase 已经通过 setAll 回调设置了 session cookie
     // 浏览器下次请求时自动携带这个 cookie
     return NextResponse.json({
       success: true,
       user: data.user,
       message: '登录成功',
+      membership_type: membershipType,
+      membership_expires_at: membershipExpiresAt,
+      is_price_member: isPriceMember,
     });
   } catch (err: any) {
     console.error("[Auth Login API Error]", err);

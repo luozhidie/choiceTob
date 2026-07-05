@@ -240,6 +240,7 @@
           <view class="cnf">
             <text class="cnm">{{item.name||item.title||'商品'}}</text>
             <text class="cnp">{{item.priceText}}</text>
+            <text class="cwp" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
             <view class="cbn">下单</view>
           </view>
         </view>

@@ -2,6 +2,7 @@ App({
   globalData: {
     userInfo: null,
     isVip: false,
+    isPriceMember: false,  // 价格会员（可查看批发价）
   },
 
   onLaunch: function() {
@@ -9,6 +10,11 @@ App({
     var vipStatus = wx.getStorageSync('vip_status');
     if (vipStatus === 'active') {
       this.globalData.isVip = true;
+    }
+    // 恢复价格会员状态
+    var isPriceMember = wx.getStorageSync('is_price_member');
+    if (isPriceMember === true) {
+      this.globalData.isPriceMember = true;
     }
   },
 

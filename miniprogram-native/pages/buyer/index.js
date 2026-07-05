@@ -8,9 +8,16 @@ Page({
     loading:true,
     hasMore:true,
     page:1,
+    isPriceMember:false,  // 价格会员状态
   },
 
-  onLoad:function(){this.load();},
+  onLoad:function(){
+    var app = getApp();
+    this.setData({
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+    });
+    this.load();
+  },
   onPullDownRefresh:function(){var t=this;t.setData({page:1,hasMore:true});t.load(function(){wx.stopPullDownRefresh();});},
   onReachBottom:function(){if(!this.data.hasMore||this.data.loading)return;this.setData({page:this.data.page+1});this.loadMore();},
 
@@ -37,9 +44,15 @@ Page({
         var list=[];
         if(r.data&&r.data.success&&r.data.data)list=r.data.data||[];
         else if(Array.isArray(r.data))list=r.data;
+        var isPriceMember = t.data.isPriceMember;
         list.forEach(function(p){
           var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
           p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+          /* 批发价 */
+          var wp=Number(p.wholesale_price)||0;
+          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
+          else if(wp>0)p.wholesalePriceText='\u00A5???';
+          else p.wholesalePriceText='';
         });
         t.setData({products:list,hasMore:list.length>=20});
       },
@@ -59,7 +72,15 @@ Page({
         var list=[];
         if(r.data&&r.data.success&&r.data.data)list=r.data.data||[];
         else if(Array.isArray(r.data))list=r.data;
-        list.forEach(function(p){var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));});
+        var isPriceMember = t.data.isPriceMember;
+        list.forEach(function(p){
+          var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
+          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+          var wp=Number(p.wholesale_price)||0;
+          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
+          else if(wp>0)p.wholesalePriceText='\u00A5???';
+          else p.wholesalePriceText='';
+        });
         t.setData({products:t.data.products.concat(list),hasMore:list.length>=20});
       },
       complete:function(){t.setData({loading:false});}
