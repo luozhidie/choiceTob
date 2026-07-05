@@ -38,30 +38,24 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
 
   // 按 ID 单条查询（给商品详情页用）
   if (singleId) {
-    // 先查 products 表
-    const { data: pData, error: pError } = await supabase
-      .from("products")
-      .select("*")
-      .eq("id", singleId)
-      .maybeSingle();
+    // 并行查两个表，提升速度
+    const [pResult, bpResult] = await Promise.all([
+      supabase.from("products").select("*").eq("id", singleId).maybeSingle(),
+      supabase.from("buyer_products").select("*").eq("id", singleId).maybeSingle(),
+    ]);
 
-    if (pData) {
-      return { success: true, data: [pData], error: null };
+    if (pResult.data) {
+      console.log(`[products API] 找到商品 in products: id=${singleId}`);
+      return { success: true, data: [pResult.data], error: null };
     }
 
-    // 再查 buyer_products 表
-    const { data: bpData, error: bpError } = await supabase
-      .from("buyer_products")
-      .select("*")
-      .eq("id", singleId)
-      .maybeSingle();
-
-    if (bpData) {
-      return { success: true, data: [bpData], error: null };
+    if (bpResult.data) {
+      console.log(`[products API] 找到商品 in buyer_products: id=${singleId}`);
+      return { success: true, data: [bpResult.data], error: null };
     }
 
-    // 两个表都没找到：返回空数组，不返回 error
-    console.log(`[products API] 商品不存在: id=${singleId}, pError=${pError?.message}, bpError=${bpError?.message}`);
+    // 两个表都没找到：记录日志，返回空数组
+    console.log(`[products API] 商品不存在: id=${singleId}, pError=${pResult.error?.message}, bpError=${bpResult.error?.message}`);
     return { success: true, data: [], error: null };
   }
 
