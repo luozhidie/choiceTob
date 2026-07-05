@@ -59,33 +59,36 @@ Page({
     var t=this;
     var ui=wx.getStorageSync('user_info');
     if(!ui||!ui.id){
-      t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员'});
+      t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员',nextLevelGapLabel:'50,000'});
       return;
     }
     wx.request({
       url:'https://colour-choice.art/api/user/me',
       method:'GET',
-      data:{ user_id:ui.id },
+      header:{
+        'Authorization':'Bearer '+ (wx.getStorageSync('token')||'')
+      },
       success:function(r){
-        var d=r.data||{};
-        var amount=d.total_purchase_amount||0;  // 分
+        var d=(r.data||{}).data||{};  // API返回 {data:{totalPurchaseAmount,...}}
+        var amount=d.totalPurchaseAmount||0;  // 分
         var amountYuan=Math.round(amount/100);
-        var levels=[0,5000,10000,30000];  // 分→元的阈值
+        // 阈值（分）
+        var thresholds=[0,500000,1000000,3000000];
         var levelNames=['普通','5万会员','10万会员','30万会员'];
         var curLv=0;
-        for(var i=levels.length-1;i>=0;i--){
-          if(amount>=levels[i]*100){curLv=i;break;}
+        for(var i=thresholds.length-1;i>=0;i--){
+          if(amount>=thresholds[i]){curLv=i;break;}
         }
         var progress=0;
         var nextLabel='';
         var gapLabel='';
-        if(curLv<levels.length-1){
-          var curThreshold=levels[curLv]*100;
-          var nextThreshold=levels[curLv+1]*100;
-          var ratio=(amount-curThreshold)/(nextThreshold-curThreshold);
+        if(curLv<thresholds.length-1){
+          var curT=thresholds[curLv];
+          var nextT=thresholds[curLv+1];
+          var ratio=(amount-curT)/(nextT-curT);
           progress=Math.min(100,Math.max(0,Math.round(ratio*100)));
           nextLabel=levelNames[curLv+1];
-          gapLabel=Math.round((nextThreshold-amount)/100).toLocaleString();
+          gapLabel=Math.round((nextT-amount)/100).toLocaleString();
         } else {
           progress=100;
         }
@@ -99,7 +102,7 @@ Page({
         });
       },
       fail:function(){
-        t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员'});
+        t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员',nextLevelGapLabel:'50,000'});
       }
     });
   },

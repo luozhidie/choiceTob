@@ -25,10 +25,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    // 2. 读取 profiles（会员状态）
+    // 2. 读取 profiles（会员状态 + 拿货金额）
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate")
+      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate, total_purchase_amount")
       .eq("id", userId)
       .single();
 
@@ -89,6 +89,7 @@ export async function GET(request: NextRequest) {
         role: profile?.role || "user",
         membershipType: profile?.membership_type || "none",
         membershipExpiresAt: profile?.membership_expires_at || null,
+        totalPurchaseAmount: profile?.total_purchase_amount || 0,
         depositAmount: profile?.deposit_amount || 0,
         depositDiscountRate: profile?.deposit_discount_rate || 1.0,
 
