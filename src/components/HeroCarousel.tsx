@@ -156,10 +156,10 @@ export default function HeroCarousel() {
         {banners.map((banner, index) => (
           <div
             key={banner.id}
-            className={`absolute inset-0 bg-cover bg-center transition-all duration-700 ease-in-out ${
+            className={`absolute inset-0 bg-no-repeat bg-cover bg-center transition-all duration-700 ease-in-out ${
               index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
-            style={{ backgroundImage: `url('${banner.image_url}')` }}
+            style={{ backgroundImage: `url('${banner.image_url}')`, backgroundColor: '#1a1a2e' }}
           />
         ))}
         

@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     items:[],
@@ -79,6 +81,22 @@ Page({
     if(!t.data.address){wx.showToast({title:'请选择收货地址',icon:'none'});return;}
     if(t.data.items.length===0){wx.showToast({title:'无商品',icon:'none'});return;}
 
+    /* 先获取微信openid（JSAPI支付必需） */
+    app.getOpenid().then(function(openid){
+      t.doPay(openid);
+    }).catch(function(err){
+      console.error('获取openid失败',err);
+      /* 获取不到openid时降级为native模式（扫码支付） */
+      wx.showModal({
+        title:'无法调起微信支付',
+        content:'请在微信中打开此页面使用支付功能',
+        showCancel:false
+      });
+    });
+  },
+
+  doPay:function(openid){
+    var t=this;
     wx.showLoading({title:'提交中...'});
     var items=t.data.items;
     var total=Math.round(Number(t.data.total)*100);/* 转成分 */
@@ -91,6 +109,7 @@ Page({
         total_fee:total,
         quantity:items.reduce(function(s,i){return s+(i.quantity||1);},0),
         platform:'mini',
+        openid:openid,
         remark:t.data.remark,
         address:JSON.stringify(t.data.address),
       },
@@ -100,10 +119,10 @@ Page({
         if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
         var params=d.jsapi||d;
         wx.requestPayment({
-          timeStamp:params.timestamp||params.timeStamp,
+          timeStamp:params.timeStamp,
           nonceStr:params.nonceStr,
           package:params.package,
-          signType:params.signType||'RSA',
+          signType:params.signType||'MD5',
           paySign:params.paySign,
           success:function(){
             /* 清除购物车中已结算商品 */
@@ -114,7 +133,11 @@ Page({
             wx.showToast({title:'支付成功',icon:'success'});
             setTimeout(function(){wx.redirectTo({url:'/pages/orders/index?status=paid'});},1200);
           },
-          fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
+          fail:function(err){
+            if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1)){
+              wx.showToast({title:'支付失败',icon:'none'});
+            }
+          }
         });
       },
       fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}

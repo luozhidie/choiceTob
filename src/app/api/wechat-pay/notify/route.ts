@@ -3,19 +3,22 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import crypto from 'crypto';
 
+const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
+
 export async function POST(request: NextRequest) {
   try {
     const xml = await request.text();
     const params = parseXml(xml);
-    
+
     console.log('[微信支付回调]', params);
-    
+
     // 验证签名
     const sign = params.sign;
     delete params.sign;
     const localSign = signMd5(params);
-    
+
     if (localSign !== sign) {
+      console.error('[微信支付回调] 签名验证失败', { localSign, sign });
       return new NextResponse(buildXml({ return_code: 'FAIL', return_msg: '签名失败' }), { headers: { 'Content-Type': 'application/xml' } });
     }
     
@@ -147,7 +150,7 @@ async function autoActivateMembership(supabase: any, userId: string, productId: 
 }
 
 function signMd5(params: Record<string, string>) {
-  const sorted = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&') + `&key=${process.env.WECHAT_APIV2_KEY}`;
+  const sorted = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&') + `&key=${APIV2_KEY}`;
   return crypto.createHash('md5').update(sorted, 'utf8').digest('hex').toUpperCase();
 }
 

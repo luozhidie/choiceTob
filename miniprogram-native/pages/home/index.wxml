@@ -1,38 +1,40 @@
 <view class="page">
-  <!-- 导航栏 -->
-  <view class="nav">
-    <view class="brand">
-      <text class="bicon">骆</text>
-      <view class="bt"><text class="bn">骆芷蝶智选</text><text class="bs">CHOICETOB</text></view>
-    </view>
-    <view class="ham {{mo?'on':''}}" bindtap="togMenu"><view class="l"></view><view class="l"></view><view class="l"></view></view>
-  </view>
-
-  <!-- 大图Hero -->
   <view class="hero">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
-    <view class="ov">
-      <view class="top-txt">
-        <view class="badge">数据驱动 · 智选未来</view>
-        <text class="mt">骆芷蝶供应链<text class="ma">智选</text>平台</text>
-        <text class="st">服装门店一站式赋能平台</text>
-      </view>
-      <view class="bot-area">
-        <view class="tg-bar">
-          <scroll-view scroll-x show-scrollbar="{{false}}">
-            <view class="tg-row">
-              <view wx:for="{{categories}}" wx:key="*this"
-                class="tg {{ac===item?'tg-on':''}}"
-                bindtap="swCat" data-c="{{item}}">{{item}}</view>
-            </view>
-          </scroll-view>
-        </view>
-      </view>
+
+    <!-- 顶栏：只有小标题 -->
+    <view class="hero-top">
+      <text class="ht-small">数据趋动·智选未来</text>
     </view>
-    <view class="fade"></view>
+
+    <!-- ☰菜单按钮（右上角下方，独立定位） -->
+    <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
+      <text class="ham-icon">☰</text>
+    </view>
+
+    <!-- 文字叠加在图上（左靠上，紧接顶栏下方） -->
+    <view class="hero-ol">
+      <text class="ht-big">骆芷蝶·智选｜供应链平台</text>
+      <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 搜索框 + 分类标签（紧跟文字下方） -->
+    <view class="hero-mid">
+      <view class="hero-search" bindtap="goSearch">
+        <text class="hs-icon">🔍</text>
+        <text class="hs-ph">搜索</text>
+      </view>
+      <scroll-view scroll-x show-scrollbar="{{false}}" class="cat-scroll">
+        <view class="tg-row">
+          <view wx:for="{{categories}}" wx:key="*this"
+            class="tg {{ac===item?'tg-on':''}}"
+            bindtap="swCat" data-c="{{item}}">{{item}}</view>
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 菜单面板 -->
@@ -43,9 +45,7 @@
         <view class="mi" bindtap="goBuyer"><text>🛍</text><text>买手选品</text></view>
         <view class="mi" bindtap="goCourses"><text>📚</text><text>线上课程</text></view>
         <view class="mi" bindtap="goLooks"><text>🎨</text><text>每日搭配</text></view>
-        <view class="mi" bindtap="goVipPage"><text>👑</text><text>VIP会员中心</text></view>
-        <view class="mi" bindtap="goMember"><text>🏆</text><text>会员功能中心</text></view>
-        <view class="mi" bindtap="goArticles"><text>📰</text><text>时尚资讯</text></view>
+      <view class="mi" bindtap="goArticles"><text>📰</text><text>时尚资讯</text></view>
         <view class="mdv"></view>
         <view class="mi" bindtap="goStyleTest"><text>📋</text><text>风格测试</text></view>
         <view class="mi" bindtap="goContact"><text>💬</text><text>联系我们</text></view>
@@ -67,13 +67,13 @@
         <image src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
         <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
-      <view class="fb-subs">
-        <view class="fb-sub" wx:for="{{[0,1,2]}}" wx:key="*this"
-          bindtap="goBlockLink" data-link="{{item.content['sub'+(index+0)]&&item.content['sub'+(index+0)].link}}">
-          <image src="{{item.content['sub'+(index+0)].image}}" mode="aspectFill" class="fb-sub-img"/>
-          <view class="fb-sub-info">
-            <text class="fb-sn">{{item.content['sub'+(index+0)].title}}</text>
-            <text class="fb-sp">{{item.content['sub'+(index+0)].price}}</text>
+      <view class="fb-subs" wx:if="{{item.content._subs&&item.content._subs.length>0}}">
+        <view class="fb-sub" wx:for="{{item.content._subs}}" wx:key="image"
+          bindtap="goBlockLink" data-link="{{item.link}}">
+          <image src="{{item.image}}" mode="aspectFill" class="fb-sub-img"/>
+          <view wx:if="{{item.title||item.price}}" class="fb-sub-info">
+            <text class="fb-sn">{{item.title}}</text>
+            <text class="fb-sp">{{item.price}}</text>
           </view>
         </view>
       </view>
@@ -127,10 +127,10 @@
               <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
                 <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
                   <view class="cr-row">
-                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="label"
+                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="image"
                       bindtap="goBlockLink" data-link="{{item.link}}">
                       <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
-                      <text class="cr-label">{{item.label}}</text>
+                      <text class="cr-label" wx:if="{{item.label}}">{{item.label}}</text>
                     </view>
                   </view>
                 </scroll-view>
@@ -240,6 +240,7 @@
           <view class="cnf">
             <text class="cnm">{{item.name||item.title||'商品'}}</text>
             <text class="cnp">{{item.priceText}}</text>
+            <text class="cwp" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
             <view class="cbn">下单</view>
           </view>
         </view>

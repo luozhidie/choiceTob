@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     productId:'',
@@ -6,6 +8,8 @@ Page({
     priceText:'',
     originalPriceText:'',
     discountText:'',
+    wholesalePriceText:'',   // 批发价显示文本
+    isPriceMember:false,      // 是否为价格会员
     quantity:1,
     cartCount:0,
     isFav:false,
@@ -16,7 +20,11 @@ Page({
   },
 
   onLoad:function(opt){
-    this.setData({productId:opt.id||''});
+    var app = getApp();
+    this.setData({
+      productId:opt.id||'',
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+    });
     this.loadProduct(opt.id);
     this.loadCartCount();
     this.loadFav(opt.id);
@@ -36,13 +44,24 @@ Page({
         if(p.image_url)images.push(p.image_url);
         if(p.images&&Array.isArray(p.images))images=images.concat(p.images);
         if(images.length===0)images=[''];
-        /* 价格 */
+        /* 零售价 */
         var price=Number(p.price)||0;
         if(price>=100)price=Math.round(price/100);
         var ori=p.original_price?Number(p.original_price):0;
         if(ori>=100)ori=Math.round(ori/100);
         var disc='';
         if(ori>0&&price>0)disc='省¥'+(ori-price);
+        /* 批发价（分单位，需/100展示） */
+        var isPriceMember = t.data.isPriceMember;
+        var wholesaleText = '';
+        var wp = Number(p.wholesale_price)||0;
+        if(wp > 0){
+          if(isPriceMember){
+            wholesaleText = '¥' + Math.round(wp/100);
+          } else {
+            wholesaleText = '¥???';
+          }
+        }
         /* 规格 */
         var specList=[];
         if(p.category)specList.push({label:'分类',value:p.category});
@@ -56,6 +75,7 @@ Page({
           priceText:price?'¥'+price:'¥0',
           originalPriceText:ori?'¥'+ori:'',
           discountText:disc,
+          wholesalePriceText:wholesaleText,
           specList:specList,
         });
         t.loadReviews(id);
@@ -88,7 +108,6 @@ Page({
         var list=[];
         if(r.data&&r.data.data)list=r.data.data||[];
         else if(Array.isArray(r.data))list=r.data;
-        /* 排除当前商品 */
         if(excludeId)list=list.filter(function(x){return x.id!==excludeId;});
         list.forEach(function(p){var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);p.priceLabel='¥'+n;});
         t.setData({recList:list.slice(0,6)});
@@ -114,7 +133,7 @@ Page({
     var favs=wx.getStorageSync('favorites')||[];
     var idx=favs.indexOf(id);
     if(idx>=0){favs.splice(idx,1);this.setData({isFav:false});wx.showToast({title:'已取消收藏',icon:'none'});}
-    else{favs.push(id);this.setData({isFav:true});wx.showToast({title:'已收藏',icon:'success'});}
+    else{favs.push(id);this.setData({isFip:true});wx.showToast({title:'已收藏',icon:'success'});}
     wx.setStorageSync('favorites',favs);
   },
 
@@ -141,36 +160,44 @@ Page({
     var t=this;
     var p=this.data.product;
     if(!p)return;
-    wx.showLoading({title:'调起支付...'});
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      data:{
-        product_id:p.id,
-        product_title:p.title||p.name,
-        total_fee:p.price,
-        quantity:t.data.quantity,
-        platform:'mini',
-      },
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-        var params=d.jsapi||d;
-        wx.requestPayment({
-          timeStamp:params.timestamp||params.timeStamp,
-          nonceStr:params.nonceStr,
-          package:params.package,
-          signType:params.signType||'RSA',
-          paySign:params.paySign,
-          success:function(){wx.showToast({title:'支付成功',icon:'success'});setTimeout(function(){wx.navigateBack();},1500);},
-          fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
-        });
-      },
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+
+    /* 先获取openid */
+    app.getOpenid().then(function(openid){
+      wx.showLoading({title:'调起支付...'});
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{
+          product_id:p.id,
+          product_title:p.title||p.name,
+          total_fee:Number(p.price),
+          quantity:t.data.quantity,
+          platform:'mini',
+          openid:openid,
+        },
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          var params=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:params.timeStamp,
+            nonceStr:params.nonceStr,
+            package:params.package,
+            signType:params.signType||'MD5',
+            paySign:params.paySign,
+            success:function(){wx.showToast({title:'支付成功',icon:'success'});setTimeout(function(){wx.navigateBack();},1500);},
+            fail:function(err){if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1)){wx.showToast({title:'支付取消',icon:'none'});}}
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+      });
+    }).catch(function(){
+      wx.showToast({title:'无法调起微信支付',icon:'none'});
     });
   },
 
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
+  goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
 });

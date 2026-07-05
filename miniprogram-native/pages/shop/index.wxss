@@ -17,6 +17,13 @@ page{background:#f5f3f0;}
 .disc{font-size:22rpx;color:#4caf50;background:#e8f5e9;padding:4rpx 14rpx;border-radius:10rpx;}
 .sales{font-size:23rpx;color:#999;display:block;margin-top:6rpx;}
 
+/* 批发价区域 */
+.wp-row{display:flex;align-items:center;gap:10rpx;margin-top:10rpx;padding:8rpx 12rpx;background:#f0faf0;border-radius:8rpx;}
+.wp-label{font-size:22rpx;color:#4caf50;font-weight:600;}
+.wp-val{font-size:28rpx;font-weight:700;color:#e91e63;}
+.wp-blur{letter-spacing:2rpx;color:#999;}
+.wp-hint{font-size:20rpx;color:#2196f3;margin-left:auto;}
+
 /* 商品名 */
 .name-sec{background:#fff;padding:20rpx 24rpx;margin-top:8rpx;}
 .name{font-size:32rpx;font-weight:700;color:#1a1a2e;display:block;line-height:1.5;}

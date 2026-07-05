@@ -284,6 +284,7 @@ export default function VIPPage() {
   const [copiedAccount, setCopiedAccount] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [paymentUrl, setPaymentUrl] = useState<string | null>(null);
   const autoPayShown = useRef(false);
 
   const supabase = createClient();
@@ -334,46 +335,44 @@ export default function VIPPage() {
           status: "pending",
         },
       ]).select().single();
-      
+
       if (error) throw error;
 
-      // 2. 调用微信支付API
+      // 2. 调用微信支付API（native 模式）
       const totalFee = selectedPlan.price; // 单位已经是分
       const response = await fetch('/api/wechat-pay/unified-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           product_id: selectedPlan.id,
-          product_title: selectedPlan.name,
+          product_title: `骆芷蝶智选-${selectedPlan.name}`,
           total_fee: totalFee,
           quantity: 1,
-          platform: 'native', // 使用native支付(扫码)
+          platform: 'native',
         }),
       });
 
       const result = await response.json();
 
       if (result.error) {
-        alert('支付发起失败：' + result.error);
+        alert('下单失败：' + result.error);
         setSubmitting(false);
         return;
       }
 
-      // 3. 判断是否在微信内
+      // 3. 判断是否在微信内浏览器
       const isWeChat = /MicroMessenger/i.test(navigator.userAgent);
-      
+
       if (isWeChat && result.code_url && result.code_url.startsWith('weixin://')) {
-        // 在微信内，直接跳转微信支付链接
+        // 微信内：直接跳转 weixin:// 链接拉起支付
         window.location.href = result.code_url;
       } else if (result.code_url) {
-        // 非微信内，显示二维码
-        setPayStep("scan");
-        // 保存支付链接,用于显示二维码
+        // 非微信内或普通 code_url：显示二维码扫码
         setPaymentUrl(result.code_url);
-        // 开始轮询订单状态
+        setPayStep("scan");
         pollOrderStatus(orderData.id || result.order_no);
       } else {
-        alert('支付发起失败，请稍后重试');
+        alert('下单失败，请稍后重试');
         setSubmitting(false);
       }
     } catch (err: any) {

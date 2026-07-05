@@ -26,21 +26,32 @@ interface Block {
 }
 
 /* ------------------------------------------------------------------ */
-/*  主分类                                                            */
+/*  主分类 - 从数据库 home_categories 表动态读取                        */
+/*  ------------------------------------------------------------------ */
 /*  穿搭 → /buyer（买手选品）                                         */
-/*  其他 → /category/[category]（商品列表页，带综合/销量/价格/上新tab）*/
-/* ------------------------------------------------------------------ */
+/*  其他 → /category/[label]（商品列表页）                            */
+/*  ------------------------------------------------------------------ */
 
-const categories = [
-  { name: "全部", href: "/", key: "all" },
-  { name: "穿搭", href: "/buyer", key: "clothing" },
-  { name: "护肤", href: "/category/护肤", key: "skincare" },
-  { name: "彩妆", href: "/category/彩妆", key: "makeup" },
-  { name: "养生", href: "/category/养生", key: "wellness" },
-  { name: "食品", href: "/category/食品", key: "food" },
-  { name: "家居", href: "/category/家居", key: "home" },
-  { name: "文创", href: "/category/文创", key: "creative" },
-  { name: "艺术", href: "/category/艺术", key: "art" },
+interface HomeCategory {
+  id: string;
+  label: string;
+  icon: string;
+  link: string;
+  sort_order: number;
+  is_active: boolean;
+}
+
+// 默认 fallback（数据库为空或请求失败时显示）
+const DEFAULT_CATEGORIES = [
+  { label: "全部", link: "/", sort_order: 0 },
+  { label: "穿搭", link: "/buyer", sort_order: 1 },
+  { label: "护肤", link: "/category/护肤", sort_order: 2 },
+  { label: "彩妆", link: "/category/彩妆", sort_order: 3 },
+  { label: "养生", link: "/category/养生", sort_order: 4 },
+  { label: "食品", link: "/category/食品", sort_order: 5 },
+  { label: "家居", link: "/category/家居", sort_order: 6 },
+  { label: "文创", link: "/category/文创", sort_order: 7 },
+  { label: "艺术", link: "/category/艺术", sort_order: 8 },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -487,6 +498,14 @@ function PreSaleCard({ block, content, bgColor }: { block: any; content: any; bg
 function FeaturedBannerBlock({ content }: { content: any }) {
   const mainImage = content.mainImage || "";
   const mainLink = content.mainLink || "/buyer";
+  // 检查副图中至少有多少张有效图片
+  const validSubs = [1, 2, 3].map((i) => {
+    const sub = content[`sub${i}`] as any;
+    return sub?.image ? { ...sub, key: i } : null;
+  }).filter(Boolean);
+
+  // 如果既没有主图也没有副图，不渲染
+  if (!mainImage && validSubs.length === 0) return null;
 
   return (
     <section className="w-full">
@@ -496,13 +515,11 @@ function FeaturedBannerBlock({ content }: { content: any }) {
           <img src={mainImage} alt="" className="w-full h-auto rounded-xl shadow-sm hover:shadow-md transition-shadow" />
         </a>
       )}
-      {/* 3张小图 */}
-      <div className={`grid gap-3 ${mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
-        {[1, 2, 3].map((i) => {
-          const sub = content[`sub${i}`] as any;
-          if (!sub?.image) return null;
-          return (
-            <a key={i} href={sub.link || `/buyer`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
+      {/* 小图（仅渲染有图片的） */}
+      {validSubs.length > 0 && (
+        <div className={`grid gap-3 ${mainImage ? "grid-cols-3" : "grid-cols-4"}`}>
+          {validSubs.map((sub: any) => (
+            <a key={sub.key} href={sub.link || `/buyer`} className="group block relative rounded-xl overflow-hidden bg-gray-100">
               <div className="aspect-[4/5] relative">
                 <img
                   src={sub.image}
@@ -517,16 +534,17 @@ function FeaturedBannerBlock({ content }: { content: any }) {
                 </div>
               )}
             </a>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
 
 export default function Home() {
   const [keyword, setKeyword] = useState("");
-  const [activeCategoryName, setActiveCategoryName] = useState("全部");
+  const [homeCategories, setHomeCategories] = useState<HomeCategory[]>([]);
+  const [activeCategoryName, setActiveCategoryName] = useState("");
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroBgUrl, setHeroBgUrl] = useState<string>("");
@@ -535,6 +553,31 @@ export default function Home() {
   const [homePopup, setHomePopup] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // 从数据库读取首页行业标签
+  useEffect(() => {
+    fetch("/api/public/home-categories")
+      .then(r => r.json())
+      .then((data: HomeCategory[]) => {
+        const list = Array.isArray(data) && data.length > 0 ? data : DEFAULT_CATEGORIES;
+        setHomeCategories(list);
+        // 默认选中第一个（通常是"全部"）
+        if (!activeCategoryName && list.length > 0) {
+          setActiveCategoryName(list[0].label);
+        }
+      })
+      .catch(() => {
+        setHomeCategories(DEFAULT_CATEGORIES);
+        if (!activeCategoryName) setActiveCategoryName(DEFAULT_CATEGORIES[0].label);
+      });
+  }, []);
+
+  // 当 activeCategoryName 为空时（初始加载），设为第一个标签
+  useEffect(() => {
+    if (homeCategories.length > 0 && !activeCategoryName) {
+      setActiveCategoryName(homeCategories[0].label);
+    }
+  }, [homeCategories, activeCategoryName]);
 
   const currentSubCategories = subCategoryMap[activeCategoryName] || subCategoryMap["全部"];
 
@@ -947,39 +990,42 @@ export default function Home() {
 
 
       {/* ===== Hero 全屏轮播区域（含搜索+分类标签） ===== */}
-      <section className="relative overflow-hidden pt-12" style={{ height: "100vh", minHeight: "600px" }}>
-        <div style={{ height: "calc(100% - 48px)", minHeight: "552px", position: "relative", overflow: "hidden" }}>
+      <section className="relative overflow-hidden pt-12" style={{ height: "100svh", minHeight: "500px" }}>
+        <div style={{ height: "calc(100% - 48px)", minHeight: "452px", position: "relative", overflow: "hidden" }}>
           {/* 轮播图背景 */}
           <HeroCarousel />
 
           {/* 内容层（叠在轮播图上） */}
           <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
             <div className="flex flex-col h-full px-4 pointer-events-auto">
-              {/* 顶部区域：标语 + 主标题 */}
+              {/* 顶部区域：品牌标题（左上角固定样式） */}
               <div className="pt-5 pb-2">
                 <div className="max-w-7xl mx-auto">
+                  {/* 标语标签 */}
                   <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
                     <span className="text-white/70 text-[10px] font-medium tracking-widest">🏷 数据驱动·智选未来</span>
                   </span>
-                  <h1 className="font-black text-white leading-[1.15] mb-3 tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(22px, 4vw, 36px)" }}>
-                    骆芷蝶供应链<span className="text-[#e89aac]">智选</span>平台
+                  {/* 品牌名称 - 大字 */}
+                  <h1 className="font-black text-white leading-[1.15] tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
+                    骆芷蝶·智选<span className="text-[#e89aac] mx-1">|</span>供应链平台
                   </h1>
-                  <p className="text-sm md:text-base text-white/80 mb-4 font-light tracking-wide">服装门店一站式赋能平台</p>
+                  {/* 副标题 - 小字 */}
+                  <p className="text-xs md:text-sm text-white/80 font-light tracking-wide mt-1">服装门店一站式智选平台</p>
 
-                  {/* 分类标签栏（在大图上） */}
-                  <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pb-1">
-                    {categories.map((cat) => (
+                  {/* 分类标签栏 */}
+                  <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pt-3 pb-1">
+                    {homeCategories.map((cat) => (
                       <Link
-                        key={cat.name}
-                        href={cat.href}
-                        onClick={() => setActiveCategoryName(cat.name)}
+                        key={cat.id}
+                        href={cat.link || (cat.label === "全部" ? "/" : `/category/${encodeURIComponent(cat.label)}`)}
+                        onClick={() => setActiveCategoryName(cat.label)}
                         className={`px-3 py-1.5 rounded-full text-xs whitespace-nowrap transition-all ${
-                          activeCategoryName === cat.name
+                          activeCategoryName === cat.label
                             ? "bg-white text-gray-800 shadow font-bold"
                             : "bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20"
                         }`}
                       >
-                        {cat.name}
+                        {cat.label}
                       </Link>
                     ))}
                   </div>

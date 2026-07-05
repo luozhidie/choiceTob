@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = 'force-dynamic';
+
+
 function verifyAdmin(request: NextRequest): boolean {
   const cookie = request.headers.get("cookie") || "";
   return cookie.includes("admin_logged_in=true");

@@ -2,13 +2,14 @@ Page({
   data:{
     banners:[],
     curB:0,
-    categories:['全部','穿搭','护肤','彩妆','养生','食品','家居','文创','艺术'],
+    categories:['全部','穿搭','护肤','彩妆','养生','食品','家居','文创','艺术'],  // 默认值，API成功后覆盖
     ac:'全部',
     products:[],
     ld:true,
     mo:false,
     un:'',
     li:false,
+    isPriceMember:false,  // 价格会员状态
     /* 动态模块 */
     blocks:[],          // 全部已发布模块（按 sort_order 排序）
     catNavItems:[],     // 分类导航预解析数据
@@ -17,14 +18,33 @@ Page({
   },
 
   onLoad:function(){
-    var t=this;
-    t.loadB();
-    t.loadP();
-    t.loadBlocks();
-    t.chkLogin();
+    var app = getApp();
+    this.setData({
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+    });
+    this.loadB();
+    this.loadP();
+    this.loadCategories();  // 从后台读取分类标签
+    this.loadBlocks();
+    this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
+
+  /* ====== 从后台加载首页行业标签 ====== */
+  loadCategories:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/home-categories',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(Array.isArray(d)&&d.length>0){
+          t.setData({categories:d.map(function(x){return x.label;})});
+        }
+      }
+    });
+  },
 
   /* ====== 加载动态模块 ====== */
   loadBlocks:function(){
@@ -63,9 +83,18 @@ Page({
             var keys=Object.keys(ct).sort();
             for(var m=0;m<keys.length;m++){
               var key=keys[m];
-              if(key.indexOf('item')===0&&ct[key]&&ct[key].label)citems.push(ct[key]);
+              if(key.indexOf('item')===0&&ct[key]&&ct[key].image)citems.push(ct[key]);
             }
             if(citems.length>0)circleData[i]=citems;
+          }
+          /* 预处理 featured_banner 副图 */
+          if(b.type==='featured_banner'){
+            var subs=[];
+            for(var s=1;s<=3;s++){
+              var sub=ct['sub'+s];
+              if(sub&&sub.image)subs.push(sub);
+            }
+            ct._subs=subs;
           }
         }
 
@@ -83,6 +112,11 @@ Page({
   },
 
   /* ====== 模块点击跳转 ====== */
+  goSearch:function(){
+    wx.navigateTo({url:'/pages/buyer/index',fail:function(){
+      wx.showToast({title:'搜索功能开发中',icon:'none'});
+    }});
+  },
   goBlockLink:function(e){
     var link=e.currentTarget.dataset.link;
     if(!link)return;
@@ -158,9 +192,15 @@ Page({
         var l=[];
         if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
         else if(Array.isArray(r.data))l=r.data;
+        var isPriceMember = t.data.isPriceMember;
         l.forEach(function(p){
           var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
           p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+          /* 批发价 */
+          var wp=Number(p.wholesale_price)||0;
+          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
+          else if(wp>0)p.wholesalePriceText='\u00A5???';
+          else p.wholesalePriceText='';
           p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;
           t.saveViewHistory(p);
         });

@@ -2,6 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = 'force-dynamic';
+
+
 // 允许删除的表名白名单（防止 SQL 注入）
 const ALLOWED_TABLES = new Set([
   // 商品相关

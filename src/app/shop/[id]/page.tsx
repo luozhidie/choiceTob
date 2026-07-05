@@ -78,88 +78,48 @@ export default function ProductDetailPage() {
     });
   }, []);
 
-  // 获取商品数据
+  // 获取商品数据（走服务端 API，绕过 RLS）
   useEffect(() => {
     if (!productId) return;
     let cancelled = false;
 
     const fetchProduct = async () => {
       setLoading(true);
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-      const headers: Record<string, string> = {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      };
-
-      // 先查 products 表
       try {
-        const platformRes = await fetch(
-          `${supabaseUrl}/rest/v1/products?id=eq.${encodeURIComponent(productId)}&select=*`,
-          { headers }
-        );
-        if (platformRes.ok) {
-          const data = await platformRes.json();
-          if (data && data.length > 0 && !cancelled) {
-            const p = data[0];
-            setProduct({
-              id: p.id,
-              title: p.title || "平台商品",
-              description: p.description,
-              cover_image: p.cover_image || null,
-              images: p.images || null,
-              price: p.price || 0,
-              original_price: p.original_price || null,
-              wholesale_price: p.wholesale_price || null,   // 批发价
-              category: p.category || null,
-              subcategory: p.subcategory || null,
-              tags: p.tags || null,
-              is_published: p.is_published,
-              stock: p.stock || 0,
-              source: "platform",
-              is_preorder: p.is_preorder || false,
-              preorder_days: p.preorder_days || null,
-            });
-            setLoading(false);
-            return;
-          }
+        const url = `/api/public/products?id=${encodeURIComponent(productId)}`;
+        console.log('[ProductDetail] 开始获取商品:', url);
+        const res = await fetch(url);
+        console.log('[ProductDetail] API响应状态:', res.status);
+        const json = await res.json();
+        console.log('[ProductDetail] API返回数据:', JSON.stringify(json).slice(0, 200));
+        if (json.success && json.data && json.data.length > 0 && !cancelled) {
+          const p = json.data[0];
+          setProduct({
+            id: p.id,
+            title: p.title || "平台商品",
+            description: p.description || null,
+            cover_image: p.cover_image || null,
+            images: p.images || null,
+            price: p.price || 0,
+            original_price: p.original_price || null,
+            wholesale_price: p.wholesale_price || null,
+            category: p.category || null,
+            subcategory: p.subcategory || null,
+            tags: p.tags || null,
+            is_published: p.is_published ?? true,
+            stock: p.stock || 0,
+            source: "platform",
+            is_preorder: false,
+            preorder_days: null,
+          });
+          setLoading(false);
+          return;
+        } else {
+          console.warn('[ProductDetail] 商品数据为空或格式错误:', json);
         }
-      } catch (e) { console.error("查询 products 表失败:", e); }
-
-      // 再查 buyer_products 表
-      try {
-        const buyerRes = await fetch(
-          `${supabaseUrl}/rest/v1/buyer_products?id=eq.${encodeURIComponent(productId)}&select=*`,
-          { headers }
-        );
-        if (buyerRes.ok) {
-          const data = await buyerRes.json();
-          if (data && data.length > 0 && !cancelled) {
-            const p = data[0];
-            setProduct({
-              id: p.id,
-              title: p.title || p.name || "选品商品",
-              description: p.description,
-              cover_image: p.cover_image || null,
-              images: p.images || null,
-              price: p.price || 0,
-              original_price: p.original_price || null,
-              wholesale_price: p.wholesale_price || null,   // 批发价
-              category: p.category || null,
-              subcategory: p.subcategory || null,
-              tags: p.tags || null,
-              is_published: p.is_published,
-              stock: p.stock || 0,
-              supplier_name: p.supplier_name || null,
-              source: p.source || "buyer",
-              is_preorder: p.is_preorder || false,
-              preorder_days: p.preorder_days || null,
-            });
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (e) { console.error("查询 buyer_products 表失败:", e); }
+      } catch (e) { 
+        console.error("查询商品失败:", e); 
+      }
 
       if (!cancelled) {
         setProduct(null);

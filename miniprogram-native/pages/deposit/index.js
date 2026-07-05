@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     showPay:false,
@@ -16,28 +18,34 @@ Page({
     var t=this;
     var p=this.data.selectedPlan;
     if(!p)return;
-    wx.showLoading({title:'正在调起支付...'});
+
     var feeMap={'wholesale_5w':5000000,'wholesale_10w':10000000,'wholesale_30w':30000000};
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      data:{product_id:p.id,product_title:p.name,total_fee:feeMap[p.id]||5000000,quantity:1,platform:'mini'},
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-        var pm=d.jsapi||d;
-        wx.requestPayment({
-          timeStamp:pm.timestamp||pm.timeStamp,
-          nonceStr:pm.nonceStr,
-          package:pm.package,
-          signType:pm.signType||'RSA',
-          paySign:pm.paySign,
-          success:function(){wx.showToast({title:'充值成功',icon:'success'});t.setData({showPay:false});},
-          fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
-        });
-      },
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+
+    app.getOpenid().then(function(openid){
+      wx.showLoading({title:'正在调起支付...'});
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{product_id:p.id,product_title:p.name,total_fee:feeMap[p.id]||5000000,quantity:1,platform:'mini',openid:openid},
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          var pm=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:pm.timeStamp||pm.timestamp,
+            nonceStr:pm.nonceStr,
+            package:pm.package,
+            signType:pm.signType||'MD5',
+            paySign:pm.paySign,
+            success:function(){wx.showToast({title:'充值成功',icon:'success'});t.setData({showPay:false});},
+            fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+      });
+    }).catch(function(){
+      wx.showToast({title:'无法调起微信支付',icon:'none'});
     });
   },
 

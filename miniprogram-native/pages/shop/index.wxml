@@ -20,6 +20,12 @@
       <text class="disc" wx:if="{{discountText}}">{{discountText}}</text>
     </view>
     <text class="sales" wx:if="{{product.sales_count}}">已售 {{product.sales_count}}</text>
+    <!-- 批发价区域 -->
+    <view class="wp-row" wx:if="{{wholesalePriceText}}">
+      <text class="wp-label">批发价</text>
+      <text class="wp-val {{isPriceMember?'wp-show':'wp-blur'}}">{{wholesalePriceText}}</text>
+      <text class="wp-hint" wx:if="{{!isPriceMember}}" bindtap="goVip">开通会员查看</text>
+    </view>
   </view>
 
   <!-- 商品名 -->
