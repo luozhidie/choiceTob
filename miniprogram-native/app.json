@@ -17,7 +17,9 @@
     "pages/member/index",
     "pages/login/index",
     "pages/checkout/index",
-    "pages/favorites/index"
+    "pages/favorites/index",
+    "pages/coupons/index",
+    "pages/red-packets/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
