@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Gift, Search, Users, Send } from "lucide-react";
-import { formatPrice } from "@/lib/discount";
+
+// 分→元格式化（内联，避免import问题）
+const fmt = (p: number) => `¥${(p / 100).toFixed(0)}`;
 
 // 优惠券类型标签
 const couponTypeLabels: Record<string, string> = {
@@ -222,7 +224,7 @@ export default function AdminCouponsPage() {
                   <td className="px-4 py-3 font-medium text-primary">{c.title}</td>
                   <td className="px-4 py-3 text-sm text-gray-600">{c.discount_desc || "-"}</td>
                   <td className="px-4 py-3 text-sm">
-                    {c.min_amount > 0 ? `满${formatPrice(c.min_amount)}元` : "无门槛"}
+                    {c.min_amount > 0 ? `满${fmt(c.min_amount)}元` : "无门槛"}
                   </td>
                   <td className="px-4 py-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-600">

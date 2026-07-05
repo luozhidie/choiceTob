@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Heart, Search, Send } from "lucide-react";
-import { formatPrice } from "@/lib/discount";
+
+// 分→元格式化（内联）
+const fmt = (p: number) => `¥${(p / 100).toFixed(0)}`;
 
 export default function AdminRedPacketsPage() {
   const [packets, setPackets] = useState<any[]>([]);
@@ -192,7 +194,7 @@ export default function AdminRedPacketsPage() {
               {packets.map((p: any) => (
                 <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-primary">{p.title}</td>
-                  <td className="px-4 py-3 text-sm font-bold text-red-500">¥{formatPrice(p.amount)}</td>
+                  <td className="px-4 py-3 text-sm font-bold text-red-500">¥{fmt(p.amount)}</td>
                   <td className="px-4 py-3">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-600">
                       {packetTypeLabels[p.packet_type] || p.packet_type}
