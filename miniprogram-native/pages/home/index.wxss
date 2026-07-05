@@ -35,7 +35,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 
 /* 搜索框 + 分类标签（紧跟文字下方，紧贴副标题） */
 .hero-mid{
-  position:absolute;left:40rpx;right:40rpx;top:160rpx;z-index:6;
+  position:absolute;left:40rpx;right:40rpx;top:240rpx;z-index:6;
 }
 .hero-search{
   display:flex;align-items:center;
