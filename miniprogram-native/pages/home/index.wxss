@@ -111,8 +111,8 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 
 /* featured_banner 精选横幅 - 大图+3小图 */
 .blk-fb{background:#faf8f6;}
-.fb-main{width:100%;height:400rpx;border-radius:20rpx;overflow:hidden;position:relative;margin-bottom:12rpx;}
-.fb-main-img{width:100%;height:100%;}
+.fb-main{width:100%;border-radius:20rpx;overflow:hidden;position:relative;margin-bottom:12rpx;}
+.fb-main-img{width:100%;display:block;}
 .fb-ov{position:absolute;bottom:16rpx;right:16rpx;background:rgba(0,0,0,.5);color:#fff;padding:8rpx 22rpx;border-radius:14rpx;font-size:21rpx;}
 .fb-tap{font-weight:600;}
 .fb-subs{display:flex;gap:10rpx;}

@@ -64,7 +64,7 @@
     <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
-        <image src="{{item.content.mainImage}}" mode="aspectFill" class="fb-main-img"/>
+        <image src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
         <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
       </view>
       <view class="fb-subs">
