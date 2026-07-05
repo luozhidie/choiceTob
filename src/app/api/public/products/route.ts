@@ -38,24 +38,31 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
 
   // 按 ID 单条查询（给商品详情页用）
   if (singleId) {
-    let { data, error } = await supabase
+    // 先查 products 表
+    const { data: pData, error: pError } = await supabase
       .from("products")
       .select("*")
       .eq("id", singleId)
-      .limit(1);
-    if (data && data.length > 0 && !error) {
-      return { success: true, data: [data[0]], error: null };
+      .maybeSingle();
+
+    if (pData) {
+      return { success: true, data: [pData], error: null };
     }
+
     // 再查 buyer_products 表
-    const bp = await supabase
+    const { data: bpData, error: bpError } = await supabase
       .from("buyer_products")
       .select("*")
       .eq("id", singleId)
-      .limit(1);
-    if (bp.data && bp.data.length > 0 && !bp.error) {
-      return { success: true, data: [bp.data[0]], error: null };
+      .maybeSingle();
+
+    if (bpData) {
+      return { success: true, data: [bpData], error: null };
     }
-    return { success: false, data: [], error: error || bp.error };
+
+    // 两个表都没找到：返回空数组，不返回 error
+    console.log(`[products API] 商品不存在: id=${singleId}, pError=${pError?.message}, bpError=${bpError?.message}`);
+    return { success: true, data: [], error: null };
   }
 
   // 按ID批量查
@@ -114,10 +121,16 @@ export async function GET(request: NextRequest) {
     try {
       const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
       const result = await queryWithClient(supabase, request);
-      if (!result.error && result.success !== false) {
+      if (result.error) {
+        console.error("[products API] service_role 查询出错:", result.error);
+      } else {
         return NextResponse.json(result);
       }
-    } catch {}
+    } catch (e: any) {
+      console.error("[products API] service_role 异常:", e.message);
+    }
+  } else {
+    console.warn("[products API] 警告: SUPABASE_SERVICE_ROLE_KEY 未设置，使用 anon key（可能被 RLS 限制）");
   }
 
   // 方式2: 降级到 publishable key（可以硬编码，因为是公开的）
@@ -126,10 +139,12 @@ export async function GET(request: NextRequest) {
     const supabase = createClient(supabaseUrl, publishableKey);
     const result = await queryWithClient(supabase, request);
     if (result.error) {
-      return NextResponse.json({ error: result.error.message }, { status: 500 });
+      console.error("[products API] anon key 查询出错:", result.error);
+      return NextResponse.json({ success: false, data: [], error: result.error.message }, { status: 500 });
     }
     return NextResponse.json(result);
-  } catch {}
-
-  return NextResponse.json({ success: true, data: [] });
+  } catch (e: any) {
+    console.error("[products API] anon key 异常:", e.message);
+    return NextResponse.json({ success: false, data: [], error: e.message }, { status: 500 });
+  }
 }
