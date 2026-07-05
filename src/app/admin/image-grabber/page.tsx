@@ -261,6 +261,26 @@ export default function ImageGrabberPage() {
     try {
       let imageUrls: string[] = [];
 
+      // 检测输入中是否有动态页面链接（1688/淘宝/微信小程序）
+      const dynamicSitePatterns = [/1688\.com\/offer\//, /taobao\.com/, /tmall\.com/, /#小程序\/|#微信小程序\/]/];
+      const hasDynamicLinks = dynamicSitePatterns.some(p => p.test(inputText));
+
+      if (hasDynamicLinks) {
+        setProductInfo({
+          title: "⚠️ 检测到动态页面链接",
+          description: "1688/淘宝等网站的详情页是JS动态加载，服务端无法直接抓取图片",
+          specs: [
+            "① 浏览器打开商品页，右键图片 → 复制图片地址",
+            "② 或长按图片保存到手机相册后上传",
+            "③ 切换到「批量粘贴链接」模式粘贴图片URL（.jpg结尾）",
+            "④ 图片地址格式如：https://xxx.alicdn.com/img.jpg",
+          ],
+        });
+        showToast("error", "检测到动态页面链接，请使用图片URL而非商品页链接");
+        setIsProcessing(false);
+        return;
+      }
+
       if (mode === "batch") {
         imageUrls = extractImageUrls(inputText);
         
