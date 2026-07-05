@@ -20,6 +20,13 @@ const menuGroups = [
     { label: "店铺买手决策", href: "/admin/buyer-features" },
   ]},
 
+  // ─── 会员权益 ───
+  { label: "会员权益", items: [
+    { label: "会员等级配置", href: "/admin/membership-levels" },
+    { label: "优惠券管理", href: "/admin/coupons" },
+    { label: "红包管理", href: "/admin/red-packets" },
+  ]},
+
   // ─── VIP会员 ───
   { label: "VIP会员", items: [
     { label: "VIP订单", href: "/admin/membership-orders" },

@@ -41,13 +41,37 @@
 
   <!-- 拿货会员 -->
   <view class="plans" wx:if="{{activeTab==='deposit'}}">
+
+    <!-- 拿货升级进度 -->
+    <view class="upgrade-card" wx:if="{{purchaseAmount !== undefined}}">
+      <view class="uc-header">
+        <text class="uc-title">拿货升级进度</text>
+        <text class="uc-amount">已拿货 ¥{{purchaseAmountLabel}}</text>
+      </view>
+      <view class="uc-progress-bar">
+        <view class="uc-progress-fill" style="width:{{upgradeProgress}}%;"></view>
+      </view>
+      <view class="uc-levels">
+        <text class="uc-level {{currentLevel>=0?'uc-level-active':''}}">普通</text>
+        <text class="uc-level {{currentLevel>=1?'uc-level-active':''}}">5万会员</text>
+        <text class="uc-level {{currentLevel>=2?'uc-level-active':''}}">10万会员</text>
+        <text class="uc-level {{currentLevel>=3?'uc-level-active':''}}">30万会员</text>
+      </view>
+      <view class="uc-tip" wx:if="{{nextLevelLabel}}">
+        再拿货 ¥{{nextLevelGapLabel}} 即可升级为 <text class="uc-next">{{nextLevelLabel}}</text>
+      </view>
+      <view class="uc-tip uc-tip-done" wx:if="{{!nextLevelLabel}}">
+        您已到达最高会员等级 🎉
+      </view>
+    </view>
+
     <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{depositPlans}}" wx:key="id">
       <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
       <text class="pc-name">{{item.name}}</text>
       <text class="pc-price">{{item.priceLabel}}</text>
       <text class="pc-desc">{{item.discountLabel}}</text>
       <view class="pc-features">
-        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this" wx:for-item="feat">✓ {{feat}}</text>
       </view>
       <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即充值</view>
     </view>

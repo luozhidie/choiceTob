@@ -6,6 +6,13 @@ Page({
     isMember:false,
     memberLabel:'',
     expireDate:'',
+    /* 拿货升级进度 */
+    purchaseAmount:0,
+    purchaseAmountLabel:'0',
+    currentLevel:0,          // 0=普通,1=5万,2=10万,3=30万
+    upgradeProgress:0,
+    nextLevelLabel:'',
+    nextLevelGapLabel:'',
     pricePlans:[
       {id:'price_trial',name:'价格会员·体验',priceLabel:'¥19.9',originalPrice:'',discountLabel:'省¥0',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预览'],highlight:false},
       {id:'price_3m',name:'价格会员·季卡',priceLabel:'¥128/季',originalPrice:'¥199',discountLabel:'省¥71',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预测数据','行业选品报告(月)'],highlight:false},
@@ -34,7 +41,10 @@ Page({
     selectedPlan:null,
   },
 
-  onLoad:function(){this.chkLogin();},
+  onLoad:function(){
+    this.chkLogin();
+    this.loadPurchaseAmount();
+  },
 
   chkLogin:function(){
     var t=this;
@@ -42,6 +52,56 @@ Page({
     if(ui){
       t.setData({isMember:true,memberLabel:'价格会员',expireDate:'2027-07-03'});
     }
+  },
+
+  /* 获取拿货金额并计算升级进度 */
+  loadPurchaseAmount:function(){
+    var t=this;
+    var ui=wx.getStorageSync('user_info');
+    if(!ui||!ui.id){
+      t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员'});
+      return;
+    }
+    wx.request({
+      url:'https://colour-choice.art/api/user/me',
+      method:'GET',
+      data:{ user_id:ui.id },
+      success:function(r){
+        var d=r.data||{};
+        var amount=d.total_purchase_amount||0;  // 分
+        var amountYuan=Math.round(amount/100);
+        var levels=[0,5000,10000,30000];  // 分→元的阈值
+        var levelNames=['普通','5万会员','10万会员','30万会员'];
+        var curLv=0;
+        for(var i=levels.length-1;i>=0;i--){
+          if(amount>=levels[i]*100){curLv=i;break;}
+        }
+        var progress=0;
+        var nextLabel='';
+        var gapLabel='';
+        if(curLv<levels.length-1){
+          var curThreshold=levels[curLv]*100;
+          var nextThreshold=levels[curLv+1]*100;
+          var ratio=(amount-curThreshold)/(nextThreshold-curThreshold);
+          progress=Math.min(100,Math.max(0,Math.round(ratio*100)));
+          nextLabel=levelNames[curLv+1];
+          gapLabel=Math.round((nextThreshold-amount)/100).toLocaleString();
+        } else {
+          progress=100;
+        }
+        t.setData({
+          purchaseAmount:amount,
+          purchaseAmountLabel:amountYuan.toLocaleString(),
+          currentLevel:curLv,
+          upgradeProgress:progress,
+          nextLevelLabel:nextLabel,
+          nextLevelGapLabel:gapLabel,
+        });
+      },
+      fail:function(){
+        t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员'});
+      }
+    });
   },
 
   switchTab:function(e){this.setData({activeTab:e.currentTarget.dataset.tab});},

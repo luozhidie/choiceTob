@@ -74,3 +74,17 @@ page{background:#f5f3f0;}
 .m-price{font-size:40rpx;font-weight:bold;color:#e91e63;display:block;margin-bottom:8rpx;}
 .m-tip{font-size:24rpx;color:#999;display:block;margin-bottom:28rpx;}
 .m-btn{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;padding:22rpx 0;border-radius:14rpx;font-size:29rpx;font-weight:600;}
+
+/* 拿货升级进度卡片 */
+.upgrade-card{background:#fff;border-radius:22rpx;padding:28rpx 24rpx;margin-bottom:20rpx;box-shadow:0 3rpx 16rpx rgba(0,0,0,.05);}
+.uc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16rpx;}
+.uc-title{font-size:28rpx;font-weight:bold;color:#1a1a2e;}
+.uc-amount{font-size:26rpx;font-weight:700;color:#e91e63;}
+.uc-progress-bar{height:16rpx;background:#f0ece8;border-radius:8rpx;overflow:hidden;margin-bottom:12rpx;}
+.uc-progress-fill{height:100%;background:linear-gradient(90deg,#e91e63,#ff6090);border-radius:8rpx;transition:width .5s ease;}
+.uc-levels{display:flex;justify-content:space-between;margin-bottom:12rpx;}
+.uc-level{font-size:20rpx;color:#bbb;}
+.uc-level-active{color:#e91e63;font-weight:700;}
+.uc-tip{font-size:22rpx;color:#888;}
+.uc-next{color:#e91e63;font-weight:700;}
+.uc-tip-done{color:#4caf50;font-weight:600;}
