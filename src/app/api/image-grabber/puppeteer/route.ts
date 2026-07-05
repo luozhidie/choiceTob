@@ -225,11 +225,23 @@ export async function POST(request: NextRequest) {
 
     if (imageUrls.length === 0 && !productInfo) {
       var hint = platform ? platform + "页面可能是动态加载的" : "该页面";
+      
+      // 1688特殊提示
+      if (platform === "1688") {
+        return NextResponse.json({
+          success: false,
+          images: [],
+          error: "1688商品详情页是动态加载的，服务端无法直接抓取。\n\n【推荐操作】\n1. 在浏览器打开商品页\n2. 右键点击每张商品图片 → 「复制图片地址」\n3. 切换到「批量粘贴链接」模式，批量粘贴图片URL\n4. 或使用「微信图片上传」功能",
+          hint: "1688需要手动复制图片链接",
+          isDynamicSite: true,
+        });
+      }
+
       return NextResponse.json({
-        error: "未找到图片。" + hint + "建议直接粘贴图片链接或使用上传功能",
         success: false,
-        hint: getHintForPlatform(platform),
         images: [],
+        error: "未找到图片。" + hint + "建议直接粘贴图片链接或使用上传功能",
+        hint: getHintForPlatform(platform),
       });
     }
 

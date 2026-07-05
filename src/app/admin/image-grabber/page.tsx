@@ -301,6 +301,19 @@ export default function ImageGrabberPage() {
             return;
           }
           
+          // 动态页面特殊提示（如1688）
+          if (result.isDynamicSite) {
+            showToast("error", "该页面需要手动操作，请看下方提示");
+            // 显示一个持久的提示信息
+            setProductInfo({
+              title: "⚠️ 该网站无法自动抓取",
+              description: result.error || "",
+              specs: ["1. 在浏览器打开商品页", "2. 右键图片 → 复制图片地址", "3. 切换到「批量粘贴链接」模式", "4. 粘贴图片URL后点开始抓取"],
+            });
+            setIsProcessing(false);
+            return;
+          }
+
           if (!result.success && result.error) throw new Error(result.error);
           
           if (result.images && result.images.length > 0) {
