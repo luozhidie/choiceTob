@@ -51,6 +51,8 @@ export default function ImageGrabberPage() {
   const [mode, setMode] = useState<"url" | "batch" | "upload">("upload"); // 新增 upload 模式
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  // 商品参数（抓取时提取）
+  const [productInfo, setProductInfo] = useState<Record<string, any> | null>(null);
 
   // 加载商品列表（用 fetch 代替 supabase 客户端）
   useEffect(() => {
@@ -289,13 +291,25 @@ export default function ImageGrabberPage() {
         if (url.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i)) {
           imageUrls = [url];
         } else {
-          showToast("success", "正在使用浏览器抓取图片...");
+          showToast("success", "正在抓取页面内容...");
           const result = await handlePuppeteerGrab(url);
           
-          if (result.error) throw new Error(result.error);
+          // 微信小程序链接特殊提示
+          if (result.isMiniprogram) {
+            showToast("error", result.error);
+            setIsProcessing(false);
+            return;
+          }
+          
+          if (!result.success && result.error) throw new Error(result.error);
           
           if (result.images && result.images.length > 0) {
             imageUrls = result.images;
+          }
+          
+          // 保存商品参数
+          if (result.productInfo) {
+            setProductInfo(result.productInfo);
           }
         }
       }
@@ -379,6 +393,7 @@ export default function ImageGrabberPage() {
   const clearAll = () => {
     setImages([]);
     setInputText("");
+    setProductInfo(null);
   };
 
   // 复制URL
@@ -697,6 +712,53 @@ export default function ImageGrabberPage() {
               <option value="new">创建新商品</option>
             </select>
           </div>
+
+          {/* 抓取到的商品参数 */}
+          {productInfo && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl border border-blue-100">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-bold text-gray-800 flex items-center gap-1.5">
+                  <Package className="w-4 h-4 text-primary" />
+                  商品参数
+                </h3>
+                <button onClick={() => setProductInfo(null)} className="text-xs text-gray-400 hover:text-gray-600">✕ 清除</button>
+              </div>
+
+              {productInfo.title && (
+                <p className="text-base font-semibold text-gray-900 mb-2">{productInfo.title}</p>
+              )}
+
+              {(productInfo.price || productInfo.originalPrice) && (
+                <div className="flex items-center gap-4 mb-2">
+                  {productInfo.price && (
+                    <span className="text-red-600 font-bold text-lg">¥{productInfo.price}</span>
+                  )}
+                  {productInfo.originalPrice && (
+                    <span className="text-gray-400 text-sm line-through">¥{productInfo.originalPrice}</span>
+                  )}
+                </div>
+              )}
+
+              {productInfo.specs && productInfo.specs.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {productInfo.specs.map((spec: string, i: number) => (
+                    <span key={i} className="inline-block bg-white px-2 py-1 rounded-md text-xs border border-gray-200 text-gray-700">{spec}</span>
+                  ))}
+                </div>
+              )}
+
+              {(productInfo.shipFrom || productInfo.stock) && (
+                <div className="flex items-center gap-4 text-xs text-gray-500 mt-1">
+                  {productInfo.shipFrom && <span>发货地：{productInfo.shipFrom}</span>}
+                  {productInfo.stock && <span>库存：{productInfo.stock}</span>}
+                </div>
+              )}
+
+              {productInfo.description && !productInfo.title && (
+                <p className="text-sm text-gray-600 mt-1">{productInfo.description}</p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 结果展示 */}
