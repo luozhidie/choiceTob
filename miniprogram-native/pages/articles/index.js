@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     activeTab:'blogger',
@@ -47,13 +49,31 @@ Page({
   doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
 
   doPay:function(pid,fee,title){
-    wx.showLoading({title:'调起支付...'});
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      data:{product_id:pid,product_title:title,total_fee:fee,quantity:1,platform:'mini'},
-      success:function(r){wx.hideLoading();var d=r.data||{};if(d.error){wx.showModal({title:d.error,showCancel:false});return;}var pm=d.jsapi||d;wx.requestPayment({timeStamp:pm.timestamp||pm.timeStamp,nonceStr:pm.nonceStr,package:pm.package,signType:pm.signType||'RSA',paySign:pm.paySign,success:function(){wx.showToast({title:'订阅成功',icon:'success'});},fail:function(){}});},
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误'});}
+    app.getOpenid().then(function(openid){
+      wx.showLoading({title:'调起支付...'});
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{product_id:pid,product_title:title,total_fee:fee,quantity:1,platform:'mini',openid:openid},
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:d.error,showCancel:false});return;}
+          var pm=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:pm.timeStamp||pm.timestamp,
+            nonceStr:pm.nonceStr,
+            package:pm.package,
+            signType:pm.signType||'MD5',
+            paySign:pm.paySign,
+            success:function(){wx.showToast({title:'订阅成功',icon:'success'});},
+            fail:function(){}
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误'});}
+      });
+    }).catch(function(){
+      wx.showToast({title:'无法调起微信支付',icon:'none'});
     });
   }
 });

@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     activeTab:'price',
@@ -23,10 +25,10 @@ Page({
     compareRows:[
       {name:'批发价查看',trial:true,quarterly:true,yearly:true},
       {name:'市场价格对比',trial:true,quarterly:true,yearly:true},
-      {name:'爆款趋势预测',trial:false,quarterly:true,yearly:true},
-      {name:'选品报告(月)',trial:false,quarterly:true,yearly:true},
-      {name:'每日搭配订阅',trial:false,quarterly:false,yearly:true},
-      {name:'专属客服通道',trial:false,quarterly:false,yearly:true},
+      {name:'爆款趋势预测',false:true,quarterly:true,yearly:true},
+      {name:'选品报告(月)',false:false,quarterly:true,yearly:true},
+      {name:'每日搭配订阅',false:false,quarterly:false,yearly:true},
+      {name:'专属客服通道',false:false,quarterly:false,yearly:true},
     ],
     showPay:false,
     selectedPlan:null,
@@ -49,87 +51,76 @@ Page({
     this.setData({selectedPlan:plan,showPay:true});
   },
 
+  /* 统一支付方法：先获取openid，再调起支付 */
+  doWechatPay:function(planData){
+    var t=this;
+    wx.showLoading({title:'正在调起支付...'});
+
+    /* 先获取openid */
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{
+          product_id:planData.id,
+          product_title:planData.name,
+          total_fee:t.getFee(planData.id),
+          quantity:1,
+          platform:'mini',
+          openid:openid,
+        },
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          var params=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:params.timeStamp,
+            nonceStr:params.nonceStr,
+            package:params.package,
+            signType:params.signType||'MD5',
+            paySign:params.paySign,
+            success:function(){
+              wx.showToast({title:'支付成功',icon:'success'});
+              t.setData({showPay:false,selectedPlan:null});
+              t.chkLogin();
+              /* 测试会员支付成功后跳转测试页 */
+              if(planData.id==='test_female'||planData.id==='test_male'){
+                setTimeout(function(){
+                  wx.navigateTo({
+                    url:'/pages/style-test/index?mode='+(planData.id==='test_female'?'female':'male')
+                  });
+                },1200);
+              }
+            },
+            fail:function(err){
+              if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1)){
+                wx.showToast({title:'支付失败',icon:'none'});
+              }
+            }
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+      });
+    }).catch(function(err){
+      wx.hideLoading();
+      console.error('获取openid失败',err);
+      wx.showToast({title:'无法调起微信支付',icon:'none'});
+    });
+  },
+
   /* 测试会员 - 点击立即测试 */
   goTest:function(e){
     var plan=e.currentTarget.dataset.plan;
-    var t=this;
-    wx.showLoading({title:'发起支付...'});
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      header:{'Content-Type':'application/json'},
-      data:{
-        product_id:plan.id,
-        product_title:plan.name,
-        total_fee:plan.price*100,
-        quantity:1,
-        platform:'mini',
-      },
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-        var params=d.jsapi||d.payParams||d;
-        wx.requestPayment({
-          timeStamp:params.timeStamp||params.timestamp,
-          nonceStr:params.nonceStr,
-          package:params.package,
-          signType:params.signType||'RSA',
-          paySign:params.paySign,
-          success:function(){
-            /* 支付成功后跳转到风格测试页面 */
-            wx.navigateTo({
-              url:'/pages/style-test/index?mode='+(plan.id==='test_female'?'female':'male')
-            });
-          },
-          fail:function(err){
-            if(!err.errMsg || err.errMsg.indexOf('cancel')===-1){
-              wx.showToast({title:'支付取消',icon:'none'});
-            }
-          }
-        });
-      },
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
-    });
+    this.doWechatPay(plan);
   },
+
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
 
   confirmPay:function(){
-    var that=this;
     var plan=this.data.selectedPlan;
     if(!plan)return;
-    wx.showLoading({title:'正在调起支付...'});
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      data:{
-        product_id:plan.id,
-        product_title:plan.name,
-        total_fee:this.getFee(plan.id),
-        quantity:1,
-        platform:'mini',
-      },
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-        var params=d.jsapi||d;
-        wx.requestPayment({
-          timeStamp:params.timestamp||params.timeStamp,
-          nonceStr:params.nonceStr,
-          package:params.package,
-          signType:params.signType||'RSA',
-          paySign:params.paySign,
-          success:function(){
-            wx.showToast({title:'支付成功',icon:'success'});
-            that.setData({showPay:false,selectedPlan:null});
-            that.chkLogin();
-          },
-          fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
-        });
-      },
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
-    });
+    this.doWechatPay(plan);
   },
 
   getFee:function(pid){

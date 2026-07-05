@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     productId:'',
@@ -88,7 +90,6 @@ Page({
         var list=[];
         if(r.data&&r.data.data)list=r.data.data||[];
         else if(Array.isArray(r.data))list=r.data;
-        /* 排除当前商品 */
         if(excludeId)list=list.filter(function(x){return x.id!==excludeId;});
         list.forEach(function(p){var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);p.priceLabel='¥'+n;});
         t.setData({recList:list.slice(0,6)});
@@ -114,7 +115,7 @@ Page({
     var favs=wx.getStorageSync('favorites')||[];
     var idx=favs.indexOf(id);
     if(idx>=0){favs.splice(idx,1);this.setData({isFav:false});wx.showToast({title:'已取消收藏',icon:'none'});}
-    else{favs.push(id);this.setData({isFav:true});wx.showToast({title:'已收藏',icon:'success'});}
+    else{favs.push(id);this.setData({isFip:true});wx.showToast({title:'已收藏',icon:'success'});}
     wx.setStorageSync('favorites',favs);
   },
 
@@ -141,33 +142,40 @@ Page({
     var t=this;
     var p=this.data.product;
     if(!p)return;
-    wx.showLoading({title:'调起支付...'});
-    wx.request({
-      url:'https://colour-choice.art/api/wechat-pay/unified-order',
-      method:'POST',
-      data:{
-        product_id:p.id,
-        product_title:p.title||p.name,
-        total_fee:p.price,
-        quantity:t.data.quantity,
-        platform:'mini',
-      },
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-        var params=d.jsapi||d;
-        wx.requestPayment({
-          timeStamp:params.timestamp||params.timeStamp,
-          nonceStr:params.nonceStr,
-          package:params.package,
-          signType:params.signType||'RSA',
-          paySign:params.paySign,
-          success:function(){wx.showToast({title:'支付成功',icon:'success'});setTimeout(function(){wx.navigateBack();},1500);},
-          fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
-        });
-      },
-      fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+
+    /* 先获取openid */
+    app.getOpenid().then(function(openid){
+      wx.showLoading({title:'调起支付...'});
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{
+          product_id:p.id,
+          product_title:p.title||p.name,
+          total_fee:Number(p.price),
+          quantity:t.data.quantity,
+          platform:'mini',
+          openid:openid,
+        },
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          var params=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:params.timeStamp,
+            nonceStr:params.nonceStr,
+            package:params.package,
+            signType:params.signType||'MD5',
+            paySign:params.paySign,
+            success:function(){wx.showToast({title:'支付成功',icon:'success'});setTimeout(function(){wx.navigateBack();},1500);},
+            fail:function(err){if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1)){wx.showToast({title:'支付取消',icon:'none'});}}
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+      });
+    }).catch(function(){
+      wx.showToast({title:'无法调起微信支付',icon:'none'});
     });
   },
 

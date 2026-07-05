@@ -95,12 +95,10 @@ export async function unifiedOrder(params: {
 
   let { out_trade_no, body, total_fee, openid, platform = 'native' } = params;
 
-  // 防御：如果平台是 JSAPI（mini/mp）但没有传合法的微信 openid，
-  // 强制降级为 native 模式，避免微信 API 报 "JSAPI支付必须传 openid"
-  // 注意：Supabase 的 user.id 是 UUID，不是微信 openid，不能传给微信 API
+  // JSAPI支付必须传openid（小程序/公众号）
   if ((platform === 'mini' || platform === 'mp') && !openid) {
-    console.warn(`[微信支付] 平台=${platform} 但 openid 为空，自动降级为 native 模式`);
-    platform = 'native';
+    console.error(`[微信支付] 平台=${platform} 但 openid 为空，JSAPI 支付需要 openid`);
+    throw new Error('JSAPI支付缺少openid，请先调用 wx.login 获取');
   }
   const nonce_str = randomStr();
 
