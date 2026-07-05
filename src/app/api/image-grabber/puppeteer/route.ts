@@ -204,16 +204,11 @@ function extractGenericInfo(html: string, platform: string): Record<string, any>
   if (ogImageMatch) info.mainImage = ogImageMatch[1];
 
   // price patterns for generic sites
-  const pricePatterns = [
-    /\¥\s*([\d,]+\.?\d*)/,
-    /\$\s*([\d,]+\.?\d*)/,
-    /price["':\s]+["']?([\d,]+\.?\d*)/,
-    itemprop="price"[^>]*content="([^"]+)",
-  ];
-  for (const p of pricePatterns) {
-    const m = html.match(p);
-    if (m) { info.price = m[1]; break; }
-  }
+  const rawPrice = html.match(/¥\s*([\d,]+\.?\d*)/)
+    || html.match(/\$[\s]?([\d,]+\.?\d*)/)
+    || html.match(/price[\s]*[:=]["\s]*([\d,]+\.?\d*)/)
+    || html.match(/content="([^"]+)"[^>]*itemprop="price"/);
+  if (rawPrice) info.price = rawPrice[1];
 
   return Object.keys(info).length > 0 ? info : null;
 }
