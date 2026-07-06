@@ -15,10 +15,10 @@
     </view>
   </view>
 
-  <!-- ═══════ 已登录 + 未认证：金色认证引导卡（同行截图1）═══════ -->
-  <view wx:if="{{isLoggedIn && !isCertified}}" class="cert-guide-card">
+  <!-- ═══════ 未认证（不管是否登录）：金色左右对比引导卡（同行截图1）═══════ -->
+  <view wx:if="{{!isCertified}}" class="cert-guide-card">
     <view class="cg-body">
-      <!-- 左侧：未认证提示 -->
+      <!-- 左侧：当前受限状态 -->
       <view class="cg-left">
         <text class="cg-status">您暂未认证</text>
         <text class="cg-hint">仅能</text>
@@ -41,7 +41,7 @@
           </block>
         </view>
         <!-- 一键认证按钮 -->
-        <view class="cg-btn" bindtap="goCertify">一键认证 解锁权益</view>
+        <view class="cg-btn" bindtap="{{isLoggedIn?'goCertify':'goLogin'}}">{{isLoggedIn?'一键认证 解锁权益':'登录后一键认证'}}</view>
       </view>
     </view>
   </view>
@@ -72,18 +72,6 @@
         </view>
       </block>
     </view>
-  </view>
-
-  <!-- ═══════ 未登录：轻量认证入口（同行截图3粉色卡）═══════ -->
-  <view wx:if="{{!isLoggedIn}}" class="cert-entry-card" bindtap="goLogin">
-    <div class="ce-row">
-      <text class="ce-icon">🛡</text>
-      <div class="ce-body">
-        <text class="ce-title">认证店主</text>
-        <text class="ce-desc">免费通过答题，解锁批发价查看权</text>
-      </div>
-      <text class="ce-arrow">免费认证 →</text>
-    </div>
   </view>
 
   <!-- ═══════ 未登录后：正常显示下方内容 ═══════ -->
