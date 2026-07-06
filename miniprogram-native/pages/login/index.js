@@ -1,86 +1,133 @@
 Page({
   data:{
-    email:'',pw:'',showPw:false,
-    adminEmail:'',adminPw:'',
+    agreed:false,
+    loading:false,
+    showPhoneList:false,
+    phoneNumbers:[]
   },
 
-  onEmail:function(e){this.setData({email:e.detail.value});},
-  onPw:function(e){this.setData({pw:e.detail.value});},
-  togglePw:function(){this.setData({showPw:!this.data.showPw});},
+  /* 勾选协议 */
+  toggleAgree:function(){
+    this.setData({agreed:!this.data.agreed});
+  },
 
-  doLogin:function(){
+  /* 手机号一键登录 */
+  doPhoneLogin:function(){
     var t=this;
-    var e=t.data.email.trim();
-    var p=t.data.pw.trim();
-    if(!e||!p){wx.showToast({title:'请填写完整',icon:'none'});return;}
-    if(e.indexOf('@')<0){wx.showToast({title:'邮箱格式不正确',icon:'none'});return;}
+    if(!t.data.agreed){
+      wx.showToast({title:'请先同意用户协议',icon:'none'});return;
+    }
+    t.setData({loading:true});
 
-    wx.showLoading({title:'登录中...'});
+    wx.login({
+      success:function(loginRes){
+        if(!loginRes.code){
+          t.setData({loading:false});
+          wx.showToast({title:'获取登录凭证失败',icon:'none'});return;
+        }
+
+        /* 获取手机号 */
+        wx.getPhoneNumber({
+          success:function(phoneRes){
+            t.handlePhoneCode(loginRes.code,phoneRes.code);
+          },
+          fail:function(err){
+            t.setData({loading:false});
+            console.error('[getPhoneNumber] fail:',err);
+            /* 用户拒绝授权 → 引导用其它方式 */
+            wx.showModal({
+              title:'提示',
+              content:'需要授权手机号才能一键登录，是否使用其它方式？',
+              confirmText:'其它方式',
+              cancelText:'取消',
+              success:function(m){
+                if(m.confirm)t.goOtherLogin();
+              }
+            });
+          }
+        });
+      },
+      fail:function(){
+        t.setData({loading:false});
+        wx.showToast({title:'微信登录失败',icon:'none'});
+      }
+    });
+  },
+
+  /* 处理手机号 code（发给后端换手机号+自动注册/登录）*/
+  handlePhoneCode:function(loginCode,phoneCode){
+    var t=this;
     wx.request({
-      url:'https://colour-choice.art/api/auth/login',
+      url:'https://colour-choice.art/api/auth/phone-login',
       method:'POST',
-      data:{email:e,password:p},
+      data:{
+        login_code:loginCode,
+        phone_code:phoneCode
+      },
       success:function(r){
-        wx.hideLoading();
+        t.setData({loading:false});
         var d=r.data||{};
-        if(d.error){wx.showModal({title:'登录失败',content:d.error,showCancel:false});return;}
-        /* 保存token和用户信息 */
-        wx.setStorageSync('auth_token',d.token);
-        wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
-        wx.setStorageSync('vip_status','active');
-        /* 保存会员状态（用于批发价可见） */
-        var isPrice = !!(d.is_price_member);
-        wx.setStorageSync('is_price_member', isPrice);
-        var app = getApp();
-        if(app && app.globalData) app.globalData.isPriceMember = isPrice;
-        wx.showToast({title:'登录成功',icon:'success'});
+        if(d.error){
+          wx.showModal({title:'登录失败',content:d.error,showCancel:false});return;
+        }
+
+        /* 登录成功：保存状态 */
+        var u=d.user||{};
+        wx.setStorageSync('token',d.token);
+        wx.setStorageSync('user_info',{
+          nickName:u.phone_number||u.nickName||'用户',
+          avatarUrl:u.avatarUrl||'',
+          phone:u.phone_number||''
+        });
+        wx.setStorageSync('vip_status',u.vip_status||'');
+        wx.setStorageSync('member_type',u.membership_type||'');
+        wx.setStorageSync('vip_level',u.vip_level||'');
+        wx.setStorageSync('vip_expire',u.membership_expires_at||'');
+        wx.setStorageSync('is_price_member',!!(u.membership_type==='view_price'));
+        wx.setStorageSync('is_certified_store_owner',!!u.store_owner_certified);
+        wx.setStorageSync('certified_style',u.certified_style||'');
+
+        /* 全局状态同步 */
+        var app=getApp();
+        if(app&&app.globalData){
+          app.globalData.isPriceMember=!!(u.membership_type==='view_price');
+          app.globalData.isCertifiedStoreOwner=!!u.store_owner_certified;
+        }
+
+        wx.showToast({title:'登录成功 ✓',icon:'success'});
         setTimeout(function(){wx.navigateBack();},1200);
       },
       fail:function(){
-        wx.hideLoading();
-        /* 本地模拟登录：默认视为价格会员 */
-        wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
-        wx.setStorageSync('vip_status','active');
-        wx.setStorageSync('is_price_member', true);
-        var app = getApp();
-        if(app && app.globalData) app.globalData.isPriceMember = true;
-        wx.showToast({title:'已登录（本地）',icon:'success'});
-        setTimeout(function(){wx.navigateBack();},1000);
+        t.setData({loading:false});
+        wx.showToast({title:'网络异常，请重试',icon:'none'});
       }
     });
   },
 
-  onAdminEmail:function(e){this.setData({adminEmail:e.detail.value});},
-  onAdminPw:function(e){this.setData({adminPw:e.detail.value});},
+  /* 使用其它方式登录 */
+  goOtherLogin:function(){
+    /* 暂时引导到邮箱登录页（后续可扩展微信授权等）*/
+    wx.navigateTo({url:'/pages/email-login/index'});
+  },
 
-  doAdminLogin:function(){
-    var t=this;
-    var e=t.data.adminEmail.trim();
-    var p=t.data.adminPw.trim();
-    if(!e||!p){wx.showToast({title:'请填写完整',icon:'none'});return;}
-
-    wx.showLoading({title:'验证中...'});
-    wx.request({
-      url:'https://colour-choice.art/api/auth/admin-login',
-      method:'POST',
-      data:{email:e,password:p},
-      success:function(r){
-        wx.hideLoading();
-        var d=r.data||{};
-        if(d.error){wx.showModal({title:'验证失败',content:d.error,showCancel:false});return;}
-        wx.setStorageSync('admin_token',d.token);
-        wx.setStorageSync('is_admin','true');
-        wx.showToast({title:'管理员已登录',icon:'success'});
-        setTimeout(function(){wx.redirectTo({url:'/pages/member/index'});},1200);
-      },
-      fail:function(){
-        wx.hideLoading();
-        wx.setStorageSync('is_admin','true');
-        wx.showToast({title:'管理员模式（本地）',icon:'success'});
-      }
+  /* 协议链接 */
+  goAgreement:function(){
+    wx.showModal({
+      title:'用户服务协议',
+      content:'欢迎使用骆芷蝶智选平台。\n\n本平台为服装批发B2B平台，提供商品浏览、批发价查看、在线下单等服务。\n\n注册/登录即表示您已阅读并同意《用户服务协议》与《隐私政策》。',
+      showCancel:false,
+      confirmText:'我知道了'
     });
   },
 
-  goReg:function(){wx.showToast({title:'注册功能开发中',icon:'none'});},
+  goPrivacy:function(){
+    wx.showModal({
+      title:'隐私政策',
+      content:'我们重视您的隐私保护。您的手机号仅用于账号识别和订单联系，不会向第三方泄露。\n\n详细隐私条款请访问 colour-choice.art 查看。',
+      showCancel:false,
+      confirmText:'我知道了'
+    });
+  },
+
   goHome:function(){wx.switchTab({url:'/pages/home/index'});},
 });

@@ -1,52 +1,44 @@
 <view class="page">
-  <view class="hd">
-    <text class="ht">欢迎回来</text>
-    <text class="hs">请选择登录方式</text>
+  <!-- Logo 区域 -->
+  <view class="logo-area">
+    <view class="logo-box">
+      <text class="logo-icon">一手</text>
+      <text class="logo-sub">1件起批</text>
+    </view>
+    <text class="logo-title">专业的女装批发平台</text>
+    <text class="logo-en">WOMEN CLOTHING WHOLESALE APP</text>
   </view>
 
-  <!-- 会员登录 -->
-  <view class="card">
-    <text class="ct">会员登录</text>
-    <text class="cs">登录后查看批发价、享受会员权益</text>
+  <!-- 登录按钮区 -->
+  <view class="btn-area">
+    <!-- 手机号一键登录 -->
+    <button
+      class="btn-phone {{loading?'btn-disabled':''}}"
+      disabled="{{loading}}"
+      bindtap="doPhoneLogin"
+    >
+      {{loading?'登录中...':'手机号一键登录'}}
+    </button>
 
-    <view class="fg">
-      <text class="fl">邮箱地址</text>
-    </view>
-    <input class="inp" type="text" placeholder="请输入邮箱" value="{{email}}" bindinput="onEmail"/>
-
-    <view class="fg">
-      <text class="fl">登录密码</text>
-      <text class="fr" bindtap="togglePw">忘记密码？</text>
-    </view>
-    <input class="inp" type="{{showPw?'text':'password'}}" placeholder="请输入密码" value="{{pw}}" bindinput="onPw"/>
-
-    <view class="btn-login" bindtap="doLogin"><text>立即登录</text></view>
-
-    <view class="reg-row">
-      <text>还没有账号？</text><text class="reg-link" bindtap="goReg">去注册</text>
-    </view>
+    <!-- 使用其它方式登录 -->
+    <button class="btn-other" bindtap="goOtherLogin">使用其它方式登录</button>
   </view>
 
-  <!-- 分割线 -->
-  <view class="divider"><text>管理员入口</text></view>
-
-  <!-- 管理员登录 -->
-  <view class="card card-admin">
-    <text class="ct ct-a"><text>🛡 </text>管理员登录</text>
-    <text class="cs cs-a">仅限授权管理员访问管理后台</text>
-
-    <view class="fg fg-a">
-      <text class="fl fl-a">管理员邮箱</text>
+  <!-- 协议勾选 -->
+  <view class="agree-row" bindtap="toggleAgree">
+    <view class="checkbox {{agreed?'checked':''}}">
+      <text wx:if="{{agreed}}">✓</text>
     </view>
-    <input class="inp inp-a" type="text" placeholder="请输入管理员邮箱" value="{{adminEmail}}" bindinput="onAdminEmail"/>
-
-    <view class="fg fg-a">
-      <text class="fl fl-a">管理员密码</text>
-    </view>
-    <input class="inp inp-a" type="password" placeholder="请输入密码" value="{{adminPw}}" bindinput="onAdminPw"/>
-
-    <view class="btn-admin" bindtap="doAdminLogin"><text>管理员登录</text></view>
+    <text class="agree-text">
+      阅读并同意
+      <text class="link" catchtap="goAgreement">《一手用户服务协议》</text>
+      和
+      <text class="link" catchtap="goPrivacy">《隐私政策》</text>
+    </text>
   </view>
 
-  <view class="back-home" bindtap="goHome"><text>← 返回首页</text></view>
+  <!-- 底部提示 -->
+  <view class="footer-hint">
+    <text>登录即表示您已满18周岁并同意平台规则</text>
+  </view>
 </view>

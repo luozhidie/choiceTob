@@ -1,12 +1,11 @@
 <view class="page">
-  <!-- ========== 头部：头像+用户信息+操作图标 ========== -->
+  <!-- ====== 头部：头像+用户信息+操作图标 ====== -->
   <view class="header">
-    <view class="header-left" bindtap="goSettings">
+    <view class="header-left" bindtap="{{isLoggedIn?'goSettings':'goLogin'}}">
       <image class="avatar" src="{{avatarUrl||'/assets/avatar-ph.png'}}" mode="aspectFill"/>
       <view class="user-meta">
-        <text class="uid">{{userId||'未登录'}}</text>
-        <text class="role">{{roleText||'点击登录/注册'}}</text>
-        <text class="cert-badge" wx:if="{{isCertified}}">🛡️ 已认证</text>
+        <text class="uid">{{isLoggedIn?(userId||'用户'):'登录/注册'}}</text>
+        <text class="role">{{roleText}}</text>
       </view>
     </view>
     <view class="header-icons">
@@ -16,91 +15,66 @@
     </view>
   </view>
 
-  <!-- ========== 成长等级卡（渐进解锁）========== -->
-  <view class="tier-card-wrap">
-    <!-- 等级卡 -->
-    <view class="tier-card tier-{{curTier.key}}">
-      <view class="tc-header">
-        <view class="tc-left">
-          <text class="tc-emoji">{{curTier.emoji}}</text>
-          <view class="tc-meta">
-            <text class="tc-label">当前成长等级</text>
-            <text class="tc-name">{{curTier.name}}</text>
-          </view>
-        </view>
-        <view class="tc-upgrade" bindtap="goVip">
-          <text>升级特权</text>
-        </view>
+  <!-- ═══════ 已登录 + 未认证：金色认证引导卡（同行截图1）═══════ -->
+  <view wx:if="{{isLoggedIn && !isCertified}}" class="cert-guide-card">
+    <view class="cg-body">
+      <!-- 左侧：未认证提示 -->
+      <view class="cg-left">
+        <text class="cg-status">您暂未认证</text>
+        <text class="cg-hint">仅能</text>
+        <text class="cg-restrict">零售价拿货</text>
       </view>
-      <block wx:if="{{nextTier}}">
-        <view class="tc-progress-row">
-          <text class="tc-progress-l">距 {{nextTier.name}} 还差</text>
-          <text class="tc-progress-r">¥{{tierDiff}} · 累计 ¥{{totalSpentYuan}}</text>
-        </view>
-        <view class="tc-bar-track">
-          <view class="tc-bar-fill" style="width:{{tierProgress}}%"></view>
-        </view>
-      </block>
-      <view wx:else class="tc-max-tag">🎉 已达最高等级</view>
-    </view>
 
-    <!-- 等级阶梯 -->
-    <view class="tier-steps">
-      <block wx:for="{{tiers}}" wx:key="key">
-        <view class="ts-node-wrap">
-          <block wx:if="{{index < tiers.length - 1}}">
-            <view class="ts-line {{index < tierIdx ? 'ts-line-active' : ''}}"></view>
+      <!-- 右侧：认证店主权益 -->
+      <view class="cg-right">
+        <view class="cg-title-row">
+          <text class="cg-shield">🛡</text>
+          <text class="cg-cert-title">认证店主</text>
+        </view>
+        <!-- 4个权益图标 -->
+        <view class="cg-icons">
+          <block wx:for="{{certBenefits}}" wx:key="title">
+            <view class="cgi-item">
+              <view class="cgi-circle"><text>{{item.icon}}</text></view>
+              <text class="cgi-label">{{item.title}}</text>
+            </view>
           </block>
-          <view class="ts-dot {{index <= tierIdx ? 'ts-dot-active' : ''}} {{index === tierIdx ? 'ts-dot-current' : ''}}">
-            <text wx:if="{{index < tierIdx}}">✓</text>
-            <text wx:else>{{index + 1}}</text>
-          </view>
-          <text class="ts-name {{index === tierIdx ? 'ts-name-cur' : ''}}">{{item.name.replace('会员','')}}</text>
         </view>
-      </block>
-    </view>
-    <text class="tc-footnote">成长等级依据累计拿货金额自动解锁 · </text>
-    <text class="tc-link" bindtap="goRules">查看权益领取规则</text>
-  </view>
-
-  <!-- ========== 权益解锁等级（5列横排·同行同款）========== -->
-  <view class="benefit-wrap">
-    <view class="bw-head">
-      <text class="bw-title">⭐ 权益解锁等级</text>
-      <text class="bw-sub">成长等级提升自动解锁更多权益</text>
-    </view>
-    <view class="bw-row">
-      <block wx:for="{{benefits}}" wx:key="key">
-        <view class="bw-item">
-          <view class="bw-circle {{tierIdx >= item.tier ? 'bw-c-on' : 'bw-c-off'}}">
-            <text wx:if="{{tierIdx >= item.tier}}">{{item.icon}}</text>
-            <text wx:else>🔒</text>
-          </view>
-          <text class="bw-name {{tierIdx >= item.tier ? 'bw-n-on' : 'bw-n-off'}}">{{item.title}}</text>
-          <text class="bw-status {{tierIdx >= item.tier ? 'bw-s-on' : 'bw-s-off'}}">{{tierIdx >= item.tier ? '已解锁' : tiers[item.tier].name.replace('会员','')}}</text>
-        </view>
-      </block>
-    </view>
-  </view>
-
-  <!-- ========== 认证店主联盟（深色卡片·同行同款）========== -->
-  <view class="cert-alliance-wrap">
-    <view class="ca-head">
-      <text class="ca-icon">🛡️</text>
-      <text class="ca-title">认证店主联盟</text>
-      <text class="ca-badge" wx:if="{{isCertified}}">已加入联盟</text>
-    </view>
-    <block wx:if="{{isCertified}}">
-      <view class="ca-done">
-        <text class="ca-check">✅</text>
-        <text class="ca-msg">已通过行业认证 · 解锁全部商品批发价查看 + 全国销售排名</text>
+        <!-- 一键认证按钮 -->
+        <view class="cg-btn" bindtap="goCertify">一键认证 解锁权益</view>
       </view>
-    </block>
-    <block wx:else>
-      <text class="ca-desc">免费通过行业知识答题认证，即可查看所有商品批发价。与付费会员权益平行，互不冲突。</text>
-      <view class="ca-btn" bindtap="goCertify">免费认证加入联盟 →</view>
-    </block>
+    </view>
   </view>
+
+  <!-- ═══════ 已登录 + 已认证：深色等级卡（同行截图2）═══════ -->
+  <view wx:if="{{isLoggedIn && isCertified}}" class="tier-card-dark">
+    <!-- 标题行 -->
+    <view class="tcd-header">
+      <text class="tcd-level">{{tierName}}<text class="tcd-badge">{{tierBadge}}</text></text>
+      <view class="tcd-view-btn" bindtap="goVip"><text>查看权益</text></view>
+    </view>
+    <!-- 进度条 -->
+    <view class="tcd-bar-wrap">
+      <view class="tcd-bar-track">
+        <view class="tcd-bar-fill" style="width:{{tierProgress}}%"></view>
+      </view>
+    </view>
+    <!-- 拿货额文字 -->
+    <view class="tcd-spent-text">
+      当月拿货额 <text class="tcd-spent-num">{{spentYuan}}</text> ，还差<text class="tcd-diff-num">{{nextTierDiff}}</text>元升级{{nextTierName}}
+    </view>
+    <!-- 4个权益图标行 -->
+    <view class="tcd-benefits">
+      <block wx:for="{{tierCardBenefits}}" wx:key="title">
+        <view class="tcdb-item">
+          <view class="tcdb-circle"><text>{{item.icon}}</text></view>
+          <text class="tcdb-label">{{item.title}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- ═══════ 未登录：无主卡，直接显示下方内容 ═══════ -->
 
   <!-- ========== 快捷数据（3格）========== -->
   <view class="stats-row">
@@ -146,8 +120,9 @@
   <!-- ========== 活动横幅 ========== -->
   <view class="promo-banner" bindtap="goPromo">
     <text class="pb-tag">HOT</text>
-    <text class="pb-title">周末·爆款返场</text>
-    <text class="pb-btn">历史热销好款 ›</text>
+    <text class="pb-title">首单4重福利 · 限时福利</text>
+    <text class="pb-sub">169包邮/免费退货/新人红包/优先发货</text>
+    <text class="pb-go">GO →</text>
   </view>
 
   <!-- ========== 我的资产 ========== -->
@@ -169,14 +144,9 @@
   </view>
 
   <!-- ========== 我的活动（2x3网格）========== -->
-  <view class="section">
+  <view class="section" wx:if="{{isLoggedIn}}">
     <text class="sec-title">我的活动</text>
     <view class="activity-grid">
-      <view class="ac-item" bindtap="goNewCustomer">
-        <text class="ac-title">新客首单权益</text>
-        <text class="ac-desc">首单4重礼</text>
-        <image class="ac-img" src="/assets/icon-gift.png" mode="aspectFit"/>
-      </view>
       <view class="ac-item" bindtap="goBuyer">
         <text class="ac-title">发现宝藏档口</text>
         <text class="ac-desc">2026全国精选...</text>
@@ -198,18 +168,6 @@
         <view class="ac-badge-new">New</view>
         <image class="ac-img" src="/assets/icon-invite.png" mode="aspectFit"/>
       </view>
-    </view>
-  </view>
-
-  <!-- ========== 认证店主入口（未认证时显示）========== -->
-  <view class="section" wx:if="{{!isCertified}}">
-    <view class="cert-entry" bindtap="goCertify">
-      <text class="ce-icon">🛡️</text>
-      <view class="ce-body">
-        <text class="ce-title">认证店主</text>
-        <text class="ce-desc">免费通过答题，解锁批发价查看权</text>
-      </view>
-      <text class="ce-btn">免费认证 →</text>
     </view>
   </view>
 

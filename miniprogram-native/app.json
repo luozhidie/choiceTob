@@ -21,7 +21,8 @@
     "pages/coupons/index",
     "pages/red-packets/index",
     "pages/import/index",
-    "pages/certify/index"
+    "pages/certify/index",
+    "pages/email-login/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
