@@ -144,16 +144,14 @@ export async function POST(request: NextRequest) {
             price,
             original_price: price,
             cover_image: uploadedImages[0] || null,
-            images: JSON.stringify(uploadedImages),
+            images: uploadedImages.length > 0 ? uploadedImages : [],
             category: "待分类",
             is_published: true,
             stock: 0,
             tags: ["导入", item.platform || ""].filter(Boolean),
-            specs: specs.length > 0 ? JSON.stringify(specs) : null,
           };
           let { data, error: createError } = await supabase.from("products").insert(payload).select().single();
           if (createError) {
-            delete payload.specs;
             const { data: d2, error: e2 } = await supabase.from("products").insert(payload).select().single();
             if (d2) { data = d2; createError = null; }
             else { results.push({ url: raw.slice(0, 80), status: "error", message: e2?.message || "创建失败" }); continue; }
@@ -294,12 +292,11 @@ export async function POST(request: NextRequest) {
             price,
             original_price: price,
             cover_image: uploadedImages[0] || null,
-            images: JSON.stringify(uploadedImages),
+            images: uploadedImages.length > 0 ? uploadedImages : [],
             category: "待分类",
             is_published: true,
             stock: 0,
             tags: ["导入"],
-            specs: uniqueSpecs.length > 0 ? JSON.stringify(uniqueSpecs) : null,
           };
           let { data, error: createError } = await supabase
             .from("products")
@@ -308,8 +305,6 @@ export async function POST(request: NextRequest) {
             .single();
 
           if (createError) {
-            // fallback: 去掉可能不存在的列（specs）
-            delete payload.specs;
             const { data: d2, error: e2 } = await supabase.from("products").insert(payload).select().single();
             if (d2) {
               data = d2;
