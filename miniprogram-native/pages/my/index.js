@@ -136,5 +136,6 @@ Page({
   goLuckDraw:function(){wx.showToast({title:'集财运开发中',icon:'none'});},
   goInvite:function(){wx.showToast({title:'邀请有奖开发中',icon:'none'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
+  goImport:function(){wx.navigateTo({url:'/pages/import/index'});},
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
 });

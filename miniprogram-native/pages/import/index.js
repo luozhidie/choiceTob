@@ -51,9 +51,9 @@ Page({
 
     that.setData({ isProcessing: true, results: [], toastText: '正在导入 ' + urls.length + ' 个商品...' });
 
-    // 调用 Vercel API
+    // 调用 Vercel API（走 products/create?action=import）
     wx.request({
-      url: 'https://colour-choice.art/api/admin/products/import',
+      url: 'https://colour-choice.art/api/admin/products/create?action=import',
       method: 'POST',
       header: {
         'Content-Type': 'application/json',
@@ -64,7 +64,8 @@ Page({
         var result = res.data || {};
         if (result.success) {
           that.setData({ results: result.results || [] });
-          that.showToast('成功导入 ' + result.successCount + ' 个商品');
+          var count = result.successCount || result.results.filter(function(r){return r.status==='success'}).length;
+          that.showToast('成功导入 ' + count + ' 个商品');
         } else {
           that.showToast(result.error || '导入失败');
         }
@@ -72,7 +73,7 @@ Page({
       fail: function (err) {
         that.setData({ isProcessing: false });
         that.showToast('网络错误，请稍后重试');
-        console.error('[importGoods]', err);
+        console.error('[import]', err);
       }
     });
   },

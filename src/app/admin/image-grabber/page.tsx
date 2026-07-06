@@ -429,7 +429,7 @@ export default function ImageGrabberPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // 商品导入（调用 /api/admin/products/import）
+  // 商品导入（调用 /api/admin/products/create?action=import）
   const handleImport = async () => {
     if (!inputText.trim()) {
       showToast("error", "请输入商品页链接");
@@ -453,7 +453,7 @@ export default function ImageGrabberPage() {
 
       showToast("success", `正在导入 ${urls.length} 个商品...`);
 
-      const res = await fetch("/api/admin/products/import", {
+      const res = await fetch("/api/admin/products/create?action=import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -463,10 +463,12 @@ export default function ImageGrabberPage() {
       const json = await res.json();
       setImportResults(json.results || []);
 
-      if (json.successCount > 0) {
-        showToast("success", `成功导入 ${json.successCount} 个商品`);
+      const okCount = json.successCount || (json.results || []).filter((r: any) => r.status === "success").length;
+      const errCount = (json.results || []).filter((r: any) => r.status === "error").length;
+      if (okCount > 0) {
+        showToast("success", `成功导入 ${okCount} 个商品`);
       }
-      if (json.errorCount > 0) {
+      if (errCount > 0) {
         showToast("error", `${json.errorCount} 个导入失败`);
       }
     } catch (err: any) {
