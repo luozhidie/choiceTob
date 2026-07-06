@@ -125,4 +125,14 @@ page{background:#f5f3f0;}
 .sv-item{flex:1;min-width:140rpx;background:#faf8f6;border-radius:14rpx;padding:18rpx 14rpx;display:flex;align-items:center;gap:12rpx;border:1rpx solid #f0ede9;}
 .sv-label{font-size:24rpx;font-weight:500;color:#333;}
 
+/* ═══════ 未登录：轻量认证入口（粉色·同行截图3）═══════ */
+.cert-entry-card{margin:16rpx 20rpx 12rpx;background:linear-gradient(135deg,#fef2f2,#fce7f3);border:2rpx solid #fecdd3;border-radius:20rpx;overflow:hidden;}
+.cert-entry-card:active{background:linear-gradient(135deg,#fee2e2,#fecaca);}
+.ce-row{display:flex;align-items:center;padding:24rpx 20rpx;gap:14rpx;}
+.ce-icon{font-size:40rpx;shrink:0;}
+.ce-body{flex:1;display:flex;flex-direction:column;gap:4rpx;}
+.ce-title{font-size:28rpx;font-weight:bold;color:#be123c;}
+.ce-desc{font-size:22rpx;color:#b91c1c;}
+.ce-arrow{font-size:24rpx;font-weight:bold;color:#e11d48;shrink:0;}
+
 .sbtm{height:100rpx;}

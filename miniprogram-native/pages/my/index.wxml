@@ -74,7 +74,19 @@
     </view>
   </view>
 
-  <!-- ═══════ 未登录：无主卡，直接显示下方内容 ═══════ -->
+  <!-- ═══════ 未登录：轻量认证入口（同行截图3粉色卡）═══════ -->
+  <view wx:if="{{!isLoggedIn}}" class="cert-entry-card" bindtap="goLogin">
+    <div class="ce-row">
+      <text class="ce-icon">🛡</text>
+      <div class="ce-body">
+        <text class="ce-title">认证店主</text>
+        <text class="ce-desc">免费通过答题，解锁批发价查看权</text>
+      </div>
+      <text class="ce-arrow">免费认证 →</text>
+    </div>
+  </view>
+
+  <!-- ═══════ 未登录后：正常显示下方内容 ═══════ -->
 
   <!-- ========== 快捷数据（3格）========== -->
   <view class="stats-row">
