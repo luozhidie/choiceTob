@@ -146,8 +146,20 @@ page {
   font-size: 22rpx;
   color: #888;
   margin-top: 4rpx;
-  display: flex;
-  gap: 12rpx;
+  display: inline-block;
+  margin-right: 12rpx;
+}
+.ri-tags {
+  margin-top: 6rpx;
+}
+.ri-cat {
+  display: inline-block;
+  font-size: 20rpx;
+  color: #b06;
+  background: #fce4ec;
+  border-radius: 6rpx;
+  padding: 2rpx 10rpx;
+  margin-right: 12rpx;
 }
 .ri-btn {
   font-size: 22rpx;

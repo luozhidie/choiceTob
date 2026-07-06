@@ -45,8 +45,11 @@
         <view class="ri-icon">✅</view>
         <view class="ri-info">
           <text class="ri-title">{{item.title || '导入商品'}}</text>
-          <text class="ri-detail" wx:if="{{item.price}}">¥{{item.price}}</text>
-          <text class="ri-detail" wx:if="{{item.imageCount>0}}">{{item.imageCount}}张图片</text>
+          <view class="ri-tags">
+            <text class="ri-detail" wx:if="{{item.price}}">¥{{item.price}}</text>
+            <text class="ri-detail" wx:if="{{item.imageCount>0}}">{{item.imageCount}}张图片</text>
+            <text class="ri-cat">待分类</text>
+          </view>
         </view>
         <view class="ri-btn" data-id="{{item.productId}}" bindtap="previewGoods">查看</view>
       </view>

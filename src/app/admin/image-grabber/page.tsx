@@ -463,14 +463,12 @@ export default function ImageGrabberPage() {
       const json = await res.json();
       setImportResults(json.results || []);
 
-      const okCount = json.successCount || (json.results || []).filter((r: any) => r.status === "success").length;
+      const okCount = json.success ?? (json.results || []).filter((r: any) => r.status === "success").length;
+      const skipCount = json.skipped ?? (json.results || []).filter((r: any) => r.status === "skipped").length;
       const errCount = (json.results || []).filter((r: any) => r.status === "error").length;
-      if (okCount > 0) {
-        showToast("success", `成功导入 ${okCount} 个商品`);
-      }
-      if (errCount > 0) {
-        showToast("error", `${json.errorCount} 个导入失败`);
-      }
+      if (okCount > 0) showToast("success", `成功导入 ${okCount} 个商品到「待分类」`);
+      if (skipCount > 0) showToast("error", `${skipCount} 个动态站点已跳过，请看下方说明`);
+      if (errCount > 0) showToast("error", `${errCount} 个导入失败`);
     } catch (err: any) {
       showToast("error", err.message || "导入失败");
     } finally {
@@ -827,6 +825,58 @@ export default function ImageGrabberPage() {
                 )}
               </div>
             </>
+          )}
+
+          {/* 导入结果展示 */}
+          {importResults.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                导入结果（{importResults.filter(r => r.status === "success").length} 成功 / {importResults.filter(r => r.status === "skipped").length} 跳过 / {importResults.filter(r => r.status === "error").length} 失败）
+              </div>
+              {importResults.map((r, i) => (
+                <div key={i} className={`p-4 rounded-xl border ${
+                  r.status === "success" ? "bg-green-50 border-green-100"
+                  : r.status === "skipped" ? "bg-yellow-50 border-yellow-100"
+                  : "bg-red-50 border-red-100"
+                }`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">{r.title || r.url}</p>
+                      <p className="text-xs text-gray-400 break-all mt-0.5">{r.url}</p>
+                    </div>
+                    <span className={`shrink-0 text-xs font-semibold px-2 py-1 rounded-full ${
+                      r.status === "success" ? "bg-green-100 text-green-700"
+                      : r.status === "skipped" ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                    }`}>
+                      {r.status === "success" ? "✓ 成功" : r.status === "skipped" ? "↷ 跳过" : "✗ 失败"}
+                    </span>
+                  </div>
+
+                  {r.status === "success" && (
+                    <div className="mt-2 text-xs text-gray-600">
+                      <span className="text-red-600 font-bold">{r.price ? `¥${r.price}` : "价格未知"}</span>
+                      {r.imageCount !== undefined && <span className="ml-3">图片 {r.imageCount} 张</span>}
+                      <span className="ml-3 px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">待分类</span>
+                      {r.productId && <span className="ml-2 text-gray-400">ID: {r.productId.slice(0,8)}</span>}
+                    </div>
+                  )}
+
+                  {r.specs && r.specs.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {r.specs.map((s: string, j: number) => (
+                        <span key={j} className="inline-block bg-white px-2 py-0.5 rounded border border-gray-200 text-xs text-gray-600">{s}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {(r.status === "skipped" || r.status === "error") && r.message && (
+                    <p className="mt-2 text-xs text-gray-600 leading-relaxed">{r.message}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
 
           {/* 关联商品 */}

@@ -62,13 +62,15 @@ Page({
       success: function (res) {
         that.setData({ isProcessing: false });
         var result = res.data || {};
-        if (result.success) {
-          that.setData({ results: result.results || [] });
-          var count = result.successCount || result.results.filter(function(r){return r.status==='success'}).length;
-          that.showToast('成功导入 ' + count + ' 个商品');
-        } else {
-          that.showToast(result.error || '导入失败');
-        }
+        var results = result.results || [];
+        that.setData({ results: results });
+        var okCount = result.success != null ? result.success : results.filter(function(r){return r.status==='success'}).length;
+        var skipCount = result.skipped != null ? result.skipped : results.filter(function(r){return r.status==='skipped'}).length;
+        var errCount = results.filter(function(r){return r.status==='error'}).length;
+        var msg = '成功 ' + okCount + ' 个';
+        if (skipCount > 0) msg += '，跳过 ' + skipCount + ' 个（动态站点）';
+        if (errCount > 0) msg += '，失败 ' + errCount + ' 个';
+        that.showToast(msg);
       },
       fail: function (err) {
         that.setData({ isProcessing: false });
