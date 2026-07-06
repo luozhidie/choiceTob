@@ -6,6 +6,7 @@
       <view class="user-meta">
         <text class="uid">{{userId||'未登录'}}</text>
         <text class="role">{{roleText||'点击登录/注册'}}</text>
+        <text class="cert-badge" wx:if="{{isCertified}}">🛡️ 已认证</text>
       </view>
     </view>
     <view class="header-icons">
@@ -131,6 +132,18 @@
         <view class="ac-badge-new">New</view>
         <image class="ac-img" src="/assets/icon-invite.png" mode="aspectFit"/>
       </view>
+    </view>
+  </view>
+
+  <!-- ========== 认证店主入口（未认证时显示）========== -->
+  <view class="section" wx:if="{{!isCertified}}">
+    <view class="cert-entry" bindtap="goCertify">
+      <text class="ce-icon">🛡️</text>
+      <view class="ce-body">
+        <text class="ce-title">认证店主</text>
+        <text class="ce-desc">免费通过答题，解锁批发价查看权</text>
+      </view>
+      <text class="ce-btn">免费认证 →</text>
     </view>
   </view>
 

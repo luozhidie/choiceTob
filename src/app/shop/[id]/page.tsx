@@ -17,6 +17,7 @@ import {
   SUBCATEGORY_MAP,
 } from "@/lib/categories";
 import { useCart } from "@/lib/cart-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface Product {
   id: string;
@@ -43,6 +44,7 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
+  const { user: authUser, canViewWholesale, isCertifiedStoreOwner } = useAuth();
 
   // ✅ 所有 hooks 必须在组件顶层
   const [product, setProduct] = useState<Product | null>(null);
@@ -442,25 +444,25 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* 批发价区域 */}
-                <div className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${isPriceMember && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
+                <div className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${canViewWholesale && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
                    onClick={() => {
-                     if (!user) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
-                     if (!isPriceMember) setShowWholesalePrompt(true);
+                     if (!authUser) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                     if (!canViewWholesale) setShowWholesalePrompt(true);
                    }}
                 >
                   <Lock className="w-4 h-4 text-blue-500 shrink-0" />
                   <span className="text-sm font-medium text-blue-700">批发价</span>
-                  {!user ? (
+                  {!authUser ? (
                     <span className="text-lg font-bold text-blue-600 ml-auto">登录可见</span>
-                  ) : isPriceMember && product.wholesale_price ? (
+                  ) : canViewWholesale && product.wholesale_price ? (
                     <span className="text-lg font-bold text-green-600 ml-auto">{formatPrice(product.wholesale_price)}</span>
-                  ) : isPriceMember ? (
+                  ) : canViewWholesale ? (
                     <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
                   ) : (
-                    <span className="text-lg font-bold text-blue-600 ml-auto">会员可见</span>
+                    <span className="text-lg font-bold text-blue-600 ml-auto">认证/会员可见</span>
                   )}
                   <span className="text-[10px] text-blue-400 ml-1">{
-                    !user ? "去登录" : isPriceMember ? "批发价" : "开通会员"
+                    !authUser ? "去登录" : canViewWholesale ? "批发价" : isCertifiedStoreOwner ? "批发价" : "认证/开通"
                   }</span>
                 </div>
               </div>
@@ -864,7 +866,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Lock className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-bold text-gray-900">开通价格会员</h3>
+                  <h3 className="text-lg font-bold text-gray-900">解锁批发价</h3>
                 </div>
                 <button
                   onClick={() => setShowWholesalePrompt(false)}
@@ -877,8 +879,33 @@ export default function ProductDetailPage() {
               {/* 内容 */}
               <div className="px-6 py-5">
                 <p className="text-sm text-gray-500 mb-4">
-                  开通价格会员后，可查看所有商品批发价，享受专属采购权益
+                  查看所有商品批发价，享受专属采购权益
                 </p>
+
+                {/* 免费认证入口 */}
+                {!isCertifiedStoreOwner && (
+                  <Link
+                    href="/certify"
+                    onClick={() => setShowWholesalePrompt(false)}
+                    className="flex items-center justify-between p-4 rounded-xl border-2 border-accent/30 bg-gradient-to-r from-accent/5 to-primary/5 hover:border-accent/50 transition-all group mb-4"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-accent/15 flex items-center justify-center">
+                        <Lock className="w-5 h-5 text-accent" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 text-sm">认证店主 · 免费看批发价</div>
+                        <div className="text-xs text-gray-400 mt-0.5">通过行业知识答题即可解锁</div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="text-sm font-black text-accent">免费</div>
+                      <div className="text-[10px] text-accent font-medium group-hover:underline">
+                        去认证 →
+                      </div>
+                    </div>
+                  </Link>
+                )}
 
                 {/* 套餐选项 */}
                 <div className="space-y-3">

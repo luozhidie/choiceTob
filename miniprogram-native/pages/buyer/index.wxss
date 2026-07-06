@@ -46,3 +46,11 @@ page{background:#faf8f6;}
 .et{font-size:27rpx;color:#ccc;display:block;margin-top:12rpx;}
 .more,.nomore{text-align:center;padding:28rpx 0;font-size:24rpx;color:#bbb;}
 .sb{height:30rpx;}
+
+/* 认证店主 Banner */
+.cert-banner{display:flex;align-items:center;gap:16rpx;margin:16rpx 24rpx;padding:20rpx 24rpx;background:linear-gradient(135deg,#fef3e8,#fdeef6);border:2rpx solid #f5d0b8;border-radius:18rpx;}
+.cb-icon{font-size:40rpx;shrink:0;}
+.cb-body{flex:1;}
+.cb-title{display:block;font-size:26rpx;font-weight:bold;color:#c44d26;}
+.cb-desc{display:block;font-size:22rpx;color:#b87a58;margin-top:2rpx;}
+.cb-btn{font-size:24rpx;font-weight:bold;color:#e85d5d;shrink:0;}

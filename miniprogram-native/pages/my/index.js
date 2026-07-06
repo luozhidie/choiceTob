@@ -20,6 +20,9 @@ Page({
     walletBalance:0,
     couponCount:0,
     redPackCount:0,
+
+    /* 认证店主 */
+    isCertified:false,
   },
 
   onShow:function(){
@@ -34,14 +37,16 @@ Page({
   loadUser:function(){
     var t=this;
     var ui=wx.getStorageSync('user_info');
+    var isCert = !!wx.getStorageSync('is_certified_store_owner');
     if(ui&&ui.nickName){
       t.setData({
         userId:ui.nickName||ui.openid||'用户',
-        roleText:ui.role||'已认证店主',
-        avatarUrl:ui.avatarUrl||''
+        roleText:isCert ? '认证店主' : (ui.role||'已认证店主'),
+        avatarUrl:ui.avatarUrl||'',
+        isCertified:isCert,
       });
     } else {
-      t.setData({userId:'未登录',roleText:'点击登录/注册',avatarUrl:''});
+      t.setData({userId:'未登录',roleText:'点击登录/注册',avatarUrl:'',isCertified:false});
     }
   },
 
@@ -138,4 +143,5 @@ Page({
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
   goImport:function(){wx.navigateTo({url:'/pages/import/index'});},
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
+  goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
 });

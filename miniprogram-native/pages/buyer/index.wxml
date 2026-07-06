@@ -23,6 +23,16 @@
     <text class="st {{sortType==='newest'?'st-on':''}}" bindtap="setSort" data-sort="newest">上新</text>
   </view>
 
+  <!-- 认证店主入口（未认证时显示） -->
+  <view class="cert-banner" wx:if="{{!isPriceMember}}" bindtap="goCertify">
+    <text class="cb-icon">🛡️</text>
+    <view class="cb-body">
+      <text class="cb-title">认证店主，免费看批发价</text>
+      <text class="cb-desc">通过行业知识答题即可解锁</text>
+    </view>
+    <text class="cb-btn">去认证 →</text>
+  </view>
+
   <!-- 商品数 -->
   <view class="count-bar"><text>共{{products.length}}件</text></view>
 

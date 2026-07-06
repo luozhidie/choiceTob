@@ -13,8 +13,9 @@ Page({
 
   onLoad:function(){
     var app = getApp();
+    var isCertified = !!wx.getStorageSync('is_certified_store_owner');
     this.setData({
-      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || isCertified
     });
     this.load();
   },
@@ -103,6 +104,8 @@ Page({
   },
 
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
+
+  goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
 
   addToCart:function(e){
     var p=e.currentTarget.dataset.product;

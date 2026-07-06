@@ -20,6 +20,10 @@ export interface UserProfile {
   deposit_discount_rate: number;
   deposit_return_rate: number;
   view_price_package_id: string | null;
+  store_owner_certified: boolean;
+  certified_at: string | null;
+  certified_style: string | null;
+  certified_monthly_sales: number | null;
   created_at: string;
 }
 
@@ -32,6 +36,8 @@ interface AuthContextType {
   isViewPriceMember: boolean;
   isDepositMember: boolean;
   isHotPicksMember: boolean;
+  isCertifiedStoreOwner: boolean;   // 认证店主（免费看批发价）
+  canViewWholesale: boolean;        // 价格会员 OR 认证店主，均可看批发价
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, metadata?: { full_name?: string; phone?: string; company_name?: string }) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -63,6 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isDepositMember = profile?.membership_type === "deposit_discount";
   const isMember = isViewPriceMember || isDepositMember;
+  const isCertifiedStoreOwner = !!profile?.store_owner_certified;
+  // 价格会员（付费）或认证店主（免费）均可查看批发价
+  const canViewWholesale = isViewPriceMember || isCertifiedStoreOwner;
   const [isHotPicksMember, setIsHotPicksMember] = useState(false);
 
   // 查询爆款样衣会员状态
@@ -208,6 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isViewPriceMember,
         isDepositMember,
         isHotPicksMember,
+        isCertifiedStoreOwner,
+        canViewWholesale,
         signIn,
         signUp,
         signOut,

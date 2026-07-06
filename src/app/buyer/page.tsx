@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   Search, X, TrendingUp, Truck, Star, CheckCircle2,
-  FileCheck, Shield, Factory, Headphones, Landmark,
+  FileCheck, Shield, ShieldCheck, Factory, Headphones, Landmark,
   Upload, ArrowRight, Building2, Package, Flame,
   ChevronRight, Home, ShoppingBag, Lock,
 } from "lucide-react";
@@ -371,7 +371,7 @@ export default function BuyerPage() {
   const [submitted, setSubmitted] = useState(false);
 
   const supabase = createClient();
-  const { user, isMember } = useAuth();
+  const { user, isMember, canViewWholesale, isCertifiedStoreOwner } = useAuth();
   const { addItem, isInCart } = useCart();
   const {
     promotions,
@@ -1189,6 +1189,26 @@ export default function BuyerPage() {
       {/* ====== 商品列表 ====== */}
       <section className="py-8 md:py-12">
         <div className="container mx-auto px-4">
+          {/* 认证店主 Banner（未认证时显示） */}
+          {user && !isCertifiedStoreOwner && !canViewWholesale && (
+            <Link href="/certify" className="block mb-6 bg-gradient-to-r from-accent/10 to-primary/10 border border-accent/30 rounded-xl p-4 md:p-5 hover:shadow-md transition-all">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent to-primary flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary text-sm md:text-base">认证店主，免费看批发价</h3>
+                    <p className="text-xs text-gray-500 mt-0.5">通过行业知识答题即可解锁 · 6道题不限次数</p>
+                  </div>
+                </div>
+                <span className="hidden sm:flex items-center gap-1 text-sm font-semibold text-accent shrink-0">
+                  立即认证 <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
+            </Link>
+          )}
+
           {loading ? (
             <div className="text-center py-16">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
@@ -1257,7 +1277,7 @@ export default function BuyerPage() {
                         <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-1">{product.description}</p>
                       )}
                       <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-50">
-                        {isMember ? (
+                        {canViewWholesale ? (
                           <>
                             <div className="flex flex-col">
                               <div className="flex items-center gap-1.5">
@@ -1315,14 +1335,23 @@ export default function BuyerPage() {
                             >
                               <span className="text-sm font-bold text-gray-400">¥???</span>
                               <span className="text-[10px] px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-medium">
-                                付费查看批发价
+                                付费/认证查看批发价
                               </span>
                             </button>
+                            {!isCertifiedStoreOwner && (
+                              <Link
+                                href="/certify"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-accent text-white hover:bg-accent/90 transition-colors"
+                              >
+                                免费认证看价
+                              </Link>
+                            )}
                             <button
                               onClick={(e) => { e.stopPropagation(); setMemberPromptType("view_price"); setShowMemberPrompt(true); }}
                               className="text-[10px] md:text-xs px-2 md:px-3 py-1 md:py-1.5 rounded-lg font-medium bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
                             >
-                              开通查看价格
+                              开通会员
                             </button>
                           </>
                         )}

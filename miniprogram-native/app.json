@@ -20,7 +20,8 @@
     "pages/favorites/index",
     "pages/coupons/index",
     "pages/red-packets/index",
-    "pages/import/index"
+    "pages/import/index",
+    "pages/certify/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

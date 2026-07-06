@@ -13,6 +13,7 @@ import { motion } from "framer-motion";
 import {
   calcDiscount, formatPrice,
 } from "@/lib/discount";
+import { useAuth } from "@/lib/auth-context";
 
 interface Product {
   id: string;
@@ -98,6 +99,7 @@ function WechatPayModal({ codeUrl, amount, onClose }: { codeUrl: string; amount:
 function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { canViewWholesale, isCertifiedStoreOwner } = useAuth();
   const productId = searchParams.get("id");
   const productSource = searchParams.get("source") || "buyer";
 
@@ -407,15 +409,30 @@ function CheckoutContent() {
                       )}
                       <span className="text-sm text-gray-400 mb-1">零售价</span>
                     </div>
-                    {/* 批发价区域 - 隐藏显示 */}
+                    {/* 批发价区域 */}
                     <div
-                      className="mt-2 flex items-center gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-dashed border-blue-200 cursor-pointer hover:border-solid transition-all"
-                      onClick={() => window.location.href = '/vip'}
+                      className={`mt-2 flex items-center gap-2 p-2.5 rounded-lg border cursor-pointer transition-all ${
+                        canViewWholesale && product.wholesale_price
+                          ? "bg-green-50 border-green-200"
+                          : "bg-gradient-to-r from-blue-50 to-indigo-50 border-dashed border-blue-200 hover:border-solid"
+                      }`}
+                      onClick={() => {
+                        if (!canViewWholesale) {
+                          if (isCertifiedStoreOwner) return;
+                          window.location.href = '/certify';
+                        }
+                      }}
                     >
                       <Lock className="w-4 h-4 text-blue-500 shrink-0" />
                       <span className="text-sm font-medium text-blue-700">批发价</span>
-                      <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
-                      <span className="text-[10px] text-blue-400 ml-1">会员可见</span>
+                      {canViewWholesale && product.wholesale_price ? (
+                        <span className="text-lg font-bold text-green-600 ml-auto">{formatPrice(product.wholesale_price)}</span>
+                      ) : (
+                        <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
+                      )}
+                      <span className="text-[10px] text-blue-400 ml-1">{
+                        canViewWholesale ? "批发价" : isCertifiedStoreOwner ? "" : "认证可见"
+                      }</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-3 py-1.5">
