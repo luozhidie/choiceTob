@@ -72,16 +72,10 @@ export default function AdminProductsPage() {
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
 
-  const allVisibleIds = filteredProducts.map((p) => p.id);
-  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
-
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
-  const toggleSelectAll = () => {
-    setSelectedIds(allSelected ? [] : [...new Set([...selectedIds, ...allVisibleIds])]);
   };
   const clearSelection = () => setSelectedIds([]);
 
@@ -441,6 +435,13 @@ export default function AdminProductsPage() {
       )
     );
   });
+
+  // 批量选择辅助（依赖 filteredProducts，必须在其之后定义）
+  const allVisibleIds = filteredProducts.map((p) => p.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : [...new Set([...selectedIds, ...allVisibleIds])]);
+  };
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
 
