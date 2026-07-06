@@ -53,6 +53,13 @@ export default function ImageGrabberPage() {
   const dropZoneRef = useRef<HTMLDivElement>(null);
   // 商品参数（抓取时提取）
   const [productInfo, setProductInfo] = useState<Record<string, any> | null>(null);
+  // 商品导入结果
+  const [importResults, setImportResults] = useState<Array<{
+    url: string; platform: string | null;
+    status: "success" | "error" | "skipped";
+    productId?: string; title?: string; price?: string;
+    imageCount?: number; message?: string;
+  }>>([]);
 
   // 加载商品列表（用 fetch 代替 supabase 客户端）
   useEffect(() => {
@@ -422,6 +429,53 @@ export default function ImageGrabberPage() {
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  // 商品导入（调用 /api/admin/products/import）
+  const handleImport = async () => {
+    if (!inputText.trim()) {
+      showToast("error", "请输入商品页链接");
+      return;
+    }
+
+    setIsProcessing(true);
+    setImportResults([]);
+
+    try {
+      const urls = inputText
+        .split(/[\n\r]+/)
+        .map(l => l.trim())
+        .filter(l => l.startsWith("http"));
+
+      if (urls.length === 0) {
+        showToast("error", "没有有效的URL");
+        setIsProcessing(false);
+        return;
+      }
+
+      showToast("success", `正在导入 ${urls.length} 个商品...`);
+
+      const res = await fetch("/api/admin/products/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ urls }),
+      });
+
+      const json = await res.json();
+      setImportResults(json.results || []);
+
+      if (json.successCount > 0) {
+        showToast("success", `成功导入 ${json.successCount} 个商品`);
+      }
+      if (json.errorCount > 0) {
+        showToast("error", `${json.errorCount} 个导入失败`);
+      }
+    } catch (err: any) {
+      showToast("error", err.message || "导入失败");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // 清空所有
   const clearAll = () => {
     setImages([]);
@@ -617,6 +671,17 @@ export default function ImageGrabberPage() {
               <Link2 className="w-4 h-4 inline-block mr-1 -mt-0.5" />
               单链接抓取
             </button>
+            <button
+              onClick={() => setMode("import")}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                mode === "import"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <Package className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+              商品导入
+            </button>
           </div>
 
           {/* 微信图片上传模式 */}
@@ -719,6 +784,43 @@ export default function ImageGrabberPage() {
                 {images.length > 0 && (
                   <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors flex items-center gap-1">
                     <Trash2 className="w-4 h-4" /> 清空全部
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* 商品导入模式 */}
+          {mode === "import" && (
+            <>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <Package className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+                  粘贴商品页链接（每行一个，支持1688/淘宝/拼多多/京东/抖音）
+                </label>
+                <textarea
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  placeholder={"粘贴商品页链接，每行一个：\nhttps://detail.1688.com/offer/xxxx.html\nhttps://item.taobao.com/xxxx.htm\n..."}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none h-40 resize-y font-mono text-sm"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handleImport}
+                  disabled={isProcessing || !inputText.trim()}
+                  className="px-8 py-3 bg-primary text-white font-semibold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {isProcessing ? (
+                    <><Loader2 className="w-5 h-5 animate-spin" /> 导入中...</>
+                  ) : (
+                    <><Package className="w-5 h-5" /> 开始导入</>
+                  )}
+                </button>
+                {images.length > 0 && (
+                  <button onClick={clearAll} className="px-4 py-2 text-sm text-gray-500 hover:text-red-600 transition-colors flex items-center gap-1">
+                    <Trash2 className="w-4 h-4" /> 清空
                   </button>
                 )}
               </div>
