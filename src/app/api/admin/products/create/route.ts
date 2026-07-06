@@ -105,7 +105,8 @@ export async function POST(request: NextRequest) {
 
           const title = (item.title || `导入商品_${Date.now()}`).toString().slice(0, 120);
           let price = 0;
-          if (item.price) price = Math.round(parseFloat(String(item.price).replace(/[^\d.]/g, "")) * 100);
+          const rawPrice = item.price ? parseFloat(String(item.price).replace(/[^\d.]/g, "")) : NaN;
+          if (!isNaN(rawPrice) && rawPrice > 0) price = Math.round(rawPrice * 100);
 
           const specs: string[] = [];
           if (item.specs) {

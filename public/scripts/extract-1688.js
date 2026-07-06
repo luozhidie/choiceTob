@@ -19,27 +19,52 @@
     images: [],
   };
 
-  // ── 1. 标题 ──
-  try {
-    const el =
-      document.querySelector(".d-title") ||
-      document.querySelector("h1") ||
-      document.querySelector('[itemprop="name"]') ||
-      document.querySelector(".offer-title") ||
-      document.querySelector(".mod-detail-title");
-    if (el) result.title = el.innerText.trim();
-  } catch (e) {}
+      // ── 1. 标题（优先匹配商品标题而非公司名）──
+      // 新版1688：标题在详情主区域，公司名在左上角
+      const titleCandidates = [
+        document.querySelector("[class*='detail-title']"),
+        document.querySelector("[class*='offer-title']"),
+        document.querySelector(".d-title"),
+        // 从页面文本中找最长的合理标题（排除公司名/店铺名）
+        ...Array.from(document.querySelectorAll("h1, [class*='title']")).filter(el => {
+          const t = el.innerText.trim();
+          return t.length > 5 && t.length < 120 && !t.includes("有限公司") && !t.includes("旗舰店") && !t.includes("店铺");
+        }),
+        document.querySelector("[itemprop='name']"),
+        document.querySelector("h1"),
+      ];
+      for (const el of titleCandidates) {
+        if (el) {
+          const t = el.innerText.trim();
+          if (t && t.length > 4 && !t.includes("有限公司")) { result.title = t; break; }
+        }
+      }
 
-  // ── 2. 价格 ──
+  // ── 2. 价格（新版1688有多种价格展示格式）──
   try {
-    const priceEl =
-      document.querySelector(".price-text") ||
-      document.querySelector(".price") ||
-      document.querySelector('[itemprop="price"]') ||
-      document.querySelector(".detail-price .price");
-    if (priceEl) result.price = priceEl.innerText.replace(/[^\d.]/g, "").trim();
-    const origEl = document.querySelector(".original-price, [class*=origin]");
-    if (origEl) result.originalPrice = origEl.innerText.replace(/[^\d.]/g, "").trim();
+    // 策略1：找包含¥符号且紧跟数字的元素
+    const allEls = document.querySelectorAll("[class*='price'], [class*='Price'], [itemprop='price'], .cost-price, .discount-price, [class*='amount']");
+    for (const el of allEls) {
+      const t = (el.innerText || "").trim();
+      if (/¥\s*\d+/.test(t) || /^\d+(\.\d{1,2})?$/.test(t)) {
+        const m = t.match(/(\d+(?:\.\d{1,2})?)/);
+        if (m && parseFloat(m[1]) > 0) { result.price = m[1]; break; }
+      }
+    }
+    // 策略2：页面全局搜 ¥数字 模式
+    if (!result.price) {
+      const body = document.body.innerText;
+      const priceMatch = body.match(/(?:热销款|新人价|促销价|活动价)?[^\n]*?¥[\s]*(\d+(?:\.\d{1,2})?)/);
+      if (priceMatch) result.price = priceMatch[1];
+    }
+    // 原价
+    if (!result.originalPrice) {
+      const origEl = document.querySelector(".original-price, [class*='origin'], del, [class*='market']");
+      if (origEl) {
+        const m = origEl.innerText.replace(/[^\d.]/g, "").match(/\d+(?:\.\d{1,2})?/);
+        if (m) result.originalPrice = m[0];
+      }
+    }
   } catch (e) {}
 
   // ── 3. 主图 ──
