@@ -399,75 +399,100 @@ export default function MyPage() {
 
         {activeTab === "overview" && (
           <>
-            {/* 成长等级卡 */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-              <div className={`rounded-2xl bg-gradient-to-r ${tierInfo.cur.gradient} p-5 text-white mb-5`}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{tierInfo.cur.emoji}</span>
-                    <div>
-                      <p className="text-xs opacity-90">当前成长等级</p>
-                      <p className="text-xl font-bold">{tierInfo.cur.name}</p>
-                    </div>
+            {/* ═══ 未认证：金色认证引导卡（同行截图1）════ */}
+            {!profile?.store_owner_certified && (
+              <div className="bg-gradient-to-br from-yellow-100 via-amber-50 to-orange-50 rounded-2xl border-2 border-amber-300 p-0 mb-6 overflow-hidden shadow-md">
+                <div className="flex p-6 gap-4">
+                  {/* 左侧：未认证提示 */}
+                  <div className="w-[35%] flex flex-col items-center justify-center pr-4 border-r-2 border-dborder border-amber-300/50">
+                    <p className="text-sm font-bold text-amber-800 tracking-widest">您暂未认证</p>
+                    <p className="text-xs text-amber-700 mt-1">仅能</p>
+                    <p className="text-base font-bold text-amber-900 mt-0.5">零售价拿货</p>
                   </div>
-                  <Link
-                    href="/vip"
-                    className="text-xs bg-white/25 px-3 py-1.5 rounded-full backdrop-blur-sm whitespace-nowrap"
-                  >
-                    升级特权
+
+                  {/* 右侧：认证店主权益 */}
+                  <div className="flex-1 flex flex-col items-center pl-2">
+                    <div className="flex items-center gap-2 mb-3 self-start">
+                      <span className="text-2xl">🛡</span>
+                      <span className="text-lg font-bold text-amber-900">认证店主</span>
+                    </div>
+
+                    {/* 4个权益图标横排 */}
+                    <div className="flex justify-between w-full mb-4">
+                      {[
+                        { icon: "🏷️", label: "批发价拿货" },
+                        { icon: "🔄", label: "无理由退货" },
+                        { icon: "🎟️", label: "¥10运费券" },
+                        { icon: "⚡", label: "新款抢先看" },
+                      ].map((item) => (
+                        <div key={item.label} className="flex flex-col items-center gap-1">
+                          <div className="w-12 h-12 rounded-full bg-white/60 border border-white/80 flex items-center justify-center text-lg shadow-sm">
+                            {item.icon}
+                          </div>
+                          <span className="text-[11px] font-medium text-amber-800 text-center leading-tight">{item.label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Link
+                      href="/certify"
+                      className="w-full py-2.5 bg-gradient-to-r from-white/70 to-white/40 border-2 border-amber-800 text-amber-900 font-semibold rounded-full text-center text-sm hover:bg-white/80 transition-colors"
+                    >
+                      一键认证 解锁权益 →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ 已认证：深色等级卡（同行截图2）════ */}
+            {profile?.store_owner_certified && (
+              <div className="bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 rounded-2xl p-6 mb-6 text-white shadow-lg">
+                {/* 标题行 */}
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    {tierInfo.cur.name}
+                    <span className="text-xs bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-900 px-2.5 py-0.5 rounded-md font-extrabold shadow-md">
+                      {tierInfo.cur.badge || "V1"}
+                    </span>
+                  </h2>
+                  <Link href="/vip" className="text-xs bg-amber-400/15 border border-amber-400/30 text-amber-300 px-3 py-1.5 rounded-full hover:bg-amber-400/25 transition-colors">
+                    查看权益
                   </Link>
                 </div>
-                {tierInfo.next ? (
-                  <div className="mt-4">
-                    <div className="flex justify-between text-xs opacity-90 mb-1">
-                      <span>距 {tierInfo.next.name} 还差</span>
-                      <span>¥{tierInfo.diff.toLocaleString()}（累计拿货 ¥{Math.round(totalSpentYuan).toLocaleString()}）</span>
-                    </div>
-                    <div className="h-2 bg-white/25 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-white rounded-full transition-all duration-500"
-                        style={{ width: `${tierInfo.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-xs bg-white/20 inline-block px-3 py-1 rounded-full">🎉 已达最高等级</p>
-                )}
-              </div>
 
-              {/* 等级阶梯 */}
-              <div className="flex items-center justify-between">
-                {TIERS.map((t, i) => (
-                  <div key={t.key} className="flex-1 flex flex-col items-center relative">
-                    {i < TIERS.length - 1 && (
-                      <div
-                        className={`absolute top-4 left-1/2 w-full h-0.5 ${
-                          i < tierInfo.idx ? "bg-primary" : "bg-gray-200"
-                        }`}
-                      />
-                    )}
-                    <div
-                      className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                        i <= tierInfo.idx ? "bg-primary text-white" : "bg-gray-100 text-gray-400"
-                      }`}
-                    >
-                      {i < tierInfo.idx ? "✓" : i + 1}
+                {/* 进度条 */}
+                {tierInfo.next ? (
+                  <>
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
+                      <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${tierInfo.progress}%` }} />
                     </div>
-                    <span
-                      className={`mt-1.5 text-[10px] ${
-                        i === tierInfo.idx ? "text-primary font-bold" : "text-gray-400"
-                      }`}
-                    >
-                      {t.name.replace("会员", "")}
-                    </span>
-                  </div>
-                ))}
+                    <p className="text-xs text-white/55 mb-5">
+                      当月拿货额 <span className="text-amber-400 font-bold text-sm">¥{Math.round(totalSpentYuan).toLocaleString()}</span> ，还差<span className="text-amber-400 font-bold"> ¥{tierInfo.diff.toLocaleString()}</span> 升级{tierInfo.next.name}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs bg-white/10 inline-block px-3 py-1 rounded-full mb-5">🎉 已达最高等级</p>
+                )}
+
+                {/* 4个权益图标行（同行截图2）*/}
+                <div className="flex justify-around pt-4 border-t border-white/8">
+                  {[
+                    { icon: "📅", label: "淡季保级" },
+                    { icon: "⚡", label: "会员专享" },
+                    { icon: "🎧", label: "VIP客服" },
+                    { icon: "🚚", label: "包邮特权" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col items-center gap-1.5">
+                      <div className="w-14 h-14 rounded-full bg-white/8 border border-white/15 flex items-center justify-center text-xl">
+                        {item.icon}
+                      </div>
+                      <span className="text-[11px] text-white/55">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <p className="text-[11px] text-gray-400 text-center mt-3">
-                成长等级依据累计拿货金额自动解锁 ·
-                <button onClick={() => setShowRules(true)} className="text-primary hover:underline"> 查看权益领取规则</button>
-              </p>
-            </div>
+            )}
 
             {/* 会员权益解锁等级（5列横排 · 同行同款）*/}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
@@ -502,42 +527,6 @@ export default function MyPage() {
                   );
                 })}
               </div>
-            </div>
-
-            {/* 认证店主联盟（深色卡片 · 同行同款） */}
-            <div className="rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                  <h2 className="font-bold">认证店主联盟</h2>
-                </div>
-                {profile?.store_owner_certified && (
-                  <span className="text-xs bg-emerald-400/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-400/30">已加入联盟</span>
-                )}
-              </div>
-              {profile?.store_owner_certified ? (
-                <div className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <p className="text-sm text-white/90 flex items-center gap-2">
-                    <BadgeCheck className="w-4 h-4 text-emerald-400" />
-                    已通过行业认证 · 解锁全部商品批发价查看 + 全国销售排名
-                  </p>
-                  {profile?.certified_style && (
-                    <p className="text-xs text-white/60 mt-2">常拿风格：<span className="text-white/90">{profile.certified_style}</span></p>
-                  )}
-                </div>
-              ) : (
-                <>
-                  <p className="text-sm text-white/60 mb-3">
-                    免费通过行业知识答题认证，即可查看所有商品批发价。与付费会员权益平行，互不冲突。
-                  </p>
-                  <Link
-                    href="/certify"
-                    className="block w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold rounded-xl text-center hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
-                  >
-                    <ShieldCheck className="w-4 h-4" /> 免费认证加入联盟
-                  </Link>
-                </>
-              )}
             </div>
 
             {/* 会员权益领取规则弹窗（同行同款） */}
