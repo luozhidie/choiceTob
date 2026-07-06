@@ -20,6 +20,7 @@ import {
   LogIn, UserPlus, Sparkles, Smartphone,
   ShieldCheck,
   Award, Gift, Percent, BarChart3, Headphones, Eye, Lock, BadgeCheck,
+  X, TrendingUp, Star, FileText,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -43,23 +44,22 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   cancelled: { label: "已取消", color: "text-red-500 bg-red-50", icon: XCircle },
 };
 
-// 成长等级阶梯（依据累计拿货金额，与「拿货升级自动会员」逻辑一致）
+// 成长等级阶梯（依据累计拿货金额，参照同行渐进解锁设计）
 const TIERS = [
-  { key: "normal", name: "普通会员", min: 0, emoji: "🌱", gradient: "from-gray-400 to-gray-500" },
-  { key: "silver", name: "白银会员", min: 5000, emoji: "🥈", gradient: "from-slate-300 to-slate-400" },
-  { key: "gold", name: "黄金会员", min: 50000, emoji: "🥇", gradient: "from-amber-400 to-yellow-500" },
-  { key: "platinum", name: "铂金会员", min: 100000, emoji: "💠", gradient: "from-cyan-400 to-blue-500" },
-  { key: "diamond", name: "钻石会员", min: 300000, emoji: "💎", gradient: "from-fuchsia-400 to-purple-500" },
+  { key: "normal",   name: "普通会员", min: 0,      emoji: "🌱", gradient: "from-gray-500 to-gray-600",     badge: "V0" },
+  { key: "silver",   name: "白银会员", min: 5000,   emoji: "🥈", gradient: "from-sky-400 to-blue-500",    badge: "V1" },
+  { key: "gold",     name: "黄金会员", min: 50000,  emoji: "🥇", gradient: "from-amber-400 to-orange-500",  badge: "V2" },
+  { key: "platinum", name: "铂金会员", min: 100000, emoji: "💎", gradient: "from-violet-400 to-purple-500",  badge: "V3" },
+  { key: "diamond",  name: "钻石会员", min: 300000, emoji: "👑", gradient: "from-rose-400 to-pink-500",    badge: "V4" },
 ];
 
-// 会员权益（按解锁等级排列，tier 为 TIERS 下标）
+// 会员权益（5项横排，同行同款）
 const TIER_BENEFITS = [
-  { key: "return5", icon: Percent, title: "退货补贴5%", tier: 2, desc: "黄金解锁" },
-  { key: "early", icon: Eye, title: "新款抢先看", tier: 2, desc: "黄金解锁" },
-  { key: "return10", icon: Gift, title: "退货补贴10%", tier: 3, desc: "铂金解锁" },
-  { key: "vipService", icon: Headphones, title: "专属客服", tier: 3, desc: "铂金解锁" },
-  { key: "return20", icon: Award, title: "退货补贴20%", tier: 4, desc: "钻石解锁" },
-  { key: "report", icon: BarChart3, title: "数据报告", tier: 4, desc: "钻石解锁" },
+  { key: "wholesale", icon: Eye,        title: "拿货价查看",   tier: 1, emoji: "💰" },
+  { key: "earlyAccess",icon: Sparkles,  title: "新款抢先看",   tier: 2, emoji: "✨" },
+  { key: "returnRate", icon: Percent,    title: "退货补贴",     tier: 2, emoji: "🎁" },
+  { key: "vipService",  icon: Headphones,title: "专属客服",     tier: 3, emoji: "🎧" },
+  { key: "dataReport",  icon: FileText,  title: "经营数据报告", tier: 4, emoji: "📊" },
 ];
 
 function getTierInfo(totalSpentYuan: number) {
@@ -89,6 +89,7 @@ export default function MyPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "cart">("overview");
+  const [showRules, setShowRules] = useState(false);
 
   // 成长等级：依据累计拿货金额计算（与「拿货升级自动会员」逻辑一致）
   const totalSpentYuan = Math.round(orders.reduce((s, o) => s + (o.total_amount || 0), 0) / 100);
@@ -463,40 +464,39 @@ export default function MyPage() {
                 ))}
               </div>
               <p className="text-[11px] text-gray-400 text-center mt-3">
-                成长等级依据累计拿货金额自动解锁 · 查看
-                <Link href="/vip" className="text-primary"> 权益规则</Link>
+                成长等级依据累计拿货金额自动解锁 ·
+                <button onClick={() => setShowRules(true)} className="text-primary hover:underline"> 查看权益领取规则</button>
               </p>
             </div>
 
-            {/* 会员权益网格（升级自动解锁） */}
+            {/* 会员权益解锁等级（5列横排 · 同行同款）*/}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Gift className="w-5 h-5 text-primary" /> 会员权益
-                <span className="text-xs font-normal text-gray-400">升级自动解锁</span>
+              <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+                <Star className="w-5 h-5 text-amber-500" /> 权益解锁等级
               </h2>
-              <div className="grid grid-cols-3 gap-3">
+              <p className="text-xs text-gray-400 mb-4">成长等级提升自动解锁更多权益</p>
+
+              {/* 5个权益图标横排 */}
+              <div className="flex justify-between gap-2">
                 {TIER_BENEFITS.map((b) => {
                   const unlocked = tierInfo.idx >= b.tier;
                   const BIcon = b.icon;
                   return (
-                    <div
-                      key={b.key}
-                      className={`flex flex-col items-center text-center p-3 rounded-xl border ${
-                        unlocked ? "border-primary/30 bg-primary/5" : "border-gray-100 bg-gray-50"
-                      }`}
-                    >
+                    <div key={b.key} className="flex-1 flex flex-col items-center">
                       <div
-                        className={`w-11 h-11 rounded-full flex items-center justify-center mb-2 ${
-                          unlocked ? "bg-primary text-white" : "bg-gray-200 text-gray-400"
+                        className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 transition-all ${
+                          unlocked
+                            ? "bg-gradient-to-br from-amber-300 to-orange-400 text-white shadow-lg shadow-amber-200/40"
+                            : "bg-gray-100 text-gray-300"
                         }`}
                       >
-                        {unlocked ? <BIcon className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                        {unlocked ? <BIcon className="w-6 h-6" /> : <Lock className="w-5 h-5" />}
                       </div>
-                      <span className={`text-xs font-medium ${unlocked ? "text-gray-800" : "text-gray-400"}`}>
+                      <span className={`text-[11px] font-medium text-center leading-tight ${unlocked ? "text-gray-800" : "text-gray-400"}`}>
                         {b.title}
                       </span>
-                      <span className="text-[10px] text-gray-400 mt-0.5">
-                        {unlocked ? "已解锁" : TIERS[b.tier].name.replace("会员", "") + "解锁"}
+                      <span className={`text-[10px] mt-0.5 ${unlocked ? "text-amber-600" : "text-gray-300"}`}>
+                        {unlocked ? "已解锁" : TIERS[b.tier].name.replace("会员", "")}
                       </span>
                     </div>
                   );
@@ -504,41 +504,133 @@ export default function MyPage() {
               </div>
             </div>
 
-            {/* 认证店主（平行赛道 · 免费） */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+            {/* 认证店主联盟（深色卡片 · 同行同款） */}
+            <div className="rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 bg-gradient-to-br from-slate-800 to-slate-900 text-white">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="font-bold text-gray-900 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-accent" /> 认证店主
-                  <span className="text-xs font-normal text-gray-400">平行赛道 · 免费</span>
-                </h2>
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  <h2 className="font-bold">认证店主联盟</h2>
+                </div>
                 {profile?.store_owner_certified && (
-                  <span className="text-xs bg-green-100 text-green-600 px-2.5 py-1 rounded-full">已认证</span>
+                  <span className="text-xs bg-emerald-400/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-400/30">已加入联盟</span>
                 )}
               </div>
               {profile?.store_owner_certified ? (
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                  <p className="text-sm text-gray-700 flex items-center gap-2">
-                    <BadgeCheck className="w-4 h-4 text-green-600" />
-                    已通过认证 · 享全部商品批发价查看 + 全国销售排名
+                <div className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
+                  <p className="text-sm text-white/90 flex items-center gap-2">
+                    <BadgeCheck className="w-4 h-4 text-emerald-400" />
+                    已通过行业认证 · 解锁全部商品批发价查看 + 全国销售排名
                   </p>
                   {profile?.certified_style && (
-                    <p className="text-xs text-gray-500 mt-2">常拿风格：{profile.certified_style}</p>
+                    <p className="text-xs text-white/60 mt-2">常拿风格：<span className="text-white/90">{profile.certified_style}</span></p>
                   )}
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-gray-500 mb-3">
-                    免费通过行业知识答题，解锁全部商品批发价查看权限（与会员等级平行，不冲突）
+                  <p className="text-sm text-white/60 mb-3">
+                    免费通过行业知识答题认证，即可查看所有商品批发价。与付费会员权益平行，互不冲突。
                   </p>
                   <Link
                     href="/certify"
-                    className="block w-full py-2.5 bg-accent text-white text-sm font-medium rounded-xl text-center hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
+                    className="block w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-semibold rounded-xl text-center hover:from-emerald-600 hover:to-teal-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25"
                   >
-                    <ShieldCheck className="w-4 h-4" /> 免费认证看价
+                    <ShieldCheck className="w-4 h-4" /> 免费认证加入联盟
                   </Link>
                 </>
               )}
             </div>
+
+            {/* 会员权益领取规则弹窗（同行同款） */}
+            {showRules && (
+              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowRules(false)} />
+                <div className="relative bg-white w-full sm:max-w-lg max-h-[85vh] rounded-t-3xl sm:rounded-2xl overflow-y-auto animate-in slide-in-from-bottom duration-300">
+                  {/* 弹窗头部 */}
+                  <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="font-bold text-gray-900 text-lg">会员权益领取规则</h3>
+                    <button onClick={() => setShowRules(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* 规则内容 */}
+                  <div className="px-6 py-5 space-y-5 text-sm text-gray-700 leading-relaxed">
+
+                    {/* 一、何时解锁 */}
+                    <section>
+                      <h4 className="font-bold text-gray-900 mb-2">【什么时候解锁？】</h4>
+                      <p className="mb-2">每达到一个成长等级（以累计拿货金额为依据），即可<strong>自动解锁</strong>对应等级的会员权益，无需额外操作。</p>
+                      <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                        <li><strong>白银会员</strong>（累计 ≥ ¥5,000）：解锁「拿货价查看」—— 可查看所有商品批发价与市场价对比。</li>
+                        <li><strong>黄金会员</strong>（累计 ≥ ¥50,000）：新增「新款抢先看」「退货补贴5%」—— 每季新品提前7天浏览 + 充值退货额度。</li>
+                        <li><strong>铂金会员</strong>（累计 ≥ ¥100,000）：新增「专属客服」「退货补贴10%」—— 1对1微信客服通道 + 更高退换比例。</li>
+                        <li><strong>钻石会员</strong>（累计 ≥ ¥300,000）：全部权益解锁 +「经营数据报告」—— 季度经营分析与行业对标报告。</li>
+                      </ul>
+                    </section>
+
+                    {/* 二、如何领取 */}
+                    <section>
+                      <h4 className="font-bold text-gray-900 mb-2">【如何领取使用？】</h4>
+                      <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                        <li><strong>拿货价：</strong>升级后自动生效，进入商品详情页或买家选品页即显示批发价。</li>
+                        <li><strong>新款抢先看：</strong>在「每日搭配」和「买手选品」页顶部出现「新品抢先」入口。</li>
+                        <li><strong>退货补贴：</strong>按充值档位自动计算（充5万→5% / 充10万→10% / 充30万→20%），退货时系统自动抵扣。</li>
+                        <li><strong>专属客服：</strong>升级后在「我的」页显示专属客服微信号，可直接微信联系。</li>
+                        <li><strong>数据报告：</strong>每季度初自动生成，在「我的 → 经营数据」中查看下载。</li>
+                      </ul>
+                    </section>
+
+                    {/* 三、认证店主平行赛道 */}
+                    <section>
+                      <h4 className="font-bold text-gray-900 mb-2">【认证店主 · 平行赛道】</h4>
+                      <p className="mb-2">除付费会员外，「认证店主」是一条<strong>完全免费</strong>的平行解锁路径：</p>
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 space-y-2">
+                        <p>✅ 通过6道行业知识答题即可认证</p>
+                        <p>✅ 认证后立即解锁<strong>全部商品批发价查看权</strong></p>
+                        <p>✅ 填写的常拿风格 & 月销售额同步至后台店铺管理</p>
+                        <p>✅ 获得全国销售排名估算（基于您填写的月销售额）</p>
+                      </div>
+                      <p className="mt-2 text-xs text-gray-400">注：认证店主不享受退货补贴、新款抢先看、专属客服等付费会员特权。如需全部权益，建议同时开通付费会员。</p>
+                    </section>
+
+                    {/* 四、等级对照表 */}
+                    <section>
+                      <h4 className="font-bold text-gray-900 mb-2">【等级权益一览】</h4>
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs border-collapse">
+                          <thead>
+                            <tr className="bg-gray-50">
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">等级</th>
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">门槛(累计)</th>
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">解锁权益</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {TIERS.slice(1).map((t) => (
+                              <tr key={t.key}>
+                                <td className="border border-gray-200 px-3 py-2 font-medium">{t.emoji} {t.name}</td>
+                                <td className="border border-gray-200 px-3 py-2">≥ ¥{t.min.toLocaleString()}</td>
+                                <td className="border border-gray-200 px-3 py-2">
+                                  {TIER_BENEFITS.filter(b => b.tier <= TIERS.indexOf(t)).map(b => b.title).join('、') || '—'}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+
+                    {/* 底部提示 */}
+                    <div className="text-center pt-3 border-t border-gray-100">
+                      <p className="text-xs text-gray-400">
+                        如有疑问请联系客服 · 微信: luozhidie666
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* 常用功能 */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

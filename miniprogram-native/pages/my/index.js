@@ -7,12 +7,11 @@ var TIERS=[
   {key:'diamond',name:'钻石会员',emoji:'👑',threshold:300000}
 ];
 var BENEFITS=[
-  {key:'return5',title:'退货补贴5%',tier:1,icon:'💰'},
-  {key:'return10',title:'退货补贴10%',tier:2,icon:'🎁'},
-  {key:'return20',title:'退货补贴20%',tier:3,icon:'🏆'},
-  {key:'newStyle',title:'新款抢先看',tier:2,icon:'✨'},
-  {key:'vipService',title:'专属客服',tier:3,icon:'🎧'},
-  {key:'dataReport',title:'数据报告',tier:4,icon:'📊'}
+  {key:'wholesale',  title:'拿货价查看',   tier:1, icon:'💰'},
+  {key:'earlyAccess',title:'新款抢先看',   tier:2, icon:'✨'},
+  {key:'returnRate', title:'退货补贴',     tier:2, icon:'🎁'},
+  {key:'vipService', title:'专属客服',     tier:3, icon:'🎧'},
+  {key:'dataReport', title:'经营数据报告', tier:4, icon:'📊'}
 ];
 
 function getTierInfo(spent){
@@ -180,4 +179,9 @@ Page({
   goImport:function(){wx.navigateTo({url:'/pages/import/index'});},
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
   goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
+  goRules:function(){wx.showModal({
+    title:'会员权益领取规则',
+    content:'【解锁条件】\n白银(≥5k):拿货价查看\n黄金(≥5w):新款抢先看+退货补贴5%\n铂金(≥10w):专属客服+退货补贴10%\n钻石(≥30w):经营数据报告+退货补贴20%\n\n【认证店主·免费赛道】\n答题通过即可免费看批发价，与付费会员平行。\n\n详细规则请登录网页 colour-choice.art/my 查看',
+    showCancel:false,confirmText:'知道了'
+  });},
 });

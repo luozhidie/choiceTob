@@ -60,42 +60,45 @@
       </block>
     </view>
     <text class="tc-footnote">成长等级依据累计拿货金额自动解锁 · </text>
-    <text class="tc-link" bindtap="goVip">查看权益规则</text>
+    <text class="tc-link" bindtap="goRules">查看权益领取规则</text>
   </view>
 
-  <!-- ========== 权益解锁网格 ========== -->
-  <view class="benefit-grid-wrap">
-    <view class="bg-title">会员权益<text class="bg-sub">升级自动解锁</text></view>
-    <view class="benefit-grid">
+  <!-- ========== 权益解锁等级（5列横排·同行同款）========== -->
+  <view class="benefit-wrap">
+    <view class="bw-head">
+      <text class="bw-title">⭐ 权益解锁等级</text>
+      <text class="bw-sub">成长等级提升自动解锁更多权益</text>
+    </view>
+    <view class="bw-row">
       <block wx:for="{{benefits}}" wx:key="key">
-        <view class="bg-item {{tierIdx >= item.tier ? 'bg-on' : 'bg-off'}}">
-          <view class="bg-icon-circle {{tierIdx >= item.tier ? 'bg-icon-on' : 'bg-icon-off'}}">
+        <view class="bw-item">
+          <view class="bw-circle {{tierIdx >= item.tier ? 'bw-c-on' : 'bw-c-off'}}">
             <text wx:if="{{tierIdx >= item.tier}}">{{item.icon}}</text>
             <text wx:else>🔒</text>
           </view>
-          <text class="bg-t {{tierIdx >= item.tier ? 'bg-t-on' : 'bg-t-off'}}">{{item.title}}</text>
-          <text class="bg-sub2">{{tierIdx >= item.tier ? '已解锁' : (tiers[item.tier].name.replace('会员','')+'解锁')}}</text>
+          <text class="bw-name {{tierIdx >= item.tier ? 'bw-n-on' : 'bw-n-off'}}">{{item.title}}</text>
+          <text class="bw-status {{tierIdx >= item.tier ? 'bw-s-on' : 'bw-s-off'}}">{{tierIdx >= item.tier ? '已解锁' : tiers[item.tier].name.replace('会员','')}}</text>
         </view>
       </block>
     </view>
   </view>
 
-  <!-- ========== 认证店主（平行赛道）========== -->
-  <view class="cert-track-wrap">
-    <view class="ct-head">
-      <text class="ct-title">认证店主</text>
-      <text class="ct-badge" wx:if="{{isCertified}}">已认证</text>
-      <text class="ct-sub" wx:else>平行赛道 · 免费</text>
+  <!-- ========== 认证店主联盟（深色卡片·同行同款）========== -->
+  <view class="cert-alliance-wrap">
+    <view class="ca-head">
+      <text class="ca-icon">🛡️</text>
+      <text class="ca-title">认证店主联盟</text>
+      <text class="ca-badge" wx:if="{{isCertified}}">已加入联盟</text>
     </view>
     <block wx:if="{{isCertified}}">
-      <view class="ct-body-done">
-        <text class="ct-check">✅</text>
-        <text class="ct-msg">已通过认证 · 享全部商品批发价查看</text>
+      <view class="ca-done">
+        <text class="ca-check">✅</text>
+        <text class="ca-msg">已通过行业认证 · 解锁全部商品批发价查看 + 全国销售排名</text>
       </view>
     </block>
     <block wx:else>
-      <text class="ct-desc">免费通过行业知识答题，解锁批发价查看权限（与会员等级平行不冲突）</text>
-      <view class="ct-btn" bindtap="goCertify">免费认证看价 →</view>
+      <text class="ca-desc">免费通过行业知识答题认证，即可查看所有商品批发价。与付费会员权益平行，互不冲突。</text>
+      <view class="ca-btn" bindtap="goCertify">免费认证加入联盟 →</view>
     </block>
   </view>
 
