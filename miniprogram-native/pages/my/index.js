@@ -1,3 +1,33 @@
+/* ── 成长等级常量（与网页 /my 一致）── */
+var TIERS=[
+  {key:'normal',name:'普通会员',emoji:'🌱',threshold:0},
+  {key:'silver',name:'白银会员',emoji:'🥈',threshold:5000},
+  {key:'gold',name:'黄金会员',emoji:'🥇',threshold:50000},
+  {key:'platinum',name:'铂金会员',emoji:'💎',threshold:100000},
+  {key:'diamond',name:'钻石会员',emoji:'👑',threshold:300000}
+];
+var BENEFITS=[
+  {key:'return5',title:'退货补贴5%',tier:1,icon:'💰'},
+  {key:'return10',title:'退货补贴10%',tier:2,icon:'🎁'},
+  {key:'return20',title:'退货补贴20%',tier:3,icon:'🏆'},
+  {key:'newStyle',title:'新款抢先看',tier:2,icon:'✨'},
+  {key:'vipService',title:'专属客服',tier:3,icon:'🎧'},
+  {key:'dataReport',title:'数据报告',tier:4,icon:'📊'}
+];
+
+function getTierInfo(spent){
+  var spentNum=Number(spent)||0;
+  var idx=0;
+  for(var i=TIERS.length-1;i>=0;i--){if(spentNum>=TIERS[i].threshold){idx=i;break;}}
+  var cur=TIERS[idx],next=TIERS[idx+1]||null;
+  return{
+    idx:idx,cur:cur,next:next,
+    diff:next?Math.max(0,next.threshold-spentNum):0,
+    progress:next?Math.min(100,Math.round((spentNum/(cur.threshold+(next.threshold-cur.threshold))||1)*100)):100,
+    totalSpent:spentNum
+  };
+}
+
 Page({
   data:{
     /* 用户 */
@@ -5,10 +35,18 @@ Page({
     roleText:'点击登录/注册',
     avatarUrl:'',
 
-    /* VIP */
+    /* 成长等级（渐进解锁）*/
+    tiers:TIERS,
+    benefits:BENEFITS,
+    tierIdx:0,
+    curTier:{key:'normal',name:'普通会员',emoji:'🌱',threshold:0},
+    nextTier:null,
+    tierDiff:0,
+    tierProgress:0,
+    totalSpentYuan:0,
+
+    /* VIP 兼容 */
     vipLevel:'',
-    levelName:'普通会员',
-    progressText:'开通会员享专属权益',
     isVip:false,
 
     /* 统计 */
@@ -50,24 +88,22 @@ Page({
     }
   },
 
-  /* ===== VIP 状态 ====== */
+  /* ===== VIP / 成长等级状态 ====== */
   loadVip:function(){
     var t=this;
     var vip=wx.getStorageSync('vip_status');
-    var mt=wx.getStorageSync('member_type')||'';
-    var exp=wx.getStorageSync('vip_expire')||'';
-    var level=wx.getStorageSync('vip_level')||'';
-
-    if(vip==='active'){
-      var ln='',lv=level||'V1',pt='';
-      if(lv==='V1'||lv==='trial'){ln='体验会员';pt='当月拿货额 0.00，还差 2000.00 元升级白银会员';}
-      else if(lv==='V2'||lv==='quarter'){ln='季卡会员';pt='当月拿货额 5000.00，还差 15000.00 元升级年卡会员';}
-      else if(lv==='V3'||lv==='year'){ln='年卡会员';pt='已享受全部权益';}
-      else{ln=mt||'价格会员';pt='会员权益有效中';}
-      t.setData({isVip:true,levelName:ln,vipLevel:lv,progressText:pt});
-    } else {
-      t.setData({isVip:false,levelName:'普通会员',vipLevel:'',progressText:'开通会员享专属权益'});
-    }
+    /* 用本地存储的累计拿货额算等级（元）*/
+    var spent=wx.getStorageSync('total_spent_yuan')||0;
+    var info=getTierInfo(spent);
+    t.setData({
+      isVip:vip==='active',
+      tierIdx:info.idx,
+      curTier:info.cur,
+      nextTier:info.next,
+      tierDiff:info.diff,
+      tierProgress:info.progress,
+      totalSpentYuan:info.totalSpent
+    });
   },
 
   /* ===== 从后端加载「我的」全部数据 ====== */

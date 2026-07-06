@@ -11,24 +11,69 @@ page{background:#f5f3f0;}
 .header-icons{display:flex;gap:20rpx;}
 .hi{width:56rpx;height:56rpx;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.06);}
 
-/* ====== VIP卡 ====== */
-.vip-card{margin:16rpx 20rpx;border-radius:20rpx;overflow:hidden;
-  background:linear-gradient(145deg,#2d1b2e 0%,#4a3548 60%,#1a1225 100%);padding:24rpx 24rpx 20rpx;}
-.vip-gold{
-  background:linear-gradient(145deg,#3a2a18 0%,#6b5528 60%,#3d2914 100%);
-}
-.vc-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14rpx;}
-.vc-level{display:flex;align-items:center;gap:8rpx;}
-.vl-text{font-size:30rpx;font-weight:bold;color:#ffd700;}
-.vl-icon{font-size:20rpx;background:rgba(255,215,0,.15);color:#ffd700;padding:3rpx 12rpx;border-radius:8rpx;font-weight:600;}
-.vc-btn-view{background:rgba(255,255,255,.12);border-radius:16rpx;padding:6rpx 16rpx;}
-.vc-btn{font-size:21rpx;color:#ffd700;font-weight:500;}
-.vc-progress-info{margin-bottom:16rpx;}
-.vcp-text{font-size:23rpx;color:rgba(255,215,0,.75);line-height:1.5;}
-.vc-privileges{display:flex;justify-content:space-around;margin-top:16rpx;padding-top:16rpx;border-top:1rpx solid rgba(255,255,255,.08);}
-.vp-item{display:flex;flex-direction:column;align-items:center;gap:6rpx;flex:1;}
-.vp-icon{font-size:36rpx;}
-.vp-label{font-size:20rpx;color:#aaa;}
+/* ====== 成长等级卡（渐进解锁）====== */
+.tier-card-wrap{margin:16rpx 20rpx;background:#fff;border-radius:24rpx;padding:28rpx 24rpx;box-shadow:0 4rpx 20rpx rgba(0,0,0,.05);}
+.tier-card{border-radius:20rpx;padding:32rpx 28rpx;color:#fff;margin-bottom:24rpx;}
+.tier-normal{background:linear-gradient(135deg,#9ca3af,#6b7280);}
+.tier-silver{background:linear-gradient(135deg,#60a5fa,#3b82f6);}
+.tier-gold{background:linear-gradient(135deg,#f59e0b,#d97706);}
+.tier-platinum{background:linear-gradient(135deg,#a855f7,#7c3aed);}
+.tier-diamond{background:linear-gradient(135deg,#ec4899,#db2777);}
+
+.tc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20rpx;}
+.tc-left{display:flex;align-items:center;gap:16rpx;}
+.tc-emoji{font-size:48rpx;}
+.tc-meta{display:flex;flex-direction:column;gap:4rpx;}
+.tc-label{font-size:22rpx;opacity:.85;}
+.tc-name{font-size:34rpx;font-weight:bold;}
+.tc-upgrade{background:rgba(255,255,255,.22);border-radius:40rpx;padding:8rpx 22rpx;font-size:22rpx;}
+
+.tc-progress-row{display:flex;justify-content:space-between;margin-top:20rpx;font-size:22rpx;opacity:.9;}
+.tc-progress-l{opacity:.85;}
+.tc-bar-track{height:14rpx;background:rgba(255,255,255,.25);border-radius:10rpx;margin-top:12rpx;overflow:hidden;}
+.tc-bar-fill{height:100%;background:#fff;border-radius:10rpx;transition:width .5s;}
+.tc-max-tag{margin-top:20rpx;display:inline-block;background:rgba(255,255,255,.2);padding:10rpx 24rpx;border-radius:30rpx;font-size:22rpx;}
+
+/* 等级阶梯 */
+.tier-steps{display:flex;justify-content:space-between;position:relative;padding:0 4rpx;}
+.ts-node-wrap{flex:1;display:flex;flex-direction:column;align-items:center;position:relative;}
+.ts-line{position:absolute;top:26rpx;left:50%;width:100%;height:4rpx;background:#e5e7eb;z-index:0;}
+.ts-line-active{background:#e91e63;}
+.ts-dot{width:52rpx;height:52rpx;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22rpx;z-index:1;background:#f3f4f6;color:#9ca3af;}
+.ts-dot-active{background:#e91e63;color:#fff;font-weight:bold;}
+.ts-dot-current{border:3rpx solid #fce7f3;background:#fff;color:#e91e63;}
+.ts-name{font-size:19rpx;color:#9ca3af;margin-top:10rpx;}
+.ts-name-cur{color:#e91e63;font-weight:bold;}
+.tc-footnote{display:block;text-align:center;font-size:19rpx;color:#bbb;margin-top:16rpx;}
+.tc-link{color:#e91e63;font-weight:500;}
+
+/* 权益解锁网格 */
+.benefit-grid-wrap{margin:0 20rpx 16rpx;background:#fff;border-radius:24rpx;padding:28rpx 24rpx;box-shadow:0 4rpx 20rpx rgba(0,0,0,.05);}
+.bg-title{font-size:30rpx;font-weight:700;color:#1a1a2e;display:flex;align-items:center;gap:10rpx;margin-bottom:20rpx;}
+.bg-sub{font-size:21rpx;font-weight:normal;color:#bbb;}
+.benefit-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16rpx;}
+.bg-item{display:flex;flex-direction:column;align-items:center;padding:20rpx 12rpx;border-radius:18rpx;border:2rpx solid transparent;}
+.bg-on{background:#fef7ff;border-color:#f3d0fa;}
+.bg-off{background:#fafafa;border-color:#eee;}
+.bg-icon-circle{width:80rpx;height:80rpx;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34rpx;margin-bottom:10rpx;}
+.bg-icon-on{background:#e91e63;color:#fff;}
+.bg-icon-off{background:#ddd;color:#999;}
+.bg-t{font-size:23rpx;font-weight:500;line-height:1.3;text-align:center;}
+.bg-t-on{color:#333;}
+.bg-t-off{color:#999;}
+.bg-sub2{font-size:18rpx;color:#bbb;margin-top:4rpx;}
+
+/* 认证店主平行赛道 */
+.cert-track-wrap{margin:0 20rpx 16rpx;background:#fff;border-radius:24rpx;padding:28rpx 24rpx;box-shadow:0 4rpx 20rpx rgba(0,0,0,.05);}
+.ct-head{display:flex;align-items:center;gap:12rpx;margin-bottom:16rpx;}
+.ct-title{font-size:30rpx;font-weight:700;color:#1a1a2e;}
+.ct-badge{font-size:20rpx;background:#dcfce7;color:#16a34a;padding:6rpx 18rpx;border-radius:30rpx;font-weight:600;}
+.ct-sub{font-size:21rpx;color:#bbb;font-weight:400;}
+.ct-desc{font-size:24rpx;color:#666;line-height:1.6;margin-bottom:18rpx;}
+.ct-btn{background:#e91e63;color:#fff;font-size:26rpx;font-weight:600;text-align:center;padding:20rpx;border-radius:18rpx;}
+.ct-body-done{display:flex;align-items:center;gap:12rpx;background:#f0fdf4;border:2rpx solid #bbf7d0;border-radius:18rpx;padding:20rpx;}
+.ct-check{font-size:32rpx;}
+.ct-msg{font-size:24rpx;color:#166534;}
 
 /* ====== 快捷数据行（3格）===== */
 .stats-row{display:flex;gap:12rpx;padding:0 20rpx;margin-top:12rpx;}

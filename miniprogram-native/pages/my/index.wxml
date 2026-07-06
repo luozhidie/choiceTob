@@ -16,24 +16,87 @@
     </view>
   </view>
 
-  <!-- ========== VIP会员卡 ========== -->
-  <view class="vip-card {{vipLevel==='gold'||vipLevel==='platinum'?'vip-gold':''}}">
-    <view class="vc-top">
-      <view class="vc-level">
-        <text class="vl-text">{{levelName||'普通会员'}}</text>
-        <text class="vl-icon" wx:if="{{vipLevel==='V1'}}">V1</text>
+  <!-- ========== 成长等级卡（渐进解锁）========== -->
+  <view class="tier-card-wrap">
+    <!-- 等级卡 -->
+    <view class="tier-card tier-{{curTier.key}}">
+      <view class="tc-header">
+        <view class="tc-left">
+          <text class="tc-emoji">{{curTier.emoji}}</text>
+          <view class="tc-meta">
+            <text class="tc-label">当前成长等级</text>
+            <text class="tc-name">{{curTier.name}}</text>
+          </view>
+        </view>
+        <view class="tc-upgrade" bindtap="goVip">
+          <text>升级特权</text>
+        </view>
       </view>
-      <view class="vc-btn-view" bindtap="goVip"><text class="vc-btn">查看权益</text></view>
+      <block wx:if="{{nextTier}}">
+        <view class="tc-progress-row">
+          <text class="tc-progress-l">距 {{nextTier.name}} 还差</text>
+          <text class="tc-progress-r">¥{{tierDiff}} · 累计 ¥{{totalSpentYuan}}</text>
+        </view>
+        <view class="tc-bar-track">
+          <view class="tc-bar-fill" style="width:{{tierProgress}}%"></view>
+        </view>
+      </block>
+      <view wx:else class="tc-max-tag">🎉 已达最高等级</view>
     </view>
-    <view class="vc-progress-info">
-      <text class="vcp-text">{{progressText}}</text>
+
+    <!-- 等级阶梯 -->
+    <view class="tier-steps">
+      <block wx:for="{{tiers}}" wx:key="key">
+        <view class="ts-node-wrap">
+          <block wx:if="{{index < tiers.length - 1}}">
+            <view class="ts-line {{index < tierIdx ? 'ts-line-active' : ''}}"></view>
+          </block>
+          <view class="ts-dot {{index <= tierIdx ? 'ts-dot-active' : ''}} {{index === tierIdx ? 'ts-dot-current' : ''}}">
+            <text wx:if="{{index < tierIdx}}">✓</text>
+            <text wx:else>{{index + 1}}</text>
+          </view>
+          <text class="ts-name {{index === tierIdx ? 'ts-name-cur' : ''}}">{{item.name.replace('会员','')}}</text>
+        </view>
+      </block>
     </view>
-    <view class="vc-privileges">
-      <view class="vp-item"><text class="vp-icon">👑</text><text class="vp-label">减季保级</text></view>
-      <view class="vp-item"><text class="vp-icon">⚡</text><text class="vp-label">会员专享</text></view>
-      <view class="vp-item"><text class="vp-icon">🎧</text><text class="vp-label">VIP客服</text></view>
-      <view class="vp-item"><text class="vp-icon">🚚</text><text class="vp-label">包邮特权</text></view>
+    <text class="tc-footnote">成长等级依据累计拿货金额自动解锁 · </text>
+    <text class="tc-link" bindtap="goVip">查看权益规则</text>
+  </view>
+
+  <!-- ========== 权益解锁网格 ========== -->
+  <view class="benefit-grid-wrap">
+    <view class="bg-title">会员权益<text class="bg-sub">升级自动解锁</text></view>
+    <view class="benefit-grid">
+      <block wx:for="{{benefits}}" wx:key="key">
+        <view class="bg-item {{tierIdx >= item.tier ? 'bg-on' : 'bg-off'}}">
+          <view class="bg-icon-circle {{tierIdx >= item.tier ? 'bg-icon-on' : 'bg-icon-off'}}">
+            <text wx:if="{{tierIdx >= item.tier}}">{{item.icon}}</text>
+            <text wx:else>🔒</text>
+          </view>
+          <text class="bg-t {{tierIdx >= item.tier ? 'bg-t-on' : 'bg-t-off'}}">{{item.title}}</text>
+          <text class="bg-sub2">{{tierIdx >= item.tier ? '已解锁' : (tiers[item.tier].name.replace('会员','')+'解锁')}}</text>
+        </view>
+      </block>
     </view>
+  </view>
+
+  <!-- ========== 认证店主（平行赛道）========== -->
+  <view class="cert-track-wrap">
+    <view class="ct-head">
+      <text class="ct-title">认证店主</text>
+      <text class="ct-badge" wx:if="{{isCertified}}">已认证</text>
+      <text class="ct-sub" wx:else>平行赛道 · 免费</text>
+    </view>
+    <block wx:if="{{isCertified}}">
+      <view class="ct-body-done">
+        <text class="ct-check">✅</text>
+        <text class="ct-msg">已通过认证 · 享全部商品批发价查看</text>
+      </view>
+    </block>
+    <block wx:else>
+      <text class="ct-desc">免费通过行业知识答题，解锁批发价查看权限（与会员等级平行不冲突）</text>
+      <view class="ct-btn" bindtap="goCertify">免费认证看价 →</view>
+    </block>
   </view>
 
   <!-- ========== 快捷数据（3格）========== -->
