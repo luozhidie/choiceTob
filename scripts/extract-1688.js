@@ -1,12 +1,9 @@
 // ============================================================
-//  1688 商品一键提取脚本（浏览器控制台版）
-//  用途：在已登录1688的浏览器中自动提取商品全部数据
-//  使用步骤：
-//    1. 浏览器打开 1688 商品详情页（如 https://detail.1688.com/offer/xxx.html）
-//    2. 按 F12 打开开发者工具 → 切到 Console（控制台）
-//    3. 粘贴下面全部代码 → 按回车
-//    4. 自动复制结果到剪贴板
-//    5. 打开「骆芷蝶智选」后台 → 图片抓取工具 → 「商品导入」tab → 粘贴 → 开始导入
+//  1688 商品一键提取 + 直传脚本
+//  两种用法：
+//   A) 控制台版：F12 / Ctrl+Shift+I 打开控制台 → 粘贴执行 → 复制结果
+//   B) 书签版（推荐，不用F12）：把下方「书签代码」存为浏览器书签，
+//      在 1688 商品页点一下书签 → 自动提取并跳转后台入库
 // ============================================================
 
 (function extract1688() {
@@ -17,8 +14,8 @@
     originalPrice: "",
     description: "",
     supplier: "",
-    specs: [],          // 规格参数数组，如 ["材质:纯棉","颜色:白色"]
-    skuOptions: {},      // SKU选项 {颜色:["白","黑"], 尺码:["S","M","L"]}
+    specs: [],
+    skuOptions: {},
     images: [],
   };
 
@@ -35,106 +32,75 @@
 
   // ── 2. 价格 ──
   try {
-    // 1688 价格元素
     const priceEl =
       document.querySelector(".price-text") ||
       document.querySelector(".price") ||
       document.querySelector('[itemprop="price"]') ||
       document.querySelector(".detail-price .price");
     if (priceEl) result.price = priceEl.innerText.replace(/[^\d.]/g, "").trim();
-
     const origEl = document.querySelector(".original-price, [class*=origin]");
     if (origEl) result.originalPrice = origEl.innerText.replace(/[^\d.]/g, "").trim();
   } catch (e) {}
 
-  // ── 3. 主图（轮播图）──
+  // ── 3. 主图 ──
   try {
     const imgSet = new Set();
-
-    // 3.1 主图轮播区
     document.querySelectorAll(
-      ".tab-content img, .detail-gallery-turn img, " +
-      ".main-img img, .tb-main-pic img, " +
-      "[id*='thumb'] img, [class*='gallery'] img, " +
+      ".tab-content img, .detail-gallery-turn img, .main-img img, " +
+      ".tb-main-pic img, [id*='thumb'] img, [class*='gallery'] img, " +
       "[class*='swiper'] img, [class*='slider'] img"
     ).forEach(img => {
       let src = img.src || img.dataset.src || img.getAttribute("data-originalsrc") || "";
       if (src && !src.startsWith("data:") && src.includes("http")) {
-        // 去缩放参数拿原图
         src = src.replace(/_\d+x\d+\.jpg/, ".jpg").replace(/\.jpg_.+/, ".jpg");
         imgSet.add(src.split("?")[0]);
       }
     });
-
-    // 3.2 页面内所有大图
     document.querySelectorAll("img").forEach(img => {
       const src = img.src || img.dataset.src || "";
-      if (
-        src &&
-        /\.(jpg|jpeg|png|webp)/i.test(src) &&
-        !src.includes("icon") && !src.includes("logo") &&
-        !src.includes("avatar") && !src.includes("badge") &&
-        (img.naturalWidth > 100 || img.width > 100)
-      ) {
+      if (src && /\.(jpg|jpeg|png|webp)/i.test(src) &&
+          !src.includes("icon") && !src.includes("logo") &&
+          !src.includes("avatar") && !src.includes("badge") &&
+          (img.naturalWidth > 100 || img.width > 100)) {
         imgSet.add(src.split("?")[0]);
       }
     });
-
-    // 3.3 详情页描述中的图片
     document.querySelectorAll(
-      ".detail-desc img, .desc img, " +
-      "[class*='detail-content'] img, " +
-      "[class*='deco-tail'] img"
+      ".detail-desc img, .desc img, [class*='detail-content'] img, [class*='deco-tail'] img"
     ).forEach(img => {
       const src = img.src || img.dataset.src || "";
-      if (src && /\.(jpg|jpeg|png|webp)/i.test(src)) {
-        imgSet.add(src.split("?")[0]);
-      }
+      if (src && /\.(jpg|jpeg|png|webp)/i.test(src)) imgSet.add(src.split("?")[0]);
     });
-
     result.images = [...imgSet].slice(0, 20);
   } catch (e) {}
 
   // ── 4. 规格参数表 ──
   try {
-    // 4.1 标准属性表格
     document.querySelectorAll(
-      ".obj-content table tr, .table table tr, " +
-      ".mod-detail-property tr, .property-table tr, " +
-      "[class*='attribute'] tr, [class*='param'] tr"
+      ".obj-content table tr, .table table tr, .mod-detail-property tr, " +
+      ".property-table tr, [class*='attribute'] tr, [class*='param'] tr"
     ).forEach(tr => {
       const cells = tr.querySelectorAll("td, th");
       if (cells.length >= 2) {
         const key = cells[0].innerText.trim().replace(/[:：\s]/g, "");
         const val = cells[1].innerText.trim().replace(/\s+/g, " ");
-        if (key && val) result.specs.push(`${key}:${val}`);
+        if (key && val) result.specs.push(key + ":" + val);
       }
     });
-
-    // 4.2 属性列表（非表格形式）
-    document.querySelectorAll(
-      ".obj-content li, .attribute-item li, " +
-      "[class*='prop'] li"
-    ).forEach(li => {
+    document.querySelectorAll(".obj-content li, .attribute-item li, [class*='prop'] li").forEach(li => {
       const text = li.innerText.replace(/\n/g, "").trim();
-      if (text.includes(":") || text.includes("\uff1a")) {
-        result.specs.push(text.replace(/\s+/g, ""));
-      }
+      if (text.includes(":") || text.includes("：")) result.specs.push(text.replace(/\s+/g, ""));
     });
   } catch (e) {}
 
-  // ── 5. SKU 选项（颜色/尺码等）──
+  // ── 5. SKU 选项 ──
   try {
     document.querySelectorAll(
-      ".obj-sku li, .sku-item, " +
-      "[class*='sku'] [class*='value'], " +
-      "[class*='sku-item'] span, " +
-      ".object-main .sku-list .sku-line"
+      ".obj-sku li, .sku-item, [class*='sku'] [class*='value'], " +
+      "[class*='sku-item'] span, .object-main .sku-list .sku-line"
     ).forEach(el => {
-      // 尝试找父级 label 作为属性名
       const parent = el.closest("[class*='sku'], [class*='line']");
       const label = parent ? (parent.querySelector("[class*='title'], [class*='label'], dt")?.innerText || "") : "";
-
       const value = el.innerText.trim() || el.getAttribute("data-value") || "";
       if (value && value.length < 30) {
         const attrName = label || "规格";
@@ -142,17 +108,14 @@
         if (!result.skuOptions[attrName].includes(value)) result.skuOptions[attrName].push(value);
       }
     });
-
-    // 把 SKU 也加入 specs
     for (const [k, vals] of Object.entries(result.skuOptions)) {
-      if (Array.isArray(vals)) result.specs.push(`${k}: ${vals.join(", ")}`);
+      if (Array.isArray(vals)) result.specs.push(k + ": " + vals.join(", "));
     }
   } catch (e) {}
 
   // ── 6. 描述 ──
   try {
-    const descEl =
-      document.querySelector("[itemprop='description']") ||
+    const descEl = document.querySelector("[itemprop='description']") ||
       document.querySelector(".description, .desc-content, [class*='detail-desc']");
     if (descEl) result.description = descEl.innerText.trim().slice(0, 200);
   } catch (e) {}
@@ -163,63 +126,60 @@
     if (supEl) result.supplier = supEl.innerText.trim();
   } catch (e) {}
 
-  // ── 输出 & 复制 ──
+  // ── 汇总 ──
   const output = {
     ...result,
     imageCount: result.images.length,
     exportTime: new Date().toISOString(),
     url: location.href,
   };
-
   const jsonStr = JSON.stringify(output, null, 2);
 
-  // 自动复制到剪贴板
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(jsonStr).then(() => {
-      console.log("%c✅ 已复制到剪贴板！直接粘贴到「骆芷蝶智选」导入框即可", "color:#16a34a;font-weight:bold;font-size:14px;");
-    }).catch(() => fallbackCopy(jsonStr));
-  } else {
-    fallbackCopy(jsonStr);
-  }
-
+  // 复制兜底
   function fallbackCopy(text) {
     const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed"; ta.style.opacity = "0";
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand("copy"); console.log("%c✅ 已复制！", "color:green;font-weight:bold;"); }
-    catch(e) { console.log("%c⚠️ 请手动复制下方输出", "color:red;font-weight:bold;"); }
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
     document.body.removeChild(ta);
   }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(jsonStr).catch(() => fallbackCopy(jsonStr));
+  } else { fallbackCopy(jsonStr); }
 
-  console.log("%c📦 1688 商品数据提取完成", "color:#2563eb;font-weight:bold;font-size:14px;");
-  console.table(result.specs.length > 0 ? result.specs.map(s => ({ 参数: s })) : ["无"]);
-  console.log(`%c🖼️ 图片 ${result.images.length} 张`, "color:#7c3aed;font-weight:bold;");
-  console.log(`💰 价格: ¥${result.price}${result.originalPrice ? ` (原价¥${result.originalPrice})` : ""}`);
-  console.log(`📝 标题: ${result.title}`);
+  console.log("%c📦 1688 提取完成：" + result.title + " | ¥" + result.price + " | " + result.images.length + "张",
+    "color:#2563eb;font-weight:bold;font-size:14px;");
 
-  // ── 批量收集器：多次执行自动累积，exportBatch() 一次导出全部 ──
+  // 批量收集器
   window.__1688Batch = window.__1688Batch || [];
   window.__1688Batch.push(output);
-  console.log(`%c📚 已加入批量收集（共 ${window.__1688Batch.length} 个），执行 exportBatch() 导出数组`, "color:#059669;font-weight:bold;");
-
-  // 导出函数：把收集到的所有商品拼成一个 JSON 数组并复制到剪贴板
   window.exportBatch = function () {
     const arr = window.__1688Batch || [];
-    if (arr.length === 0) { console.log("没有收集到数据"); return; }
-    const json = JSON.stringify(arr, null, 2);
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(json).then(() => {
-        console.log(`%c✅ 已复制 ${arr.length} 个商品的 JSON 数组！直接粘贴到「骆芷蝶智选」导入框`, "color:#16a34a;font-weight:bold;");
-      });
-    }
-    console.log(arr);
+    if (!arr.length) { console.log("无数据"); return; }
+    const j = JSON.stringify(arr);
+    if (navigator.clipboard) navigator.clipboard.writeText(j).catch(() => fallbackCopy(j));
+    if (window.pushToChoice) window.pushToChoice(); // 批量收集后也可一键直传
     return arr;
   };
+  window.clearBatch = function () { window.__1688Batch = []; console.log("已清空"); };
 
-  // 清空收集器
-  window.clearBatch = function () { window.__1688Batch = []; console.log("批量收集已清空"); };
+  // ── 一键直传后台（书签模式核心）──
+  const IMPORT_PAGE = "https://colour-choice.art/admin/image-grabber";
+  window.pushToChoice = function () {
+    const b64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    const target = IMPORT_PAGE + "?import=" + encodeURIComponent(b64) + "&auto=1";
+    window.open(target, "_blank");
+    console.log("%c🚀 已打开后台导入页，将自动入库", "color:#16a34a;font-weight:bold;");
+  };
+
+  // 书签模式：脚本 URL 带 __AUTOPUSH__ 标记时自动直传
+  if (window.__AUTOPUSH__) {
+    window.pushToChoice();
+  } else {
+    console.log("%c💡 控制台版：执行 pushToChoice() 直传；或 exportBatch() 批量收集后直传", "color:#7c3aed;");
+    // 若脚本以书签方式(URL带 #autopush)运行也自动触发
+    if (location.hash.indexOf("autopush") > -1) window.pushToChoice();
+  }
 
   return output;
 })();

@@ -112,6 +112,46 @@ export default function ImageGrabberPage() {
     loadProducts();
   }, []);
 
+  // 自动导入：从 URL ?import=<base64> 读取 1688 书签直传的数据
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const importData = params.get("import");
+    if (importData) {
+      try {
+        const json = decodeURIComponent(escape(window.atob(importData)));
+        setInputText(json);
+        setMode("import");
+        showToast("success", "已接收 1688 商品数据，正在导入...");
+        setTimeout(() => {
+          handleImportAuto(json);
+          window.history.replaceState({}, "", window.location.pathname);
+        }, 600);
+      } catch (e) {
+        showToast("error", "数据解析失败");
+      }
+    }
+  }, []);
+
+  const handleImportAuto = async (jsonText: string) => {
+    setIsProcessing(true);
+    try {
+      const res = await fetch("/api/admin/products/create?action=import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ urls: [jsonText] }),
+      });
+      const json = await res.json();
+      setImportResults(json.results || []);
+      const okCount = json.success ?? (json.results || []).filter((r: any) => r.status === "success").length;
+      if (okCount > 0) showToast("success", `✅ 自动导入成功 ${okCount} 个商品到「待分类」`);
+    } catch (err: any) {
+      showToast("error", err.message || "自动导入失败");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   // 从文本中提取所有图片URL
   const extractImageUrls = (text: string): string[] => {
     const urlRegex = /https?:\/\/[^\s<>""'\]\)]+/gi;
