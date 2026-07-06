@@ -34,8 +34,35 @@ export async function POST(request: NextRequest) {
         price?: string;
         imageCount?: number;
         specs?: string[];
+        duplicate?: boolean;
         message?: string;
       }> = [];
+
+      // ===== 去重辅助：拉取现有商品标题做相似度比对 =====
+      const normalizeTitle = (t: string) =>
+        (t || "")
+          .toLowerCase()
+          .replace(/[\s\-_|｜—,，.。·、×x*#@！!?？()（）\[\]【】"'"'`~]/g, "")
+          .replace(/^(新款|现货|批发|厂家直销|2024|2025|2026|男|女|中性)/g, "");
+      const existingTitles: string[] = [];
+      try {
+        const { data: ex } = await supabase.from("products").select("title").limit(2000);
+        if (ex) ex.forEach((r: any) => { if (r.title) existingTitles.push(normalizeTitle(r.title)); });
+      } catch {}
+      const checkDuplicate = (title: string): boolean => {
+        const n = normalizeTitle(title);
+        if (!n || n.length < 4) return false;
+        return existingTitles.some((t) => {
+          if (Math.abs(t.length - n.length) > Math.max(6, n.length * 0.5)) return false;
+          if (t.includes(n) || n.includes(t)) return true;
+          // 简单编辑距离：允许少量字符差异
+          let diff = 0;
+          const minLen = Math.min(t.length, n.length);
+          for (let i = 0; i < minLen; i++) if (t[i] !== n[i]) diff++;
+          diff += Math.abs(t.length - n.length);
+          return diff <= 3;
+        });
+      };
 
       // 动态站点（JS 渲染 / 小程序链接）——服务端无法直接抓取，返回操作指引
       const dynamicSitePatterns = [
@@ -50,8 +77,22 @@ export async function POST(request: NextRequest) {
       ];
 
       // ===== 分支 A：JSON 数据导入（1688/淘宝提取脚本结果） =====
-      const jsonItems = urls.filter(s => typeof s === "string" && s.trim().startsWith("{"));
-      const urlOnlyItems = urls.filter(s => !(typeof s === "string" && s.trim().startsWith("{")));
+      // 支持格式：单个 JSON 对象 {…} / JSON 数组 […] / 多对象拼接
+      const jsonItems: string[] = [];
+      for (const s of urls) {
+        if (typeof s !== "string") continue;
+        const t = s.trim();
+        if (t.startsWith("{")) {
+          jsonItems.push(t);
+        } else if (t.startsWith("[")) {
+          // JSON 数组：拆分为多个对象项
+          try {
+            const arr = JSON.parse(t);
+            if (Array.isArray(arr)) arr.forEach((o: any) => { if (o && typeof o === "object") jsonItems.push(JSON.stringify(o)); });
+          } catch {}
+        }
+      }
+      const urlOnlyItems = urls.filter(s => !(typeof s === "string" && (s.trim().startsWith("{") || s.trim().startsWith("["))));
 
       // 处理 JSON 数据项
       for (const raw of jsonItems) {
@@ -123,6 +164,7 @@ export async function POST(request: NextRequest) {
             title: data.title,
             price: (data.price / 100).toString(),
             imageCount: uploadedImages.length,
+            duplicate: checkDuplicate(title),
             specs,
           });
         } catch (err: any) {
@@ -286,6 +328,7 @@ export async function POST(request: NextRequest) {
               price: (data.price / 100).toString(),
               imageCount: uploadedImages.length,
               specs: uniqueSpecs,
+              duplicate: checkDuplicate(title),
             });
           }
         } catch (err: any) {

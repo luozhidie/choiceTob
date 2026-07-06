@@ -199,5 +199,27 @@
   console.log(`💰 价格: ¥${result.price}${result.originalPrice ? ` (原价¥${result.originalPrice})` : ""}`);
   console.log(`📝 标题: ${result.title}`);
 
+  // ── 批量收集器：多次执行自动累积，exportBatch() 一次导出全部 ──
+  window.__1688Batch = window.__1688Batch || [];
+  window.__1688Batch.push(output);
+  console.log(`%c📚 已加入批量收集（共 ${window.__1688Batch.length} 个），执行 exportBatch() 导出数组`, "color:#059669;font-weight:bold;");
+
+  // 导出函数：把收集到的所有商品拼成一个 JSON 数组并复制到剪贴板
+  window.exportBatch = function () {
+    const arr = window.__1688Batch || [];
+    if (arr.length === 0) { console.log("没有收集到数据"); return; }
+    const json = JSON.stringify(arr, null, 2);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(json).then(() => {
+        console.log(`%c✅ 已复制 ${arr.length} 个商品的 JSON 数组！直接粘贴到「骆芷蝶智选」导入框`, "color:#16a34a;font-weight:bold;");
+      });
+    }
+    console.log(arr);
+    return arr;
+  };
+
+  // 清空收集器
+  window.clearBatch = function () { window.__1688Batch = []; console.log("批量收集已清空"); };
+
   return output;
 })();

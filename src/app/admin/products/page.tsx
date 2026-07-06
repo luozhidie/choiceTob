@@ -66,6 +66,60 @@ export default function AdminProductsPage() {
     message: string;
   } | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  // 批量选择 + 归类
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [batchCategory, setBatchCategory] = useState("");
+  const [batchSubcategory, setBatchSubcategory] = useState("");
+  const [batchApplying, setBatchApplying] = useState(false);
+
+  const allVisibleIds = filteredProducts.map((p) => p.id);
+  const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+  const toggleSelectAll = () => {
+    setSelectedIds(allSelected ? [] : [...new Set([...selectedIds, ...allVisibleIds])]);
+  };
+  const clearSelection = () => setSelectedIds([]);
+
+  const applyBatchCategory = async () => {
+    if (selectedIds.length === 0 || !batchCategory) {
+      setToast({ type: "error", message: "请先勾选商品并选择分类" });
+      return;
+    }
+    setBatchApplying(true);
+    try {
+      const res = await fetch("/api/admin/products/batch-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ids: selectedIds,
+          data: { category: batchCategory, subcategory: batchSubcategory || null },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error || "批量更新失败");
+      setProducts((prev) =>
+        prev.map((p) =>
+          selectedIds.includes(p.id)
+            ? { ...p, category: batchCategory, subcategory: batchSubcategory || null }
+            : p
+        )
+      );
+      setToast({ type: "success", message: `已将 ${selectedIds.length} 个商品归入「${CATEGORY_MAP[batchCategory] || batchCategory}」` });
+      setSelectedIds([]);
+      setBatchCategory("");
+      setBatchSubcategory("");
+    } catch (err: any) {
+      setToast({ type: "error", message: err.message || "操作失败" });
+    } finally {
+      setBatchApplying(false);
+    }
+  };
 
   const [form, setForm] = useState({
     title: "",
@@ -560,6 +614,51 @@ export default function AdminProductsPage() {
         })}
       </div>
 
+      {/* 批量操作栏 */}
+      {selectedIds.length > 0 && (
+        <div className="max-w-7xl mx-auto mb-4 p-4 bg-primary/5 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-3">
+          <span className="text-sm font-medium text-primary">
+            已选 {selectedIds.length} 个商品
+          </span>
+          <select
+            value={batchCategory}
+            onChange={(e) => { setBatchCategory(e.target.value); setBatchSubcategory(""); }}
+            className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="">选择分类...</option>
+            {CATEGORIES.map((cat) => (
+              <option key={cat.key} value={cat.key}>{cat.label}</option>
+            ))}
+          </select>
+          {batchCategory && getSubcategories(batchCategory).length > 0 && (
+            <select
+              value={batchSubcategory}
+              onChange={(e) => setBatchSubcategory(e.target.value)}
+              className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+            >
+              <option value="">不分子类</option>
+              {getSubcategories(batchCategory).map((sub) => (
+                <option key={sub.key} value={sub.key}>{sub.label}</option>
+              ))}
+            </select>
+          )}
+          <button
+            onClick={applyBatchCategory}
+            disabled={batchApplying || !batchCategory}
+            className="px-5 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+          >
+            {batchApplying && <Loader2 className="w-4 h-4 animate-spin" />}
+            应用归类
+          </button>
+          <button
+            onClick={clearSelection}
+            className="px-3 py-2 text-sm text-gray-500 hover:text-red-500"
+          >
+            取消选择
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
@@ -578,6 +677,14 @@ export default function AdminProductsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 text-left text-xs text-muted-foreground uppercase tracking-wider">
+                  <th className="px-3 py-3 font-medium w-10">
+                    <input
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                      className="w-4 h-4 accent-primary cursor-pointer"
+                    />
+                  </th>
                   <th className="px-5 py-3 font-medium">商品</th>
                   <th className="px-5 py-3 font-medium">品类</th>
                   <th className="px-5 py-3 font-medium">价格</th>
@@ -591,8 +698,16 @@ export default function AdminProductsPage() {
                 {filteredProducts.map((product) => (
                   <tr
                     key={product.id}
-                    className="hover:bg-gray-50/50 transition-colors"
+                    className={`hover:bg-gray-50/50 transition-colors ${selectedIds.includes(product.id) ? "bg-primary/5" : ""}`}
                   >
+                    <td className="px-3 py-3.5">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.includes(product.id)}
+                        onChange={() => toggleSelect(product.id)}
+                        className="w-4 h-4 accent-primary cursor-pointer"
+                      />
+                    </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

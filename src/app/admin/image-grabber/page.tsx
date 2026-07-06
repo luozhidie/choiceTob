@@ -61,6 +61,10 @@ const EXTRACT_1688_SCRIPT = `(function extract1688(){
   var j=JSON.stringify(o,null,2);
   if(navigator.clipboard)navigator.clipboard.writeText(j).then(function(){console.log("%c✅ 已复制！粘贴到导入框即可","color:green;font-weight:bold;")});
   console.log("%c📦 1688 提取完成："+r.title+" | ¥"+r.price+" | "+r.images.length+"张图","color:blue;font-size:14px;");
+  window.__1688Batch=window.__1688Batch||[];window.__1688Batch.push(o);
+  console.log("%c📚 已加入批量收集（共"+window.__1688Batch.length+"个），执行 exportBatch() 导出数组","color:#059669;font-weight:bold;");
+  window.exportBatch=function(){var a=window.__1688Batch||[];if(!a.length){console.log("无数据");return}var json=JSON.stringify(a,null,2);if(navigator.clipboard)navigator.clipboard.writeText(json).then(function(){console.log("%c✅ 已复制"+a.length+"个商品数组！","color:#16a34a;font-weight:bold;")});return a};
+  window.clearBatch=function(){window.__1688Batch=[];console.log("已清空")};
   return o;
 })();`;
 
@@ -891,6 +895,13 @@ export default function ImageGrabberPage() {
                       {r.imageCount !== undefined && <span className="ml-3">图片 {r.imageCount} 张</span>}
                       <span className="ml-3 px-1.5 py-0.5 bg-gray-100 rounded text-gray-500">待分类</span>
                       {r.productId && <span className="ml-2 text-gray-400">ID: {r.productId.slice(0,8)}</span>}
+                    </div>
+                  )}
+
+                  {r.status === "success" && r.duplicate && (
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-orange-600 bg-orange-50 border border-orange-100 rounded-lg px-2 py-1.5">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                      疑似与已有商品重复，请到「商品管理」核对
                     </div>
                   )}
 
