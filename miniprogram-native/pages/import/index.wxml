@@ -1,0 +1,78 @@
+<view class="page">
+  <!-- 顶部 Tab -->
+  <view class="tabs">
+    <view class="tab {{mode==='url'?'tab-on':''}}" data-mode="url" bindtap="switchMode">单链接</view>
+    <view class="tab {{mode==='batch'?'tab-on':''}}" data-mode="batch" bindtap="switchMode">批量粘贴</view>
+  </view>
+
+  <!-- 输入区 -->
+  <view class="input-area">
+    <textarea wx:if="{{mode=='batch'}}"
+      class="input-box"
+      placeholder="每行一个商品链接：\nhttps://detail.1688.com/offer/xxx.html\nhttps://item.taobao.com/xxx.htm"
+      value="{{inputText}}"
+      bindinput="onInput"
+      auto-height
+      maxlength="-1"
+    />
+    <input wx:else
+      class="input-single"
+      placeholder="粘贴商品链接..."
+      value="{{inputText}}"
+      bindinput="onInput"
+    />
+    <view class="btn-import" bindtap="startImport">
+      <text wx:if="{{isProcessing}}">导入中...</text>
+      <text wx:else>开始导入</text>
+    </view>
+  </view>
+
+  <!-- 提示 -->
+  <view class="tip" wx:if="{{mode=='batch'}}">
+    <text class="tip-text">💡 支持平台：1688、淘宝、拼多多、京东、抖音、小红书、微店、微信小店\n💡 每行一个链接，可粘贴多个</text>
+  </view>
+
+  <!-- 结果列表 -->
+  <view class="results" wx:if="{{results.length>0}}">
+    <view class="result-header">
+      <text class="rh-title">导入结果（{{results.length}}）</text>
+      <text class="rh-view" bindtap="viewAll">去商品管理查看 →</text>
+    </view>
+
+    <view class="result-item {{item.status}}" wx:for="{{results}}" wx:key="index">
+      <!-- 成功 -->
+      <view wx:if="{{item.status=='success'}}" class="ri-success">
+        <view class="ri-icon">✅</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.title || '导入商品'}}</text>
+          <text class="ri-detail" wx:if="{{item.price}}">¥{{item.price}}</text>
+          <text class="ri-detail" wx:if="{{item.imageCount>0}}">{{item.imageCount}}张图片</text>
+        </view>
+        <view class="ri-btn" data-id="{{item.productId}}" bindtap="previewGoods">查看</view>
+      </view>
+
+      <!-- 跳过 -->
+      <view wx:elif="{{item.status=='skipped'}}" class="ri-skipped">
+        <view class="ri-icon">⏭</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.url}}</text>
+          <text class="ri-msg">{{item.message}}</text>
+        </view>
+      </view>
+
+      <!-- 失败 -->
+      <view wx:else class="ri-error">
+        <view class="ri-icon">❌</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.url}}</text>
+          <text class="ri-msg">{{item.message}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Toast -->
+  <view class="toast {{toastType}}" wx:if="{{toastText}}">
+    <text>{{toastText}}</text>
+  </view>
+</view>
