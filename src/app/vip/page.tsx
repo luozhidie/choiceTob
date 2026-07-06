@@ -9,7 +9,7 @@ import {
   Crown, Eye, CreditCard, CheckCircle2, X, Clock, Star,
   MessageCircle, Smartphone, Copy, Check, Loader2, ArrowRight,
   ShieldCheck, Zap, Gift, HeadphonesIcon, AlertCircle, Sparkles,
-  Package,
+  Package, User, BarChart3, BookOpen, FileText, Lock,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentQRCode from "@/components/PaymentQRCode";
@@ -273,6 +273,32 @@ const plans: Plan[] = [
   },
 ];
 
+/* ── 会员成长阶梯（渐进解锁） ── */
+const PAID_TIERS = [
+  { name: "普通会员", icon: User, gradient: "from-gray-400 to-gray-500" },
+  { name: "价格会员", icon: Eye, gradient: "from-sky-400 to-blue-500" },
+  { name: "商城VIP", icon: Star, gradient: "from-amber-400 to-orange-500" },
+  { name: "进阶VIP", icon: Crown, gradient: "from-fuchsia-400 to-purple-500" },
+];
+
+function getPaidTierIndex(mt?: string): number {
+  switch (mt) {
+    case "view_price": return 1;
+    case "deposit_discount": return 2;
+    case "pro": return 3;
+    default: return 0;
+  }
+}
+
+const PAID_BENEFITS = [
+  { key: "wholesaleView", title: "批发价查看", tier: 1, icon: Eye },
+  { key: "trendData", title: "爆款趋势数据", tier: 1, icon: BarChart3 },
+  { key: "dailyLook", title: "每日搭配9折", tier: 2, icon: Sparkles },
+  { key: "course", title: "课程8折", tier: 2, icon: BookOpen },
+  { key: "vipService", title: "专属1v1客服", tier: 3, icon: HeadphonesIcon },
+  { key: "dataReport", title: "经营分析报告", tier: 3, icon: FileText },
+];
+
 /* ── 支付步骤 ── */
 type PayStep = "confirm" | "scan" | "pending" | "success";
 
@@ -289,7 +315,9 @@ export default function VIPPage() {
 
   const supabase = createClient();
   const router = useRouter();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, isCertifiedStoreOwner } = useAuth();
+
+  const paidTierIndex = getPaidTierIndex(profile?.membership_type);
 
   useEffect(() => { setVisible(true); }, []);
 
@@ -413,9 +441,9 @@ export default function VIPPage() {
     new Date(profile.membership_expires_at) > new Date();
 
   const currentLabel =
-    (profile?.membership_type as string) === "view_price" ? "基础VIP" :
+    (profile?.membership_type as string) === "view_price" ? "价格会员" :
     (profile?.membership_type as string) === "pro" ? "进阶VIP" :
-    (profile?.membership_type as string) === "deposit_discount" ? "高阶VIP" : "会员";
+    (profile?.membership_type as string) === "deposit_discount" ? "商城VIP" : "会员";
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -445,6 +473,95 @@ export default function VIPPage() {
         </div>
       </section>
 
+      {/* 会员成长阶梯（渐进解锁） */}
+      <section className="py-6 md:py-8">
+        <div className="container mx-auto px-4 max-w-5xl space-y-4">
+          {/* 阶梯卡 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <div className={`rounded-2xl bg-gradient-to-r ${PAID_TIERS[paidTierIndex].gradient} p-5 text-white mb-5`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{paidTierIndex === 0 ? "🌱" : "👑"}</span>
+                  <div>
+                    <p className="text-xs opacity-90">当前会员等级</p>
+                    <p className="text-xl font-bold">{PAID_TIERS[paidTierIndex].name}</p>
+                  </div>
+                </div>
+                {!isCurrentlyMember && (
+                  <Link href="#plans" className="text-xs bg-white/25 px-3 py-1.5 rounded-full backdrop-blur-sm whitespace-nowrap">
+                    立即升级
+                  </Link>
+                )}
+              </div>
+              {paidTierIndex < PAID_TIERS.length - 1 && (
+                <p className="mt-4 text-xs bg-white/20 inline-block px-3 py-1 rounded-full">
+                  升级到 {PAID_TIERS[paidTierIndex + 1].name} 解锁更多权益
+                </p>
+              )}
+            </div>
+
+            {/* 阶梯节点 */}
+            <div className="flex items-center justify-between">
+              {PAID_TIERS.map((t, i) => {
+                const TIcon = t.icon;
+                return (
+                  <div key={t.name} className="flex-1 flex flex-col items-center relative">
+                    {i < PAID_TIERS.length - 1 && (
+                      <div className={`absolute top-4 left-1/2 w-full h-0.5 ${i < paidTierIndex ? "bg-primary" : "bg-gray-200"}`} />
+                    )}
+                    <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center ${i <= paidTierIndex ? "bg-primary text-white" : "bg-gray-100 text-gray-400"}`}>
+                      {i < paidTierIndex ? <CheckCircle2 className="w-4 h-4" /> : <TIcon className="w-4 h-4" />}
+                    </div>
+                    <span className={`mt-1.5 text-[10px] ${i === paidTierIndex ? "text-primary font-bold" : "text-gray-400"}`}>{t.name.replace("会员", "")}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 权益解锁网格 */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Gift className="w-5 h-5 text-primary" /> 会员权益
+              <span className="text-xs font-normal text-gray-400">升级自动解锁</span>
+            </h2>
+            <div className="grid grid-cols-3 gap-3">
+              {PAID_BENEFITS.map((b) => {
+                const unlocked = paidTierIndex >= b.tier;
+                const BIcon = b.icon;
+                return (
+                  <div key={b.key} className={`flex flex-col items-center text-center p-3 rounded-xl border ${unlocked ? "border-primary/30 bg-primary/5" : "border-gray-100 bg-gray-50"}`}>
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center mb-2 ${unlocked ? "bg-primary text-white" : "bg-gray-200 text-gray-400"}`}>
+                      {unlocked ? <BIcon className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                    </div>
+                    <span className={`text-xs font-medium ${unlocked ? "text-gray-800" : "text-gray-400"}`}>{b.title}</span>
+                    <span className="text-[10px] text-gray-400 mt-0.5">{unlocked ? "已解锁" : PAID_TIERS[b.tier].name.replace("会员", "") + "解锁"}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 认证店主平行赛道 */}
+          {!isCertifiedStoreOwner && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="w-6 h-6 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-sm">不想付费？免费认证店主也能看批发价</h3>
+                  <p className="text-xs text-gray-500 mt-0.5">答题通过即可，与会员权益平行不冲突</p>
+                </div>
+              </div>
+              <Link href="/certify" className="shrink-0 px-4 py-2.5 bg-accent text-white text-sm font-medium rounded-xl hover:bg-accent/90 transition-colors">
+                去认证
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* 货款折扣会员入口 */}
       <section className="py-6 md:py-8">
         <div className="container mx-auto px-4 max-w-5xl">
@@ -468,7 +585,7 @@ export default function VIPPage() {
       </section>
 
       {/* Plans */}
-      <section className="pb-12 md:pb-16 pt-2">
+      <section id="plans" className="pb-12 md:pb-16 pt-2">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-6">
             {plans.map((plan, idx) => (
