@@ -33,6 +33,37 @@ interface GrabbedImage {
   isLocalFile?: boolean; // 是否是本地上传的文件
 }
 
+// 1688 商品提取脚本（浏览器控制台版）— 点击 skipped 卡片的「复制脚本」按钮使用
+const EXTRACT_1688_SCRIPT = `(function extract1688(){
+  var r={platform:"1688",title:"",price:"",originalPrice:"",description:"",supplier:"",specs:[],skuOptions:{},images:[]};
+  try{var e=document.querySelector(".d-title")||document.querySelector("h1")||document.querySelector('[itemprop="name"]')||document.querySelector(".offer-title");if(e)r.title=e.innerText.trim()}catch(e){}
+  try{var p=document.querySelector(".price-text")||document.querySelector(".price")||document.querySelector('[itemprop="price"]');if(p)r.price=p.innerText.replace(/[^\\d.]/g,"").trim()}catch(e){}
+  try{
+    var s=new Set();
+    document.querySelectorAll(".tab-content img,.detail-gallery-turn img,.main-img img,[id*='thumb'] img,[class*='gallery'] img,[class*='swiper'] img").forEach(function(img){
+      var src=img.src||img.dataset.src||"";if(src&&src.includes("http")){src=src.replace(/_\\d+x\\d+\\.jpg/,".jpg");s.add(src.split("?")[0])}
+    });
+    document.querySelectorAll("img").forEach(function(img){
+      var src=img.src||img.dataset.src||"";if(src&&/\\.(jpg|jpeg|png|webp)/i.test(src)&&!src.includes("icon")&&!src.includes("logo")&&(img.naturalWidth>100))s.add(src.split("?")[0])
+    });
+    r.images=[...s].slice(0,20);
+  }catch(e){}
+  try{
+    document.querySelectorAll(".obj-content table tr,.mod-detail-property tr,.property-table tr").forEach(function(tr){
+      var t=tr.querySelectorAll("td,th");if(t.length>=2){var k=t[0].innerText.trim().replace(/[:：\\s]/g,""),v=t[1].innerText.trim();if(k&&v)r.specs.push(k+":"+v)}
+    });
+    document.querySelectorAll("[class*='sku'] [class*='value'],.obj-sku li").forEach(function(el){
+      var val=el.innerText.trim();if(val&&val.length<30)r.specs.push(val)
+    });
+  }catch(e){}
+  try{var d=document.querySelector("[itemprop='description']")||document.querySelector(".desc-content");if(d)r.description=d.innerText.trim().slice(0,200)}catch(e){}
+  var o={...r,imageCount:r.images.length,exportTime:new Date().toISOString(),url:location.href};
+  var j=JSON.stringify(o,null,2);
+  if(navigator.clipboard)navigator.clipboard.writeText(j).then(function(){console.log("%c✅ 已复制！粘贴到导入框即可","color:green;font-weight:bold;")});
+  console.log("%c📦 1688 提取完成："+r.title+" | ¥"+r.price+" | "+r.images.length+"张图","color:blue;font-size:14px;");
+  return o;
+})();`;
+
 export default function ImageGrabberPage() {
   // 不创建 supabase 客户端（避免 Storage SDK 在 Vercel 上的兼容问题）
   // [版本] v20240627-NUKE - 完全移除 Supabase 浏览器端 SDK
@@ -873,6 +904,28 @@ export default function ImageGrabberPage() {
 
                   {(r.status === "skipped" || r.status === "error") && r.message && (
                     <p className="mt-2 text-xs text-gray-600 leading-relaxed">{r.message}</p>
+                  )}
+
+                  {/* 1688/淘宝等动态站点：提供专用提取脚本 */}
+                  {r.status === "skipped" && /1688|taobao|tmall/i.test(r.url) && (
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <p className="text-xs font-semibold text-blue-800 mb-2">🔧 快速方案：使用 1688 提取脚本</p>
+                      <ol className="text-xs text-blue-700 space-y-1 mb-2 list-decimal list-inside">
+                        <li>浏览器打开该 1688 商品页</li>
+                        <li>按 F12 → Console 控制台</li>
+                        <li>粘贴脚本回车 → 自动复制数据到剪贴板</li>
+                        <li>回到这里清空输入框，粘贴 JSON 数据 → 开始导入</li>
+                      </ol>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(EXTRACT_1688_SCRIPT);
+                          showToast("success", "✅ 脚本已复制！去 1688 页面 F12 粘贴执行");
+                        }}
+                        className="w-full mt-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                      >
+                        📋 一键复制提取脚本
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}

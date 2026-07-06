@@ -49,7 +49,89 @@ export async function POST(request: NextRequest) {
         /#小程序\/|#微信小程序\//,
       ];
 
-      for (const u of urls.slice(0, 20)) {
+      // ===== 分支 A：JSON 数据导入（1688/淘宝提取脚本结果） =====
+      const jsonItems = urls.filter(s => typeof s === "string" && s.trim().startsWith("{"));
+      const urlOnlyItems = urls.filter(s => !(typeof s === "string" && s.trim().startsWith("{")));
+
+      // 处理 JSON 数据项
+      for (const raw of jsonItems) {
+        try {
+          const item = JSON.parse(raw);
+          if (!item.title && !item.images?.length) {
+            results.push({ url: raw.slice(0, 80) + "...", status: "error", message: "JSON 缺少标题或图片字段" });
+            continue;
+          }
+
+          const title = (item.title || `导入商品_${Date.now()}`).toString().slice(0, 120);
+          let price = 0;
+          if (item.price) price = Math.round(parseFloat(String(item.price).replace(/[^\d.]/g, "")) * 100);
+
+          const specs: string[] = [];
+          if (item.specs) {
+            if (Array.isArray(item.specs)) specs.push(...item.specs.map(s => String(s)));
+            else if (typeof item.specs === "object") specs.push(...Object.entries(item.specs).map(([k, v]) => `${k}:${v}`));
+          }
+          if (item.description) specs.push(item.description.toString().slice(0, 60));
+
+          let imageList: string[] = [];
+          if (item.images && Array.isArray(item.images)) imageList = item.images;
+          // 去重+过滤
+          const uniqueImages = [...new Set(imageList)]
+            .filter(src => typeof src === "string" && /\.(jpg|jpeg|png|webp|gif)/i.test(src))
+            .slice(0, 10);
+
+          // 下载图片到 Storage
+          const uploadedImages: string[] = [];
+          for (const imgUrl of uniqueImages) {
+            try {
+              const imgResp = await fetch(imgUrl, { headers: { Referer: new URL(imgUrl).origin } });
+              const buf = await imgResp.arrayBuffer();
+              const ext = imgUrl.match(/\.(jpg|jpeg|png|webp)/i)?.[1] || "jpg";
+              const filename = `${item.platform || "import"}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+              const { data, error } = await supabase.storage.from("products").upload(filename, buf, { contentType: `image/${ext}`, upsert: false });
+              if (!error && data) {
+                const { data: pub } = supabase.storage.from("products").getPublicUrl(data.path);
+                if (pub?.publicUrl) uploadedImages.push(pub.publicUrl);
+              }
+            } catch {}
+          }
+
+          // 创建商品
+          const payload: any = {
+            title,
+            price,
+            original_price: price,
+            cover_image: uploadedImages[0] || null,
+            images: JSON.stringify(uploadedImages),
+            category: "待分类",
+            is_published: true,
+            stock: 0,
+            tags: ["导入", item.platform || ""].filter(Boolean),
+            specs: specs.length > 0 ? JSON.stringify(specs) : null,
+          };
+          let { data, error: createError } = await supabase.from("products").insert(payload).select().single();
+          if (createError) {
+            delete payload.specs;
+            const { data: d2, error: e2 } = await supabase.from("products").insert(payload).select().single();
+            if (d2) { data = d2; createError = null; }
+            else { results.push({ url: raw.slice(0, 80), status: "error", message: e2?.message || "创建失败" }); continue; }
+          }
+          if (data) results.push({
+            url: raw.slice(0, 80),
+            status: "success",
+            productId: data.id,
+            title: data.title,
+            price: (data.price / 100).toString(),
+            imageCount: uploadedImages.length,
+            specs,
+          });
+        } catch (err: any) {
+          results.push({ url: raw.slice(0, 80), status: "error", message: err.message || "JSON 解析失败" });
+        }
+      }
+
+      // ===== 分支 B：URL 网页抓取导入 =====
+      for (const u of urlOnlyItems.slice(0, 20)) {
         try {
           // 0. 动态站点拦截
           if (dynamicSitePatterns.some(p => p.test(u))) {
