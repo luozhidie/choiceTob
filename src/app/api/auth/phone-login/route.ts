@@ -107,14 +107,14 @@ export async function POST(req: NextRequest) {
       };
       if (phoneNumber && !existingUser.phone) {
         updateData.phone = phoneNumber;
-        updateData.nickname = `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`;
+        updateData.full_name = `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`;
       }
       await supabase.from("profiles").update(updateData).eq("id", userId);
       userProfile = { ...existingUser, ...updateData };
     } else {
       // 新用户 → 必须先在 auth.users 创建（因为 profiles.id FK 引用它）
       const fakeEmail = `${phoneNumber || 'wx'}_${openid.slice(-8)}@wechat.phone`;
-      const nickname = phoneNumber
+      const fullName = phoneNumber
         ? `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`
         : `微信用户${openid.slice(-6)}`;
 
@@ -146,7 +146,7 @@ export async function POST(req: NextRequest) {
         wechat_openid: openid,
         wechat_unionid: unionid || null,
         phone: phoneNumber || null,
-        nickname: nickname,
+        full_name: fullName,
         role: 'user',
         membership_type: 'none',
         store_owner_certified: false,
@@ -185,8 +185,7 @@ export async function POST(req: NextRequest) {
       user: {
         id: userId,
         phone_number: userProfile.phone || phoneNumber || "",
-        nickname: userProfile.nickname || "",
-        avatarUrl: userProfile.avatar_url || "",
+        full_name: userProfile.full_name || "",
         membership_type: userProfile.membership_type || "none",
         vip_status: userProfile.membership_type !== "none" ? "active" : "",
         membership_expires_at: userProfile.membership_expires_at || null,

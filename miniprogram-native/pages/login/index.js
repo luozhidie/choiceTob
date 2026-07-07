@@ -102,8 +102,8 @@ Page({
         var u=d.user||{};
         wx.setStorageSync('token',d.token);
         wx.setStorageSync('user_info',{
-          nickName:u.phone_number||u.nickName||'用户',
-          avatarUrl:u.avatarUrl||'',
+          nickName:u.phone_number||u.full_name||'用户',
+          avatarUrl:'',
           phone:u.phone_number||''
         });
         wx.setStorageSync('vip_status',u.vip_status||'');
