@@ -2,8 +2,8 @@
   <!-- Logo 区域 -->
   <view class="logo-area">
     <view class="logo-box">
-      <text class="logo-icon">一手</text>
-      <text class="logo-sub">1件起批</text>
+      <text class="logo-icon">骆</text>
+      <text class="logo-sub">智选</text>
     </view>
     <text class="logo-title">骆芷蝶·智选｜供应链平台</text>
     <text class="logo-en">WOMEN CLOTHING WHOLESALE APP</text>
@@ -32,7 +32,7 @@
     </view>
     <text class="agree-text">
       阅读并同意
-      <text class="link" catchtap="goAgreement">《一手用户服务协议》</text>
+      <text class="link" catchtap="goAgreement">《骆芷蝶用户服务协议》</text>
       和
       <text class="link" catchtap="goPrivacy">《隐私政策》</text>
     </text>

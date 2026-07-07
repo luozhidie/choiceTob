@@ -93,7 +93,9 @@ Page({
         t.setData({loading:false});
         var d=r.data||{};
         if(d.error){
-          wx.showModal({title:'登录失败',content:d.error,showCancel:false});return;
+          var errMsg=d.error;
+          if(d.detail) errMsg=errMsg+'\n('+d.detail+')';
+          wx.showModal({title:'登录失败',content:errMsg,showCancel:false});return;
         }
 
         /* 登录成功：保存状态 */
@@ -140,7 +142,7 @@ Page({
   goAgreement:function(){
     wx.showModal({
       title:'用户服务协议',
-      content:'欢迎使用骆芷蝶智选平台。\n\n本平台为服装批发B2B平台，提供商品浏览、批发价查看、在线下单等服务。\n\n注册/登录即表示您已阅读并同意《用户服务协议》与《隐私政策》。',
+      content:'欢迎使用骆芷蝶智选平台。\n\n本平台为服装批发B2B平台，提供商品浏览、批发价查看、在线下单等服务。\n\n注册/登录即表示您已阅读并同意《骆芷蝶用户服务协议》与《隐私政策》。',
       showCancel:false,
       confirmText:'我知道了'
     });
