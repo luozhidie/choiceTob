@@ -35,29 +35,27 @@
 
       <view class="question-card">
         <text class="q-badge">第 {{quizIdx+1}} 题</text>
-        <text class="q-text">{{QUIZ[quizIdx].q}}</text>
+        <text class="q-text">{{currentQ.q}}</text>
 
         <view class="options">
-          <block wx:for="{{QUIZ[quizIdx].a}}" wx:key="index">
+          <block wx:for="{{options}}" wx:key="index">
             <view
-              class="option {{showResult && index===QUIZ[quizIdx].c?'option-correct':''}} {{showResult&&selectedAnswer===index&&index!==QUIZ[quizIdx].c?'option-wrong':''}} {{selectedAnswer===index&&!showResult?'option-selected':''}}"
+              class="option {{item.cls}}"
               data-idx="{{index}}" bindtap="pickAnswer"
             >
-              <text class="option-letter">{{index===0?'A':index===1?'B':'C'}}</text>
-              <text>{{item}}</text>
-              <text wx:if="{{showResult && index===QUIZ[quizIdx].c}}" class="result-icon">✅</text>
-              <text wx:if="{{showResult && selectedAnswer===index && index !== QUIZ[quizIdx].c}}" class="result-icon wrong">❌</text>
+              <text class="option-letter">{{item.letter}}</text>
+              <text>{{item.text}}</text>
             </view>
           </block>
         </view>
 
         <view wx:if="{{showResult}}" class="{{isCorrect?'result-ok':'result-fail'}}">
-          <text>{{isCorrect?'✅ 回答正确！':'❌ 回答错误，正确答案是「'+QUIZ[quizIdx].a[QUIZ[quizIdx].c]+'」'}}</text>
+          <text>{{resultText}}</text>
         </view>
       </view>
 
-      <button wx:if="{{!showResult}}" class="btn-primary {{selectedAnswer===null?'btn-disabled':''}}" bindtap="confirmAnswer" disabled="{{selectedAnswer===null}}">确认选择</button>
-      <button wx:else class="btn-accent" bindtap="nextQuestion">{{quizIdx<QUIZ.length-1?'下一题':'查看结果'}}</button>
+      <button wx:if="{{!showResult}}" class="btn-primary {{btnDisabled?'btn-disabled':''}}" bindtap="confirmAnswer" disabled="{{btnDisabled}}">{{btnText}}</button>
+      <button wx:else class="btn-accent" bindtap="nextQuestion">{{btnText}}</button>
     </view>
   </block>
 
@@ -129,7 +127,7 @@
       <view class="rank-trophy"><text class="rank-tri">🏆</text></view>
 
       <text class="rank-title">您上月超过了全国 <text class="rank-pct">{{rankPercent}}%</text> 的店主</text>
-      <text class="rank-sales" wx:if="{{salesInput}}">月销 ¥{{salesInput}} · {{salesInput>=10000?'表现优异':'继续加油'}}</text>
+      <text class="rank-sales" wx:if="{{salesInput}}">月销 ¥{{salesInput}} · {{salesRankText}}</text>
 
       <view class="rank-hint-box">
         <text class="rank-hint">💡 排名基于当前平台数据估算，随着用户积累将越来越准确。</text>

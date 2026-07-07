@@ -13,10 +13,16 @@ Page({
     styleActiveMap:{},     // 预计算：每个风格是否选中，避免wxml里用indexOf
     recStyles:[],          // 预计算：推荐风格列表（最多4个），避免wxml里用slice/三元数组
 
-    // 销售额
+    // 答题区预计算（避免 wxml 复杂三元/比较）
+    currentQ:null,          // 当前题目 {q,a,c}
+    options:[],             // [{text,cls}] 每个选项的文字+样式类
+    resultText:'',          // 结果提示文字
+    btnText:'确认选择',     // 底部按钮文字
+    btnDisabled:true,       // 底部按钮是否禁用
     salesInput:'',
     // 排名估算
     rankPercent:0,
+    salesRankText:'',     // 预计算：销售额评语（"表现优异"/"继续加油"）
 
     submitting:false,
     submitError:'',
@@ -68,7 +74,7 @@ Page({
 
   goBackStep:function(){
     var t=this,s=t.data.step;
-    if(s==='quiz'){ if(t.data.quizIdx>0){t.setData({quizIdx:t.data.quizIdx-1,showResult:false,selectedAnswer:null});} else {t.setData({step:'intro'});} }
+    if(s==='quiz'){ if(t.data.quizIdx>0){t.buildQuiz(t.data.quizIdx-1);} else {t.setData({step:'intro'});} }
     else if(s==='passed'){t.setData({step:'quiz',quizIdx:t.QUIZ.length-1,showResult:false,selectedAnswer:null});}
     else if(s==='style'){t.setData({step:'passed'});}
     else if(s==='recommend'){t.setData({step:'style'});}
@@ -77,24 +83,71 @@ Page({
     else if(s==='benefits'){t.setData({step:'rank'});}
   },
 
-  goQuiz:function(){this.setData({step:'quiz'});},
+  goQuiz:function(){this.buildQuiz(0);},
+
+  /* ── 构建当前题目视图数据 ── */
+  buildQuiz:function(idx){
+    var t=this;
+    var q=t.QUIZ[idx];
+    var opts=[];
+    for(var i=0;i<q.a.length;i++){
+      opts.push({text:q.a[i],letter:i===0?'A':i===1?'B':'C',cls:''});
+    }
+    t.setData({
+      quizIdx:idx,
+      currentQ:q,
+      options:opts,
+      selectedAnswer:null,
+      showResult:false,
+      resultText:'',
+      btnText:'确认选择',
+      btnDisabled:true,
+      step:'quiz'
+    });
+  },
 
   /* ── 答题 ── */
-  pickAnswer:function(e){var i=e.currentTarget.dataset.idx;if(this.data.showResult)return;this.setData({selectedAnswer:i});},
+  pickAnswer:function(e){
+    var t=this;
+    if(t.data.showResult)return;
+    var i=Number(e.currentTarget.dataset.idx);
+    // 更新选项样式：选中项高亮
+    var opts=t.data.options;
+    for(var j=0;j<opts.length;j++){
+      opts[j].cls=(j===i?'option-selected':'');
+    }
+    t.setData({selectedAnswer:i,options:opts,btnDisabled:false});
+  },
 
   confirmAnswer:function(){
     var t=this,d=t.data;
     if(d.selectedAnswer===null)return;
-    var q=t.QUIZ[d.quizIdx];
+    var q=d.currentQ;
     var ok=d.selectedAnswer===q.c;
-    t.setData({isCorrect:ok,showResult:true});
+    // 更新选项样式：显示对错
+    var opts=d.options;
+    for(var j=0;j<opts.length;j++){
+      if(j===q.c){opts[j].cls='option-correct';}
+      else if(j===d.selectedAnswer&&j!==q.c){opts[j].cls='option-wrong';}
+      else{opts[j].cls='';}
+    }
+    var rText=ok?'✅ 回答正确！':'❌ 回答错误，正确答案是「'+q.a[q.c]+'」';
+    var isLast=(d.quizIdx>=t.QUIZ.length-1);
+    t.setData({
+      isCorrect:ok,
+      showResult:true,
+      options:opts,
+      resultText:rText,
+      btnText:isLast?'查看结果':'下一题',
+      btnDisabled:false
+    });
     if(!ok)t.setData({wrongCount:d.wrongCount+1});
   },
 
   nextQuestion:function(){
     var t=this;
     if(t.data.quizIdx < t.QUIZ.length - 1){
-      t.setData({quizIdx:t.data.quizIdx+1,showResult:false,selectedAnswer:null});
+      t.buildQuiz(t.data.quizIdx+1);
     }else{
       t.setData({step:'passed'});
     }
@@ -126,7 +179,11 @@ Page({
   goRank:function(){
     var t=this;
     var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
-    t.setData({rankPercent:t.estimateRankPercent(sales),step:'rank'});
+    t.setData({
+      rankPercent:t.estimateRankPercent(sales),
+      salesRankText:sales>=10000?'表现优异':'继续加油',
+      step:'rank'
+    });
   },
 
   /* ── 提交认证（真实提交后端）── */
@@ -165,7 +222,7 @@ Page({
 
         // 先显示排名（基于输入的销售额）
         var pct=t.estimateRankPercent(sales);
-        t.setData({rankPercent:pct});
+        t.setData({rankPercent:pct,salesRankText:sales>=10000?'表现优异':'继续加油'});
 
         setTimeout(function(){t.setData({step:'benefits'});},300);
         wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
