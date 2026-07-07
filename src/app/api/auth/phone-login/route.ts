@@ -8,8 +8,8 @@ import { createClient } from "@supabase/supabase-js";
  *
  * 流程：
  * 1. login_code → 换取 openid + session_key
- * 2. session_key + phone_code → 解密获取手机号
- * 3. 根据 openid 查找/创建用户
+ * 2. phone_code → 换取手机号（新版 API）
+ * 3. 根据 openid 查找/创建用户（先 auth.users 再 profiles）
  * 4. 返回 token + user info
  */
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "缺少登录凭证" }, { status: 400 });
     }
 
-    // ── Step 1: 用 login_code 换取 openid + session_key ──
+    // ── Step 1: 用 login_code 换取 openid ──
     const jscodeUrl = `https://api.weixin.qq.com/sns/jscode2session?appid=${WX_APPID}&secret=${WX_SECRET}&js_code=${login_code}&grant_type=authorization_code`;
 
     let sessionRes;
@@ -47,20 +47,16 @@ export async function POST(req: NextRequest) {
     }
 
     const openid = sessionData.openid as string;
-    const sessionKey = sessionData.session_key as string;
     const unionid = sessionData.unionid as string | undefined;
 
-    if (!openid || !sessionKey) {
+    if (!openid) {
       return NextResponse.json({ error: "无法获取用户标识" }, { status: 500 });
     }
 
-    // ── Step 2: 用 session_key + phone_code 获取手机号 ──
-    // 注意：新版本微信小程序用 getPhoneNumber 直接返回加密数据，需后端解密
-    // 这里先尝试直接调用微信 getPhoneNumber 接口（如果 code 可直接换）
+    // ── Step 2: 用 access_token + phone_code 获取手机号 ──
     let phoneNumber = "";
 
     try {
-      // 方式A：新版 - 用 access_token + phone_code 直接换取手机号
       const tokenUrl = `https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=${WX_APPID}&secret=${WX_SECRET}`;
       const tokenRes = await fetch(tokenUrl);
       const tokenData = await tokenRes.json() as Record<string, any>;
@@ -78,8 +74,6 @@ export async function POST(req: NextRequest) {
           phoneNumber = phoneData.phone_info.phoneNumber;
         } else {
           console.warn("[phone-login] getuserphonenumber 返回:", JSON.stringify(phoneData).slice(0, 300));
-          // fallback：如果接口失败，先用 openid 作为标识，后续引导补录手机号
-          phoneNumber = "";
         }
       } else {
         console.error("[phone-login] 获取access_token失败:", tokenData);
@@ -95,7 +89,7 @@ export async function POST(req: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // 先按 openid 查找
+    // 先按 openid 查找已有用户
     const { data: existingUser } = await supabase
       .from("profiles")
       .select("*")
@@ -106,43 +100,74 @@ export async function POST(req: NextRequest) {
     let userProfile: any;
 
     if (existingUser) {
-      // 已有用户 → 更新手机号（如有）和最后登录时间
+      // 已有用户 → 更新
       userId = existingUser.id;
       const updateData: Record<string, any> = {
         last_login_at: new Date().toISOString(),
       };
-      if (phoneNumber) {
+      if (phoneNumber && !existingUser.phone) {
         updateData.phone = phoneNumber;
+        updateData.nickname = `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`;
       }
       await supabase.from("profiles").update(updateData).eq("id", userId);
       userProfile = { ...existingUser, ...updateData };
     } else {
-      // 新用户 → 创建
-      const { data: newUser, error: createErr } = await supabase
+      // 新用户 → 必须先在 auth.users 创建（因为 profiles.id FK 引用它）
+      const fakeEmail = `${phoneNumber || 'wx'}_${openid.slice(-8)}@wechat.phone`;
+      const nickname = phoneNumber
+        ? `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}`
+        : `微信用户${openid.slice(-6)}`;
+
+      // 3a) 用 Admin API 在 auth.users 创建用户
+      const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
+        email: fakeEmail,
+        password: crypto.randomUUID(), // 随机密码（小程序不用密码登录）
+        email_confirm: true,
+        user_metadata: {
+          provider: 'wechat_mini',
+          wechat_openid: openid,
+          phone_number: phoneNumber || '',
+        },
+      });
+
+      if (authErr || !authUser?.user?.id) {
+        console.error("[phone-login] 创建 auth.user 失败:", authErr);
+        return NextResponse.json({
+          error: "账号创建失败，请重试或使用其它方式登录",
+          detail: authErr?.message,
+        }, { status: 500 });
+      }
+
+      userId = authUser.user.id;
+
+      // 3b) 现在插入 profiles（FK 已满足）
+      const { data: newUser, error: profileErr } = await supabase
         .from("profiles")
         .insert({
+          id: userId,
+          email: fakeEmail,
           wechat_openid: openid,
           wechat_unionid: unionid || null,
           phone: phoneNumber || null,
-          nickname: phoneNumber ? `${phoneNumber.slice(0, 3)}****${phoneNumber.slice(-4)}` : `用户${openid.slice(-6)}`,
-          role: "user",
-          membership_type: "none",
+          nickname: nickname,
+          role: 'user',
+          membership_type: 'none',
           store_owner_certified: false,
         })
         .select("*")
         .single();
 
-      if (createErr || !newUser) {
-        console.error("[phone-login] 创建用户失败:", createErr);
-        return NextResponse.json({ error: "创建账号失败，请重试" }, { status: 500 });
+      if (profileErr || !newUser) {
+        console.error("[phone-login] 创建 profile 失败:", profileErr);
+        // auth.user 已创建但 profile 失败，清理 auth.user 避免孤儿数据
+        await supabase.auth.admin.deleteUser(userId);
+        return NextResponse.json({ error: "账号创建失败，请重试" }, { status: 500 });
       }
 
-      userId = newUser.id;
       userProfile = newUser;
     }
 
-    // ── Step 4: 生成并返回 JWT token（简化：返回 user info + 临时标识）──
-    // 小程序端用 token 标识登录态，这里生成一个简单 token
+    // ── Step 4: 生成 token 并返回 ──
     const token = Buffer.from(JSON.stringify({
       uid: userId,
       openid,
