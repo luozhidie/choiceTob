@@ -186,5 +186,10 @@
     </view>
   </view>
 
+  <!-- ========== 退出登录（仅登录时显示）========== -->
+  <view wx:if="{{isLoggedIn}}" class="logout-wrap">
+    <button class="btn-logout" bindtap="goLogout">退出登录</button>
+  </view>
+
   <view class="sbtm"></view>
 </view>

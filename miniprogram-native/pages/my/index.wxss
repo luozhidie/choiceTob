@@ -136,3 +136,9 @@ page{background:#f5f3f0;}
 .ce-arrow{font-size:24rpx;font-weight:bold;color:#e11d48;shrink:0;}
 
 .sbtm{height:100rpx;}
+
+/* 退出登录 */
+.logout-wrap{padding:20rpx 40rpx 40rpx;}
+.btn-logout{height:80rpx;background:#fff;color:#e11d48;font-size:28rpx;font-weight:500;border-radius:16rpx;display:flex;align-items:center;justify-content:center;border:2rpx solid #fecdd3;box-sizing:border-box;}
+.btn-logout::after{display:none;}
+.btn-logout:active{background:#fef2f2;}

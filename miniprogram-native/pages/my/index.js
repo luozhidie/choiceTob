@@ -183,6 +183,46 @@ Page({
   goInvite:function(){wx.showToast({title:'邀请有奖开发中',icon:'none'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
 
+  /* ===== 退出登录 ===== */
+  goLogout:function(){
+    var t=this;
+    wx.showModal({
+      title:'退出登录',
+      content:'确定要退出当前账号吗？',
+      confirmText:'退出',
+      confirmColor:'#e11d48',
+      success:function(res){
+        if(!res.confirm)return;
+        // 清除所有本地状态
+        wx.removeStorageSync('token');
+        wx.removeStorageSync('user_info');
+        wx.removeStorageSync('vip_status');
+        wx.removeStorageSync('member_type');
+        wx.removeStorageSync('vip_level');
+        wx.removeStorageSync('vip_expire');
+        wx.removeStorageSync('is_price_member');
+        wx.removeStorageSync('is_certified_store_owner');
+        wx.removeStorageSync('certified_style');
+        wx.removeStorageSync('certified_monthly_sales');
+        // 重置全局状态
+        var app=getApp();
+        if(app&&app.globalData){
+          app.globalData.isPriceMember=false;
+          app.globalData.isCertifiedStoreOwner=false;
+        }
+        // 刷新页面显示未登录态
+        t.setData({
+          isLoggedIn:false,
+          userId:'',
+          roleText:'未认证店主',
+          avatarUrl:'',
+          isCertified:false
+        });
+        wx.showToast({title:'已退出登录',icon:'success'});
+      }
+    });
+  },
+
   goRules:function(){wx.showModal({
     title:'会员权益领取规则',
     content:'【解锁条件】\n白银(≥2k):批发价查看\n黄金(≥5w):新款抢先+退货5%\n铂金(≥10w):专属客服+退货10%\n钻石(≥30w):数据报告+退货20%\n\n【认证店主·免费赛道】\n答题通过即可免费看批发价。\n\n详细规则请登录网页 colour-choice.art/my 查看',

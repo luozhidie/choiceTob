@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ code: phone_code }),
         });
-        const phoneData = await phoneRes.json() as Record<string, any);
+        const phoneData = await phoneRes.json() as Record<string, any>;
 
         if (phoneData.errcode === 0 && phoneData.phone_info?.phoneNumber) {
           phoneNumber = phoneData.phone_info.phoneNumber;
