@@ -12,12 +12,20 @@ Page({
   },
 
   onLoad:function(){
+    this.refreshAuth();
+    this.load();
+  },
+
+  onShow:function(){
+    this.refreshAuth();
+  },
+
+  refreshAuth:function(){
     var app = getApp();
     var isCertified = !!wx.getStorageSync('is_certified_store_owner');
     this.setData({
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || isCertified
     });
-    this.load();
   },
   onPullDownRefresh:function(){var t=this;t.setData({page:1,hasMore:true});t.load(function(){wx.stopPullDownRefresh();});},
   onReachBottom:function(){if(!this.data.hasMore||this.data.loading)return;this.setData({page:this.data.page+1});this.loadMore();},
