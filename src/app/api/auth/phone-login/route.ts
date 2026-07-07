@@ -121,7 +121,7 @@ export async function POST(req: NextRequest) {
       // 3a) 用 Admin API 在 auth.users 创建用户
       const { data: authUser, error: authErr } = await supabase.auth.admin.createUser({
         email: fakeEmail,
-        password: crypto.randomUUID(), // 随机密码（小程序不用密码登录）
+        password: crypto.randomUUID(),
         email_confirm: true,
         user_metadata: {
           provider: 'wechat_mini',
@@ -131,40 +131,45 @@ export async function POST(req: NextRequest) {
       });
 
       if (authErr || !authUser?.user?.id) {
-        console.error("[phone-login] 创建 auth.user 失败:", authErr);
+        const errDetail = JSON.stringify(authErr || { message: 'no user returned', data: authUser });
+        console.error("[phone-login] 创建 auth.user 失败:", errDetail);
         return NextResponse.json({
           error: "账号创建失败，请重试或使用其它方式登录",
-          detail: authErr?.message,
+          detail: 'auth.users创建失败: ' + errDetail,
         }, { status: 500 });
       }
 
       userId = authUser.user.id;
 
-      // 3b) 现在插入 profiles（FK 已满足）
-      const { data: newUser, error: profileErr } = await supabase
+      // 3b) 触发器已自动创建了基础 profile 行，我们 UPDATE 补充字段
+      const updateData: Record<string, any> = {
+        wechat_openid: openid,
+        wechat_unionid: unionid || null,
+        phone: phoneNumber || null,
+        nickname: nickname,
+        role: 'user',
+        membership_type: 'none',
+        store_owner_certified: false,
+      };
+
+      const { data: updProfile, error: profileErr } = await supabase
         .from("profiles")
-        .insert({
-          id: userId,
-          email: fakeEmail,
-          wechat_openid: openid,
-          wechat_unionid: unionid || null,
-          phone: phoneNumber || null,
-          nickname: nickname,
-          role: 'user',
-          membership_type: 'none',
-          store_owner_certified: false,
-        })
+        .update(updateData)
+        .eq("id", userId)
         .select("*")
         .single();
 
-      if (profileErr || !newUser) {
-        console.error("[phone-login] 创建 profile 失败:", profileErr);
-        // auth.user 已创建但 profile 失败，清理 auth.user 避免孤儿数据
-        await supabase.auth.admin.deleteUser(userId);
-        return NextResponse.json({ error: "账号创建失败，请重试" }, { status: 500 });
+      if (profileErr || !updProfile) {
+        const errDetail = JSON.stringify(profileErr || { message: 'no data after update' });
+        console.error("[phone-login] 更新 profile 失败:", errDetail);
+        try { await supabase.auth.admin.deleteUser(userId); } catch(e) {}
+        return NextResponse.json({
+          error: "账号创建失败，请重试",
+          detail: 'profiles更新失败: ' + errDetail,
+        }, { status: 500 });
       }
 
-      userProfile = newUser;
+      userProfile = updProfile;
     }
 
     // ── Step 4: 生成 token 并返回 ──
@@ -191,7 +196,8 @@ export async function POST(req: NextRequest) {
     });
 
   } catch (err: any) {
-    console.error("[phone-login] 未捕获异常:", err);
-    return NextResponse.json({ error: err.message || "登录失败" }, { status: 500 });
+    const errDetail = err?.message || JSON.stringify(err).slice(0, 500);
+    console.error("[phone-login] 未捕获异常:", errDetail);
+    return NextResponse.json({ error: "登录失败", detail: errDetail }, { status: 500 });
   }
 }
