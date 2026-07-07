@@ -1,205 +1,121 @@
 Page({
   data:{
     step:'intro',
-    quizIdx:0,
-    showResult:false,
-    isCorrect:false,
-    wrongCount:0,
 
-    /* ── 答题：扁平字段（不用对象数组，最稳）── */
-    qText:'',
-    optAText:'',optBText:'',optCText:'',
-    optACls:'',optBCls:'',optCCls:'',
-    selectedAns:null,
-    resultText:'',
-    btnText:'确认选择',
-    btnDisabled:true,
+    /* ── 基本信息 ── */
+    name:'',contact:'',phone:'',wechat:'',city:'',district:'',
+    shopSizeIndex:0,styleIndex:0,ageIndex:0,priceIndex:0,
+    shopSizeOptions:['<30㎡','30-50㎡','50-80㎡','80-120㎡','120-200㎡','>200㎡'],
+    styleOptions:['淑女风','知性风','名媛风','中性风','潮牌风','职业风','休闲风','大牌风'],
+    ageOptions:['18-25岁','26-35岁','36-45岁','46-55岁','全年龄'],
+    priceOptions:['100元以下','100-300元','300-500元','500-1000元','1000元以上'],
 
-    /* ── 风格 ── */
-    styleInput:'',
-    selectedStyles:[],
-    tag0Cls:'',tag1Cls:'',tag2Cls:'',tag3Cls:'',tag4Cls:'',tag5Cls:'',tag6Cls:'',tag7Cls:'',
-
-    recStyles:[],
-
-    salesInput:'',
-    rankPercent:0,
-    salesRankText:'',
+    /* ── 经营数据 ── */
+    rent:'',breakeven:'',grossMargin:'',netMargin:'',turnover:'',
+    channels:'',trends:'',notes:'',
 
     submitting:false,
     submitError:'',
     needLogin:false,
-
-    QUIZ:[
-      {q:'炒货就是某些档口到一批市场拿的货，在其他一批市场拿同款',a:['A. 对','B. 错'],c:0},
-      {q:'以下哪个属于"拿货"的术语？',a:['A.多少钱1件','B.怎么拿','C.衣服怎么卖'],c:1},
-      {q:'以下哪个属于正确的服装批发市场？',a:['A.杭州四季青','B.广州四季青','C.深圳四季青'],c:0},
-      {q:'10件起批是什么意思？',a:['A.10件以内按批发价','B.10件才能按批发价','C.100件才能按批发价'],c:1},
-      {q:'同款是"打包价"便宜还是"拿货价"便宜？',a:['A.打包价','B.拿货价'],c:0},
-      {q:'二批市场就是从一批拿货回各个城市销售的',a:['A. 对','B. 错'],c:0},
-    ],
-
-    STYLES:['淑女风','知性风','名媛风','中性风','潮牌风','职业风','休闲风','大牌风'],
-
-    STYLE_MAP:{'淑女风':'少女型','知性风':'知性型','名媛风':'优雅型','中性风':'中性型',
-              '潮牌风':'时尚型','职业风':'古典型','休闲风':'自然型','大牌风':'奢华型'},
-
-    TIER_BENEFITS:[
-      {amount:'5万',returnRate:'5%',color:'#3b82f6'},
-      {amount:'10万',returnRate:'10%',color:'#f59e0b'},
-      {amount:'30万',returnRate:'20%',color:'#a855f7'},
-    ]
   },
 
   onLoad:function(){
-    var t=this;
     var token=wx.getStorageSync('token');
     var info=wx.getStorageSync('user_info');
     if(!token && (!info || !info.nickName)){
-      t.setData({needLogin:true});
+      this.setData({needLogin:true});
     }
   },
 
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
   goHome:function(){wx.switchTab({url:'/pages/home/index'});},
-
   goBackStep:function(){
     var t=this,s=t.data.step;
-    if(s==='quiz'){ if(t.data.quizIdx>0){t.buildQuiz(t.data.quizIdx-1);} else {t.setData({step:'intro'});} }
-    else if(s==='passed'){t.buildQuiz(t.QUIZ.length-1);t.setData({step:'passed'});}
-    else if(s==='style'){t.setData({step:'passed'});}
-    else if(s==='recommend'){t.setData({step:'style'});}
-    else if(s==='sales'){t.setData({step:'recommend'});}
-    else if(s==='rank'){t.setData({step:'sales'});}
-    else if(s==='benefits'){t.setData({step:'rank'});}
+    if(s==='base'){t.setData({step:'intro'});}
+    else if(s==='biz'){t.setData({step:'base'});}
+    else if(s==='done'){t.setData({step:'biz'});}
   },
+  goForm:function(){this.setData({step:'base'});},
 
-  goQuiz:function(){this.buildQuiz(0);},
+  /* ── 基本信息输入 ── */
+  onName:function(e){this.setData({name:e.detail.value});},
+  onContact:function(e){this.setData({contact:e.detail.value});},
+  onPhone:function(e){this.setData({phone:e.detail.value});},
+  onWechat:function(e){this.setData({wechat:e.detail.value});},
+  onCity:function(e){this.setData({city:e.detail.value});},
+  onDistrict:function(e){this.setData({district:e.detail.value});},
+  onShopSize:function(e){this.setData({shopSizeIndex:Number(e.detail.value)});},
+  onStyle:function(e){this.setData({styleIndex:Number(e.detail.value)});},
+  onAge:function(e){this.setData({ageIndex:Number(e.detail.value)});},
+  onPrice:function(e){this.setData({priceIndex:Number(e.detail.value)});},
 
-  /* ── 构建题目（扁平字段）── */
-  buildQuiz:function(idx){
-    var t=this;
-    var q=t.QUIZ[idx];
-    t.setData({
-      quizIdx:idx,
-      qText:q.q,
-      optAText:q.a[0]||'',optBText:q.a[1]||'',optCText:q.a[2]||'',
-      optACls:'',optBCls:'',optCCls:'',
-      selectedAns:null,
-      showResult:false,
-      isCorrect:false,
-      resultText:'',
-      btnText:'确认选择',
-      btnDisabled:true,
-      step:'quiz'
-    });
-  },
-
-  pickA:function(){this._pick(0);},
-  pickB:function(){this._pick(1);},
-  pickC:function(){this._pick(2);},
-  _pick:function(idx){
-    var t=this;
-    if(t.data.showResult)return;
-    t.setData({
-      selectedAns:idx,
-      optACls:idx===0?'option-selected':'',
-      optBCls:idx===1?'option-selected':'',
-      optCCls:idx===2?'option-selected':'',
-      btnDisabled:false
-    });
-  },
-
-  confirmAnswer:function(){
-    var t=this,d=t.data;
-    if(d.selectedAns===null)return;
-    var q=t.QUIZ[d.quizIdx];
-    var ok=d.selectedAns===q.c;
-    var rText=ok?'✅ 回答正确！':'❌ 回答错误，正确答案是「'+q.a[q.c]+'」';
-    var isLast=(d.quizIdx>=t.QUIZ.length-1);
-    // 正确答案标绿，错误选中的标红
-    t.setData({
-      isCorrect:ok,
-      showResult:true,
-      optACls:(0===q.c?'option-correct':(0===d.selectedAns&&0!==q.c?'option-wrong':'')),
-      optBCls:(1===q.c?'option-correct':(1===d.selectedAns&&1!==q.c?'option-wrong':'')),
-      optCCls:(2===q.c?'option-correct':(2===d.selectedAns&&2!==q.c?'option-wrong':'')),
-      resultText:rText,
-      btnText:isLast?'查看结果':'下一题',
-      btnDisabled:false
-    });
-    if(!ok)t.setData({wrongCount:d.wrongCount+1});
-  },
-
-  nextQuestion:function(){
-    var t=this;
-    if(t.data.quizIdx < t.QUIZ.length - 1){
-      t.buildQuiz(t.data.quizIdx+1);
-    }else{
-      t.setData({step:'passed'});
+  goBiz:function(){
+    if(!this.data.name || !this.data.name.trim()){
+      wx.showToast({title:'请填写店铺名称',icon:'none'});
+      return;
     }
+    this.setData({step:'biz'});
   },
 
-  /* ── 风格选择 ── */
-  toggleStyle:function(e){
-    var t=this;
-    var idx=Number(e.currentTarget.dataset.idx);
-    var s=t.data.STYLES[idx];
-    var list=t.data.selectedStyles||[];
-    var field='tag'+idx+'Cls';
-    var active=(list.indexOf(s)<0);
-    if(active){list.push(s);t.setData({[field]:'tag-active',selectedStyles:list});}
-    else{list=list.filter(function(x){return x!==s});t.setData({[field]:'',selectedStyles:list});}
-  },
+  /* ── 经营数据输入 ── */
+  onRent:function(e){this.setData({rent:e.detail.value});},
+  onBreakeven:function(e){this.setData({breakeven:e.detail.value});},
+  onGross:function(e){this.setData({grossMargin:e.detail.value});},
+  onNet:function(e){this.setData({netMargin:e.detail.value});},
+  onTurnover:function(e){this.setData({turnover:e.detail.value});},
+  onChannels:function(e){this.setData({channels:e.detail.value});},
+  onTrends:function(e){this.setData({trends:e.detail.value});},
+  onNotes:function(e){this.setData({notes:e.detail.value});},
 
-  onStyleInput:function(e){this.setData({styleInput:e.detail.value});},
-  onSalesInput:function(e){this.setData({salesInput:e.detail.value});},
-
-  goStyle:function(){this.setData({step:'style'});},
-  goRecommend:function(){
-    var t=this;
-    var src=(t.data.selectedStyles&&t.data.selectedStyles.length>0)?t.data.selectedStyles:['淑女风','潮牌风','职业风','休闲风'];
-    var rec=[];
-    for(var i=0;i<src.length&&i<4;i++){rec.push(src[i]);}
-    t.setData({recStyles:rec,step:'recommend'});
-  },
-  goSales:function(){this.setData({step:'sales'});},
-  goRank:function(){
-    var t=this;
-    var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
-    t.setData({rankPercent:t.estimateRankPercent(sales),salesRankText:sales>=10000?'表现优异':'继续加油',step:'rank'});
-  },
-
-  /* ── 提交认证 ── */
   submitCertify:function(){
     var t=this;
     if(t.data.submitting)return;
     t.setData({submitting:true,submitError:''});
+
     var token=wx.getStorageSync('token');
     if(!token){t.setData({submitting:false,needLogin:true});return;}
-    var style=(t.data.selectedStyles.length>0?t.data.selectedStyles.join(','):(t.data.styleInput||''));
-    var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
+
+    var d=t.data;
+    var store={
+      name:d.name.trim(),
+      contact_person:d.contact||null,
+      phone:d.phone||null,
+      wechat:d.wechat||null,
+      city:d.city||null,
+      district:d.district||null,
+      shop_size:d.shopSizeOptions[d.shopSizeIndex]||null,
+      style_position:d.styleOptions[d.styleIndex]||null,
+      target_age:d.ageOptions[d.ageIndex]||null,
+      price_range:d.priceOptions[d.priceIndex]||null,
+      business_data:{
+        monthly_rent:d.rent||null,
+        breakeven:d.breakeven||null,
+        gross_margin:d.grossMargin||null,
+        net_margin:d.netMargin||null,
+        monthly_turnover:d.turnover||null,
+        traffic_channels:d.channels||null,
+        trends:d.trends||null,
+      },
+      notes:d.notes||null,
+    };
 
     wx.request({
-      url:'https://colour-choice.art/api/auth/certify',
+      url:'https://colour-choice.art/api/auth/store-certify',
       method:'POST',
-      data:{token:token,quiz_passed:true,style:style||undefined,monthly_sales:sales>0?sales:undefined},
+      data:{token:token,store:store},
       success:function(r){
         t.setData({submitting:false});
-        var d=r.data||{};
-        if(d.error){
+        var res=r.data||{};
+        if(res.error){
           if(r.statusCode===401){t.setData({needLogin:true});wx.showToast({title:'请重新登录后再认证',icon:'none'});}
-          else{t.setData({submitError:d.error});wx.showModal({title:'认证失败',content:d.error,showCancel:false});}
+          else{t.setData({submitError:res.error});wx.showModal({title:'提交失败',content:res.error,showCancel:false});}
           return;
         }
         wx.setStorageSync('is_certified_store_owner',true);
-        wx.setStorageSync('certified_style',style);
-        wx.setStorageSync('certified_monthly_sales',sales);
+        wx.setStorageSync('certified_style',store.style_position);
         var app=getApp();
         if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=true;
-        var pct=t.estimateRankPercent(sales);
-        t.setData({rankPercent:pct,salesRankText:sales>=10000?'表现优异':'继续加油'});
-        setTimeout(function(){t.setData({step:'benefits'});},300);
+        t.setData({step:'done'});
         wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
       },
       fail:function(){
@@ -207,17 +123,6 @@ Page({
         wx.showToast({title:'网络异常，请重试',icon:'none'});
       }
     });
-  },
-
-  goBenefits:function(){this.submitCertify();},
-
-  estimateRankPercent:function(sales){
-    if(sales<=0)return 30;
-    if(sales<5000)return 40;
-    if(sales<30000)return 55;
-    if(sales<80000)return 70;
-    if(sales<200000)return 85;
-    return 95;
   },
 
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
