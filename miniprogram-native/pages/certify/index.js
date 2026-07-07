@@ -1,28 +1,30 @@
 Page({
   data:{
-    step:'intro',       // intro | quiz | passed | style | recommend | sales | rank | benefits | done
+    step:'intro',
     quizIdx:0,
-    selectedAnswer:null,
     showResult:false,
     isCorrect:false,
     wrongCount:0,
 
-    // 风格相关
+    /* ── 答题：扁平字段（不用对象数组，最稳）── */
+    qText:'',
+    optAText:'',optBText:'',optCText:'',
+    optACls:'',optBCls:'',optCCls:'',
+    selectedAns:null,
+    resultText:'',
+    btnText:'确认选择',
+    btnDisabled:true,
+
+    /* ── 风格 ── */
     styleInput:'',
     selectedStyles:[],
-    styleActiveMap:{},     // 预计算：每个风格是否选中，避免wxml里用indexOf
-    recStyles:[],          // 预计算：推荐风格列表（最多4个），避免wxml里用slice/三元数组
+    tag0Cls:'',tag1Cls:'',tag2Cls:'',tag3Cls:'',tag4Cls:'',tag5Cls:'',tag6Cls:'',tag7Cls:'',
 
-    // 答题区预计算（避免 wxml 复杂三元/比较）
-    currentQ:null,          // 当前题目 {q,a,c}
-    options:[],             // [{text,cls}] 每个选项的文字+样式类
-    resultText:'',          // 结果提示文字
-    btnText:'确认选择',     // 底部按钮文字
-    btnDisabled:true,       // 底部按钮是否禁用
+    recStyles:[],
+
     salesInput:'',
-    // 排名估算
     rankPercent:0,
-    salesRankText:'',     // 预计算：销售额评语（"表现优异"/"继续加油"）
+    salesRankText:'',
 
     submitting:false,
     submitError:'',
@@ -42,13 +44,6 @@ Page({
     STYLE_MAP:{'淑女风':'少女型','知性风':'知性型','名媛风':'优雅型','中性风':'中性型',
               '潮牌风':'时尚型','职业风':'古典型','休闲风':'自然型','大牌风':'奢华型'},
 
-    benefits:[
-      {icon:'👁️',name:'批发价查看权',desc:'通过认证即可查看所有商品批发价'},
-      {icon:'🎁',name:'退换额度权益',desc:'充值后享阶梯退换额度（最高20%）'},
-      {icon:'✨',name:'新款抢先看',desc:'当季新品提前浏览与推荐'},
-      {icon:'📈',name:'全国排名',desc:'了解自己在行业中的位置'},
-    ],
-
     TIER_BENEFITS:[
       {amount:'5万',returnRate:'5%',color:'#3b82f6'},
       {amount:'10万',returnRate:'10%',color:'#f59e0b'},
@@ -63,10 +58,6 @@ Page({
     if(!token && (!info || !info.nickName)){
       t.setData({needLogin:true});
     }
-    // 初始化 styleActiveMap（避免 wxml 用 indexOf）
-    var map={};
-    for(var i=0;i<t.data.STYLES.length;i++){map[t.data.STYLES[i]]=false;}
-    t.setData({styleActiveMap:map});
   },
 
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
@@ -75,7 +66,7 @@ Page({
   goBackStep:function(){
     var t=this,s=t.data.step;
     if(s==='quiz'){ if(t.data.quizIdx>0){t.buildQuiz(t.data.quizIdx-1);} else {t.setData({step:'intro'});} }
-    else if(s==='passed'){t.setData({step:'quiz',quizIdx:t.QUIZ.length-1,showResult:false,selectedAnswer:null});}
+    else if(s==='passed'){t.buildQuiz(t.QUIZ.length-1);t.setData({step:'passed'});}
     else if(s==='style'){t.setData({step:'passed'});}
     else if(s==='recommend'){t.setData({step:'style'});}
     else if(s==='sales'){t.setData({step:'recommend'});}
@@ -85,20 +76,18 @@ Page({
 
   goQuiz:function(){this.buildQuiz(0);},
 
-  /* ── 构建当前题目视图数据 ── */
+  /* ── 构建题目（扁平字段）── */
   buildQuiz:function(idx){
     var t=this;
     var q=t.QUIZ[idx];
-    var opts=[];
-    for(var i=0;i<q.a.length;i++){
-      opts.push({text:q.a[i],letter:i===0?'A':i===1?'B':'C',cls:''});
-    }
     t.setData({
       quizIdx:idx,
-      currentQ:q,
-      options:opts,
-      selectedAnswer:null,
+      qText:q.q,
+      optAText:q.a[0]||'',optBText:q.a[1]||'',optCText:q.a[2]||'',
+      optACls:'',optBCls:'',optCCls:'',
+      selectedAns:null,
       showResult:false,
+      isCorrect:false,
       resultText:'',
       btnText:'确认选择',
       btnDisabled:true,
@@ -106,37 +95,35 @@ Page({
     });
   },
 
-  /* ── 答题 ── */
-  pickAnswer:function(e){
+  pickA:function(){this._pick(0);},
+  pickB:function(){this._pick(1);},
+  pickC:function(){this._pick(2);},
+  _pick:function(idx){
     var t=this;
     if(t.data.showResult)return;
-    var i=Number(e.currentTarget.dataset.idx);
-    // 更新选项样式：选中项高亮
-    var opts=t.data.options;
-    for(var j=0;j<opts.length;j++){
-      opts[j].cls=(j===i?'option-selected':'');
-    }
-    t.setData({selectedAnswer:i,options:opts,btnDisabled:false});
+    t.setData({
+      selectedAns:idx,
+      optACls:idx===0?'option-selected':'',
+      optBCls:idx===1?'option-selected':'',
+      optCCls:idx===2?'option-selected':'',
+      btnDisabled:false
+    });
   },
 
   confirmAnswer:function(){
     var t=this,d=t.data;
-    if(d.selectedAnswer===null)return;
-    var q=d.currentQ;
-    var ok=d.selectedAnswer===q.c;
-    // 更新选项样式：显示对错
-    var opts=d.options;
-    for(var j=0;j<opts.length;j++){
-      if(j===q.c){opts[j].cls='option-correct';}
-      else if(j===d.selectedAnswer&&j!==q.c){opts[j].cls='option-wrong';}
-      else{opts[j].cls='';}
-    }
+    if(d.selectedAns===null)return;
+    var q=t.QUIZ[d.quizIdx];
+    var ok=d.selectedAns===q.c;
     var rText=ok?'✅ 回答正确！':'❌ 回答错误，正确答案是「'+q.a[q.c]+'」';
     var isLast=(d.quizIdx>=t.QUIZ.length-1);
+    // 正确答案标绿，错误选中的标红
     t.setData({
       isCorrect:ok,
       showResult:true,
-      options:opts,
+      optACls:(0===q.c?'option-correct':(0===d.selectedAns&&0!==q.c?'option-wrong':'')),
+      optBCls:(1===q.c?'option-correct':(1===d.selectedAns&&1!==q.c?'option-wrong':'')),
+      optCCls:(2===q.c?'option-correct':(2===d.selectedAns&&2!==q.c?'option-wrong':'')),
       resultText:rText,
       btnText:isLast?'查看结果':'下一题',
       btnDisabled:false
@@ -156,12 +143,13 @@ Page({
   /* ── 风格选择 ── */
   toggleStyle:function(e){
     var t=this;
-    var v=e.currentTarget.dataset.val;
+    var idx=Number(e.currentTarget.dataset.idx);
+    var s=t.data.STYLES[idx];
     var list=t.data.selectedStyles||[];
-    var map=t.data.styleActiveMap||{};
-    if(list.indexOf(v)>=0){list=list.filter(function(s){return s!==v});map[v]=false;}
-    else{list.push(v);map[v]=true;}
-    t.setData({selectedStyles:list,styleActiveMap:map});
+    var field='tag'+idx+'Cls';
+    var active=(list.indexOf(s)<0);
+    if(active){list.push(s);t.setData({[field]:'tag-active',selectedStyles:list});}
+    else{list=list.filter(function(x){return x!==s});t.setData({[field]:'',selectedStyles:list});}
   },
 
   onStyleInput:function(e){this.setData({styleInput:e.detail.value});},
@@ -170,7 +158,7 @@ Page({
   goStyle:function(){this.setData({step:'style'});},
   goRecommend:function(){
     var t=this;
-    var src=t.data.selectedStyles&&t.data.selectedStyles.length>0?t.data.selectedStyles:['淑女风','潮牌风','职业风','休闲风'];
+    var src=(t.data.selectedStyles&&t.data.selectedStyles.length>0)?t.data.selectedStyles:['淑女风','潮牌风','职业风','休闲风'];
     var rec=[];
     for(var i=0;i<src.length&&i<4;i++){rec.push(src[i]);}
     t.setData({recStyles:rec,step:'recommend'});
@@ -179,25 +167,16 @@ Page({
   goRank:function(){
     var t=this;
     var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
-    t.setData({
-      rankPercent:t.estimateRankPercent(sales),
-      salesRankText:sales>=10000?'表现优异':'继续加油',
-      step:'rank'
-    });
+    t.setData({rankPercent:t.estimateRankPercent(sales),salesRankText:sales>=10000?'表现优异':'继续加油',step:'rank'});
   },
 
-  /* ── 提交认证（真实提交后端）── */
+  /* ── 提交认证 ── */
   submitCertify:function(){
     var t=this;
     if(t.data.submitting)return;
     t.setData({submitting:true,submitError:''});
-
     var token=wx.getStorageSync('token');
-    if(!token){
-      t.setData({submitting:false,needLogin:true});
-      return;
-    }
-
+    if(!token){t.setData({submitting:false,needLogin:true});return;}
     var style=(t.data.selectedStyles.length>0?t.data.selectedStyles.join(','):(t.data.styleInput||''));
     var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
 
@@ -213,17 +192,13 @@ Page({
           else{t.setData({submitError:d.error});wx.showModal({title:'认证失败',content:d.error,showCancel:false});}
           return;
         }
-        // 成功：同步本地状态
         wx.setStorageSync('is_certified_store_owner',true);
         wx.setStorageSync('certified_style',style);
         wx.setStorageSync('certified_monthly_sales',sales);
         var app=getApp();
         if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=true;
-
-        // 先显示排名（基于输入的销售额）
         var pct=t.estimateRankPercent(sales);
         t.setData({rankPercent:pct,salesRankText:sales>=10000?'表现优异':'继续加油'});
-
         setTimeout(function(){t.setData({step:'benefits'});},300);
         wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
       },
@@ -236,7 +211,6 @@ Page({
 
   goBenefits:function(){this.submitCertify();},
 
-  /* ── 排名估算 ── */
   estimateRankPercent:function(sales){
     if(sales<=0)return 30;
     if(sales<5000)return 40;
