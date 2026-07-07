@@ -1,10 +1,21 @@
 <view class="page">
-  <view class="hd"><text class="ht">其它方式登录</text><text class="hs">使用邮箱密码登录</text></view>
+  <view class="hd">
+    <text class="ht">{{mode==='login'?'其它方式登录':'注册新账号'}}</text>
+    <text class="hs">{{mode==='login'?'使用邮箱密码登录':'创建账号后查看批发价与会员权益'}}</text>
+  </view>
 
   <view class="card">
     <input class="inp" type="text" placeholder="请输入邮箱" value="{{email}}" bindinput="onEmail"/>
-    <input class="inp" type="password" placeholder="请输入密码" value="{{pw}}" bindinput="onPw"/>
-    <button class="btn-login" bindtap="doLogin">登录</button>
+    <input class="inp" type="password" placeholder="请输入密码（至少6位）" value="{{pw}}" bindinput="onPw"/>
+    <input wx:if="{{mode==='register'}}" class="inp" type="password" placeholder="请再次输入密码" value="{{confirmPw}}" bindinput="onConfirmPw"/>
+
+    <button wx:if="{{mode==='login'}}" class="btn-primary" loading="{{loading}}" bindtap="doLogin">登录</button>
+    <button wx:else class="btn-primary" loading="{{loading}}" bindtap="doRegister">注册</button>
+
+    <view class="switch-row" bindtap="toggleMode">
+      <text wx:if="{{mode==='login'}}">没有账号？<text class="hl">去注册</text></text>
+      <text wx:else>已有账号？<text class="hl">去登录</text></text>
+    </view>
   </view>
 
   <view class="back-row" bindtap="goBack">← 返回一键登录</view>

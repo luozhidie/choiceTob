@@ -17,11 +17,21 @@ Page({
     if(!t.data.agreed){
       wx.showToast({title:'请先同意用户协议',icon:'none'});return;
     }
+    if(t.data.loading)return;
     t.setData({loading:true});
+
+    /* 超时保护：15秒自动解除 */
+    var timeoutTimer=setTimeout(function(){
+      if(t.data.loading){
+        t.setData({loading:false});
+        wx.showToast({title:'登录超时，请重试或用其它方式',icon:'none',duration:2500});
+      }
+    },15000);
 
     wx.login({
       success:function(loginRes){
         if(!loginRes.code){
+          clearTimeout(timeoutTimer);
           t.setData({loading:false});
           wx.showToast({title:'获取登录凭证失败',icon:'none'});return;
         }
@@ -29,9 +39,11 @@ Page({
         /* 获取手机号 */
         wx.getPhoneNumber({
           success:function(phoneRes){
+            clearTimeout(timeoutTimer);
             t.handlePhoneCode(loginRes.code,phoneRes.code);
           },
           fail:function(err){
+            clearTimeout(timeoutTimer);
             t.setData({loading:false});
             console.error('[getPhoneNumber] fail:',err);
             /* 用户拒绝授权 → 引导用其它方式 */
@@ -48,6 +60,7 @@ Page({
         });
       },
       fail:function(){
+        clearTimeout(timeoutTimer);
         t.setData({loading:false});
         wx.showToast({title:'微信登录失败',icon:'none'});
       }
