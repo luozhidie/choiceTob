@@ -6,7 +6,7 @@
     <text></text>
   </view>
 
-  <!-- Step 1: 开场 -->
+  <!-- ═══ Step 1: 开场 ═══ -->
   <block wx:if="{{step==='intro'}}">
     <view class="intro-section">
       <view class="intro-icon"><text class="icon-shield">🛡️</text></view>
@@ -25,29 +25,23 @@
     </view>
   </block>
 
-  <!-- Step 2: 答题 -->
+  <!-- ═══ Step 2: 答题 ═══ -->
   <block wx:if="{{step==='quiz'}}">
     <view class="quiz-section">
-      <!-- 进度 -->
       <view class="progress-bar">
         <text class="progress-text">题目 {{quizIdx+1}}/{{QUIZ.length}}</text>
-        <view class="progress-track">
-          <view class="progress-fill" style="width:{{(quizIdx+1)/QUIZ.length*100}}%"></view>
-        </view>
+        <view class="progress-track"><view class="progress-fill" style="width:{{(quizIdx+1)/QUIZ.length*100}}%"></view></view>
       </view>
 
-      <!-- 当前题 -->
       <view class="question-card">
         <text class="q-badge">第 {{quizIdx+1}} 题</text>
         <text class="q-text">{{QUIZ[quizIdx].q}}</text>
 
-        <!-- 选项 -->
         <view class="options">
           <block wx:for="{{QUIZ[quizIdx].a}}" wx:key="index">
             <view
               class="option {{showResult && index===QUIZ[quizIdx].c?'option-correct':''}} {{showResult&&selectedAnswer===index&&index!==QUIZ[quizIdx].c?'option-wrong':''}} {{selectedAnswer===index&&!showResult?'option-selected':''}}"
-              data-idx="{{index}}"
-              bindtap="pickAnswer"
+              data-idx="{{index}}" bindtap="pickAnswer"
             >
               <text class="option-letter">{{index===0?'A':index===1?'B':'C'}}</text>
               <text>{{item}}</text>
@@ -57,19 +51,17 @@
           </block>
         </view>
 
-        <!-- 结果提示 -->
         <view wx:if="{{showResult}}" class="{{isCorrect?'result-ok':'result-fail'}}">
           <text>{{isCorrect?'✅ 回答正确！':'❌ 回答错误，正确答案是「'+QUIZ[quizIdx].a[QUIZ[quizIdx].c]+'」'}}</text>
         </view>
       </view>
 
-      <!-- 按钮 -->
       <button wx:if="{{!showResult}}" class="btn-primary {{selectedAnswer===null?'btn-disabled':''}}" bindtap="confirmAnswer" disabled="{{selectedAnswer===null}}">确认选择</button>
       <button wx:else class="btn-accent" bindtap="nextQuestion">{{quizIdx<QUIZ.length-1?'下一题':'查看结果'}}</button>
     </view>
   </block>
 
-  <!-- Step 3: 通过 -->
+  <!-- ═══ Step 3: 通过 ═══ -->
   <block wx:if="{{step==='passed'}}">
     <view class="pass-section">
       <view class="pass-icon">✅</view>
@@ -80,57 +72,130 @@
     </view>
   </block>
 
-  <!-- Step 4: 风格 -->
+  <!-- ═══ Step 4: 风格 ═══ -->
   <block wx:if="{{step==='style'}}">
     <view class="form-section">
       <text class="form-title">您常拿什么风格的货？</text>
       <text class="form-desc">帮助我们为您推荐更精准的商品</text>
 
-      <!-- 快捷标签 -->
       <view class="tag-group">
         <block wx:for="{{STYLES}}" wx:key="*this">
-          <view
-            class="tag {{selectedStyles.indexOf(item)>=0?'tag-active':''}}"
-            data-val="{{item}}"
-            bindtap="toggleStyle"
-          >{{item}}</view>
+          <view class="tag {{selectedStyles.indexOf(item)>=0?'tag-active':''}}" data-val="{{item}}" bindtap="toggleStyle">{{item}}</view>
         </block>
       </view>
 
-      <!-- 自定义输入 -->
-      <input
-        class="form-input"
-        value="{{styleInput}}"
-        placeholder="如：韩系女装、日系休闲..."
-        bindinput="onStyleInput"
-      />
+      <input class="form-input" value="{{styleInput}}" placeholder="如：韩系女装、日系休闲..." bindinput="onStyleInput"/>
+
+      <button class="btn-primary" bindtap="goRecommend">下一步：获取推荐 →</button>
+    </view>
+  </block>
+
+  <!-- ═══ Step 5: 推荐（新增） ═══ -->
+  <block wx:if="{{step==='recommend'}}">
+    <view class="form-section">
+      <text class="form-title">为您推荐当季市场的畅销风格</text>
+      <text class="form-desc">基于您选择的风格偏好</text>
+
+      <view class="rec-grid">
+        <block wx:for="{{(selectedStyles.length>0?selectedStyles:['淑女风','潮牌风','职业风','休闲风']).slice(0,4)}}" wx:key="*this">
+          <view class="rec-item">
+            <text class="rec-sparkle">✨</text>
+            <text class="rec-name">{{item}}</text>
+            <text class="rec-sub">{{STYLE_MAP[item]||'当季热销'}}</text>
+          </view>
+        </block>
+      </view>
 
       <button class="btn-primary" bindtap="goSales">下一步：填写月销售额 →</button>
     </view>
   </block>
 
-  <!-- Step 5: 销售额 -->
+  <!-- ═══ Step 6: 月销售额 ═══ -->
   <block wx:if="{{step==='sales'}}">
     <view class="form-section">
       <text class="form-title">输入您上月销售额</text>
       <text class="form-desc">看看自己在全国的销售排名</text>
 
-      <input
-        class="form-input form-input-lg"
-        type="digit"
-        value="{{salesInput}}"
-        placeholder="如：50000"
-        bindinput="onSalesInput"
-      />
+      <input class="form-input form-input-lg" type="digit" value="{{salesInput}}" placeholder="如：50000" bindinput="onSalesInput"/>
       <text class="tip-text">仅用于排名估算，不会公开</text>
 
-      <button class="btn-primary btn-lg {{submitting?'submitting':''}}" bindtap="submitCertify" disabled="{{submitting}}">
-        {{submitting?'提交中...':'完成认证，开启批发价 🎉'}}
-      </button>
+      <button class="btn-primary" bindtap="goRank">查看我的排名 →</button>
     </view>
   </block>
 
-  <!-- Step 6: 完成 -->
+  <!-- ═══ Step 7: 排名（新增） ═══ -->
+  <block wx:if="{{step==='rank'}}">
+    <view class="rank-section">
+      <view class="rank-trophy"><text class="rank-tri">🏆</text></view>
+
+      <text class="rank-title">您上月超过了全国 <text class="rank-pct">{{rankPercent}}%</text> 的店主</text>
+      <text class="rank-sales" wx:if="{{salesInput}}">月销 ¥{{salesInput}} · {{salesInput>=10000?'表现优异':'继续加油'}}</text>
+
+      <view class="rank-hint-box">
+        <text class="rank-hint">💡 排名基于当前平台数据估算，随着用户积累将越来越准确。</text>
+      </view>
+
+      <button class="btn-primary btn-lg {{submitting?'submitting':''}}" bindtap="submitCertify" disabled="{{submitting}}">
+        {{submitting?'提交中...':'完成认证，开启批发价 🛡'}}
+      </button>
+
+      <text wx:if="{{submitError}}" class="err-text">{{submitError}}</text>
+    </view>
+  </block>
+
+  <!-- ═══ Step 8: 权益完成卡（新增） ═══ -->
+  <block wx:if="{{step==='benefits'}}">
+    <view class="benefits-done-section">
+      <view class="bd-crown"><text class="bd-ci">👑</text></view>
+      <text class="bd-title">认证成功！🎉</text>
+      <text class="bd-sub">您已获得以下店主权益</text>
+
+      <!-- 1. 批发价查看 -->
+      <view class="bd-card bd-green">
+        <text class="bd-ci-sm">👁️</text>
+        <view class="bd-body">
+          <text class="bd-name">✅ 批发价已解锁</text>
+          <text class="bd-desc">所有商品批发价立即可见，免费使用</text>
+        </view>
+      </view>
+
+      <!-- 2. 退换额度 -->
+      <view class="bd-card">
+        <text class="bd-ci-sm">🎁</text>
+        <view class="bd-body">
+          <text class="bd-name">退换额度（充值后生效）</text>
+          <view class="tier-grid">
+            <view class="tier-cell tc-blue"><text class="tc-amt">充5万</text><text class="tc-rate">退换5%</text></view>
+            <view class="tier-cell tc-amber"><text class="tc-amt">充10万</text><text class="tc-rate">退换10%</text></view>
+            <view class="tier-cell tc-purple"><text class="tc-amt">充30万</text><text class="tc-rate">退换20%</text></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 3. 新款抢看 -->
+      <view class="bd-card">
+        <text class="bd-ci-sm">✨</text>
+        <view class="bd-body">
+          <text class="bd-name">新款抢先看</text>
+          <text class="bd-desc">当季新品提前浏览，热门款式优先推送</text>
+        </view>
+      </view>
+
+      <!-- 4. 排名 -->
+      <view class="bd-card">
+        <text class="bd-ci-sm">📈</text>
+        <view class="bd-body">
+          <text class="bd-name">全国销售排名</text>
+          <text class="bd-desc">您上月超过了全国 <text class="rank-pct-sm">{{rankPercent}}%</text> 的店主</text>
+        </view>
+      </view>
+
+      <button class="btn-accent btn-lg" bindtap="goBuyer">去看款拿货</button>
+      <button class="btn-outline" bindtap="goMy">前往个人中心</button>
+    </view>
+  </block>
+
+  <!-- ═══ Step 9: 完成（保留兼容） ═══ -->
   <block wx:if="{{step==='done'}}">
     <view class="done-section">
       <view class="done-icon">👑</view>
@@ -159,6 +224,3 @@
     <text class="login-cancel" bindtap="goHome">返回首页</text>
   </view>
 </view>
-
-<!-- 数据（开场权益列表）在 JS 中定义，此处仅作占位 -->
-<wxs module="utils"/>
