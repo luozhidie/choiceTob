@@ -1,20 +1,15 @@
 <view class="page">
   <!-- ═══ Step 1: 开场（暗色+金色） ═══ -->
   <block wx:if="{{step==='intro'}}">
-    <view class="hero-section">
-      <view class="hero-badge">认证店主 · 开通批发价</view>
+    <view class="hero">
+      <text class="hero-badge">认证店主 · 开通批发价</text>
       <text class="hero-title">填写店铺信息，即刻开通批发价查看权</text>
       <view class="hero-line"></view>
-      <text class="hero-sub">信息将同步至后台店铺管理，便于后续为您推荐款式、开展服务</text>
-    </view>
 
-    <view class="intro-card">
-      <view class="ic-header"><text class="ic-gold">认证后可享 4 大权益</text></view>
-      <view class="ic-grid">
-        <view class="ic-item"><text class="ic-icon">👁️</text><view class="ic-body"><text class="ic-name">批发价查看权</text><text class="ic-desc">认证即可查看所有商品批发价</text></view></view>
-        <view class="ic-item"><text class="ic-icon">🎁</text><view class="ic-body"><text class="ic-name">退换额度</text><text class="ic-desc">充值后享阶梯退换额度</text></view></view>
-        <view class="ic-item"><text class="ic-icon">✨</text><view class="ic-body"><text class="ic-name">新款抢先看</text><text class="ic-desc">当季新品提前浏览推荐</text></view></view>
-        <view class="ic-item"><text class="ic-icon">📈</text><view class="ic-body"><text class="ic-name">精准推荐</text><text class="ic-desc">基于店铺画像匹配款式</text></view></view>
+      <view class="benefit-card">
+        <view class="bc-head"><text class="bc-gold">认证后可享 4 大权益</text></view>
+        <view class="bc-row"><view class="bc-item"><text class="bc-icon">👁️</text><text class="bc-name">批发价查看权</text><text class="bc-desc">认证即可查看所有商品批发价</text></view><view class="bc-item"><text class="bc-icon">🎁</text><text class="bc-name">退换额度</text><text class="bc-desc">充值后享阶梯退换额度</text></view></view>
+        <view class="bc-row"><view class="bc-item"><text class="bc-icon">✨</text><text class="bc-name">新款抢先看</text><text class="bc-desc">当季新品提前浏览推荐</text></view><view class="bc-item"><text class="bc-icon">📈</text><text class="bc-name">精准推荐</text><text class="bc-desc">基于店铺画像匹配款式</text></view></view>
       </view>
     </view>
 
@@ -27,37 +22,34 @@
       <text bindtap="goBackStep" class="back-btn">← 上一步</text>
       <text class="nav-title">店铺基本信息</text><text></text>
     </view>
-    <view class="form-wrap">
-      <view class="field"><text class="label req">店铺名称</text><input class="input" value="{{name}}" placeholder="如：巴黎春天女装店" bindinput="onName"/></view>
-      <view class="field"><text class="label">联系人</text><input class="input" value="{{contact}}" placeholder="如：张小姐" bindinput="onContact"/></view>
-      <view class="field"><text class="label">联系电话</text><input class="input" type="number" value="{{phone}}" placeholder="如：13800138000" bindinput="onPhone"/></view>
-      <view class="field"><text class="label">微信号</text><input class="input" value="{{wechat}}" placeholder="如：luozhidie" bindinput="onWechat"/></view>
-      <view class="field"><text class="label">所在城市</text><input class="input" value="{{city}}" placeholder="如：杭州" bindinput="onCity"/></view>
-      <view class="field"><text class="label">商圈/地段</text><input class="input" value="{{district}}" placeholder="如：武林银泰" bindinput="onDistrict"/></view>
 
-      <view class="field"><text class="label">店铺面积</text>
-        <picker mode="selector" range="{{shopSizeOptions}}" value="{{shopSizeIndex}}" bindchange="onShopSize">
-          <view class="picker">{{shopSizeOptions[shopSizeIndex]}}</view>
-        </picker>
+    <scroll-view scroll-y class="form-scroll">
+      <!-- 基本信息分组 -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">🏪</text><text class="sec-title">基本信息</text></view>
+        <view class="f-grid">
+          <view class="f-cell full"><text class="flabel req">店铺名称</text><input class="finput" value="{{name}}" placeholder="如：巴黎春天女装店" bindinput="onName"/></view>
+          <view class="f-cell"><text class="flabel">联系人</text><input class="finput" value="{{contact}}" placeholder="张小姐" bindinput="onContact"/></view>
+          <view class="f-cell"><text class="flabel">联系电话</text><input class="finput" type="number" value="{{phone}}" placeholder="13800138000" bindinput="onPhone"/></view>
+          <view class="f-cell"><text class="flabel">微信号</text><input class="finput" value="{{wechat}}" placeholder="luozhidie" bindinput="onWechat"/></view>
+          <view class="f-cell"><text class="flabel">所在城市</text><input class="finput" value="{{city}}" placeholder="杭州" bindinput="onCity"/></view>
+          <view class="f-cell"><text class="flabel">商圈/地段</text><input class="finput" value="{{district}}" placeholder="武林银泰" bindinput="onDistrict"/></view>
+        </view>
       </view>
-      <view class="field"><text class="label">风格定位</text>
-        <picker mode="selector" range="{{styleOptions}}" value="{{styleIndex}}" bindchange="onStyle">
-          <view class="picker">{{styleOptions[styleIndex]}}</view>
-        </picker>
-      </view>
-      <view class="field"><text class="label">目标年龄层</text>
-        <picker mode="selector" range="{{ageOptions}}" value="{{ageIndex}}" bindchange="onAge">
-          <view class="picker">{{ageOptions[ageIndex]}}</view>
-        </picker>
-      </view>
-      <view class="field"><text class="label">价格带</text>
-        <picker mode="selector" range="{{priceOptions}}" value="{{priceIndex}}" bindchange="onPrice">
-          <view class="picker">{{priceOptions[priceIndex]}}</view>
-        </picker>
+
+      <!-- 经营特征分组 -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">🎯</text><text class="sec-title">经营特征</text></view>
+        <view class="f-list">
+          <view class="f-row"><text class="flabel">店铺面积</text><picker mode="selector" range="{{shopSizeOptions}}" value="{{shopSizeIndex}}" bindchange="onShopSize"><view class="fpick">{{shopSizeOptions[shopSizeIndex]}} ▾</view></picker></view>
+          <view class="f-row"><text class="flabel">风格定位</text><picker mode="selector" range="{{styleOptions}}" value="{{styleIndex}}" bindchange="onStyle"><view class="fpick">{{styleOptions[styleIndex]}} ▾</view></picker></view>
+          <view class="f-row"><text class="flabel">目标年龄层</text><picker mode="selector" range="{{ageOptions}}" value="{{ageIndex}}" bindchange="onAge"><view class="fpick">{{ageOptions[ageIndex]}} ▾</view></picker></view>
+          <view class="f-row"><text class="flabel">价格带</text><picker mode="selector" range="{{priceOptions}}" value="{{priceIndex}}" bindchange="onPrice"><view class="fpick">{{priceOptions[priceIndex]}} ▾</view></picker></view>
+        </view>
       </view>
 
       <button class="btn-primary" bindtap="goBiz">下一步：填写经营数据 →</button>
-    </view>
+    </scroll-view>
   </block>
 
   <!-- ═══ Step 3: 经营数据 ═══ -->
@@ -66,34 +58,40 @@
       <text bindtap="goBackStep" class="back-btn">← 上一步</text>
       <text class="nav-title">店铺经营数据</text><text></text>
     </view>
-    <view class="form-wrap">
-      <view class="field"><text class="label">月租金（元）</text><input class="input" type="digit" value="{{rent}}" placeholder="选填" bindinput="onRent"/></view>
-      <view class="field"><text class="label">保本点（元/月）</text><input class="input" type="digit" value="{{breakeven}}" placeholder="选填" bindinput="onBreakeven"/></view>
-      <view class="field"><text class="label">毛利率（如 0.55）</text><input class="input" type="digit" value="{{grossMargin}}" placeholder="选填" bindinput="onGross"/></view>
-      <view class="field"><text class="label">净利率（如 0.2）</text><input class="input" type="digit" value="{{netMargin}}" placeholder="选填" bindinput="onNet"/></view>
-      <view class="field"><text class="label">月营业额（元）</text><input class="input" type="digit" value="{{turnover}}" placeholder="选填" bindinput="onTurnover"/></view>
-      <view class="field"><text class="label">流量渠道</text><input class="input" value="{{channels}}" placeholder="选填，逗号分隔，如：小红书，抖音，线下" bindinput="onChannels"/></view>
-      <view class="field"><text class="label">当前流行趋势</text><input class="input" value="{{trends}}" placeholder="选填，逗号分隔，如：新中式，莫兰迪色" bindinput="onTrends"/></view>
-      <view class="field"><text class="label">备注</text><textarea class="textarea" value="{{notes}}" placeholder="选填" bindinput="onNotes"/></view>
+
+    <scroll-view scroll-y class="form-scroll">
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">📊</text><text class="sec-title">经营数据</text></view>
+        <view class="f-grid">
+          <view class="f-cell"><text class="flabel">月租金（元）</text><input class="finput" type="digit" value="{{rent}}" placeholder="选填" bindinput="onRent"/></view>
+          <view class="f-cell"><text class="flabel">保本点（元/月）</text><input class="finput" type="digit" value="{{breakeven}}" placeholder="选填" bindinput="onBreakeven"/></view>
+          <view class="f-cell"><text class="flabel">毛利率</text><input class="finput" type="digit" value="{{grossMargin}}" placeholder="0.55=55%" bindinput="onGross"/></view>
+          <view class="f-cell"><text class="flabel">净利率</text><input class="finput" type="digit" value="{{netMargin}}" placeholder="0.2=20%" bindinput="onNet"/></view>
+          <view class="f-cell full"><text class="flabel">月营业额（元）</text><input class="finput" type="digit" value="{{turnover}}" placeholder="选填" bindinput="onTurnover"/></view>
+          <view class="f-cell full"><text class="flabel">流量渠道</text><input class="finput" value="{{channels}}" placeholder="小红书，抖音，线下" bindinput="onChannels"/></view>
+          <view class="f-cell full"><text class="flabel">当前流行趋势</text><input class="finput" value="{{trends}}" placeholder="新中式，莫兰迪色" bindinput="onTrends"/></view>
+          <view class="f-cell full"><text class="flabel">备注</text><textarea class="ftextarea" value="{{notes}}" placeholder="选填" bindinput="onNotes"/></view>
+        </view>
+      </view>
 
       <button class="btn-primary btn-lg {{submitting?'submitting':''}}" bindtap="submitCertify" disabled="{{submitting}}">
         {{submitting?'提交中...':'提交认证，开通批发价 🛡'}}
       </button>
       <text wx:if="{{submitError}}" class="err-text">{{submitError}}</text>
-    </view>
+    </scroll-view>
   </block>
 
   <!-- ═══ Step 4: 成功 ═══ -->
   <block wx:if="{{step==='done'}}">
-    <view class="done-section">
-      <view class="done-icon">👑</view>
-      <text class="done-title">认证成功！🎉</text>
-      <text class="done-sub">店铺信息已同步至后台，批发价已开通</text>
-      <view class="done-benefits">
-        <view class="done-item done-ok"><text>✅ 批发价已解锁</text></view>
-        <view class="done-item"><text>🎁 退换额度（充值后生效）</text></view>
-        <view class="done-item"><text>✨ 新款抢先看</text></view>
-        <view class="done-item"><text>📈 精准款式推荐</text></view>
+    <view class="done-wrap">
+      <view class="done-crown">👑</view>
+      <text class="done-tit">认证成功！🎉</text>
+      <text class="done-sub">批发价已开启</text>
+      <view class="done-list">
+        <view class="done-it ok"><text>✅ 批发价已解锁</text></view>
+        <view class="done-it"><text>🎁 退换额度（充值后生效）</text></view>
+        <view class="done-it"><text>✨ 新款抢先看</text></view>
+        <view class="done-it"><text>📈 精准款式推荐</text></view>
       </view>
       <button class="btn-accent" bindtap="goBuyer">去看款拿货</button>
       <button class="btn-outline" bindtap="goMy">前往个人中心</button>
@@ -103,10 +101,10 @@
 
 <!-- 未登录引导层 -->
 <view wx:if="{{needLogin}}" class="login-mask">
-  <view class="login-card">
-    <text class="login-title">请先登录</text>
-    <text class="login-desc">认证店主需先登录账号</text>
+  <view class="login-box">
+    <text class="login-tit">请先登录</text>
+    <text class="login-dsc">认证店主需先登录账号</text>
     <button class="btn-primary login-btn" bindtap="goLogin">去登录</button>
-    <text class="login-cancel" bindtap="goHome">返回首页</text>
+    <text class="login-x" bindtap="goHome">返回首页</text>
   </view>
 </view>
