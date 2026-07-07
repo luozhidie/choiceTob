@@ -62,9 +62,6 @@
       }
     ]
   },
-  "requiredPrivateInfos": [
-    "getPhoneNumber"
-  ],
   "permission": {
     "scope.userLocation": {
       "desc": "用于推荐附近货源"
