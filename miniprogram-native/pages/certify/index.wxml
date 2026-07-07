@@ -80,7 +80,7 @@
 
       <view class="tag-group">
         <block wx:for="{{STYLES}}" wx:key="*this">
-          <view class="tag {{selectedStyles.indexOf(item)>=0?'tag-active':''}}" data-val="{{item}}" bindtap="toggleStyle">{{item}}</view>
+          <view class="tag {{styleActiveMap[item]?'tag-active':''}}" data-val="{{item}}" bindtap="toggleStyle">{{item}}</view>
         </block>
       </view>
 
@@ -97,7 +97,7 @@
       <text class="form-desc">基于您选择的风格偏好</text>
 
       <view class="rec-grid">
-        <block wx:for="{{(selectedStyles.length>0?selectedStyles:['淑女风','潮牌风','职业风','休闲风']).slice(0,4)}}" wx:key="*this">
+        <block wx:for="{{recStyles}}" wx:key="*this">
           <view class="rec-item">
             <text class="rec-sparkle">✨</text>
             <text class="rec-name">{{item}}</text>

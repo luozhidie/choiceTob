@@ -10,6 +10,8 @@ Page({
     // 风格相关
     styleInput:'',
     selectedStyles:[],
+    styleActiveMap:{},     // 预计算：每个风格是否选中，避免wxml里用indexOf
+    recStyles:[],          // 预计算：推荐风格列表（最多4个），避免wxml里用slice/三元数组
 
     // 销售额
     salesInput:'',
@@ -49,11 +51,16 @@ Page({
   },
 
   onLoad:function(){
+    var t=this;
     var token=wx.getStorageSync('token');
     var info=wx.getStorageSync('user_info');
     if(!token && (!info || !info.nickName)){
-      this.setData({needLogin:true});
+      t.setData({needLogin:true});
     }
+    // 初始化 styleActiveMap（避免 wxml 用 indexOf）
+    var map={};
+    for(var i=0;i<t.data.STYLES.length;i++){map[t.data.STYLES[i]]=false;}
+    t.setData({styleActiveMap:map});
   },
 
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
@@ -95,18 +102,26 @@ Page({
 
   /* ── 风格选择 ── */
   toggleStyle:function(e){
+    var t=this;
     var v=e.currentTarget.dataset.val;
-    var list=this.data.selectedStyles||[];
-    if(list.indexOf(v)>=0){list=list.filter(function(s){return s!==v});}
-    else{list.push(v);}
-    this.setData({selectedStyles:list});
+    var list=t.data.selectedStyles||[];
+    var map=t.data.styleActiveMap||{};
+    if(list.indexOf(v)>=0){list=list.filter(function(s){return s!==v});map[v]=false;}
+    else{list.push(v);map[v]=true;}
+    t.setData({selectedStyles:list,styleActiveMap:map});
   },
 
   onStyleInput:function(e){this.setData({styleInput:e.detail.value});},
   onSalesInput:function(e){this.setData({salesInput:e.detail.value});},
 
   goStyle:function(){this.setData({step:'style'});},
-  goRecommend:function(){this.setData({step:'recommend'});},
+  goRecommend:function(){
+    var t=this;
+    var src=t.data.selectedStyles&&t.data.selectedStyles.length>0?t.data.selectedStyles:['淑女风','潮牌风','职业风','休闲风'];
+    var rec=[];
+    for(var i=0;i<src.length&&i<4;i++){rec.push(src[i]);}
+    t.setData({recStyles:rec,step:'recommend'});
+  },
   goSales:function(){this.setData({step:'sales'});},
   goRank:function(){
     var t=this;
