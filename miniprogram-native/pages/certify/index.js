@@ -10,6 +10,8 @@ Page({
     selectedStyles:[],
     salesInput:'',
     submitting:false,
+    submitError:'',
+    needLogin:false
   },
 
   QUIZ:[
@@ -30,7 +32,26 @@ Page({
     {icon:'📈',name:'全国排名',desc:'了解自己在行业中的位置'},
   ],
 
-  onLoad:function(){},
+  onLoad:function(){
+    // 登录态守卫：未登录 / 无 token 时引导先登录
+    var token=wx.getStorageSync('token');
+    var info=wx.getStorageSync('user_info');
+    if(!token && (!info || !info.nickName)){
+      this.setData({needLogin:true});
+    }
+  },
+
+  goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
+  goHome:function(){wx.switchTab({url:'/pages/home/index'});},
+
+  // 返回上一步（intro/done 无上一步）
+  goBackStep:function(){
+    var t=this,s=t.data.step;
+    if(s==='quiz'){ if(t.data.quizIdx>0){t.setData({quizIdx:t.data.quizIdx-1,showResult:false,selectedAnswer:null});} else {t.setData({step:'intro'});} }
+    else if(s==='passed'){t.setData({step:'quiz',quizIdx:t.QUIZ.length-1,showResult:false,selectedAnswer:null});}
+    else if(s==='style'){t.setData({step:'passed'});}
+    else if(s==='sales'){t.setData({step:'style'});}
+  },
 
   goQuiz:function(){this.setData({step:'quiz'});},
 
@@ -67,32 +88,64 @@ Page({
     this.setData({selectedStyles:list});
   },
 
-  // ── 提交认证 ──
+  // ── 提交认证（真实提交后端）──
   submitCertify:function(){
     var t=this;
-    t.setData({submitting:true});
-    // 小程序无后端，存本地
-    wx.setStorageSync('is_certified_store_owner',true);
-    wx.setStorageSync('certified_style',
-      (t.data.selectedStyles.length>0?t.data.selectedStyles.join(','):(t.data.styleInput||''))
-    );
-    wx.setStorageSync('certified_monthly_sales',
-      Number(t.data.salesInput.replace(/[^\d]/g,''))||0
-    );
-    // 更新全局状态（使 buyer 页批发价立即可见）
-    var app=getApp();
-    if(app&&app.globalData)app.globalData.isPriceMember=true;
+    if(t.data.submitting)return;
+    t.setData({submitting:true,submitError:''});
 
-    setTimeout(function(){
-      t.setData({step:'done',submitting:false});
-      wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
-    },500);
+    var token=wx.getStorageSync('token');
+    if(!token){
+      t.setData({submitting:false,needLogin:true});
+      return;
+    }
+
+    var style=(t.data.selectedStyles.length>0?t.data.selectedStyles.join(','):(t.data.styleInput||''));
+    var sales=Number((t.data.salesInput||'').replace(/[^\d]/g,''))||0;
+
+    wx.request({
+      url:'https://colour-choice.art/api/auth/certify',
+      method:'POST',
+      data:{
+        token:token,
+        quiz_passed:true,
+        style:style||undefined,
+        monthly_sales:sales>0?sales:undefined
+      },
+      success:function(r){
+        t.setData({submitting:false});
+        var d=r.data||{};
+        if(d.error){
+          // 登录态失效 → 引导登录
+          if(r.statusCode===401){
+            t.setData({needLogin:true});
+            wx.showToast({title:'请重新登录后再认证',icon:'none'});
+          }else{
+            t.setData({submitError:d.error});
+            wx.showModal({title:'认证失败',content:d.error,showCancel:false});
+          }
+          return;
+        }
+        // 成功：同步本地状态，使批发价立即可见
+        wx.setStorageSync('is_certified_store_owner',true);
+        wx.setStorageSync('certified_style',style);
+        wx.setStorageSync('certified_monthly_sales',sales);
+        var app=getApp();
+        if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=true;
+        t.setData({step:'done'});
+        wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
+      },
+      fail:function(){
+        t.setData({submitting:false});
+        t.setData({submitError:'网络异常，请重试'});
+        wx.showToast({title:'网络异常，请重试',icon:'none'});
+      }
+    });
   },
 
   goStyle:function(){this.setData({step:'style'});},
   goSales:function(){this.setData({step:'sales'});},
-  goBuyer:function(){wx.switchTab({url:'/pages/home/index'})||wx.redirectTo({url:'/pages/buyer/index'});},
-  goHome:function(){wx.switchTab({url:'/pages/home/index'})},
+  goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
 
   onStyleInput:function(e){this.setData({styleInput:e.detail.value});},
   onSalesInput:function(e){this.setData({salesInput:e.detail.value});},

@@ -68,10 +68,19 @@ export async function POST(req: NextRequest) {
       new Date(membershipExpiresAt) > new Date()
     );
 
+    // 生成小程序用的自定义 token（与 phone-login 同格式，含 uid），便于小程序端调用认证等接口
+    const token = Buffer.from(
+      JSON.stringify({
+        uid: data.user!.id,
+        exp: Date.now() + 7 * 24 * 60 * 60 * 1000,
+      })
+    ).toString("base64url");
+
     // 登录成功！Supabase 已经通过 setAll 回调设置了 session cookie
     // 浏览器下次请求时自动携带这个 cookie
     return NextResponse.json({
       success: true,
+      token,
       user: data.user,
       message: '登录成功',
       membership_type: membershipType,

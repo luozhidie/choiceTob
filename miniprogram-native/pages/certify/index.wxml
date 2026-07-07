@@ -1,7 +1,7 @@
 <view class="page">
   <!-- 顶部导航 -->
   <view class="nav-bar">
-    <text wx:if="{{step!=='intro'&&step!=='done'}}" bindtap="goHome" class="back-btn">← 上一步</text>
+    <text wx:if="{{step!=='intro'&&step!=='done'}}" bindtap="goBackStep" class="back-btn">← 上一步</text>
     <text class="nav-title">认证店主</text>
     <text></text>
   </view>
@@ -14,7 +14,7 @@
       <text class="intro-desc">为了让您更好的拿货，\n所有店主均需通过认证后才能看款/拿货！</text>
 
       <view class="benefit-list">
-        <view class="benefit-item" v-for="(item,idx) in benefits" wx:key="idx">
+        <view class="benefit-item" wx:for="{{benefits}}" wx:key="idx">
           <text class="benefit-icon">{{item.icon}}</text>
           <view><text class="benefit-name">{{item.name}}</text><text class="benefit-desc">{{item.desc}}</text></view>
         </view>
@@ -148,6 +148,16 @@
       <button class="btn-outline" bindtap="goHome">返回首页</button>
     </view>
   </block>
+</view>
+
+<!-- 未登录引导层 -->
+<view wx:if="{{needLogin}}" class="login-mask">
+  <view class="login-card">
+    <text class="login-title">请先登录</text>
+    <text class="login-desc">认证店主需先登录账号</text>
+    <button class="btn-primary login-btn" bindtap="goLogin">去登录</button>
+    <text class="login-cancel" bindtap="goHome">返回首页</text>
+  </view>
 </view>
 
 <!-- 数据（开场权益列表）在 JS 中定义，此处仅作占位 -->
