@@ -11,11 +11,12 @@
 
   <!-- 登录按钮区 -->
   <view class="btn-area">
-    <!-- 手机号一键登录 -->
+    <!-- 手机号一键登录（必须用 open-type=getPhoneNumber） -->
     <button
-      class="btn-phone {{loading?'btn-disabled':''}}"
-      disabled="{{loading}}"
-      bindtap="doPhoneLogin"
+      class="btn-phone {{loading||!agreed?'btn-disabled':''}}"
+      disabled="{{loading||!agreed}}"
+      open-type="getPhoneNumber"
+      bindgetphonenumber="onGetPhoneCode"
     >
       {{loading?'登录中...':'手机号一键登录'}}
     </button>

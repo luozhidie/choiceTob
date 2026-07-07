@@ -1,9 +1,7 @@
 Page({
   data:{
     agreed:false,
-    loading:false,
-    showPhoneList:false,
-    phoneNumbers:[]
+    loading:false
   },
 
   /* 勾选协议 */
@@ -11,23 +9,51 @@ Page({
     this.setData({agreed:!this.data.agreed});
   },
 
-  /* 手机号一键登录 */
-  doPhoneLogin:function(){
+  /* ── 微信标准：按钮 open-type=getPhoneNumber 触发此回调 ── */
+  onGetPhoneCode:function(e){
     var t=this;
     if(!t.data.agreed){
       wx.showToast({title:'请先同意用户协议',icon:'none'});return;
     }
+
+    var detail=e.detail||{};
+    // 用户拒绝授权
+    if(detail.errMsg&&detail.errMsg.indexOf('fail')>=0){
+      console.warn('[getPhoneNumber] 用户拒绝:',detail.errMsg);
+      wx.showModal({
+        title:'提示',
+        content:'需要授权手机号才能一键登录，是否使用其它方式？',
+        confirmText:'其它方式',
+        cancelText:'取消',
+        success:function(m){if(m.confirm)t.goOtherLogin();}
+      });
+      return;
+    }
+    // 获取到 phoneCode
+    var phoneCode=detail.code;
+    if(!phoneCode){
+      wx.showToast({title:'获取手机号失败，请重试',icon:'none'});return;
+    }
+
+    // 已有 phoneCode → 开始登录流程
+    t.doPhoneLogin(phoneCode);
+  },
+
+  /* 用 phoneCode + loginCode 提交后端 */
+  doPhoneLogin:function(phoneCode){
+    var t=this;
     if(t.data.loading)return;
     t.setData({loading:true});
 
-    /* 超时保护：15秒自动解除 */
+    /* 超时保护：15秒 */
     var timeoutTimer=setTimeout(function(){
       if(t.data.loading){
         t.setData({loading:false});
-        wx.showToast({title:'登录超时，请重试或用其它方式',icon:'none',duration:2500});
+        wx.showToast({title:'��录超时，请重试或用其它方式',icon:'none',duration:2500});
       }
     },15000);
 
+    // Step 1: wx.login 获取 loginCode
     wx.login({
       success:function(loginRes){
         if(!loginRes.code){
@@ -36,28 +62,8 @@ Page({
           wx.showToast({title:'获取登录凭证失败',icon:'none'});return;
         }
 
-        /* 获取手机号 */
-        wx.getPhoneNumber({
-          success:function(phoneRes){
-            clearTimeout(timeoutTimer);
-            t.handlePhoneCode(loginRes.code,phoneRes.code);
-          },
-          fail:function(err){
-            clearTimeout(timeoutTimer);
-            t.setData({loading:false});
-            console.error('[getPhoneNumber] fail:',err);
-            /* 用户拒绝授权 → 引导用其它方式 */
-            wx.showModal({
-              title:'提示',
-              content:'需要授权手机号才能一键登录，是否使用其它方式？',
-              confirmText:'其它方式',
-              cancelText:'取消',
-              success:function(m){
-                if(m.confirm)t.goOtherLogin();
-              }
-            });
-          }
-        });
+        // Step 2: 发给后端
+        t.handlePhoneCode(loginRes.code,phoneCode,timeoutTimer);
       },
       fail:function(){
         clearTimeout(timeoutTimer);
@@ -68,7 +74,7 @@ Page({
   },
 
   /* 处理手机号 code（发给后端换手机号+自动注册/登录）*/
-  handlePhoneCode:function(loginCode,phoneCode){
+  handlePhoneCode:function(loginCode,phoneCode,timeoutTimer){
     var t=this;
     wx.request({
       url:'https://colour-choice.art/api/auth/phone-login',
@@ -78,6 +84,7 @@ Page({
         phone_code:phoneCode
       },
       success:function(r){
+        clearTimeout(timeoutTimer);
         t.setData({loading:false});
         var d=r.data||{};
         if(d.error){
@@ -110,8 +117,10 @@ Page({
         wx.showToast({title:'登录成功 ✓',icon:'success'});
         setTimeout(function(){wx.navigateBack();},1200);
       },
-      fail:function(){
+      fail:function(err){
+        clearTimeout(timeoutTimer);
         t.setData({loading:false});
+        console.error('[handlePhoneCode] request fail:',err);
         wx.showToast({title:'网络异常，请重试',icon:'none'});
       }
     });
@@ -119,7 +128,6 @@ Page({
 
   /* 使用其它方式登录 */
   goOtherLogin:function(){
-    /* 暂时引导到邮箱登录页（后续可扩展微信授权等）*/
     wx.navigateTo({url:'/pages/email-login/index'});
   },
 
