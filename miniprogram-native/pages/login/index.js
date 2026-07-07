@@ -1,7 +1,12 @@
 Page({
   data:{
+    _v:'20260707',
     agreed:false,
     loading:false
+  },
+
+  onLoad:function(){
+    console.log('[login] version:',this.data._v);
   },
 
   /* 勾选协议 */

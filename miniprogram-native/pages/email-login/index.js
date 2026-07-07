@@ -1,10 +1,15 @@
 Page({
   data:{
+    _v:'20260707',       // 版本号，用于确认体验版是否更新
     mode:'login',        // 'login' | 'register'
     email:'',
     pw:'',
     confirmPw:'',
     loading:false
+  },
+
+  onLoad:function(){
+    console.log('[email-login] version:',this.data._v);
   },
 
   onEmail:function(e){this.setData({email:e.detail.value});},
