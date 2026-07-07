@@ -2,7 +2,8 @@ App({
   globalData: {
     userInfo: null,
     isVip: false,
-    isPriceMember: false,  // 价格会员（可查看批发价）
+    isPriceMember: false,       // 价格会员（可查看批发价）
+    isCertifiedStoreOwner: false, // 认证店主
   },
 
   onLaunch: function() {
@@ -15,6 +16,11 @@ App({
     var isPriceMember = wx.getStorageSync('is_price_member');
     if (isPriceMember === true) {
       this.globalData.isPriceMember = true;
+    }
+    // 恢复认证店主状态
+    var isCertified = wx.getStorageSync('is_certified_store_owner');
+    if (isCertified === true) {
+      this.globalData.isCertifiedStoreOwner = true;
     }
   },
 
