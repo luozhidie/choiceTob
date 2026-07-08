@@ -19,9 +19,9 @@ Page({
       {id:'price_1y',name:'价格会员·年卡',priceLabel:'¥399/年',originalPrice:'¥798',discountLabel:'省¥399',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预测数据','行业选品报告(月)','每日搭配订阅','专属客服通道'],highlight:true},
     ],
     depositPlans:[
-      {id:'wholesale_5w',name:'拿货会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度5%','优先发货权'],highlight:false},
-      {id:'wholesale_10w',name:'拿货会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
-      {id:'wholesale_30w',name:'拿货会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
+      {id:'wholesale_5w',name:'充值会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度5%','优先发货权'],highlight:false},
+      {id:'wholesale_10w',name:'充值会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
+      {id:'wholesale_30w',name:'充值会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
     ],
     compareRows:[
       {name:'批发价查看',trial:true,quarterly:true,yearly:true},
@@ -35,7 +35,10 @@ Page({
     selectedPlan:null,
   },
 
-  onLoad:function(){
+  onLoad:function(options){
+    if(options&&options.tab&&(options.tab==='price'||options.tab==='deposit')){
+      this.setData({activeTab:options.tab});
+    }
     this.chkLogin();
     this.loadPurchaseAmount();
   },

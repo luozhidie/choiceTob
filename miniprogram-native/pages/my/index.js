@@ -175,6 +175,7 @@ Page({
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
   goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
+  goVipDeposit:function(){wx.navigateTo({url:'/pages/vip/index?tab=deposit'});},
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
   goFavorites:function(){wx.navigateTo({url:'/pages/favorites/index'});},
   goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},

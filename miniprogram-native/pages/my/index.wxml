@@ -80,7 +80,7 @@
     <!-- 等级计算说明 + 保级 -->
     <text class="tcd-foot">累计拿货额自动升级 · 连续6月不拿货将降级</text>
     <!-- 充值入口：累计赛道无退换，充值同时得折扣+退换 -->
-    <view class="tcd-price-entry" bindtap="goVip">
+    <view class="tcd-price-entry" bindtap="goVipDeposit">
       <text class="tcd-price-txt">充值解锁退换额度 + 拿货折扣 →</text>
     </view>
   </view>
