@@ -9,7 +9,7 @@ import {
   DollarSign, BarChart3, ShoppingCart, ArrowRight,
   ChevronRight, Home, Loader2, Phone, User,
   RefreshCw, ExternalLink, Package, CheckCircle2,
-  Clock, Lightbulb, LayoutGrid, FileText, Palette, Download,
+  Clock, Lightbulb, LayoutGrid, FileText, Palette, Download, Camera,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -631,6 +631,36 @@ export default function StoresAdminPage() {
                   </div>
                 </div>
 
+                {/* 照片 & 拿货单（来自认证提交） */}
+                {(bizData.front_photo_base64 || bizData.interior_photo_base64 || bizData.purchase_order_base64) && (
+                  <div>
+                    <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><Camera className="w-4 h-4 text-accent" />店铺照片 & 拿货单</h4>
+                    <div className="grid grid-cols-3 gap-4">
+                      {bizData.front_photo_base64 && (
+                        <div className="space-y-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={bizData.front_photo_base64} alt="门头照" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                          <p className="text-xs text-gray-500 text-center">店铺门头照</p>
+                        </div>
+                      )}
+                      {bizData.interior_photo_base64 && (
+                        <div className="space-y-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={bizData.interior_photo_base64} alt="陈列照" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                          <p className="text-xs text-gray-500 text-center">店内陈列照</p>
+                        </div>
+                      )}
+                      {bizData.purchase_order_base64 && (
+                        <div className="space-y-1">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={bizData.purchase_order_base64} alt="拿货单" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                          <p className="text-xs text-gray-500 text-center">拿货单</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* 备注 */}
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">备注</label>
@@ -716,6 +746,41 @@ export default function StoresAdminPage() {
                         {detailStore.business_data.traffic_channels.map((ch: string) => (
                           <span key={ch} className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">{ch}</span>
                         ))}
+                      </div>
+                    )}
+                    {/* 当前店铺主要色系 */}
+                    {detailStore.business_data?.store_color_system?.length > 0 && (
+                      <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">主要色系：</span>
+                        {detailStore.business_data.store_color_system.map((c: string) => (
+                          <span key={c} className="px-2 py-0.5 bg-purple-50 text-purple-600 text-xs rounded-full">{c}</span>
+                        ))}
+                      </div>
+                    )}
+                    {/* 照片 & 拿货单 */}
+                    {(detailStore.business_data?.front_photo_base64 || detailStore.business_data?.interior_photo_base64 || detailStore.business_data?.purchase_order_base64) && (
+                      <div className="mt-4 grid grid-cols-3 gap-4">
+                        {detailStore.business_data?.front_photo_base64 && (
+                          <div className="space-y-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={detailStore.business_data.front_photo_base64} alt="门头照" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                            <p className="text-xs text-gray-500 text-center">店铺门头照</p>
+                          </div>
+                        )}
+                        {detailStore.business_data?.interior_photo_base64 && (
+                          <div className="space-y-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={detailStore.business_data.interior_photo_base64} alt="陈列照" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                            <p className="text-xs text-gray-500 text-center">店内陈列照</p>
+                          </div>
+                        )}
+                        {detailStore.business_data?.purchase_order_base64 && (
+                          <div className="space-y-1">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={detailStore.business_data.purchase_order_base64} alt="拿货单" className="w-full h-40 object-cover rounded-lg border border-gray-200" />
+                            <p className="text-xs text-gray-500 text-center">拿货单</p>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
