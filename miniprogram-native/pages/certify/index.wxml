@@ -7,9 +7,40 @@
       <text class="hero-title">填写店铺信息，即刻开通批发价查看权</text>
       <view class="hero-line"></view>
       <view class="benefit-card">
-        <view class="bc-head"><text class="bc-gold">认证后可享 4 大权益</text></view>
-        <view class="bc-row"><view class="bc-item"><text class="bc-icon">👁️</text><view class="bc-body"><text class="bc-name">批发价查看权</text><text class="bc-desc">认证即可查看所有商品批发价</text></view></view><view class="bc-item"><text class="bc-icon">🎁</text><view class="bc-body"><text class="bc-name">退换额度</text><text class="bc-desc">充值后享阶梯退换额度</text></view></view>
-        <view class="bc-row"><view class="bc-item"><text class="bc-icon">✨</text><view class="bc-body"><text class="bc-name">新款抢先看</text><text class="bc-desc">当季新品提前浏览推荐</text></view></view><view class="bc-item"><text class="bc-icon">📈</text><view class="bc-body"><text class="bc-name">精准推荐</text><text class="bc-desc">基于店铺画像匹配款式</text></view></view>
+        <view class="bc-head">
+          <text class="bc-gold">认证后可享 4 大权益</text>
+        </view>
+        <view class="bc-row">
+          <view class="bc-item">
+            <text class="bc-icon">👁️</text>
+            <view class="bc-body">
+              <text class="bc-name">批发价查看权</text>
+              <text class="bc-desc">认证即可查看所有商品批发价</text>
+            </view>
+          </view>
+          <view class="bc-item">
+            <text class="bc-icon">🎁</text>
+            <view class="bc-body">
+              <text class="bc-name">退换额度</text>
+              <text class="bc-desc">充值后享阶梯退换额度</text>
+            </view>
+          </view>
+        </view>
+        <view class="bc-row">
+          <view class="bc-item">
+            <text class="bc-icon">✨</text>
+            <view class="bc-body">
+              <text class="bc-name">新款抢先看</text>
+              <text class="bc-desc">当季新品提前浏览推荐</text>
+            </view>
+          </view>
+          <view class="bc-item">
+            <text class="bc-icon">📈</text>
+            <view class="bc-body">
+              <text class="bc-name">精准推荐</text>
+              <text class="bc-desc">基于店铺画像匹配款式</text>
+            </view>
+          </view>
         </view>
       </view>
     </view>
