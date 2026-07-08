@@ -15,36 +15,40 @@
     <view class="sc-badge">✓ 已开通</view>
   </view>
 
-  <!-- Tab 切换 -->
-  <view class="tabs">
-    <view class="tab {{activeTab==='price'?'tab-on':''}}" bindtap="switchTab" data-tab="price">价格会员</view>
-    <view class="tab {{activeTab==='deposit'?'tab-on':''}}" bindtap="switchTab" data-tab="deposit">拿货会员</view>
-  </view>
-
-  <!-- 价格会员 -->
-  <view class="plans" wx:if="{{activeTab==='price'}}">
-    <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{pricePlans}}" wx:key="id">
-      <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
-      <text class="pc-name">{{item.name}}</text>
-      <view class="pc-price-row">
-        <text class="pc-price">{{item.priceLabel}}</text>
-        <text class="pc-ori" wx:if="{{item.originalPrice}}">{{item.originalPrice}}</text>
+  <!-- ═════ 过渡引导：选择你的升级方式 ══════ -->
+  <view class="guide-section">
+    <text class="guide-title">选择你的升级方式</text>
+    <view class="guide-cards">
+      <!-- 左：累计拿货（免费赛道） -->
+      <view class="gc-card gc-free" bindtap="goBackMy">
+        <view class="gc-icon"><text>免</text></view>
+        <text class="gc-name">累计拿货升级</text>
+        <text class="gc-sub">认证后拿货，累计自动升折扣</text>
+        <view class="gc-features">
+          <text class="gc-f">✓ 免费</text><text class="gc-f">✓ 批发价</text><text class="gc-f">✓ 2.8/2.6折</text>
+          <text class="gc-f" style="color:#999;">— 无退换额度</text>
+        </view>
+        <view class="gc-btn gc-btn-sec">查看我的进度 →</view>
       </view>
-      <view class="pc-save" wx:if="{{item.discountLabel}}">{{item.discountLabel}}</view>
-      <view class="pc-features">
-        <text class="pc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
+      <!-- 右：直接充值（付费赛道） -->
+      <view class="gc-card gc-pay" bindtap="scrollToDeposit">
+        <view class="gc-icon"><text>充</text></view>
+        <text class="gc-name">直接充值解锁</text>
+        <text class="gc-sub">充值即同时享折扣+退换额度</text>
+        <view class="gc-features">
+          <text class="gc-f">✓ 退换额度</text><text class="gc-f">✓ 拿货折扣</text><text class="gc-f">✓ 优先发货</text>
+        </view>
+        <view class="gc-btn gc-btn-main">选套餐 ↓</view>
       </view>
-      <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即开通</view>
     </view>
   </view>
 
-  <!-- 拿货会员 -->
-  <view class="plans" wx:if="{{activeTab==='deposit'}}">
-
-    <!-- 拿货升级进度 -->
+  <!-- 拿货升级进度（锚点 id="deposit"） -->
+  <view id="deposit" class="plans">
+    <!-- 累计进度展示 -->
     <view class="upgrade-card" wx:if="{{purchaseAmount !== undefined}}">
       <view class="uc-header">
-        <text class="uc-title">拿货升级进度</text>
+        <text class="uc-title">我的累计拿货进度</text>
         <text class="uc-amount">已拿货 ¥{{purchaseAmountLabel}}</text>
       </view>
       <view class="uc-progress-bar">
@@ -52,17 +56,20 @@
       </view>
       <view class="uc-levels">
         <text class="uc-level {{currentLevel>=0?'uc-level-active':''}}">普通</text>
-        <text class="uc-level {{currentLevel>=1?'uc-level-active':''}}">5万会员</text>
-        <text class="uc-level {{currentLevel>=2?'uc-level-active':''}}">10万会员</text>
-        <text class="uc-level {{currentLevel>=3?'uc-level-active':''}}">30万会员</text>
+        <text class="uc-level {{currentLevel>=1?'uc-level-active':''}}">5万</text>
+        <text class="uc-level {{currentLevel>=2?'uc-level-active':''}}">10万</text>
+        <text class="uc-level {{currentLevel>=3?'uc-level-active':''}}">30万</text>
       </view>
       <view class="uc-tip" wx:if="{{nextLevelLabel}}">
-        再拿货 ¥{{nextLevelGapLabel}} 即可升级为 <text class="uc-next">{{nextLevelLabel}}</text>
+        再拿货 ¥{{nextLevelGapLabel}} 升级为 <text class="uc-next">{{nextLevelLabel}}</text>
       </view>
       <view class="uc-tip uc-tip-done" wx:if="{{!nextLevelLabel}}">
-        您已到达最高会员等级 🎉
+        已达最高等级 🎉
       </view>
     </view>
+
+    <!-- 充值会员套餐 -->
+    <view class="deposit-header"><text class="dh-title">充值会员套餐</text><text class="dh-sub">充值即得 折扣权 + 退换额度</text></view>
 
     <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{depositPlans}}" wx:key="id">
       <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>
@@ -73,25 +80,6 @@
         <text class="pc-f" wx:for="{{item.features}}" wx:key="*this" wx:for-item="feat">✓ {{feat}}</text>
       </view>
       <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即充值</view>
-    </view>
-  </view>
-
-  <!-- 权益对比表 -->
-  <view class="compare" wx:if="{{activeTab==='price'}}">
-    <text class="ctitle">权益对比</text>
-    <view class="ctable">
-      <view class="ctr">
-        <text class="cth">权益</text>
-        <text class="cth">体验</text>
-        <text class="cth">季卡</text>
-        <text class="cth">年卡</text>
-      </view>
-      <view class="ctr" wx:for="{{compareRows}}" wx:key="name">
-        <text class="ctd">{{item.name}}</text>
-        <text class="ctd {{item.trial?'ct-yes':'ct-no'}}">{{item.trial?'✓':'—'}}</text>
-        <text class="ctd {{item.quarterly?'ct-yes':'ct-no'}}">{{item.quarterly?'✓':'—'}}</text>
-        <text class="ctd {{item.yearly?'ct-yes':'ct-no'}}">{{item.yearly?'✓':'—'}}</text>
-      </view>
     </view>
   </view>
 

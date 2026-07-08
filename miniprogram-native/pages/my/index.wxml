@@ -63,7 +63,7 @@
     </view>
     <!-- 拿货额 / 升级文字 -->
     <view class="tcd-spent-text" wx:if="{{nextTierName}}">
-      累计拿货 <text class="tcd-spent-num">{{spentYuan}}</text> 元，再拿 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元升级 {{nextTierName}}
+      已累计 <text class="tcd-spent-num">{{spentYuan}}</text> 元，距 <text class="tcd-diff-num">{{nextTierName}}</text> 还差 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元
     </view>
     <view class="tcd-spent-text" wx:else>
       已达最高等级 {{tierName}}，感谢一路同行 🎉

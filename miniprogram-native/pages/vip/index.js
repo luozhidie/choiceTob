@@ -2,34 +2,22 @@ var app = getApp();
 
 Page({
   data:{
-    activeTab:'price',
+    activeTab:'deposit',
     isMember:false,
     memberLabel:'',
     expireDate:'',
     /* 拿货升级进度 */
     purchaseAmount:0,
     purchaseAmountLabel:'0',
-    currentLevel:0,          // 0=普通,1=5万,2=10万,3=30万
+    currentLevel:0,
     upgradeProgress:0,
     nextLevelLabel:'',
     nextLevelGapLabel:'',
-    pricePlans:[
-      {id:'price_trial',name:'价格会员·体验',priceLabel:'¥19.9',originalPrice:'',discountLabel:'省¥0',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预览'],highlight:false},
-      {id:'price_3m',name:'价格会员·季卡',priceLabel:'¥128/季',originalPrice:'¥199',discountLabel:'省¥71',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预测数据','行业选品报告(月)'],highlight:false},
-      {id:'price_1y',name:'价格会员·年卡',priceLabel:'¥399/年',originalPrice:'¥798',discountLabel:'省¥399',features:['查看所有商品批发价','对比供货价与市场价格差','爆款趋势预测数据','行业选品报告(月)','每日搭配订阅','专属客服通道'],highlight:true},
-    ],
+    /* 充值会员套餐（唯一赛道）*/
     depositPlans:[
       {id:'wholesale_5w',name:'充值会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度5%','优先发货权'],highlight:false},
       {id:'wholesale_10w',name:'充值会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
       {id:'wholesale_30w',name:'充值会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
-    ],
-    compareRows:[
-      {name:'批发价查看',trial:true,quarterly:true,yearly:true},
-      {name:'市场价格对比',trial:true,quarterly:true,yearly:true},
-      {name:'爆款趋势预测',false:true,quarterly:true,yearly:true},
-      {name:'选品报告(月)',false:false,quarterly:true,yearly:true},
-      {name:'每日搭配订阅',false:false,quarterly:false,yearly:true},
-      {name:'专属客服通道',false:false,quarterly:false,yearly:true},
     ],
     showPay:false,
     selectedPlan:null,
@@ -47,7 +35,7 @@ Page({
     var t=this;
     var ui=wx.getStorageSync('user_info');
     if(ui){
-      t.setData({isMember:true,memberLabel:'价格会员',expireDate:'2027-07-03'});
+      t.setData({isMember:true,memberLabel:'充值会员',expireDate:'2027-07-03'});
     }
   },
 
@@ -105,6 +93,20 @@ Page({
   },
 
   switchTab:function(e){this.setData({activeTab:e.currentTarget.dataset.tab});},
+
+  /* 引导卡：累计赛道 → 回我的页面看进度 */
+  goBackMy:function(){wx.navigateBack();},
+
+  /* 引导卡：充值 → 滚动到套餐区 */
+  scrollToDeposit:function(){
+    var t=this;
+    setTimeout(function(){
+      wx.createSelectorQuery().select("#deposit").boundingClientRect(function(rect){
+        if(!rect)return;
+        wx.pageScrollTo({scrollTop:Math.max(0,rect.top-10),duration:300});
+      }).exec();
+    },100);
+  },
 
   selectPlan:function(e){
     var plan=e.currentTarget.dataset.plan;
