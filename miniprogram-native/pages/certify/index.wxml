@@ -55,12 +55,12 @@
         <view class="sec-head"><text class="sec-icon">🏪</text><text class="sec-title">基本信息</text><text class="sec-hint req">*全项必填</text></view>
 
         <view class="f-grid2">
-          <view class="f-cell full"><text class="flabel req">店铺名称</text><input class="finput" value="{{name}}" placeholder="如：巴黎春天女装店" bindinput="onName"/></view>
-          <view class="f-cell"><text class="flabel req">联系人</text><input class="finput" value="{{contact}}" placeholder="张小姐" bindinput="onContact"/></view>
-          <view class="f-cell"><text class="flabel req">联系电话</text><input class="finput" type="number" value="{{phone}}" placeholder="13800138000" bindinput="onPhone"/></view>
-          <view class="f-cell"><text class="flabel req">微信号</text><input class="finput" value="{{wechat}}" placeholder="luozhidie" bindinput="onWechat"/></view>
-          <view class="f-cell"><text class="flabel req">所在城市</text><input class="finput" value="{{city}}" placeholder="杭州" bindinput="onCity"/></view>
-          <view class="f-cell"><text class="flabel req">商圈/地段</text><input class="finput" value="{{district}}" placeholder="武林银泰" bindinput="onDistrict"/></view>
+          <view class="f-cell full"><text class="flabel req">店铺名称</text><input class="finput" value="{{name}}" placeholder="" bindinput="onName"/></view>
+          <view class="f-cell"><text class="flabel req">联系人</text><input class="finput" value="{{contact}}" placeholder="" bindinput="onContact"/></view>
+          <view class="f-cell"><text class="flabel req">联系电话</text><input class="finput" type="number" value="{{phone}}" placeholder="" bindinput="onPhone"/></view>
+          <view class="f-cell"><text class="flabel req">微信号</text><input class="finput" value="{{wechat}}" placeholder="" bindinput="onWechat"/></view>
+          <view class="f-cell"><text class="flabel req">所在城市</text><input class="finput" value="{{city}}" placeholder="" bindinput="onCity"/></view>
+          <view class="f-cell"><text class="flabel req">商圈/地段</text><input class="finput" value="{{district}}" placeholder="" bindinput="onDistrict"/></view>
         </view>
 
         <view class="f-row"><text class="flabel req">经营模式</text>
@@ -158,7 +158,7 @@
       <!-- 地址 + 色系 -->
       <view class="sec-card">
         <view class="sec-head"><text class="sec-icon">📍</text><text class="sec-title">店铺位置</text><text class="sec-hint req">*</text></view>
-        <view class="f-row full"><text class="flabel req">详细地址</text><input class="finput" value="{{address}}" placeholder="如：杭州市拱墅区武林路277号" bindinput="onAddress"/></view>
+        <view class="f-row full"><text class="flabel req">详细地址</text><input class="finput" value="{{address}}" placeholder="" bindinput="onAddress"/></view>
 
         <view class="f-row"><text class="flabel req">当前店铺主要色系</text>
           <picker mode="selector" range="{{colors}}" value="{{colorIndex}}" bindchange="onColor">
@@ -212,24 +212,24 @@
         <view class="sec-head"><text class="sec-icon">📊</text><text class="sec-title">经营数据</text><text class="sec-hint opt">选填</text></view>
 
         <view class="biz-grid">
-          <view class="biz-cell"><text class="flabel">月租金（元）</text><input class="finput finput-sm" type="digit" value="{{monthlyRent}}" placeholder="如：8000" bindinput="onMonthlyRent"/></view>
-          <view class="biz-cell"><text class="flabel">保本点（元/月）</text><input class="finput finput-sm" type="digit" value="{{breakEven}}" placeholder="如：30000" bindinput="onBreakEven"/></view>
-          <view class="biz-cell"><text class="flabel">毛利率</text><input class="finput finput-sm" type="digit" value="{{grossMargin}}" placeholder="如 0.55 表示55%" bindinput="onGrossMargin"/></view>
-          <view class="biz-cell"><text class="flabel">净利率</text><input class="finput finput-sm" type="digit" value="{{netMargin}}" placeholder="如 0.55 表示55%" bindinput="onNetMargin"/></view>
-          <view class="biz-cell"><text class="flabel">线上曝光人数/月</text><input class="finput finput-sm" type="number" value="{{onlineExposure}}" placeholder="如：5000" bindinput="onOnlineExposure"/></view>
-          <view class="biz-cell"><text class="flabel">月进店数</text><input class="finput finput-sm" type="number" value="{{footTraffic}}" placeholder="如：300" bindinput="onFootTraffic"/></view>
-          <view class="biz-cell"><text class="flabel">成交率</text><input class="finput finput-sm" type="digit" value="{{conversionRate}}" placeholder="如 0.55 表示55%" bindinput="onConversionRate"/></view>
-          <view class="biz-cell"><text class="flabel">连带率</text><input class="finput finput-sm" type="digit" value="{{attachRate}}" placeholder="如：2.5" bindinput="onAttachRate"/></view>
-          <view class="biz-cell"><text class="flabel">均件单价（元）</text><input class="finput finput-sm" type="digit" value="{{avgItemPrice}}" placeholder="如：280" bindinput="onAvgItemPrice"/></view>
+          <view class="biz-cell"><text class="flabel">月租金（元）</text><input class="finput finput-sm" type="digit" value="{{monthlyRent}}" placeholder="" bindinput="onMonthlyRent"/></view>
+          <view class="biz-cell"><text class="flabel">保本点（元/月）</text><input class="finput finput-sm" type="digit" value="{{breakEven}}" placeholder="" bindinput="onBreakEven"/></view>
+          <view class="biz-cell"><text class="flabel">毛利率</text><input class="finput finput-sm" type="digit" value="{{grossMargin}}" placeholder="" bindinput="onGrossMargin"/></view>
+          <view class="biz-cell"><text class="flabel">净利率</text><input class="finput finput-sm" type="digit" value="{{netMargin}}" placeholder="" bindinput="onNetMargin"/></view>
+          <view class="biz-cell"><text class="flabel">线上曝光人数/月</text><input class="finput finput-sm" type="number" value="{{onlineExposure}}" placeholder="" bindinput="onOnlineExposure"/></view>
+          <view class="biz-cell"><text class="flabel">月进店数</text><input class="finput finput-sm" type="number" value="{{footTraffic}}" placeholder="" bindinput="onFootTraffic"/></view>
+          <view class="biz-cell"><text class="flabel">成交率</text><input class="finput finput-sm" type="digit" value="{{conversionRate}}" placeholder="" bindinput="onConversionRate"/></view>
+          <view class="biz-cell"><text class="flabel">连带率</text><input class="finput finput-sm" type="digit" value="{{attachRate}}" placeholder="" bindinput="onAttachRate"/></view>
+          <view class="biz-cell"><text class="flabel">均件单价（元）</text><input class="finput finput-sm" type="digit" value="{{avgItemPrice}}" placeholder="" bindinput="onAvgItemPrice"/></view>
         </view>
-        <view class="f-row full mt-2"><text class="flabel">月营业额（元）</text><input class="finput" type="digit" value="{{monthlyRevenue}}" placeholder="如：150000" bindinput="onMonthlyRevenue"/></view>
-        <view class="f-row full mt-2"><text class="flabel">流量渠道（逗号分隔）</text><input class="finput" value="{{trafficChannels}}" placeholder="如：小红书，抖音，线下" bindinput="onTrafficChannels"/></view>
+        <view class="f-row full mt-2"><text class="flabel">月营业额（元）</text><input class="finput" type="digit" value="{{monthlyRevenue}}" placeholder="" bindinput="onMonthlyRevenue"/></view>
+        <view class="f-row full mt-2"><text class="flabel">流量渠道（逗号分隔）</text><input class="finput" value="{{trafficChannels}}" placeholder="" bindinput="onTrafficChannels"/></view>
       </view>
 
       <!-- 备注 -->
       <view class="sec-card">
         <view class="sec-head"><text class="sec-icon">📝</text><text class="sec-title">备注 / 需求说明</text><text class="sec-hint opt">选填</text></view>
-        <textarea class="ftextarea" value="{{notes}}" placeholder="如有特殊需求可在此说明，如：希望优先推荐韩系风格、需要搭配建议等" bindinput="onNotes"/>
+        <textarea class="ftextarea" value="{{notes}}" placeholder="" bindinput="onNotes"/>
       </view>
 
       <button class="btn-primary btn-lg {{submitting?'submitting':''}}" bindtap="submitCertify" disabled="{{submitting}}">
