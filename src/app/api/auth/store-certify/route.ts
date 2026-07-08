@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
         interior_photo_base64: bd.interior_photo_base64 || null,
         credibility_score: score,
         credibility_level: score >= 80 ? "high" : score >= 55 ? "medium" : "low",
-        source: "mini_program_certify",
+        source: bd.source || "mini_program_certify",
         submitted_at: new Date().toISOString(),
       },
 
