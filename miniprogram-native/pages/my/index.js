@@ -2,10 +2,10 @@
 
 /* 拿货会员等级（累计拿货额自动升级，连续6月不拿货降级） */
 var TIERS=[
-  {key:'normal',name:'普通',badge:'L1',threshold:0},
-  {key:'level5w',name:'5万会员',badge:'L2',threshold:50000},
-  {key:'level10w',name:'10万会员',badge:'L3',threshold:100000},
-  {key:'level30w',name:'30万会员',badge:'L4',threshold:300000}
+  {key:'normal',name:'普通',badge:'L1',threshold:0,discount:''},
+  {key:'level5w',name:'5万会员',badge:'L2',threshold:50000,discount:'2.8折'},
+  {key:'level10w',name:'10万会员',badge:'L3',threshold:100000,discount:'2.8折'},
+  {key:'level30w',name:'30万会员',badge:'L4',threshold:300000,discount:'2.6折'}
 ];
 
 /* 未认证时显示的引导权益（同行截图1）*/
@@ -134,6 +134,7 @@ Page({
       spentYuan:spent.toFixed(2),
       nextTierName:next?next.name:'',
       nextTierDiff:diff,
+      nextTierDiscount:next?next.discount||'':'',
       tierProgress:progress
     });
   },
