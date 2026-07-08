@@ -1,9 +1,9 @@
-/* ═══════ 认证店主 · 表单版（暗色+分组卡片设计） ═══════ */
+/* ═══════ 认证店主 · 三步渐进式表单（暗色+分组卡片） ═══════ */
 page{background:#f5f2ef;min-height:100vh;}
 
 /* ── 导航 ── */
 .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:16rpx 30rpx;background:#fff;border-bottom:1rpx solid #ede8e4;}
-.nav-title{font-size:34rpx;font-weight:bold;color:#2d1b2e;}
+.nav-title{font-size:32rpx;font-weight:bold;color:#2d1b2e;}
 .back-btn{font-size:28rpx;color:#8a7e7b;padding:8rpx 0;}
 
 /* ═══ Step 1: 开场 Hero ═══ */
@@ -19,19 +19,28 @@ page{background:#f5f2ef;min-height:100vh;}
 .hero-title{display:block;font-size:38rpx;font-weight:bold;color:#b8945a;line-height:1.55;margin-bottom:14rpx;}
 .hero-line{width:56rpx;height:4rpx;background:linear-gradient(90deg,#b8945a,transparent);margin:0 auto 20rpx;border-radius:2rpx;}
 
-/* 权益卡片（照同行排版）*/
+/* 权益卡片 */
 .benefit-card{
   margin:-24rpx 28rpx 0;background:#fff;border-radius:20rpx;
   padding:32rpx 24rpx 24rpx;box-shadow:0 10rpx 36rpx rgba(0,0,0,.08);position:relative;z-index:2;
 }
 .bc-head{text-align:center;margin-bottom:20rpx;}
 .bc-gold{font-size:29rpx;font-weight:bold;color:#b8945a;}
-.bc-row{display:flex;gap:12rpx;margin-bottom:10rpx;}
-.bc-item:last-child .bc-row{margin-bottom:0;}
+.bc-row{display:flex;gap:12rpx;margin-bottom:12rpx;}
+.bc-row:last-child{margin-bottom:0;}
 .bc-item{flex:1;background:#faf8f6;border-radius:14rpx;padding:18rpx 12rpx;display:flex;align-items:center;gap:10rpx;}
 .bc-icon{font-size:34rpx;shrink:0;width:46rpx;text-align:center;}
+.bc-body{flex:1;min-width:0;}
 .bc-name{display:block;font-size:24rpx;font-weight:600;color:#333;}
 .bc-desc{display:block;font-size:19rpx;color:#aaa;margin-top:2rpx;}
+
+/* 为什么卡片 */
+.why-card{
+  margin:24rpx 28rpx;background:#fffdf9;border-radius:18rpx;
+  padding:26rpx 28rpx;border:1rpx solid #f0e6d8;
+}
+.why-title{display:block;font-size:27rpx;font-weight:bold;color:#2d1b2e;margin-bottom:14rpx;}
+.why-line{display:block;font-size:23rpx;color:#8a7e7b;line-height:1.9;}
 
 .btn-hero{
   display:block;width:calc(100% - 56rpx);margin:28rpx 28rpx 44rpx;
@@ -40,44 +49,57 @@ page{background:#f5f2ef;min-height:100vh;}
   text-align:center;border:none;box-shadow:0 10rpx 34rpx rgba(196,69,105,.35);
 }
 
-/* ═══ 表单区域（scroll-view 保证可滚动） ═══ */
+/* ═══ 表单区域 ═══ */
 .form-scroll{height:calc(100vh - 96rpx);}
 
-/* 分组卡片（照同行：section header + 内容区） */
 .sec-card{background:#fff;border-radius:20rpx;margin:20rpx 24rpx;padding:28rpx 24rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.04);}
-.sec-head{display:flex;align-items:center;gap:10rpx;margin-bottom:24rpx;padding-bottom:16rpx;border-bottom:1rpx solid #f0ece8;}
+.sec-head{display:flex;align-items:center;gap:10rpx;margin-bottom:22rpx;padding-bottom:16rpx;border-bottom:1rpx solid #f0ece8;}
 .sec-icon{font-size:30rpx;}
-.sec-title{font-size:29rpx;font-weight:bold;color:#2d1b2e;}
+.sec-title{font-size:29rpx;font-weight:bold;color:#2d1b2e;flex:1;}
+.sec-hint{font-size:21rpx;color:#bbb;}
+.sec-hint.opt{color:#c44569;}
 
-/* 字段网格（2列，同行风格） */
-.f-grid{display:flex;flex-wrap:wrap;gap:16rpx;}
-.f-cell{width:calc(50% - 8rpx);display:flex;flex-direction:column;gap:8rpx;}
-.f-cell.full{width:100%;}
-.flist{display:flex;flex-direction:column;gap:0;}
-.f-row{display:flex;align-items:center;justify-content:space-between;padding:18rpx 0;border-bottom:1rpx solid #f5f2ef;}
+.f-row{display:flex;align-items:center;justify-content:space-between;padding:16rpx 0;border-bottom:1rpx solid #f5f2ef;}
 .f-row:last-child{border:none;}
+.f-row.full{flex-direction:column;align-items:stretch;gap:12rpx;}
+.flabel{font-size:26rpx;color:#555;font-weight:500;shrink:0;}
+.flabel.req::before{content:'* ';color:#c44569;}
 
-/* 标签 */
-.flabel{font-size:25rpx;color:#666;font-weight:500;shrink:0;}
-
-/* 输入框（关键：确保能响应点击） */
+/* 输入框 */
 .finput{
-  width:100%;height:72rpx;padding:0 20rpx;
+  width:48%;height:72rpx;padding:0 20rpx;
   background:#fafafa;border:1rpx solid #e8e4df;border-radius:12rpx;
-  font-size:27rpx;color:#333;box-sizing:border-box;line-height:72rpx;
+  font-size:27rpx;color:#333;border-box;line-height:normal;
 }
+.f-row.full .finput{width:100%;}
 .ftextarea{
   width:100%;min-height:140rpx;padding:18rpx 20rpx;
   background:#fafafa;border:1rpx solid #e8e4df;border-radius:12rpx;
   font-size:26rpx;color:#333;box-sizing:border-box;
 }
 .fpick{
-  font-size:26rpx;color:#555;padding:8rpx 0;
+  font-size:26rpx;color:#555;padding:8rpx 0;text-align:right;min-width:160rpx;
 }
+.fpick-big{
+  font-size:28rpx;color:#333;padding:24rpx;background:#fafafa;
+  border:1rpx solid #e8e4df;border-radius:12rpx;text-align:center;
+}
+
+/* 多选标签（拿货市场/品类/风格） */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:16rpx;}
+.chk{
+  padding:18rpx 32rpx;border:2rpx solid #e8e4df;border-radius:40rpx;
+  font-size:26rpx;color:#666;background:#fafafa;transition:all .15s;
+}
+.chk-on{border-color:#c44569;background:rgba(196,69,105,.06);color:#c44569;font-weight:600;}
+
+/* 提示框 */
+.tip-box{margin:8rpx 24rpx 24rpx;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:16rpx;padding:24rpx 28rpx;}
+.tip-txt{display:block;font-size:24rpx;color:#166534;line-height:1.9;}
 
 /* 按钮 */
 .btn-primary{
-  display:block;width:auto;margin:32rpx 40rpx 24rpx;padding:30rpx 0;
+  display:block;margin:32rpx 40rpx 24rpx;padding:30rpx 0;
   background:linear-gradient(135deg,#c44569,#e85d75);color:#fff;
   font-size:31rpx;font-weight:bold;border-radius:22rpx;text-align:center;border:none;
   box-shadow:0 8rpx 28rpx rgba(196,69,105,.28);
@@ -95,7 +117,7 @@ page{background:#f5f2ef;min-height:100vh;}
   border:2rpx solid #ede8e4;border-radius:20rpx;text-align:center;
 }
 
-/* ═══ Step 4: 成功 ═══ */
+/* ═══ Step 5: 成功 ═══ */
 .done-wrap{text-align:center;padding:60rpx 36rpx;}
 .done-crown{font-size:88rpx;margin-bottom:18rpx;display:inline-block;}
 .done-tit{display:block;font-size:40rpx;font-weight:bold;color:#2d1b2e;margin-bottom:8rpx;}

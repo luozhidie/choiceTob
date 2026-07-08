@@ -1,77 +1,148 @@
 <view class="page">
-  <!-- ═══ Step 1: 开场（暗色+金色） ═══ -->
+
+  <!-- ═══ Step 1: 开场 ═══ -->
   <block wx:if="{{step==='intro'}}">
     <view class="hero">
       <text class="hero-badge">认证店主 · 开通批发价</text>
-      <text class="hero-title">填写店铺信息，即刻开通批发价查看权</text>
+      <text class="hero-title">简单几步，即刻开通批发价查看权</text>
       <view class="hero-line"></view>
 
       <view class="benefit-card">
         <view class="bc-head"><text class="bc-gold">认证后可享 4 大权益</text></view>
-        <view class="bc-row"><view class="bc-item"><text class="bc-icon">👁️</text><text class="bc-name">批发价查看权</text><text class="bc-desc">认证即可查看所有商品批发价</text></view><view class="bc-item"><text class="bc-icon">🎁</text><text class="bc-name">退换额度</text><text class="bc-desc">充值后享阶梯退换额度</text></view></view>
-        <view class="bc-row"><view class="bc-item"><text class="bc-icon">✨</text><text class="bc-name">新款抢先看</text><text class="bc-desc">当季新品提前浏览推荐</text></view><view class="bc-item"><text class="bc-icon">📈</text><text class="bc-name">精准推荐</text><text class="bc-desc">基于店铺画像匹配款式</text></view></view>
+        <view class="bc-row"><view class="bc-item"><text class="bc-icon">👁️</text><view class="bc-body"><text class="bc-name">批发价查看权</text><text class="bc-desc">认证即可查看所有商品批发价</text></view></view><view class="bc-item"><text class="bc-icon">🎁</text><view class="bc-body"><text class="bc-name">退换额度</text><text class="bc-desc">充值后享阶梯退换额度</text></view></view>
+        <view class="bc-row"><view class="bc-item"><text class="bc-icon">✨</text><view class="bc-body"><text class="bc-name">新款抢先看</text><text class="bc-desc">当季新品提前浏览推荐</text></view></view><view class="bc-item"><text class="bc-icon">📈</text><view class="bc-body"><text class="bc-name">精准推荐</text><text class="bc-desc">基于店铺画像匹配款式</text></view></view>
+        </view>
+      </view>
+
+      <!-- 为什么要认证 -->
+      <view class="why-card">
+        <text class="why-title">为什么需要填写这些？</text>
+        <text class="why-line">· 帮助我们了解您的店铺定位，推荐更合适的款式</text>
+        <text class="why-line">· 不涉及任何财务数据，保护商业隐私</text>
+        <text class="why-line">· 信息仅用于服务优化，绝不对外泄露</text>
       </view>
     </view>
 
-    <button class="btn-hero" bindtap="goForm">填写店铺信息，开通认证 →</button>
+    <button class="btn-hero" bindtap="goIdentity">开始填写 →</button>
   </block>
 
-  <!-- ═══ Step 2: 基本信息 ═══ -->
-  <block wx:if="{{step==='base'}}">
+  <!-- ═══ Step 2: 店铺身份 ═══ -->
+  <block wx:if="{{step==='identity'}}">
     <view class="nav-bar">
       <text bindtap="goBackStep" class="back-btn">← 上一步</text>
-      <text class="nav-title">店铺基本信息</text><text></text>
+      <text class="nav-title">1/3 店铺身份</text><text></text>
     </view>
-
     <scroll-view scroll-y class="form-scroll">
-      <!-- 基本信息分组 -->
       <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">🏪</text><text class="sec-title">基本信息</text></view>
-        <view class="f-grid">
-          <view class="f-cell full"><text class="flabel req">店铺名称</text><input class="finput" value="{{name}}" placeholder="如：巴黎春天女装店" bindinput="onName"/></view>
-          <view class="f-cell"><text class="flabel">联系人</text><input class="finput" value="{{contact}}" placeholder="张小姐" bindinput="onContact"/></view>
-          <view class="f-cell"><text class="flabel">联系电话</text><input class="finput" type="number" value="{{phone}}" placeholder="13800138000" bindinput="onPhone"/></view>
-          <view class="f-cell"><text class="flabel">微信号</text><input class="finput" value="{{wechat}}" placeholder="luozhidie" bindinput="onWechat"/></view>
-          <view class="f-cell"><text class="flabel">所在城市</text><input class="finput" value="{{city}}" placeholder="杭州" bindinput="onCity"/></view>
-          <view class="f-cell"><text class="flabel">商圈/地段</text><input class="finput" value="{{district}}" placeholder="武林银泰" bindinput="onDistrict"/></view>
+        <view class="sec-head"><text class="sec-icon">🏪</text><text class="sec-title">基本信息</text><text class="sec-hint">* 必填</text></view>
+
+        <view class="f-row"><text class="flabel req">店铺名称</text><input class="finput" value="{{name}}" placeholder="如：巴黎春天女装店" bindinput="onName"/></view>
+
+        <view class="f-row"><text class="flabel">经营模式</text>
+          <picker mode="selector" range="{{shopTypes}}" value="{{shopTypeIndex}}" bindchange="onShopType">
+            <view class="fpick">{{shopTypes[shopTypeIndex]}} ▾</view>
+          </picker>
+        </view>
+
+        <view class="f-row"><text class="flabel">所在城市</text><input class="finput" value="{{city}}" placeholder="如：杭州" bindinput="onCity"/></view>
+
+        <view class="f-row"><text class="flabel">从业年限</text>
+          <picker mode="selector" range="{{yearOptions}}" value="{{yearsIndex}}" bindchange="onYears">
+            <view class="fpick">{{yearOptions[yearsIndex]}} ▾</view>
+          </picker>
         </view>
       </view>
 
-      <!-- 经营特征分组 -->
-      <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">🎯</text><text class="sec-title">经营特征</text></view>
-        <view class="f-list">
-          <view class="f-row"><text class="flabel">店铺面积</text><picker mode="selector" range="{{shopSizeOptions}}" value="{{shopSizeIndex}}" bindchange="onShopSize"><view class="fpick">{{shopSizeOptions[shopSizeIndex]}} ▾</view></picker></view>
-          <view class="f-row"><text class="flabel">风格定位</text><picker mode="selector" range="{{styleOptions}}" value="{{styleIndex}}" bindchange="onStyle"><view class="fpick">{{styleOptions[styleIndex]}} ▾</view></picker></view>
-          <view class="f-row"><text class="flabel">目标年龄层</text><picker mode="selector" range="{{ageOptions}}" value="{{ageIndex}}" bindchange="onAge"><view class="fpick">{{ageOptions[ageIndex]}} ▾</view></picker></view>
-          <view class="f-row"><text class="flabel">价格带</text><picker mode="selector" range="{{priceOptions}}" value="{{priceIndex}}" bindchange="onPrice"><view class="fpick">{{priceOptions[priceIndex]}} ▾</view></picker></view>
-        </view>
-      </view>
-
-      <button class="btn-primary" bindtap="goBiz">下一步：填写经营数据 →</button>
+      <button class="btn-primary" bindtap="goProfile">下一步：经营画像 →</button>
     </scroll-view>
   </block>
 
-  <!-- ═══ Step 3: 经营数据 ═══ -->
-  <block wx:if="{{step==='biz'}}">
+  <!-- ═══ Step 3: 经营画像 ═══ -->
+  <block wx:if="{{step==='profile'}}">
     <view class="nav-bar">
       <text bindtap="goBackStep" class="back-btn">← 上一步</text>
-      <text class="nav-title">店铺经营数据</text><text></text>
+      <text class="nav-title">2/3 经营画像</text><text></text>
     </view>
+    <scroll-view scroll-y class="form-scroll">
+      <!-- 拿货市场（多选）-->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">🚛</text><text class="sec-title">主要拿货市场</text><text class="sec-hint opt">可多选</text></view>
+        <view class="tag-wrap">
+          <view class="chk {{marketCheck[0]?'chk-on':''}}" data-idx="0" bindtap="toggleMarket">广州</view>
+          <view class="chk {{marketCheck[1]?'chk-on':''}}" data-idx="1" bindtap="toggleMarket">杭州</view>
+          <view class="chk {{marketCheck[2]?'chk-on':''}}" data-idx="2" bindtap="toggleMarket">深圳</view>
+          <view class="chk {{marketCheck[3]?'chk-on':''}}" data-idx="3" bindtap="toggleMarket">上海</view>
+          <view class="chk {{marketCheck[4]?'chk-on':''}}" data-idx="4" bindtap="toggleMarket">常熟</view>
+          <view class="chk {{marketCheck[5]?'chk-on':''}}" data-idx="5" bindtap="toggleMarket">其他</view>
+        </view>
+      </view>
 
+      <!-- 拿货频次 -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">📅</text><text class="sec-title">月均拿货频次</text></view>
+        <picker mode="selector" range="{{freqOptions}}" value="{{freqIndex}}" bindchange="onFreq">
+          <view class="fpick-big">{{freqOptions[freqIndex]}} ▾</view>
+        </picker>
+      </view>
+
+      <!-- 主营品类（多选）-->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">👗</text><text class="sec-title">主营品类</text><text class="sec-hint opt">可多选</text></view>
+        <view class="tag-wrap">
+          <view class="chk {{categoryCheck[0]?'chk-on':''}}" data-idx="0" bindtap="toggleCat">女装</view>
+          <view class="chk {{categoryCheck[1]?'chk-on':''}}" data-idx="1" bindtap="toggleCat">男装</view>
+          <view class="chk {{categoryCheck[2]?'chk-on':''}}" data-idx="2" bindtap="toggleCat">童装</view>
+          <view class="chk {{categoryCheck[3]?'chk-on':''}}" data-idx="3" bindtap="toggleCat">配饰</view>
+          <view class="chk {{categoryCheck[4]?'chk-on':''}}" data-idx="4" bindtap="toggleCat">内衣/家居服</view>
+        </view>
+      </view>
+
+      <!-- 风格偏好（多选）-->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">🎨</text><text class="sec-title">风格偏好</text><text class="sec-hint opt">可多选</text></view>
+        <view class="tag-wrap">
+          <view class="chk {{styleCheck[0]?'chk-on':''}}" data-idx="0" bindtap="toggleStyle">淑女风</view>
+          <view class="chk {{styleCheck[1]?'chk-on':''}}" data-idx="1" bindtap="toggleStyle">知性风</view>
+          <view class="chk {{styleCheck[2]?'chk-on':''}}" data-idx="2" bindtap="toggleStyle">名媛风</view>
+          <view class="chk {{styleCheck[3]?'chk-on':''}}" data-idx="3" bindtap="toggleStyle">中性风</view>
+          <view class="chk {{styleCheck[4]?'chk-on':''}}" data-idx="4" bindtap="toggleStyle">潮牌风</view>
+          <view class="chk {{styleCheck[5]?'chk-on':''}}" data-idx="5" bindtap="toggleStyle">职业风</view>
+          <view class="chk {{styleCheck[6]?'chk-on':''}}" data-idx="6" bindtap="toggleStyle">休闲风</view>
+          <view class="chk {{styleCheck[7]?'chk-on':''}}" data-idx="7" bindtap="toggleStyle">大牌风</view>
+        </view>
+      </view>
+
+      <!-- 价格带 -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">💰</text><text class="sec-title">价格带</text></view>
+        <picker mode="selector" range="{{prices}}" value="{{priceIndex}}" bindchange="onPrice">
+          <view class="fpick-big">{{prices[priceIndex]}} ▾</view>
+        </picker>
+      </view>
+
+      <button class="btn-primary" bindtap="goContact">下一步：补充联系 →</button>
+    </scroll-view>
+  </block>
+
+  <!-- ═══ Step 4: 联系 + 提交 ═══ -->
+  <block wx:if="{{step==='contact'}}">
+    <view class="nav-bar">
+      <text bindtap="goBackStep" class="back-btn">← 上一步</text>
+      <text class="nav-title">3/3 完成认证</text><text></text>
+    </view>
     <scroll-view scroll-y class="form-scroll">
       <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">📊</text><text class="sec-title">经营数据</text></view>
-        <view class="f-grid">
-          <view class="f-cell"><text class="flabel">月租金（元）</text><input class="finput" type="digit" value="{{rent}}" placeholder="选填" bindinput="onRent"/></view>
-          <view class="f-cell"><text class="flabel">保本点（元/月）</text><input class="finput" type="digit" value="{{breakeven}}" placeholder="选填" bindinput="onBreakeven"/></view>
-          <view class="f-cell"><text class="flabel">毛利率</text><input class="finput" type="digit" value="{{grossMargin}}" placeholder="0.55=55%" bindinput="onGross"/></view>
-          <view class="f-cell"><text class="flabel">净利率</text><input class="finput" type="digit" value="{{netMargin}}" placeholder="0.2=20%" bindinput="onNet"/></view>
-          <view class="f-cell full"><text class="flabel">月营业额（元）</text><input class="finput" type="digit" value="{{turnover}}" placeholder="选填" bindinput="onTurnover"/></view>
-          <view class="f-cell full"><text class="flabel">流量渠道</text><input class="finput" value="{{channels}}" placeholder="小红书，抖音，线下" bindinput="onChannels"/></view>
-          <view class="f-cell full"><text class="flabel">当前流行趋势</text><input class="finput" value="{{trends}}" placeholder="新中式，莫兰迪色" bindinput="onTrends"/></view>
-          <view class="f-cell full"><text class="flabel">备注</text><textarea class="ftextarea" value="{{notes}}" placeholder="选填" bindinput="onNotes"/></view>
-        </view>
+        <view class="sec-head"><text class="sec-icon">💬</text><text class="sec-title">联系方式（选填，便于后续服务）</text></view>
+
+        <view class="f-row"><text class="flabel">微信号</text><input class="finput" value="{{wechat}}" placeholder="选填" bindinput="onWechat"/></view>
+        <view class="f-row"><text class="flabel">联系电话</text><input class="finput" type="number" value="{{phone}}" placeholder="选填" bindinput="onPhone"/></view>
+        <view class="f-row full"><text class="flabel">备注 / 需求说明</text><textarea class="ftextarea" value="{{notes}}" placeholder="选填，如：希望优先推荐韩系风格" bindinput="onNotes"/></view>
+      </view>
+
+      <view class="tip-box">
+        <text class="tip-txt">✅ 提交后即可开通批发价查看权</text>
+        <text class="tip-txt">✅ 您的店铺信息将同步至后台管理</text>
+        <text class="tip-txt">✅ 后续将有专属顾问为您推荐款式</text>
       </view>
 
       <button class="btn-primary btn-lg {{submitting?'submitting':''}}" bindtap="submitCertify" disabled="{{submitting}}">
@@ -81,7 +152,7 @@
     </scroll-view>
   </block>
 
-  <!-- ═══ Step 4: 成功 ═══ -->
+  <!-- ═══ Step 5: 成功 ═══ -->
   <block wx:if="{{step==='done'}}">
     <view class="done-wrap">
       <view class="done-crown">👑</view>
