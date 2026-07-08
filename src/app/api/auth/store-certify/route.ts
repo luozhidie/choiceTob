@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { normalizeStoreName } from "@/lib/store-name";
 
 /**
  * 小程序店铺认证接口（4步渐进式全必填）
@@ -89,9 +90,12 @@ export async function POST(req: NextRequest) {
 
     const score = calcCredibility(store);
 
+    // 店名拼城市，形成「店名(城市)」唯一业务键，按 店名+城市 排重
+    const finalName = normalizeStoreName(store.name, store.city);
+
     const storePayload = {
       owner_id: uid,
-      name: String(store.name).trim(),
+      name: finalName,
       contact_person: store.contact_person || null,
       phone: store.phone || null,
       wechat: store.wechat || null,
@@ -119,15 +123,36 @@ export async function POST(req: NextRequest) {
       status: "active",
     };
 
-    const { data: inserted, error: sErr } = await serviceClient
+    // 查重：同一用户、同店名同城市 → 更新原记录（幂等提交，防重复创建）
+    const { data: existing } = await serviceClient
       .from("stores")
-      .insert([storePayload])
       .select("id")
-      .single();
+      .eq("owner_id", uid)
+      .eq("name", finalName)
+      .maybeSingle();
 
-    if (sErr) {
-      console.error("[Store Certify] 写入 stores 失败:", sErr);
-      return NextResponse.json({ error: "店铺信息保存失败：" + sErr.message }, { status: 500 });
+    let storeId: string | null = null;
+    if (existing?.id) {
+      const { error: uErr } = await serviceClient
+        .from("stores")
+        .update({ ...storePayload, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (uErr) {
+        console.error("[Store Certify] 更新 stores 失败:", uErr);
+        return NextResponse.json({ error: "店铺信息保存失败：" + uErr.message }, { status: 500 });
+      }
+      storeId = existing.id;
+    } else {
+      const { data: inserted, error: sErr } = await serviceClient
+        .from("stores")
+        .insert([storePayload])
+        .select("id")
+        .single();
+      if (sErr) {
+        console.error("[Store Certify] 写入 stores 失败:", sErr);
+        return NextResponse.json({ error: "店铺信息保存失败：" + sErr.message }, { status: 500 });
+      }
+      storeId = inserted?.id || null;
     }
 
     // 更新 profiles：标记为认证店主
@@ -161,7 +186,7 @@ export async function POST(req: NextRequest) {
       success: true,
       message: "认证成功，已开启批发价",
       store_owner_certified: true,
-      store_id: inserted?.id || null,
+      store_id: storeId,
       credibility_score: score,
     });
 

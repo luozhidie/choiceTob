@@ -17,6 +17,7 @@ import {
   Tooltip, Legend, ResponsiveContainer, CartesianGrid,
 } from "recharts";
 import { FEMALE_STYLES, MALE_STYLES, STYLE_KEY_MAP, STYLE_PRO_MAP, FEMALE_STYLE_KEYS, MALE_STYLE_KEYS, FEMALE_STYLE_ALL_KEYS, MALE_STYLE_ALL_KEYS, getColorSeasonFullLabel, getStyleProLabel } from "@/lib/styles";
+import { normalizeStoreName } from "@/lib/store-name";
 
 /* ==================== 类型 ==================== */
 interface StoreType {
@@ -222,8 +223,10 @@ export default function StoresAdminPage() {
   const handleSave = async () => {
     if (!form.name.trim()) { alert("店铺名称不能为空"); return; }
     setSaving(true);
+    // 店名拼城市，形成「店名(城市)」唯一业务键，按 店名+城市 排重
+    const finalName = normalizeStoreName(form.name, form.city);
     const payload = {
-      name: form.name, contact_person: form.contact_person || null,
+      name: finalName, contact_person: form.contact_person || null,
       phone: form.phone || null, wechat: form.wechat || null,
       city: form.city || null, district: form.district || null,
       shop_size: form.shop_size || null, style_position: form.style_position || null,
@@ -233,7 +236,14 @@ export default function StoresAdminPage() {
     if (editingStore) {
       await supabase.from("stores").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", editingStore.id);
     } else {
-      await supabase.from("stores").insert([payload]);
+      // 查重：后台一个名字=一家店铺；同名同城市视为重复，更新而非新建
+      const { data: existing } = await supabase
+        .from("stores").select("id").eq("name", finalName).maybeSingle();
+      if (existing?.id) {
+        await supabase.from("stores").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", existing.id);
+      } else {
+        await supabase.from("stores").insert([payload]);
+      }
     }
     setShowForm(false);
     setSaving(false);
