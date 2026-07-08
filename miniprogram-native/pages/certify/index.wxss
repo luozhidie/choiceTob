@@ -58,6 +58,7 @@ page{background:#f5f2ef;min-height:100vh;}
 .sec-title{font-size:29rpx;font-weight:bold;color:#2d1b2e;flex:1;}
 .sec-hint{font-size:21rpx;color:#bbb;}
 .sec-hint.opt{color:#c44569;}
+.sec-hint.req{color:#c44569;font-weight:600;}
 
 .f-row{display:flex;align-items:center;justify-content:space-between;padding:16rpx 0;border-bottom:1rpx solid #f5f2ef;}
 .f-row:last-child{border:none;}

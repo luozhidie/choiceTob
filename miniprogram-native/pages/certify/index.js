@@ -12,6 +12,8 @@ Page({
     freqIndex:0,categoryCheck:[false,false,false,false,false],
     styleCheck:[false,false,false,false,false,false,false,false],
     priceIndex:0,
+    ageIndex:-1,
+    ages:['18-25岁','26-35岁','36-45岁','46-55岁','全年龄'],
     freqOptions:['每月1~2次','每月3~4次','每周2~3次','隔天一次','每天'],
     categories:['女装','男装','童装','配饰','内衣/家居服'],
     styles:['淑女风','知性风','名媛风','中性风','潮牌风','职业风','休闲风','大牌风'],
@@ -51,9 +53,9 @@ Page({
   onYears:function(e){this.setData({yearsIndex:Number(e.detail.value)});},
 
   goProfile:function(){
-    if(!this.data.name || !this.data.name.trim()){
-      wx.showToast({title:'请填写店铺名称',icon:'none'});return;
-    }
+    var d=this.data;
+    if(!d.name || !d.name.trim()){wx.showToast({title:'请填写店铺名称',icon:'none'});return;}
+    if(!d.city || !d.city.trim()){wx.showToast({title:'请填写所在城市',icon:'none'});return;}
     this.setData({step:'profile'});
   },
 
@@ -75,8 +77,16 @@ Page({
     c[i]=!c[i];this.setData({styleCheck:c});
   },
   onPrice:function(e){this.setData({priceIndex:Number(e.detail.value)});},
+  onAge:function(e){this.setData({ageIndex:Number(e.detail.value)});},
 
   goContact:function(){
+    var d=this.data;
+    var hasMarket=d.marketCheck.some(function(v){return v;});
+    var hasStyle=d.styleCheck.some(function(v){return v;});
+    if(!hasMarket){wx.showToast({title:'请至少选择1个拿货市场',icon:'none'});return;}
+    if(!hasStyle){wx.showToast({title:'请至少选择1个风格偏好',icon:'none'});return;}
+    if(d.ageIndex<0){wx.showToast({title:'请选择目标年龄层',icon:'none'});return;}
+    if(d.priceIndex<0){wx.showToast({title:'请选择价格带',icon:'none'});return;}
     this.setData({step:'contact'});
   },
 
@@ -129,7 +139,7 @@ Page({
       district:null,
       shop_size:null,
       style_position:(selStyles.length>0?selStyles.join(','):null),
-      target_age:null,
+      target_age:(d.ageIndex>=0?d.ages[d.ageIndex]:null),
       price_range:d.prices[d.priceIndex]||null,
       business_data:{
         shop_type:d.shopTypes[d.shopTypeIndex]||null,

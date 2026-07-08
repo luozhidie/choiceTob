@@ -44,7 +44,7 @@
           </picker>
         </view>
 
-        <view class="f-row"><text class="flabel">所在城市</text><input class="finput" value="{{city}}" placeholder="如：杭州" bindinput="onCity"/></view>
+        <view class="f-row"><text class="flabel req">所在城市</text><input class="finput" value="{{city}}" placeholder="如：杭州" bindinput="onCity"/></view>
 
         <view class="f-row"><text class="flabel">从业年限</text>
           <picker mode="selector" range="{{yearOptions}}" value="{{yearsIndex}}" bindchange="onYears">
@@ -66,7 +66,7 @@
     <scroll-view scroll-y class="form-scroll">
       <!-- 拿货市场（多选）-->
       <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">🚛</text><text class="sec-title">主要拿货市场</text><text class="sec-hint opt">可多选</text></view>
+        <view class="sec-head"><text class="sec-icon">🚛</text><text class="sec-title">主要拿货市场</text><text class="sec-hint req">*必选</text></view>
         <view class="tag-wrap">
           <view class="chk {{marketCheck[0]?'chk-on':''}}" data-idx="0" bindtap="toggleMarket">广州</view>
           <view class="chk {{marketCheck[1]?'chk-on':''}}" data-idx="1" bindtap="toggleMarket">杭州</view>
@@ -99,7 +99,7 @@
 
       <!-- 风格偏好（多选）-->
       <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">🎨</text><text class="sec-title">风格偏好</text><text class="sec-hint opt">可多选</text></view>
+        <view class="sec-head"><text class="sec-icon">🎨</text><text class="sec-title">风格偏好</text><text class="sec-hint req">*必选</text></view>
         <view class="tag-wrap">
           <view class="chk {{styleCheck[0]?'chk-on':''}}" data-idx="0" bindtap="toggleStyle">淑女风</view>
           <view class="chk {{styleCheck[1]?'chk-on':''}}" data-idx="1" bindtap="toggleStyle">知性风</view>
@@ -114,9 +114,16 @@
 
       <!-- 价格带 -->
       <view class="sec-card">
-        <view class="sec-head"><text class="sec-icon">💰</text><text class="sec-title">价格带</text></view>
+        <view class="sec-head"><text class="sec-icon">👥</text><text class="sec-title">目标年龄层</text><text class="sec-hint req">*必选</text></view>
+        <picker mode="selector" range="{{ages}}" value="{{ageIndex}}" bindchange="onAge">
+          <view class="fpick-big">{{ageIndex<0?'请选择 ▾':ages[ageIndex]+' ▾'}}</view>
+        </picker>
+      </view>
+
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">💰</text><text class="sec-title">价格带</text><text class="sec-hint req">*必选</text></view>
         <picker mode="selector" range="{{prices}}" value="{{priceIndex}}" bindchange="onPrice">
-          <view class="fpick-big">{{prices[priceIndex]}} ▾</view>
+          <view class="fpick-big">{{priceIndex<0?'请选择 ▾':prices[priceIndex]+' ▾'}}</view>
         </picker>
       </view>
 
