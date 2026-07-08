@@ -19,7 +19,6 @@
   <view class="tabs">
     <view class="tab {{activeTab==='price'?'tab-on':''}}" bindtap="switchTab" data-tab="price">价格会员</view>
     <view class="tab {{activeTab==='deposit'?'tab-on':''}}" bindtap="switchTab" data-tab="deposit">拿货会员</view>
-    <view class="tab {{activeTab==='test'?'tab-on':''}}" bindtap="switchTab" data-tab="test">测试会员</view>
   </view>
 
   <!-- 价格会员 -->
@@ -74,25 +73,6 @@
         <text class="pc-f" wx:for="{{item.features}}" wx:key="*this" wx:for-item="feat">✓ {{feat}}</text>
       </view>
       <view class="pc-btn" bindtap="selectPlan" data-plan="{{item}}">立即充值</view>
-    </view>
-  </view>
-
-  <!-- 测试会员 - 双卡布局 -->
-  <view class="test-section" wx:if="{{activeTab==='test'}}">
-    <text class="ts-title">色彩风格测试</text>
-    <view class="ts-cards">
-      <view class="ts-card" wx:for="{{testPlans}}" wx:key="id">
-        <view class="tsc-icon" style="background:{{item.color}}15;color:{{item.color}};">{{item.icon}}</view>
-        <text class="tsc-name">{{item.name}}</text>
-        <text class="tsc-sub">{{item.sub}}</text>
-        <view class="tsc-features">
-          <text class="tsc-f" wx:for="{{item.features}}" wx:key="*this">✓ {{item}}</text>
-        </view>
-        <view class="tsc-row">
-          <text class="tsc-price" style="color:{{item.color}};">{{item.priceLabel}}</text>
-          <text class="tsc-btn" style="color:{{item.color}};" bindtap="goTest" data-plan="{{item}}">立即测试 →</text>
-        </view>
-      </view>
     </view>
   </view>
 

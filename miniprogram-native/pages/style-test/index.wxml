@@ -5,6 +5,16 @@
     <text class="hs">{{testDesc}}</text>
   </view>
 
+  <!-- 测试会员购买入口（移自VIP页） -->
+  <view class="member-card {{testMode==='male'?'mc-blue':''}}">
+    <view class="mc-left">
+      <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
+      <text class="mc-desc">含专业诊断题 + AI色彩报告 + 微信推送结果</text>
+    </view>
+    <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
+    <view wx:else class="mc-btn mc-done">已开通 ✓</view>
+  </view>
+
   <!-- 女士测试表单 -->
   <scroll-view scroll-y class="form-scroll" wx:if="{{testMode==='female'}}">
     <view class="form">

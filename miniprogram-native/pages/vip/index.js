@@ -23,12 +23,6 @@ Page({
       {id:'wholesale_10w',name:'拿货会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
       {id:'wholesale_30w',name:'拿货会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
     ],
-    testPlans:[
-      {id:'test_female',name:'女士风格测试',sub:'14道题·自动出结果',priceLabel:'¥99',price:99,icon:'👩',color:'#e91e63',
-        features:['17道专业诊断题','色彩风格匹配报告','搭配建议方案','结果微信通知']},
-      {id:'test_male',name:'男士风格测试',sub:'14道题·自动出结果',priceLabel:'¥99',price:99,icon:'👨',color:'#1976d2',
-        features:['14道专业诊断题','色彩风格匹配报告','穿搭建议方案','结果微信通知']},
-    ],
     compareRows:[
       {name:'批发价查看',trial:true,quarterly:true,yearly:true},
       {name:'市场价格对比',trial:true,quarterly:true,yearly:true},
@@ -147,14 +141,6 @@ Page({
               wx.showToast({title:'支付成功',icon:'success'});
               t.setData({showPay:false,selectedPlan:null});
               t.chkLogin();
-              /* 测试会员支付成功后跳转测试页 */
-              if(planData.id==='test_female'||planData.id==='test_male'){
-                setTimeout(function(){
-                  wx.navigateTo({
-                    url:'/pages/style-test/index?mode='+(planData.id==='test_female'?'female':'male')
-                  });
-                },1200);
-              }
             },
             fail:function(err){
               if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1)){
@@ -172,12 +158,6 @@ Page({
     });
   },
 
-  /* 测试会员 - 点击立即测试 */
-  goTest:function(e){
-    var plan=e.currentTarget.dataset.plan;
-    this.doWechatPay(plan);
-  },
-
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
 
   confirmPay:function(){
@@ -193,9 +173,6 @@ Page({
     if(pid==='wholesale_5w')return 5000000;
     if(pid==='wholesale_10w')return 10000000;
     if(pid==='wholesale_30w')return 30000000;
-    if(pid==='test_style')return 9900;
-    if(pid==='test_female')return 9900;
-    if(pid==='test_male')return 9900;
     return 100;
   }
 });

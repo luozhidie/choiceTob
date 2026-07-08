@@ -78,6 +78,10 @@ page{background:#f5f3f0;}
   display:flex;align-items:center;justify-content:center;font-size:32rpx;}
 .tcdb-label{font-size:19rpx;color:rgba(255,255,255,.6);text-align:center;}
 .tcd-foot{display:block;font-size:18rpx;color:rgba(255,255,255,.4);text-align:center;margin-top:16rpx;line-height:1.4;}
+.tcd-price-entry{margin-top:14rpx;padding:16rpx 20rpx;border-radius:12rpx;
+  background:linear-gradient(135deg,rgba(252,211,77,.12),rgba(245,158,11,.08));
+  border:1rpx solid rgba(252,211,77,.2);}
+.tcd-price-txt{font-size:21rpx;color:#fcd34d;font-weight:600;text-align:center;}
 
 /* ====== 快捷数据行（3格）===== */
 .stats-row{display:flex;gap:12rpx;padding:0 20rpx;margin-top:12rpx;}

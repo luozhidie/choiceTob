@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data:{
     /* 当前测试模式：female / male */
@@ -5,6 +7,10 @@ Page({
     testTitle:'',
     testDesc:'',
     tipText:'所有信息仅用于色彩风格诊断，严格保密',
+
+    /* 测试会员（从风格测试入口购买，不再放在VIP页） */
+    isTestMember:false,
+    testFeeLabel:'¥99',
 
     /* 女士表单 (17题) */
     fForm:{
@@ -118,5 +124,35 @@ Page({
         showCancel:false,confirmText:'知道了'
       });
     },800);
+  },
+
+  /* 开通测试会员（从风格测试入口购买，¥99） */
+  buyTestMember:function(){
+    var t=this;
+    if(!app||!app.getOpenid){wx.showToast({title:'暂不支持',icon:'none'});return;}
+    wx.showLoading({title:'调起支付...'});
+    app.getOpenid().then(function(openid){
+      var isFemale=t.data.testMode==='female';
+      var pid=isFemale?'test_female':'test_male';
+      var title=isFemale?'女士风格测试会员':'男士风格测试会员';
+      wx.request({
+        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        method:'POST',
+        data:{product_id:pid,product_title:title,total_fee:9900,quantity:1,platform:'mini',openid:openid},
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          var p=d.jsapi||d;
+          wx.requestPayment({
+            timeStamp:p.timeStamp,nonceStr:p.nonceStr,package:p.package,
+            signType:p.signType||'MD5',paySign:p.paySign,
+            success:function(){wx.showToast({title:'开通成功',icon:'success'});t.setData({isTestMember:true});},
+            fail:function(err){if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1))wx.showToast({title:'支付失败',icon:'none'});}
+          });
+        },
+        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+      });
+    }).catch(function(){wx.hideLoading();wx.showToast({title:'无法调起支付',icon:'none'});});
   },
 });

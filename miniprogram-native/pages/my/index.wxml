@@ -63,7 +63,7 @@
     </view>
     <!-- 拿货额 / 升级文字 -->
     <view class="tcd-spent-text" wx:if="{{nextTierName}}">
-      本月已拿货 <text class="tcd-spent-num">{{spentYuan}}</text> 元，再拿 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元升级 {{nextTierName}}
+      累计拿货 <text class="tcd-spent-num">{{spentYuan}}</text> 元，再拿 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元升级 {{nextTierName}}
     </view>
     <view class="tcd-spent-text" wx:else>
       已达最高等级 {{tierName}}，感谢一路同行 🎉
@@ -77,8 +77,12 @@
         </view>
       </block>
     </view>
-    <!-- 等级计算说明 -->
-    <text class="tcd-foot">等级按累计拿货额自动计算 · 认证店主免费起步</text>
+    <!-- 等级计算说明 + 保级 -->
+    <text class="tcd-foot">累计拿货额自动升级 · 连续6月不拿货将降级</text>
+    <!-- 充值入口：累计赛道无退换，充值同时得折扣+退换 -->
+    <view class="tcd-price-entry" bindtap="goVip">
+      <text class="tcd-price-txt">充值解锁退换额度 + 拿货折扣 →</text>
+    </view>
   </view>
 
   <!-- ═══════ 未登录后：正常显示下方内容 ═══════ -->

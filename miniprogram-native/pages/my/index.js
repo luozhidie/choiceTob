@@ -1,12 +1,11 @@
 /* ── 小程序「我的」页 — 三态：未登录 / 已登录未认证 / 已登录已认证 ── */
 
-/* 等级常量 */
+/* 拿货会员等级（累计拿货额自动升级，连续6月不拿货降级） */
 var TIERS=[
-  {key:'normal',name:'普通会员',badge:'V1',threshold:0},
-  {key:'silver',name:'白银会员',badge:'V2',threshold:2000},
-  {key:'gold',name:'黄金会员',badge:'V3',threshold:50000},
-  {key:'platinum',name:'铂金会员',badge:'V4',threshold:100000},
-  {key:'diamond',name:'钻石会员',badge:'V5',threshold:300000}
+  {key:'normal',name:'普通',badge:'L1',threshold:0},
+  {key:'level5w',name:'5万会员',badge:'L2',threshold:50000},
+  {key:'level10w',name:'10万会员',badge:'L3',threshold:100000},
+  {key:'level30w',name:'30万会员',badge:'L4',threshold:300000}
 ];
 
 /* 未认证时显示的引导权益（同行截图1）*/
@@ -17,21 +16,20 @@ var CERT_BENEFITS=[
   {icon:'新',title:'新款先看'}
 ];
 
-/* 已认证时等级卡内权益（同行截图2）—— 用汉字徽标，必渲染、贴合服装调性 */
+/* 已认证时等级卡内权益（拿货会员累计赛道——只有折扣权，退换需充值） */
 var TIER_CARD_BENEFITS=[
   {icon:'价',title:'批发价'},
-  {icon:'退',title:'退换额度'},
-  {icon:'客',title:'专属客服'},
-  {icon:'邮',title:'包邮特权'}
+  {icon:'折',title:'拿货折扣'},
+  {icon:'新',title:'新款抢先'},
+  {icon:'荐',title:'精准推荐'}
 ];
 
-/* 各等级一句话说明，让店主一眼看懂“这是什么等级” */
+/* 各等级一句话说明（累计拿货额→折扣权，退换需单独充值） */
 var TIER_DESC=[
-  '认证店主基础等级，拿货累计自动升级',
-  '已享批发价，继续拿货解锁更多权益',
-  '已解锁新款抢先 + 5% 退换额度',
-  '已解锁专属客服 + 10% 退换额度',
-  '顶级会员：数据报告 + 20% 退换额度'
+  '认证即享批发价，累计拿货解锁折扣',
+  '累计5万：拿货折扣2.8折',
+  '累计10万：拿货折扣2.8折 + 新款优先',
+  '累计30万：拿货折扣2.6折 + 数据报告'
 ];
 
 Page({
@@ -46,14 +44,14 @@ Page({
     isCertified:false,
     certifiedStyle:'',
 
-    /* ===== 成长等级 ===== */
+    /* ===== 拿货等级（累计制） ===== */
     tierIdx:0,
-    tierBadge:'V1',
-    tierName:'普通会员',
-    tierDesc:'认证店主基础等级，拿货累计自动升级',
+    tierBadge:'L1',
+    tierName:'普通',
+    tierDesc:'认证即享批发价，累计拿货解锁折扣',
     spentYuan:0,
-    nextTierName:'白银会员',
-    nextTierDiff:2000,
+    nextTierName:'5万会员',
+    nextTierDiff:50000,
     tierProgress:0,
 
     /* ===== 统计 ===== */
@@ -235,8 +233,8 @@ Page({
   },
 
   goRules:function(){wx.showModal({
-    title:'会员权益领取规则',
-    content:'【解锁条件】\n白银(≥2k):批发价查看\n黄金(≥5w):新款抢先+退货5%\n铂金(≥10w):专属客服+退货10%\n钻石(≥30w):数据报告+退货20%\n\n【认证店主·免费赛道】\n答题通过即可免费看批发价。\n\n详细规则请登录网页 colour-choice.art/my 查看',
+    title:'拿货会员权益规则',
+    content:'【累计赛道·免费】认证后拿货累计金额自动升折扣等级（无退换额度）\nL1 普通(≥0): 批发价查看权\nL2/L3 5万~10万: 拿货2.8折\nL4 30万: 拿货2.6折 + 数据报告\n\n【充值赛道·付费】充值即同时获得 拿货折扣 + 退换额度(5%/10%/20%)，独立权益\n\n【保级规则】连续6个月无拿货记录将降级\n\n【价格会员】单独购买，时间制，到期收回权益',
     showCancel:false,confirmText:'知道了'
   });}
 });
