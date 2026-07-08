@@ -142,14 +142,18 @@ export async function POST(req: NextRequest) {
       console.error("[Store Certify] 更新 profiles 失败:", pErr);
     }
 
-    // 数据积累表
-    await serviceClient.from("store_owner_certifications").insert({
-      user_id: uid,
-      quiz_passed: true,
-      style: store.style_position || null,
-      monthly_sales: null,
-      region: store.city || null,
-    }).catch((e: any) => console.error("[Store Certify] certifications 写入失败:", e));
+    // 数据积累表（非核心路径，失败不阻断）
+    try {
+      await serviceClient.from("store_owner_certifications").insert({
+        user_id: uid,
+        quiz_passed: true,
+        style: store.style_position || null,
+        monthly_sales: null,
+        region: store.city || null,
+      });
+    } catch (e: any) {
+      console.error("[Store Certify] certifications 写入失败:", e);
+    }
 
     return NextResponse.json({
       success: true,
