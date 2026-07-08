@@ -2,63 +2,57 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * 小程序店铺认证接口（三步渐进式信息录入）
+ * 小程序店铺认证接口（4步渐进式全必填）
  * POST /api/auth/store-certify
- * Body: { token, store:{ name, phone, wechat, city, style_position, price_range, business_data } }
  *
- * business_data 包含：shop_type / years_experience / wholesale_markets /
- *                      purchase_frequency / main_categories / credibility_score / source / notes
+ * Step 1: 店铺身份（店名/联系人/电话/微信/城市/商圈/经营模式/面积）— 全必填
+ * Step 2: 经营画像（拿货市场/频次/品类/风格/年龄层/价格带）— 全必填
+ * Step 3: 补充信息（地址/色系/门头照/陈列照/备注）— 全必填
  *
- * 设计原则：
- * 1. 只收集对后续"推荐款式+精准服务"有价值、且不敏感的经营画像数据
- * 2. 后端二次计算可信度分（credibility_score），交叉校验异常组合（如新手+每天拿货）
- * 3. 与后台店铺管理 stores 表字段对齐，数据直接同步到后台
- *
- * 本接口只处理用户自己提交的店铺数据，不涉及后台管理权限。
+ * 数据写入 stores 表，同步至后台"店铺管理"，电脑端手机端共用同一张表。
  */
 
 function decodeToken(token: string): { uid?: string } | null {
   try {
-    const json = Buffer.from(token, "base64url").toString("utf8");
-    return JSON.parse(json);
+    return JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
   } catch {
     return null;
   }
 }
 
-/** 后端可信度评分：0-100，交叉校验异常组合 */
+/** 后端可信度评分 */
 function calcCredibility(s: any): number {
   const bd = s.business_data || {};
-  let score = 40; // 基础分（能提交即给）
-
-  // 身份信息完整度
+  let score = 40;
   if (s.name && String(s.name).trim().length >= 4) score += 12;
-  if (s.city) score += 8;
-  if (bd.shop_type) score += 4;
+  if (s.city) score += 10;
+  if (s.contact_person) score += 6;
+  if (s.phone && /^1\d{10}$/.test(String(s.phone))) score += 8;
+  if (s.wechat) score += 4;
   if (s.style_position) score += 6;
+  if (s.target_age) score += 4;
   if (s.price_range) score += 4;
 
-  // 经营画像完整度（选择题越多越可信）
   const markets = String(bd.wholesale_markets || "").split(",").filter(Boolean);
   const cats = String(bd.main_categories || "").split(",").filter(Boolean);
-  const styles = String(s.style_position || "").split(",").filter(Boolean);
   if (markets.length >= 1) score += 8;
-  if (markets.length >= 2) score += 4; // 多市场更真实
-  if (cats.length >= 1) score += 6;
-  if (styles.length >= 1) score += 4;
+  if (markets.length >= 2) score += 4;
+  if (cats.length >= 1) score += 4;
+  if (bd.shop_type) score += 4;
+  if (bd.purchase_frequency) score += 4;
 
-  // 联系方式（可选但加分）
-  if (s.wechat) score += 4;
-  if (s.phone && /^1\d{10}$/.test(String(s.phone))) score += 4;
+  // 照片上传是强信号
+  if (bd.front_photo_base64) score += 12;
+  if (bd.interior_photo_base64) score += 8;
+  // 地址填写
+  if (bd.store_address) score += 6;
+  // 色系选择
+  if (bd.store_color_system) score += 4;
 
-  // 交叉校验异常组合（扣分）
+  // 交叉校验异常扣分
   const years = bd.years_experience || "";
   const freq = bd.purchase_frequency || "";
-  // 新手（<1年）却"每天拿货" → 可疑
-  if ((years.includes("半年") || years.includes("<6")) && freq.includes("每天")) {
-    score -= 20;
-  }
-  // 无城市却填了具体拿货市场 → 可疑
+  if ((years.includes("半年") || years.includes("<6")) && freq.includes("每天")) score -= 20;
   if (!s.city && markets.length >= 1) score -= 8;
 
   return Math.max(0, Math.min(100, score));
@@ -69,7 +63,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { token, store } = body;
 
-    // ── 身份识别 ──
     if (!token) {
       return NextResponse.json({ error: "未登录，请先登录后再认证" }, { status: 401 });
     }
@@ -89,12 +82,10 @@ export async function POST(req: NextRequest) {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
-    // 展开前端传来的 business_data（不再嵌套 extra）
-    const bd = store.business_data && typeof store.business_data === "object" ? store.business_data : {};
+    const bd = store.business_data && typeof store.business_data === "object"
+      ? store.business_data : {};
 
-    // 后端二次算可信度分（防止前端篡改）
     const score = calcCredibility(store);
-    const level = score >= 80 ? "high" : score >= 55 ? "medium" : "low";
 
     const storePayload = {
       owner_id: uid,
@@ -108,11 +99,20 @@ export async function POST(req: NextRequest) {
       style_position: store.style_position || null,
       target_age: store.target_age || null,
       price_range: store.price_range || null,
+
+      // 弹性 JSON 字段：存放小程序特有的扩展数据
       business_data: {
         ...bd,
+        store_address: bd.store_address || null,
+        store_color_system: bd.store_color_system || null,
+        front_photo_base64: bd.front_photo_base64 || null,
+        interior_photo_base64: bd.interior_photo_base64 || null,
         credibility_score: score,
-        credibility_level: level,
+        credibility_level: score >= 80 ? "high" : score >= 55 ? "medium" : "low",
+        source: "mini_program_certify",
+        submitted_at: new Date().toISOString(),
       },
+
       notes: store.notes || bd.notes || null,
       status: "active",
     };
@@ -140,18 +140,16 @@ export async function POST(req: NextRequest) {
 
     if (pErr) {
       console.error("[Store Certify] 更新 profiles 失败:", pErr);
-      return NextResponse.json({ error: "认证状态保存失败：" + pErr.message }, { status: 500 });
     }
 
     // 数据积累表
-    const { error: cErr } = await serviceClient.from("store_owner_certifications").insert({
+    await serviceClient.from("store_owner_certifications").insert({
       user_id: uid,
       quiz_passed: true,
       style: store.style_position || null,
       monthly_sales: null,
       region: store.city || null,
-    });
-    if (cErr) console.error("[Store Certify] 写入 certifications 失败:", cErr);
+    }).catch((e: any) => console.error("[Store Certify] certifications 写入失败:", e));
 
     return NextResponse.json({
       success: true,
@@ -159,8 +157,8 @@ export async function POST(req: NextRequest) {
       store_owner_certified: true,
       store_id: inserted?.id || null,
       credibility_score: score,
-      credibility_level: level,
     });
+
   } catch (err: any) {
     console.error("[Store Certify API Error]", err);
     return NextResponse.json({ error: err.message || "认证失败" }, { status: 500 });

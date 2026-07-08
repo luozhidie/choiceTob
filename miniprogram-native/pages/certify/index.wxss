@@ -1,4 +1,4 @@
-/* ═══════ 认证店主 · 三步渐进式表单（暗色+分组卡片） ═══════ */
+/* ═══════ 认证店主 · 4步渐进式全必填表单 ═══════ */
 page{background:#f5f2ef;min-height:100vh;}
 
 /* ── 导航 ── */
@@ -19,7 +19,6 @@ page{background:#f5f2ef;min-height:100vh;}
 .hero-title{display:block;font-size:38rpx;font-weight:bold;color:#b8945a;line-height:1.55;margin-bottom:14rpx;}
 .hero-line{width:56rpx;height:4rpx;background:linear-gradient(90deg,#b8945a,transparent);margin:0 auto 20rpx;border-radius:2rpx;}
 
-/* 权益卡片 */
 .benefit-card{
   margin:-24rpx 28rpx 0;background:#fff;border-radius:20rpx;
   padding:32rpx 24rpx 24rpx;box-shadow:0 10rpx 36rpx rgba(0,0,0,.08);position:relative;z-index:2;
@@ -33,14 +32,6 @@ page{background:#f5f2ef;min-height:100vh;}
 .bc-body{flex:1;min-width:0;}
 .bc-name{display:block;font-size:24rpx;font-weight:600;color:#333;}
 .bc-desc{display:block;font-size:19rpx;color:#aaa;margin-top:2rpx;}
-
-/* 为什么卡片 */
-.why-card{
-  margin:24rpx 28rpx;background:#fffdf9;border-radius:18rpx;
-  padding:26rpx 28rpx;border:1rpx solid #f0e6d8;
-}
-.why-title{display:block;font-size:27rpx;font-weight:bold;color:#2d1b2e;margin-bottom:14rpx;}
-.why-line{display:block;font-size:23rpx;color:#8a7e7b;line-height:1.9;}
 
 .btn-hero{
   display:block;width:calc(100% - 56rpx);margin:28rpx 28rpx 44rpx;
@@ -57,22 +48,29 @@ page{background:#f5f2ef;min-height:100vh;}
 .sec-icon{font-size:30rpx;}
 .sec-title{font-size:29rpx;font-weight:bold;color:#2d1b2e;flex:1;}
 .sec-hint{font-size:21rpx;color:#bbb;}
-.sec-hint.opt{color:#c44569;}
+.sec-hint.opt{color:#999;}
 .sec-hint.req{color:#c44569;font-weight:600;}
+
+/* 两列网格（Step1 基本信息） */
+.f-grid2{display:flex;flex-wrap:wrap;gap:14rpx;}
+.f-cell{width:calc(50% - 7rpx);display:flex;flex-direction:column;gap:8rpx;}
+.f-cell.full{width:100%;}
 
 .f-row{display:flex;align-items:center;justify-content:space-between;padding:16rpx 0;border-bottom:1rpx solid #f5f2ef;}
 .f-row:last-child{border:none;}
 .f-row.full{flex-direction:column;align-items:stretch;gap:12rpx;}
+
 .flabel{font-size:26rpx;color:#555;font-weight:500;shrink:0;}
 .flabel.req::before{content:'* ';color:#c44569;}
 
-/* 输入框 */
 .finput{
   width:48%;height:72rpx;padding:0 20rpx;
   background:#fafafa;border:1rpx solid #e8e4df;border-radius:12rpx;
-  font-size:27rpx;color:#333;border-box;line-height:normal;
+  font-size:27rpx;color:#333;line-height:normal;
 }
+.f-cell.full .finput,
 .f-row.full .finput{width:100%;}
+
 .ftextarea{
   width:100%;min-height:140rpx;padding:18rpx 20rpx;
   background:#fafafa;border:1rpx solid #e8e4df;border-radius:12rpx;
@@ -86,17 +84,28 @@ page{background:#f5f2ef;min-height:100vh;}
   border:1rpx solid #e8e4df;border-radius:12rpx;text-align:center;
 }
 
-/* 多选标签（拿货市场/品类/风格） */
-.tag-wrap{display:flex;flex-wrap:wrap;gap:16rpx;}
+/* 多选标签 */
+.tag-wrap{display:flex;flex-wrap:wrap;gap:14rpx;padding-top:4rpx;}
 .chk{
-  padding:18rpx 32rpx;border:2rpx solid #e8e4df;border-radius:40rpx;
+  padding:18rpx 30rpx;border:2rpx solid #e8e4df;border-radius:40rpx;
   font-size:26rpx;color:#666;background:#fafafa;transition:all .15s;
 }
 .chk-on{border-color:#c44569;background:rgba(196,69,105,.06);color:#c44569;font-weight:600;}
 
-/* 提示框 */
-.tip-box{margin:8rpx 24rpx 24rpx;background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-radius:16rpx;padding:24rpx 28rpx;}
-.tip-txt{display:block;font-size:24rpx;color:#166534;line-height:1.9;}
+/* ── 照片上传区域 ── */
+.photo-area{
+  margin-bottom:24rpx;border:2rpx dashed #ddd;border-radius:16rpx;
+  overflow:hidden;position:relative;
+}
+.photo-img{width:100%;height:320rpx;display:block;}
+.photo-placeholder{
+  height:280rpx;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10rpx;background:#fafafa;
+}
+.photo-icon{font-size:60rpx;}
+.photo-txt{font-size:27rpx;color:#888;}
+.photo-tip{font-size:22rpx;color:#bbb;}
+.photo-label{display:block;text-align:left;padding:12rpx 16rpx;font-size:23rpx;color:#888;background:#f9f9f9;}
 
 /* 按钮 */
 .btn-primary{
@@ -118,7 +127,7 @@ page{background:#f5f2ef;min-height:100vh;}
   border:2rpx solid #ede8e4;border-radius:20rpx;text-align:center;
 }
 
-/* ═══ Step 5: 成功 ═══ */
+/* ═══ 成功 ═══ */
 .done-wrap{text-align:center;padding:60rpx 36rpx;}
 .done-crown{font-size:88rpx;margin-bottom:18rpx;display:inline-block;}
 .done-tit{display:block;font-size:40rpx;font-weight:bold;color:#2d1b2e;margin-bottom:8rpx;}
