@@ -192,6 +192,40 @@
         </view>
       </view>
 
+      <!-- 拿货单上传（必填） -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">🧾</text><text class="sec-title">拿货单</text><text class="sec-hint req">*</text></view>
+
+        <view class="photo-area" bindtap="choosePurchaseOrder">
+          <image wx:if="{{purchaseOrderPath}}" src="{{purchaseOrderPath}}" mode="aspectFill" class="photo-img"></image>
+          <view wx:else class="photo-placeholder">
+            <text class="photo-icon">🧾</text>
+            <text class="photo-txt">点击上传拿货单</text>
+            <text class="photo-tip">拍照或相册选取近期拿货单据</text>
+          </view>
+          <text class="photo-label req">* 上传拿货单（必填）</text>
+        </view>
+      </view>
+
+      <!-- 经营数据（选填） -->
+      <view class="sec-card">
+        <view class="sec-head"><text class="sec-icon">📊</text><text class="sec-title">经营数据</text><text class="sec-hint opt">选填</text></view>
+
+        <view class="biz-grid">
+          <view class="biz-cell"><text class="flabel">月租金（元）</text><input class="finput finput-sm" type="digit" value="{{monthlyRent}}" placeholder="如：8000" bindinput="onMonthlyRent"/></view>
+          <view class="biz-cell"><text class="flabel">保本点（元/月）</text><input class="finput finput-sm" type="digit" value="{{breakEven}}" placeholder="如：30000" bindinput="onBreakEven"/></view>
+          <view class="biz-cell"><text class="flabel">毛利率</text><input class="finput finput-sm" type="digit" value="{{grossMargin}}" placeholder="如 0.55 表示55%" bindinput="onGrossMargin"/></view>
+          <view class="biz-cell"><text class="flabel">净利率</text><input class="finput finput-sm" type="digit" value="{{netMargin}}" placeholder="如 0.55 表示55%" bindinput="onNetMargin"/></view>
+          <view class="biz-cell"><text class="flabel">线上曝光人数/月</text><input class="finput finput-sm" type="number" value="{{onlineExposure}}" placeholder="如：5000" bindinput="onOnlineExposure"/></view>
+          <view class="biz-cell"><text class="flabel">月进店数</text><input class="finput finput-sm" type="number" value="{{footTraffic}}" placeholder="如：300" bindinput="onFootTraffic"/></view>
+          <view class="biz-cell"><text class="flabel">成交率</text><input class="finput finput-sm" type="digit" value="{{conversionRate}}" placeholder="如 0.55 表示55%" bindinput="onConversionRate"/></view>
+          <view class="biz-cell"><text class="flabel">连带率</text><input class="finput finput-sm" type="digit" value="{{attachRate}}" placeholder="如：2.5" bindinput="onAttachRate"/></view>
+          <view class="biz-cell"><text class="flabel">均件单价（元）</text><input class="finput finput-sm" type="digit" value="{{avgItemPrice}}" placeholder="如：280" bindinput="onAvgItemPrice"/></view>
+        </view>
+        <view class="f-row full mt-2"><text class="flabel">月营业额（元）</text><input class="finput" type="digit" value="{{monthlyRevenue}}" placeholder="如：150000" bindinput="onMonthlyRevenue"/></view>
+        <view class="f-row full mt-2"><text class="flabel">流量渠道（逗号分隔）</text><input class="finput" value="{{trafficChannels}}" placeholder="如：小红书，抖音，线下" bindinput="onTrafficChannels"/></view>
+      </view>
+
       <!-- 备注 -->
       <view class="sec-card">
         <view class="sec-head"><text class="sec-icon">📝</text><text class="sec-title">备注 / 需求说明</text><text class="sec-hint opt">选填</text></view>

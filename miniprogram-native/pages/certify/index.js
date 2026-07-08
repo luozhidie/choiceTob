@@ -26,6 +26,21 @@ Page({
             '黑白灰极简','马卡龙/糖果色','撞色/对比色','韩系清新','法式优雅','其他'],
     frontPhotoPath:null,   // 门头照 temp path
     interiorPhotoPath:null, // 陈列照 temp path
+    purchaseOrderPath:null,// 拿货单 temp path（必填）
+
+    /* ── 经营数据（选填） ── */
+    monthlyRent:'',        // 月租金(元)
+    breakEven:'',          // 保本点(元/月)
+    grossMargin:'',        // 毛利率
+    netMargin:'',          // 净利率
+    onlineExposure:'',     // 线上曝光人数/月
+    footTraffic:'',        // 月进店数
+    conversionRate:'',     // 成交率
+    attachRate:'',         // 连带率
+    avgItemPrice:'',       // 均件单价(元)
+    monthlyRevenue:'',     // 月营业额(元)
+    trafficChannels:'',    // 流量渠道
+
     notes:'',
 
     submitting:false,submitError:'',needLogin:false,
@@ -106,6 +121,17 @@ Page({
   onAddress:function(e){this.setData({address:e.detail.value});},
   onColor:function(e){this.setData({colorIndex:Number(e.detail.value)});},
   onNotes:function(e){this.setData({notes:e.detail.value});},
+  onMonthlyRent:function(e){this.setData({monthlyRent:e.detail.value});},
+  onBreakEven:function(e){this.setData({breakEven:e.detail.value});},
+  onGrossMargin:function(e){this.setData({grossMargin:e.detail.value});},
+  onNetMargin:function(e){this.setData({netMargin:e.detail.value});},
+  onOnlineExposure:function(e){this.setData({onlineExposure:e.detail.value});},
+  onFootTraffic:function(e){this.setData({footTraffic:e.detail.value});},
+  onConversionRate:function(e){this.setData({conversionRate:e.detail.value});},
+  onAttachRate:function(e){this.setData({attachRate:e.detail.value});},
+  onAvgItemPrice:function(e){this.setData({avgItemPrice:e.detail.value});},
+  onMonthlyRevenue:function(e){this.setData({monthlyRevenue:e.detail.value});},
+  onTrafficChannels:function(e){this.setData({trafficChannels:e.detail.value});},
 
   chooseFrontPhoto:function(){
     var t=this;
@@ -127,6 +153,16 @@ Page({
       }
     });
   },
+  choosePurchaseOrder:function(){
+    var t=this;
+    wx.chooseMedia({count:1,mediaType:['image'],sizeType:['compressed'],sourceType:['album','camera'],
+      success:function(r){
+        if(r.tempFiles&&r.tempFiles[0]){
+          t.setData({purchaseOrderPath:r.tempFiles[0].tempFilePath});
+        }
+      }
+    });
+  },
 
   submitCertify:function(){
     var t=this;
@@ -139,11 +175,12 @@ Page({
     if(d.colorIndex<0){t.setData({submitting:false});wx.showToast({title:'请选择店铺主要色系',icon:'none'});return;}
     if(!d.frontPhotoPath){t.setData({submitting:false});wx.showToast({title:'请上传店铺门头照',icon:'none'});return;}
     if(!d.interiorPhotoPath){t.setData({submitting:false});wx.showToast({title:'请上传店内陈列照',icon:'none'});return;}
+    if(!d.purchaseOrderPath){t.setData({submitting:false});wx.showToast({title:'请上传拿货单',icon:'none'});return;}
 
     var token=wx.getStorageSync('token');
     if(!token){t.setData({submitting:false,needLogin:true});return;}
 
-    // 图片转 base64
+    // 图片转 base64（门头照 + 陈列照 + 拿货单）
     wx.showLoading({title:'正在提交...'});
     Promise.all([
       new Promise(function(resolve){wx.getFileSystemManager().readFile({
@@ -153,6 +190,11 @@ Page({
       });}),
       new Promise(function(resolve){wx.getFileSystemManager().readFile({
         filePath:d.interiorPhotoPath,encoding:'base64',
+        success:function(res){resolve('data:image/jpeg;base64,'+res.data);},
+        fail:function(){resolve(null);}
+      });}),
+      new Promise(function(resolve){wx.getFileSystemManager().readFile({
+        filePath:d.purchaseOrderPath,encoding:'base64',
         success:function(res){resolve('data:image/jpeg;base64,'+res.data);},
         fail:function(){resolve(null);}
       });})
@@ -190,6 +232,19 @@ Page({
           notes:d.notes||null,
           front_photo_base64:imgResults[0],     // 门头照
           interior_photo_base64:imgResults[1],  // 陈列照
+          purchase_order_base64:imgResults[2],  // 拿货单
+          /* 经营数据（选填，有值才传） */
+          monthly_rent:d.monthlyRent?Number(d.monthlyRent):null,
+          break_even_point:d.breakEven?Number(d.breakEven):null,
+          gross_margin_rate:d.grossMargin?Number(d.grossMargin):null,
+          net_margin_rate:d.netMargin?Number(d.netMargin):null,
+          online_exposure:d.onlineExposure?Number(d.onlineExposure):null,
+          foot_traffic:d.footTraffic?Number(d.footTraffic):null,
+          conversion_rate:d.conversionRate?Number(d.conversionRate):null,
+          attach_rate:d.attachRate?Number(d.attachRate):null,
+          avg_item_price:d.avgItemPrice?Number(d.avgItemPrice):null,
+          monthly_revenue:d.monthlyRevenue?Number(d.monthlyRevenue):null,
+          traffic_channels:d.trafficChannels.trim()||null,
         },
         notes:d.notes||null,
       };

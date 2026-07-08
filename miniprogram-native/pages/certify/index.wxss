@@ -107,6 +107,16 @@ page{background:#f5f2ef;min-height:100vh;}
 .photo-tip{font-size:22rpx;color:#bbb;}
 .photo-label{display:block;text-align:left;padding:12rpx 16rpx;font-size:23rpx;color:#888;background:#f9f9f9;}
 
+/* ── 经营数据网格（选填） ── */
+.biz-grid{display:flex;flex-wrap:wrap;gap:14rpx;}
+.biz-cell{width:calc(50% - 7rpx);display:flex;flex-direction:column;gap:8rpx;}
+.finput-sm{
+  height:64rpx;padding:0 16rpx;
+  background:#fafafa;border:1rpx solid #e8e4df;border-radius:12rpx;
+  font-size:24rpx;color:#333;line-height:normal;
+}
+.mt-2{margin-top:16rpx;}
+
 /* 按钮 */
 .btn-primary{
   display:block;margin:32rpx 40rpx 24rpx;padding:30rpx 0;

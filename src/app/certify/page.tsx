@@ -7,7 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import {
   ShieldCheck, ArrowRight, ChevronRight, Sparkles,
   Eye, Loader2, Gift, TrendingUp, Camera, Store,
-  User, MessageCircle, MapPin, Tag, Palette,
+  User, MessageCircle, MapPin, Tag, Palette, Receipt, BarChart3,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -78,6 +78,19 @@ export default function CertifyPage() {
   const [colorIndex, setColorIndex] = useState(-1);
   const [frontPhoto, setFrontPhoto] = useState<string | null>(null); // base64 data url
   const [interiorPhoto, setInteriorPhoto] = useState<string | null>(null);
+  const [purchaseOrder, setPurchaseOrder] = useState<string | null>(null); // 拿货单（必填）
+  /* ── 经营数据（选填） ── */
+  const [monthlyRent, setMonthlyRent] = useState("");
+  const [breakEven, setBreakEven] = useState("");
+  const [grossMargin, setGrossMargin] = useState("");
+  const [netMargin, setNetMargin] = useState("");
+  const [onlineExposure, setOnlineExposure] = useState("");
+  const [footTraffic, setFootTraffic] = useState("");
+  const [conversionRate, setConversionRate] = useState("");
+  const [attachRate, setAttachRate] = useState("");
+  const [avgItemPrice, setAvgItemPrice] = useState("");
+  const [monthlyRevenue, setMonthlyRevenue] = useState("");
+  const [trafficChannels, setTrafficChannels] = useState("");
   const [notes, setNotes] = useState("");
 
   /* ── 提交状态 ── */
@@ -85,6 +98,7 @@ export default function CertifyPage() {
   const [submitError, setSubmitError] = useState("");
   const frontInputRef = useRef<HTMLInputElement>(null);
   const interiorInputRef = useRef<HTMLInputElement>(null);
+  const purchaseInputRef = useRef<HTMLInputElement>(null);
 
   // 已认证 → 直接展示完成态
   useEffect(() => {
@@ -148,6 +162,9 @@ export default function CertifyPage() {
   const onInteriorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) readPhoto(e.target.files[0], setInteriorPhoto);
   };
+  const onPurchaseOrderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) readPhoto(e.target.files[0], setPurchaseOrder);
+  };
 
   /* ── 提交认证 ── */
   const submitCertify = async () => {
@@ -157,6 +174,7 @@ export default function CertifyPage() {
     if (colorIndex < 0) return toast("请选择店铺主要色系");
     if (!frontPhoto) return toast("请上传店铺门头照");
     if (!interiorPhoto) return toast("请上传店内陈列照");
+    if (!purchaseOrder) return toast("请上传拿货单");
 
     if (!user) {
       router.push(`/login?redirect=/certify?redirect=${encodeURIComponent(redirectTo)}`);
@@ -192,6 +210,19 @@ export default function CertifyPage() {
         notes: notes || null,
         front_photo_base64: frontPhoto, // 门头照
         interior_photo_base64: interiorPhoto, // 陈列照
+        purchase_order_base64: purchaseOrder, // 拿货单
+        /* 经营数据（选填，有值才传） */
+        monthly_rent: monthlyRent ? Number(monthlyRent) : null,
+        break_even_point: breakEven ? Number(breakEven) : null,
+        gross_margin_rate: grossMargin ? Number(grossMargin) : null,
+        net_margin_rate: netMargin ? Number(netMargin) : null,
+        online_exposure: onlineExposure ? Number(onlineExposure) : null,
+        foot_traffic: footTraffic ? Number(footTraffic) : null,
+        conversion_rate: conversionRate ? Number(conversionRate) : null,
+        attach_rate: attachRate ? Number(attachRate) : null,
+        avg_item_price: avgItemPrice ? Number(avgItemPrice) : null,
+        monthly_revenue: monthlyRevenue ? Number(monthlyRevenue) : null,
+        traffic_channels: trafficChannels.trim() || null,
       },
       notes: notes || null,
     };
@@ -455,6 +486,46 @@ export default function CertifyPage() {
               <PhotoBox label="* 店内陈列照" tip="展示店内陈列/货架" onClick={() => interiorInputRef.current?.click()}
                 src={interiorPhoto} fallbackIcon="🏪" />
               <input ref={interiorInputRef} type="file" accept="image/*" className="hidden" onChange={onInteriorChange} />
+            </SectionCard>
+
+            {/* 拿货单上传（必填） */}
+            <SectionCard icon={Receipt} title="拿货单" hint="*">
+              <PhotoBox label="* 上传拿货单（必填）" tip="拍照或相册选取近期拿货单据" onClick={() => purchaseInputRef.current?.click()}
+                src={purchaseOrder} fallbackIcon="🧾" />
+              <input ref={purchaseInputRef} type="file" accept="image/*" className="hidden" onChange={onPurchaseOrderChange} />
+            </SectionCard>
+
+            {/* 经营数据（选填） */}
+            <SectionCard icon={BarChart3} title="经营数据" hint="选填">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  ["月租金（元）", monthlyRent, setMonthlyRent, "如：8000"],
+                  ["保本点（元/月）", breakEven, setBreakEven, "如：30000"],
+                  ["毛利率", grossMargin, setGrossMargin, "如 0.55 表示55%"],
+                  ["净利率", netMargin, setNetMargin, "如 0.55 表示55%"],
+                  ["线上曝光人数/月", onlineExposure, setOnlineExposure, "如：5000"],
+                  ["月进店数", footTraffic, setFootTraffic, "如：300"],
+                  ["成交率", conversionRate, setConversionRate, "如 0.55 表示55%"],
+                  ["连带率", attachRate, setAttachRate, "如：2.5"],
+                  ["均件单价（元）", avgItemPrice, setAvgItemPrice, "如：280"],
+                ].map(([label, val, setter, ph]) => (
+                  <Field key={label as string} label={label as string}>
+                    <input className={`${inputCls} text-sm`} type="text"
+                      value={val as string}
+                      onChange={(e) => setter!(e.target.value)}
+                      placeholder={ph as string} />
+                  </Field>
+                ))}
+              </div>
+              <Field label="月营业额（元）">
+                <input className={inputCls} type="text" value={monthlyRevenue}
+                  onChange={(e) => setMonthlyRevenue(e.target.value)} placeholder="如：150000" />
+              </Field>
+              <Field label="流量渠道（逗号分隔）">
+                <input className={inputCls} value={trafficChannels}
+                  onChange={(e) => setTrafficChannels(e.target.value)}
+                  placeholder="如：小红书，抖音，线下" />
+              </Field>
             </SectionCard>
 
             <SectionCard icon={MessageCircle} title="备注 / 需求说明" hint="选填">

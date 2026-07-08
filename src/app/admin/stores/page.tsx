@@ -622,11 +622,11 @@ export default function StoresAdminPage() {
                       onChange={(e) => setBizData({ ...bizData, traffic_channels: e.target.value ? e.target.value.split(/[，,]/).map((s: string) => s.trim()).filter(Boolean) : [] })}
                       placeholder="如：小红书，抖音，线下" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" />
                   </div>
-                  {/* 当前流行趋势 */}
+                  {/* 当前店铺主要色系 */}
                   <div className="mt-4">
-                    <label className="block text-xs font-medium text-gray-500 mb-1">当前流行趋势（逗号分隔）</label>
-                    <input value={Array.isArray(bizData.current_trends) ? bizData.current_trends.join("，") : bizData.current_trends || ""}
-                      onChange={(e) => setBizData({ ...bizData, current_trends: e.target.value ? e.target.value.split(/[，,]/).map((s: string) => s.trim()).filter(Boolean) : [] })}
+                    <label className="block text-xs font-medium text-gray-500 mb-1">当前店铺主要色系（逗号分隔）</label>
+                    <input value={Array.isArray(bizData.store_color_system) ? bizData.store_color_system.join("，") : bizData.store_color_system || ""}
+                      onChange={(e) => setBizData({ ...bizData, store_color_system: e.target.value ? e.target.value.split(/[，,]/).map((s: string) => s.trim()).filter(Boolean) : [] })}
                       placeholder="如：新中式，莫兰迪色系" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent focus:ring-1 focus:ring-accent/20 outline-none" />
                   </div>
                 </div>

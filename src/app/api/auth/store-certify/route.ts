@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
  *
  * Step 1: 店铺身份（店名/联系人/电话/微信/城市/商圈/经营模式/面积）— 全必填
  * Step 2: 经营画像（拿货市场/频次/品类/风格/年龄层/价格带）— 全必填
- * Step 3: 补充信息（地址/色系/门头照/陈列照/备注）— 全必填
+ * Step 3: 补充信息（地址/色系/门头照/陈列照/拿货单/经营数据(选填)/备注）— 全必填
  *
  * 数据写入 stores 表，同步至后台"店铺管理"，电脑端手机端共用同一张表。
  */
@@ -44,6 +44,8 @@ function calcCredibility(s: any): number {
   // 照片上传是强信号
   if (bd.front_photo_base64) score += 12;
   if (bd.interior_photo_base64) score += 8;
+  // 拿货单上传是强信号（证明真实经营）
+  if (bd.purchase_order_base64) score += 10;
   // 地址填写
   if (bd.store_address) score += 6;
   // 色系选择
