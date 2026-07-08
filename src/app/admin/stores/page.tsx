@@ -619,6 +619,26 @@ export default function StoresAdminPage() {
                   </div>
                 </div>
 
+                {/* 认证信息（来自小程序/电脑端填写） */}
+                <div>
+                  <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-accent" />认证信息</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div><label className="block text-xs font-medium text-gray-500 mb-1">经营模式</label>
+                      <input value={bizData.shop_type || ""} onChange={(e) => setBizData({ ...bizData, shop_type: e.target.value })} placeholder="如：实体店、档口" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent outline-none" /></div>
+                    <div><label className="block text-xs font-medium text-gray-500 mb-1">月均拿货频次</label>
+                      <input value={bizData.purchase_frequency || ""} onChange={(e) => setBizData({ ...bizData, purchase_frequency: e.target.value })} placeholder="如：每月1~2次" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent outline-none" /></div>
+                    <div></div>
+                    <div className="sm:col-span-2 lg:col-span-3"><label className="block text-xs font-medium text-gray-500 mb-1">主要拿货市场（逗号分隔）</label>
+                      <input value={Array.isArray(bizData.wholesale_markets) ? bizData.wholesale_markets.join("，") : bizData.wholesale_markets || ""} onChange={(e) => setBizData({ ...bizData, wholesale_markets: e.target.value ? e.target.value.split(/[，,]/).map((s: string) => s.trim()).filter(Boolean) : [] })}
+                        placeholder="如：广州，杭州，深圳" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent outline-none" /></div>
+                    <div className="sm:col-span-2 lg:col-span-3"><label className="block text-xs font-medium text-gray-500 mb-1">主营品类（逗号分隔）</label>
+                      <input value={Array.isArray(bizData.main_categories) ? bizData.main_categories.join("，") : bizData.main_categories || ""} onChange={(e) => setBizData({ ...bizData, main_categories: e.target.value ? e.target.value.split(/[,]/).map((s: string) => s.trim()).filter(Boolean) : [] })}
+                        placeholder="如：女装，男装，配饰" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent outline-none" /></div>
+                    <div className="sm:col-span-2 lg:col-span-3"><label className="block text-xs font-medium text-gray-500 mb-1">店铺详细地址</label>
+                      <input value={bizData.store_address || ""} onChange={(e) => setBizData({ ...bizData, store_address: e.target.value })} placeholder="如：杭州市拱墅区武林路277号" className="w-full px-3 py-2 rounded-lg border border-gray-200 text-sm focus:border-accent outline-none" /></div>
+                  </div>
+                </div>
+
                 {/* 经营数据 */}
                 <div>
                   <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-accent" />经营数据</h4>
@@ -730,6 +750,69 @@ export default function StoresAdminPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* ═══ 认证表单完整信息（来自小程序/电脑端填写） ═══ */}
+                {Object.keys(detailStore.business_data || {}).length > 0 && (
+                  <div>
+                    <h4 className="text-sm font-bold text-primary mb-3 flex items-center gap-2"><FileText className="w-4 h-4 text-accent" />认证信息</h4>
+                    <div className="bg-muted/20 rounded-xl p-4 space-y-3">
+                      {/* 第一行：联系人 / 微信 / 商圈 */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div><span className="text-xs text-muted-foreground">联系人</span><p className="text-sm font-medium">{detailStore.contact_person || "-"}</p></div>
+                        <div><span className="text-xs text-muted-foreground">微信号</span><p className="text-sm font-medium">{detailStore.wechat || "-"}</p></div>
+                        <div><span className="text-xs text-muted-foreground">商圈/地段</span><p className="text-sm font-medium">{detailStore.district || "-"}</p></div>
+                      </div>
+                      {/* 经营模式 & 拿货频次 */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div><span className="text-xs text-muted-foreground">经营模式</span><p className="text-sm font-medium">{detailStore.business_data?.shop_type || "-"}</p></div>
+                        <div><span className="text-xs text-muted-foreground">月均拿货频次</span><p className="text-sm font-medium">{detailStore.business_data?.purchase_frequency || "-"}</p></div>
+                      </div>
+                      {/* 拿货市场（标签） */}
+                      {detailStore.business_data?.wholesale_markets && (
+                        <div>
+                          <span className="text-xs text-muted-foreground block mb-1">主要拿货市场</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {String(detailStore.business_data.wholesale_markets).split(",").filter(Boolean).map((m: string) => (
+                              <span key={m} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-xs rounded-full">{m}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* 主营品类（标签） */}
+                      {detailStore.business_data?.main_categories && (
+                        <div>
+                          <span className="text-xs text-muted-foreground block mb-1">主营品类</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {String(detailStore.business_data.main_categories).split(",").filter(Boolean).map((c: string) => (
+                              <span key={c} className="px-2 py-0.5 bg-pink-50 text-pink-600 text-xs rounded-full">{c}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {/* 店铺地址 */}
+                      {detailStore.business_data?.store_address && (
+                        <div><span className="text-xs text-muted-foreground">店铺详细地址</span><p className="text-sm font-medium mt-0.5 flex items-center gap-1"><MapPin className="w-3 h-3" />{detailStore.business_data.store_address}</p></div>
+                      )}
+                      {/* 来源 & 提交时间 */}
+                      <div className="grid grid-cols-2 gap-3 pt-1 border-t border-gray-100">
+                        <div><span className="text-xs text-muted-foreground">来源</span><p className="text-xs font-medium mt-0.5">{detailStore.business_data?.source === "web_certify" ? "🖥 电脑端认证" : detailStore.business_data?.source === "mini_program_certify" ? "📱 小程序认证" : "-"}</p></div>
+                        <div><span className="text-xs text-muted-foreground">提交时间</span><p className="text-xs font-medium mt-0.5">{detailStore.business_data?.submitted_at ? new Date(detailStore.business_data.submitted_at).toLocaleString("zh-CN") : "-"}</p></div>
+                      </div>
+                      {/* 可信度评分 */}
+                      {detailStore.business_data?.credibility_score != null && (
+                        <div className="pt-1 border-t border-gray-100">
+                          <span className="text-xs text-muted-foreground">可信度评分</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                              <div className={`h-full rounded-full ${detailStore.business_data.credibility_score >= 80 ? "bg-green-500" : detailStore.business_data.credibility_score >= 55 ? "bg-yellow-400" : "bg-red-400"}`} style={{ width: `${Math.min(100, detailStore.business_data.credibility_score)}%` }} />
+                            </div>
+                            <span className={`text-xs font-bold ${detailStore.business_data.credibility_score >= 80 ? "text-green-600" : detailStore.business_data.credibility_score >= 55 ? "text-yellow-600" : "text-red-600"}`}>{detailStore.business_data.credibility_score}分 ({detailStore.business_data.credibility_level || "-"} )</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {/* 经营数据 */}
                 {Object.keys(detailStore.business_data || {}).length > 0 && (

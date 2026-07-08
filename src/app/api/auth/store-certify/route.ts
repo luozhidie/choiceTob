@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
 
     const score = calcCredibility(store);
 
-    // 店名拼城市，形成「店名(城市)」唯一业务键，按 店名+城市 排重
+    // 店名拼城市，形成「店名(城市)」便于区分
     const finalName = normalizeStoreName(store.name, store.city);
 
     const storePayload = {
@@ -123,7 +123,8 @@ export async function POST(req: NextRequest) {
       status: "active",
     };
 
-    // 查重：同一用户、同店名同城市 → 更新原记录（幂等提交，防重复创建）
+    // 查重：同一用户、同名同店铺 → 更新（防手滑重复提交）
+    // 不同用户可各自创建同名店铺（同城同名确实是两家不同的店）
     const { data: existing } = await serviceClient
       .from("stores")
       .select("id")
