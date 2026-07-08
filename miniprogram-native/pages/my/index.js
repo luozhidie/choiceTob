@@ -11,18 +11,27 @@ var TIERS=[
 
 /* 未认证时显示的引导权益（同行截图1）*/
 var CERT_BENEFITS=[
-  {icon:'🏷️',title:'批发价拿货'},
-  {icon:'🔄',title:'无理由退货'},
-  {icon:'🎟️',title:'¥10运费券'},
-  {icon:'⚡',title:'新款抢先看'}
+  {icon:'价',title:'批发价拿货'},
+  {icon:'退',title:'无理由退'},
+  {icon:'券',title:'运费券'},
+  {icon:'新',title:'新款先看'}
 ];
 
-/* 已认证时等级卡内权益（同行截图2）*/
+/* 已认证时等级卡内权益（同行截图2）—— 用汉字徽标，必渲染、贴合服装调性 */
 var TIER_CARD_BENEFITS=[
-  {icon:'📅',title:'淡季保级'},
-  {icon:'⚡',title:'会员专享'},
-  {icon:'🎧',title:'VIP客服'},
-  {icon:'🚚',title:'包邮特权'}
+  {icon:'价',title:'批发价'},
+  {icon:'退',title:'退换额度'},
+  {icon:'客',title:'专属客服'},
+  {icon:'邮',title:'包邮特权'}
+];
+
+/* 各等级一句话说明，让店主一眼看懂“这是什么等级” */
+var TIER_DESC=[
+  '认证店主基础等级，拿货累计自动升级',
+  '已享批发价，继续拿货解锁更多权益',
+  '已解锁新款抢先 + 5% 退换额度',
+  '已解锁专属客服 + 10% 退换额度',
+  '顶级会员：数据报告 + 20% 退换额度'
 ];
 
 Page({
@@ -41,6 +50,7 @@ Page({
     tierIdx:0,
     tierBadge:'V1',
     tierName:'普通会员',
+    tierDesc:'认证店主基础等级，拿货累计自动升级',
     spentYuan:0,
     nextTierName:'白银会员',
     nextTierDiff:2000,
@@ -122,6 +132,7 @@ Page({
       tierIdx:idx,
       tierBadge:cur.badge,
       tierName:cur.name,
+      tierDesc:TIER_DESC[idx]||'',
       spentYuan:spent.toFixed(2),
       nextTierName:next?next.name:'',
       nextTierDiff:diff,

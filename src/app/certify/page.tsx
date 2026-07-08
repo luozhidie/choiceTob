@@ -383,24 +383,24 @@ export default function CertifyPage() {
             {submitError && <ErrBar msg={submitError} />}
             <SectionCard icon={Store} title="基本信息" hint="全项必填 *">
               <Field label="店铺名称" required>
-                <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="" />
+                <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="请输入店铺名称" />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="联系人" required>
-                  <input className={inputCls} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="" />
+                  <input className={inputCls} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="请输入联系人姓名" />
                 </Field>
                 <Field label="联系电话" required>
-                  <input className={inputCls} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="" />
+                  <input className={inputCls} type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="请输入手机号码" />
                 </Field>
                 <Field label="微信号" required>
-                  <input className={inputCls} value={wechat} onChange={(e) => setWechat(e.target.value)} placeholder="" />
+                  <input className={inputCls} value={wechat} onChange={(e) => setWechat(e.target.value)} placeholder="请输入微信号" />
                 </Field>
                 <Field label="所在城市" required>
-                  <input className={inputCls} value={city} onChange={(e) => setCity(e.target.value)} placeholder="" />
+                  <input className={inputCls} value={city} onChange={(e) => setCity(e.target.value)} placeholder="请输入所在城市" />
                 </Field>
               </div>
               <Field label="商圈/地段" required>
-                <input className={inputCls} value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="" />
+                <input className={inputCls} value={district} onChange={(e) => setDistrict(e.target.value)} placeholder="请输入商圈/地段" />
               </Field>
               <Field label="经营模式" required>
                 <Select value={shopTypeIndex} options={SHOP_TYPES} onChange={setShopTypeIndex} placeholder="请选择 ▾" />
@@ -471,7 +471,7 @@ export default function CertifyPage() {
             {submitError && <ErrBar msg={submitError} />}
             <SectionCard icon={MapPin} title="店铺位置" hint="*">
               <Field label="详细地址" required>
-                <input className={inputCls} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="" />
+                <input className={inputCls} value={address} onChange={(e) => setAddress(e.target.value)} placeholder="请输入详细地址" />
               </Field>
               <Field label="当前店铺主要色系" required>
                 <Select value={colorIndex} options={COLORS} onChange={setColorIndex} placeholder="请选择 ▾" />
@@ -519,18 +519,18 @@ export default function CertifyPage() {
               </div>
               <Field label="月营业额（元）">
                 <input className={inputCls} type="text" value={monthlyRevenue}
-                  onChange={(e) => setMonthlyRevenue(e.target.value)} placeholder="" />
+                  onChange={(e) => setMonthlyRevenue(e.target.value)} placeholder="如：50000" />
               </Field>
               <Field label="流量渠道（逗号分隔）">
                 <input className={inputCls} value={trafficChannels}
                   onChange={(e) => setTrafficChannels(e.target.value)}
-                  placeholder="" />
+                  placeholder="微信、抖音、小红书，逗号分隔" />
               </Field>
             </SectionCard>
 
             <SectionCard icon={MessageCircle} title="备注 / 需求说明" hint="选填">
               <textarea className={textareaCls} value={notes} onChange={(e) => setNotes(e.target.value)}
-                placeholder="" rows={3} />
+                placeholder="选填，可补充特殊需求，如：主营客群、拿货偏好" rows={3} />
             </SectionCard>
 
             <button

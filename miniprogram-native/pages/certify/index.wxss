@@ -28,7 +28,7 @@ page{background:#f5f2ef;min-height:100vh;}
 .bc-row{display:flex;gap:12rpx;margin-bottom:12rpx;}
 .bc-row:last-child{margin-bottom:0;}
 .bc-item{flex:1;background:#faf8f6;border-radius:14rpx;padding:18rpx 12rpx;display:flex;align-items:center;gap:10rpx;}
-.bc-icon{font-size:34rpx;shrink:0;width:46rpx;text-align:center;}
+.bc-icon{width:54rpx;height:54rpx;border-radius:50%;background:#faf3e8;color:#b8945a;font-size:28rpx;font-weight:700;display:flex;align-items:center;justify-content:center;shrink:0;}
 .bc-body{flex:1;min-width:0;}
 .bc-name{display:block;font-size:24rpx;font-weight:600;color:#333;}
 .bc-desc{display:block;font-size:19rpx;color:#aaa;margin-top:2rpx;}
@@ -143,9 +143,12 @@ page{background:#f5f2ef;min-height:100vh;}
 .done-tit{display:block;font-size:40rpx;font-weight:bold;color:#2d1b2e;margin-bottom:8rpx;}
 .done-sub{display:block;font-size:26rpx;color:#8a7e7b;margin-bottom:32rpx;}
 .done-list{background:#fff;border-radius:18rpx;padding:8rpx 0;margin-bottom:36rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.04);}
-.done-it{padding:18rpx 28rpx;font-size:26rpx;color:#555;border-bottom:1rpx solid #f5f2ef;text-align:left;}
+.done-it{padding:16rpx 24rpx;font-size:25rpx;color:#555;border-bottom:1rpx solid #f5f2ef;display:flex;align-items:center;gap:16rpx;text-align:left;}
 .done-it:last-child{border:none;}
-.done-it.ok{color:#16a34a;font-weight:600;}
+.di-ico{width:40rpx;height:40rpx;border-radius:50%;background:#f1f5f9;color:#94a3b8;font-size:24rpx;display:flex;align-items:center;justify-content:center;shrink:0;}
+.di-ico.ok{background:#dcfce7;color:#16a34a;font-weight:700;}
+.di-txt{line-height:1.4;flex:1;}
+.di-b{font-weight:600;color:#333;}
 
 /* ── 登录遮罩 ── */
 .login-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center;}

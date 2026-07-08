@@ -53,15 +53,20 @@
       <text class="tcd-level">{{tierName}}<text class="tcd-badge">{{tierBadge}}</text></text>
       <view class="tcd-view-btn" bindtap="goVip"><text>查看权益</text></view>
     </view>
+    <!-- 等级一句话说明 -->
+    <text class="tcd-desc">{{tierDesc}}</text>
     <!-- 进度条 -->
     <view class="tcd-bar-wrap">
       <view class="tcd-bar-track">
         <view class="tcd-bar-fill" style="width:{{tierProgress}}%"></view>
       </view>
     </view>
-    <!-- 拿货额文字 -->
-    <view class="tcd-spent-text">
-      当月拿货额 <text class="tcd-spent-num">{{spentYuan}}</text> ，还差<text class="tcd-diff-num">{{nextTierDiff}}</text>元升级{{nextTierName}}
+    <!-- 拿货额 / 升级文字 -->
+    <view class="tcd-spent-text" wx:if="{{nextTierName}}">
+      本月已拿货 <text class="tcd-spent-num">{{spentYuan}}</text> 元，再拿 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元升级 {{nextTierName}}
+    </view>
+    <view class="tcd-spent-text" wx:else>
+      已达最高等级 {{tierName}}，感谢一路同行 🎉
     </view>
     <!-- 4个权益图标行 -->
     <view class="tcd-benefits">
@@ -72,6 +77,8 @@
         </view>
       </block>
     </view>
+    <!-- 等级计算说明 -->
+    <text class="tcd-foot">等级按累计拿货额自动计算 · 认证店主免费起步</text>
   </view>
 
   <!-- ═══════ 未登录后：正常显示下方内容 ═══════ -->
