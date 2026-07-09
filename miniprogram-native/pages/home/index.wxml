@@ -1,40 +1,42 @@
 <view class="page">
-  <view class="hero">
+  <!-- ========== 粘性头部 ========== -->
+  <view class="sticky-header">
+    <!-- 顶部：小标题 + 菜单 -->
+    <view class="header-top">
+      <text class="ht-small">数据趋动·智选未来</text>
+      <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
+        <text class="ham-icon">☰</text>
+      </view>
+    </view>
+
+    <!-- 大标题 + 副标题 -->
+    <view class="header-titles">
+      <text class="ht-big">骆芷蝶·智选|供应链平台</text>
+      <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 搜索框 -->
+    <view class="header-search" bindtap="goSearch">
+      <text class="hs-icon">🔍</text>
+      <text class="hs-ph">搜索</text>
+    </view>
+
+    <!-- 分类标签 -->
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="header-cat-scroll">
+      <view class="tg-row">
+        <view wx:for="{{categories}}" wx:key="*this"
+          class="tg {{ac===item?'tg-on':''}}"
+          bindtap="swCat" data-c="{{item}}">{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
+  <view class="hero-banner">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
-
-    <!-- 顶栏：只有小标题 -->
-    <view class="hero-top">
-      <text class="ht-small">数据趋动·智选未来</text>
-    </view>
-
-    <!-- ☰菜单按钮（右上角下方，独立定位） -->
-    <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
-      <text class="ham-icon">☰</text>
-    </view>
-
-    <!-- 文字叠加在图上（左靠上，紧接顶栏下方） -->
-    <view class="hero-ol">
-      <text class="ht-big">骆芷蝶·智选｜供应链平台</text>
-      <text class="ht-sub">服装门店一站式赋能平台</text>
-    </view>
-
-    <!-- 搜索框 + 分类标签（紧跟文字下方） -->
-    <view class="hero-mid">
-      <view class="hero-search" bindtap="goSearch">
-        <text class="hs-icon">🔍</text>
-        <text class="hs-ph">搜索</text>
-      </view>
-      <scroll-view scroll-x show-scrollbar="{{false}}" class="cat-scroll">
-        <view class="tg-row">
-          <view wx:for="{{categories}}" wx:key="*this"
-            class="tg {{ac===item?'tg-on':''}}"
-            bindtap="swCat" data-c="{{item}}">{{item}}</view>
-        </view>
-      </scroll-view>
-    </view>
   </view>
 
   <!-- 菜单面板 -->
