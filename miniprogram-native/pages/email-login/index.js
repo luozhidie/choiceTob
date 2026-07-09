@@ -42,7 +42,7 @@ Page({
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         wx.showToast({title:'登录成功',icon:'success'});
-        setTimeout(function(){wx.navigateBack();},1000);
+        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1000);
       },
       fail:function(){
         t.setData({loading:false});
@@ -50,7 +50,7 @@ Page({
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',true);
         wx.showToast({title:'已登录（本地）',icon:'success'});
-        setTimeout(function(){wx.navigateBack();},800);
+        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},800);
       }
     });
   },
@@ -86,7 +86,7 @@ Page({
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         wx.showToast({title:'注册成功',icon:'success'});
-        setTimeout(function(){wx.navigateBack();},1000);
+        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1000);
       },
       fail:function(){
         t.setData({loading:false});

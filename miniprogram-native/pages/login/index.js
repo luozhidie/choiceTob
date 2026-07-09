@@ -122,7 +122,7 @@ Page({
         }
 
         wx.showToast({title:'登录成功 ✓',icon:'success'});
-        setTimeout(function(){wx.navigateBack();},1200);
+        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1200);
       },
       fail:function(err){
         clearTimeout(timeoutTimer);
