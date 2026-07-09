@@ -5,7 +5,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
   position:sticky;
   top:0;
   z-index:100;
-  background:#faf8f6;
+  background:#fcefe9;
   padding:max(12rpx,env(safe-area-inset-top)) 28rpx 14rpx;
   box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);
 }
@@ -38,7 +38,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 /* 搜索框 */
 .header-search{
   display:flex;align-items:center;
-  background:#f5f2ef;border-radius:44rpx;
+  background:#fff;border-radius:44rpx;
   padding:14rpx 28rpx;gap:10rpx;
   margin-bottom:10rpx;
 }
@@ -48,7 +48,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 /* 分类标签 */
 .header-cat-scroll{white-space:nowrap;}
 .tg-row{display:inline-flex;gap:14rpx;padding:0;}
-.tg{padding:10rpx 24rpx;border-radius:32rpx;font-size:24rpx;white-space:nowrap;color:#555;background:#f5f2ef;transition:all .2s;font-weight:500;}
+.tg{padding:10rpx 24rpx;border-radius:32rpx;font-size:24rpx;white-space:nowrap;color:#555;background:#fff;transition:all .2s;font-weight:500;}
 .tg-on{color:#fff;background:#2d1b2e;font-weight:700;}
 
 /* ========== 轮播图（在头部下方，不叠加） ========== */
