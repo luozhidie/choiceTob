@@ -153,6 +153,17 @@ const menuGroups = [
     { label: "版块管理器", href: "/admin/blocks" },
     { label: "弹窗管理", href: "/admin/popups" },
   ]},
+
+  // ─── AI 智能中心 ───
+  { label: "AI 智能中心", items: [
+    { label: "AI 中心首页", href: "/admin/ai-center" },
+    { label: "AI 生产协同", href: "/admin/production-coordination" },
+    { label: "商品企划", href: "/admin/report" },
+    { label: "AI 设计研发", href: "/admin/designer" },
+    { label: "AI 营销策划", href: "/admin/marketing" },
+    { label: "趋势预测", href: "/admin/trend-predict" },
+    { label: "买手中心", href: "/admin/buyer-center" },
+  ]},
 ];
 
 export default function AdminLayout({
