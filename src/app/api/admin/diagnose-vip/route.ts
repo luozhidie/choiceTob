@@ -51,7 +51,7 @@ export async function GET() {
       result.profiles = { total: profCount };
       // 有姓名或电话的记录
       const { data: named } = await supabase.from("profiles")
-        .select("*").or("full_name.neq.,name.neq.,phone.neq.").limit(5);
+        .select("*").or("full_name.not.is.null,name.not.is.null,phone.not.is.null").limit(5);
       result.profiles.withInfo = named?.length || 0;
       result.profiles.samples = named;
       result.profiles.columns = named?.length > 0 ? Object.keys(named[0]) : [];

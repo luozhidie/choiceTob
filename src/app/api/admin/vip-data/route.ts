@@ -31,7 +31,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .or("full_name.neq.,name.neq.,phone.neq.")
+      .or("full_name.not.is.null,name.not.is.null,phone.not.is.null")
       .order("id", { ascending: false })
       .limit(200);
     if (!error && data) {
