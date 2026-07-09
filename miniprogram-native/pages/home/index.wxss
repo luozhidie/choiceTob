@@ -5,7 +5,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
   position:sticky;
   top:0;
   z-index:100;
-  background:#fff;
+  background:#faf8f6;
   padding:max(12rpx,env(safe-area-inset-top)) 28rpx 14rpx;
   box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);
 }
