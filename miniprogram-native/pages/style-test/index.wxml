@@ -5,7 +5,7 @@
     <text class="hs">{{testDesc}}</text>
   </view>
 
-  <!-- 测试会员购买入口（移自VIP页） -->
+  <!-- 测试会员购买入口 -->
   <view class="member-card {{testMode==='male'?'mc-blue':''}}">
     <view class="mc-left">
       <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
@@ -15,100 +15,186 @@
     <view wx:else class="mc-btn mc-done">已开通 ✓</view>
   </view>
 
-  <!-- 女士测试表单 -->
-  <scroll-view scroll-y class="form-scroll" wx:if="{{testMode==='female'}}">
+  <!-- 表单区域（男女共用同一套题，与电脑版完全一致） -->
+  <scroll-view scroll-y class="form-scroll">
     <view class="form">
-      <view class="pay-info">
-        <text class="pay-title">女士风格专业诊断</text>
-        <text class="pay-desc">17道深度诊断题 + AI色彩匹配报告 + 专业搭配建议 + 微信结果通知</text>
-      </view>
-      <view class="q"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{fForm.name}}" bindinput="onFName"/></view>
-      <view class="q"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{fForm.wechat}}" bindinput="onFWechat"/></view>
-      <view class="q"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{fForm.age}}" bindinput="onFAge"/></view>
 
-      <view class="q"><text class="ql">4. 看上去会比同龄人（）？<text class="req">*</text></text></view>
+      <!-- ═══ 输入题 Q1-Q6 ═══ -->
+      <view class="q"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{form.full_name}}" bindinput="onName"/></view>
+      <view class="q"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{form.wechat_id}}" bindinput="onWechat"/></view>
+      <view class="q"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{form.age}}" bindinput="onAge"/></view>
+      <view class="q"><text class="ql">4. 是否视频课学员，你在几号社群，微信名？（优先连）</text><input class="qin" placeholder="请输入" value="{{form.video_course_info}}" bindinput="onVideoCourse"/></view>
+      <view class="q"><text class="ql">5. 看上去会比同年人（ ）？</text><input class="qin" placeholder="请输入" value="{{form.look_vs_age}}" bindinput="onLookVsAge"/></view>
+      <view class="q"><text class="ql">6. 身高： <text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{form.height}}" bindinput="onHeight"/></view>
+
+      <!-- ═══ 选择题 Q7-Q17 ═══ -->
+
+      <!-- Q7 -->
+      <view class="q"><text class="ql">7. 你看起来的身高和实际身高相比会：<text class="req">*</text></text></view>
       <view class="opts">
-        <view wx:for="{{optAgeLook}}" wx:key="*this" class="opt {{fForm.q5===item?'opt-on':''}}" bindtap="pickFQ5" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ7}}" wx:key="*this" class="opt {{form.q7===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q7" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">5. 身高：<text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{fForm.height}}" bindinput="onFHeight"/></view>
-
-      <view class="q"><text class="ql">6. 你看起来身高和实际相比会：<text class="req">*</text></text></view>
+      <!-- Q8 -->
+      <view class="q"><text class="ql">8. 有没有擅长体育项目：（跑步、打球、瑜伽、舞蹈等都算，比别人学起来厉害，甚至有拿奖）</text></view>
       <view class="opts">
-        <view wx:for="{{optHeightVisual}}" wx:key="*this" class="opt {{fForm.q7===item?'opt-on':''}}" bindtap="pickFQ7" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ8}}" wx:key="*this" class="opt {{form.q8===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q8" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">7. 体型偏：<text class="req">*</text></text></view>
+      <!-- Q9 -->
+      <view class="q"><text class="ql">9. 你穿正装与休闲装哪个好看？</text></view>
       <view class="opts">
-        <view wx:for="{{optBodyType}}" wx:key="*this" class="opt {{fForm.q8===item?'opt-on':''}}" bindtap="pickFQ8" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ9}}" wx:key="*this" class="opt {{form.q9===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q9" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">8. 脸型偏向：</text></view>
+      <!-- Q10 -->
+      <view class="q"><text class="ql">10. 穿裤装和裙装哪个好看？</text></view>
       <view class="opts">
-        <view wx:for="{{optFaceType}}" wx:key="*this" class="opt {{fForm.q9===item?'opt-on':''}}" bindtap="pickFQ9" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ10}}" wx:key="*this" class="opt {{form.q10===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q10" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">9. 肤色倾向：</text></view>
+      <!-- Q11 -->
+      <view class="q"><text class="ql">11. 你穿连衣裙和半裙哪个好看？</text></view>
       <view class="opts">
-        <view wx:for="{{optSkinColor}}" wx:key="*this" class="opt {{fForm.q10===item?'opt-on':''}}" bindtap="pickFQ10" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ11}}" wx:key="*this" class="opt {{form.q11===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q11" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">10. 青春期发育相比同龄人：<text class="req">*</text></text></view>
+      <!-- Q12 + 上衣长度参考图 -->
+      <view class="q"><text class="ql">12. 你穿上衣（不是风衣大衣）到哪个长度好看？<text class="req">*</text></text></view>
       <view class="opts">
-        <view wx:for="{{optDevlop}}" wx:key="*this" class="opt {{fForm.q11===item?'opt-on':''}}" bindtap="pickFQ11" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ12}}" wx:key="*this" class="opt {{form.q12===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q12" data-v="{{item}}">{{item}}</view>
+      </view>
+      <view class="q12-ref">
+        <text class="q12-ref-t">上衣长度参考</text>
+        <image src="/images/form-reference/q12.jpg" mode="widthFix" class="q12-ref-img" />
       </view>
 
-      <view class="q"><text class="ql">11. 洗完脸后皮肤会不会白一些？<text class="req">*</text></text></view>
+      <!-- Q13 -->
+      <view class="q"><text class="ql">13. 有没有这样的现象：你穿的衣服的面料看上去价值感高就好看，价值感一般的就不好看？</text></view>
       <view class="opts">
-        <view wx:for="{{optSkinAfterWash}}" wx:key="*this" class="opt {{fForm.q12===item?'opt-on':''}}" bindtap="pickFQ12" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ13}}" wx:key="*this" class="opt {{form.q13===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q13" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">12. 平时会不会容易脸红？<text class="req">*</text></text></view>
+      <!-- Q14 -->
+      <view class="q"><text class="ql">14. 你小时候会不会调皮淘气，上墙爬树的行为？</text></view>
       <view class="opts">
-        <view wx:for="{{optBlush}}" wx:key="*this" class="opt {{fForm.q13===item?'opt-on':''}}" bindtap="pickFQ13" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ14}}" wx:key="*this" class="opt {{form.q14===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q14" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="q"><text class="ql">13. 风格偏好：</text></view>
+      <!-- Q15 -->
+      <view class="q"><text class="ql">15. 你在青春期身型发育上（前凸后翘）和同年人相比</text></view>
       <view class="opts">
-        <view wx:for="{{optStylePref}}" wx:key="*this" class="opt {{fForm.q14===item?'opt-on':''}}" bindtap="pickFQ14" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{optQ15}}" wx:key="*this" class="opt {{form.q15===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q15" data-v="{{item}}">{{item}}</view>
       </view>
 
-      <view class="submit-btn {{canPay?'sb-ok':'sb-dis'}}" bindtap="submitFemale"><text>⊙ 提交</text></view>
+      <!-- Q16 -->
+      <view class="q"><text class="ql">16. 洗完脸后当时皮肤会不会白一些，过一段时间又恢复。</text></view>
+      <view class="opts">
+        <view wx:for="{{optQ16}}" wx:key="*this" class="opt {{form.q16===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q16" data-v="{{item}}">{{item}}</view>
+      </view>
+
+      <!-- Q17 -->
+      <view class="q"><text class="ql">17. 平时会不会容易脸红（不包括大的运动、害羞、喝酒等） <text class="req">*</text></text></view>
+      <view class="opts">
+        <view wx:for="{{optQ17}}" wx:key="*this" class="opt {{form.q17===item?'opt-on':''}}" bindtap="pickQ" data-qkey="q17" data-v="{{item}}">{{item}}</view>
+      </view>
+
+      <!-- ═══ Q18: 需要提供的照片 ═══ -->
+      <view class="q18-section">
+        <text class="ql q18-title">18.需要提供的照片</text>
+        <view class="q18-desc">
+          <text>1:一张后背图：示例如下</text>
+          <text>注意：拍后背是为了分清直曲，红框区域需要露出来，肩和背可以不露肤，最好穿贴身衣服</text>
+          <image src="/images/form-reference/q18.jpg" mode="widthFix" class="q18-ref-img" />
+          <text>2:多张生活照 要求：</text>
+          <text>质量：</text>
+          <text class="q18-sub">1:最好全身照或大半身照</text>
+          <text class="q18-sub">2:不能戴口罩</text>
+          <text class="q18-sub">3:面部清晰</text>
+          <text class="q18-sub">4:最好不同场合，不同颜色、款式</text>
+        </view>
+        <textarea class="q18-textarea" value="{{form.photo_note}}" bindinput="onPhotoNote" placeholder="填写者回答区" auto-height />
+      </view>
+
+      <!-- ═══ Q19-Q21: 图片文件上传 ═══ -->
+
+      <!-- Q19 图片文件一 -->
+      <view class="upload-card">
+        <text class="ql upload-label">*19.图片文件一</text>
+        <block wx:if="{{form.img1}}">
+          <view class="uploaded-preview" bindtap="previewImage" data-idx="0">
+            <image src="{{form.img1}}" mode="aspectFit" class="up-preview-img" />
+            <text class="up-preview-ok">已上传 ✓</text>
+          </view>
+          <view class="rm-btn" catchtap="removeImage" data-idx="0">删除</view>
+        </block>
+        <block wx:elif="{{uploadingImg}}">
+          <view class="upload-placeholder">
+            <text class="uploading-txt">上传中...</text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="upload-placeholder" bindtap="pickImage" data-idx="0">
+            <text class="upload-icon">↑</text>
+            <text class="upload-hint-pink">点击上传图片（0/10）</text>
+            <text class="upload-hint-gray">当前设置：最多上传10张图片，单个图片10MB以内</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- Q20 图片文件二 -->
+      <view class="upload-card">
+        <text class="ql upload-label">20.图片文件二</text>
+        <block wx:if="{{form.img2}}">
+          <view class="uploaded-preview" bindtap="previewImage" data-idx="1">
+            <image src="{{form.img2}}" mode="aspectFit" class="up-preview-img" />
+            <text class="up-preview-ok">已上传 ✓</text>
+          </view>
+          <view class="rm-btn" catchtap="removeImage" data-idx="1">删除</view>
+        </block>
+        <block wx:elif="{{uploadingImg}}">
+          <view class="upload-placeholder">
+            <text class="uploading-txt">上传中...</text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="upload-placeholder" bindtap="pickImage" data-idx="1">
+            <text class="upload-icon">↑</text>
+            <text class="upload-hint-pink">点击上传图片（0/10）</text>
+            <text class="upload-hint-gray">当前设置：最多上传10张图片，单个图片10MB以内</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- Q21 图片文件三 -->
+      <view class="upload-card">
+        <text class="ql upload-label">21.图片文件三</text>
+        <block wx:if="{{form.img3}}">
+          <view class="uploaded-preview" bindtap="previewImage" data-idx="2">
+            <image src="{{form.img3}}" mode="aspectFit" class="up-preview-img" />
+            <text class="up-preview-ok">已上传 ✓</text>
+          </view>
+          <view class="rm-btn" catchtap="removeImage" data-idx="2">删除</view>
+        </block>
+        <block wx:elif="{{uploadingImg}}">
+          <view class="upload-placeholder">
+            <text class="uploading-txt">上传中...</text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="upload-placeholder" bindtap="pickImage" data-idx="2">
+            <text class="upload-icon">↑</text>
+            <text class="upload-hint-pink">点击上传图片（0/10）</text>
+            <text class="upload-hint-gray">当前设置：最多上传10张图片，单个图片10MB以内</text>
+          </view>
+        </block>
+      </view>
+
+      <!-- 提交按钮 -->
+      <view class="submit-btn {{canPay?'sb-ok':'sb-dis'}}" bindtap="submitForm"><text>⊙ 提交</text></view>
     </view>
   </scroll-view>
 
-  <!-- 男士测试表单 -->
-  <scroll-view scroll-y class="form-scroll" wx:if="{{testMode==='male'}}">
-    <view class="form">
-      <view class="pay-info pay-blue">
-        <text class="pay-title">男士风格专业诊断</text>
-        <text class="pay-desc">14道深度诊断题 + AI色彩匹配报告 + 穿搭建议方案 + 微信结果通知</text>
-      </view>
-      <view class="q"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{mForm.name}}" bindinput="onMName"/></view>
-      <view class="q"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{mForm.wechat}}" bindinput="onMWechat"/></view>
-      <view class="q"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{mForm.age}}" bindinput="onMAge"/></view>
-
-      <view class="q"><text class="ql">4. 看上去会比同龄人（）？<text class="req">*</text></text></view>
-      <view class="opts">
-        <view wx:for="{{optAgeLook}}" wx:key="*this" class="opt {{mForm.q5===item?'opt-on':''}}" bindtap="pickMQ5" data-v="{{item}}">{{item}}</view>
-      </view>
-
-      <view class="q"><text class="ql">5. 身高：<text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{mForm.height}}" bindinput="onMHeight"/></view>
-
-      <view class="q"><text class="ql">6. 体型偏：<text class="req">*</text></text></view>
-      <view class="opts">
-        <view wx:for="{{optBodyType}}" wx:key="*this" class="opt {{mForm.q8===item?'opt-on':''}}" bindtap="pickMQ8" data-v="{{item}}">{{item}}</view>
-      </view>
-
-      <view class="q"><text class="ql">7. 风格偏好：</text></view>
-      <view class="opts">
-        <view wx:for="{{optStylePrefMale}}" wx:key="*this" class="opt {{mForm.q9===item?'opt-on':''}}" bindtap="pickMQ9" data-v="{{item}}">{{item}}</view>
-      </view>
-
-      <view class="submit-btn {{canPay?'sb-ok':'sb-dis'}}" bindtap="submitMale"><text>⊙ 提交</text></view>
-    </view>
-  </scroll-view>
-
-  <!-- 提示 -->
+  <!-- 底部提示 -->
   <view class="tip"><text>{{tipText}}</text></view>
 </view>

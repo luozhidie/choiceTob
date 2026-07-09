@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import Link from "next/link";
 import {
   User, CheckCircle2, AlertCircle, Loader2, Camera,
-  LogIn, UserPlus, ChevronUp, X
+  LogIn, UserPlus, ChevronUp, X, Upload, Image as ImageIcon
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
@@ -43,6 +43,9 @@ export default function StyleTestPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [photoNote, setPhotoNote] = useState("");
+  const [imageUrls, setImageUrls] = useState<string[]>(["", "", ""]);
+  const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
   const supabase = createClient();
 
   // 需要登录的操作：点击输入框/选项时检查
@@ -64,6 +67,32 @@ export default function StyleTestPage() {
     return "";
   };
 
+  // 图片上传（调用 /api/upload → Supabase Storage）
+  const handleImageUpload = async (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingIndex(index);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert(data.error || "上传失败");
+        return;
+      }
+      const urls = [...imageUrls];
+      urls[index] = data.url;
+      setImageUrls(urls);
+    } catch (err: any) {
+      alert(err.message || "上传失败");
+    } finally {
+      setUploadingIndex(null);
+      // 重置 input 以便重复选同一文件
+      e.target.value = "";
+    }
+  };
+
   const handleSubmit = async () => {
     if (!requireLogin()) return;
     const err = validate();
@@ -74,12 +103,16 @@ export default function StyleTestPage() {
     try {
       const payload = {
         full_name: form.full_name,
-        wechat_id: form.wechat_id || null,  // 微信号（文字）
+        wechat_id: form.wechat_id || null,
         age: form.age,
         video_course_info: form.video_course_info || null,
         look_vs_age: form.look_vs_age || null,
         height: form.height || null,
         answers,
+        photo_note: photoNote || null,
+        photo_urls_1: imageUrls[0] ? [imageUrls[0]] : [],
+        photo_urls_2: imageUrls[1] ? [imageUrls[1]] : [],
+        photo_urls_3: imageUrls[2] ? [imageUrls[2]] : [],
       };
       const res = await fetch("/api/style-test/submit", {
         method: "POST",
@@ -106,6 +139,26 @@ export default function StyleTestPage() {
           </Link>
           <h1 className="text-2xl font-bold text-primary">色彩风格诊断问卷</h1>
           <p className="text-gray-500 text-sm mt-1">请详细填写以下内容进行预约，我们将以微信形式通知你结果</p>
+        </div>
+
+        {/* 风格测试会员 ¥99 */}
+        <div className="bg-gradient-to-r from-primary to-accent rounded-2xl p-5 mb-6 text-white flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+              <User className="w-6 h-6" />
+            </div>
+            <div>
+              <h3 className="font-bold text-base">风格测试会员 · ¥99</h3>
+              <p className="text-xs text-white/80 mt-0.5">14道题自动出结果 · 解锁专属色彩风格诊断</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
+            <span className="text-2xl font-black">¥99</span>
+            <div className="flex gap-2">
+              <Link href="/style-test/female" className="px-3 py-1.5 bg-white text-primary text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors">女士</Link>
+              <Link href="/style-test/male" className="px-3 py-1.5 bg-white text-primary text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors">男士</Link>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -167,6 +220,77 @@ export default function StyleTestPage() {
               )}
             </div>
           ))}
+
+          {/* ═══ Q18: 需要提供的照片（填写者回答区） ═══ */}
+          <div className="pt-6 border-t border-gray-100">
+            <label className="block text-base font-bold text-gray-900 mb-3">
+              18.需要提供的照片
+            </label>
+            <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm text-gray-600 leading-relaxed">
+              <p>1:一张后背图：示例如下</p>
+              <p>注意：拍后背是为了分清直曲，红框区域需要露出来，肩和背可以不露肤，最好穿贴身衣服</p>
+              <div className="rounded-lg overflow-hidden border border-gray-200 my-2">
+                <img src="/images/form-reference/q18.jpg" alt="后背参考图" className="w-full h-auto object-contain max-h-48" />
+              </div>
+              <p>2:多张生活照 要求：</p>
+              <p className="pl-4">质量：</p>
+              <ul className="list-decimal pl-8 space-y-1">
+                <li>1:最好全身照或大半身照</li>
+                <li>2:不能戴口罩</li>
+                <li>3:面部清晰</li>
+                <li>4:最好不同场合，不同颜色、款式</li>
+              </ul>
+            </div>
+            <textarea
+              value={photoNote}
+              onFocus={() => requireLogin()}
+              onChange={(e) => requireLogin() && setPhotoNote(e.target.value)}
+              placeholder="填写者回答区"
+              rows={4}
+              className="mt-3 w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm bg-gray-50/50 resize-vertical"
+            />
+          </div>
+
+          {/* ═══ Q19-Q21: 图片文件上传（三组） ═══ */}
+          {[19, 20, 21].map((num) => {
+            const idx = num - 19;
+            return (
+              <div key={num} className="pt-4">
+                <label className="block text-base font-bold text-gray-900 mb-2">
+                  {num === 19 ? "*19." : `${num}.`}图片文件{["一", "二", "三"][idx]}
+                </label>
+                <div
+                  className="relative border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-primary/40 transition-colors cursor-pointer"
+                  onClick={() => document.getElementById(`style-img-${idx}`)?.click()}
+                >
+                  {imageUrls[idx] ? (
+                    <div className="space-y-2">
+                      <img src={imageUrls[idx]} alt={`图片${["一","二","三"][idx]}`} className="max-h-48 mx-auto rounded-lg object-contain" />
+                      <p className="text-xs text-green-600">已上传 ✓</p>
+                    </div>
+                  ) : uploadingIndex === idx ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      <p className="text-sm text-gray-500">上传中...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Upload className="w-10 h-10 text-gray-400" />
+                      <p className="text-base text-pink-400 font-medium">↑ 点击上传图片（0/10）</p>
+                      <p className="text-xs text-gray-400">当前设置：最多上传10张图片，单个图片10MB以内</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id={`style-img-${idx}`}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => handleImageUpload(idx, e)}
+                />
+              </div>
+            );
+          })}
 
           {/* 提交 */}
           <div className="pt-4">

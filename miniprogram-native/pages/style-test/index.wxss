@@ -57,3 +57,34 @@ page{background:#f8f6f4;}
 
 /* 底部提示 */
 .tip{text-align:center;padding:10rpx 40rpx 24rpx;font-size:22rpx;color:#bbb;line-height:1.5;}
+
+/* ═══ Q12 上衣长度参考图 ═══ */
+.q12-ref{margin-top:14rpx;padding:20rpx;background:#f8f6f4;border-radius:14rpx;border:2rpx solid #eee5df;}
+.q12-ref-t{font-size:24rpx;color:#666;font-weight:bold;display:block;margin-bottom:10rpx;}
+.q12-ref-img{width:100%;border-radius:10rpx;border:2rpx solid #e0ddd8;}
+
+/* ═══ Q18 照片说明区 ═══ */
+.q18-section{margin-top:28rpx;padding:24rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;}
+.q18-title{font-size:30rpx;color:#333;font-weight:bold;display:block;margin-bottom:16rpx;}
+.q18-desc{font-size:25rpx;color:#666;line-height:1.7;display:flex;flex-direction:column;gap:6rpx;}
+.q18-desc text:first-child{color:#333;font-weight:500;margin-top:4rpx;}
+.q18-sub{padding-left:24rpx;color:#777;}
+.q18-ref-img{width:100%;max-height:300rpx;border-radius:12rpx;margin:10rpx 0;border:2rpx solid #e0ddd8;}
+.q18-textarea{width:100%;min-height:140rpx;margin-top:14rpx;padding:18rpx 20rpx;
+  background:#f8f6f4;border:2rpx solid #e0ddd8;border-radius:14rpx;
+  font-size:26rpx;color:#333;line-height:1.6;box-sizing:border-box;}
+
+/* ═══ Q19-Q21 图片上传卡片 ═══ */
+.upload-card{margin-top:20rpx;padding:24rpx;background:#fff;border-radius:20rpx;
+  border:2rpx dashed #d0c8c0;text-align:center;}
+.upload-label{font-size:29rpx;color:#333;font-weight:bold;display:block;margin-bottom:14rpx;text-align:left;}
+.upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:10rpx;padding:36rpx 20rpx;}
+.upload-icon{font-size:56rpx;color:#ccc;}
+.upload-hint-pink{font-size:28rpx;color:#e91e63;font-weight:500;}
+.upload-hint-gray{font-size:22rpx;color:#aaa;}
+.uploading-txt{font-size:26rpx;color:#888;}
+.uploaded-preview{display:flex;flex-direction:column;align-items:center;gap:8rpx;padding:16rpx;}
+.up-preview-img{width:100%;max-height:360rpx;border-radius:14rpx;border:2rpx solid #e0ddd8;}
+.up-preview-ok{font-size:24rpx;color:#4caf50;font-weight:bold;}
+.rm-btn{display:inline-block;margin-top:8rpx;padding:10rpx 28rpx;
+  border-radius:30rpx;background:#ffebee;color:#c62828;font-size:23rpx;border:2rpx solid #ef9a9a;}

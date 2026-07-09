@@ -9,7 +9,7 @@ import {
   Crown, Eye, CreditCard, CheckCircle2, X, Clock, Star,
   MessageCircle, Smartphone, Copy, Check, Loader2, ArrowRight,
   ShieldCheck, Zap, Gift, HeadphonesIcon, AlertCircle, Sparkles,
-  Package, User, BarChart3, BookOpen, FileText, Lock,
+  Package, User, BarChart3, BookOpen, FileText, Lock, TrendingUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentQRCode from "@/components/PaymentQRCode";
@@ -30,79 +30,6 @@ interface Plan {
 }
 
 const plans: Plan[] = [
-  // ========================================
-  // 第一类：价格会员（查看批发价）
-  // ========================================
-  {
-    id: "price_trial",
-    name: "价格会员·体验",
-    price: 1990,          // ¥19.9
-    originalPrice: 0,
-    priceLabel: "¥19.9",
-    discountLabel: "14天体验",
-    newCustomerLabel: "查看批发价",
-    membershipType: "view_price",
-    icon: Eye,
-    highlight: false,
-    features: [
-      "14天体验期",
-      "查看所有商品批发价",
-      "对比供货价与市场价差",
-    ],
-  },
-  {
-    id: "price_1y",
-    name: "价格会员·年卡",
-    price: 39900,         // ¥399
-    originalPrice: 0,
-    priceLabel: "¥399/年",
-    discountLabel: "全年查看批发价",
-    membershipType: "view_price",
-    icon: Eye,
-    highlight: true,
-    features: [
-      "查看所有商品批发价",
-      "对比供货价与市场价差",
-      "爆款趋势预测数据",
-      "明星同款货源搜索",
-    ],
-  },
-  {
-    id: "price_2y",
-    name: "价格会员·两年卡",
-    price: 59900,         // ¥599
-    originalPrice: 79800,
-    priceLabel: "¥599/2年",
-    discountLabel: "立省¥199",
-    membershipType: "view_price",
-    icon: Eye,
-    highlight: false,
-    features: [
-      "2年无限次查看批发价",
-      "对比供货价与市场价差",
-      "爆款趋势预测数据",
-      "明星同款货源搜索",
-    ],
-  },
-  {
-    id: "price_3y",
-    name: "价格会员·三年卡",
-    price: 69900,         // ¥699
-    originalPrice: 119700,
-    priceLabel: "¥699/3年",
-    discountLabel: "超值！省¥498",
-    membershipType: "view_price",
-    icon: Eye,
-    highlight: false,
-    features: [
-      "3年无限次查看批发价",
-      "对比供货价与市场价差",
-      "爆款趋势预测数据",
-      "明星同款货源搜索",
-    ],
-  },
-
-  // ========================================
   // 第二类：商城会员（享受商城服务与资源优惠）
   // ========================================
   {
@@ -473,6 +400,62 @@ export default function VIPPage() {
         </div>
       </section>
 
+      {/* 双轨引导：累计拿货升级 vs 直接充值解锁 */}
+      <section className="py-6 md:py-8">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" /> 两种解锁方式
+            </h2>
+            <p className="text-xs text-gray-400 mb-4">选择适合你的会员路径</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 左：累计拿货升级（免费） */}
+              <div className="rounded-2xl border border-gray-200 p-5 bg-gradient-to-br from-gray-50 to-white">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                    <TrendingUp className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">累计拿货升级</h3>
+                    <p className="text-xs text-gray-400">免费 · 自动升级</p>
+                  </div>
+                </div>
+                <ul className="text-sm text-gray-600 space-y-1.5 mb-4">
+                  <li>· 认证店主后按累计拿货额自动升级</li>
+                  <li>· 5万 / 10万 = <strong className="text-primary">2.8折</strong>，30万 = <strong className="text-primary">2.6折</strong></li>
+                  <li>· 仅解锁拿货折扣权，<strong>不含退换额度</strong></li>
+                  <li>· 连续 6 个月不拿货将逐步降级</li>
+                </ul>
+                <Link href="/my" className="block text-center text-sm text-primary font-medium py-2 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
+                  去拿货累计 →
+                </Link>
+              </div>
+              {/* 右：直接充值解锁（付费） */}
+              <div className="rounded-2xl border border-amber-200 p-5 bg-gradient-to-br from-amber-50 to-orange-50">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-gray-900 text-sm">直接充值解锁</h3>
+                    <p className="text-xs text-gray-400">付费 · 立即生效</p>
+                  </div>
+                </div>
+                <ul className="text-sm text-gray-600 space-y-1.5 mb-4">
+                  <li>· 一次性充值货款，<strong className="text-amber-600">折扣权 + 退换额度</strong>同时获得</li>
+                  <li>· 充 5万 → 2.8折 + 退换 5%</li>
+                  <li>· 充 10万 → 2.8折 + 退换 10%</li>
+                  <li>· 充 30万 → 2.6折 + 退换 20%</li>
+                </ul>
+                <Link href="/vip#deposit" className="block text-center text-sm text-white font-medium py-2 rounded-xl bg-accent hover:brightness-110 transition-all">
+                  立即充值 →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* 会员成长阶梯（渐进解锁） */}
       <section className="py-6 md:py-8">
         <div className="container mx-auto px-4 max-w-5xl space-y-4">
@@ -563,7 +546,7 @@ export default function VIPPage() {
       </section>
 
       {/* 货款折扣会员入口 */}
-      <section className="py-6 md:py-8">
+      <section id="deposit" className="py-6 md:py-8 scroll-mt-20">
         <div className="container mx-auto px-4 max-w-5xl">
           <Link href="/members" className="block bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 md:p-6 hover:shadow-md transition-all">
             <div className="flex items-center justify-between gap-4">

@@ -17,10 +17,10 @@ import {
   ArrowRight,
   ChevronRight,
   Loader2,
-  LogIn, UserPlus, Sparkles, Smartphone,
+  LogIn, UserPlus, Smartphone,
   ShieldCheck,
-  Award, Gift, Percent, BarChart3, Headphones, Eye, Lock, BadgeCheck,
-  X, TrendingUp, Star, FileText,
+  Award, Gift, BarChart3, Lock, BadgeCheck,
+  X, TrendingUp, Star,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -44,22 +44,20 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   cancelled: { label: "已取消", color: "text-red-500 bg-red-50", icon: XCircle },
 };
 
-// 成长等级阶梯（依据累计拿货金额，参照同行渐进解锁设计）
+// 成长等级阶梯（双轨模型：累计拿货=折扣权；直接充值=折扣权+退换额度）
 const TIERS = [
-  { key: "normal",   name: "普通会员", min: 0,      emoji: "🌱", gradient: "from-gray-500 to-gray-600",     badge: "V0" },
-  { key: "silver",   name: "白银会员", min: 5000,   emoji: "🥈", gradient: "from-sky-400 to-blue-500",    badge: "V1" },
-  { key: "gold",     name: "黄金会员", min: 50000,  emoji: "🥇", gradient: "from-amber-400 to-orange-500",  badge: "V2" },
-  { key: "platinum", name: "铂金会员", min: 100000, emoji: "💎", gradient: "from-violet-400 to-purple-500",  badge: "V3" },
-  { key: "diamond",  name: "钻石会员", min: 300000, emoji: "👑", gradient: "from-rose-400 to-pink-500",    badge: "V4" },
+  { key: "normal",   name: "普通",    min: 0,      badge: "L1", discount: "" },
+  { key: "level5w",  name: "5万会员", min: 50000,  badge: "L2", discount: "2.8折" },
+  { key: "level10w", name: "10万会员",min: 100000, badge: "L3", discount: "2.8折" },
+  { key: "level30w", name: "30万会员",min: 300000, badge: "L4", discount: "2.6折" },
 ];
 
-// 会员权益（5项横排，同行同款）
+// 会员权益（4项横排，汉字徽章，与小程序一致）
 const TIER_BENEFITS = [
-  { key: "wholesale", icon: Eye,        title: "拿货价查看",   tier: 1, emoji: "💰" },
-  { key: "earlyAccess",icon: Sparkles,  title: "新款抢先看",   tier: 2, emoji: "✨" },
-  { key: "returnRate", icon: Percent,    title: "退货补贴",     tier: 2, emoji: "🎁" },
-  { key: "vipService",  icon: Headphones,title: "专属客服",     tier: 3, emoji: "🎧" },
-  { key: "dataReport",  icon: FileText,  title: "经营数据报告", tier: 4, emoji: "📊" },
+  { key: "wholesale",  title: "批发价",   tier: 0, badge: "价" },
+  { key: "discount",   title: "拿货折扣", tier: 1, badge: "折" },
+  { key: "earlyAccess",title: "新款抢先", tier: 2, badge: "新" },
+  { key: "recommend",  title: "精准推荐", tier: 3, badge: "荐" },
 ];
 
 function getTierInfo(totalSpentYuan: number) {
@@ -453,7 +451,7 @@ export default function MyPage() {
                   <h2 className="text-xl font-bold flex items-center gap-2">
                     {tierInfo.cur.name}
                     <span className="text-xs bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-900 px-2.5 py-0.5 rounded-md font-extrabold shadow-md">
-                      {tierInfo.cur.badge || "V1"}
+                      {tierInfo.cur.badge || "L1"}
                     </span>
                   </h2>
                   <Link href="/vip" className="text-xs bg-amber-400/15 border border-amber-400/30 text-amber-300 px-3 py-1.5 rounded-full hover:bg-amber-400/25 transition-colors">
@@ -468,54 +466,57 @@ export default function MyPage() {
                       <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${tierInfo.progress}%` }} />
                     </div>
                     <p className="text-xs text-white/55 mb-5">
-                      当月拿货额 <span className="text-amber-400 font-bold text-sm">¥{Math.round(totalSpentYuan).toLocaleString()}</span> ，还差<span className="text-amber-400 font-bold"> ¥{tierInfo.diff.toLocaleString()}</span> 升级{tierInfo.next.name}
+                      已累计 <span className="text-amber-400 font-bold text-sm">¥{Math.round(totalSpentYuan).toLocaleString()}</span> 元，累计拿货 <span className="text-amber-400 font-bold">¥{tierInfo.diff.toLocaleString()}</span> 元可享 <span className="text-amber-400 font-bold">{tierInfo.next?.discount || ""}</span>
                     </p>
                   </>
                 ) : (
                   <p className="text-xs bg-white/10 inline-block px-3 py-1 rounded-full mb-5">🎉 已达最高等级</p>
                 )}
 
-                {/* 4个权益图标行（同行截图2）*/}
+                {/* 4个权益徽章（汉字，与小程序一致）*/}
                 <div className="flex justify-around pt-4 border-t border-white/8">
-                  {[
-                    { icon: "📅", label: "淡季保级" },
-                    { icon: "⚡", label: "会员专享" },
-                    { icon: "🎧", label: "VIP客服" },
-                    { icon: "🚚", label: "包邮特权" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex flex-col items-center gap-1.5">
-                      <div className="w-14 h-14 rounded-full bg-white/8 border border-white/15 flex items-center justify-center text-xl">
-                        {item.icon}
+                  {TIER_BENEFITS.map((b) => {
+                    const unlocked = tierInfo.idx >= b.tier;
+                    return (
+                      <div key={b.key} className="flex flex-col items-center gap-1.5">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${unlocked ? "bg-amber-400/20 border border-amber-400/40 text-amber-300" : "bg-white/8 border border-white/15 text-white/30"}`}>
+                          {b.badge}
+                        </div>
+                        <span className={`text-[11px] ${unlocked ? "text-white/80" : "text-white/40"}`}>{b.title}</span>
                       </div>
-                      <span className="text-[11px] text-white/55">{item.label}</span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
+
+                {/* 注脚 + 充值入口 */}
+                <p className="text-[11px] text-white/40 mt-4 text-center">累计拿货额自动升级 · 连续6月不拿货将降级</p>
+                <Link href="/vip#deposit" className="mt-3 block text-center text-xs text-amber-300 hover:text-amber-200 transition-colors">
+                  充值解锁退换额度 + 拿货折扣 →
+                </Link>
               </div>
             )}
 
-            {/* 会员权益解锁等级（5列横排 · 同行同款）*/}
+            {/* 会员权益解锁等级（4列横排）*/}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
               <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
                 <Star className="w-5 h-5 text-amber-500" /> 权益解锁等级
               </h2>
-              <p className="text-xs text-gray-400 mb-4">成长等级提升自动解锁更多权益</p>
+              <p className="text-xs text-gray-400 mb-4">累计拿货额提升自动解锁更多权益</p>
 
-              {/* 5个权益图标横排 */}
+              {/* 4个权益徽章横排 */}
               <div className="flex justify-between gap-2">
                 {TIER_BENEFITS.map((b) => {
                   const unlocked = tierInfo.idx >= b.tier;
-                  const BIcon = b.icon;
                   return (
                     <div key={b.key} className="flex-1 flex flex-col items-center">
                       <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 transition-all ${
+                        className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 text-xl font-bold transition-all ${
                           unlocked
                             ? "bg-gradient-to-br from-amber-300 to-orange-400 text-white shadow-lg shadow-amber-200/40"
                             : "bg-gray-100 text-gray-300"
                         }`}
                       >
-                        {unlocked ? <BIcon className="w-6 h-6" /> : <Lock className="w-5 h-5" />}
+                        {unlocked ? b.badge : <Lock className="w-5 h-5" />}
                       </div>
                       <span className={`text-[11px] font-medium text-center leading-tight ${unlocked ? "text-gray-800" : "text-gray-400"}`}>
                         {b.title}
@@ -545,28 +546,29 @@ export default function MyPage() {
                   {/* 规则内容 */}
                   <div className="px-6 py-5 space-y-5 text-sm text-gray-700 leading-relaxed">
 
-                    {/* 一、何时解锁 */}
+                    {/* 一、累计拿货解锁（免费） */}
                     <section>
-                      <h4 className="font-bold text-gray-900 mb-2">【什么时候解锁？】</h4>
-                      <p className="mb-2">每达到一个成长等级（以累计拿货金额为依据），即可<strong>自动解锁</strong>对应等级的会员权益，无需额外操作。</p>
+                      <h4 className="font-bold text-gray-900 mb-2">【累计拿货解锁 · 免费】</h4>
+                      <p className="mb-2">认证店主后，按<strong>累计拿货金额</strong>自动升级，无需额外付费，解锁对应等级的<strong>拿货折扣权</strong>（不含退换额度）：</p>
                       <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        <li><strong>白银会员</strong>（累计 ≥ ¥5,000）：解锁「拿货价查看」—— 可查看所有商品批发价与市场价对比。</li>
-                        <li><strong>黄金会员</strong>（累计 ≥ ¥50,000）：新增「新款抢先看」「退货补贴5%」—— 每季新品提前7天浏览 + 充值退货额度。</li>
-                        <li><strong>铂金会员</strong>（累计 ≥ ¥100,000）：新增「专属客服」「退货补贴10%」—— 1对1微信客服通道 + 更高退换比例。</li>
-                        <li><strong>钻石会员</strong>（累计 ≥ ¥300,000）：全部权益解锁 +「经营数据报告」—— 季度经营分析与行业对标报告。</li>
+                        <li><strong>L1 普通</strong>：认证即享批发价查看。</li>
+                        <li><strong>L2 5万会员</strong>（累计 ≥ ¥50,000）：拿货折扣 <strong>2.8折</strong>。</li>
+                        <li><strong>L3 10万会员</strong>（累计 ≥ ¥100,000）：拿货折扣 2.8折 + 新款抢先。</li>
+                        <li><strong>L4 30万会员</strong>（累计 ≥ ¥300,000）：拿货折扣 <strong>2.6折</strong> + 精准推荐 / 经营数据报告。</li>
                       </ul>
+                      <p className="mt-2 text-xs text-gray-400">⚠️ 累计拿货仅解锁折扣权，<strong>不含退换额度</strong>；连续 6 个月不拿货，权益将逐步降级。</p>
                     </section>
 
-                    {/* 二、如何领取 */}
+                    {/* 二、直接充值解锁（付费） */}
                     <section>
-                      <h4 className="font-bold text-gray-900 mb-2">【如何领取使用？】</h4>
+                      <h4 className="font-bold text-gray-900 mb-2">【直接充值解锁 · 付费】</h4>
+                      <p className="mb-2">一次性充值货款，<strong>同时获得折扣权 + 退换额度</strong>：</p>
                       <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        <li><strong>拿货价：</strong>升级后自动生效，进入商品详情页或买家选品页即显示批发价。</li>
-                        <li><strong>新款抢先看：</strong>在「每日搭配」和「买手选品」页顶部出现「新品抢先」入口。</li>
-                        <li><strong>退货补贴：</strong>按充值档位自动计算（充5万→5% / 充10万→10% / 充30万→20%），退货时系统自动抵扣。</li>
-                        <li><strong>专属客服：</strong>升级后在「我的」页显示专属客服微信号，可直接微信联系。</li>
-                        <li><strong>数据报告：</strong>每季度初自动生成，在「我的 → 经营数据」中查看下载。</li>
+                        <li><strong>充值 ¥50,000</strong>：拿货 2.8折 + 退换额度 5%。</li>
+                        <li><strong>充值 ¥100,000</strong>：拿货 2.8折 + 退换额度 10%。</li>
+                        <li><strong>充值 ¥300,000</strong>：拿货 2.6折 + 退换额度 20%。</li>
                       </ul>
+                      <p className="mt-2 text-xs text-gray-400">退换额度在退货时按档位自动抵扣，折扣权与退换额度同时生效。</p>
                     </section>
 
                     {/* 三、认证店主平行赛道 */}
@@ -597,7 +599,7 @@ export default function MyPage() {
                           <tbody>
                             {TIERS.slice(1).map((t) => (
                               <tr key={t.key}>
-                                <td className="border border-gray-200 px-3 py-2 font-medium">{t.emoji} {t.name}</td>
+                                <td className="border border-gray-200 px-3 py-2 font-medium"><span className="inline-block w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-center text-xs font-bold mr-1 align-middle">{t.badge}</span>{t.name}</td>
                                 <td className="border border-gray-200 px-3 py-2">≥ ¥{t.min.toLocaleString()}</td>
                                 <td className="border border-gray-200 px-3 py-2">
                                   {TIER_BENEFITS.filter(b => b.tier <= TIERS.indexOf(t)).map(b => b.title).join('、') || '—'}
