@@ -1,8 +1,7 @@
 <view class="page">
   <!-- 标题 -->
   <view class="hd">
-    <text class="ht">色彩风格判断问卷</text>
-    <text class="hs">商城拿货店铺上传核心VIP客户资料</text>
+    <text class="ht">色彩季型VS穿衣风格判断</text>
   </view>
 
   <!-- 说明卡：区分色彩风格诊断与风格测试 -->
