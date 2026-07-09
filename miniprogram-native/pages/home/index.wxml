@@ -22,15 +22,6 @@
       <text class="hs-icon">🔍</text>
       <text class="hs-ph">搜索</text>
     </view>
-
-    <!-- 分类标签 -->
-    <scroll-view scroll-x show-scrollbar="{{false}}" class="header-cat-scroll">
-      <view class="tg-row">
-        <view wx:for="{{categories}}" wx:key="*this"
-          class="tg {{ac===item?'tg-on':''}}"
-          bindtap="swCat" data-c="{{item}}">{{item}}</view>
-      </view>
-    </scroll-view>
   </view>
 
   <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
@@ -39,6 +30,17 @@
       <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
       <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
     </swiper>
+  </view>
+
+  <!-- ========== 分类标签（轮播图下方，滚动后粘性固定在搜索框下方） ========== -->
+  <view class="cat-sticky">
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="header-cat-scroll">
+      <view class="tg-row">
+        <view wx:for="{{categories}}" wx:key="*this"
+          class="tg {{ac===item?'tg-on':''}}"
+          bindtap="swCat" data-c="{{item}}">{{item}}</view>
+      </view>
+    </scroll-view>
   </view>
 
   <!-- 菜单面板 -->

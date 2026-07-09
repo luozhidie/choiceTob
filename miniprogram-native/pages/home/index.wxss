@@ -45,7 +45,15 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .hs-icon{font-size:24rpx;flex-shrink:0;}
 .hs-ph{font-size:25rpx;color:#999;}
 
-/* 分类标签 */
+/* 分类标签（轮播图下方，滚动后粘性固定在搜索框下方） */
+.cat-sticky{
+  position:sticky;
+  top:calc(max(12rpx,env(safe-area-inset-top)) + 205rpx);
+  z-index:99;
+  background:#fcefe9;
+  padding:14rpx 28rpx;
+  box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);
+}
 .header-cat-scroll{white-space:nowrap;}
 .tg-row{display:inline-flex;gap:14rpx;padding:0;}
 .tg{padding:10rpx 24rpx;border-radius:32rpx;font-size:24rpx;white-space:nowrap;color:#555;background:#fff;transition:all .2s;font-weight:500;}
