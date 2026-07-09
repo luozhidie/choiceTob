@@ -15,7 +15,7 @@ const INPUT_QUESTIONS = [
   { id: "full_name", label: "1. 你的名字", type: "text", placeholder: "请输入", required: true },
   { id: "wechat_id", label: "2. 你的微信号", type: "text", placeholder: "请输入微信号（用于联系）", required: true },
   { id: "age", label: "3. 年龄", type: "text", placeholder: "请输入", required: true },
-  { id: "video_course_info", label: "4. 是否视频课学员，你在几号社群，微信名？（优先连	）", type: "text", placeholder: "请输入", required: true },
+  { id: "video_course_info", label: "4. 是否商城拿货店铺VIP客户/视频课学员，VIP客户备注店名，视频课学员备注在几号社群，微信名?(优先判断结论)", type: "text", placeholder: "请输入", required: true },
   { id: "look_vs_age", label: "5. 看上去会比同年人（ ）？", type: "text", placeholder: "请输入", required: true },
   { id: "height", label: "6. 身高：", type: "text", placeholder: "请输入", required: true },
 ];
@@ -137,8 +137,18 @@ export default function StyleTestPage() {
             </div>
             <span className="font-bold text-lg text-primary">骆芷蝶智选</span>
           </Link>
-          <h1 className="text-2xl font-bold text-primary">色彩风格诊断问卷</h1>
-          <p className="text-gray-500 text-sm mt-1">请详细填写以下内容进行预约，我们将以微信形式通知你结果</p>
+          <h1 className="text-2xl font-bold text-primary">色彩风格判断问卷</h1>
+          <p className="text-gray-500 text-sm mt-1">商城拿货店铺上传核心VIP客户资料</p>
+        </div>
+
+        {/* 说明：区分色彩风格诊断与风格测试 */}
+        <div className="bg-white rounded-2xl p-5 mb-6 border border-gray-200 shadow-sm">
+          <h3 className="font-bold text-gray-900 text-base mb-3">色彩风格诊断 vs 风格测试</h3>
+          <ul className="text-sm text-gray-600 space-y-2">
+            <li>• 本问卷为色彩风格判断题，商城拿货店铺可免费为VIP客户填写。</li>
+            <li>• 付费「风格测试会员」是电脑端同款14题自动诊断，做完直接出结果。</li>
+            <li>• VIP客户请备注店名，视频课学员按第4题备注。</li>
+          </ul>
         </div>
 
         {/* 风格测试会员 ¥99 */}

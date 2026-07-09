@@ -4,11 +4,11 @@ Page({
   data:{
     /* 当前测试模式：female / male */
     testMode:'female',
-    testTitle:'',
-    testDesc:'',
-    tipText:'所有信息仅用于色彩风格诊断，严格保密',
+    testTitle:'色彩风格判断问卷',
+    testDesc:'商城拿货店铺上传核心VIP客户资料',
+    tipText:'所有信息仅用于色彩风格判断，严格保密',
 
-    /* 测试会员（从风格测试入口购买） */
+    /* 测试会员（付费风格测试） */
     isTestMember:false,
     testFeeLabel:'¥99',
 
@@ -46,12 +46,7 @@ Page({
 
   /* ========== 切换男士/女士模式 ========== */
   applyMode:function(mode){
-    var t = '', d = '';
-    if(mode==='female'){
-      t='女士风格专业诊断';d='17道深度诊断题 + AI 色彩匹配报告 + 专业搭配建议';
-    } else {
-      t='男士风格专业诊断';d='17道深度诊断题 + AI 色彩匹配报告 + 穿搭建议方案';
-    }
+    var t = '色彩风格判断问卷', d = '商城拿货店铺上传核心VIP客户资料';
     this.setData({testMode:mode,testTitle:t,testDesc:d});
   },
   switchMode:function(e){
