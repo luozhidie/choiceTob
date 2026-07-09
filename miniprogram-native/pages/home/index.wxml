@@ -1,18 +1,20 @@
 <view class="page">
   <!-- ========== 粘性头部 ========== -->
   <view class="sticky-header">
-    <!-- 顶部：小标题 + 菜单 -->
+    <!-- 顶部：小标题 -->
     <view class="header-top">
       <text class="ht-small">数据趋动·智选未来</text>
-      <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
-        <text class="ham-icon">☰</text>
-      </view>
     </view>
 
     <!-- 大标题 + 副标题 -->
     <view class="header-titles">
       <text class="ht-big">骆芷蝶·智选|供应链平台</text>
       <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 菜单按钮（搜索框上方） -->
+    <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
+      <text class="ham-icon">☰</text>
     </view>
 
     <!-- 搜索框 -->
