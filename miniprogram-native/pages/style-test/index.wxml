@@ -31,6 +31,12 @@
     <view wx:else class="mc-btn mc-done">已开通 ✓</view>
   </view>
 
+  <!-- 当前问卷标题 -->
+  <view class="form-title">
+    <text class="form-title-main">色彩风格判断问卷</text>
+    <text class="form-title-sub">商城拿货会员店铺核心VIP客户色彩季型风格在线诊断资料上传</text>
+  </view>
+
   <!-- 表单区域（男女共用同一套题，与电脑版完全一致） -->
   <scroll-view scroll-y class="form-scroll">
     <view class="form">

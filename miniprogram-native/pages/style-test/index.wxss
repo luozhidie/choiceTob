@@ -24,6 +24,11 @@ page{background:#f8f6f4;}
 .mc-blue .mc-btn{background:linear-gradient(135deg,#1976d2,#1565c0);box-shadow:0 4rpx 12rpx rgba(25,118,210,.3);}
 .mc-done{background:#bbb;color:#fff;box-shadow:none;}
 
+/* 当前问卷标题（放在风格测试会员卡片下方） */
+.form-title{margin:0 28rpx 24rpx;padding:20rpx 24rpx;background:#fff;border-radius:16rpx;border:2rpx solid #eee5df;text-align:center;}
+.form-title-main{font-size:30rpx;font-weight:bold;color:#333;display:block;margin-bottom:8rpx;}
+.form-title-sub{font-size:22rpx;color:#888;display:block;line-height:1.5;}
+
 /* 说明卡：区分色彩风格诊断与风格测试 */
 .info-card{margin:0 28rpx 24rpx;padding:24rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
 .info-t{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
@@ -31,7 +36,7 @@ page{background:#f8f6f4;}
 .info-line{font-size:24rpx;color:#666;line-height:1.6;}
 
 /* 表单滚动区 */
-.form-scroll{height:calc(100vh - 540rpx);}
+.form-scroll{height:calc(100vh - 640rpx);}
 .form{padding:0 28rpx 40rpx;}
 
 /* 付费提示卡片 */
