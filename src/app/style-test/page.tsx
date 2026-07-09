@@ -307,40 +307,6 @@ export default function StyleTestPage() {
 
         <p className="text-center text-xs text-gray-400 mt-6 mb-2">所有信息仅用于色彩风格诊断，严格保密</p>
 
-        {/* 付费测风格入口 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 mb-8">
-          <Link href="/style-test/female" className="group block bg-white border border-gray-200 rounded-2xl p-5 hover:border-pink-300 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center group-hover:bg-pink-100 transition-colors">
-                <User className="w-5 h-5 text-pink-500" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800 text-sm">女士风格测试</h3>
-                <p className="text-xs text-gray-400">14道题 · 自动出结果</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-pink-500">¥99</span>
-              <span className="text-xs text-pink-500 font-medium group-hover:underline">立即测试 →</span>
-            </div>
-          </Link>
-          <Link href="/style-test/male" className="group block bg-white border border-gray-200 rounded-2xl p-5 hover:border-blue-300 hover:shadow-md transition-all">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                <User className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800 text-sm">男士风格测试</h3>
-                <p className="text-xs text-gray-400">14道题 · 自动出结果</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-blue-500">¥99</span>
-              <span className="text-xs text-blue-500 font-medium group-hover:underline">立即测试 →</span>
-            </div>
-          </Link>
-        </div>
-
         {/* 回到顶部 */}
         <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="fixed bottom-6 right-6 w-10 h-10 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors z-50">
           <ChevronUp className="w-5 h-5" />

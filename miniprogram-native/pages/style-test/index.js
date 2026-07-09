@@ -41,7 +41,11 @@ Page({
   },
 
   onLoad:function(options){
-    var mode = options.mode || 'female';
+    this.applyMode(options.mode || 'female');
+  },
+
+  /* ========== 切换男士/女士模式 ========== */
+  applyMode:function(mode){
     var t = '', d = '';
     if(mode==='female'){
       t='女士风格专业诊断';d='17道深度诊断题 + AI 色彩匹配报告 + 专业搭配建议';
@@ -49,6 +53,12 @@ Page({
       t='男士风格专业诊断';d='17道深度诊断题 + AI 色彩匹配报告 + 穿搭建议方案';
     }
     this.setData({testMode:mode,testTitle:t,testDesc:d});
+  },
+  switchMode:function(e){
+    var mode = e.currentTarget.dataset.mode;
+    if(mode===this.data.testMode)return;
+    this.applyMode(mode);
+    this.setData({'isTestMember':false});
   },
 
   /* ========== 输入题 handlers (Q1-Q6) ========== */
@@ -150,7 +160,7 @@ Page({
           q13:f.q13,q14:f.q14,q15:f.q15,q16:f.q16,q17:f.q17
         },
         photo_note:f.photo_note||null,
-        photo_urls_1:f.fimg1?[f.img1]:[],
+        photo_urls_1:f.img1?[f.img1]:[],
         photo_urls_2:f.img2?[f.img2]:[],
         photo_urls_3:f.img3?[f.img3]:[],
         gender:t.data.testMode
@@ -173,7 +183,7 @@ Page({
               showCancel:false,confirmText:'知道了'
             });
             // 清空表单（保留非敏感字段）
-            t.setData({'form.full_name':'','form.wechat_id':'','form.age':'','form.photo_note':''});
+            t.setData({'form.full_name':'','form.wechat_id':'','form.age':'','form.photo_note':'','form.img1':'','form.img2':'','form.img3':''});
           } else {
             wx.showModal({title:'提交失败',content:(r.data&&r.data.error)||'请稍后重试',showCancel:false});
           }

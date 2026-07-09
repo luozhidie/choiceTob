@@ -8,7 +8,13 @@
   <!-- 测试会员购买入口 -->
   <view class="member-card {{testMode==='male'?'mc-blue':''}}">
     <view class="mc-left">
-      <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
+      <view class="mc-title-row">
+        <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
+        <view class="mc-switch">
+          <view class="mc-si {{testMode==='female'?'mc-si-on':''}}" data-mode="female" bindtap="switchMode">女士</view>
+          <view class="mc-si {{testMode==='male'?'mc-si-on':''}}" data-mode="male" bindtap="switchMode">男士</view>
+        </view>
+      </view>
       <text class="mc-desc">含专业诊断题 + AI色彩报告 + 微信推送结果</text>
     </view>
     <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
@@ -20,12 +26,12 @@
     <view class="form">
 
       <!-- ═══ 输入题 Q1-Q6 ═══ -->
-      <view class="q"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{form.full_name}}" bindinput="onName"/></view>
-      <view class="q"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{form.wechat_id}}" bindinput="onWechat"/></view>
-      <view class="q"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{form.age}}" bindinput="onAge"/></view>
-      <view class="q"><text class="ql">4. 是否视频课学员，你在几号社群，微信名？（优先连）</text><input class="qin" placeholder="请输入" value="{{form.video_course_info}}" bindinput="onVideoCourse"/></view>
-      <view class="q"><text class="ql">5. 看上去会比同年人（ ）？</text><input class="qin" placeholder="请输入" value="{{form.look_vs_age}}" bindinput="onLookVsAge"/></view>
-      <view class="q"><text class="ql">6. 身高： <text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{form.height}}" bindinput="onHeight"/></view>
+      <view class="q q-input"><text class="ql">1. 你的名字 <text class="req">*</text></text><input class="qin" placeholder="请输入" value="{{form.full_name}}" bindinput="onName"/></view>
+      <view class="q q-input"><text class="ql">2. 你的微信号 <text class="req">*</text></text><input class="qin" placeholder="请输入微信号（用于联系）" value="{{form.wechat_id}}" bindinput="onWechat"/></view>
+      <view class="q q-input"><text class="ql">3. 年龄 <text class="req">*</text></text><input class="qin" type="number" placeholder="请输入" value="{{form.age}}" bindinput="onAge"/></view>
+      <view class="q q-input"><text class="ql">4. 是否视频课学员，你在几号社群，微信名？（优先连）</text><input class="qin" placeholder="请输入" value="{{form.video_course_info}}" bindinput="onVideoCourse"/></view>
+      <view class="q q-input"><text class="ql">5. 看上去会比同年人（ ）？</text><input class="qin" placeholder="请输入" value="{{form.look_vs_age}}" bindinput="onLookVsAge"/></view>
+      <view class="q q-input"><text class="ql">6. 身高： <text class="req">*</text></text><input class="qin" type="digit" placeholder="请输入" value="{{form.height}}" bindinput="onHeight"/></view>
 
       <!-- ═══ 选择题 Q7-Q17 ═══ -->
 
