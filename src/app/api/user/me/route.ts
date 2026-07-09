@@ -7,28 +7,49 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
+/**
+ * 解析小程序自定义 token（base64url JSON，如 {uid,openid,exp}）
+ * 与 Supabase JWT 区分：JWT 包含两个点号分隔段。
+ */
+function parseMiniToken(token: string): { uid: string; exp?: number } | null {
+  try {
+    if (!token || token.includes('.')) return null;
+    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+    if (!payload.uid) return null;
+    if (payload.exp && payload.exp < Date.now()) return null;
+    return { uid: payload.uid as string, exp: payload.exp as number | undefined };
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const cookie = request.headers.get("cookie") || "";
     const authHeader = request.headers.get("authorization") || "";
     let userId: string | null = null;
 
-    // 1. 尝试从 cookie 中的 JWT 获取 user_id
+    // 1. 尝试认证：Bearer JWT（微信登录） 或 小程序自定义 token（手机号/邮箱登录）
     if (authHeader) {
       try {
         const token = authHeader.replace("Bearer ", "");
-        const { data } = await supabase.auth.getUser(token);
-        if (data.user) userId = data.user.id;
+        if (token.includes('.')) {
+          const { data } = await supabase.auth.getUser(token);
+          if (data.user) userId = data.user.id;
+        } else {
+          const mini = parseMiniToken(token);
+          if (mini) userId = mini.uid;
+        }
       } catch {}
     }
     if (!userId) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    // 2. 读取 profiles（会员状态 + 拿货金额）
+    // 2. 读取 profiles（会员状态 + 拿货金额 + 管理员标识）
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate, total_purchase_amount")
+      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate, total_purchase_amount, is_admin")
       .eq("id", userId)
       .single();
 
@@ -87,6 +108,7 @@ export async function GET(request: NextRequest) {
         // 用户信息
         userId: userId,
         role: profile?.role || "user",
+        isAdmin: !!profile?.is_admin,
         membershipType: profile?.membership_type || "none",
         membershipExpiresAt: profile?.membership_expires_at || null,
         totalPurchaseAmount: profile?.total_purchase_amount || 0,

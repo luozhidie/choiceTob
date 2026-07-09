@@ -36,6 +36,7 @@ Page({
   data:{
     /* ===== 登录状态 ===== */
     isLoggedIn:false,
+    isAdmin:false,
     userId:'',
     roleText:'登录/注册',
     avatarUrl:'',
@@ -98,6 +99,7 @@ Page({
       /* 未登录 */
       t.setData({
         isLoggedIn:false,
+        isAdmin:false,
         userId:'',
         roleText:'登录/注册',
         avatarUrl:'',
@@ -165,7 +167,8 @@ Page({
           couponCount:data.couponCount!=null?data.couponCount:'--',
           redPackCount:data.redPackCount!=null?data.redPackCount:'--',
           favCount:data.favCount||(wx.getStorageSync('favorites')||[]).length,
-          historyCount:data.historyCount||(wx.getStorageSync('view_history')||[]).length
+          historyCount:data.historyCount||(wx.getStorageSync('view_history')||[]).length,
+          isAdmin:!!data.isAdmin
         });
       },
       fail:function(){}

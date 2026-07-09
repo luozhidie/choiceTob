@@ -186,7 +186,7 @@
   <view class="section">
     <text class="sec-title">我的服务</text>
     <view class="service-list">
-      <view class="sv-item" bindtap="goImport">
+      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goImport">
         <text class="sv-icon-text">📦</text>
         <text class="sv-label">一键导入</text>
       </view>

@@ -9,10 +9,57 @@ const supabase = createClient(
 
 export const dynamic = 'force-dynamic';
 
+/**
+ * 解析小程序自定义 token（base64url JSON，如 {uid,openid,exp}）
+ */
+function parseMiniToken(token: string): { uid: string; exp?: number } | null {
+  try {
+    if (!token || token.includes('.')) return null;
+    const payload = JSON.parse(Buffer.from(token, 'base64url').toString('utf8'));
+    if (!payload.uid) return null;
+    if (payload.exp && payload.exp < Date.now()) return null;
+    return { uid: payload.uid as string, exp: payload.exp as number | undefined };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 通用管理员校验：
+ * 1) 浏览器端：cookie 包含 admin_logged_in=true
+ * 2) 小程序端：Authorization Bearer token 对应 profiles.is_admin=true
+ */
+async function checkAdmin(request: NextRequest): Promise<boolean> {
+  const cookie = request.headers.get("cookie") || "";
+  if (cookie.includes("admin_logged_in=true")) return true;
+
+  const authHeader = request.headers.get("authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+
+  let userId: string | null = null;
+  if (token.includes('.')) {
+    try {
+      const { data } = await supabase.auth.getUser(token);
+      if (data.user) userId = data.user.id;
+    } catch {}
+  } else {
+    const mini = parseMiniToken(token);
+    if (mini) userId = mini.uid;
+  }
+
+  if (!userId) return false;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+  return !!profile?.is_admin;
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const cookie = request.headers.get("cookie") || "";
-    if (!cookie.includes("admin_logged_in=true")) {
+    if (!(await checkAdmin(request))) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
     }
 

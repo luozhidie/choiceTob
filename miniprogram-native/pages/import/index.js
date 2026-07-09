@@ -49,6 +49,9 @@ Page({
       return;
     }
 
+    var app = getApp();
+    var token = wx.getStorageSync('token') || '';
+
     that.setData({ isProcessing: true, results: [], toastText: '正在导入 ' + urls.length + ' 个商品...' });
 
     // 调用 Vercel API（走 products/create?action=import）
@@ -57,6 +60,7 @@ Page({
       method: 'POST',
       header: {
         'Content-Type': 'application/json',
+        'Authorization': token ? 'Bearer ' + token : '',
       },
       data: { urls: urls },
       success: function (res) {
