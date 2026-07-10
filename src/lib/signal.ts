@@ -41,6 +41,7 @@ export interface RuleThresholds {
   rsiSell: number;
   volRatio: number;
   stopLoss: number;
+  trailingStop: number;
 }
 
 export async function readRule(supabase: any): Promise<RuleThresholds> {
@@ -55,6 +56,7 @@ export async function readRule(supabase: any): Promise<RuleThresholds> {
     rsiSell: r.rsi_sell ?? 75,
     volRatio: r.vol_ratio ?? 1.2,
     stopLoss: r.stop_loss ?? 0.08,
+    trailingStop: r.trailing_stop ?? 0.05,
   };
 }
 
@@ -113,22 +115,27 @@ export async function runStrategy(supabase: any) {
       const e = evaluateSignal(closes, volumes, i, rule);
       const { data: pos } = await supabase.from("paper_positions").select("*").eq("symbol", item.symbol).single();
       const qty = 100;
-      const hitStop = pos && pos.qty > 0 && pos.avg_cost != null && e.price < pos.avg_cost * (1 - rule.stopLoss);
+      const currentPeak = pos && pos.qty > 0 ? Math.max(pos.peak_price || 0, e.price) : e.price;
+      const hitEntryStop = pos && pos.qty > 0 && pos.avg_cost != null && e.price < pos.avg_cost * (1 - rule.stopLoss);
+      const hitTrailingStop = pos && pos.qty > 0 && currentPeak > 0 && e.price < currentPeak * (1 - rule.trailingStop);
 
       let signal = e.signal, reason = e.reason;
       if (signal === "买入" && (!pos || pos.qty === 0)) {
         await supabase.from("paper_trades").insert({ symbol: item.symbol, side: "buy", price: e.price, qty, source: "rule", note: reason });
         const newQty = (pos?.qty || 0) + qty;
         const newAvg = pos?.qty ? ((pos.qty * pos.avg_cost) + qty * e.price) / newQty : e.price;
-        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: newQty, avg_cost: newAvg, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: newQty, avg_cost: newAvg, peak_price: e.price, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
         trades.push({ symbol: item.symbol, side: "buy", price: e.price, qty });
-      } else if ((signal === "卖出" || hitStop) && pos && pos.qty > 0) {
+      } else if ((signal === "卖出" || hitEntryStop || hitTrailingStop) && pos && pos.qty > 0) {
         const sellQty = Math.min(qty, pos.qty);
-        const note = hitStop ? `止损-${Math.round(rule.stopLoss * 100)}%` : reason;
-        await supabase.from("paper_trades").insert({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty, source: hitStop ? "stop" : "rule", note });
-        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: pos.qty - sellQty, avg_cost: pos.avg_cost, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+        const note = hitTrailingStop ? `移动止盈-${Math.round(rule.trailingStop * 100)}%` : hitEntryStop ? `止损-${Math.round(rule.stopLoss * 100)}%` : reason;
+        await supabase.from("paper_trades").insert({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty, source: hitTrailingStop ? "trailing" : hitEntryStop ? "stop" : "rule", note });
+        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: pos.qty - sellQty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
         trades.push({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty });
         if (signal === "买入") { signal = "持有"; reason = "持仓中，忽略新买点"; }
+      } else if (pos && pos.qty > 0) {
+        // 持仓中未触发卖出：更新最高点（用于移动止盈）
+        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: pos.qty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
       }
       signals.push({ symbol: item.symbol, name: item.name, signal, reason, score: e.score, price: e.price });
 
@@ -164,7 +171,7 @@ export async function runBacktest(supabase: any) {
         return;
       }
       const qty = 100;
-      let posQty = 0, posCost = 0, realized = 0;
+      let posQty = 0, posCost = 0, realized = 0, posPeak = 0;
       const trades: any[] = [];
       const equity: number[] = [];
       let cap = 0; // 该标的投入本金（全部买入名义金额），作为权益基线，避免回撤>100%
@@ -173,19 +180,22 @@ export async function runBacktest(supabase: any) {
       for (let i = rule.maTrend; i < closes.length; i++) {
         const e = evaluateSignal(closes, volumes, i, rule);
         const buy = e.signal === "买入" && posQty === 0;
-        const hitStop = posQty > 0 && posCost != null && e.price < posCost * (1 - rule.stopLoss);
-        const sell = (e.signal === "卖出" || hitStop) && posQty > 0;
+        if (posQty > 0) posPeak = Math.max(posPeak, e.price);
+        const hitEntryStop = posQty > 0 && posCost != null && e.price < posCost * (1 - rule.stopLoss);
+        const hitTrailingStop = posQty > 0 && posPeak > 0 && e.price < posPeak * (1 - rule.trailingStop);
+        const sell = (e.signal === "卖出" || hitEntryStop || hitTrailingStop) && posQty > 0;
 
         if (buy) {
-          posQty = qty; posCost = e.price;
+          posQty = qty; posCost = e.price; posPeak = e.price;
           trades.push({ day: i, side: "buy", price: e.price });
           cap += e.price * qty;
           totalCapital += e.price * qty;
         } else if (sell) {
           const pnl = (e.price - posCost) * posQty;
           realized += pnl;
-          trades.push({ day: i, side: "sell", price: e.price, pnl, reason: hitStop ? "stop" : "rule" });
-          posQty = 0; posCost = 0;
+          const reason = hitTrailingStop ? "trailing" : hitEntryStop ? "stop" : "rule";
+          trades.push({ day: i, side: "sell", price: e.price, pnl, reason });
+          posQty = 0; posCost = 0; posPeak = 0;
         }
         const eq = cap + realized + posQty * e.price; // 权益 = 本金 + 累计盈亏 + 持仓市值
         equity.push(eq);
