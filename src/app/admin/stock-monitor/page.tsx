@@ -12,18 +12,6 @@ const MARKETS = [
 
 const SECTORS = ["上游纺织", "中游制造", "下游品牌零售", "电商渠道", "其他"];
 
-// 默认初始清单：服装全链条港股/美股龙头
-const DEFAULT_LIST = [
-  { symbol: "2020.HK", name: "安踏体育", market: "hk", sector: "下游品牌零售" },
-  { symbol: "2331.HK", name: "李宁", market: "hk", sector: "下游品牌零售" },
-  { symbol: "2313.HK", name: "申洲国际", market: "hk", sector: "中游制造" },
-  { symbol: "2232.HK", name: "晶苑国际", market: "hk", sector: "中游制造" },
-  { symbol: "2199.HK", name: "维珍妮", market: "hk", sector: "中游制造" },
-  { symbol: "NKE", name: "耐克", market: "us", sector: "下游品牌零售" },
-  { symbol: "LULU", name: "露露乐蒙", market: "us", sector: "下游品牌零售" },
-  { symbol: "9983.T", name: "迅销(优衣库)", market: "jp", sector: "下游品牌零售" },
-];
-
 export default function StockMonitorPage() {
   const [list, setList] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<Record<string, any>>({});
@@ -33,26 +21,12 @@ export default function StockMonitorPage() {
   const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售" });
 
   const loadList = useCallback(async () => {
-    const r = await fetch("/api/finance/quote", { credentials: "include" });
-    // GET 单只需要 symbol；这里只用来鉴权，实际列表走 supabase 客户端
+    const r = await fetch("/api/finance/watchlist", { credentials: "include" });
+    const d = await r.json();
+    setList(d.records || []);
   }, []);
 
-  // 用 supabase 客户端读 watchlist
-  const supabaseLoad = useCallback(async () => {
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    const { data } = await supabase.from("stock_watchlist").select("*").order("created_at");
-    if (data && data.length === 0) {
-      // 首次：写入默认清单
-      await supabase.from("stock_watchlist").insert(DEFAULT_LIST);
-      const { data: d2 } = await supabase.from("stock_watchlist").select("*").order("created_at");
-      setList(d2 || []);
-    } else {
-      setList(data || []);
-    }
-  }, []);
-
-  useEffect(() => { supabaseLoad(); }, [supabaseLoad]);
+  useEffect(() => { loadList(); }, [loadList]);
 
   const refreshAll = async () => {
     setLoading(true);
@@ -80,20 +54,27 @@ export default function StockMonitorPage() {
 
   const addItem = async () => {
     if (!form.symbol || !form.name) { alert("请填代码和名称"); return; }
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    const { error } = await supabase.from("stock_watchlist").insert([form]);
-    if (error) { alert(error.message); return; }
+    const r = await fetch("/api/finance/watchlist", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(form),
+    });
+    const d = await r.json();
+    if (!r.ok) { alert(d.error || "添加失败"); return; }
     setForm({ symbol: "", name: "", market: "hk", sector: "下游品牌零售" });
-    supabaseLoad();
+    loadList();
   };
 
   const delItem = async (id: string) => {
     if (!confirm("删除该标的？")) return;
-    const { createClient } = await import("@/lib/supabase/client");
-    const supabase = createClient();
-    await supabase.from("stock_watchlist").delete().eq("id", id);
-    supabaseLoad();
+    await fetch("/api/finance/watchlist", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ id }),
+    });
+    loadList();
   };
 
   const cell = (l: any) => {
