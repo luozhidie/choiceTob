@@ -197,12 +197,13 @@ export async function runBacktest(supabase: any) {
           trades.push({ day: i, side: "sell", price: e.price, pnl, reason });
           posQty = 0; posCost = 0; posPeak = 0;
         }
-        const eq = cap + realized + posQty * e.price; // 权益 = 本金 + 累计盈亏 + 持仓市值
+        const unrealized = posQty * (e.price - posCost); // 持仓浮动盈亏
+        const eq = cap + realized + unrealized; // 权益 = 投入本金 + 已实现盈亏 + 浮动盈亏
         equity.push(eq);
       }
 
       const lastPrice = closes[closes.length - 1];
-      const finalPnl = realized + posQty * lastPrice; // 累计盈亏（可正可负）
+      const finalPnl = realized + posQty * (lastPrice - posCost); // 累计盈亏（可正可负）
       const finalEq = equity.length ? equity[equity.length - 1] : cap; // 终值权益 = 本金 + 盈亏
       for (const v of equity) {
         peak = Math.max(peak, v);
