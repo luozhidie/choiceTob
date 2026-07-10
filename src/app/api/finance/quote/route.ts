@@ -111,14 +111,37 @@ export async function POST(req: NextRequest) {
   if (!list || list.length === 0) {
     return NextResponse.json({ ok: true, refreshed: 0, quotes: [] });
   }
-  const quotes: any[] = [];
   const aShares = list.filter((item: any) => /\.(SH|SZ)$/i.test(item.symbol));
-  const sinaQuotes = await fetchSinaBulk(aShares.map((item: any) => item.symbol));
+  const nonAShares = list.filter((item: any) => !/\.(SH|SZ)$/i.test(item.symbol));
 
+  // A股：新浪批量（一次请求）
+  const sinaQuotes = aShares.length > 0 ? await fetchSinaBulk(aShares.map((i: any) => i.symbol)) : {};
+
+  // 非A股：Yahoo 分批并发，避免顺序请求累计超时（Vercel 60s 限制）
+  const yahooQuotes: Record<string, any> = {};
+  const BATCH = 8;
+  for (let i = 0; i < nonAShares.length; i += BATCH) {
+    const batch = nonAShares.slice(i, i + BATCH);
+    const results = await Promise.all(
+      batch.map(async (item: any) => {
+        try {
+          const q = await fetchYahoo(item.symbol);
+          return { symbol: item.symbol, q };
+        } catch (e: any) {
+          return { symbol: item.symbol, error: e.message };
+        }
+      })
+    );
+    for (const r of results) {
+      if (r.q) yahooQuotes[r.symbol] = r.q;
+    }
+  }
+
+  const quotes: any[] = [];
   for (const item of list) {
+    const isA = /\.(SH|SZ)$/i.test(item.symbol);
+    const q = isA ? sinaQuotes[item.symbol] : yahooQuotes[item.symbol];
     try {
-      const isA = /\.(SH|SZ)$/i.test(item.symbol);
-      const q = isA ? sinaQuotes[item.symbol] : await fetchYahoo(item.symbol);
       if (!q) throw new Error(isA ? "Sina_NO_DATA" : "Yahoo_NO_DATA");
       q.name = q.name || item.name;
       const { name, ...snapshot } = q;
