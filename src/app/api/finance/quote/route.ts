@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const isA = /^\d{6}$/.test(symbol);
+    const isA = /\.(SH|SZ)$/i.test(symbol);
     const q = isA ? await fetchTushare(symbol) : await fetchYahoo(symbol);
     return NextResponse.json({ ok: true, quote: q });
   } catch (e: any) {
@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
   const quotes: any[] = [];
   for (const item of list) {
     try {
-      const isA = /^\d{6}$/.test(item.symbol);
+      const isA = /\.(SH|SZ)$/i.test(item.symbol);
       const q = isA ? await fetchTushare(item.symbol) : await fetchYahoo(item.symbol);
       q.name = q.name || item.name;
       await supabase.from("stock_snapshots").upsert({ symbol: item.symbol, ...q, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
