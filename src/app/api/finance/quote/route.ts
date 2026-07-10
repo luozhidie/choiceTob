@@ -4,8 +4,8 @@ import { callAI } from "@/lib/ai";
 
 export const maxDuration = 60;
 
-// 阶段1：港股/美股用 Yahoo 公开接口（免 token，Vercel 海外节点可直连）
-// A股（6位纯数字）预留 Tushare，需环境变量 TUSHARE_TOKEN
+// 阶段1：港股/美股/日股用 Yahoo 公开接口（免 token，Vercel 海外节点可直连）
+// A股（.SH/.SZ）用新浪财经接口（免 token，无积分限制）
 
 async function fetchYahoo(symbol: string) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`;
@@ -28,32 +28,50 @@ async function fetchYahoo(symbol: string) {
   };
 }
 
-async function fetchTushare(symbol: string) {
-  const token = process.env.TUSHARE_TOKEN;
-  if (!token) throw new Error("TUSHARE_TOKEN 未配置");
-  const res = await fetch("https://api.tushare.pro", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      api_name: "daily",
-      token,
-      params: { ts_code: symbol, trade_date: "" },
-      fields: "close,pct_chg,vol,amount",
-    }),
-    // @ts-ignore
-    signal: AbortSignal.timeout(8000),
+async function fetchSinaBulk(symbols: string[]) {
+  if (symbols.length === 0) return {};
+  const sinaSymbols = symbols.map((s) => {
+    const code = s.replace(/\.(SH|SZ)$/i, "");
+    return /\.SH$/i.test(s) ? `sh${code}` : `sz${code}`;
   });
-  const d = await res.json();
-  const row = d?.data?.items?.[0];
-  if (!row) throw new Error("Tushare_NO_DATA");
-  return {
-    symbol,
-    price: row[0],
-    changePct: row[1],
-    volume: row[2],
-    currency: "CNY",
-    name: symbol,
-  };
+  const url = `https://hq.sinajs.cn/list=${sinaSymbols.join(",")}`;
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+      "Referer": "https://finance.sina.com.cn",
+    },
+    // @ts-ignore
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error("Sina_HTTP_" + res.status);
+  const buffer = await res.arrayBuffer();
+  const text = new TextDecoder("gbk").decode(buffer);
+  const result: Record<string, any> = {};
+  for (const sinaSymbol of sinaSymbols) {
+    const match = text.match(new RegExp(`var hq_str_${sinaSymbol}="([^"]*)";`));
+    if (!match) continue;
+    const parts = match[1].split(",");
+    if (parts.length < 4 || !parts[3]) continue;
+    const originalSymbol = symbols.find((s) => {
+      const code = s.replace(/\.(SH|SZ)$/i, "");
+      return sinaSymbol === (/\.SH$/i.test(s) ? `sh${code}` : `sz${code}`);
+    });
+    if (!originalSymbol) continue;
+    const name = parts[0] || originalSymbol;
+    const prevClose = parseFloat(parts[2]);
+    const price = parseFloat(parts[3]);
+    const volume = parseInt(parts[8], 10) || null;
+    const changePct = prevClose && price ? ((price - prevClose) / prevClose) * 100 : null;
+    result[originalSymbol] = {
+      symbol: originalSymbol,
+      price,
+      changePct,
+      volume,
+      currency: "CNY",
+      name,
+    };
+  }
+  return result;
 }
 
 export async function GET(req: NextRequest) {
@@ -68,7 +86,8 @@ export async function GET(req: NextRequest) {
 
   try {
     const isA = /\.(SH|SZ)$/i.test(symbol);
-    const q = isA ? await fetchTushare(symbol) : await fetchYahoo(symbol);
+    const q = isA ? (await fetchSinaBulk([symbol]))[symbol] : await fetchYahoo(symbol);
+    if (!q) throw new Error(isA ? "Sina_NO_DATA" : "Yahoo_NO_DATA");
     return NextResponse.json({ ok: true, quote: q });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e.message }, { status: 502 });
@@ -87,10 +106,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, refreshed: 0, quotes: [] });
   }
   const quotes: any[] = [];
+  const aShares = list.filter((item: any) => /\.(SH|SZ)$/i.test(item.symbol));
+  const sinaQuotes = await fetchSinaBulk(aShares.map((item: any) => item.symbol));
+
   for (const item of list) {
     try {
       const isA = /\.(SH|SZ)$/i.test(item.symbol);
-      const q = isA ? await fetchTushare(item.symbol) : await fetchYahoo(item.symbol);
+      const q = isA ? sinaQuotes[item.symbol] : await fetchYahoo(item.symbol);
+      if (!q) throw new Error(isA ? "Sina_NO_DATA" : "Yahoo_NO_DATA");
       q.name = q.name || item.name;
       await supabase.from("stock_snapshots").upsert({ symbol: item.symbol, ...q, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
       quotes.push(q);
