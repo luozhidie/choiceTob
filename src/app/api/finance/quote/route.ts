@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, refreshed: quotes.length, quotes });
 }
 
-// 全行业 AI 解读
+// 跨行业 AI 解读（按行业分组研判）
 export async function PUT(req: NextRequest) {
   const cookieHeader = req.headers.get("cookie") || "";
   if (!cookieHeader.includes("admin_logged_in=true")) {
@@ -167,14 +167,29 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "监控清单为空" }, { status: 400 });
   }
   const snapMap = new Map((snaps || []).map((s: any) => [s.symbol, s]));
-  const payload = list.map((l: any) => {
+  // 按行业分组
+  const byIndustry: Record<string, any[]> = {};
+  for (const l of list) {
+    const ind = (l.industry || "其他").trim() || "其他";
+    if (!byIndustry[ind]) byIndustry[ind] = [];
     const s = snapMap.get(l.symbol) || {};
-    return { 标的: l.name, symbol: l.symbol, 环节: l.sector || "—", 现价: s.price ?? "—", 涨跌幅: s.changePct != null ? (Math.round(s.changePct * 100) / 100) + "%" : "—" };
-  });
+    const chg = s.change_pct ?? s.changePct;
+    byIndustry[ind].push({
+      标的: l.name,
+      symbol: l.symbol,
+      细分: l.sector || "—",
+      现价: s.price != null ? s.price : "—",
+      涨跌幅: chg != null ? (Math.round(chg * 100) / 100) + "%" : "—",
+    });
+  }
+  const payloadLines: string[] = [];
+  for (const [ind, items] of Object.entries(byIndustry)) {
+    payloadLines.push(`【${ind}】(${items.length}只)\n` + JSON.stringify(items, null, 2));
+  }
 
   const { content, source } = await callAI({
-    system: "你是服装行业投研分析师。根据一组服装产业链公司的实时行情，输出行业景气度研判：1)整体趋势 2)上游/中游/下游各环节表现 3)值得关注的异动 4)对服装批发零售生意的启示。中文，分点，务实。",
-    user: "当前监控的服装产业链行情：\n" + JSON.stringify(payload, null, 2),
+    system: "你是资深行业投研分析师。下面按「行业」分组给出了一组公司的实时行情。请：1) 分行业点评各环节表现与景气度；2) 指出值得关注的异动标的（涨幅/跌幅异常）；3) 给出对实体生意（尤其消费/零售）的启示与可行动建议。中文，分点，务实，避免空话。",
+    user: "当前跨行业监控行情（按行业分组）：\n" + payloadLines.join("\n\n"),
     temperature: 0.5,
     maxTokens: 2000,
     timeoutMs: 55000,

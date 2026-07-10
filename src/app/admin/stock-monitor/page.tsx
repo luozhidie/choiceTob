@@ -19,7 +19,7 @@ export default function StockMonitorPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState("");
   const [analysisError, setAnalysisError] = useState("");
-  const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售" });
+  const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售", industry: "服装" });
   const [error, setError] = useState("");
   const [diag, setDiag] = useState<any>(null);
 
@@ -99,7 +99,7 @@ export default function StockMonitorPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, industry: (form.industry || "其他").trim() || "其他" }),
     });
     const d = await r.json();
     if (!r.ok) { alert(d.error || "添加失败"); return; }
@@ -126,7 +126,7 @@ export default function StockMonitorPage() {
       <div className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between">
         <div>
           <div className="font-medium text-primary">{l.name} <span className="text-xs text-muted-foreground">{l.symbol}</span></div>
-          <div className="text-xs text-muted-foreground mt-0.5">{l.sector}</div>
+          <div className="text-xs text-muted-foreground mt-0.5">{[l.industry, l.sector].filter(Boolean).join(" · ") || "—"}</div>
         </div>
         <div className="text-right">
           <div className="text-lg font-bold text-primary">
@@ -145,7 +145,7 @@ export default function StockMonitorPage() {
   return (
     <div style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
       <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2"><TrendingUp className="w-6 h-6 text-accent" /> 服装行业股票监控</h1>
+        <h1 className="text-2xl font-bold text-primary flex items-center gap-2"><TrendingUp className="w-6 h-6 text-accent" /> 跨行业股票监控</h1>
         <button onClick={loadList} className="btn-secondary flex items-center gap-2"><RefreshCw className="w-4 h-4" />刷新清单</button>
         <button onClick={runDiagnose} className="btn-secondary flex items-center gap-2"><TrendingUp className="w-4 h-4" />诊断</button>
         <button onClick={refreshAll} disabled={loading} className="btn-secondary flex items-center gap-2">
@@ -166,7 +166,7 @@ export default function StockMonitorPage() {
           {JSON.stringify(diag, null, 2)}
         </div>
       )}
-      <p className="text-sm text-muted-foreground mb-5">观察服装全产业链（上游纺织 / 中游制造 / 下游品牌）港股美股行情与财务，辅助判断行业景气度。数据来自 Yahoo（免 token）。阶段2 再接 A股(Tushare)与量化下单。</p>
+      <p className="text-sm text-muted-foreground mb-5">跨行业监控港股/美股/日股（Yahoo 免 token）与 A股（新浪财经免 token）实时行情，按行业分组研判景气度。添加标的时填「行业」即可归入对应分组。</p>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
         <div className="flex flex-wrap items-end gap-3">
@@ -190,6 +190,10 @@ export default function StockMonitorPage() {
               {SECTORS.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
+          <div>
+            <label className="block text-xs font-medium text-primary mb-1">行业</label>
+            <input value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} className="w-28 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="服装/科技/消费" />
+          </div>
           <button onClick={addItem} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" />添加</button>
         </div>
       </div>
@@ -201,15 +205,38 @@ export default function StockMonitorPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        {list.map((l) => (
-          <div key={l.id} className="relative">
-            {cell(l)}
-            <button onClick={() => delItem(l.id)} className="absolute top-2 right-2 p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+      {(() => {
+        const groups: Record<string, any[]> = {};
+        for (const l of list) {
+          const key = (l.industry || "其他").trim() || "其他";
+          if (!groups[key]) groups[key] = [];
+          groups[key].push(l);
+        }
+        const keys = Object.keys(groups);
+        if (keys.length === 0) {
+          return <p className="text-muted-foreground text-sm">清单为空。先点「刷新清单」，仍为空请点「诊断」并把结果发我。</p>;
+        }
+        return (
+          <div className="space-y-6 mb-6">
+            {keys.map((k) => (
+              <div key={k}>
+                <h3 className="text-sm font-bold text-primary mb-2 flex items-center gap-2">
+                  <span className="px-2 py-0.5 rounded bg-accent/10 text-accent text-xs">{k}</span>
+                  <span className="text-muted-foreground font-normal">{groups[k].length} 只</span>
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {groups[k].map((l) => (
+                    <div key={l.id} className="relative">
+                      {cell(l)}
+                      <button onClick={() => delItem(l.id)} className="absolute top-2 right-2 p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-        {list.length === 0 && <p className="text-muted-foreground text-sm col-span-2">清单为空。先点「刷新清单」，仍为空请点「诊断」并把结果发我。</p>}
-      </div>
+        );
+      })()}
 
       {analysis && (
         <div className="bg-accent/5 border border-accent/20 rounded-2xl p-6">
