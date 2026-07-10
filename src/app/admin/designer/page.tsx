@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
-  Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff, Loader2, Palette,
+  Plus, Pencil, Trash2, Upload, Save, X, Eye, EyeOff, Loader2, Palette, Sparkles,
 } from "lucide-react";
 
 interface DesignerPackage {
@@ -29,6 +29,53 @@ export default function AdminDesignerPage() {
   });
   const [uploading, setUploading] = useState(false);
   const supabase = createClient();
+
+  // ── AI 爆款改款 ──
+  const [showAI, setShowAI] = useState(false);
+  const [aiForm, setAiForm] = useState({ productDesc: "", category: "", refStyle: "", color: "", fabric: "", season: "" });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<any>(null);
+  const [aiError, setAiError] = useState("");
+
+  const runAI = async () => {
+    if (!aiForm.productDesc && !aiForm.category) { alert("请填写爆款描述或品类"); return; }
+    setAiLoading(true); setAiError(""); setAiResult(null);
+    try {
+      const res = await fetch("/api/ai/designer-redesign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(aiForm),
+      });
+      const d = await res.json();
+      if (!res.ok) { setAiError(d.error || "生成失败"); return; }
+      setAiResult(d.result);
+    } catch (e: any) {
+      setAiError("请求失败：" + (e.message || ""));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  // 把 AI 结果保存为新套餐草稿
+  const saveAsDraft = () => {
+    if (!aiResult) return;
+    const features = [
+      ...(aiResult.colorOptions || []).map((x: string) => "换色：" + x),
+      ...(aiResult.fabricOptions || []).map((x: string) => "换面料：" + x),
+      ...(aiResult.silhouetteOptions || []).map((x: string) => "换版型：" + x),
+      ...(aiResult.printOptions || []).map((x: string) => "印花：" + x),
+      ...(aiResult.craftOptions || []).map((x: string) => "工艺：" + x),
+    ].join("\n");
+    setFormData({
+      name: aiResult.name || "AI 改款草稿",
+      description: (aiResult.summary || "") + (aiResult.targetPrice ? "　拿货价：" + aiResult.targetPrice : ""),
+      features,
+      price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0,
+    });
+    setShowAI(false); setAiResult(null);
+    setShowModal(true);
+  };
 
   // 加载数据
   const fetchData = async () => {
@@ -105,10 +152,93 @@ export default function AdminDesignerPage() {
           <h1 className="text-2xl font-bold text-primary">爆款样衣管理</h1>
           <p className="text-muted-foreground mt-1">管理爆款样衣服务套餐</p>
         </div>
-        <button onClick={() => { setEditing(null); setFormData({ name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0 }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" />新增套餐
-        </button>
+        <div className="flex items-center gap-3">
+          <button onClick={() => setShowAI(true)} className="btn-secondary flex items-center gap-2">
+            <Sparkles className="w-4 h-4" />AI 爆款改款
+          </button>
+          <button onClick={() => { setEditing(null); setFormData({ name: "", description: "", features: "", price_individual: 0, price_group: 0, image_url: "", is_published: false, sort_order: 0 }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" />新增套餐
+          </button>
+        </div>
       </div>
+
+      {showAI && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-bold text-primary flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" />AI 爆款改款</h2>
+              <button onClick={() => { setShowAI(false); setAiResult(null); setAiError(""); }} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+
+            {!aiResult ? (
+              <div className="p-6 space-y-4">
+                <p className="text-sm text-muted-foreground">输入一个爆款，AI 给出换色 / 换面料 / 换版型 / 印花 / 工艺 5 个方向的改款建议，可一键存为套餐草稿。</p>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">爆款描述 <span className="text-red-500">*</span></label>
+                  <textarea value={aiForm.productDesc} onChange={(e) => setAiForm({ ...aiForm, productDesc: e.target.value })} rows={3} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none" placeholder="如：法式碎花茶歇连衣裙，收腰显瘦，浅色系" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-2">品类</label>
+                    <input value={aiForm.category} onChange={(e) => setAiForm({ ...aiForm, category: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="连衣裙 / 卫衣 / 衬衫" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-2">参考风格</label>
+                    <input value={aiForm.refStyle} onChange={(e) => setAiForm({ ...aiForm, refStyle: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="法式 / 韩系 / 通勤" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-2">希望主色</label>
+                    <input value={aiForm.color} onChange={(e) => setAiForm({ ...aiForm, color: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="自由发挥留空" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-primary mb-2">希望面料</label>
+                    <input value={aiForm.fabric} onChange={(e) => setAiForm({ ...aiForm, fabric: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="自由发挥留空" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-primary mb-2">季节</label>
+                  <input value={aiForm.season} onChange={(e) => setAiForm({ ...aiForm, season: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent" placeholder="2026 春夏" />
+                </div>
+                {aiError && <p className="text-sm text-red-600">{aiError}</p>}
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button onClick={() => { setShowAI(false); }} className="btn-secondary">取消</button>
+                  <button onClick={runAI} disabled={aiLoading} className="btn-primary flex items-center gap-2">
+                    {aiLoading ? <><Loader2 className="w-4 h-4 animate-spin" />生成中...</> : <><Sparkles className="w-4 h-4" />生成改款方案</>}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-6 space-y-5">
+                <div className="bg-accent/5 border border-accent/20 rounded-xl p-4">
+                  <p className="text-sm font-semibold text-primary mb-1">{aiResult.name}</p>
+                  <p className="text-sm text-muted-foreground">{aiResult.summary}</p>
+                  {aiResult.targetPrice && <p className="text-sm text-accent mt-2 font-medium">建议拿货价：{aiResult.targetPrice}</p>}
+                </div>
+                {[
+                  { title: "换色方案", items: aiResult.colorOptions },
+                  { title: "换面料方案", items: aiResult.fabricOptions },
+                  { title: "换版型 / 廓形", items: aiResult.silhouetteOptions },
+                  { title: "印花 / 图案", items: aiResult.printOptions },
+                  { title: "工艺升级", items: aiResult.craftOptions },
+                ].map((g) => (
+                  <div key={g.title}>
+                    <h3 className="text-sm font-semibold text-primary mb-2">{g.title}</h3>
+                    <ul className="space-y-1">
+                      {(g.items || []).map((it: string, i: number) => (
+                        <li key={i} className="text-sm text-muted-foreground flex items-start gap-2"><span className="text-accent mt-0.5">•</span><span>{it}</span></li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+                <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100">
+                  <button onClick={() => { setAiResult(null); }} className="btn-secondary">返回重填</button>
+                  <button onClick={saveAsDraft} className="btn-primary flex items-center gap-2"><Save className="w-4 h-4" />存为套餐草稿</button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <div className="text-center py-12"><Loader2 className="w-8 h-8 animate-spin mx-auto text-accent mb-4" /><p className="text-muted-foreground">加载中...</p></div>
