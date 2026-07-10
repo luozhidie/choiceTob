@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export const dynamic = 'force-dynamic';
 
-
 export async function GET() {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("membership_orders")
-    .select("*")
+    .select("*, profiles:user_id (email, full_name, phone)")
     .order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true, data: data || [] });
@@ -20,7 +19,7 @@ export async function DELETE(req: NextRequest) {
     const { id, table } = body;
     if (!id) return NextResponse.json({ error: "缺少ID" }, { status: 400 });
 
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const targetTable = table || "membership_orders";
 
     const { error } = await supabase.from(targetTable).delete().eq("id", id);
@@ -37,7 +36,7 @@ export async function PUT(req: NextRequest) {
     const { id, action } = body;
     if (!id) return NextResponse.json({ error: "缺少订单ID" }, { status: 400 });
 
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const now = new Date().toISOString();
 
     /* 开通：pending -> confirmed + 同步更新profiles表 */

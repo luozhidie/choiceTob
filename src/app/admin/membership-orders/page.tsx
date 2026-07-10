@@ -20,6 +20,12 @@ interface Order {
   payment_method: string;
   status: string;
   created_at: string;
+  user_id: string;
+  profiles: {
+    email: string | null;
+    full_name: string | null;
+    phone: string | null;
+  } | null;
 }
 
 export default function MembershipOrdersPage() {
@@ -162,6 +168,7 @@ export default function MembershipOrdersPage() {
           <table className="w-full text-sm">
             <thead><tr className="border-b bg-gray-50 text-xs text-muted-foreground uppercase">
               <th className="text-left px-4 py-3">套餐</th>
+              <th className="text-left px-4 py-3">用户</th>
               <th className="text-left px-4 py-3">支付方式</th>
               <th className="text-right px-4 py-3">金额</th>
               <th className="text-left px-4 py-3">时间</th>
@@ -171,9 +178,15 @@ export default function MembershipOrdersPage() {
             <tbody className="divide-y divide-gray-50">
               {filtered.map((o) => {
                 const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
+                const profile = o.profiles;
+                const userLabel = profile?.full_name || profile?.email || profile?.phone || o.user_id || "未知用户";
                 return (
                   <tr key={o.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 font-medium">{o.plan_name || o.plan_id || "-"}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <div className="font-medium text-gray-900">{userLabel}</div>
+                      {profile?.email && profile.email !== userLabel && <div className="text-muted-foreground">{profile.email}</div>}
+                    </td>
                     <td className="px-4 py-3">{o.payment_method === "wechat" ? "微信" : "-"}</td>
                     <td className="px-4 py-3 text-right font-bold">¥{(o.price / 100).toFixed(0)}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleDateString("zh-CN")}</td>
