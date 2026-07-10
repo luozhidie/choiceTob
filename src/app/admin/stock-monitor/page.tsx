@@ -23,7 +23,20 @@ export default function StockMonitorPage() {
   const loadList = useCallback(async () => {
     const r = await fetch("/api/finance/watchlist", { credentials: "include" });
     const d = await r.json();
-    setList(d.records || []);
+    const records = d.records || [];
+    setList(records);
+    // 如果清单为空，自动调用后端初始化默认清单
+    if (records.length === 0) {
+      try {
+        const s = await fetch("/api/finance/seed", { method: "POST", credentials: "include" });
+        const sd = await s.json();
+        if (sd.seeded) {
+          const r2 = await fetch("/api/finance/watchlist", { credentials: "include" });
+          const d2 = await r2.json();
+          setList(d2.records || []);
+        }
+      } catch {}
+    }
   }, []);
 
   useEffect(() => { loadList(); }, [loadList]);
@@ -105,6 +118,7 @@ export default function StockMonitorPage() {
     <div style={{ padding: 24, maxWidth: 960, margin: "0 auto" }}>
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-primary flex items-center gap-2"><TrendingUp className="w-6 h-6 text-accent" /> 服装行业股票监控</h1>
+        <button onClick={loadList} className="btn-secondary flex items-center gap-2"><RefreshCw className="w-4 h-4" />刷新清单</button>
         <button onClick={refreshAll} disabled={loading} className="btn-secondary flex items-center gap-2">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}刷新行情
         </button>
