@@ -157,6 +157,7 @@ const menuGroups = [
   // ─── AI 智能中心 ───
   { label: "AI 智能中心", items: [
     { label: "AI 中心首页", href: "/admin/ai-center" },
+    { label: "AI 爆款文案", href: "/admin/ai-marketing-copy" },
     { label: "AI 生产协同", href: "/admin/production-coordination" },
     { label: "商品企划", href: "/admin/report" },
     { label: "AI 设计研发", href: "/admin/designer" },
