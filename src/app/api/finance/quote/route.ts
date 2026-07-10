@@ -169,7 +169,7 @@ export async function PUT(req: NextRequest) {
   const snapMap = new Map((snaps || []).map((s: any) => [s.symbol, s]));
   const payload = list.map((l: any) => {
     const s = snapMap.get(l.symbol) || {};
-    return { 标的: l.name, symbol: l.symbol, 环节: l.sector || "—", 现价: s.price ?? "—", 涨跌幅: s.changePct != null ? s.changePct + "%" : "—" };
+    return { 标的: l.name, symbol: l.symbol, 环节: l.sector || "—", 现价: s.price ?? "—", 涨跌幅: s.changePct != null ? (Math.round(s.changePct * 100) / 100) + "%" : "—" };
   });
 
   const { content, source } = await callAI({

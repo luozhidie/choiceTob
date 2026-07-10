@@ -18,6 +18,7 @@ export default function StockMonitorPage() {
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState("");
+  const [analysisError, setAnalysisError] = useState("");
   const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售" });
   const [error, setError] = useState("");
   const [diag, setDiag] = useState<any>(null);
@@ -81,10 +82,12 @@ export default function StockMonitorPage() {
 
   const analyze = async () => {
     setAnalyzing(true);
+    setAnalysisError("");
     try {
       const r = await fetch("/api/finance/quote", { method: "PUT", credentials: "include" });
       const d = await r.json();
-      if (d.analysis) setAnalysis(d.analysis); else alert(d.error || "分析失败");
+      if (d.analysis) setAnalysis(d.analysis);
+      else setAnalysisError(d.error || "分析失败");
     } finally {
       setAnalyzing(false);
     }
@@ -132,7 +135,7 @@ export default function StockMonitorPage() {
           </div>
           <div className={`text-sm flex items-center justify-end gap-1 ${up ? "text-emerald-600" : "text-rose-600"}`}>
             {pct != null ? (up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />) : null}
-            {pct != null ? `${pct > 0 ? "+" : ""}${pct}%` : (q.error ? "拉取失败" : "未刷新")}
+            {pct != null ? `${pct > 0 ? "+" : ""}${pct.toFixed(2)}%` : (q.error ? "拉取失败" : "未刷新")}
           </div>
         </div>
       </div>
@@ -212,6 +215,14 @@ export default function StockMonitorPage() {
         <div className="bg-accent/5 border border-accent/20 rounded-2xl p-6">
           <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2"><Sparkles className="w-4 h-4 text-accent" /> 行业景气度 AI 研判</h3>
           <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{analysis}</div>
+        </div>
+      )}
+
+      {analysisError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-5 text-sm">
+          <div className="font-semibold mb-1">⚠️ AI 解读未生成</div>
+          <div className="break-all">{analysisError}</div>
+          <div className="mt-2 text-rose-500">若提示「AI 服务未配置」，需在 Vercel 环境变量中添加 DEEPSEEK_API_KEY（推荐）或 OPENAI_API_KEY。</div>
         </div>
       )}
     </div>
