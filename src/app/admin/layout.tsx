@@ -158,6 +158,7 @@ const menuGroups = [
   { label: "AI 智能中心", items: [
     { label: "AI 中心首页", href: "/admin/ai-center" },
     { label: "AI 爆款文案", href: "/admin/ai-marketing-copy" },
+    { label: "服装股票监控", href: "/admin/stock-monitor" },
     { label: "AI 生产协同", href: "/admin/production-coordination" },
     { label: "商品企划", href: "/admin/report" },
     { label: "AI 设计研发", href: "/admin/designer" },

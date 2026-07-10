@@ -24,6 +24,7 @@ const MODULES = [
     items: [
       { name: "AI 爆款文案", desc: "输入商品标题，生成朋友圈/小红书/抖音/社群文案和图片配文", href: "/admin/ai-marketing-copy" },
       { name: "AI 营销策划", desc: "营销策划与内容生成", href: "/admin/marketing" },
+      { name: "服装股票监控", desc: "监控服装全产业链港股/美股行情，AI 解读行业景气度", href: "/admin/stock-monitor" },
       { name: "销售服务话术", desc: "销售服务脚本生成", href: "/admin/sales" },
       { name: "趋势预测", desc: "趋势预测与趋势中心", href: "/admin/trend-predict" },
     ],
