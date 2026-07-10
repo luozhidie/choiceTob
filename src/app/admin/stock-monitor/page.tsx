@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Plus, RefreshCw, Sparkles, Trash2, Loader2, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, RefreshCw, Sparkles, Trash2, Loader2, TrendingUp, TrendingDown, Activity } from "lucide-react";
 
 const MARKETS = [
   { value: "hk", label: "港股" },
@@ -19,6 +19,9 @@ export default function StockMonitorPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState("");
   const [analysisError, setAnalysisError] = useState("");
+  const [signals, setSignals] = useState<any[]>([]);
+  const [signalRunning, setSignalRunning] = useState(false);
+  const [signalError, setSignalError] = useState("");
   const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售", industry: "服装" });
   const [error, setError] = useState("");
   const [diag, setDiag] = useState<any>(null);
@@ -111,6 +114,21 @@ export default function StockMonitorPage() {
       else setAnalysisError(d.error || "分析失败");
     } finally {
       setAnalyzing(false);
+    }
+  };
+
+  const runSignal = async () => {
+    setSignalRunning(true);
+    setSignalError("");
+    try {
+      const r = await fetch("/api/finance/signal", { method: "POST", credentials: "include" });
+      const d = await r.json();
+      if (d.signals) setSignals(d.signals);
+      else setSignalError(d.error || "运行失败");
+    } catch (e: any) {
+      setSignalError("请求异常：" + (e?.message || String(e)));
+    } finally {
+      setSignalRunning(false);
     }
   };
 
@@ -227,6 +245,9 @@ export default function StockMonitorPage() {
         <button onClick={analyze} disabled={analyzing} className="btn-secondary flex items-center gap-2">
           {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}全行业 AI 解读
         </button>
+        <button onClick={runSignal} disabled={signalRunning} className="btn-secondary flex items-center gap-2">
+          {signalRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}运行策略
+        </button>
       </div>
 
       {(() => {
@@ -274,6 +295,33 @@ export default function StockMonitorPage() {
           <div className="font-semibold mb-1">⚠️ AI 解读未生成</div>
           <div className="break-all">{analysisError}</div>
           <div className="mt-2 text-rose-500">若提示「AI 服务未配置」，需在 Vercel 环境变量中添加 DEEPSEEK_API_KEY（推荐）或 OPENAI_API_KEY。</div>
+        </div>
+      )}
+
+      {signals.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
+          <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-accent" /> 策略信号（{signals.length}）</h3>
+          <div className="space-y-2">
+            {signals.map((s, i) => (
+              <div key={i} className="flex items-center justify-between text-sm border-b border-gray-50 pb-2">
+                <div>
+                  <span className="font-medium">{s.name || s.symbol}</span>
+                  <span className="text-xs text-muted-foreground ml-2">{s.symbol}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`px-2 py-0.5 rounded text-xs ${s.signal === "买入" ? "bg-emerald-50 text-emerald-600" : s.signal === "卖出" ? "bg-rose-50 text-rose-600" : "bg-gray-50 text-gray-500"}`}>{s.signal}</span>
+                  <span className="text-xs text-muted-foreground w-44 truncate">{s.reason}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {signalError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-5 text-sm">
+          <div className="font-semibold mb-1">⚠️ 策略运行失败</div>
+          <div className="break-all">{signalError}</div>
         </div>
       )}
     </div>
