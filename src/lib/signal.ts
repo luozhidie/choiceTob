@@ -40,12 +40,13 @@ export async function runStrategy(supabase: any) {
 
   const signals: any[] = [];
   const trades: any[] = [];
-  for (const item of list) {
+
+  async function processOne(item: any) {
     try {
       const closes = await fetchYahooHistory(item.symbol);
       if (closes.length < maLong + 1) {
         signals.push({ symbol: item.symbol, name: item.name, signal: "持有", reason: "历史数据不足" });
-        continue;
+        return;
       }
       const ma5 = ma(closes, maShort)!;
       const ma20 = ma(closes, maLong)!;
@@ -78,5 +79,13 @@ export async function runStrategy(supabase: any) {
       signals.push({ symbol: item.symbol, name: item.name, signal: "错误", reason: e.message });
     }
   }
+
+  // 分批并发拉历史 K 线，避免顺序请求累计超时（Vercel 60s 限制）
+  const BATCH = 8;
+  for (let i = 0; i < list.length; i += BATCH) {
+    const batch = list.slice(i, i + BATCH);
+    await Promise.all(batch.map(processOne));
+  }
+
   return { signals, trades };
 }
