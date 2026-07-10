@@ -19,23 +19,48 @@ export default function StockMonitorPage() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState("");
   const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售" });
+  const [error, setError] = useState("");
+  const [diag, setDiag] = useState<any>(null);
 
   const loadList = useCallback(async () => {
-    const r = await fetch("/api/finance/watchlist", { credentials: "include" });
-    const d = await r.json();
-    const records = d.records || [];
-    setList(records);
-    // 如果清单为空，自动调用后端初始化默认清单
-    if (records.length === 0) {
-      try {
-        const s = await fetch("/api/finance/seed", { method: "POST", credentials: "include" });
-        const sd = await s.json();
-        if (sd.seeded) {
-          const r2 = await fetch("/api/finance/watchlist", { credentials: "include" });
-          const d2 = await r2.json();
-          setList(d2.records || []);
-        }
-      } catch {}
+    setError("");
+    setDiag(null);
+    try {
+      const r = await fetch("/api/finance/watchlist", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      // 后端返回 { ok:false, error } 或 HTTP 非 200 → 必须现形，不能吞掉
+      if (!r.ok || d.error || d.ok === false) {
+        setError((d.error || ("HTTP " + r.status)) + (d.mode ? "（模式：" + d.mode + "）" : ""));
+        setList([]);
+        return;
+      }
+      const records = d.records || [];
+      setList(records);
+      // 仍为空：兜底调一次 seed
+      if (records.length === 0) {
+        try {
+          const s = await fetch("/api/finance/seed", { method: "POST", credentials: "include" });
+          const sd = await s.json().catch(() => ({}));
+          if (sd.seeded) {
+            const r2 = await fetch("/api/finance/watchlist", { credentials: "include" });
+            const d2 = await r2.json().catch(() => ({}));
+            setList(d2.records || []);
+          }
+        } catch {}
+      }
+    } catch (e: any) {
+      setError("请求异常：" + (e?.message || String(e)));
+    }
+  }, []);
+
+  const runDiagnose = useCallback(async () => {
+    setError("");
+    try {
+      const r = await fetch("/api/finance/diagnose", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      setDiag(d);
+    } catch (e: any) {
+      setError("诊断请求异常：" + (e?.message || String(e)));
     }
   }, []);
 
@@ -119,10 +144,25 @@ export default function StockMonitorPage() {
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-2xl font-bold text-primary flex items-center gap-2"><TrendingUp className="w-6 h-6 text-accent" /> 服装行业股票监控</h1>
         <button onClick={loadList} className="btn-secondary flex items-center gap-2"><RefreshCw className="w-4 h-4" />刷新清单</button>
+        <button onClick={runDiagnose} className="btn-secondary flex items-center gap-2"><TrendingUp className="w-4 h-4" />诊断</button>
         <button onClick={refreshAll} disabled={loading} className="btn-secondary flex items-center gap-2">
           {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}刷新行情
         </button>
       </div>
+
+      {error && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 mb-4 text-sm">
+          <div className="font-semibold mb-1">⚠️ 加载出错</div>
+          <div className="break-all">{error}</div>
+          <div className="mt-2 text-rose-500">点「诊断」查看详情，把诊断结果发我即可定位。</div>
+        </div>
+      )}
+
+      {diag && (
+        <div className="bg-slate-900 text-slate-100 rounded-xl p-4 mb-4 text-xs font-mono whitespace-pre-wrap break-all">
+          {JSON.stringify(diag, null, 2)}
+        </div>
+      )}
       <p className="text-sm text-muted-foreground mb-5">观察服装全产业链（上游纺织 / 中游制造 / 下游品牌）港股美股行情与财务，辅助判断行业景气度。数据来自 Yahoo（免 token）。阶段2 再接 A股(Tushare)与量化下单。</p>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
@@ -165,7 +205,7 @@ export default function StockMonitorPage() {
             <button onClick={() => delItem(l.id)} className="absolute top-2 right-2 p-1.5 text-gray-300 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
           </div>
         ))}
-        {list.length === 0 && <p className="text-muted-foreground text-sm col-span-2">加载中或为空…</p>}
+        {list.length === 0 && <p className="text-muted-foreground text-sm col-span-2">清单为空。先点「刷新清单」，仍为空请点「诊断」并把结果发我。</p>}
       </div>
 
       {analysis && (

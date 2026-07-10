@@ -13,18 +13,35 @@ const DEFAULT_LIST = [
 ];
 
 export async function GET() {
-  const supabase = await createClient();
-  let { data, error } = await supabase.from("stock_watchlist").select("*").order("created_at");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  // 首次访问：若为空，自动用 service role 写入默认清单
-  if (!data || data.length === 0) {
-    const { error: insertErr } = await supabase.from("stock_watchlist").insert(DEFAULT_LIST);
-    if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
-    const { data: d2, error: e2 } = await supabase.from("stock_watchlist").select("*").order("created_at");
-    if (e2) return NextResponse.json({ error: e2.message }, { status: 500 });
-    data = d2;
+  const mode = process.env.SUPABASE_SERVICE_ROLE_KEY ? "service-role" : "anon";
+  try {
+    const supabase = await createClient();
+    let { data, error } = await supabase.from("stock_watchlist").select("*").order("created_at");
+    if (error) {
+      return NextResponse.json({ ok: false, mode, error: error.message }, { status: 500 });
+    }
+    // 首次访问：若为空，自动写入默认清单
+    if (!data || data.length === 0) {
+      const { error: insertErr } = await supabase.from("stock_watchlist").insert(DEFAULT_LIST);
+      if (insertErr) {
+        return NextResponse.json(
+          { ok: false, mode, error: "自动初始化失败：" + insertErr.message },
+          { status: 500 }
+        );
+      }
+      const { data: d2, error: e2 } = await supabase.from("stock_watchlist").select("*").order("created_at");
+      if (e2) {
+        return NextResponse.json({ ok: false, mode, error: e2.message }, { status: 500 });
+      }
+      data = d2;
+    }
+    return NextResponse.json({ ok: true, mode, records: data });
+  } catch (e: any) {
+    return NextResponse.json(
+      { ok: false, mode, error: e?.message || String(e) },
+      { status: 500 }
+    );
   }
-  return NextResponse.json({ records: data });
 }
 
 export async function POST(req: NextRequest) {
