@@ -1,13 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Activity, RefreshCw, Loader2 } from "lucide-react";
+import { Activity, RefreshCw, Loader2, BarChart3 } from "lucide-react";
 
 export default function SimulationPage() {
   const [state, setState] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState("");
+  const [bt, setBt] = useState<any>(null);
+  const [btRunning, setBtRunning] = useState(false);
+  const [btError, setBtError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -52,6 +55,24 @@ export default function SimulationPage() {
     }
   };
 
+  const runBacktest = async () => {
+    setBtRunning(true);
+    setBtError("");
+    try {
+      const r = await fetch("/api/finance/backtest", { method: "POST", credentials: "include" });
+      const d = await r.json();
+      if (!r.ok || d.error) {
+        setBtError(d.error || "回测失败");
+      } else {
+        setBt(d);
+      }
+    } catch (e: any) {
+      setBtError("请求异常：" + (e?.message || String(e)));
+    } finally {
+      setBtRunning(false);
+    }
+  };
+
   const positions = state?.positions || [];
   const signals = state?.signals || [];
   const trades = state?.trades || [];
@@ -66,10 +87,13 @@ export default function SimulationPage() {
           <button onClick={run} disabled={running} className="btn-primary flex items-center gap-2">
             {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}运行策略
           </button>
+          <button onClick={runBacktest} disabled={btRunning} className="btn-secondary flex items-center gap-2">
+            {btRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart3 className="w-4 h-4" />}回测
+          </button>
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-5">纸面交易，虚拟资金，不实盘、无资金风险。信号由均线/RSI/动量规则生成，可回测。定时任务（Vercel Cron）盘后自动运行，也可手动点「运行策略」。</p>
+      <p className="text-sm text-muted-foreground mb-5">纸面交易，虚拟资金，不实盘、无资金风险。信号由均线/RSI/动量规则生成。「运行策略」实时算信号并模拟成交；「回测」用过去半年真实日K逐日回放，验证策略历史表现（胜率/收益/回撤）。定时任务（Vercel Cron）盘后自动运行实时策略。</p>
 
       {error && (
         <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 mb-4 text-sm">{error}</div>
@@ -110,6 +134,58 @@ export default function SimulationPage() {
           </div>
         )}
       </div>
+
+      {/* 回测结果 */}
+      {btError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-4 mb-4 text-sm">{btError}</div>
+      )}
+      {bt && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
+          <h2 className="text-lg font-bold text-primary mb-3 flex items-center gap-2"><BarChart3 className="w-5 h-5 text-accent" />回测结果（{bt.range}）</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="bg-gray-50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">总收益率</div>
+              <div className={`text-xl font-bold ${bt.summary.totalReturnPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                {bt.summary.totalReturnPct >= 0 ? "+" : ""}{bt.summary.totalReturnPct.toFixed(2)}%
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">胜率</div>
+              <div className="text-xl font-bold text-primary">{bt.summary.winRate.toFixed(1)}%</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">最大回撤</div>
+              <div className="text-xl font-bold text-rose-600">-{bt.summary.maxDrawdown.toFixed(2)}%</div>
+            </div>
+            <div className="bg-gray-50 rounded-xl p-3">
+              <div className="text-xs text-muted-foreground">交易次数</div>
+              <div className="text-xl font-bold text-primary">{bt.summary.totalTrades}</div>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted-foreground border-b">
+                  <th className="py-2">标的</th><th>交易</th><th>胜率</th><th>收益(虚拟)</th><th>收益率</th><th>最大回撤</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bt.perStock.map((p: any) => (
+                  <tr key={p.symbol} className="border-b border-gray-50">
+                    <td className="py-2 font-medium">{p.name || p.symbol}<span className="text-xs text-muted-foreground ml-2">{p.symbol}</span></td>
+                    <td>{p.status === "ok" ? p.trades : p.status}</td>
+                    <td>{p.status === "ok" ? p.winRate.toFixed(0) + "%" : "—"}</td>
+                    <td className={p.pnl >= 0 ? "text-emerald-600" : "text-rose-600"}>{p.status === "ok" ? (p.pnl >= 0 ? "+" : "") + p.pnl.toFixed(2) : "—"}</td>
+                    <td className={p.returnPct >= 0 ? "text-emerald-600" : "text-rose-600"}>{p.status === "ok" ? (p.returnPct >= 0 ? "+" : "") + p.returnPct.toFixed(2) + "%" : "—"}</td>
+                    <td className="text-rose-600">{p.status === "ok" ? "-" + p.maxDD.toFixed(2) + "%" : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">虚拟资金按每笔买入 100 股计；收益率为累计盈亏 / 投入本金。最大回撤为组合按日对齐权益曲线的最深浮亏。</p>
+        </div>
+      )}
 
       {/* 最新信号 */}
       <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
