@@ -37,6 +37,23 @@ export default function StockMonitorPage() {
       }
       const records = d.records || [];
       setList(records);
+      // 拉取已有快照，打开页面即显示上次行情（不必每次手动刷新）
+      try {
+        const sr = await fetch("/api/finance/snapshots", { credentials: "include" });
+        const sd = await sr.json().catch(() => ({}));
+        if (sd.snapshots) {
+          const map: Record<string, any> = {};
+          for (const s of sd.snapshots) {
+            map[s.symbol] = {
+              price: s.price,
+              changePct: s.change_pct ?? s.changePct,
+              currency: s.currency,
+              updatedAt: s.updated_at,
+            };
+          }
+          setQuotes(map);
+        }
+      } catch {}
       // 仍为空：兜底调一次 seed
       if (records.length === 0) {
         try {
@@ -84,6 +101,10 @@ export default function StockMonitorPage() {
     setAnalyzing(true);
     setAnalysisError("");
     try {
+      // 若尚未拉过行情（无快照），先刷新一次，保证 AI 有数据可研判
+      if (Object.keys(quotes).length === 0) {
+        await refreshAll();
+      }
       const r = await fetch("/api/finance/quote", { method: "PUT", credentials: "include" });
       const d = await r.json();
       if (d.analysis) setAnalysis(d.analysis);
@@ -136,6 +157,9 @@ export default function StockMonitorPage() {
           <div className={`text-sm flex items-center justify-end gap-1 ${up ? "text-emerald-600" : "text-rose-600"}`}>
             {pct != null ? (up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />) : null}
             {pct != null ? `${pct > 0 ? "+" : ""}${pct.toFixed(2)}%` : (q.error ? "拉取失败" : "未刷新")}
+          </div>
+          <div className="text-[10px] text-muted-foreground mt-1">
+            {q.updatedAt ? "更新 " + new Date(q.updatedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }) : ""}
           </div>
         </div>
       </div>
