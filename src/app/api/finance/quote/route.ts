@@ -18,10 +18,16 @@ async function fetchYahoo(symbol: string) {
   const d = await res.json();
   const meta = d?.chart?.result?.[0]?.meta;
   if (!meta) throw new Error("Yahoo_NO_META");
+  const price = meta.regularMarketPrice ?? null;
+  const prevClose = meta.chartPreviousClose ?? meta.previousClose ?? null;
+  let changePct = meta.regularMarketChangePercent ?? null;
+  if (changePct == null && price != null && prevClose) {
+    changePct = ((price - prevClose) / prevClose) * 100;
+  }
   return {
     symbol: meta.symbol,
-    price: meta.regularMarketPrice ?? null,
-    changePct: meta.regularMarketChangePercent ?? null,
+    price,
+    changePct,
     volume: meta.regularMarketVolume ?? null,
     currency: meta.currency ?? null,
     name: meta.shortName || meta.longName || symbol,
@@ -115,7 +121,8 @@ export async function POST(req: NextRequest) {
       const q = isA ? sinaQuotes[item.symbol] : await fetchYahoo(item.symbol);
       if (!q) throw new Error(isA ? "Sina_NO_DATA" : "Yahoo_NO_DATA");
       q.name = q.name || item.name;
-      await supabase.from("stock_snapshots").upsert({ symbol: item.symbol, ...q, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+      const { name, ...snapshot } = q;
+      await supabase.from("stock_snapshots").upsert({ symbol: item.symbol, ...snapshot, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
       quotes.push(q);
     } catch (e: any) {
       quotes.push({ symbol: item.symbol, error: e.message });
