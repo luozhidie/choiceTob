@@ -181,18 +181,27 @@ export default function AdminLayout({
     setMounted(true);
   }, []);
 
-  // 根据当前路径自动展开对应分组
+  // 根据当前路径自动展开对应分组（优先用户点击进入的分组，避免同一页面归属多个分组时高亮错位）
   useEffect(() => {
     if (!mounted || collapsed) return;
     const autoExpand = new Set<string>();
-    for (const group of menuGroups) {
-      for (const item of group.items) {
-        if (item.href === pathname) {
+    // 优先：用户上次点击进入时记录的分组
+    const preferred =
+      typeof window !== "undefined" ? sessionStorage.getItem("activeMenuGroup") : null;
+    if (preferred) {
+      const grp = menuGroups.find((g) => g.label === preferred);
+      if (grp && grp.items.some((i) => i.href === pathname)) {
+        autoExpand.add(preferred);
+      }
+    }
+    // fallback：取第一个匹配的分组
+    if (autoExpand.size === 0) {
+      for (const group of menuGroups) {
+        if (group.items.some((i) => i.href === pathname)) {
           autoExpand.add(group.label);
           break;
         }
       }
-      if (autoExpand.has(group.label)) break; // 找到就停止外层循环
     }
     setExpandedGroups(autoExpand);
   }, [pathname, mounted, collapsed]);
@@ -228,8 +237,15 @@ export default function AdminLayout({
   }
 
   const findTitle = () => {
+    const preferred =
+      typeof window !== "undefined" ? sessionStorage.getItem("activeMenuGroup") : null;
+    if (preferred) {
+      const grp = menuGroups.find((g) => g.label === preferred);
+      const found = grp?.items.find((i) => i.href === pathname);
+      if (found) return found.label;
+    }
     for (const group of menuGroups) {
-      const found = group.items.find(i => i.href === pathname);
+      const found = group.items.find((i) => i.href === pathname);
       if (found) return found.label;
     }
     return "数据概览";
@@ -355,6 +371,9 @@ export default function AdminLayout({
                           key={item.href}
                           href={item.href}
                           title={collapsed ? item.label : undefined}
+                          onClick={() => {
+                            try { sessionStorage.setItem("activeMenuGroup", group.label); } catch {}
+                          }}
                           style={{
                             display: "flex", alignItems: "center",
                             padding: collapsed ? "6px 0" : "5px 12px 5px 20px",
