@@ -3,26 +3,23 @@ import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-// 只读诊断：用于排查股票监控清单为空的问题，不写入任何数据
+// 只读诊断：报告 Vercel 当前连接的是哪个项目、各表数据量，用于定位配置错配
 export async function GET() {
   const out: Record<string, any> = {
     serviceRoleConfigured: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-    supabaseUrlConfigured: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     anonKeyConfigured: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    // 仅返回 URL（不含任何 key），用于确认连接的是哪个项目
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || null,
   };
   try {
     const supabase = await createClient();
-    const { count, error } = await supabase
-      .from("stock_watchlist")
-      .select("*", { count: "exact", head: true });
-    out.watchlistCount = count;
-    out.selectError = error?.message || null;
-
-    const { data: snapCount, error: snapErr } = await supabase
-      .from("stock_snapshots")
-      .select("*", { count: "exact", head: true });
-    out.snapshotsCount = snapCount;
-    out.snapshotsError = snapErr?.message || null;
+    // 当前项目各表数量
+    for (const t of ["products", "buyer_products", "orders", "profiles", "stock_watchlist", "stock_snapshots"]) {
+      const { count, error } = await supabase
+        .from(t)
+        .select("*", { count: "exact", head: true });
+      out[t + "Count"] = error ? "ERR:" + error.message : count;
+    }
   } catch (e: any) {
     out.fatal = e?.message || String(e);
   }
