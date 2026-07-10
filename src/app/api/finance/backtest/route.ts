@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { runBacktest } from "@/lib/signal";
 
 export const maxDuration = 60;
@@ -10,7 +10,10 @@ export async function POST(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: "服务器配置错误：缺少 SUPABASE_SERVICE_ROLE_KEY 环境变量" }, { status: 500 });
+  }
+  const supabase = createServiceRoleClient();
   const result = await runBacktest(supabase);
   if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
   return NextResponse.json(result);
