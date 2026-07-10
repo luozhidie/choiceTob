@@ -54,11 +54,12 @@ export async function runStrategy(supabase: any) {
       const momentum = ((closes[closes.length - 1] - closes[closes.length - 2]) / closes[closes.length - 2]) * 100;
       const price = closes[closes.length - 1];
       let signal = "持有", reason = "无触发";
-      if (ma5 > ma20 && (r == null || r < 70)) { signal = "买入"; reason = `MA${maShort}上穿MA${maLong}金叉`; }
+      if (ma5 > ma20 && price > ma20 && (r == null || r < 60) && momentum > 0) { signal = "买入"; reason = `MA${maShort}金叉且价格站上MA${maLong}`; }
       else if (ma5 < ma20 || (r != null && r > 75)) { signal = "卖出"; reason = ma5 < ma20 ? "MA死叉" : `RSI超买${r.toFixed(0)}`; }
       const score = Math.round((ma5 / ma20 - 1) * 1000) / 10;
       signals.push({ symbol: item.symbol, name: item.name, signal, reason, score, price });
 
+      await supabase.from("stock_snapshots").upsert({ symbol: item.symbol, price, change_pct: momentum, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
       await supabase.from("signal_calc").insert({ symbol: item.symbol, price, ma5, ma20, rsi: r, momentum, score, signal });
 
       const { data: pos } = await supabase.from("paper_positions").select("*").eq("symbol", item.symbol).single();
