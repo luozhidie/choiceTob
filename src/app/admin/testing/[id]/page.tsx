@@ -21,14 +21,11 @@ interface TestItem {
   product_id: string;
   product_title: string;
   product_image: string | null;
-  impressions: number;
+  views: number;
   clicks: number;
+  cart_adds: number;
   inquiries: number;
-  add_to_cart_count: number;
-  orders_count: number;
-  ctr: number;
-  inquiry_rate: number;
-  conversion_rate: number;
+  orders: number;
   is_winner: boolean;
 }
 
@@ -40,6 +37,19 @@ export default function CampaignDetailPage() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [items, setItems] = useState<TestItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => { setToast(msg); setTimeout(() => setToast(null), 2000); };
+
+  const copyShareLink = async () => {
+    const url = `${typeof window !== "undefined" ? window.location.origin : ""}/testing/${campaignId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast("✅ 分享链接已复制");
+    } catch {
+      showToast(url);
+    }
+  };
 
   const campaignId = params.id as string;
 
@@ -89,14 +99,11 @@ export default function CampaignDetailPage() {
         await supabase
           .from("product_test_items")
           .update({
-            impressions,
+            views: impressions,
             clicks,
             inquiries,
-            add_to_cart_count: addToCart,
-            orders_count: orders,
-            ctr: clicks / impressions,
-            inquiry_rate: inquiries / clicks,
-            conversion_rate: orders / inquiries,
+            cart_adds: addToCart,
+            orders,
           })
           .eq("id", item.id);
       }
@@ -149,6 +156,11 @@ export default function CampaignDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
+      {toast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg bg-gray-900 text-white text-sm font-medium">
+          {toast}
+        </div>
+      )}
       <div className="max-w-7xl mx-auto">
         {/* 标题 */}
         <div className="flex items-center gap-4 mb-8">
@@ -165,6 +177,19 @@ export default function CampaignDetailPage() {
               {campaign.end_date && ` · 结束日期：${new Date(campaign.end_date).toLocaleDateString("zh-CN")}`}
             </p>
           </div>
+          <button
+            onClick={copyShareLink}
+            className="px-4 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors text-sm"
+          >
+            复制分享链接
+          </button>
+          <Link
+            href={`/testing/${campaignId}`}
+            target="_blank"
+            className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+          >
+            查看公开页 ↗
+          </Link>
           <button
             onClick={addMockData}
             className="px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition-colors text-sm"
@@ -237,16 +262,16 @@ export default function CampaignDetailPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.impressions}</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.views}</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-900">{item.clicks}</td>
                     <td className="px-6 py-4 text-center">
-                      <span className={`text-sm font-medium ${item.ctr > 0.03 ? "text-green-600" : item.ctr > 0.01 ? "text-yellow-600" : "text-gray-900"}`}>
-                        {(item.ctr * 100).toFixed(2)}%
+                      <span className={`text-sm font-medium ${(item.clicks / Math.max(item.views, 1)) > 0.03 ? "text-green-600" : (item.clicks / Math.max(item.views, 1)) > 0.01 ? "text-yellow-600" : "text-gray-900"}`}>
+                        {((item.clicks / Math.max(item.views, 1)) * 100).toFixed(2)}%
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.add_to_cart_count}</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.cart_adds}</td>
                     <td className="px-6 py-4 text-center text-sm text-gray-900">{item.inquiries}</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.orders_count}</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-900">{item.orders}</td>
                     <td className="px-6 py-4 text-center">
                       {!item.is_winner && (
                         <button
