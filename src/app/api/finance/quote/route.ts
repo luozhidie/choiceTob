@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { callAI } from "@/lib/ai";
 
 export const maxDuration = 60;
@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data: list } = await supabase.from("stock_watchlist").select("*");
   if (!list || list.length === 0) {
     return NextResponse.json({ ok: true, refreshed: 0, quotes: [] });
@@ -160,7 +160,7 @@ export async function PUT(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data: list } = await supabase.from("stock_watchlist").select("*");
   const { data: snaps } = await supabase.from("stock_snapshots").select("*");
   if (!list || list.length === 0) {

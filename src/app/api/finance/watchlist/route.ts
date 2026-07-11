@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 const DEFAULT_LIST = [
   { symbol: "2020.HK", name: "安踏体育", market: "hk", sector: "下游品牌零售", industry: "服装" },
@@ -13,9 +13,9 @@ const DEFAULT_LIST = [
 ];
 
 export async function GET() {
-  const mode = process.env.SUPABASE_SERVICE_ROLE_KEY ? "service-role" : "anon";
+  const mode = "service-role";
   try {
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     let { data, error } = await supabase.from("stock_watchlist").select("*").order("created_at");
     if (error) {
       return NextResponse.json({ ok: false, mode, error: error.message }, { status: 500 });
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const body = await req.json();
   const { symbol, name, market, sector, industry } = body;
   if (!symbol || !name) return NextResponse.json({ error: "代码和名称必填" }, { status: 400 });
@@ -63,7 +63,7 @@ export async function DELETE(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 });
   const { error } = await supabase.from("stock_watchlist").delete().eq("id", id);

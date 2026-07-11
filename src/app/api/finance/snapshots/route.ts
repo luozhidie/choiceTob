@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export const dynamic = "force-dynamic";
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
   if (!cookieHeader.includes("admin_logged_in=true")) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase.from("stock_snapshots").select("*");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true, snapshots: data || [] });

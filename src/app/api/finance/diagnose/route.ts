@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +12,7 @@ export async function GET() {
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || null,
   };
   try {
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     // 当前项目各表数量
     for (const t of ["products", "buyer_products", "orders", "profiles", "stock_watchlist", "stock_snapshots"]) {
       const { count, error } = await supabase

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { runStrategy } from "@/lib/signal";
 
 export const maxDuration = 60;
@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (auth !== "Bearer " + process.env.CRON_SECRET) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const result = await runStrategy(supabase);
   return NextResponse.json({ ok: true, ...result });
 }
