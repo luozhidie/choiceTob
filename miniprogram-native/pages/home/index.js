@@ -120,9 +120,7 @@ Page({
 
   /* ====== 模块点击跳转 ====== */
   goSearch:function(){
-    wx.navigateTo({url:'/pages/buyer/index',fail:function(){
-      wx.showToast({title:'搜索功能开发中',icon:'none'});
-    }});
+    wx.navigateTo({url:'/pages/search/index'});
   },
   goBlockLink:function(e){
     var link=e.currentTarget.dataset.link;

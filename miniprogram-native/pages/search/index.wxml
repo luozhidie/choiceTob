@@ -7,7 +7,7 @@
         class="sb-input"
         placeholder="搜索商品名称、描述..."
         value="{{keyword}}"
-        onInput="onInput"
+        bindinput="onInput"
         bindconfirm="onSearch"
       />
       <text class="sb-clear" wx:if="{{keyword}}" bindtap="clearKeyword">✕</text>
