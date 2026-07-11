@@ -7,7 +7,7 @@ import {
   AlertTriangle, Trophy, Coins, Zap, ChevronRight,
 } from "lucide-react";
 import { LotteryType, SimulationResult } from "@/lib/lottery/types";
-import { getAllGames, getLotteryGame } from "@/lib/lottery/probability";
+import { getAllGames, getLotteryGame, expectedValue } from "@/lib/lottery/probability";
 import { runSimulation, generateRandomBet } from "@/lib/lottery/simulator";
 
 /* ── 彩票卡片组件 ── */
