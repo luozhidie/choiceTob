@@ -24,13 +24,6 @@
       </view>
     </scroll-view>
 
-    <!-- 文章封面：品牌/推广横幅（不放秀场图，避免与正文首图重复） -->
-    <view class="cover-banner" wx:if="{{type!=='trend'}}">
-      <view class="cb-brand">骆芷蝶智选</view>
-      <view class="cb-sub">每日搭配灵感 · 会员专享秀场资讯</view>
-      <view class="cb-tip">微信小程序搜「骆芷蝶智选」解锁完整内容</view>
-    </view>
-
     <view class="body">
       <block wx:for="{{blocks}}" wx:key="index" wx:for-item="b">
         <view wx:if="{{b.type==='h1'}}" class="h1">
