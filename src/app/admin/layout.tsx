@@ -161,6 +161,7 @@ const menuGroups = [
     { label: "AI 爆款文案", href: "/admin/ai-marketing-copy" },
     { label: "服装股票监控", href: "/admin/stock-monitor" },
     { label: "模拟交易", href: "/admin/simulation" },
+    { label: "福利彩票概率统计", href: "/admin/lottery" },
     { label: "AI 生产协同", href: "/admin/production-coordination" },
     { label: "商品企划", href: "/admin/report" },
     { label: "AI 设计研发", href: "/admin/designer" },
