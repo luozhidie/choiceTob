@@ -1,12 +1,12 @@
 /* ── 双色球真实数据抓取器（方案3） ──
  *
  * 设计原则：
- * 1. 优先抓取真实开奖数据（500彩票网 / 中彩网）
+ * 1. 优先抓取真实开奖数据（17500.cn / 500彩票网 / 中彩网）
  * 2. 所有源失败时回退到内置演示数据，保证页面不崩
  * 3. 抓取成功后存储到 Supabase Storage，下次直接读取
  *
  * ⚠️ 注意：部分数据源有反爬（腾讯云EdgeOne/地域限制）。
- * 沙箱环境可能被拦截，但 Vercel 生产服务器通常可正常访问。
+ * 17500.cn 经测试沙箱可访问且数据最新（到2026年），作为首选源。
  */
 
 import { SsqRecord } from "./analyzer";
@@ -21,7 +21,48 @@ function parseBalls(str: string): number[] {
 }
 
 /**
- * 源1：500彩票网历史数据
+ * 首选数据源：17500.cn 完整历史 TXT
+ * URL: http://data.17500.cn/ssq_asc.txt
+ * 格式：期号 日期 红1..红6 蓝 [统计字段...]
+ * 经测试沙箱可访问，数据更新至2026年最新一期
+ */
+async function fetchFrom17500(fetchImpl: typeof fetch): Promise<SsqRecord[] | null> {
+  try {
+    const res = await fetchImpl("http://data.17500.cn/ssq_asc.txt", {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined,
+    } as any);
+
+    if (!res.ok) return null;
+    const text = await res.text();
+
+    const lines = text.split("\n").filter(l => l.trim().length > 0);
+    const records: SsqRecord[] = [];
+
+    for (const line of lines) {
+      const parts = line.trim().split(/\s+/);
+      // 至少要有 期号 + 日期 + 6红 + 1蓝 = 9列
+      if (parts.length < 9) continue;
+
+      const issue = parts[0];
+      const date = parts[1];
+      const reds = parts.slice(2, 8).map(n => parseInt(n, 10)).filter(n => n >= 1 && n <= 33);
+      const blue = parseInt(parts[8], 10);
+
+      if (reds.length === 6 && blue >= 1 && blue <= 16 && issue && date) {
+        records.push({ issue, date, reds, blue });
+      }
+    }
+
+    return records.length > 100 ? records : null;
+  } catch (e) {
+    console.error("[SSQ Fetcher] 17500源失败:", e);
+    return null;
+  }
+}
+
+/**
+ * 源2：500彩票网历史数据
  * URL: https://datachart.500.com/ssq/history/newinc/history.php?start=XXXXX&end=YYYYY
  */
 async function fetchFrom500(fetchImpl: typeof fetch): Promise<SsqRecord[] | null> {
@@ -122,13 +163,14 @@ async function fetchFromCWL(fetchImpl: typeof fetch): Promise<SsqRecord[] | null
 /**
  * 主函数：尝试所有源，失败回退演示数据
  * @param fetchImpl fetch 实现（Node 全局或 polyfill）
- * @returns { records, source } source 为 "500" | "cwl" | "demo"
+ * @returns { records, source } source 为 "17500" | "500" | "cwl" | "demo"
  */
 export async function fetchSsqData(
   fetchImpl: typeof fetch = fetch
 ): Promise<{ records: SsqRecord[]; source: string; updatedAt: string }> {
-  // 按优先级尝试真实源
+  // 按优先级尝试真实源（17500.cn 沙箱可访问且最新，首选）
   const sources = [
+    { name: "17500", fn: fetchFrom17500 },
     { name: "500", fn: fetchFrom500 },
     { name: "cwl", fn: fetchFromCWL },
   ];

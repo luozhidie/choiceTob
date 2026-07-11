@@ -77,13 +77,19 @@ export async function GET(request: NextRequest) {
       /* ── 新增：历史数据分析接口 ── */
       case "analysis": {
         const analysis = await getSsqAnalysis();
+        const sourceName: Record<string, string> = {
+          "17500": "乐彩网(17500.cn)",
+          "500": "500彩票网",
+          "cwl": "中彩网",
+          "demo": "演示数据",
+        };
         return NextResponse.json({
           success: true,
           data: analysis,
           dataSource: _dataSource,
           note: _dataSource === "demo"
-            ? "⚠️ 当前为演示数据（2003-2018）。生产环境会自动同步真实最新数据。"
-            : `✅ 数据源：${_dataSource === "500" ? "500彩票网" : "中彩网"}，已同步至最新。`,
+            ? "⚠️ 当前为演示数据（2003-2018）。真实数据源暂不可达，已回退。"
+            : `✅ 数据源：${sourceName[_dataSource] || _dataSource}，已同步至最新（${analysis.meta.totalDraws}期）。`,
         });
       }
 
