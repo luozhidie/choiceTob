@@ -5,3 +5,4 @@ export * from "./probability";
 export * from "./simulator";
 export * from "./data";
 export * from "./analyzer";
+export * from "./fetcher";

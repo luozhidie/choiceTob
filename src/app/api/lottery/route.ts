@@ -8,25 +8,36 @@ import {
   analyzeSsqHistory,
   generateWeightedPick,
 } from "@/lib/lottery/analyzer";
+import { fetchSsqData, loadSsqData } from "@/lib/lottery/fetcher";
 
 /* ── 缓存：历史数据（服务端内存） ── */
 let _cachedRecords: ReturnType<typeof generateSsqDemoData> | null = null;
 let _cachedAnalysis: ReturnType<typeof analyzeSsqHistory> | null = null;
+let _dataSource: string = "demo";
 
-function getSsqRecords() {
+async function getSsqRecords(): Promise<ReturnType<typeof generateSsqDemoData>> {
   if (!_cachedRecords) {
-    _cachedRecords = generateSsqDemoData();
-    // 生成后立即计算分析
+    const supabase = createServiceRoleClient();
+    // 1. 优先从 Supabase Storage 读取已同步的真实数据
+    const stored = await loadSsqData(supabase);
+    if (stored) {
+      _cachedRecords = stored.records;
+      _dataSource = stored.source;
+      _cachedAnalysis = analyzeSsqHistory(_cachedRecords);
+      return _cachedRecords;
+    }
+    // 2. 尝试抓取真实数据
+    const { records, source } = await fetchSsqData(fetch);
+    _cachedRecords = records;
+    _dataSource = source;
     _cachedAnalysis = analyzeSsqHistory(_cachedRecords);
   }
   return _cachedRecords!;
 }
 
-function getSsqAnalysis() {
-  if (!_cachedAnalysis) {
-    _cachedAnalysis = analyzeSsqHistory(getSsqRecords());
-  }
-  return _cachedAnalysis;
+async function getSsqAnalysis() {
+  await getSsqRecords(); // 确保已加载
+  return _cachedAnalysis!;
 }
 
 /* ───────────── GET ───────────── */
@@ -65,21 +76,24 @@ export async function GET(request: NextRequest) {
 
       /* ── 新增：历史数据分析接口 ── */
       case "analysis": {
-        const analysis = getSsqAnalysis();
-        // 返回精简版（去掉原始记录列表，减少传输量）
+        const analysis = await getSsqAnalysis();
         return NextResponse.json({
           success: true,
           data: analysis,
-          note: "数据截止2018年，为演示数据。如需最新数据请提供数据源。",
+          dataSource: _dataSource,
+          note: _dataSource === "demo"
+            ? "⚠️ 当前为演示数据（2003-2018）。生产环境会自动同步真实最新数据。"
+            : `✅ 数据源：${_dataSource === "500" ? "500彩票网" : "中彩网"}，已同步至最新。`,
         });
       }
 
       case "history": {
         // 返回最近 N 期原始数据
+        const records = await getSsqRecords();
         const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 500);
-        const records = getSsqRecords();
         return NextResponse.json({
           success: true,
+          dataSource: _dataSource,
           data: {
             total: records.length,
             recent: records.slice(-limit),
@@ -94,7 +108,7 @@ export async function GET(request: NextRequest) {
         if (!validStrategies.includes(strategy)) {
           return NextResponse.json({ error: "策略参数无效" }, { status: 400 });
         }
-        const pickResult = generateWeightedPick(strategy, getSsqAnalysis());
+        const pickResult = generateWeightedPick(strategy, await getSsqAnalysis());
         return NextResponse.json({ success: true, data: pickResult });
       }
     }
