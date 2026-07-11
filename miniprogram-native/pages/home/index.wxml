@@ -4,7 +4,6 @@
     <!-- 顶部：小标题 -->
     <view class="header-top">
       <text class="ht-small">数据趋动·智选未来</text>
-      <text class="vr" wx:if="{{ver}}">{{ver}}</text>
     </view>
 
     <!-- 大标题 + 副标题 -->
@@ -270,5 +269,6 @@
     </view>
   </view>
 
+  <view class="ver-foot" wx:if="{{ver}}">{{ver}}</view>
   <view class="sbtm"></view>
 </view>
