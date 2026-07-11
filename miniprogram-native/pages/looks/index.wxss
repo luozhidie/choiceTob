@@ -33,9 +33,17 @@ page{background:#f8f6f4;}
 .lock-icn{position:absolute;top:12rpx;right:12rpx;width:48rpx;height:48rpx;background:rgba(233,33,99,.9);border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:2;}
 .lock-icn text{font-size:24rpx;color:#fff;}
 
-/* 色块区 */
-.colors{height:220rpx;display:flex;align-items:center;justify-content:center;gap:20rpx;background:#faf8f6;padding:20rpx;}
+/* 搭配图区 */
+.pic{position:relative;width:100%;height:300rpx;background:#faf8f6;overflow:hidden;}
+.pimg{width:100%;height:300rpx;display:block;}
+.pblur{filter:blur(8rpx);transform:scale(1.08);}
+.pfallback{height:300rpx;display:flex;align-items:center;justify-content:center;gap:20rpx;padding:20rpx;}
 .ccircle{width:64rpx;height:64rpx;border-radius:50%;box-shadow:0 3rpx 10rpx rgba(0,0,0,.15);}
+/* 水印 */
+.wm{position:absolute;top:14rpx;left:14rpx;font-size:20rpx;color:rgba(255,255,255,.9);background:rgba(45,27,46,.45);padding:4rpx 14rpx;border-radius:10rpx;}
+/* 锁定遮罩 */
+.plock{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.28);}
+.plt{font-size:24rpx;color:#fff;font-weight:bold;text-shadow:0 2rpx 6rpx rgba(0,0,0,.4);}
 
 /* 信息区 */
 .linfo{padding:18rpx 18rpx 22rpx;}

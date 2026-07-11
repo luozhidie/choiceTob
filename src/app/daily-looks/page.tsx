@@ -43,6 +43,9 @@ export default function DailyLooksPage() {
   const [activeStyle, setActiveStyle] = useState("全部");
   const [visible, setVisible] = useState(false);
 
+  /* 看大图 */
+  const [lightboxLook, setLightboxLook] = useState<DailyLook | null>(null);
+
   /* 会员状态 */
   const [user, setUser] = useState<any>(null);
   const [isDailyLooksMember, setIsDailyLooksMember] = useState(false);
@@ -401,7 +404,10 @@ export default function DailyLooksPage() {
                   >
                     {/* 图片区 */}
                     {look.image_url ? (
-                      <div className="relative aspect-[4/3] overflow-hidden">
+                      <div
+                        className={`relative aspect-[4/3] overflow-hidden ${isLocked ? "" : "cursor-pointer"}`}
+                        onClick={() => !isLocked && setLightboxLook(look)}
+                      >
                         <img
                           src={look.image_url}
                           alt={look.title}
@@ -409,6 +415,12 @@ export default function DailyLooksPage() {
                             isLocked ? "blur-sm scale-110 brightness-75" : ""
                           }`}
                         />
+                        {/* 水印 */}
+                        {!isLocked && (
+                          <span className="absolute top-3 left-3 px-2 py-1 text-xs font-semibold text-white/85 bg-[#2d1b2e]/45 rounded backdrop-blur-sm pointer-events-none">
+                            骆芷蝶智选
+                          </span>
+                        )}
                         {/* 锁定遮罩 */}
                         {isLocked && (
                           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/25 backdrop-blur-[2px] z-10">
@@ -521,6 +533,52 @@ export default function DailyLooksPage() {
           )}
         </div>
       </section>
+
+      {/* ── 看大图 ── */}
+      {lightboxLook && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => setLightboxLook(null)}
+        >
+          <button
+            onClick={() => setLightboxLook(null)}
+            className="absolute top-4 right-4 w-10 h-10 flex items-center justify-center rounded-full bg-white/15 hover:bg-white/25 text-white text-2xl font-bold transition-colors"
+          >
+            ×
+          </button>
+          <div
+            className="w-full max-w-2xl bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {lightboxLook.image_url && (
+              <div className="relative bg-gray-100">
+                <img
+                  src={lightboxLook.image_url}
+                  alt={lightboxLook.title}
+                  className="w-full max-h-[70vh] object-contain"
+                />
+                <span className="absolute top-3 left-3 px-2 py-1 text-xs font-semibold text-white/85 bg-[#2d1b2e]/45 rounded backdrop-blur-sm pointer-events-none">
+                  骆芷蝶智选
+                </span>
+              </div>
+            )}
+            <div className="p-5">
+              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-medium">
+                {lightboxLook.style}
+              </span>
+              <h3 className="font-bold text-primary text-lg mt-2">{lightboxLook.title}</h3>
+              {lightboxLook.description && (
+                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{lightboxLook.description}</p>
+              )}
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-50">
+                {lightboxLook.colors.map((c: string) => (
+                  <div key={c} className="w-6 h-6 rounded-full shadow-sm border border-gray-100" style={{ backgroundColor: c }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── 支付弹窗 ── */}
       {payStatus !== "" && (

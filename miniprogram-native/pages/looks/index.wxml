@@ -23,16 +23,25 @@
       data-c="{{item}}">{{item}}</text>
   </scroll-view>
 
-  <!-- 配色卡片网格 -->
+  <!-- 搭配卡片网格 -->
   <view class="grid" wx:if="{{looks.length>0}}">
-    <view wx:for="{{looks}}" wx:key="id" class="lcard {{item.locked&&!isVip?'lcard-locked':''}}">
+    <view wx:for="{{looks}}" wx:key="id" class="lcard {{item.locked&&!isVip?'lcard-locked':''}}" bindtap="onLookTap" data-look="{{item}}">
       <!-- 锁定图标 -->
-      <view class="lock-icn" wx:if="{{item.locked&&!isVip}}" bindtap="goVip"><text>🔒</text></view>
+      <view class="lock-icn" wx:if="{{item.locked&&!isVip}}" catchtap="goVip"><text>🔒</text></view>
 
-      <!-- 色块区 -->
-      <view class="colors">
-        <view wx:for="{{item.colors}}" wx:key="*this" wx:for-item="c"
-          class="ccircle" style="background:{{c}}"></view>
+      <!-- 搭配图 -->
+      <view class="pic">
+        <image wx:if="{{item.image_url}}" src="{{item.image_url}}" mode="aspectFill" class="pimg {{item.locked&&!isVip?'pblur':''}}"/>
+        <view wx:else class="pfallback">
+          <view wx:for="{{item.colors}}" wx:key="*this" wx:for-item="c"
+            class="ccircle" style="background:{{c}}"></view>
+        </view>
+        <!-- 水印 -->
+        <text wx:if="{{item.image_url && !(item.locked&&!isVip)}}" class="wm">骆芷蝶智选</text>
+        <!-- 锁定遮罩 -->
+        <view wx:if="{{item.locked&&!isVip}}" class="plock">
+          <text class="plt">订阅后查看完整搭配</text>
+        </view>
       </view>
 
       <!-- 信息区 -->

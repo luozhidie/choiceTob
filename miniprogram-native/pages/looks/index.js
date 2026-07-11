@@ -29,18 +29,39 @@ Page({
     var t=this;
     t.setData({loading:true});
     wx.request({
-      url:'https://colour-choice.art/api/public/looks?limit=30',
+      url:'https://colour-choice.art/api/public/daily-looks',
       method:'GET',
       success:function(r){
-        var list=[];
-        if(r.data&&r.data.data)list=r.data.data||[];
-        else if(Array.isArray(r.data))list=r.data;
+        var raw=[];
+        if(r.data&&r.data.data)raw=r.data.data||[];
+        else if(Array.isArray(r.data))raw=r.data;
+        var isVip=t.data.isVip;
+        var list=raw.map(function(l,i){
+          var colors=Array.isArray(l.colors)?l.colors:(l.colors?JSON.parse(l.colors||'[]'):[]);
+          return {
+            id:l.id,
+            title:l.title||'精选搭配',
+            desc:l.description||'',
+            category:l.style||'精选',
+            colors:colors,
+            image_url:l.image_url||'',
+            locked:!isVip && i>=3
+          };
+        });
         if(list.length===0)list=t.getDefaultLooks();
-        if(t.data.activeCat!=='全部')list=list.filter(function(l){return l.category===t.data.activeCat||(l.tags&&l.tags.indexOf(t.data.activeCat)>=0);});
+        if(t.data.activeCat!=='全部')list=list.filter(function(l){return l.category===t.data.activeCat;});
         t.setData({looks:list,loading:false});
       },
       fail:function(){t.setData({looks:t.getDefaultLooks(),loading:false});}
     });
+  },
+
+  onLookTap:function(e){
+    var look=e.currentTarget.dataset.look;
+    if(!look||look.locked)return;
+    if(look.image_url){
+      wx.previewImage({urls:[look.image_url],current:look.image_url});
+    }
   },
 
   getDefaultLooks:function(){
@@ -55,8 +76,8 @@ Page({
   swCat:function(e){this.setData({activeCat:e.currentTarget.dataset.c});this.loadLooks();},
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
 
-  subMonthly:function(){this.doPay('looks_monthly',99900,'每日搭配·月费订阅');},
-  subYearly:function(){this.doPay('looks_yearly',1198000,'每日搭配·年费订阅');},
+  subMonthly:function(){this.doPay('daily_looks_monthly',99900,'搭配灵感·月度会员');},
+  subYearly:function(){this.doPay('daily_looks_yearly',1198000,'搭配灵感·年度会员');},
 
   doPay:function(pid,fee,title){
     var t=this;
