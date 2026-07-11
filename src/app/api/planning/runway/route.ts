@@ -72,6 +72,65 @@ function videoPlatform(url: string): string | null {
   }
 }
 
+// Vogue Runway：国际一线奢侈品牌秀场视频库（结构化、最可靠）
+// 国产品牌（江南布衣/之禾/例外等）不在 Vogue，走 Bing 兜底
+const VOGUE_BRAND_SLUG: Record<string, string> = {
+  "香奈儿": "chanel",
+  "迪奥": "christian-dior",
+  "古驰": "gucci",
+  "普拉达": "prada",
+  "路易威登": "louis-vuitton",
+  "爱马仕": "hermes",
+  "圣罗兰": "saint-laurent",
+  "巴黎世家": "balenciaga",
+  "芬迪": "fendi",
+  "思琳": "celine",
+  "罗意威": "loewe",
+};
+
+const SEASON_PARTS_ALL = ["春夏", "夏秋", "秋冬", "冬春", "全年"];
+function getSeasonPart(season: string): string {
+  for (const p of SEASON_PARTS_ALL) if (season.includes(p)) return p;
+  return "全年";
+}
+function vogueSeasonSlugs(seasonPart: string, year: number): string[] {
+  switch (seasonPart) {
+    case "春夏": return [`spring-${year}-ready-to-wear`];
+    case "夏秋": return [`resort-${year}`];
+    case "秋冬": return [`fall-${year}-ready-to-wear`];
+    case "冬春": return [`pre-fall-${year}`];
+    default: // 全年
+      return [
+        `spring-${year}-ready-to-wear`,
+        `resort-${year}`,
+        `fall-${year}-ready-to-wear`,
+        `pre-fall-${year}`,
+      ];
+  }
+}
+
+// 找到该品牌该季的 Vogue 秀场页（存在则作为视频源）
+async function findVogueVideo(brand: string, seasonPart: string, year: number): Promise<{ url: string; title: string } | null> {
+  const slug = VOGUE_BRAND_SLUG[brand];
+  if (!slug) return null;
+  for (const s of vogueSeasonSlugs(seasonPart, year)) {
+    const url = `https://www.vogue.com/fashion-shows/${s}/${slug}`;
+    try {
+      const resp = await fetch(url, {
+        method: "HEAD",
+        headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (resp.status === 200) {
+        return { url, title: `${brand} ${seasonPart} 秀场视频 · Vogue Runway` };
+      }
+    } catch {
+      /* 该季节段无秀场页，尝试下一个 */
+    }
+  }
+  return null;
+}
+
 async function bingSearch(term: string): Promise<{ title: string; snippet: string; url: string }[]> {
   try {
     const url = `https://www.bing.com/search?q=${encodeURIComponent(term)}&setlang=zh-CN`;
@@ -123,7 +182,9 @@ export async function POST(req: NextRequest) {
         ];
         const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
 
-        // 视频搜索：多平台/多关键词，提升命中率
+        // 视频来源：Vogue Runway（国际奢侈品牌首选）→ Bing 多平台补充
+        const vogueVid = await findVogueVideo(brand, getSeasonPart(season), year);
+
         // 对「全年」这类非标准季节，用纯年份搜索更可能命中
         const seasonForVideo = season.replace("全年", "").trim() || String(year);
         const videoSearches = [
@@ -143,17 +204,23 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 视频链接（过滤视频平台/秀场官网），按 URL 去重
+        // 合并视频：Vogue 优先，再补 Bing（按 URL 去重）
+        const mergedVideos: { title: string; url: string }[] = [];
+        if (vogueVid) mergedVideos.push(vogueVid);
+        for (const i of videoItems) {
+          if (videoPlatform(i.url) && !mergedVideos.some((m) => m.url === i.url)) {
+            mergedVideos.push({ title: i.title, url: i.url });
+          }
+        }
         const seenVideoUrls = new Set<string>();
-        const videos = videoItems
-          .filter((i) => videoPlatform(i.url))
-          .filter((i) => {
-            if (seenVideoUrls.has(i.url)) return false;
-            seenVideoUrls.add(i.url);
+        const videos = mergedVideos
+          .filter((m) => {
+            if (seenVideoUrls.has(m.url)) return false;
+            seenVideoUrls.add(m.url);
             return true;
           })
           .slice(0, 10)
-          .map((i) => ({ title: i.title, url: i.url, platform: videoPlatform(i.url) }));
+          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || (vogueVid && m.url === vogueVid.url ? "Vogue Runway" : "视频") }));
 
         const allText = deduped.map((i) => i.title + " " + i.snippet).join(" ");
         const colors = countKeywords(allText, COLOR_KEYWORDS);

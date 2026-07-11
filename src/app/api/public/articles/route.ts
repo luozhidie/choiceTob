@@ -10,7 +10,7 @@ const FALLBACK_PUBLISHABLE = "sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW";
 
 // 视频平台域名（用于识别/提取视频链接）
 const VIDEO_HOST_RE =
-  /https?:\/\/(www\.)?(youtube\.com|youtu\.be|bilibili\.com|b23\.tv|douyin\.com|v\.douyin\.com|ixigua\.com|weibo\.com|youku\.com|v\.qq\.com|xiaohongshu\.com|kuaishou\.com)[^\s)"'<>]+/i;
+  /https?:\/\/(www\.)?(youtube\.com|youtu\.be|bilibili\.com|b23\.tv|douyin\.com|v\.douyin\.com|ixigua\.com|weibo\.com|youku\.com|v\.qq\.com|xiaohongshu\.com|kuaishou\.com|vogue\.com|elle\.com|wwd\.com|harpersbazaar\.com|nowfashion\.com|nssmagazine\.com)[^\s)"'<>]+/i;
 
 function extractVideoUrl(text: string): string | null {
   const m = text?.match(VIDEO_HOST_RE);
