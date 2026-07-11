@@ -104,6 +104,25 @@ function getFc3dGame(): LotteryGame {
   };
 }
 
+/* ───────── 排列3 ───────── */
+function getPl3Game(): LotteryGame {
+  const total = 1000; // 000-999
+
+  const prizes: PrizeLevel[] = [
+    { level: "直选", condition: "3位完全匹配", odds: "1/1,000", prize: "1040元", probability: 1 / total },
+  ];
+
+  return {
+    config: { id: "pl3", name: "排列3", fullName: "中国体育彩票排列3", price: 2, poolDesc: "固定奖", drawSchedule: "每日" },
+    rules: `从 000-999 中选择一个三位数。
+• 直选（主玩法）：号码和顺序完全一致 → 奖金1040元，概率 1/1000
+• 组选3：含一对相同数字（如112），顺序不限 → 奖金346元，概率 1/333（需单独投注）
+• 组选6：三个数字各不相同，顺序不限 → 奖金173元，概率 1/167（需单独投注）`,
+    prizes,
+    totalCombinations: total,
+  };
+}
+
 /* ───────── 排列5 ───────── */
 function getPl5Game(): LotteryGame {
   const total = 100000;
@@ -166,7 +185,7 @@ export function getLotteryGame(type: LotteryType): LotteryGame {
     case "ssq": return getSsqGame();
     case "dlt": return getDltGame();
     case "fc3d": return getFc3dGame();
-    case "pl3": return getFc3dGame(); // 排列3与福彩3D规则类似
+    case "pl3": return getPl3Game(); // 排列3（规则同福彩3D但独立玩法）
     case "pl5": return getPl5Game();
     case "qxc": return getQxcGame();
     default: return getSsqGame();
