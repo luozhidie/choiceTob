@@ -46,9 +46,15 @@ Page({
   goDetail:function(e){
     var id=e.currentTarget.dataset.id;
     console.log('[goDetail] tapped id=', id, 'tab=', this.data.activeTab);
-    if(!id){return;}
+    if(!id){wx.showToast({title:'文章ID缺失',icon:'none'});return;}
     var type = this.data.activeTab==='trend' ? 'trend' : 'article';
-    wx.navigateTo({url:'/pages/articles/detail?id='+id+'&type='+type});
+    wx.navigateTo({
+      url:'/pages/articles/detail/index?id='+id+'&type='+type,
+      fail:function(err){
+        console.error('[goDetail] navigateTo fail:', err);
+        wx.showModal({title:'页面跳转失败',content:err.errMsg||'请重试',showCancel:false});
+      }
+    });
   },
 
   subMonthly:function(){
