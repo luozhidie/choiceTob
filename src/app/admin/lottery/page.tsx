@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import {
-  Dice6, BarChart3, RotateCcw, Info, AlertTriangle, Trophy, Zap,
+  Dice6, BarChart3, Loader2, Info, AlertTriangle, Trophy, Zap,
   TrendingUp, TrendingDown, Flame, Snowflake, Hash, Calculator,
-  RefreshCw, Target, Shuffle, Eye, Calendar,
+  RotateCcw, Target, Shuffle, Eye, Calendar,
 } from "lucide-react";
 import {
   LotteryType, SimulationResult,
@@ -217,7 +217,7 @@ function AnalysisTab() {
   if (state.loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <RotateCw className="w-6 h-6 animate-spin text-blue-500 mr-2" />
+        <Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-2" />
         <span className="text-gray-500">正在分析历史数据...</span>
       </div>
     );
@@ -486,7 +486,7 @@ function SimulateTab() {
         </div>
         <button onClick={handleRun} disabled={running}
           className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:bg-gray-300 flex items-center gap-1.5">
-          {running ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
+          {running ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Zap className="w-3.5 h-3.5" />}
           运行模拟
         </button>
       </div>
