@@ -36,7 +36,7 @@ function topFrom(counts: { key: string; count: number }[], n = 5) {
   return counts.slice(0, n).map((x) => x.key);
 }
 
-// 视频平台识别
+// 视频平台识别 + 时尚媒体/品牌官网（秀场视频页）
 const VIDEO_PLATFORMS: { match: string; name: string }[] = [
   { match: "youtube.com", name: "YouTube" },
   { match: "youtu.be", name: "YouTube" },
@@ -50,12 +50,23 @@ const VIDEO_PLATFORMS: { match: string; name: string }[] = [
   { match: "v.qq.com", name: "腾讯视频" },
   { match: "xiaohongshu.com", name: "小红书" },
   { match: "kuaishou.com", name: "快手" },
+  { match: "toutiao.com", name: "今日头条" },
+];
+const VIDEO_PAGE_HOSTS = [
+  "vogue.com", "elle.com", "wwd.com", "harpersbazaar.com", "marieclaire.com",
+  "cosmopolitan.com", "instyle.com", "bazzar.com", "nowfashion.com", "nssmagazine.com",
+  "highsnobiety.com", "hypebeast.com", "fashionista.com", "thecut.com", "papermag.com",
+  "chanel.com", "dior.com", "gucci.com", "prada.com", "louisvuitton.com", "hermes.com",
+  "ysl.com", "yslb.com", "balenciaga.com", "fendi.com", "celine.com", "loewe.com", "burberry.com",
+  "jorya.com", "icicle.com", "exception.com", "jnby.com",
 ];
 function videoPlatform(url: string): string | null {
   try {
-    const host = new URL(url).hostname.replace("www.", "");
+    const host = new URL(url).hostname.replace(/^www\./, "").replace(/^m\./, "");
     const hit = VIDEO_PLATFORMS.find((p) => host.includes(p.match));
-    return hit ? hit.name : null;
+    if (hit) return hit.name;
+    if (VIDEO_PAGE_HOSTS.some((h) => host.includes(h))) return "秀场官网";
+    return null;
   } catch {
     return null;
   }
@@ -102,17 +113,27 @@ export async function POST(req: NextRequest) {
 
     const results: any[] = [];
 
-    // 逐品牌并行采集（每品牌 2 条搜索）
+    // 逐品牌并行采集
     const brandResults = await Promise.allSettled(
       brandList.map(async (brand) => {
-        const searches = [
+        // 趋势文本搜索（主色/风格/廓形/主题）
+        const trendSearches = [
           `${brand} ${season} 时装周 发布会 秀场`,
           `${brand} ${season} 流行色 风格 单品`,
-          `${brand} ${season} 时装周 秀场 视频 回放`,
         ];
-        const fetchedAll = await Promise.all(searches.map(bingSearch));
-        const trendItems = fetchedAll.slice(0, 2).flat();
-        const videoItems = fetchedAll[2] || [];
+        const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
+
+        // 视频搜索：多平台/多关键词，提升命中率
+        // 对「全年」这类非标准季节，用纯年份搜索更可能命中
+        const seasonForVideo = season.replace("全年", "").trim() || String(year);
+        const videoSearches = [
+          `${brand} ${seasonForVideo} 时装周 秀场 视频 回放`,
+          `${brand} ${seasonForVideo} 秀场 B站`,
+          `${brand} ${seasonForVideo} runway show video`,
+          `${brand} ${seasonForVideo} 走秀 视频`,
+          `${brand} ${seasonForVideo} 发布会 视频`,
+        ];
+        const videoItems = (await Promise.all(videoSearches.map(bingSearch))).flat();
 
         const seen = new Set<string>();
         const deduped = trendItems.filter((i) => {
@@ -122,10 +143,16 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 视频链接（过滤视频平台）
+        // 视频链接（过滤视频平台/秀场官网），按 URL 去重
+        const seenVideoUrls = new Set<string>();
         const videos = videoItems
           .filter((i) => videoPlatform(i.url))
-          .slice(0, 6)
+          .filter((i) => {
+            if (seenVideoUrls.has(i.url)) return false;
+            seenVideoUrls.add(i.url);
+            return true;
+          })
+          .slice(0, 10)
           .map((i) => ({ title: i.title, url: i.url, platform: videoPlatform(i.url) }));
 
         const allText = deduped.map((i) => i.title + " " + i.snippet).join(" ");
