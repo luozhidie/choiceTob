@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
           tag: NEWS_TAG,
           is_premium: false,
           is_published: true,
-          published_at: new Date().toISOString(),
         })
         .select("id, title")
         .single();

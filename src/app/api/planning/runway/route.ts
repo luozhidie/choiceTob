@@ -165,7 +165,7 @@ export async function POST(req: NextRequest) {
     if (!season) return NextResponse.json({ error: "请提供 season，如 2027 春夏" }, { status: 400 });
 
     const brandList: string[] = Array.isArray(brands) && brands.length > 0 ? brands : DEFAULT_BRANDS;
-    const yearMatch = String(season).match(/(20\d{2})/);
+    const yearMatch = String(season).match(/(\d{4})/);
     const year = yearMatch ? parseInt(yearMatch[1], 10) : new Date().getFullYear();
 
     const supabase = createServiceRoleClient();
@@ -190,9 +190,12 @@ export async function POST(req: NextRequest) {
         const videoSearches = [
           `${brand} ${seasonForVideo} 时装周 秀场 视频 回放`,
           `${brand} ${seasonForVideo} 秀场 B站`,
-          `${brand} ${seasonForVideo} runway show video`,
+          `${brand} ${seasonForVideo} 时装周 完整视频 youtube`,
+          `${brand} ${seasonForVideo} runway full show video`,
           `${brand} ${seasonForVideo} 走秀 视频`,
           `${brand} ${seasonForVideo} 发布会 视频`,
+          `${brand} ${seasonForVideo} 时装秀 高清 视频`,
+          `${brand} ${seasonForVideo} 秀场 完整版`,
         ];
         const videoItems = (await Promise.all(videoSearches.map(bingSearch))).flat();
 
