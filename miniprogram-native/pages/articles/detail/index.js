@@ -60,32 +60,52 @@ function renderInline(text) {
     });
 }
 
+// 趋势正文解析：按纯文本段落切分（图片已在画廊展示，正文不重复渲染图片），保留 **加粗**
+function parseTrendContent(content) {
+  if (!content) return [];
+  return content.split("\n").map(function (line) { return line.trim(); })
+    .filter(function (line) { return line !== ""; })
+    .filter(function (line) { return !/^!\[.*?\]\(.*?\)/.test(line); }) // 跳过图片行（画廊已展示）
+    .map(function (line) { return { type: "p", text: line, inline: renderInline(line) }; });
+}
+
 Page({
-  data: { id: "", loading: true, article: null, blocks: [] },
+  data: { id: "", type: "article", loading: true, article: null, blocks: [], gallery: [] },
 
   onLoad: function (options) {
     var id = options && options.id;
-    this.setData({ id: id });
-    this.load(id);
+    var type = (options && options.type) === "trend" ? "trend" : "article";
+    this.setData({ id: id, type: type });
+    this.load(id, type);
   },
 
-  load: function (id) {
+  load: function (id, type) {
     var t = this;
     t.setData({ loading: true });
+    var api = type === "trend"
+      ? "https://colour-choice.art/api/public/fashion-trends?id=" + id
+      : "https://colour-choice.art/api/public/articles?id=" + id;
     wx.request({
-      url: "https://colour-choice.art/api/public/articles?id=" + id,
+      url: api,
       method: "GET",
       success: function (r) {
         var list = (r.data && r.data.data) || [];
         var a = list[0];
         if (a) {
-          var blocks = parseBlocks(a.content || "");
-          blocks.forEach(function (b) {
-            if (b.type === "p" || b.type === "h1" || b.type === "h2" || b.type === "h3") {
-              b.inline = renderInline(b.text);
-            }
-          });
-          t.setData({ article: a, blocks: blocks, loading: false });
+          var blocks, gallery = [];
+          if (type === "trend") {
+            // 趋势：画廊用 images 字段，正文按纯文本渲染
+            gallery = Array.isArray(a.images) ? a.images : [];
+            blocks = parseTrendContent(a.content || "");
+          } else {
+            blocks = parseBlocks(a.content || "");
+            blocks.forEach(function (b) {
+              if (b.type === "p" || b.type === "h1" || b.type === "h2" || b.type === "h3") {
+                b.inline = renderInline(b.text);
+              }
+            });
+          }
+          t.setData({ article: a, blocks: blocks, gallery: gallery, loading: false });
         } else {
           t.setData({ loading: false });
         }

@@ -3,7 +3,8 @@ var app = getApp();
 Page({
   data:{
     activeTab:'blogger',
-    tags:['全部','穿搭','护肤','彩妆','养生','食品','家居'],
+    bloggerTags:['全部','穿搭','护肤','彩妆','养生','食品','家居'],
+    trendTags:['全部','色彩趋势','面料趋势','款式趋势','灵感图册'],
     activeTag:'全部',
     loading:true,
     articles:[],
@@ -12,13 +13,21 @@ Page({
   onLoad:function(){this.load();},
   onPullDownRefresh:function(){var t=this;t.load(function(){wx.stopPullDownRefresh();});},
 
-  swTab:function(e){this.setData({activeTab:e.currentTarget.dataset.t});this.load();},
+  swTab:function(e){
+    var t=e.currentTarget.dataset.t;
+    this.setData({activeTab:t,activeTag:'全部',articles:[]});
+    this.load();
+  },
   swTag:function(e){this.setData({activeTag:e.currentTarget.dataset.t});this.load();},
 
   load:function(cb){
     var t=this;
     t.setData({loading:true,articles:[]});
-    var url='https://colour-choice.art/api/public/articles?limit=20';
+    // 时尚博主 Tab → articles 表；时尚趋势 Tab → fashion_trends 表（与 web 端同源，避免内容重复）
+    var base = t.data.activeTab==='trend'
+      ? 'https://colour-choice.art/api/public/fashion-trends'
+      : 'https://colour-choice.art/api/public/articles';
+    var url=base+'?limit=20';
     if(t.data.activeTag!=='全部')url+='&category='+encodeURIComponent(t.data.activeTag);
     wx.request({
       url:url,
@@ -36,9 +45,10 @@ Page({
 
   goDetail:function(e){
     var id=e.currentTarget.dataset.id;
-    console.log('[goDetail] tapped id=', id);
+    console.log('[goDetail] tapped id=', id, 'tab=', this.data.activeTab);
     if(!id){return;}
-    wx.navigateTo({url:'/pages/articles/detail?id='+id});
+    var type = this.data.activeTab==='trend' ? 'trend' : 'article';
+    wx.navigateTo({url:'/pages/articles/detail?id='+id+'&type='+type});
   },
 
   subMonthly:function(){

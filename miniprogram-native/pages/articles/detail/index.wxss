@@ -37,6 +37,23 @@ page { background: #f5f3f0; }
 .cover { background: #fff; padding: 0 0 8rpx; }
 .cover-img { width: 100%; display: block; }
 
+/* 趋势图片画廊（横向滑动） */
+.gallery {
+  white-space: nowrap;
+  background: #1a1a2e;
+  padding: 16rpx 0;
+}
+.gitem {
+  display: inline-block;
+  width: 460rpx;
+  height: 560rpx;
+  margin-left: 20rpx;
+  border-radius: 14rpx;
+  vertical-align: middle;
+  background: #2d1b2e;
+}
+.gitem:last-child { margin-right: 20rpx; }
+
 /* 正文 */
 .body { padding: 24rpx 28rpx 40rpx; background: #fff; }
 .h1 { font-size: 38rpx; font-weight: 700; color: #1a1a2e; margin: 24rpx 0 12rpx; line-height: 1.4; }
