@@ -5,9 +5,12 @@ import { createClient } from "@/lib/supabase/client";
 import { FileDown, FileText, CheckCircle, AlertCircle, Sparkles } from "lucide-react";
 
 const SEASONS = [
-  { value: "spring_summer", label: "2026 春夏" },
-  { value: "autumn_winter", label: "2026 秋冬" },
-  { value: "full_year", label: "2026 全年" },
+  { value: "2026 春夏", label: "2026 春夏" },
+  { value: "2026 秋冬", label: "2026 秋冬" },
+  { value: "2026 全年", label: "2026 全年" },
+  { value: "2027 春夏", label: "2027 春夏" },
+  { value: "2027 秋冬", label: "2027 秋冬" },
+  { value: "2027 全年", label: "2027 全年" },
 ];
 
 const REPORT_TYPES = [
@@ -19,7 +22,7 @@ export default function ReportPage() {
   const supabase = createClient();
   const [storeId, setStoreId] = useState("");
   const [stores, setStores] = useState<any[]>([]);
-  const [season, setSeason] = useState("spring_summer");
+  const [season, setSeason] = useState("2026 春夏");
   const [reportType, setReportType] = useState("basic");
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({

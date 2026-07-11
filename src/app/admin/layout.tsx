@@ -143,6 +143,7 @@ const menuGroups = [
     { label: "趋势预测", href: "/admin/trend-predict" },
     { label: "趋势中心", href: "/admin/trend-center" },
     { label: "明星同款", href: "/admin/celebrity" },
+    { label: "品牌秀场采集", href: "/admin/runway" },
   ]},
 
   // ─── 其他（保留） ───

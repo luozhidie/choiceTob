@@ -11,7 +11,8 @@ import { createClient } from "@/lib/supabase/client";
 
 /* ==================== 选项数据 ==================== */
 
-const SEASONS = ["春夏", "夏秋", "秋冬", "冬春"];
+const REPORT_YEARS = [new Date().getFullYear(), new Date().getFullYear() + 1];
+const SEASONS = REPORT_YEARS.flatMap((y) => [`${y} 春夏`, `${y} 夏秋`, `${y} 秋冬`, `${y} 冬春`]);
 
 const COLOR_PREFERENCES = [
   { value: "warm", label: "暖色系", desc: "红/橙/黄/棕" },
@@ -91,7 +92,7 @@ export default function PlanningToolPage() {
 
   const [formData, setFormData] = useState({
     brandName: "",
-    season: "春夏",
+    season: `${REPORT_YEARS[0]} 春夏`,
     colorPref: "",
     marketStyle: "",
     priceBand: "199-399元",

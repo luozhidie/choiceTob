@@ -436,6 +436,73 @@ ${winnerLines}
 5. avoidList 应包含测款中曝光高但转化极低（如下单转化率<1%）的色彩/风格`;
 }
 
+/* ============ 辅助函数：读取已采集的品牌秀场趋势 ============ */
+async function fetchRunwayInsights(season: string) {
+  if (!season) return null;
+  try {
+    const supabase = createServiceRoleClient();
+    const { data, error } = await supabase
+      .from("brand_runway_trends")
+      .select("brand, dominant_colors, dominant_styles, key_silhouettes, themes, summary")
+      .eq("season", season);
+    if (error || !data || data.length === 0) return null;
+
+    const allColors: Record<string, number> = {};
+    const allStyles: Record<string, number> = {};
+    const allSil: Record<string, number> = {};
+    (data as any[]).forEach((b) => {
+      (b.dominant_colors || []).forEach((c: string) => (allColors[c] = (allColors[c] || 0) + 1));
+      (b.dominant_styles || []).forEach((s: string) => (allStyles[s] = (allStyles[s] || 0) + 1));
+      (b.key_silhouettes || []).forEach((s: string) => (allSil[s] = (allSil[s] || 0) + 1));
+    });
+
+    return {
+      season,
+      totalBrands: (data as any[]).length,
+      brands: (data as any[]).map((b) => ({
+        brand: b.brand,
+        colors: b.dominant_colors || [],
+        styles: b.dominant_styles || [],
+        silhouettes: b.key_silhouettes || [],
+        themes: b.themes || [],
+        summary: b.summary || "",
+      })),
+      overall: {
+        topColors: Object.entries(allColors).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k),
+        topStyles: Object.entries(allStyles).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k),
+        topSilhouettes: Object.entries(allSil).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k),
+      },
+    };
+  } catch (e: any) {
+    console.error("[generate-planning] 秀场趋势读取失败:", e.message);
+    return null;
+  }
+}
+
+/* ============ 辅助函数：构建秀场趋势 prompt 段 ============ */
+function buildRunwayPromptSection(runway: Record<string, any>): string {
+  if (!runway || !runway.totalBrands) return "";
+
+  const brandLines = (runway.brands as any[])
+    .map((b) => `- ${b.brand}：${b.summary || ""}${b.colors.length ? ` 主色[${b.colors.join("、")}]` : ""}${b.styles.length ? ` 风格[${b.styles.join("、")}]` : ""}${b.silhouettes.length ? ` 廓形[${b.silhouettes.join("、")}]` : ""}`)
+    .join("\n");
+
+  const o = runway.overall || {};
+  return `
+【👑 一线品牌发布会趋势】(${runway.totalBrands}个品牌 · ${runway.season || ""})
+品牌信号：
+${brandLines}
+整体秀场信号：
+- 高频主色：${(o.topColors || []).join("、") || "—"}
+- 主导风格：${(o.topStyles || []).join("、") || "—"}
+- 关键廓形：${(o.topSilhouettes || []).join("、") || "—"}
+
+⚠ 秀场趋势融合原则：
+1. colorPlan 适当融入秀场高频主色，提升货盘时尚度与话题性
+2. stylePlan 关注秀场主导风格信号（如静奢/新中式/运动），但须与本品牌客群（VIP/测款数据）平衡
+3. 秀场趋势作为"流行方向参考"，不与测款真实转化、VIP画像冲突——冲突时以真实数据为准`;
+}
+
 /* ============ 主接口 ============ */
 export async function POST(req: NextRequest) {
   try {
@@ -612,10 +679,16 @@ export async function POST(req: NextRequest) {
     const testSection = buildTestPromptSection(testInsights || {});
     if (testSection) userPrompt += "\n" + testSection;
 
+    // 注入一线品牌发布会趋势（已采集则参考，未采集则跳过）
+    const runwayInsights = await fetchRunwayInsights(season || "");
+    const runwaySection = buildRunwayPromptSection(runwayInsights || {});
+    if (runwaySection) userPrompt += "\n" + runwaySection;
+
     // 企划要求
     const hasVip = memberStats?.tested_vip_count > 0;
     const hasMarket = marketResearch?.totalItems > 0;
     const hasTest = !!(testInsights && testInsights.totalItems);
+    const hasRunway = !!(runwayInsights && runwayInsights.totalBrands);
 
     userPrompt += `
 
@@ -640,6 +713,7 @@ export async function POST(req: NextRequest) {
    原则：宁可少SKU多深度，不要多SKU浅深度。核心款做足颜色和尺码，非核心款只做1-2色。
 ${hasVip && hasMarket ? "14. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）" : ""}
 ${hasTest ? "15. 自家测款数据最高优先级原则：所有色彩/风格/价格带决策以测款真实转化为准，VIP数据与市场数据仅作补充验证；coreSkuList 必须优先包含测款中转化靠前的色彩/风格/价格组合" : ""}
+${hasRunway ? "16. 一线品牌发布会趋势融合：colorPlan/stylePlan 适当融入秀场高频主色与主导风格信号，作为流行方向参考；但与测款真实转化、VIP画像冲突时，以真实数据为准" : ""}
 
 ⚠ 报告质量要求（决定¥2980价值感）：
 - 所有分析必须有数据支撑，不能空泛

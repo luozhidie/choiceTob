@@ -18,11 +18,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "请提供搜索关键词" }, { status: 400 });
     }
 
-    // 构建搜索词
+    // 构建搜索词（season 若带年份如"2027 春夏"直接带入；否则兜底当前年，确保抓到前瞻趋势）
+    const currentYear = new Date().getFullYear();
     const searchTerms = [
       `${keyword} ${season || ""} 爆款 热销`,
       `${keyword} ${style || ""} ${season || ""} 流行`,
-      `${keyword} 搭配 推荐 ${season || "2025"}`,
+      `${keyword} 搭配 推荐 ${season || currentYear}`,
     ].filter(t => t.trim().length > 5);
 
     interface MarketItem {
