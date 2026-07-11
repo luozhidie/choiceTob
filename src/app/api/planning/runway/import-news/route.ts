@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
         skipped: 0,
         total: 0,
         items: [],
-        message: `${season} 暂无采集到的秀场视频。请确认：1) 已配置 YOUTUBE_API_KEY；2) 该季节已有 YouTube/B站 等平台上传真实视频；3) 已点击上方「采集秀场趋势」。`,
+        message: `${season} 暂无采集到的秀场视频。请先在上方点击「采集秀场趋势」；若已采集仍无视频，说明该季节在 YouTube/B站/Vogue 上均无可用来源。`,
       });
     }
 

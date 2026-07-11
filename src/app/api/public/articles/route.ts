@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 // 正确的 publishable key（公开安全，作为环境变量缺失时的兜底）
 const FALLBACK_PUBLISHABLE = "sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW";
 
-// 视频平台域名（用于识别/提取视频链接）
+// 视频平台域名（用于识别/提取视频链接，含 Vogue 官方秀场页）
 const VIDEO_HOST_RE =
-  /https?:\/\/(www\.)?(youtube\.com|youtu\.be|bilibili\.com|b23\.tv|douyin\.com|v\.douyin\.com|ixigua\.com|weibo\.com|youku\.com|v\.qq\.com|xiaohongshu\.com|kuaishou\.com|toutiao\.com)[^\s)"'<>]+/i;
+  /https?:\/\/(www\.)?(youtube\.com|youtu\.be|bilibili\.com|b23\.tv|douyin\.com|v\.douyin\.com|ixigua\.com|weibo\.com|youku\.com|v\.qq\.com|xiaohongshu\.com|kuaishou\.com|toutiao\.com|vogue\.com)[^\s)"'<>]+/i;
 
 function extractVideoUrl(text: string): string | null {
   const m = text?.match(VIDEO_HOST_RE);

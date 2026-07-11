@@ -123,7 +123,7 @@ export default function RunwayPage() {
           抓取各品牌时装周/发布会信号（主色·风格·廓形·主题·秀场视频），存入数据库并可融入 AI 商品企划。
         </p>
         <p className="text-xs text-amber-600 mt-1">
-          提示：秀场视频依赖 YouTube Data API，请在 Vercel 环境变量里设置 YOUTUBE_API_KEY，否则只能采集到趋势文本。
+          提示：视频源优先 YouTube（需配置 YOUTUBE_API_KEY），未配置时自动兜底 Vogue Runway 官方秀场页。
         </p>
       </div>
 

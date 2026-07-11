@@ -36,7 +36,7 @@ function topFrom(counts: { key: string; count: number }[], n = 5) {
   return counts.slice(0, n).map((x) => x.key);
 }
 
-// 视频平台识别（仅接受真实视频平台，不接受 Vogue/媒体官网 slideshow）
+// 视频平台识别（真实视频平台 + Vogue 官方秀场页作为兜底）
 const VIDEO_PLATFORMS: { match: string; name: string }[] = [
   { match: "youtube.com", name: "YouTube" },
   { match: "youtu.be", name: "YouTube" },
@@ -56,14 +56,72 @@ function videoPlatform(url: string): string | null {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "").replace(/^m\./, "");
     const hit = VIDEO_PLATFORMS.find((p) => host.includes(p.match));
-    return hit ? hit.name : null;
+    if (hit) return hit.name;
+    if (host.includes("vogue.com")) return "Vogue Runway";
+    return null;
   } catch {
     return null;
   }
 }
 
-// YouTube Data API：搜索真实秀场视频
-// 需要环境变量 YOUTUBE_API_KEY；未配置时回退到 Bing 搜索（通常很难找到真实视频）
+// Vogue Runway：国际一线奢侈品牌秀场官方页（未配置 YouTube key 时的兜底）
+const VOGUE_BRAND_SLUG: Record<string, string> = {
+  "香奈儿": "chanel",
+  "迪奥": "christian-dior",
+  "古驰": "gucci",
+  "普拉达": "prada",
+  "路易威登": "louis-vuitton",
+  "爱马仕": "hermes",
+  "圣罗兰": "saint-laurent",
+  "巴黎世家": "balenciaga",
+  "芬迪": "fendi",
+  "思琳": "celine",
+  "罗意威": "loewe",
+};
+
+const SEASON_PARTS_ALL = ["春夏", "夏秋", "秋冬", "冬春", "全年"];
+function getSeasonPart(season: string): string {
+  for (const p of SEASON_PARTS_ALL) if (season.includes(p)) return p;
+  return "全年";
+}
+function vogueSeasonSlugs(seasonPart: string, year: number): string[] {
+  switch (seasonPart) {
+    case "春夏": return [`spring-${year}-ready-to-wear`];
+    case "夏秋": return [`resort-${year}`];
+    case "秋冬": return [`fall-${year}-ready-to-wear`];
+    case "冬春": return [`pre-fall-${year}`];
+    default: // 全年
+      return [
+        `spring-${year}-ready-to-wear`,
+        `resort-${year}`,
+        `fall-${year}-ready-to-wear`,
+        `pre-fall-${year}`,
+      ];
+  }
+}
+
+async function findVogueVideo(brand: string, seasonPart: string, year: number): Promise<{ url: string; title: string } | null> {
+  const slug = VOGUE_BRAND_SLUG[brand];
+  if (!slug) return null;
+  for (const s of vogueSeasonSlugs(seasonPart, year)) {
+    const url = `https://www.vogue.com/fashion-shows/${s}/${slug}`;
+    try {
+      const resp = await fetch(url, {
+        method: "HEAD",
+        headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (resp.status === 200) {
+        return { url, title: `${brand} ${seasonPart} 秀场官方报道 · Vogue Runway` };
+      }
+    } catch {
+      /* 该季节段无秀场页，尝试下一个 */
+    }
+  }
+  return null;
+}
+
+// YouTube Data API：搜索真实秀场视频（需要 YOUTUBE_API_KEY）
 async function searchYouTubeVideos(query: string, apiKey: string): Promise<{ title: string; url: string; platform: string }[]> {
   try {
     const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
@@ -135,7 +193,7 @@ export async function POST(req: NextRequest) {
         ];
         const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
 
-        // 视频来源：YouTube Data API（真实视频）→ Bing 兜底
+        // 视频来源：YouTube Data API → Bing 真实视频 → Vogue 官方秀场页兜底
         const seasonForVideo = season.replace("全年", "").trim() || String(year);
         const ytKey = process.env.YOUTUBE_API_KEY || "";
         const ytQueries = [
@@ -147,6 +205,8 @@ export async function POST(req: NextRequest) {
         const ytResults = ytKey
           ? (await Promise.all(ytQueries.map((q) => searchYouTubeVideos(q, ytKey)))).flat()
           : [];
+
+        const vogueVid = await findVogueVideo(brand, getSeasonPart(season), year);
 
         const videoSearches = [
           `${brand} ${seasonForVideo} 时装周 秀场 视频 回放`,
@@ -168,7 +228,7 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 合并视频：YouTube 优先，再补 Bing（按 URL 去重）
+        // 合并视频：YouTube → Bing 真实视频 → Vogue 官方秀场页（按 URL 去重）
         const mergedVideos: { title: string; url: string }[] = [];
         for (const v of ytResults) {
           if (!mergedVideos.some((m) => m.url === v.url)) mergedVideos.push({ title: v.title, url: v.url });
@@ -178,6 +238,9 @@ export async function POST(req: NextRequest) {
             mergedVideos.push({ title: i.title, url: i.url });
           }
         }
+        if (vogueVid && !mergedVideos.some((m) => m.url === vogueVid.url)) {
+          mergedVideos.push(vogueVid);
+        }
         const seenVideoUrls = new Set<string>();
         const videos = mergedVideos
           .filter((m) => {
@@ -186,7 +249,7 @@ export async function POST(req: NextRequest) {
             return true;
           })
           .slice(0, 10)
-          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || "YouTube" }));
+          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || "Vogue Runway" }));
 
         const allText = deduped.map((i) => i.title + " " + i.snippet).join(" ");
         const colors = countKeywords(allText, COLOR_KEYWORDS);
