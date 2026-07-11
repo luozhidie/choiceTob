@@ -14,6 +14,7 @@ const VIP_LINKS = new Set([
 const footerLinks = [
   // 核心服务
   { label: "买手选品", href: "/buyer" },
+  { label: "时尚博主", href: "/magazine" },
   { label: "商品企划", href: "/planning", needVip: true },
   { label: "企划工具", href: "/planning-tool", needVip: true },
   { label: "爆款货盘", href: "/hot-picks", needVip: true },
