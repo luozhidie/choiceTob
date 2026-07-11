@@ -185,6 +185,25 @@ interface AnalysisState {
   loading: boolean;
   data: SsqAnalysis | null;
   error: string;
+  dataSource?: string;
+  lastUpdated?: string | null;
+  syncing?: boolean;
+  syncMsg?: string;
+}
+
+const SOURCE_LABEL: Record<string, string> = {
+  "17500": "乐彩网 (17500.cn)",
+  "500": "500彩票网",
+  "cwl": "中彩网",
+  "demo": "演示数据",
+};
+
+function fmtTime(iso?: string | null): string {
+  if (!iso) return "未知";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("zh-CN", { hour12: false });
+  } catch { return iso; }
 }
 
 function AnalysisTab() {
@@ -198,10 +217,29 @@ function AnalysisTab() {
     try {
       const r = await fetch("/api/lottery?action=analysis");
       const d = await r.json();
-      if (d.success) setState({ loading: false, data: d.data, error: "" });
+      if (d.success) setState({
+        loading: false, data: d.data, error: "",
+        dataSource: d.dataSource, lastUpdated: d.lastUpdated,
+      });
       else setState({ loading: false, data: null, error: d.error || "加载失败" });
     } catch (e: any) { setState({ loading: false, data: null, error: e.message }); }
   }, []);
+
+  const handleSync = useCallback(async () => {
+    setState(s => ({ ...s, syncing: true, syncMsg: "" }));
+    try {
+      const r = await fetch("/api/lottery?action=sync");
+      const d = await r.json();
+      if (d.success) {
+        setState(s => ({ ...s, syncing: false, syncMsg: d.message, lastUpdated: d.lastUpdated, dataSource: d.source }));
+        await loadAnalysis();
+      } else {
+        setState(s => ({ ...s, syncing: false, syncMsg: d.error || "同步失败" }));
+      }
+    } catch (e: any) {
+      setState(s => ({ ...s, syncing: false, syncMsg: e.message }));
+    }
+  }, [loadAnalysis]);
 
   useEffect(() => { loadAnalysis(); }, [loadAnalysis]);
 
@@ -269,8 +307,35 @@ function AnalysisTab() {
         </div>
       </div>
 
+      {/* 数据来源 / 更新时间 / 手动同步 */}
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="text-xs text-blue-800 space-y-0.5">
+          <p>
+            📡 数据来源：<strong>{SOURCE_LABEL[state.dataSource || ""] || state.dataSource || "未知"}</strong>
+            {" · "}
+            共 <strong>{a.meta.totalDraws.toLocaleString()}</strong> 期
+            {" · "}
+            最新 <strong>{a.meta.latestIssue}</strong>（{a.meta.dateRange.split(" ~ ")[1] || a.meta.latestIssue}）
+          </p>
+          <p className="text-blue-600/80">🕒 最后更新：{fmtTime(state.lastUpdated)}（北京时间）</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {state.syncMsg && (
+            <span className="text-xs text-green-700">{state.syncMsg}</span>
+          )}
+          <button
+            onClick={handleSync}
+            disabled={state.syncing}
+            className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-300 flex items-center gap-1.5"
+          >
+            {state.syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+            {state.syncing ? "同步中..." : "同步最新开奖"}
+          </button>
+        </div>
+      </div>
+
       <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200">
-        ⚠️ 数据截止 2018 年，共 {a.meta.totalDraws.toLocaleString()} 期。如需最新数据请提供可抓取接口或 JSON 文件。
+        ℹ️ 系统已接入真实开奖数据源，并通过定时任务（开奖日北京时间 22:00）自动同步，也可点击右侧按钮手动拉取最新一期。
         所有统计分析均为<strong>描述过去、不预测未来</strong>。
       </p>
 
