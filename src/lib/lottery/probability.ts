@@ -1,6 +1,6 @@
 /* ── 彩票概率计算核心 ── */
 
-import { LotteryType, LotteryGame, PrizeLevel, BallDraw } from "./types";
+import { LotteryType, LotteryGame, PrizeLevel, BallDraw, GameDef } from "./types";
 
 /* ─────────────────── 组合数 C(n,k) ─────────────────── */
 function combinations(n: number, k: number): number {
@@ -143,7 +143,23 @@ function getQxcGame(): LotteryGame {
   };
 }
 
-/* ───────────── 导出 ───────────── */
+/* ───────────── 玩法结构定义（驱动解析/分析/UI） ───────────── */
+
+const GAME_DEFS: Record<LotteryType, GameDef> = {
+  ssq:  { id: "ssq",  name: "双色球", kind: "pool",  frontCount: 6, frontMin: 1, frontMax: 33, backCount: 1, backMin: 1, backMax: 16, drawSchedule: "每周二、四、日", sourceUrl: "http://data.17500.cn/ssq_asc.txt" },
+  dlt:  { id: "dlt",  name: "大乐透", kind: "pool",  frontCount: 5, frontMin: 1, frontMax: 35, backCount: 2, backMin: 1, backMax: 12, drawSchedule: "每周一、三、六", sourceUrl: "http://data.17500.cn/dlt_asc.txt" },
+  fc3d: { id: "fc3d", name: "福彩3D", kind: "digit", frontCount: 3, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/3d_asc.txt" },
+  pl3:  { id: "pl3",  name: "排列3",  kind: "digit", frontCount: 3, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/pl3_asc.txt" },
+  pl5:  { id: "pl5",  name: "排列5",  kind: "digit", frontCount: 5, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/pl5_asc.txt" },
+  qxc:  { id: "qxc",  name: "七星彩", kind: "digit", frontCount: 7, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每周二、五、日" },
+};
+
+/** 获取玩法结构定义 */
+export function getGameDef(type: LotteryType): GameDef {
+  return GAME_DEFS[type] || GAME_DEFS.ssq;
+}
+
+/** ───────────── 导出 ───────────── */
 
 /** 获取指定玩法完整定义 */
 export function getLotteryGame(type: LotteryType): LotteryGame {
@@ -158,9 +174,9 @@ export function getLotteryGame(type: LotteryType): LotteryGame {
   }
 }
 
-/** 获取所有支持的游戏列表 */
+/** 获取所有支持的游戏列表（6 种） */
 export function getAllGames(): { type: LotteryType; game: LotteryGame }[] {
-  return (["ssq", "dlt", "fc3d", "pl5"] as LotteryType[]).map(type => ({
+  return (["ssq", "dlt", "fc3d", "pl3", "pl5", "qxc"] as LotteryType[]).map(type => ({
     type,
     game: getLotteryGame(type),
   }));

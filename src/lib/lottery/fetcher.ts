@@ -1,237 +1,130 @@
-/* ── 双色球真实数据抓取器（方案3） ──
+/* ── 统一开奖数据抓取器（覆盖 6 种玩法） ──
  *
  * 设计原则：
- * 1. 优先抓取真实开奖数据（17500.cn / 500彩票网 / 中彩网）
- * 2. 所有源失败时回退到内置演示数据，保证页面不崩
- * 3. 抓取成功后存储到 Supabase Storage，下次直接读取
+ * 1. 优先从 GameDef.sourceUrl 抓取真实开奖数据（17500.cn 等）
+ * 2. 所有源失败时回退到按 GameDef 生成的演示数据，保证页面不崩
+ * 3. 抓取成功后按玩法分路径存储到 Supabase Storage，下次直接读取
  *
- * ⚠️ 注意：部分数据源有反爬（腾讯云EdgeOne/地域限制）。
- * 17500.cn 经测试沙箱可访问且数据最新（到2026年），作为首选源。
+ * 17500.cn 的 *_asc.txt 格式高度统一：期号 日期 号码...（号码间空格分隔，
+ * 数字游戏按位、pool 类先主区后特殊区），可用一个通用解析器覆盖全部玩法。
  */
 
-import { SsqRecord } from "./analyzer";
-import { generateSsqDemoData } from "./analyzer";
+import { DrawRecord, GameDef, LotteryType } from "./types";
+import { getGameDef } from "./probability";
+import { generateDemoData } from "./analyzer";
 
-/* 解析红球/蓝球字符串 → 数字数组 */
-function parseBalls(str: string): number[] {
-  return str
-    .split(/[,\s]+/)
-    .map(s => parseInt(s.trim(), 10))
-    .filter(n => !isNaN(n) && n > 0);
+/* 通用解析：取日期之后的前 frontCount+backCount 个数字（跳过 "-" 等非数字） */
+function parseAscLine(line: string, def: GameDef): DrawRecord | null {
+  const parts = line.trim().split(/\s+/);
+  if (parts.length < 2 + def.frontCount + def.backCount) return null;
+  const issue = parts[0];
+  const date = parts[1];
+  const tokens = parts
+    .slice(2)
+    .filter((t) => /^\d+$/.test(t))
+    .map(Number);
+  const front = tokens.slice(0, def.frontCount);
+  const back = def.backCount > 0 ? tokens.slice(def.frontCount, def.frontCount + def.backCount) : [];
+  if (
+    front.length === def.frontCount &&
+    (def.backCount === 0 || back.length === def.backCount)
+  ) {
+    return { issue, date, front, back };
+  }
+  return null;
 }
 
-/**
- * 首选数据源：17500.cn 完整历史 TXT
- * URL: http://data.17500.cn/ssq_asc.txt
- * 格式：期号 日期 红1..红6 蓝 [统计字段...]
- * 经测试沙箱可访问，数据更新至2026年最新一期
- */
-async function fetchFrom17500(fetchImpl: typeof fetch): Promise<SsqRecord[] | null> {
+async function fetchFromUrl(
+  url: string,
+  def: GameDef,
+  fetchImpl: typeof fetch
+): Promise<DrawRecord[] | null> {
   try {
-    const res = await fetchImpl("http://data.17500.cn/ssq_asc.txt", {
+    const res = await fetchImpl(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
       signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined,
     } as any);
 
     if (!res.ok) return null;
     const text = await res.text();
-
-    const lines = text.split("\n").filter(l => l.trim().length > 0);
-    const records: SsqRecord[] = [];
+    const lines = text.split("\n").filter((l) => l.trim().length > 0);
+    const records: DrawRecord[] = [];
 
     for (const line of lines) {
-      const parts = line.trim().split(/\s+/);
-      // 至少要有 期号 + 日期 + 6红 + 1蓝 = 9列
-      if (parts.length < 9) continue;
-
-      const issue = parts[0];
-      const date = parts[1];
-      const reds = parts.slice(2, 8).map(n => parseInt(n, 10)).filter(n => n >= 1 && n <= 33);
-      const blue = parseInt(parts[8], 10);
-
-      if (reds.length === 6 && blue >= 1 && blue <= 16 && issue && date) {
-        records.push({ issue, date, reds, blue });
-      }
+      const rec = parseAscLine(line, def);
+      if (rec) records.push(rec);
     }
 
-    return records.length > 100 ? records : null;
+    return records.length > 50 ? records : null;
   } catch (e) {
-    console.error("[SSQ Fetcher] 17500源失败:", e);
+    console.error(`[Fetcher] 源 ${url} 失败:`, e);
     return null;
   }
 }
 
 /**
- * 源2：500彩票网历史数据
- * URL: https://datachart.500.com/ssq/history/newinc/history.php?start=XXXXX&end=YYYYY
+ * 抓取某玩法数据：真实源优先，失败回退演示数据
+ * @returns { records, source } source 为 "17500" | "demo"
  */
-async function fetchFrom500(fetchImpl: typeof fetch): Promise<SsqRecord[] | null> {
-  try {
-    const end = new Date().getFullYear() * 1000 + 999; // e.g. 2026999
-    const start = 2003001; // 2003年首期
-    const url = `https://datachart.500.com/ssq/history/newinc/history.php?start=${start}&end=${end}`;
-
-    const res = await fetchImpl(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://datachart.500.com/ssq/",
-        "Accept": "text/html,application/xhtml+xml",
-      },
-      // @ts-ignore - Node 18+ 支持
-      signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
-    } as any);
-
-    if (!res.ok) return null;
-    const html = await res.text();
-
-    // 解析表格 <tr class="t_tr1"> ... <td>期号</td><td>日期</td><td>红1</td>...<td>蓝</td>
-    const rows = html.match(/<tr[^>]*>([\s\S]*?)<\/tr>/gi) || [];
-    const records: SsqRecord[] = [];
-
-    for (const row of rows) {
-      const cells = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(m =>
-        m[1].replace(/<[^>]+>/g, "").trim()
-      );
-      // 500彩票网格式：期号 | 日期 | 红1 | 红2 | 红3 | 红4 | 红5 | 红6 | 蓝 | 销售额 | 奖池
-      if (cells.length >= 9) {
-        const issue = cells[0];
-        const dateRaw = cells[1];
-        const reds = cells.slice(2, 8).map(n => parseInt(n, 10)).filter(n => n > 0);
-        const blue = parseInt(cells[8], 10);
-        if (reds.length === 6 && blue > 0 && issue) {
-          records.push({
-            issue,
-            date: dateRaw.replace(/\D/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""),
-            reds,
-            blue,
-          });
-        }
-      }
-    }
-
-    return records.length > 100 ? records : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * 源2：中彩网官方 API
- * URL: https://www.cwl.gov.cn/cwl_admin/front/cwlkj/ssq/kjgg
- */
-async function fetchFromCWL(fetchImpl: typeof fetch): Promise<SsqRecord[] | null> {
-  try {
-    const res = await fetchImpl(
-      "https://www.cwl.gov.cn/cwl_admin/front/cwlkj/ssq/kjgg?issueStart=2003001&issueEnd=2099999",
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "application/json, text/plain, */*",
-          "Referer": "https://www.cwl.gov.cn/cwl_web/views/ssq/history.html",
-        },
-        signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined,
-      } as any
-    );
-
-    if (!res.ok) return null;
-    const text = await res.text();
-    if (text.includes("<!DOCTYPE") || text.includes("<html")) return null;
-
-    const json = JSON.parse(text);
-    const list = json?.data?.result || json?.data || json?.list;
-    if (!Array.isArray(list)) return null;
-
-    const records: SsqRecord[] = [];
-    for (const item of list) {
-      const reds = parseBalls(item.red || item.redball || item.reds || "");
-      const blue = parseInt(item.blue || item.blueball || item.blueball || "0", 10);
-      if (reds.length === 6 && blue > 0) {
-        records.push({
-          issue: item.code || item.issue || item.qihao || "",
-          date: (item.date || item.time || "").toString().slice(0, 10),
-          reds,
-          blue,
-        });
-      }
-    }
-    return records.length > 100 ? records : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * 主函数：尝试所有源，失败回退演示数据
- * @param fetchImpl fetch 实现（Node 全局或 polyfill）
- * @returns { records, source } source 为 "17500" | "500" | "cwl" | "demo"
- */
-export async function fetchSsqData(
+export async function fetchGameData(
+  type: LotteryType,
   fetchImpl: typeof fetch = fetch
-): Promise<{ records: SsqRecord[]; source: string; updatedAt: string }> {
-  // 按优先级尝试真实源（17500.cn 沙箱可访问且最新，首选）
-  const sources = [
-    { name: "17500", fn: fetchFrom17500 },
-    { name: "500", fn: fetchFrom500 },
-    { name: "cwl", fn: fetchFromCWL },
-  ];
+): Promise<{ records: DrawRecord[]; source: string; updatedAt: string }> {
+  const def = getGameDef(type);
 
-  for (const src of sources) {
-    try {
-      const records = await src.fn(fetchImpl);
-      if (records && records.length > 100) {
-        console.log(`[SSQ Fetcher] 数据源 ${src.name} 成功，共 ${records.length} 期`);
-        return { records, source: src.name, updatedAt: new Date().toISOString() };
-      }
-    } catch (e) {
-      console.error(`[SSQ Fetcher] 数据源 ${src.name} 失败:`, e);
+  if (def.sourceUrl) {
+    const records = await fetchFromUrl(def.sourceUrl, def, fetchImpl);
+    if (records && records.length > 50) {
+      console.log(`[Fetcher] ${type} 数据源 ${def.sourceUrl} 成功，共 ${records.length} 期`);
+      return { records, source: "17500", updatedAt: new Date().toISOString() };
     }
   }
 
-  // 全部失败 → 回退演示数据
-  console.log("[SSQ Fetcher] 所有真实源失败，回退演示数据");
-  return { records: generateSsqDemoData(), source: "demo", updatedAt: new Date().toISOString() };
+  console.log(`[Fetcher] ${type} 真实源不可达，回退演示数据`);
+  return { records: generateDemoData(def), source: "demo", updatedAt: new Date().toISOString() };
 }
 
-/* ── Supabase Storage 键 ── */
-export const SSQ_DATA_PATH = "lottery/ssq-data.json";
+/* ── Supabase Storage（按玩法分路径） ── */
+export function gameDataPath(type: LotteryType): string {
+  return `lottery/${type}-data.json`;
+}
 
-/**
- * 保存抓取结果到 Supabase Storage
- */
-export async function saveSsqData(
+/** 兼容旧路径（ssq → lottery/ssq-data.json，与历史数据一致） */
+export const SSQ_DATA_PATH = gameDataPath("ssq");
+
+export async function saveGameData(
   supabaseAdmin: any,
-  data: { records: SsqRecord[]; source: string; updatedAt: string }
+  type: LotteryType,
+  data: { records: DrawRecord[]; source: string; updatedAt: string }
 ): Promise<boolean> {
   try {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const { error } = await supabaseAdmin.storage
       .from("products")
-      .upload(SSQ_DATA_PATH, blob, { upsert: true });
+      .upload(gameDataPath(type), blob, { upsert: true });
     if (error) {
-      console.error("[SSQ Fetcher] 保存失败:", error.message);
+      console.error(`[Fetcher] ${type} 保存失败:`, error.message);
       return false;
     }
     return true;
   } catch (e: any) {
-    console.error("[SSQ Fetcher] 保存异常:", e.message);
+    console.error(`[Fetcher] ${type} 保存异常:`, e.message);
     return false;
   }
 }
 
-/**
- * 从 Supabase Storage 读取真实数据（如果存在）
- */
-export async function loadSsqData(
-  supabaseAdmin: any
-): Promise<{ records: SsqRecord[]; source: string; updatedAt: string } | null> {
+export async function loadGameData(
+  supabaseAdmin: any,
+  type: LotteryType
+): Promise<{ records: DrawRecord[]; source: string; updatedAt: string } | null> {
   try {
     const { data, error } = await supabaseAdmin.storage
       .from("products")
-      .download(SSQ_DATA_PATH);
+      .download(gameDataPath(type));
     if (error || !data) return null;
     const text = await data.text();
     const json = JSON.parse(text);
-    if (json?.records && Array.isArray(json.records) && json.records.length > 100) {
+    if (json?.records && Array.isArray(json.records) && json.records.length > 50) {
       return json;
     }
     return null;

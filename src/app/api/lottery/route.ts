@@ -1,72 +1,81 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { getAllGames, getLotteryGame, expectedValue } from "@/lib/lottery/probability";
+import { getAllGames, getLotteryGame, expectedValue, getGameDef } from "@/lib/lottery/probability";
 import { runSimulation } from "@/lib/lottery/simulator";
 import { readStats, writeStats, mergeSimulation } from "@/lib/lottery/data";
 import {
-  generateSsqDemoData,
-  analyzeSsqHistory,
-  generateWeightedPick,
+  analyzeGame, generateGamePick,
 } from "@/lib/lottery/analyzer";
-import { fetchSsqData, loadSsqData, saveSsqData } from "@/lib/lottery/fetcher";
+import { fetchGameData, loadGameData, saveGameData } from "@/lib/lottery/fetcher";
+import { DrawRecord, UnifiedAnalysis, LotteryType } from "@/lib/lottery/types";
 
-/* ── 缓存：历史数据（服务端内存） ──
- * 设计目标：
- * 1. 优先从 Supabase Storage 读取已同步的真实数据（冷启动也能秒开）
- * 2. Storage 不存在则抓取真实数据并写回 Storage（保证后续请求稳定）
- * 3. 数据超过 STALE_HOURS 视为过期 → 后台自动重新同步（实现"准实时"更新）
- */
-let _cachedRecords: ReturnType<typeof generateSsqDemoData> | null = null;
-let _cachedAnalysis: ReturnType<typeof analyzeSsqHistory> | null = null;
-let _dataSource: string = "demo";
-let _dataUpdatedAt: string | null = null;
-let _refreshing = false;
+const ALL_TYPES: LotteryType[] = ["ssq", "dlt", "fc3d", "pl3", "pl5", "qxc"];
+const STALE_HOURS = 6;
 
-const STALE_HOURS = 6; // 超过 6 小时未更新视为过期
+/* ── 每玩法缓存（服务端内存） ── */
+interface GameCache {
+  records: DrawRecord[];
+  analysis: UnifiedAnalysis;
+  source: string;
+  updatedAt: string | null;
+}
+const _cache: Partial<Record<LotteryType, GameCache>> = {};
+const _refreshing: Partial<Record<LotteryType, boolean>> = {};
 
-async function doSync(): Promise<{ source: string; total: number; updatedAt: string }> {
+async function doSync(type: LotteryType): Promise<{ source: string; total: number; updatedAt: string }> {
   const supabase = createServiceRoleClient();
-  const { records, source, updatedAt } = await fetchSsqData(fetch);
-  await saveSsqData(supabase, { records, source, updatedAt });
-  _cachedRecords = records;
-  _cachedAnalysis = analyzeSsqHistory(records);
-  _dataSource = source;
-  _dataUpdatedAt = updatedAt;
+  const def = getGameDef(type);
+  const { records, source, updatedAt } = await fetchGameData(type, fetch);
+  await saveGameData(supabase, type, { records, source, updatedAt });
+  _cache[type] = { records, analysis: analyzeGame(records, def), source, updatedAt };
   return { source, total: records.length, updatedAt };
 }
 
-async function getSsqRecords(): Promise<ReturnType<typeof generateSsqDemoData>> {
-  if (!_cachedRecords) {
+async function getGameData(type: LotteryType): Promise<GameCache> {
+  if (!_cache[type]) {
     const supabase = createServiceRoleClient();
-    // 1. 优先从 Supabase Storage 读取已同步的真实数据
-    const stored = await loadSsqData(supabase);
+    const def = getGameDef(type);
+    const stored = await loadGameData(supabase, type);
     if (stored) {
-      _cachedRecords = stored.records;
-      _dataSource = stored.source;
-      _dataUpdatedAt = stored.updatedAt ?? null;
-      _cachedAnalysis = analyzeSsqHistory(_cachedRecords);
-      return _cachedRecords;
+      _cache[type] = {
+        records: stored.records,
+        analysis: analyzeGame(stored.records, def),
+        source: stored.source,
+        updatedAt: stored.updatedAt ?? null,
+      };
+    } else {
+      console.log(`[Lottery API] ${type} Storage 无数据，触发首次同步...`);
+      await doSync(type);
     }
-    // 2. Storage 无数据 → 抓取真实数据并写回 Storage（保证下次稳定）
-    console.log("[Lottery API] Storage 无数据，触发首次同步...");
-    await doSync();
   }
-  return _cachedRecords!;
+  return _cache[type]!;
 }
 
-async function getSsqAnalysis() {
-  await getSsqRecords();
-  // 过期自动后台刷新（不阻塞当前请求，下次访问即最新）
-  if (_dataUpdatedAt) {
-    const ageHours = (Date.now() - new Date(_dataUpdatedAt).getTime()) / 3_600_000;
-    if (ageHours > STALE_HOURS && !_refreshing) {
-      _refreshing = true;
-      doSync()
-        .catch((e) => console.error("[Lottery API] 后台自动同步失败:", e))
-        .finally(() => { _refreshing = false; });
+async function getGameAnalysis(type: LotteryType): Promise<UnifiedAnalysis> {
+  const c = await getGameData(type);
+  // 过期后台自动刷新（不阻塞当前请求）
+  if (c.updatedAt) {
+    const ageHours = (Date.now() - new Date(c.updatedAt).getTime()) / 3_600_000;
+    if (ageHours > STALE_HOURS && !_refreshing[type]) {
+      _refreshing[type] = true;
+      doSync(type)
+        .catch((e) => console.error(`[Lottery API] ${type} 后台自动同步失败:`, e))
+        .finally(() => { _refreshing[type] = false; });
     }
   }
-  return _cachedAnalysis!;
+  return c.analysis;
+}
+
+async function syncAll(): Promise<any[]> {
+  const results: any[] = [];
+  for (const t of ALL_TYPES) {
+    try {
+      results.push({ type: t, ...(await doSync(t)) });
+    } catch (e: any) {
+      results.push({ type: t, error: e?.message || "同步失败" });
+    }
+  }
+  return results;
 }
 
 /* ───────────── GET ───────────── */
@@ -75,6 +84,7 @@ export async function GET(request: NextRequest) {
     const supabase = createServiceRoleClient();
     const searchParams = request.nextUrl.searchParams;
     const action = searchParams.get("action") || "info";
+    const type = (searchParams.get("type") || "ssq") as LotteryType;
 
     switch (action) {
       case "stats": {
@@ -83,103 +93,92 @@ export async function GET(request: NextRequest) {
       }
 
       case "simulate": {
-        const type = (searchParams.get("type") || "ssq") as any;
         const bets = parseInt(searchParams.get("bets") || "1", 10);
         const sims = parseInt(searchParams.get("simulations") || "1000", 10);
-
-        if (!type || bets < 1 || sims < 1 || sims > 100000) {
+        if (bets < 1 || sims < 1 || sims > 100000) {
           return NextResponse.json({ error: "参数无效" }, { status: 400 });
         }
-
         const result = runSimulation({ lotteryType: type, bets, simulations: sims });
-
         try {
           const stats = await readStats(supabase);
           await writeStats(supabase, mergeSimulation(stats, result));
-        } catch (e) {
-          console.error("[Lottery API] 保存统计失败:", e);
-        }
-
+        } catch (e) { console.error("[Lottery API] 保存统计失败:", e); }
         return NextResponse.json({ success: true, data: result });
       }
 
-      /* ── 历史数据分析接口 ── */
+      /* ── 历史数据分析（按玩法） ── */
       case "analysis": {
-        const analysis = await getSsqAnalysis();
+        const analysis = await getGameAnalysis(type);
         const sourceName: Record<string, string> = {
           "17500": "乐彩网(17500.cn)",
-          "500": "500彩票网",
-          "cwl": "中彩网",
           "demo": "演示数据",
         };
         return NextResponse.json({
           success: true,
+          type,
           data: analysis,
-          dataSource: _dataSource,
-          lastUpdated: _dataUpdatedAt,
-          note: _dataSource === "demo"
-            ? "⚠️ 当前为演示数据（2003-2018）。真实数据源暂不可达，已回退。"
-            : `✅ 数据源：${sourceName[_dataSource] || _dataSource}，已同步至最新（${analysis.meta.totalDraws}期）。`,
+          dataSource: _cache[type]?.source,
+          lastUpdated: _cache[type]?.updatedAt,
+          note: _cache[type]?.source === "demo"
+            ? "⚠️ 当前为演示数据（真实数据源暂不可达，已回退）。"
+            : `✅ 数据源：${sourceName[_cache[type]!.source] || _cache[type]!.source}，已同步至最新（${analysis.meta.totalDraws}期）。`,
         });
       }
 
       case "history": {
-        const records = await getSsqRecords();
+        const data = await getGameData(type);
         const limit = Math.min(parseInt(searchParams.get("limit") || "50"), 500);
         return NextResponse.json({
           success: true,
-          dataSource: _dataSource,
-          lastUpdated: _dataUpdatedAt,
-          data: {
-            total: records.length,
-            recent: records.slice(-limit),
-          },
+          type,
+          dataSource: data.source,
+          lastUpdated: data.updatedAt,
+          data: { total: data.records.length, recent: data.records.slice(-limit) },
         });
       }
 
       case "pick": {
         const strategy = (searchParams.get("strategy") || "balanced") as any;
-        const validStrategies = ["hot", "cold", "balanced", "random", "omission"];
-        if (!validStrategies.includes(strategy)) {
+        const valid = ["hot", "cold", "balanced", "random", "omission"];
+        if (!valid.includes(strategy)) {
           return NextResponse.json({ error: "策略参数无效" }, { status: 400 });
         }
-        const pickResult = generateWeightedPick(strategy, await getSsqAnalysis());
-        return NextResponse.json({ success: true, data: pickResult });
+        const analysis = await getGameAnalysis(type);
+        const pickResult = generateGamePick(strategy, analysis, getGameDef(type));
+        return NextResponse.json({ success: true, type, data: pickResult });
       }
 
-      /* ── 手动触发同步最新开奖 ── */
+      /* ── 手动触发同步（单玩法或全量） ── */
       case "sync": {
-        _refreshing = true;
+        const target = (searchParams.get("type") || "all") as LotteryType | "all";
+        if (target === "all") {
+          const results = await syncAll();
+          return NextResponse.json({ success: true, results });
+        }
+        _refreshing[target] = true;
         try {
-          const res = await doSync();
+          const res = await doSync(target);
           return NextResponse.json({
-            success: true,
-            source: res.source,
-            totalDraws: res.total,
-            lastUpdated: res.updatedAt,
-            message: res.source === "demo"
-              ? "⚠️ 真实数据源暂不可达，已回退演示数据。"
-              : `✅ 已同步 ${res.total} 期最新开奖数据`,
+            success: true, type: target,
+            source: res.source, totalDraws: res.total, lastUpdated: res.updatedAt,
+            message: res.source === "demo" ? "⚠️ 真实数据源暂不可达，已回退演示数据。" : `✅ 已同步 ${res.total} 期最新开奖数据`,
           });
         } catch (e: any) {
-          _refreshing = false;
+          _refreshing[target] = false;
           return NextResponse.json({ error: e?.message || "同步失败" }, { status: 500 });
         } finally {
-          _refreshing = false;
+          _refreshing[target] = false;
         }
       }
     }
 
-    // 默认：返回所有游戏基本信息
+    // 默认：返回所有玩法基本信息
     const games = getAllGames().map(({ type, game }) => ({
       type,
       config: game.config,
       totalCombinations: game.totalCombinations,
       prizes: game.prizes.map((p) => ({
-        level: p.level,
-        condition: p.condition,
-        odds: p.odds,
-        prize: p.prize,
+        level: p.level, condition: p.condition, odds: p.odds, prize: p.prize,
       })),
       ev: Math.round(expectedValue(game.prizes) * 100) / 100,
     }));

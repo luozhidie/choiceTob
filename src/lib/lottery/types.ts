@@ -1,78 +1,60 @@
-/* ── 福利彩票类型定义 ── */
+/* ── 彩票模块统一类型定义 ── */
 
-/** 支持的彩票玩法 */
+/** 支持的彩票玩法（6 种，均可计算概率；历史统计/选号已通用化支持） */
 export type LotteryType = "ssq" | "dlt" | "fc3d" | "pl3" | "pl5" | "qxc";
 
 /** 彩票玩法配置 */
 export interface LotteryConfig {
-  /** 玩法标识 */
   id: LotteryType;
-  /** 显示名称 */
   name: string;
-  /** 全称 */
   fullName: string;
-  /** 单注价格（元） */
   price: number;
-  /** 奖池描述 */
   poolDesc: string;
-  /** 开奖周期 */
   drawSchedule: string;
 }
 
 /** 双色球/大乐透 红蓝球号码 */
 export interface BallDraw {
-  reds: number[];   // 红球/前区
-  blues?: number[]; // 蓝球/后区（可选）
+  reds: number[];
+  blues?: number[];
 }
 
 /** 开奖结果 */
 export interface DrawResult {
-  /** 期号 */
   issue: string;
-  /** 开奖日期 */
   date: string;
-  /** 号码 */
   balls: BallDraw;
-  /** 销售额(元) */
   sales?: number;
-  /** 奖池余额(元) */
   pool?: number;
 }
 
 /** 中奖等级 */
 export interface PrizeLevel {
-  level: string;      // 等级名称，如"一等奖"
-  condition: string;   // 中奖条件描述
-  odds: string;        // 概率描述，如"1/17,721,088"
-  prize: string;       // 奖金范围
-  probability: number; // 精确概率值
+  level: string;
+  condition: string;
+  odds: string;
+  prize: string;
+  probability: number;
 }
 
 /** 玩法完整定义 */
 export interface LotteryGame {
   config: LotteryConfig;
-  rules: string;           // 玩法说明
-  prizes: PrizeLevel[];    // 奖级设置
-  totalCombinations: number; // 总组合数
+  rules: string;
+  prizes: PrizeLevel[];
+  totalCombinations: number;
 }
 
 /** 模拟投注结果 */
 export interface SimulationResult {
   id: string;
   lotteryType: LotteryType;
-  /** 投注注数 */
   bets: number;
-  /** 模拟期数 */
   simulations: number;
-  /** 各等级中奖次数 */
   wins: Record<string, number>;
-  /** 总花费 */
   totalCost: number;
-  /** 总奖金 */
   totalPrize: number;
-  /** ROI */
   roi: number;
-  /** 创建时间 */
   createdAt: string;
 }
 
@@ -89,4 +71,106 @@ export interface LotteryStatsSnapshot {
     lastUpdated: string;
   }>;
   recentSimulations: SimulationResult[];
+}
+
+/* ════════════════════════════════════════════════════
+   统一数据结构（覆盖 6 种玩法）
+   ════════════════════════════════════════════════════ */
+
+/** 统一开奖记录：front=主号码区，back=特殊球区（数字游戏 back 为空） */
+export interface DrawRecord {
+  issue: string;
+  date: string;
+  front: number[];
+  back: number[];
+}
+
+/** 玩法结构定义 —— 驱动解析、分析与 UI 渲染 */
+export interface GameDef {
+  id: LotteryType;
+  name: string;
+  /** pool: 红球/蓝球式（SSQ/DLT）；digit: 按位数字式（3D/PL3/PL5/QXC） */
+  kind: "pool" | "digit";
+  frontCount: number;   // SSQ 6 / DLT 5 / 3D 3 / PL3 3 / PL5 5 / QXC 7
+  frontMin: number;     // pool 1 / digit 0
+  frontMax: number;     // pool 33|35 / digit 9
+  backCount: number;    // SSQ 1 / DLT 2 / digit 0
+  backMin: number;      // pool 1
+  backMax: number;      // SSQ 16 / DLT 12
+  drawSchedule: string;
+  /** 抓取源 URL（17500.cn 等）；为空则仅演示数据 */
+  sourceUrl?: string;
+}
+
+/** 单号码频率统计 */
+export interface BallFrequency {
+  ball: number;
+  count: number;
+  frequency: number;
+  percentage: string;
+  recentCount?: { period: number; count: number }[];
+}
+
+/** 冷热号分析 */
+export interface HotColdAnalysis {
+  hot: BallFrequency[];
+  cold: BallFrequency[];
+  warm: BallFrequency[];
+  windowSize: number;
+}
+
+/** 遗漏值 */
+export interface OmissionEntry {
+  ball: number;
+  currentOmission: number;
+  maxOmission: number;
+  lastAppearIssue?: string;
+  lastAppearDate?: string;
+}
+
+/** 一个"区域"的频率分组（红球区 / 蓝球区 / 第 N 位） */
+export interface RegionFreq {
+  name: string;
+  freqs: BallFrequency[];
+  isSpecial?: boolean;
+}
+
+/** 统一分析结果（前端按 kind 渲染） */
+export interface UnifiedAnalysis {
+  meta: {
+    totalDraws: number;
+    dateRange: string;
+    latestIssue: string;
+    latestDraw: DrawRecord | null;
+    gameId: LotteryType;
+  };
+  /** 频率区域：pool=[前区,后区]；digit=[第1位…第N位] */
+  regions: RegionFreq[];
+  /** 仅 pool 前区有冷热 */
+  hotCold?: HotColdAnalysis;
+  /** 每个区域一个遗漏榜 */
+  omissions: { name: string; entries: OmissionEntry[] }[];
+  /** 仅 pool 有连号统计 */
+  consecutiveStats?: {
+    avgConsecutivePerDraw: number;
+    maxConsecutiveInOneDraw: number;
+    mostCommonLength: number;
+    lengthDistribution: Record<string, number>;
+  };
+  sumStats: {
+    mean: number;
+    stdDev: number;
+    min: number;
+    max: number;
+    mode: number;
+  };
+}
+
+export type PickStrategy = "hot" | "cold" | "balanced" | "random" | "omission";
+
+export interface PickResult {
+  front: number[];
+  back: number[];
+  strategy: PickStrategy;
+  reasoning: string;
 }
