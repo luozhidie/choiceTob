@@ -120,10 +120,10 @@ export default function RunwayPage() {
           <Sparkles className="w-6 h-6 text-indigo-600" /> 一线品牌发布会趋势采集
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          抓取各品牌时装周/发布会信号（主色·风格·廓形·主题），并采集 Tagwalk 免费秀场图，可一键导入流行资讯做灵感参考。
+          抓取各品牌时装周/发布会信号（主色·风格·廓形·主题），并采集 Vogue Runway 高清秀场图，可一键导入流行资讯做灵感参考。
         </p>
         <p className="text-xs text-amber-600 mt-1">
-          提示：秀场图片源为 Tagwalk 免费秀场图库（国际一线品牌，按品牌+季节抓取，转存到本站）。配置 YOUTUBE_API_KEY 后可额外采集真实走秀视频。
+          提示：秀场图片源为 Vogue Runway 高清图（公开可访问，按品牌+季节抓取，转存到本站）。视频：订阅用户可经文章内 Vogue 链接观看；配置 YOUTUBE_API_KEY 后可额外启用全员可看视频。
         </p>
       </div>
 
@@ -296,7 +296,7 @@ export default function RunwayPage() {
               {(b.videos && b.videos.length > 0) && (
                 <div>
                   <div className="text-xs text-gray-400 mb-1 flex items-center gap-1">
-                    <Film className="w-3 h-3" /> {b.videos[0]?.kind === "image" ? "秀场图片（Tagwalk）" : "秀场视频"}
+                    <Film className="w-3 h-3" /> {b.videos[0]?.kind === "image" ? "秀场图片（Vogue Runway）" : "秀场视频"}
                   </div>
                   <div className="grid grid-cols-4 gap-1.5">
                     {b.videos.slice(0, 8).map((v: any, vi: number) => (

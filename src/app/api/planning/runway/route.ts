@@ -36,44 +36,50 @@ function topFrom(counts: { key: string; count: number }[], n = 5) {
   return counts.slice(0, n).map((x) => x.key);
 }
 
-// Tagwalk：免费秀场图库（图片版流行资讯主源，替代被墙的 Vogue 视频）
-// 设计师 slug 与 Vogue 基本一致，直接复用 VOGUE_BRAND_SLUG
-function tagwalkSeasonMatch(url: string, seasonPart: string, year: number): boolean {
-  // 只取文件名主体（去掉末尾哈希段），避免哈希里的数字误判年份
-  const file = (url.split("/").pop() || "").toLowerCase().replace(/\.[a-z]+$/i, "");
-  const base = file.split("-").slice(0, -1).join("-") || file;
-  const yr = String(year);
-  const yr2 = yr.slice(2);
-  const hasYear = base.includes(yr) || base.includes(yr2);
-  if (seasonPart === "全年") return true;
-  if (seasonPart === "春夏") return /ss2\d|spring.?summer|ss20\d\d/.test(base) && hasYear;
-  if (seasonPart === "秋冬") return /(fw2\d|fall.?winter|aw20\d\d|autumn)/.test(base) && hasYear;
-  if (seasonPart === "夏秋") return /(cruise20\d\d|resort)/.test(base) && hasYear;
-  if (seasonPart === "冬春") return /(prefall|pre-fall)/.test(base) && hasYear;
-  return true;
-}
-
-async function findTagwalkImages(brand: string, seasonPart: string, year: number): Promise<string[]> {
-  const slug = VOGUE_BRAND_SLUG[brand];
-  if (!slug) return [];
-  const url = `https://www.tag-walk.com/en/collection/search?designer=${slug}&notts=1`;
-  try {
-    const resp = await fetch(url, {
-      headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
-      signal: AbortSignal.timeout(15000),
-    });
-    const html = await resp.text();
-    const urls = Array.from(
-      new Set((html.match(/https?:\/\/cdn\.tag-walk\.com\/cover\/[^"'<>\s]+\.jpg/gi) || []))
-    );
-    const matched = seasonPart === "全年" ? urls : urls.filter((u) => tagwalkSeasonMatch(u, seasonPart, year));
-    return matched.slice(0, 40);
-  } catch {
-    return [];
+// Vogue Runway 高清秀场图（公开可访问，无需订阅；付费墙仅锁视频）
+// 按「季节+品牌」直接定位秀场页，提取 assets.vogue.com 高清 LOOK 图
+function vogueShowSlug(seasonPart: string, year: number): string[] {
+  switch (seasonPart) {
+    case "春夏": return [`spring-${year}-ready-to-wear`];
+    case "秋冬": return [`fall-${year}-ready-to-wear`];
+    case "夏秋": return [`resort-${year}`];
+    case "冬春": return [`pre-fall-${year}`];
+    default: // 全年
+      return [`spring-${year}-ready-to-wear`, `fall-${year}-ready-to-wear`, `resort-${year}`, `pre-fall-${year}`];
   }
 }
 
-// 品牌 slug 映射（Vogue Runway 与 Tagwalk 通用，复用同一套）
+async function findVogueImages(brand: string, seasonPart: string, year: number): Promise<string[]> {
+  const slug = VOGUE_BRAND_SLUG[brand];
+  if (!slug) return [];
+  const slugs = vogueShowSlug(seasonPart, year);
+  const out: string[] = [];
+  for (const s of slugs) {
+    const url = `https://www.vogue.com/fashion-shows/${s}/${slug}`;
+    try {
+      const resp = await fetch(url, {
+        headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (resp.status !== 200) continue;
+      const html = await resp.text();
+      const urls = Array.from(
+        new Set(
+          (html.match(/https:\/\/assets\.vogue\.com\/photos\/[^"&\s)]+\.jpg/gi) || [])
+            .filter((u) => /credit-gorunway|ready-to-wear|couture|resort|pre-fall/i.test(u))
+            .map((u) => u.replace(/\/w_\d+,c_limit\//, "/w_1600,c_limit/"))
+        )
+      );
+      out.push(...urls);
+      if (out.length >= 40) break;
+    } catch {
+      /* 尝试下一个季节段 */
+    }
+  }
+  return Array.from(new Set(out)).slice(0, 40);
+}
+
+// 品牌 slug 映射（Vogue Runway 秀场页路径用）
 const VOGUE_BRAND_SLUG: Record<string, string> = {
   "香奈儿": "chanel",
   "迪奥": "christian-dior",
@@ -165,8 +171,8 @@ export async function POST(req: NextRequest) {
         ];
         const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
 
-        // 图片来源：Tagwalk 免费秀场图库（按品牌+季节抓取，替代被墙的 Vogue 视频）
-        const tagwalkImgs = await findTagwalkImages(brand, getSeasonPart(season), year);
+        // 图片来源：Vogue Runway 高清秀场图（公开可访问，按品牌+季节精准抓取）
+        const vogueImgs = await findVogueImages(brand, getSeasonPart(season), year);
 
         // 视频来源：YouTube Data API（仅当配置了 YOUTUBE_API_KEY）
         const ytKey = process.env.YOUTUBE_API_KEY || "";
@@ -189,12 +195,12 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 合并媒体：图片（kind:image，Tagwalk）优先，视频（kind:video，YouTube）其次
+        // 合并媒体：图片（kind:image，Vogue Runway）优先，视频（kind:video，YouTube）其次
         const media: { url: string; title: string; platform: string; kind: string }[] = [];
         const seasonLabel = getSeasonPart(season);
-        for (const u of tagwalkImgs) {
+        for (const u of vogueImgs) {
           if (!media.some((m) => m.url === u)) {
-            media.push({ url: u, title: `${brand} ${seasonLabel} ${year} 秀场 LOOK`, platform: "Tagwalk", kind: "image" });
+            media.push({ url: u, title: `${brand} ${seasonLabel} ${year} 秀场 LOOK`, platform: "Vogue Runway", kind: "image" });
           }
         }
         for (const v of ytResults) {

@@ -3,20 +3,20 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 
 /**
  * POST /api/planning/runway/import-news
- * 把秀场采集到的图片（Tagwalk 免费秀场图）一键导入「流行资讯」（articles 表）
+ * 把秀场采集到的高清图片（Vogue Runway 秀场图）一键导入「流行资讯」（articles 表）
  *   body: { season: "2027 春夏", brand?: "香奈儿" }
  *   返回: { imported, skipped, total, items: [...] }
  *
  * 设计说明：
  * - 不新增数据列。图片资讯用 tag='秀场LOOK' 标记，图片转存到 Supabase products 桶（稳定、不被墙）。
  * - 每品牌每季生成一篇文章，正文为 Markdown 画廊（多张 LOOK），首图作封面，解决空白卡。
- * - 文章注明来源 Tagwalk（免费秀场图库，仅供灵感参考）。
+ * - 文章注明来源 Vogue Runway（高清秀场图，仅供灵感参考），并附 Vogue 视频页链接（订阅用户可看）。
  * - 按文章标题去重，重复导入不会生成重复条目。
  */
 
 const NEWS_TAG = "秀场LOOK";
 
-const TAGWALK_SLUG: Record<string, string> = {
+const VOGUE_BRAND_SLUG: Record<string, string> = {
   "香奈儿": "chanel",
   "迪奥": "christian-dior",
   "古驰": "gucci",
@@ -30,30 +30,39 @@ const TAGWALK_SLUG: Record<string, string> = {
   "罗意威": "loewe",
 };
 
+function vogueShowSlug(season: string): string {
+  const ym = season.match(/(\d{4})/);
+  const year = ym ? parseInt(ym[1], 10) : new Date().getFullYear();
+  let part = "全年";
+  for (const p of ["春夏", "夏秋", "秋冬", "冬春"]) if (season.includes(p)) { part = p; break; }
+  switch (part) {
+    case "春夏": return `spring-${year}-ready-to-wear`;
+    case "秋冬": return `fall-${year}-ready-to-wear`;
+    case "夏秋": return `resort-${year}`;
+    case "冬春": return `pre-fall-${year}`;
+    default: return `spring-${year}-ready-to-wear`;
+  }
+}
+
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
-// 下载 Tagwalk 图片（优先 cover/，失败尝试 list_nw/ 公开缩略图），返回 buffer 或 null
-async function fetchTagwalkBuffer(imgUrl: string): Promise<Buffer | null> {
-  const tryUrls = [imgUrl];
-  const swapped = imgUrl.replace("/cover/", "/list_nw/");
-  if (swapped !== imgUrl) tryUrls.push(swapped);
-  for (const u of tryUrls) {
-    try {
-      const resp = await fetch(u, {
-        headers: { "User-Agent": UA, Referer: "https://www.tag-walk.com/", Accept: "image/avif,image/webp,image/jpeg,*/*" },
-        signal: AbortSignal.timeout(15000),
-      });
-      if (resp.ok) return Buffer.from(await resp.arrayBuffer());
-    } catch {
-      /* 尝试下一个 */
-    }
+// 下载 Vogue 高清图（公开可访问），返回 buffer 或 null
+async function fetchImageBuffer(imgUrl: string): Promise<Buffer | null> {
+  try {
+    const resp = await fetch(imgUrl, {
+      headers: { "User-Agent": UA, Referer: "https://www.vogue.com/", Accept: "image/avif,image/webp,image/jpeg,*/*" },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (resp.ok) return Buffer.from(await resp.arrayBuffer());
+  } catch {
+    /* 忽略 */
   }
   return null;
 }
 
 // 转存到 Supabase products 桶，返回公开 URL
 async function rehostImage(supabase: any, imgUrl: string): Promise<string | null> {
-  const buf = await fetchTagwalkBuffer(imgUrl);
+  const buf = await fetchImageBuffer(imgUrl);
   if (!buf) return null;
   const ext = imgUrl.match(/\.(jpg|jpeg|png|webp)/i)?.[1] || "jpg";
   const fname = `runway_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -105,7 +114,7 @@ export async function POST(req: NextRequest) {
         skipped: 0,
         total: 0,
         items: [],
-        message: `${season} 暂无采集到的秀场图片。请先在上方点击「采集秀场趋势」（图片源为 Tagwalk 免费秀场图库，国际一线品牌；国内品牌如江南布衣/之禾暂未覆盖）。`,
+        message: `${season} 暂无采集到的秀场图片。请先在上方点击「采集秀场趋势」（图片源为 Vogue Runway 高清图库，国际一线品牌；国内品牌如江南布衣/之禾暂未覆盖）。`,
       });
     }
 
@@ -119,7 +128,7 @@ export async function POST(req: NextRequest) {
     let skipped = 0;
 
     for (const g of groups.values()) {
-      const title = `${g.brand} ${g.season} 秀场 LOOK · Tagwalk`;
+      const title = `${g.brand} ${g.season} 秀场 LOOK · Vogue Runway`;
       if (existingTitles.has(title)) {
         skipped += 1;
         continue;
@@ -139,18 +148,21 @@ export async function POST(req: NextRequest) {
         if (u) rehosted.push(u);
       }
       if (rehosted.length === 0) {
-        errors.push({ title, error: "图片转存失败（Tagwalk 源不可达或被限流）" });
+        errors.push({ title, error: "图片转存失败（Vogue 源不可达或被限流）" });
         continue;
       }
 
       const summary = (g.summary || "").slice(0, 160);
-      const slug = TAGWALK_SLUG[g.brand];
-      const tagwalkUrl = slug ? `https://www.tag-walk.com/en/collection/search?designer=${slug}&notts=1` : "https://www.tag-walk.com/";
+      const slug = VOGUE_BRAND_SLUG[g.brand];
+      const vogueShowUrl = slug
+        ? `https://www.vogue.com/fashion-shows/${vogueShowSlug(g.season)}/${slug}`
+        : "https://www.vogue.com/fashion-shows";
       const gallery = rehosted.map((u) => `![](${u})`).join("\n\n");
       const content =
         (summary ? `${summary}\n\n` : "") +
         gallery +
-        `\n\n> 秀场图片来源：Tagwalk（免费秀场图库，仅供灵感参考）\n> 查看完整系列：${tagwalkUrl}`;
+        `\n\n> 秀场图片来源：Vogue Runway（高清秀场图，仅供灵感参考）` +
+        `\n> ▶ 观看秀场视频（Vogue Runway，订阅用户可看）：${vogueShowUrl}`;
 
       const { data: inserted, error: insErr } = await supabase
         .from("articles")
