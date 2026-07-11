@@ -18,7 +18,10 @@
 
     <!-- 趋势图片画廊（横向滑动，图片取自 images 字段） -->
     <scroll-view wx:if="{{gallery.length>0}}" scroll-x class="gallery" show-scrollbar="{{false}}">
-      <image wx:for="{{gallery}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gitem" lazy-load show-menu-by-longpress />
+      <view wx:for="{{gallery}}" wx:key="*this" class="gitem-wrap">
+        <image src="{{item}}" mode="aspectFill" class="gitem" lazy-load show-menu-by-longpress />
+        <view class="gwatermark">骆芷蝶智选</view>
+      </view>
     </scroll-view>
 
     <!-- 文章封面：品牌/推广横幅（不放秀场图，避免与正文首图重复） -->

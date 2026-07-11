@@ -206,6 +206,7 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
               {selectedTrend.images && selectedTrend.images.length > 0 && (
                 <div className="relative aspect-[16/9] bg-black rounded-xl overflow-hidden">
                   <img src={selectedTrend.images[currentImageIndex]} alt={`${selectedTrend.title} - 图片 ${currentImageIndex + 1}`} className="w-full h-full object-contain" />
+                  <span className="absolute bottom-4 left-4 px-2 py-1 text-xs font-semibold text-white/85 bg-[#2d1b2e]/45 rounded backdrop-blur-sm pointer-events-none">骆芷蝶智选</span>
                   {selectedTrend.images.length > 1 && (
                     <>
                       <button onClick={prevImage} disabled={currentImageIndex === 0} className="absolute left-4 top-1/2 -translate-y-1/2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors disabled:opacity-30"><ChevronLeft className="w-5 h-5" /></button>
@@ -218,8 +219,9 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
               {selectedTrend.images && selectedTrend.images.length > 1 && (
                 <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
                   {selectedTrend.images.map((url, index) => (
-                    <button key={index} onClick={() => setCurrentImageIndex(index)} className={`shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${index === currentImageIndex ? "border-accent" : "border-transparent hover:border-white/50"}`}>
+                    <button key={index} onClick={() => setCurrentImageIndex(index)} className={`relative shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${index === currentImageIndex ? "border-accent" : "border-transparent hover:border-white/50"}`}>
                       <img src={url} alt={`缩略图 ${index + 1}`} className="w-full h-full object-cover" />
+                      <span className="absolute bottom-1 right-1 px-1 py-0.5 text-[8px] font-semibold text-white/80 bg-[#2d1b2e]/50 rounded pointer-events-none">骆芷蝶智选</span>
                     </button>
                   ))}
                 </div>
