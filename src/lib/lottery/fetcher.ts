@@ -113,6 +113,30 @@ export async function saveGameData(
   }
 }
 
+/** 兼容旧版 SsqRecord 格式（reds/blue → front/back） */
+function migrateLegacyRecords(records: any[]): DrawRecord[] {
+  // 旧格式: { issue, date, reds:[], blue:N }
+  // 新格式: { issue, date, front:[], back:[] }
+  let needsMigrate = false;
+  if (!Array.isArray(records)) return [];
+  for (const r of records) {
+    if (r && typeof r === "object" && ("reds" in r || "red" in r)) { needsMigrate = true; break; }
+  }
+  if (!needsMigrate) return records as DrawRecord[];
+
+  console.log("[Fetcher] 检测到旧版存储格式，执行兼容转换...");
+  return records.map((r: any): DrawRecord => ({
+    issue: String(r.issue || ""),
+    date: String(r.date || ""),
+    front: Array.isArray(r.reds || r.red)
+      ? [...(r.reds || r.red)]
+      : (r.front ? [...r.front] : []),
+    back: Array.isArray(r.blues)
+      ? [...r.blues]
+      : (r.blue != null ? [Number(r.blue)] : (r.back ? [...r.back] : [])),
+  }));
+}
+
 export async function loadGameData(
   supabaseAdmin: any,
   type: LotteryType
@@ -124,8 +148,10 @@ export async function loadGameData(
     if (error || !data) return null;
     const text = await data.text();
     const json = JSON.parse(text);
-    if (json?.records && Array.isArray(json.records) && json.records.length > 50) {
-      return json;
+    if (json?.records && Array.isArray(json.records) && json.records.length > 10) {
+      const migrated = migrateLegacyRecords(json.records);
+      if (migrated.length < json.records.length * 0.5) return null; // 转换异常则丢弃
+      return { ...json, records: migrated };
     }
     return null;
   } catch {

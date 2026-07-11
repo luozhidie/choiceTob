@@ -198,8 +198,18 @@ function AnalysisTab({ gameType }: { gameType: LotteryType }) {
     try {
       const r = await fetch(`/api/lottery?action=analysis&type=${gameType}`);
       const d = await r.json();
-      if (d.success) setState({ loading: false, data: d.data, error: "", dataSource: d.dataSource, lastUpdated: d.lastUpdated });
-      else setState({ loading: false, data: null, error: d.error || "加载失败" });
+      if (d.success && d.data && Array.isArray(d.data?.regions) && d.data?.meta) {
+        // 防御校验：确保关键字段是数组/对象，避免 "t is not iterable" 崩溃
+        const safeData = {
+          ...d.data,
+          regions: Array.isArray(d.data.regions) ? d.data.regions : [],
+          omissions: Array.isArray(d.data.omissions) ? d.data.omissions : [],
+          hotCold: d.data.hotCold || { hot: [], cold: [], warm: [], windowSize: 100 },
+          consecutiveStats: d.data.consecutiveStats || { avgConsecutivePerDraw: 0, maxConsecutiveInOneDraw: 0, mostCommonLength: 0, lengthDistribution: {} },
+          sumStats: d.data.sumStats || { mean: 0, stdDev: 0, min: 0, max: 0, mode: 0 },
+        };
+        setState({ loading: false, data: safeData, error: "", dataSource: d.dataSource, lastUpdated: d.lastUpdated });
+      } else setState({ loading: false, data: null, error: d.error || "数据格式异常" });
     } catch (e: any) { setState({ loading: false, data: null, error: e.message }); }
   }, [gameType]);
 

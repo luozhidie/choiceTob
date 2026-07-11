@@ -329,22 +329,26 @@ export function generateGamePick(
 /** 生成某玩法的演示历史数据（真实源不可达时回退，明确标注为演示） */
 export function generateDemoData(def: GameDef): DrawRecord[] {
   const records: DrawRecord[] = [];
-  let seed = 20240711 + def.frontCount * 131 + def.backCount * 17;
+  // 每种玩法用不同种子保证不重复
+  const SEEDS: Record<LotteryType, number> = { ssq: 20030216, dlt: 20070528, fc3d: 20020101, pl3: 20041114, pl5: 20041114, qxc: 20040518 };
+  let seed = SEEDS[def.id] ?? 20240101;
+
   const rng = () => {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff;
     return seed / 0x7fffffff;
   };
 
-  const startYear = def.kind === "pool" ? 2003 : 2004;
+  const startYear = def.kind === "pool" ? (def.id === "ssq" ? 2003 : 2007) : 2004;
   let current = new Date(startYear, 0, 1);
   let issueNum = 1;
-  const TARGET = 1500;
+  const TARGET = def.kind === "digit" ? 6000 : 2500; // 数字游戏更多期数
 
   const pickDistinct = (count: number, min: number, max: number): number[] => {
     const pool: number[] = [];
     for (let i = min; i <= max; i++) pool.push(i);
     const out: number[] = [];
     for (let i = 0; i < count; i++) {
+      if (pool.length === 0) break;
       const idx = Math.floor(rng() * pool.length);
       out.push(pool.splice(idx, 1)[0]);
     }
@@ -352,21 +356,24 @@ export function generateDemoData(def: GameDef): DrawRecord[] {
   };
   const pickDigit = (): number => Math.floor(rng() * 10);
 
-  while (records.length < TARGET) {
+  while (records.length < TARGET && current.getFullYear() <= 2026) {
     const day = current.getDay();
-    // 简单模拟开奖频率
-    const isDrawDay = def.kind === "digit"
-      ? true
-      : def.id === "ssq" ? (day === 2 || day === 4 || day === 0)
-      : (day === 1 || day === 3 || day === 6);
+    const isDrawDay =
+      def.kind === "digit"
+        ? true
+        : def.id === "ssq"
+          ? (day === 2 || day === 4 || day === 0)
+          : (day === 1 || day === 3 || day === 6);
 
     if (isDrawDay) {
-      const front = def.kind === "pool"
-        ? pickDistinct(def.frontCount, def.frontMin, def.frontMax)
-        : Array.from({ length: def.frontCount }, () => pickDigit());
-      const back = def.kind === "pool" && def.backCount > 0
-        ? pickDistinct(def.backCount, def.backMin, def.backMax)
-        : [];
+      const front =
+        def.kind === "pool"
+          ? pickDistinct(def.frontCount, def.frontMin, def.frontMax)
+          : Array.from({ length: def.frontCount }, () => pickDigit());
+      const back =
+        def.kind === "pool" && def.backCount > 0
+          ? pickDistinct(def.backCount, def.backMin, def.backMax)
+          : [];
       const y = current.getFullYear();
       records.push({
         issue: `${y}${String(issueNum).padStart(3, "0")}`,
