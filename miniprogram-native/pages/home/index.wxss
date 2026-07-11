@@ -17,6 +17,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
   margin-bottom:8rpx;
 }
 .ht-small{font-size:22rpx;color:#888;letter-spacing:4rpx;}
+.vr{margin-left:12rpx;font-size:20rpx;color:#fff;background:#2e7d32;padding:2rpx 12rpx;border-radius:14rpx;letter-spacing:1rpx;}
 
 /* ☰菜单按钮（搜索框上方） */
 .ham-btn{
