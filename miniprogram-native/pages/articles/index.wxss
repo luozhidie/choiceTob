@@ -29,6 +29,19 @@ page{background:#f5f3f0;}
 .card{display:flex;background:#fff;border-radius:16rpx;overflow:hidden;margin-bottom:16rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
 .ci-wrap{position:relative;width:200rpx;height:160rpx;flex-shrink:0;background:#eee;}
 .ci{width:200rpx;height:160rpx;display:block;}
+.cwatermark{
+  position:absolute;
+  right:8rpx;
+  bottom:8rpx;
+  padding:4rpx 10rpx;
+  font-size:18rpx;
+  font-weight:600;
+  color:rgba(255,255,255,.85);
+  background:rgba(45,27,46,.45);
+  border-radius:6rpx;
+  pointer-events:none;
+  z-index:2;
+}
 .vbadge{position:absolute;left:8rpx;bottom:8rpx;background:rgba(0,0,0,.6);color:#fff;font-size:20rpx;padding:4rpx 14rpx;border-radius:20rpx;line-height:1.2;}
 .cb{flex:1;padding:18rpx 18rpx;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
 .ct-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10rpx;}

@@ -23,6 +23,7 @@
       <view wx:for="{{articles}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
         <view class="ci-wrap">
           <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
+          <view class="cwatermark">骆芷蝶智选</view>
           <view wx:if="{{item.hasVideo}}" class="vbadge">▶ 视频</view>
         </view>
         <view class="cb">

@@ -43,8 +43,11 @@
           <text wx:for="{{b.inline}}" wx:for-item="p" wx:for-index="pi" wx:key="pi" class="{{p.bold?'b':''}}">{{p.text}}</text>
         </view>
 
-        <!-- 图片：完整展示 -->
-        <image wx:elif="{{b.type==='img'}}" src="{{b.src}}" mode="widthFix" class="img" lazy-load show-menu-by-longpress />
+        <!-- 图片：完整展示 + 水印 -->
+        <view wx:elif="{{b.type==='img'}}" class="img-wrap">
+          <image src="{{b.src}}" mode="widthFix" class="img" lazy-load show-menu-by-longpress />
+          <view class="watermark">骆芷蝶智选</view>
+        </view>
 
         <!-- 视频资讯卡片 -->
         <view wx:elif="{{b.type==='video'}}" class="vcard">
