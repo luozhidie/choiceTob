@@ -13,6 +13,7 @@
     "pages/courses/index",
     "pages/style-test/index",
     "pages/articles/index",
+    "pages/articles/detail",
     "pages/history/index",
     "pages/member/index",
     "pages/login/index",

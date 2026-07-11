@@ -27,9 +27,15 @@
   <block wx:if="{{articles.length>0}}">
     <view class="list">
       <view wx:for="{{articles}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
-        <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
+        <view class="ci-wrap">
+          <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
+          <view wx:if="{{item.hasVideo}}" class="vbadge">▶ 视频</view>
+        </view>
         <view class="cb">
-          <text class="ct">{{item.title||'文章标题'}}</text>
+          <view class="ct-row">
+            <text class="ct">{{item.title||'文章标题'}}</text>
+            <text wx:if="{{item.tag}}" class="ctag">{{item.tag}}</text>
+          </view>
           <text class="cd">{{item.summary||item.description||''}}</text>
           <view class="cm">
             <text class="cauth" wx:if="{{item.author}}">{{item.author}}</text>

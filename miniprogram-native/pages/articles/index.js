@@ -36,7 +36,8 @@ Page({
 
   goDetail:function(e){
     var id=e.currentTarget.dataset.id;
-    wx.showModal({title:'文章详情',content:'即将跳转到文章详情页（开发中）\n\n文章ID: '+id,showCancel:false,confirmText:'返回'});
+    if(!id){return;}
+    wx.navigateTo({url:'/pages/articles/detail?id='+id});
   },
 
   subMonthly:function(){

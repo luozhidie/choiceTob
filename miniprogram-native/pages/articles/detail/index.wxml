@@ -1,0 +1,59 @@
+<view class="page">
+  <view class="topbar">
+    <view class="back" bindtap="goBack">‹ 返回</view>
+    <text class="tt">时尚资讯</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="ld">加载中...</view>
+
+  <block wx:elif="{{article}}">
+    <view class="head">
+      <text class="htitle">{{article.title}}</text>
+      <view class="meta">
+        <text class="mauthor">{{article.author}}</text>
+        <text class="mdate">{{article.published_at||article.created_at}}</text>
+      </view>
+      <view wx:if="{{article.tag}}" class="tag">{{article.tag}}</view>
+    </view>
+
+    <!-- 封面：完整展示（widthFix，不裁切） -->
+    <view class="cover" wx:if="{{article.image_url}}">
+      <image src="{{article.image_url}}" mode="widthFix" class="cover-img" />
+    </view>
+
+    <view class="body">
+      <block wx:for="{{blocks}}" wx:key="index" wx:for-item="b">
+        <view wx:if="{{b.type==='h1'}}" class="h1">
+          <text wx:for="{{b.inline}}" wx:for-item="p" wx:for-index="pi" wx:key="pi" class="{{p.bold?'b':''}}">{{p.text}}</text>
+        </view>
+        <view wx:elif="{{b.type==='h2'}}" class="h2">
+          <text wx:for="{{b.inline}}" wx:for-item="p" wx:for-index="pi" wx:key="pi" class="{{p.bold?'b':''}}">{{p.text}}</text>
+        </view>
+        <view wx:elif="{{b.type==='h3'}}" class="h3">
+          <text wx:for="{{b.inline}}" wx:for-item="p" wx:for-index="pi" wx:key="pi" class="{{p.bold?'b':''}}">{{p.text}}</text>
+        </view>
+        <view wx:elif="{{b.type==='p'}}" class="p">
+          <text wx:for="{{b.inline}}" wx:for-item="p" wx:for-index="pi" wx:key="pi" class="{{p.bold?'b':''}}">{{p.text}}</text>
+        </view>
+
+        <!-- 图片：完整展示 -->
+        <image wx:elif="{{b.type==='img'}}" src="{{b.src}}" mode="widthFix" class="img" lazy-load show-menu-by-longpress />
+
+        <!-- 视频资讯卡片 -->
+        <view wx:elif="{{b.type==='video'}}" class="vcard">
+          <view class="vicon">▶</view>
+          <view class="vinfo">
+            <text class="vt">{{b.title || '秀场视频'}}</text>
+            <text class="vs">小程序内无法直接播放，复制链接到浏览器 / 微信打开观看</text>
+          </view>
+          <view class="vbtn" data-url="{{b.url}}" bindtap="copyVideo">复制链接</view>
+        </view>
+
+        <view wx:elif="{{b.type==='link'}}" class="link" data-url="{{b.url}}" bindtap="copyLink">🔗 {{b.text}}</view>
+      </block>
+    </view>
+  </block>
+
+  <view wx:else class="emp">未找到该文章</view>
+  <view class="sbtm"></view>
+</view>

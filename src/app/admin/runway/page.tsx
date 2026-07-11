@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { Sparkles, Loader2, RefreshCw, CheckCircle2, Plus, X, Film } from "lucide-react";
+import { Sparkles, Loader2, RefreshCw, CheckCircle2, Plus, X, Film, Newspaper } from "lucide-react";
 
 const SEASON_PARTS = ["春夏", "夏秋", "秋冬", "冬春", "全年"];
 const PRESET_YEARS = ["2026", "2027", "2028"];
@@ -39,6 +39,8 @@ export default function RunwayPage() {
   const [result, setResult] = useState<any>(null);
   const [existing, setExisting] = useState<any[]>([]);
   const [msg, setMsg] = useState("");
+  const [importing, setImporting] = useState<string | null>(null);
+  const [importMsg, setImportMsg] = useState("");
 
   const loadExisting = async (s: string) => {
     const { data } = await supabase
@@ -80,6 +82,29 @@ export default function RunwayPage() {
       setMsg("采集失败：" + e.message);
     }
     setLoading(false);
+  };
+
+  const importNews = async (brand?: string) => {
+    const key = brand || "__all__";
+    if (importing) return;
+    setImporting(key);
+    setImportMsg("");
+    try {
+      const res = await fetch("/api/planning/runway/import-news", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ season, brand }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setImportMsg("导入失败：" + (data.error || res.status));
+      } else {
+        setImportMsg(data.message || `已导入 ${data.imported} 条`);
+      }
+    } catch (e: any) {
+      setImportMsg("导入失败：" + e.message);
+    }
+    setImporting(null);
   };
 
   const brandsToShow = result?.brands || existing;
@@ -226,9 +251,26 @@ export default function RunwayPage() {
       {/* 品牌明细 */}
       {brandsToShow && brandsToShow.length > 0 && (
         <div className="space-y-3">
-          <h2 className="font-bold text-gray-800">
-            {result ? "本次采集明细" : `已采集记录（${season}）`}
-          </h2>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <h2 className="font-bold text-gray-800">
+              {result ? "本次采集明细" : `已采集记录（${season}）`}
+            </h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => importNews()}
+                disabled={!!importing}
+                className="px-4 py-2 rounded-xl bg-rose-600 text-white text-sm font-medium flex items-center gap-1.5 disabled:opacity-60"
+              >
+                {importing === "__all__" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Newspaper className="w-4 h-4" />}
+                {importing === "__all__" ? "导入中..." : "一键导入流行资讯"}
+              </button>
+            </div>
+          </div>
+          {importMsg && (
+            <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2">
+              {importMsg}
+            </div>
+          )}
           {brandsToShow.map((b: any, i: number) => (
             <div key={i} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <div className="flex items-center gap-2 mb-2">
@@ -260,6 +302,14 @@ export default function RunwayPage() {
                       </a>
                     ))}
                   </div>
+                  <button
+                    onClick={() => importNews(b.brand)}
+                    disabled={!!importing}
+                    className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 disabled:opacity-60"
+                  >
+                    {importing === b.brand ? <Loader2 className="w-3 h-3 animate-spin" /> : <Newspaper className="w-3 h-3" />}
+                    {importing === b.brand ? "导入中..." : "导入此品牌视频"}
+                  </button>
                 </div>
               )}
             </div>
