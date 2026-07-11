@@ -16,7 +16,9 @@ import { MagazineSubscribeModal } from "@/components/MagazineSubscribeModal";
 /* ==================== Markdown 渲染 ==================== */
 function renderMarkdown(text: string) {
   if (!text) return null;
-  const lines = text.split('\n');
+  const lines = text
+    .split('\n')
+    .filter((line) => !/^\s*>\s*▶\s*观看秀场视频/.test(line));
   return lines.map((line, i) => {
     // 空行
     if (line.trim() === '') return <div key={i} className="h-2" />;

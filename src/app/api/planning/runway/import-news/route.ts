@@ -10,39 +10,11 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
  * 设计说明：
  * - 不新增数据列。图片资讯用 tag='秀场LOOK' 标记，图片转存到 Supabase products 桶（稳定、不被墙）。
  * - 每品牌每季生成一篇文章，正文为 Markdown 画廊（多张 LOOK），首图作封面，解决空白卡。
- * - 文章注明来源 Vogue Runway（高清秀场图，仅供灵感参考），并附 Vogue 视频页链接（订阅用户可看）。
+ * - 文章注明来源 Vogue Runway（高清秀场图，仅供灵感参考）。
  * - 按文章标题去重，重复导入不会生成重复条目。
  */
 
 const NEWS_TAG = "秀场LOOK";
-
-const VOGUE_BRAND_SLUG: Record<string, string> = {
-  "香奈儿": "chanel",
-  "迪奥": "christian-dior",
-  "古驰": "gucci",
-  "普拉达": "prada",
-  "路易威登": "louis-vuitton",
-  "爱马仕": "hermes",
-  "圣罗兰": "saint-laurent",
-  "巴黎世家": "balenciaga",
-  "芬迪": "fendi",
-  "思琳": "celine",
-  "罗意威": "loewe",
-};
-
-function vogueShowSlug(season: string): string {
-  const ym = season.match(/(\d{4})/);
-  const year = ym ? parseInt(ym[1], 10) : new Date().getFullYear();
-  let part = "全年";
-  for (const p of ["春夏", "夏秋", "秋冬", "冬春"]) if (season.includes(p)) { part = p; break; }
-  switch (part) {
-    case "春夏": return `spring-${year}-ready-to-wear`;
-    case "秋冬": return `fall-${year}-ready-to-wear`;
-    case "夏秋": return `resort-${year}`;
-    case "冬春": return `pre-fall-${year}`;
-    default: return `spring-${year}-ready-to-wear`;
-  }
-}
 
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
 
@@ -153,16 +125,11 @@ export async function POST(req: NextRequest) {
       }
 
       const summary = (g.summary || "").slice(0, 160);
-      const slug = VOGUE_BRAND_SLUG[g.brand];
-      const vogueShowUrl = slug
-        ? `https://www.vogue.com/fashion-shows/${vogueShowSlug(g.season)}/${slug}`
-        : "https://www.vogue.com/fashion-shows";
       const gallery = rehosted.map((u) => `![](${u})`).join("\n\n");
       const content =
         (summary ? `${summary}\n\n` : "") +
         gallery +
-        `\n\n> 秀场图片来源：Vogue Runway（高清秀场图，仅供灵感参考）` +
-        `\n> ▶ 观看秀场视频（Vogue Runway，订阅用户可看）：${vogueShowUrl}`;
+        `\n\n> 秀场图片来源：Vogue Runway（高清秀场图，仅供灵感参考）`;
 
       const { data: inserted, error: insErr } = await supabase
         .from("articles")
