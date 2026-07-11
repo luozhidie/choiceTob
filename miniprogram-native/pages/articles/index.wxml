@@ -22,7 +22,7 @@
     <view class="list">
       <view wx:for="{{articles}}" wx:key="id" class="card">
         <view class="ci-wrap" catchtap="goDetail" data-id="{{item.id}}">
-          <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
+          <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci" catchtap="goDetail" data-id="{{item.id}}"/>
           <view wx:if="{{item.hasVideo}}" class="vbadge">▶ 视频</view>
         </view>
         <view class="cb" catchtap="goDetail" data-id="{{item.id}}">
