@@ -98,17 +98,8 @@ Page({
             gallery = Array.isArray(a.images) ? a.images : [];
             blocks = parseTrendContent(a.content || "");
           } else {
+            // 封面已改为品牌/推广横幅（不放秀场图），正文图片独立渲染、互不重叠
             blocks = parseBlocks(a.content || "");
-            // 去掉与封面图重复的 content 首图，避免首图在详情页显示两次
-            var cover = a.image_url;
-            for (var bi = 0; bi < blocks.length; bi++) {
-              if (blocks[bi].type === "img") {
-                if (cover && blocks[bi].src === cover) {
-                  blocks.splice(bi, 1);
-                }
-                break; // 只检查第一张图片
-              }
-            }
             blocks.forEach(function (b) {
               if (b.type === "p" || b.type === "h1" || b.type === "h2" || b.type === "h3") {
                 b.inline = renderInline(b.text);

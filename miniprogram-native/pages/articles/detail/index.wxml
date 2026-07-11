@@ -21,9 +21,11 @@
       <image wx:for="{{gallery}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="gitem" lazy-load show-menu-by-longpress />
     </scroll-view>
 
-    <!-- 文章封面：完整展示（widthFix，不裁切）；趋势已用画廊展示，不再重复封面 -->
-    <view class="cover" wx:if="{{type!=='trend' && article.image_url}}">
-      <image src="{{article.image_url}}" mode="widthFix" class="cover-img" />
+    <!-- 文章封面：品牌/推广横幅（不放秀场图，避免与正文首图重复） -->
+    <view class="cover-banner" wx:if="{{type!=='trend'}}">
+      <view class="cb-brand">骆芷蝶智选</view>
+      <view class="cb-sub">每日搭配灵感 · 会员专享秀场资讯</view>
+      <view class="cb-tip">微信小程序搜「骆芷蝶智选」解锁完整内容</view>
     </view>
 
     <view class="body">

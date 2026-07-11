@@ -171,6 +171,12 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
                 <h3 className="font-bold text-primary pr-8">{selectedArticle.title}</h3>
                 <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
               </div>
+              {/* 品牌/推广横幅：作为文章封面，不放秀场图，避免与正文首图重复 */}
+              <div className="px-6 pt-5 pb-4 bg-gradient-to-br from-[#2d1b2e] via-[#5c2a4e] to-[#8b4368] text-white">
+                <div className="text-xl font-extrabold tracking-wide">骆芷蝶智选</div>
+                <div className="mt-1 text-sm text-white/85">每日搭配灵感 · 会员专享秀场资讯</div>
+                <div className="mt-3 inline-block px-3 py-1 rounded-full bg-white/90 text-[#2d1b2e] text-xs font-semibold">微信小程序搜「骆芷蝶智选」解锁完整内容</div>
+              </div>
               <div className="p-6">
                 {selectedArticle.content && <div className="prose max-w-none">{renderMarkdown(selectedArticle.content)}</div>}
               </div>
