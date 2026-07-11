@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { COLOR_SEASONS_PRO } from "@/lib/styles";
 
 /* ============ 辅助函数：查询店铺VIP画像+购买数据 ============ */
@@ -297,6 +298,144 @@ async function fetchMarketResearch(req: NextRequest, keyword: string, season: st
   return null;
 }
 
+/* ============ 辅助函数：聚合自家测款真实转化数据 ============ */
+async function fetchProductTestInsights() {
+  try {
+    const supabase = createServiceRoleClient();
+
+    // 1. 拉取全部测款商品（product_test_items 已关闭 RLS）
+    const { data: items, error } = await supabase
+      .from("product_test_items")
+      .select("product_id, views, clicks, cart_adds, inquiries, orders, is_winner");
+    if (error || !items || items.length === 0) return null;
+
+    // 2. 拉取关联商品属性（色/风/批发价）—— product_test_items 无 FK，手动 join
+    const productIds = [...new Set((items as any[]).map((i) => i.product_id).filter(Boolean))];
+    const productMap: Record<string, any> = {};
+    if (productIds.length > 0) {
+      const { data: prods } = await supabase
+        .from("products")
+        .select("id, color_season, style_type, wholesale_price")
+        .in("id", productIds);
+      if (prods) for (const p of prods) productMap[String(p.id)] = p;
+    }
+
+    // 3. 聚合：按色彩季型 / 风格 / 价格带 统计漏斗
+    const colorMap: Record<string, any> = {};
+    const styleMap: Record<string, any> = {};
+    const priceMap: Record<string, any> = {};
+    let totalViews = 0, totalClicks = 0, totalCart = 0, totalInq = 0, totalOrders = 0;
+    const winners: any[] = [];
+
+    const priceBand = (p: number | null) => {
+      if (p == null) return "未知";
+      if (p < 100) return "100元以下";
+      if (p < 200) return "100-200元";
+      if (p < 400) return "200-400元";
+      if (p < 800) return "400-800元";
+      return "800元以上";
+    };
+    const acc = (m: Record<string, any>, key: string) => {
+      if (!m[key]) m[key] = { views: 0, clicks: 0, cart_adds: 0, inquiries: 0, orders: 0, count: 0 };
+      return m[key];
+    };
+
+    for (const it of items as any[]) {
+      const p = productMap[String(it.product_id)] || {};
+      const color = p.color_season || "未标注";
+      const style = p.style_type || "未标注";
+      const band = priceBand(p.wholesale_price != null ? Number(p.wholesale_price) : null);
+
+      totalViews += it.views || 0;
+      totalClicks += it.clicks || 0;
+      totalCart += it.cart_adds || 0;
+      totalInq += it.inquiries || 0;
+      totalOrders += it.orders || 0;
+
+      const c = acc(colorMap, color);
+      c.views += it.views || 0; c.clicks += it.clicks || 0; c.cart_adds += it.cart_adds || 0;
+      c.inquiries += it.inquiries || 0; c.orders += it.orders || 0; c.count++;
+
+      const s = acc(styleMap, style);
+      s.views += it.views || 0; s.clicks += it.clicks || 0; s.cart_adds += it.cart_adds || 0;
+      s.inquiries += it.inquiries || 0; s.orders += it.orders || 0; s.count++;
+
+      const b = acc(priceMap, band);
+      b.views += it.views || 0; b.clicks += it.clicks || 0; b.cart_adds += it.cart_adds || 0;
+      b.inquiries += it.inquiries || 0; b.orders += it.orders || 0; b.count++;
+
+      if (it.is_winner || (it.orders || 0) > 0) {
+        winners.push({ color, style, band, views: it.views || 0, orders: it.orders || 0, is_winner: !!it.is_winner });
+      }
+    }
+
+    const withRate = (m: Record<string, any>) =>
+      Object.entries(m).map(([k, v]: [string, any]) => ({
+        key: k, ...v,
+        orderRate: v.views > 0 ? Math.round((v.orders / v.views) * 1000) / 10 : 0,
+        clickRate: v.views > 0 ? Math.round((v.clicks / v.views) * 1000) / 10 : 0,
+        cartRate: v.clicks > 0 ? Math.round((v.cart_adds / v.clicks) * 1000) / 10 : 0,
+      }));
+
+    const colorStats = withRate(colorMap).sort((a: any, b: any) => b.orderRate - a.orderRate);
+    const styleStats = withRate(styleMap).sort((a: any, b: any) => b.orderRate - a.orderRate);
+    const priceStats = withRate(priceMap).sort((a: any, b: any) => b.orderRate - a.orderRate);
+    const topWinners = winners.sort((a: any, b: any) => b.orders - a.orders).slice(0, 8);
+
+    return { totalItems: (items as any[]).length, totalViews, totalClicks, totalCart, totalInq, totalOrders, colorStats, styleStats, priceStats, topWinners };
+  } catch (e: any) {
+    console.error("[generate-planning] 测款数据聚合失败:", e.message);
+    return null;
+  }
+}
+
+/* ============ 辅助函数：构建测款数据 prompt 段 ============ */
+function buildTestPromptSection(test: Record<string, any>): string {
+  if (!test || !test.totalItems) return "";
+
+  const colorLines = (test.colorStats as any[])
+    .map((c) => `- ${c.key}：曝光${c.views}/点击${c.clicks}/加购${c.cart_adds}/询盘${c.inquiries}/下单${c.orders}，下单转化率${c.orderRate}%（${c.count}个测款商品）`)
+    .join("\n");
+  const styleLines = (test.styleStats as any[])
+    .map((s) => `- ${s.key}：曝光${s.views}/点击${s.clicks}/加购${s.cart_adds}/下单${s.orders}，下单转化率${s.orderRate}%`)
+    .join("\n");
+  const priceLines = (test.priceStats as any[])
+    .map((p) => `- ${p.key}：曝光${p.views}/下单${p.orders}，下单转化率${p.orderRate}%`)
+    .join("\n");
+  const winnerLines = (test.topWinners as any[])
+    .map((w) => `- [${w.is_winner ? "胜出" : "有单"}] ${w.color}/${w.style}/${w.band}：曝光${w.views}/下单${w.orders}`)
+    .join("\n");
+
+  const topColor = (test.colorStats as any[])[0];
+  const topStyle = (test.styleStats as any[])[0];
+  const topPrice = ((test.priceStats as any[]).find((p: any) => p.key !== "未知") || (test.priceStats as any[])[0]);
+
+  return `
+【📊 自家测款真实转化数据】（共${test.totalItems}个测款商品，总曝光${test.totalViews}/总点击${test.totalClicks}/总下单${test.totalOrders}）
+
+一、色彩转化表现（按下单转化率排序）：
+${colorLines}
+关键洞察：${topColor ? `转化最好的色彩季型是「${topColor.key}」（下单转化率${topColor.orderRate}%），colorPlan 中该季型应给最高 SKU 占比` : ""}
+
+二、风格转化表现（按下单转化率排序）：
+${styleLines}
+关键洞察：${topStyle ? `转化最好的风格是「${topStyle.key}」（下单转化率${topStyle.orderRate}%），stylePlan 中该风格应占最大比例` : ""}
+
+三、价格带转化表现（按下单转化率排序）：
+${priceLines}
+关键洞察：${topPrice ? `转化最好的价格带是「${topPrice.key}」（下单转化率${topPrice.orderRate}%），pricePlan 主推价格带应对齐该区间` : ""}
+
+四、测款爆款 / 有单商品：
+${winnerLines}
+
+⚠ 自家测款优先原则（最高优先级，优于市场与经验猜测）：
+1. colorPlan 中转化最好的色彩季型给最高 SKU 占比
+2. stylePlan 中转化最好的风格给最大比例
+3. pricePlan 主推价格带对齐测款转化最高的价格带
+4. coreSkuList 优先纳入在测款中色彩/风格/价格组合表现好的款
+5. avoidList 应包含测款中曝光高但转化极低（如下单转化率<1%）的色彩/风格`;
+}
+
 /* ============ 主接口 ============ */
 export async function POST(req: NextRequest) {
   try {
@@ -468,19 +607,25 @@ export async function POST(req: NextRequest) {
     const marketSection = buildMarketPromptSection(marketResearch || {});
     if (marketSection) userPrompt += "\n" + marketSection;
 
+    // 注入自家测款真实转化数据（最高优先级）
+    const testInsights = await fetchProductTestInsights();
+    const testSection = buildTestPromptSection(testInsights || {});
+    if (testSection) userPrompt += "\n" + testSection;
+
     // 企划要求
     const hasVip = memberStats?.tested_vip_count > 0;
     const hasMarket = marketResearch?.totalItems > 0;
+    const hasTest = !!(testInsights && testInsights.totalItems);
 
     userPrompt += `
 
 【企划要求】
 1. marketAnalysis：市场趋势、竞争格局、机会点，每部分200字，机会点列3-5个具体要点
 2. v_ipPortrait：基于VIP数据（如有）分析核心客群画像、消费力、价格敏感度、忠诚度
-3. colorPlan 至少4组，比例加起来=100%，每组注明选色理由。${hasVip ? "色彩占比必须与VIP色彩季型分布严格对齐" : hasMarket ? "色彩选择必须参考市场热门颜色数据" : ""}
-4. stylePlan 列出4-6个主流风格组合，每个包含mainStyle/subStyle/styleCombo/gender/occasions/vibe/trafficRatio/profitRatio/targetAge。${hasVip ? "风格占比必须与VIP风格分布对齐" : hasMarket ? "参考市场热门风格数据" : ""}
+3. colorPlan 至少4组，比例加起来=100%，每组注明选色理由。${hasTest ? "色彩选择与占比必须以自家测款转化数据为准（最高优先级）" : hasVip ? "色彩占比必须与VIP色彩季型分布严格对齐" : hasMarket ? "色彩选择必须参考市场热门颜色数据" : ""}
+4. stylePlan 列出4-6个主流风格组合，每个包含mainStyle/subStyle/styleCombo/gender/occasions/vibe/trafficRatio/profitRatio/targetAge。${hasTest ? "风格占比必须以自家测款转化数据为准（最高优先级）" : hasVip ? "风格占比必须与VIP风格分布对齐" : hasMarket ? "参考市场热门风格数据" : ""}
 5. productStructure 4类（引流款15%、利润款50%、形象款20%、搭配款15%），每类列2-3个关键单品
-6. pricePlan 必须严格基于用户输入的「主力价格带」拆分为4档，比例加起来=100%，每档注明目标毛利%。${memberStats?.avg_vip_spent ? `参考VIP人均消费¥${memberStats.avg_vip_spent}。` : ""}${marketResearch?.priceAnalysis?.avg ? `参考市场均价¥${marketResearch.priceAnalysis.avg}。` : ""}绝对不能输出与用户价格带无关的默认价格。
+6. pricePlan 必须严格基于用户输入的「主力价格带」拆分为4档，比例加起来=100%，每档注明目标毛利%。${hasTest ? "主推价格带须对齐自家测款转化最高的价格带（最高优先级）。" : ""}${memberStats?.avg_vip_spent ? `参考VIP人均消费¥${memberStats.avg_vip_spent}。` : ""}${marketResearch?.priceAnalysis?.avg ? `参考市场均价¥${marketResearch.priceAnalysis.avg}。` : ""}绝对不能输出与用户价格带无关的默认价格。
 7. waveCalendar：分4-6周，每周有波段主题、关键动作、采购计划、陈列重点
 8. displayAdvice：卖场规划、重点区域（3-5个）、橱窗建议、搭配技巧（5-8条）
 9. kpiTargets：销售额/毛利率/售罄率/库存周转/客流/成交率，所有指标必须具体可衡量
@@ -494,6 +639,7 @@ export async function POST(req: NextRequest) {
    - stockStrategy：首单/追单比例、补货触发条件
    原则：宁可少SKU多深度，不要多SKU浅深度。核心款做足颜色和尺码，非核心款只做1-2色。
 ${hasVip && hasMarket ? "14. 双数据源对齐原则（最重要）：色彩/风格以VIP数据为主（服务现有客户），市场数据为辅（发现增量机会）" : ""}
+${hasTest ? "15. 自家测款数据最高优先级原则：所有色彩/风格/价格带决策以测款真实转化为准，VIP数据与市场数据仅作补充验证；coreSkuList 必须优先包含测款中转化靠前的色彩/风格/价格组合" : ""}
 
 ⚠ 报告质量要求（决定¥2980价值感）：
 - 所有分析必须有数据支撑，不能空泛
