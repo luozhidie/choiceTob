@@ -15,6 +15,7 @@ Page({
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
+    ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
   },
 
   onLoad:function(){
@@ -22,6 +23,12 @@ Page({
     this.setData({
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
     });
+    // 读取真实版本号（CI 上传时设置的 version，与体验版版本号一致）
+    try {
+      var info = wx.getAccountInfoSync();
+      var v = info.miniProgram && info.miniProgram.version;
+      if (v) this.setData({ ver: 'v' + v });
+    } catch (e) {}
     this.loadB();
     this.loadP();
     this.loadCategories();  // 从后台读取分类标签
