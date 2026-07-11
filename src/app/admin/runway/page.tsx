@@ -99,7 +99,11 @@ export default function RunwayPage() {
       if (!res.ok) {
         setImportMsg("导入失败：" + (data.error || res.status));
       } else {
-        setImportMsg(data.message || `已导入 ${data.imported} 条`);
+        let msg = data.message || `已导入 ${data.imported} 条`;
+        if (data.errors && data.errors.length) {
+          msg += "\n" + data.errors.map((e: any) => `${e.title}: ${e.error}`).join("\n");
+        }
+        setImportMsg(msg);
       }
     } catch (e: any) {
       setImportMsg("导入失败：" + e.message);
@@ -267,7 +271,7 @@ export default function RunwayPage() {
             </div>
           </div>
           {importMsg && (
-            <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2">
+            <div className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-4 py-2 whitespace-pre-line">
               {importMsg}
             </div>
           )}

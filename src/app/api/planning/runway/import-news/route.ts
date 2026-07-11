@@ -60,6 +60,7 @@ export async function POST(req: NextRequest) {
     const existingTitles = new Set((existing || []).map((e: any) => e.title));
 
     const items: any[] = [];
+    const errors: any[] = [];
     let imported = 0;
     let skipped = 0;
 
@@ -86,11 +87,13 @@ export async function POST(req: NextRequest) {
           is_premium: false,
           is_published: true,
           author: brandName,
+          published_at: new Date().toISOString(),
         })
         .select("id, title")
         .single();
       if (insErr) {
         console.error("[import-news] 插入失败:", insErr.message);
+        errors.push({ title, error: insErr.message });
         continue;
       }
       existingTitles.add(title);
@@ -103,7 +106,8 @@ export async function POST(req: NextRequest) {
       skipped,
       total: videos.length,
       items,
-      message: `成功导入 ${imported} 条秀场视频到流行资讯${skipped > 0 ? `，跳过 ${skipped} 条重复` : ""}。`,
+      errors: errors.length > 0 ? errors : undefined,
+      message: `成功导入 ${imported} 条秀场视频到流行资讯${skipped > 0 ? `，跳过 ${skipped} 条重复` : ""}${errors.length > 0 ? `，${errors.length} 条写入失败` : ""}。`,
     });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
