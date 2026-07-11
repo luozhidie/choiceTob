@@ -443,7 +443,7 @@ async function fetchRunwayInsights(season: string) {
     const supabase = createServiceRoleClient();
     const { data, error } = await supabase
       .from("brand_runway_trends")
-      .select("brand, dominant_colors, dominant_styles, key_silhouettes, themes, summary")
+      .select("brand, dominant_colors, dominant_styles, key_silhouettes, themes, summary, videos")
       .eq("season", season);
     if (error || !data || data.length === 0) return null;
 
@@ -466,6 +466,7 @@ async function fetchRunwayInsights(season: string) {
         silhouettes: b.key_silhouettes || [],
         themes: b.themes || [],
         summary: b.summary || "",
+        videos: b.videos || [],
       })),
       overall: {
         topColors: Object.entries(allColors).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([k]) => k),
@@ -484,7 +485,7 @@ function buildRunwayPromptSection(runway: Record<string, any>): string {
   if (!runway || !runway.totalBrands) return "";
 
   const brandLines = (runway.brands as any[])
-    .map((b) => `- ${b.brand}：${b.summary || ""}${b.colors.length ? ` 主色[${b.colors.join("、")}]` : ""}${b.styles.length ? ` 风格[${b.styles.join("、")}]` : ""}${b.silhouettes.length ? ` 廓形[${b.silhouettes.join("、")}]` : ""}`)
+    .map((b) => `- ${b.brand}：${b.summary || ""}${b.colors.length ? ` 主色[${b.colors.join("、")}]` : ""}${b.styles.length ? ` 风格[${b.styles.join("、")}]` : ""}${b.silhouettes.length ? ` 廓形[${b.silhouettes.join("、")}]` : ""}${b.videos?.length ? ` 秀场视频${b.videos.length}条` : ""}`)
     .join("\n");
 
   const o = runway.overall || {};

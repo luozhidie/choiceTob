@@ -1,6 +1,6 @@
 -- 品牌发布会/秀场趋势采集表
 -- 在 Supabase SQL Editor 中执行（管理员权限）
--- 用途：存储一线品牌各季发布会采集到的主色/风格/廓形/主题，供 AI 企划参考
+-- 用途：存储一线品牌各季发布会采集到的主色/风格/廓形/主题/秀场视频，供 AI 企划参考
 
 CREATE TABLE IF NOT EXISTS brand_runway_trends (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -13,9 +13,13 @@ CREATE TABLE IF NOT EXISTS brand_runway_trends (
   dominant_styles TEXT[],               -- 主导风格（如 静奢/新中式/运动）
   key_silhouettes TEXT[],               -- 关键廓形/单品（如 阔腿裤/大衣/抹胸）
   themes TEXT[],                        -- 主题关键词
+  videos JSONB,                         -- 秀场视频链接 [{title,url,platform}]
   summary TEXT,                         -- 该品牌本季一句话总结
   collected_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- 若表已存在但缺 videos 列，补全（可重复执行）
+ALTER TABLE brand_runway_trends ADD COLUMN IF NOT EXISTS videos JSONB;
 
 CREATE INDEX IF NOT EXISTS idx_runway_season ON brand_runway_trends(season);
 CREATE INDEX IF NOT EXISTS idx_runway_brand ON brand_runway_trends(brand);
