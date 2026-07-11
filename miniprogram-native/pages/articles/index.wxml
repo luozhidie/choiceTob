@@ -4,12 +4,6 @@
     <view class="h-badge"><text>📰 时尚资讯与趋势</text></view>
     <text class="ht">时尚博主与<text class="h-pink">趋势</text></text>
     <text class="hs">最新时尚趋势分析、行业动态、搭配技巧，一站式阅读体验</text>
-
-    <!-- 订阅按钮 -->
-    <view class="sub-btns">
-      <view class="sbtn sbtn-month" bindtap="subMonthly"><text>月费会员 ¥138/月</text></view>
-      <view class="sbtn sbtn-year" bindtap="subYearly"><text>订阅一年享优惠价格 ¥1,380/年</text></view>
-    </view>
   </view>
 
   <!-- 双Tab -->
@@ -54,9 +48,12 @@
 
   <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
 
-  <!-- 底部CTA -->
-  <view class="bottom-cta" wx:if="{{articles.length===0&&!loading}}">
-    <text class="bt-title">订阅完整内容</text>
+  <!-- 底部订阅按钮 -->
+  <view class="bottom-cta">
+    <view class="sub-btns">
+      <view class="sbtn sbtn-month" bindtap="subMonthly"><text>月费会员 ¥138/月</text></view>
+      <view class="sbtn sbtn-year" bindtap="subYearly"><text>订阅一年享优惠价格 ¥1,380/年</text></view>
+    </view>
   </view>
 
   <view class="sbtm"></view>

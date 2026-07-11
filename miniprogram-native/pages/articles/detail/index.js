@@ -9,6 +9,9 @@ function parseBlocks(content) {
     var trimmed = lines[i].trim();
     if (trimmed === "") continue;
 
+    // 跳过旧版 Vogue 视频外链行（不再引导到 Vogue 付费视频）
+    if (/^>?\s*▶\s*观看秀场视频/.test(trimmed)) continue;
+
     // 视频行：▶ 观看秀场视频：[标题](url)
     var vMatch = trimmed.match(/^▶\s*观看秀场视频：\[([^\]]*)\]\((https?:\/\/[^)]+)\)/);
     if (vMatch) {

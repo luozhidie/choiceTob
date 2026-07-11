@@ -46,8 +46,8 @@ page{background:#f5f3f0;}
 
 .ld{text-align:center;padding:80rpx 0;color:#999;font-size:26rpx;}
 
-/* 底部CTA */
-.bottom-cta{text-align:center;padding:30rpx 0 20rpx;background:linear-gradient(180deg,transparent 0%,#2d1b2e 60%);}
-.bt-title{font-size:34rpx;font-weight:bold;color:#fff;display:block;}
+/* 底部订阅 */
+.bottom-cta{background:linear-gradient(160deg,#2d1b2e 0%,#5c2a4e 40%,#8b4368 100%);padding:28rpx 24rpx 20rpx;}
+.bottom-cta .sub-btns{margin-top:0;}
 
 .sbtm{height:30rpx;}
