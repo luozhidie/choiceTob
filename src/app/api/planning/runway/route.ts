@@ -36,35 +36,44 @@ function topFrom(counts: { key: string; count: number }[], n = 5) {
   return counts.slice(0, n).map((x) => x.key);
 }
 
-// 视频平台识别（真实视频平台 + Vogue 官方秀场页作为兜底）
-const VIDEO_PLATFORMS: { match: string; name: string }[] = [
-  { match: "youtube.com", name: "YouTube" },
-  { match: "youtu.be", name: "YouTube" },
-  { match: "bilibili.com", name: "B站" },
-  { match: "b23.tv", name: "B站" },
-  { match: "douyin.com", name: "抖音" },
-  { match: "v.douyin.com", name: "抖音" },
-  { match: "ixigua.com", name: "西瓜视频" },
-  { match: "weibo.com", name: "微博" },
-  { match: "youku.com", name: "优酷" },
-  { match: "v.qq.com", name: "腾讯视频" },
-  { match: "xiaohongshu.com", name: "小红书" },
-  { match: "kuaishou.com", name: "快手" },
-  { match: "toutiao.com", name: "今日头条" },
-];
-function videoPlatform(url: string): string | null {
+// Tagwalk：免费秀场图库（图片版流行资讯主源，替代被墙的 Vogue 视频）
+// 设计师 slug 与 Vogue 基本一致，直接复用 VOGUE_BRAND_SLUG
+function tagwalkSeasonMatch(url: string, seasonPart: string, year: number): boolean {
+  // 只取文件名主体（去掉末尾哈希段），避免哈希里的数字误判年份
+  const file = (url.split("/").pop() || "").toLowerCase().replace(/\.[a-z]+$/i, "");
+  const base = file.split("-").slice(0, -1).join("-") || file;
+  const yr = String(year);
+  const yr2 = yr.slice(2);
+  const hasYear = base.includes(yr) || base.includes(yr2);
+  if (seasonPart === "全年") return true;
+  if (seasonPart === "春夏") return /ss2\d|spring.?summer|ss20\d\d/.test(base) && hasYear;
+  if (seasonPart === "秋冬") return /(fw2\d|fall.?winter|aw20\d\d|autumn)/.test(base) && hasYear;
+  if (seasonPart === "夏秋") return /(cruise20\d\d|resort)/.test(base) && hasYear;
+  if (seasonPart === "冬春") return /(prefall|pre-fall)/.test(base) && hasYear;
+  return true;
+}
+
+async function findTagwalkImages(brand: string, seasonPart: string, year: number): Promise<string[]> {
+  const slug = VOGUE_BRAND_SLUG[brand];
+  if (!slug) return [];
+  const url = `https://www.tag-walk.com/en/collection/search?designer=${slug}&notts=1`;
   try {
-    const host = new URL(url).hostname.replace(/^www\./, "").replace(/^m\./, "");
-    const hit = VIDEO_PLATFORMS.find((p) => host.includes(p.match));
-    if (hit) return hit.name;
-    if (host.includes("vogue.com")) return "Vogue Runway";
-    return null;
+    const resp = await fetch(url, {
+      headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
+      signal: AbortSignal.timeout(15000),
+    });
+    const html = await resp.text();
+    const urls = Array.from(
+      new Set((html.match(/https?:\/\/cdn\.tag-walk\.com\/cover\/[^"'<>\s]+\.jpg/gi) || []))
+    );
+    const matched = seasonPart === "全年" ? urls : urls.filter((u) => tagwalkSeasonMatch(u, seasonPart, year));
+    return matched.slice(0, 40);
   } catch {
-    return null;
+    return [];
   }
 }
 
-// Vogue Runway：国际一线奢侈品牌秀场官方页（未配置 YouTube key 时的兜底）
+// 品牌 slug 映射（Vogue Runway 与 Tagwalk 通用，复用同一套）
 const VOGUE_BRAND_SLUG: Record<string, string> = {
   "香奈儿": "chanel",
   "迪奥": "christian-dior",
@@ -84,43 +93,6 @@ function getSeasonPart(season: string): string {
   for (const p of SEASON_PARTS_ALL) if (season.includes(p)) return p;
   return "全年";
 }
-function vogueSeasonSlugs(seasonPart: string, year: number): string[] {
-  switch (seasonPart) {
-    case "春夏": return [`spring-${year}-ready-to-wear`];
-    case "夏秋": return [`resort-${year}`];
-    case "秋冬": return [`fall-${year}-ready-to-wear`];
-    case "冬春": return [`pre-fall-${year}`];
-    default: // 全年
-      return [
-        `spring-${year}-ready-to-wear`,
-        `resort-${year}`,
-        `fall-${year}-ready-to-wear`,
-        `pre-fall-${year}`,
-      ];
-  }
-}
-
-async function findVogueVideo(brand: string, seasonPart: string, year: number): Promise<{ url: string; title: string } | null> {
-  const slug = VOGUE_BRAND_SLUG[brand];
-  if (!slug) return null;
-  for (const s of vogueSeasonSlugs(seasonPart, year)) {
-    const url = `https://www.vogue.com/fashion-shows/${s}/${slug}`;
-    try {
-      const resp = await fetch(url, {
-        method: "HEAD",
-        headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
-        signal: AbortSignal.timeout(10000),
-      });
-      if (resp.status === 200) {
-        return { url, title: `${brand} ${seasonPart} 秀场官方报道 · Vogue Runway` };
-      }
-    } catch {
-      /* 该季节段无秀场页，尝试下一个 */
-    }
-  }
-  return null;
-}
-
 // YouTube Data API：搜索真实秀场视频（需要 YOUTUBE_API_KEY）
 async function searchYouTubeVideos(query: string, apiKey: string): Promise<{ title: string; url: string; platform: string }[]> {
   try {
@@ -193,9 +165,12 @@ export async function POST(req: NextRequest) {
         ];
         const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
 
-        // 视频来源：YouTube Data API → Bing 真实视频 → Vogue 官方秀场页兜底
-        const seasonForVideo = season.replace("全年", "").trim() || String(year);
+        // 图片来源：Tagwalk 免费秀场图库（按品牌+季节抓取，替代被墙的 Vogue 视频）
+        const tagwalkImgs = await findTagwalkImages(brand, getSeasonPart(season), year);
+
+        // 视频来源：YouTube Data API（仅当配置了 YOUTUBE_API_KEY）
         const ytKey = process.env.YOUTUBE_API_KEY || "";
+        const seasonForVideo = season.replace("全年", "").trim() || String(year);
         const ytQueries = [
           `${brand} ${seasonForVideo} runway full show`,
           `${brand} ${seasonForVideo} fashion show`,
@@ -206,20 +181,6 @@ export async function POST(req: NextRequest) {
           ? (await Promise.all(ytQueries.map((q) => searchYouTubeVideos(q, ytKey)))).flat()
           : [];
 
-        const vogueVid = await findVogueVideo(brand, getSeasonPart(season), year);
-
-        const videoSearches = [
-          `${brand} ${seasonForVideo} 时装周 秀场 视频 回放`,
-          `${brand} ${seasonForVideo} 秀场 B站`,
-          `${brand} ${seasonForVideo} 时装周 完整视频 youtube`,
-          `${brand} ${seasonForVideo} runway full show video`,
-          `${brand} ${seasonForVideo} 走秀 视频`,
-          `${brand} ${seasonForVideo} 发布会 视频`,
-          `${brand} ${seasonForVideo} 时装秀 高清 视频`,
-          `${brand} ${seasonForVideo} 秀场 完整版`,
-        ];
-        const videoItems = (await Promise.all(videoSearches.map(bingSearch))).flat();
-
         const seen = new Set<string>();
         const deduped = trendItems.filter((i) => {
           const k = i.title.substring(0, 20);
@@ -228,28 +189,20 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 合并视频：YouTube → Bing 真实视频 → Vogue 官方秀场页（按 URL 去重）
-        const mergedVideos: { title: string; url: string }[] = [];
-        for (const v of ytResults) {
-          if (!mergedVideos.some((m) => m.url === v.url)) mergedVideos.push({ title: v.title, url: v.url });
-        }
-        for (const i of videoItems) {
-          if (videoPlatform(i.url) && !mergedVideos.some((m) => m.url === i.url)) {
-            mergedVideos.push({ title: i.title, url: i.url });
+        // 合并媒体：图片（kind:image，Tagwalk）优先，视频（kind:video，YouTube）其次
+        const media: { url: string; title: string; platform: string; kind: string }[] = [];
+        const seasonLabel = getSeasonPart(season);
+        for (const u of tagwalkImgs) {
+          if (!media.some((m) => m.url === u)) {
+            media.push({ url: u, title: `${brand} ${seasonLabel} ${year} 秀场 LOOK`, platform: "Tagwalk", kind: "image" });
           }
         }
-        if (vogueVid && !mergedVideos.some((m) => m.url === vogueVid.url)) {
-          mergedVideos.push(vogueVid);
+        for (const v of ytResults) {
+          if (!media.some((m) => m.url === v.url)) {
+            media.push({ url: v.url, title: v.title, platform: v.platform, kind: "video" });
+          }
         }
-        const seenVideoUrls = new Set<string>();
-        const videos = mergedVideos
-          .filter((m) => {
-            if (seenVideoUrls.has(m.url)) return false;
-            seenVideoUrls.add(m.url);
-            return true;
-          })
-          .slice(0, 10)
-          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || "Vogue Runway" }));
+        const videos = media.slice(0, 15).map((m) => ({ url: m.url, title: m.title, platform: m.platform, kind: m.kind }));
 
         const allText = deduped.map((i) => i.title + " " + i.snippet).join(" ");
         const colors = countKeywords(allText, COLOR_KEYWORDS);

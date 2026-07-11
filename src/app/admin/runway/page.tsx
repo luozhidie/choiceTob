@@ -120,10 +120,10 @@ export default function RunwayPage() {
           <Sparkles className="w-6 h-6 text-indigo-600" /> 一线品牌发布会趋势采集
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          抓取各品牌时装周/发布会信号（主色·风格·廓形·主题·秀场视频），存入数据库并可融入 AI 商品企划。
+          抓取各品牌时装周/发布会信号（主色·风格·廓形·主题），并采集 Tagwalk 免费秀场图，可一键导入流行资讯做灵感参考。
         </p>
         <p className="text-xs text-amber-600 mt-1">
-          提示：视频源优先 YouTube（需配置 YOUTUBE_API_KEY），未配置时自动兜底 Vogue Runway 官方秀场页。
+          提示：秀场图片源为 Tagwalk 免费秀场图库（国际一线品牌，按品牌+季节抓取，转存到本站）。配置 YOUTUBE_API_KEY 后可额外采集真实走秀视频。
         </p>
       </div>
 
@@ -295,17 +295,17 @@ export default function RunwayPage() {
               <div className="mb-2">{(b.themes || []).map((t: string) => <Chip key={t} label={t} color="#fce7f3" />)}</div>
               {(b.videos && b.videos.length > 0) && (
                 <div>
-                  <div className="text-xs text-gray-400 mb-1 flex items-center gap-1"><Film className="w-3 h-3" /> 秀场视频</div>
-                  <div className="space-y-1">
-                    {b.videos.map((v: any, vi: number) => (
-                      <a
-                        key={vi}
-                        href={v.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block text-xs text-indigo-600 hover:underline truncate"
-                      >
-                        ▶ {v.title} {v.platform ? `（${v.platform}）` : ""}
+                  <div className="text-xs text-gray-400 mb-1 flex items-center gap-1">
+                    <Film className="w-3 h-3" /> {b.videos[0]?.kind === "image" ? "秀场图片（Tagwalk）" : "秀场视频"}
+                  </div>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {b.videos.slice(0, 8).map((v: any, vi: number) => (
+                      <a key={vi} href={v.url} target="_blank" rel="noopener noreferrer" className="block">
+                        {v.kind === "image" ? (
+                          <img src={v.url} alt={v.title} className="w-full h-14 object-cover rounded-md border border-gray-100" loading="lazy" />
+                        ) : (
+                          <span className="block text-xs text-indigo-600 hover:underline truncate">▶ {v.title}</span>
+                        )}
                       </a>
                     ))}
                   </div>
@@ -315,7 +315,7 @@ export default function RunwayPage() {
                     className="mt-1.5 inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 text-xs font-medium hover:bg-rose-100 disabled:opacity-60"
                   >
                     {importing === b.brand ? <Loader2 className="w-3 h-3 animate-spin" /> : <Newspaper className="w-3 h-3" />}
-                    {importing === b.brand ? "导入中..." : "导入此品牌视频"}
+                    {importing === b.brand ? "导入中..." : "导入此品牌"}
                   </button>
                 </div>
               )}
