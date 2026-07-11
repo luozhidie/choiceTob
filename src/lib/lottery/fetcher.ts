@@ -25,10 +25,11 @@ function parseAscLine(line: string, def: GameDef): DrawRecord | null {
     .map(Number);
   const front = tokens.slice(0, def.frontCount);
   const back = def.backCount > 0 ? tokens.slice(def.frontCount, def.frontCount + def.backCount) : [];
-  if (
-    front.length === def.frontCount &&
-    (def.backCount === 0 || back.length === def.backCount)
-  ) {
+  // 校验每个号码必须在合法范围内（过滤源数据异常，如七星彩个别行第7位出现 10-14）
+  const inRange = (n: number, min: number, max: number) => n >= min && n <= max;
+  const frontOk = front.length === def.frontCount && front.every((n) => inRange(n, def.frontMin, def.frontMax));
+  const backOk = def.backCount === 0 || (back.length === def.backCount && back.every((n) => inRange(n, def.backMin, def.backMax)));
+  if (frontOk && backOk) {
     return { issue, date, front, back };
   }
   return null;

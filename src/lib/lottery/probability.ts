@@ -151,7 +151,7 @@ const GAME_DEFS: Record<LotteryType, GameDef> = {
   fc3d: { id: "fc3d", name: "福彩3D", kind: "digit", frontCount: 3, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/3d_asc.txt" },
   pl3:  { id: "pl3",  name: "排列3",  kind: "digit", frontCount: 3, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/pl3_asc.txt" },
   pl5:  { id: "pl5",  name: "排列5",  kind: "digit", frontCount: 5, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每日",       sourceUrl: "http://data.17500.cn/pl5_asc.txt" },
-  qxc:  { id: "qxc",  name: "七星彩", kind: "digit", frontCount: 7, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每周二、五、日" },
+  qxc:  { id: "qxc",  name: "七星彩", kind: "digit", frontCount: 7, frontMin: 0, frontMax: 9,  backCount: 0, backMin: 0, backMax: 0,  drawSchedule: "每周二、五、日", sourceUrl: "http://data.17500.cn/7xc_asc.txt" },
 };
 
 /** 获取玩法结构定义 */
