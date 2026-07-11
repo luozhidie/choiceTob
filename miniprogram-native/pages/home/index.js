@@ -157,7 +157,7 @@ Page({
     if(e&&e.currentTarget&&e.currentTarget.dataset.from==='menu')this.setData({mo:false});
     wx.switchTab({url:'/pages/buyer/index'});
   },
-  goCourses:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/courses/index'});},
+  goCourses:function(){this.setData({mo:false});console.log('[goCourses] to /pages/courses/index');wx.navigateTo({url:'/pages/courses/index'});},
   goLooks:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/looks/index'});},
   goVipPage:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/vip/index'});},
   goMember:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/member/index'});},

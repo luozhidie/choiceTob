@@ -73,7 +73,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .mph{display:flex;justify-content:space-between;align-items:center;padding:52rpx 32rpx 24rpx;border-bottom:1rpx solid #f0ede9;}
 .mpb{font-size:31rpx;font-weight:800;color:#1a1a2e;}
 .mpc{width:56rpx;height:56rpx;display:flex;align-items:center;justify-content:center;background:#f5f2ef;border-radius:50%;font-size:26rpx;color:#888;}
-.mpb2{flex:1;overflow:hidden;padding:8rpx 0;}
+.mpb2{flex:1;padding:8rpx 0;}
 .mi{display:flex;align-items:center;gap:16rpx;padding:26rpx 36rpx;font-size:29rpx;color:#333;font-weight:500;}
 .mi:active{background:#f8f7f4;}
 .mdv{height:1rpx;background:#f0ede9;margin:6rpx 32rpx;}

@@ -36,6 +36,7 @@ Page({
 
   goDetail:function(e){
     var id=e.currentTarget.dataset.id;
+    console.log('[goDetail] tapped id=', id);
     if(!id){return;}
     wx.navigateTo({url:'/pages/articles/detail?id='+id});
   },
