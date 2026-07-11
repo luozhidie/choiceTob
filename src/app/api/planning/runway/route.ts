@@ -36,7 +36,7 @@ function topFrom(counts: { key: string; count: number }[], n = 5) {
   return counts.slice(0, n).map((x) => x.key);
 }
 
-// 视频平台识别 + 时尚媒体/品牌官网（秀场视频页）
+// 视频平台识别（仅接受真实视频平台，不接受 Vogue/媒体官网 slideshow）
 const VIDEO_PLATFORMS: { match: string; name: string }[] = [
   { match: "youtube.com", name: "YouTube" },
   { match: "youtu.be", name: "YouTube" },
@@ -52,83 +52,36 @@ const VIDEO_PLATFORMS: { match: string; name: string }[] = [
   { match: "kuaishou.com", name: "快手" },
   { match: "toutiao.com", name: "今日头条" },
 ];
-const VIDEO_PAGE_HOSTS = [
-  "vogue.com", "elle.com", "wwd.com", "harpersbazaar.com", "marieclaire.com",
-  "cosmopolitan.com", "instyle.com", "bazzar.com", "nowfashion.com", "nssmagazine.com",
-  "highsnobiety.com", "hypebeast.com", "fashionista.com", "thecut.com", "papermag.com",
-  "chanel.com", "dior.com", "gucci.com", "prada.com", "louisvuitton.com", "hermes.com",
-  "ysl.com", "yslb.com", "balenciaga.com", "fendi.com", "celine.com", "loewe.com", "burberry.com",
-  "jorya.com", "icicle.com", "exception.com", "jnby.com",
-];
 function videoPlatform(url: string): string | null {
   try {
     const host = new URL(url).hostname.replace(/^www\./, "").replace(/^m\./, "");
     const hit = VIDEO_PLATFORMS.find((p) => host.includes(p.match));
-    if (hit) return hit.name;
-    if (VIDEO_PAGE_HOSTS.some((h) => host.includes(h))) return "秀场官网";
-    return null;
+    return hit ? hit.name : null;
   } catch {
     return null;
   }
 }
 
-// Vogue Runway：国际一线奢侈品牌秀场视频库（结构化、最可靠）
-// 国产品牌（江南布衣/之禾/例外等）不在 Vogue，走 Bing 兜底
-const VOGUE_BRAND_SLUG: Record<string, string> = {
-  "香奈儿": "chanel",
-  "迪奥": "christian-dior",
-  "古驰": "gucci",
-  "普拉达": "prada",
-  "路易威登": "louis-vuitton",
-  "爱马仕": "hermes",
-  "圣罗兰": "saint-laurent",
-  "巴黎世家": "balenciaga",
-  "芬迪": "fendi",
-  "思琳": "celine",
-  "罗意威": "loewe",
-};
-
-const SEASON_PARTS_ALL = ["春夏", "夏秋", "秋冬", "冬春", "全年"];
-function getSeasonPart(season: string): string {
-  for (const p of SEASON_PARTS_ALL) if (season.includes(p)) return p;
-  return "全年";
-}
-function vogueSeasonSlugs(seasonPart: string, year: number): string[] {
-  switch (seasonPart) {
-    case "春夏": return [`spring-${year}-ready-to-wear`];
-    case "夏秋": return [`resort-${year}`];
-    case "秋冬": return [`fall-${year}-ready-to-wear`];
-    case "冬春": return [`pre-fall-${year}`];
-    default: // 全年
-      return [
-        `spring-${year}-ready-to-wear`,
-        `resort-${year}`,
-        `fall-${year}-ready-to-wear`,
-        `pre-fall-${year}`,
-      ];
-  }
-}
-
-// 找到该品牌该季的 Vogue 秀场页（存在则作为视频源）
-async function findVogueVideo(brand: string, seasonPart: string, year: number): Promise<{ url: string; title: string } | null> {
-  const slug = VOGUE_BRAND_SLUG[brand];
-  if (!slug) return null;
-  for (const s of vogueSeasonSlugs(seasonPart, year)) {
-    const url = `https://www.vogue.com/fashion-shows/${s}/${slug}`;
-    try {
-      const resp = await fetch(url, {
-        method: "HEAD",
-        headers: { "User-Agent": UA, "Accept-Language": "en-US,en;q=0.9" },
-        signal: AbortSignal.timeout(10000),
-      });
-      if (resp.status === 200) {
-        return { url, title: `${brand} ${seasonPart} 秀场视频 · Vogue Runway` };
-      }
-    } catch {
-      /* 该季节段无秀场页，尝试下一个 */
+// YouTube Data API：搜索真实秀场视频
+// 需要环境变量 YOUTUBE_API_KEY；未配置时回退到 Bing 搜索（通常很难找到真实视频）
+async function searchYouTubeVideos(query: string, apiKey: string): Promise<{ title: string; url: string; platform: string }[]> {
+  try {
+    const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=10&key=${apiKey}`;
+    const resp = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    const data = await resp.json();
+    if (data.error) {
+      console.error("[YouTube API] error:", data.error.message);
+      return [];
     }
+    return (data.items || []).map((item: any) => ({
+      title: item.snippet?.title || "秀场视频",
+      url: `https://www.youtube.com/watch?v=${item.id?.videoId}`,
+      platform: "YouTube",
+    }));
+  } catch (e: any) {
+    console.error("[YouTube API] exception:", e.message);
+    return [];
   }
-  return null;
 }
 
 async function bingSearch(term: string): Promise<{ title: string; snippet: string; url: string }[]> {
@@ -182,11 +135,19 @@ export async function POST(req: NextRequest) {
         ];
         const trendItems = (await Promise.all(trendSearches.map(bingSearch))).flat();
 
-        // 视频来源：Vogue Runway（国际奢侈品牌首选）→ Bing 多平台补充
-        const vogueVid = await findVogueVideo(brand, getSeasonPart(season), year);
-
-        // 对「全年」这类非标准季节，用纯年份搜索更可能命中
+        // 视频来源：YouTube Data API（真实视频）→ Bing 兜底
         const seasonForVideo = season.replace("全年", "").trim() || String(year);
+        const ytKey = process.env.YOUTUBE_API_KEY || "";
+        const ytQueries = [
+          `${brand} ${seasonForVideo} runway full show`,
+          `${brand} ${seasonForVideo} fashion show`,
+          `${brand} ${seasonForVideo} 秀场`,
+          `${brand} ${seasonForVideo} 走秀`,
+        ];
+        const ytResults = ytKey
+          ? (await Promise.all(ytQueries.map((q) => searchYouTubeVideos(q, ytKey)))).flat()
+          : [];
+
         const videoSearches = [
           `${brand} ${seasonForVideo} 时装周 秀场 视频 回放`,
           `${brand} ${seasonForVideo} 秀场 B站`,
@@ -207,9 +168,11 @@ export async function POST(req: NextRequest) {
           return true;
         });
 
-        // 合并视频：Vogue 优先，再补 Bing（按 URL 去重）
+        // 合并视频：YouTube 优先，再补 Bing（按 URL 去重）
         const mergedVideos: { title: string; url: string }[] = [];
-        if (vogueVid) mergedVideos.push(vogueVid);
+        for (const v of ytResults) {
+          if (!mergedVideos.some((m) => m.url === v.url)) mergedVideos.push({ title: v.title, url: v.url });
+        }
         for (const i of videoItems) {
           if (videoPlatform(i.url) && !mergedVideos.some((m) => m.url === i.url)) {
             mergedVideos.push({ title: i.title, url: i.url });
@@ -223,7 +186,7 @@ export async function POST(req: NextRequest) {
             return true;
           })
           .slice(0, 10)
-          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || (vogueVid && m.url === vogueVid.url ? "Vogue Runway" : "视频") }));
+          .map((m) => ({ title: m.title, url: m.url, platform: videoPlatform(m.url) || "YouTube" }));
 
         const allText = deduped.map((i) => i.title + " " + i.snippet).join(" ");
         const colors = countKeywords(allText, COLOR_KEYWORDS);
