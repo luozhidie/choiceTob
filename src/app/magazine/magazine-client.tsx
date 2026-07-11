@@ -172,7 +172,6 @@ export default function MagazineClient({ initialTab }: { initialTab?: string }) 
                 <button onClick={() => setSelectedArticle(null)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><X className="w-5 h-5" /></button>
               </div>
               <div className="p-6">
-                {selectedArticle.image_url && <img src={selectedArticle.image_url} alt={selectedArticle.title} className="w-full rounded-lg mb-6" />}
                 {selectedArticle.content && <div className="prose max-w-none">{renderMarkdown(selectedArticle.content)}</div>}
               </div>
             </motion.div>
