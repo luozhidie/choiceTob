@@ -20,12 +20,12 @@
   <!-- 文章列表 -->
   <block wx:if="{{articles.length>0}}">
     <view class="list">
-      <view wx:for="{{articles}}" wx:key="id" class="card">
-        <view class="ci-wrap" catchtap="goDetail" data-id="{{item.id}}">
-          <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci" catchtap="goDetail" data-id="{{item.id}}"/>
+      <view wx:for="{{articles}}" wx:key="id" class="card" bindtap="goDetail" data-id="{{item.id}}">
+        <view class="ci-wrap">
+          <image src="{{item.cover_image||item.image_url||''}}" mode="aspectFill" class="ci"/>
           <view wx:if="{{item.hasVideo}}" class="vbadge">▶ 视频</view>
         </view>
-        <view class="cb" catchtap="goDetail" data-id="{{item.id}}">
+        <view class="cb">
           <view class="ct-row">
             <text class="ct">{{item.title||'文章标题'}}</text>
             <text wx:if="{{item.tag}}" class="ctag">{{item.tag}}</text>
