@@ -88,18 +88,17 @@ function getDltGame(): LotteryGame {
 function getFc3dGame(): LotteryGame {
   const total = 1000; // 000-999
 
+  // 注意：组选3 / 组选6 是独立的投注方式（非同注可兼得），EV 仅按主玩法(直选)计算
   const prizes: PrizeLevel[] = [
     { level: "直选", condition: "3位完全匹配", odds: "1/1,000", prize: "1040元", probability: 1 / total },
-    { level: "组选3", condition: "2位相同，顺序不限", odds: "1/333", prize: "346元", probability: 3 / total },
-    { level: "组选6", condition: "3位各不同，顺序不限", odds: "1/167", prize: "173元", probability: 6 / total },
   ];
 
   return {
     config: { id: "fc3d", name: "福彩3D", fullName: "中国福利彩票3D游戏", price: 2, poolDesc: "固定奖", drawSchedule: "每日" },
     rules: `从 000-999 中选择一个三位数。
-• 直选：号码和顺序完全一致
-• 组选3：含一对相同数字（如112），顺序不限
-• 组选6：三个数字各不相同，顺序不限`,
+• 直选（主玩法）：号码和顺序完全一致 → 奖金1040元，概率 1/1000
+• 组选3：含一对相同数字（如112），顺序不限 → 奖金346元，概率 1/333（需单独投注）
+• 组选6：三个数字各不相同，顺序不限 → 奖金173元，概率 1/167（需单独投注）`,
     prizes,
     totalCombinations: total,
   };
@@ -192,20 +191,58 @@ export function formatOdds(probability: number): string {
   return `1/${denom.toLocaleString()}`;
 }
 
-/** 计算期望值（基于概率和奖金） */
+/** 计算期望值（基于概率和奖金）
+ *
+ * 注意：如果所有奖级概率之和 > 1（如福彩3D 的直选/组选3/组选6 是互斥投注方式），
+ * 则仅取第一个奖级（主玩法）计算期望值，避免重复叠加。
+ */
 export function expectedValue(prizes: PrizeLevel[]): number {
-  return prizes.reduce((sum, p) => {
-    // 取奖金中间值做估算
+  if (!prizes || prizes.length === 0) return 0;
+
+  // 检测概率总和是否 > 1（表示多玩法并列而非互斥奖级）
+  const probSum = prizes.reduce((s, p) => s + (p.probability || 0), 0);
+  const effectivePrizes = probSum > 1 ? [prizes[0]] : prizes;
+
+  return effectivePrizes.reduce((sum, p) => {
     const avgPrize = parsePrize(p.prize);
     return sum + p.probability * avgPrize;
   }, 0);
 }
 
-/** 解析奖金字符串为数值 */
+/** 解析奖金字符串为数值（支持 "5,000,000" / "10万~500万" / "3,000元" 等格式）
+ *
+ * 设计决策：范围型奖金（如 "10万~500万"）取**下限值**而非算术平均。
+ * 原因：彩票高奖级的上限仅在奖池累积极厚时才出现（罕见），
+ *       绝大多数开奖实际开出接近下限。用下限更贴合真实长期期望。
+ */
 function parsePrize(prizeStr: string): number {
-  const nums = prizeStr.match(/[\d.]+/g);
-  if (!nums || nums.length === 0) return 0;
-  // 取范围的平均值
-  const values = nums.map(n => parseFloat(n));
-  return values.reduce((a, b) => a + b, 0) / values.length;
+  const s = prizeStr.trim();
+  if (!s || s.length === 0) return 0;
+
+  // 范围型：取下限值（更保守、更贴近实际常态）
+  if (s.includes("~") || s.includes("-")) {
+    const parts = s.split(/[~-]/);
+    // 取第一个值（下限）
+    return parseSinglePrize(parts[0].trim());
+  }
+  return parseSinglePrize(s);
+}
+
+/** 解析单值奖金字符串（如 "100000" / "500万" / "1040元" / "173元" / "5,000,000"） */
+function parseSinglePrize(s: string): number {
+  const trimmed = s.replace(/[,，\s元]/g, "").trim();
+  if (!trimmed || trimmed.length === 0) return 0;
+
+  // 含"万"/"亿"单位
+  if (/[\d.]+[万亿]/.test(trimmed)) {
+    const m = trimmed.match(/^([\d.]+)([万亿])$/);
+    if (!m) return parseFloat(trimmed) || 0;
+    const num = parseFloat(m[1]);
+    if (isNaN(num)) return 0;
+    if (m[2] === "万") return num * 10000;
+    if (m[2] === "亿") return num * 100000000;
+    return num;
+  }
+
+  return parseFloat(trimmed) || 0;
 }
