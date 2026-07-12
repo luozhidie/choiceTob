@@ -36,8 +36,8 @@ page{background:#f8f6f4;}
 .info-line{font-size:24rpx;color:#666;line-height:1.6;}
 
 /* 表单滚动区 */
-.form-scroll{height:calc(100vh - 640rpx);}
-.form{padding:0 28rpx 120rpx;}
+.form-scroll{height:calc(100vh - 200rpx);}
+.form{padding:0 28rpx 150rpx;}
 
 /* 付费提示卡片 */
 .pay-info{background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-radius:20rpx;padding:24rpx 28rpx;margin-bottom:24rpx;}
