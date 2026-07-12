@@ -32,7 +32,7 @@
 
   <!-- 当前问卷标题 -->
   <view class="form-title">
-    <text class="form-title-main">{{testTitle}}</text>
+    <text wx:if="{{!isPersonal}}" class="form-title-main">{{testTitle}}</text>
     <text class="form-title-sub">{{isPersonal?'请填写真实信息，便于为您精准选款拿货':'商城拿货会员店铺核心VIP客户色彩季型风格在线诊断资料上传'}}</text>
   </view>
 
