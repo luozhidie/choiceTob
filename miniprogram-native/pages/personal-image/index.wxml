@@ -9,64 +9,11 @@
     </view>
   </view>
 
-  <!-- 痛点 -->
-  <view class="block">
-    <view class="block-head">
-      <text class="block-title">遇到以下问题</text>
-      <text class="block-title-hl">就急需做诊断</text>
-    </view>
-    <view class="pain-list">
-      <view wx:for="{{pains}}" wx:key="*this" class="pain-row">
-        <text class="pain-num">{{index+1}}</text>
-        <text class="pain-txt">{{item}}</text>
-      </view>
-    </view>
+  <!-- 后台配置的满框大图片模块（全宽无 padding） -->
+  <view wx:if="{{blocks.length > 0}}" class="blocks">
+    <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
   </view>
 
-  <!-- 服务流程 -->
-  <view class="block">
-    <text class="block-title">形象诊断服务流程</text>
-    <view class="flow-list">
-      <view wx:for="{{flow}}" wx:key="t" class="flow-card">
-        <view class="flow-num">{{index+1}}</view>
-        <view class="flow-body">
-          <text class="flow-t">{{item.t}}</text>
-          <text class="flow-d">{{item.d}}</text>
-        </view>
-      </view>
-    </view>
-  </view>
-
-  <!-- 报告内容 -->
-  <view class="block">
-    <text class="block-title">形象报告内容</text>
-    <text class="block-intro">一份专业全面的形象报告</text>
-    <text class="block-intro2">通过诊断，找准显白本命色，锁定高级风格，越穿越显贵。搭配师每日精准推荐，不用动脑也能一直美。</text>
-    <view class="report-grid">
-      <view wx:for="{{reports}}" wx:key="t" class="report-card">
-        <text class="report-t">{{item.t}}</text>
-        <text class="report-d">{{item.d}}</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- 仓库/预约 -->
-  <view class="block">
-    <text class="block-title">1000+平米南油大仓库</text>
-    <text class="block-intro">现场检验诊断结果</text>
-    <view class="warehouse-img">
-      <view class="warehouse-placeholder">🏭</view>
-    </view>
-  </view>
-
-  <!-- 后台配置的满框大图片模块 -->
-  <view wx:if="{{blocks.length > 0}}" class="block block-clean">
-    <view class="block-list">
-      <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
-    </view>
-  </view>
-
-  <!-- 底部间距 -->
   <view class="bottom-space"></view>
 </view>
 
