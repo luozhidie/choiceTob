@@ -1,15 +1,8 @@
 page{background:#f8f6f4;padding-bottom:calc(40rpx + env(safe-area-inset-bottom));}
 
 /* 头 */
-.hd{text-align:center;padding:36rpx 24rpx 20rpx;}
+.hd{text-align:center;padding:36rpx 24rpx 28rpx;}
 .ht{font-size:38rpx;font-weight:bold;color:#1a1a2e;display:block;letter-spacing:1rpx;}
-.hs{font-size:24rpx;color:#888;display:block;margin-top:10rpx;}
-
-/* 说明卡：区分色彩风格诊断与风格测试 */
-.info-card{margin:0 28rpx 24rpx;padding:24rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
-.info-t{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
-.info-body{display:flex;flex-direction:column;gap:12rpx;}
-.info-line{font-size:24rpx;color:#666;line-height:1.6;}
 
 /* 测试会员购买卡片 */
 .member-card{display:flex;align-items:center;gap:18rpx;margin:0 28rpx 28rpx;padding:22rpx 24rpx;
@@ -37,6 +30,3 @@ page{background:#f8f6f4;padding-bottom:calc(40rpx + env(safe-area-inset-bottom))
 /* 后台可配满框图片模块 */
 .blocks{display:flex;flex-direction:column;gap:0;margin:0 28rpx;}
 .full-img{width:100%;display:block;}
-
-/* 底部提示 */
-.tip{text-align:center;padding:24rpx 40rpx 10rpx;font-size:22rpx;color:#bbb;line-height:1.5;}

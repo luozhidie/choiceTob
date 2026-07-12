@@ -41,20 +41,9 @@ export default function StyleTestPage() {
             <span className="font-bold text-lg text-primary">骆芷蝶智选</span>
           </Link>
           <h1 className="text-2xl font-bold text-primary">色彩季型VS穿衣风格判断</h1>
-          <p className="text-gray-500 text-sm mt-1">商城拿货店铺上传核心VIP客户资料</p>
         </div>
 
-        {/* 说明：区分色彩风格诊断与风格测试 */}
-        <div className="bg-white rounded-2xl p-5 mb-6 border border-gray-200 shadow-sm">
-          <h3 className="font-bold text-gray-900 text-base mb-3">色彩风格诊断 vs 风格测试</h3>
-          <ul className="text-sm text-gray-600 space-y-2">
-            <li>• 本问卷为色彩风格判断题，商城拿货店铺可免费为VIP客户填写。</li>
-            <li>• 付费「风格测试会员」是电脑端同款14题自动诊断，做完直接出结果。</li>
-            <li>• VIP客户请备注店名，视频课学员按第4题备注。</li>
-          </ul>
-        </div>
-
-        {/* 风格测试会员 ¥99 */}
+        {/* 风格测试会员 ¥99 — 付费入口 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
@@ -67,7 +56,7 @@ export default function StyleTestPage() {
             </div>
             <div>
               <h3 className="font-bold text-base">风格测试会员 · ¥99</h3>
-              <p className="text-xs text-white/80 mt-0.5">14道题自动出结果 · 解锁专属色彩风格诊断</p>
+              <p className="text-xs text-white/80 mt-0.5">14 题自动诊断 · 找到你的本命色彩与穿衣风格</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
@@ -94,8 +83,6 @@ export default function StyleTestPage() {
             ))}
           </section>
         )}
-
-        <p className="text-center text-xs text-gray-400 mt-6 mb-2">所有信息仅用于色彩风格诊断，严格保密</p>
       </div>
     </div>
   );

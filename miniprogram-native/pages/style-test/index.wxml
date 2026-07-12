@@ -2,17 +2,6 @@
   <!-- 标题 -->
   <view class="hd">
     <text class="ht">色彩季型VS穿衣风格判断</text>
-    <text class="hs">商城拿货店铺上传核心VIP客户资料</text>
-  </view>
-
-  <!-- 说明卡：区分色彩风格诊断与风格测试 -->
-  <view wx:if="{{!isPersonal}}" class="info-card">
-    <text class="info-t">色彩风格诊断 vs 风格测试</text>
-    <view class="info-body">
-      <text class="info-line">本问卷为色彩风格判断题，商城拿货店铺可免费为VIP客户填写。</text>
-      <text class="info-line">付费「风格测试会员」是电脑端同款14题自动诊断，做完直接出结果。</text>
-      <text class="info-line">VIP客户请备注店名，视频课学员按第4题备注。</text>
-    </view>
   </view>
 
   <!-- 测试会员购买入口（付费风格测试） -->
@@ -25,7 +14,7 @@
           <view class="mc-si {{testMode==='male'?'mc-si-on':''}}" data-mode="male" bindtap="switchMode">男士</view>
         </view>
       </view>
-      <text class="mc-desc">14题自动诊断 · 做完直接出结果</text>
+      <text class="mc-desc">14 题自动诊断 · 找到你的本命色彩与穿衣风格</text>
     </view>
     <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
     <view wx:else class="mc-btn mc-done">已开通 ✓</view>
@@ -40,7 +29,4 @@
   <view wx:if="{{blocks.length > 0}}" class="blocks">
     <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
   </view>
-
-  <!-- 底部提示 -->
-  <view class="tip"><text>{{tipText}}</text></view>
 </view>

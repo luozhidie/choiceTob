@@ -10,8 +10,6 @@ Page({
     isTestMember:false,
     testFeeLabel:'¥99',
 
-    tipText:'所有信息仅用于色彩风格判断，严格保密',
-
     /* 后台配置的图片 */
     heroImage:'',
     blocks:[]
