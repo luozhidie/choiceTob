@@ -1,0 +1,20 @@
+.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;}
+.empty{padding:80rpx 40rpx;text-align:center;color:#999;font-size:26rpx;}
+.addr{background:#fff;border-radius:16rpx;padding:24rpx;margin-bottom:20rpx;}
+.addr-top{display:flex;align-items:center;gap:16rpx;margin-bottom:10rpx;}
+.addr-name{font-size:30rpx;color:#333;font-weight:600;}
+.addr-phone{font-size:26rpx;color:#666;}
+.addr-default{font-size:20rpx;color:#C9A24B;background:#fff8e6;padding:4rpx 12rpx;border-radius:8rpx;}
+.addr-text{font-size:26rpx;color:#555;line-height:1.5;display:block;margin-bottom:16rpx;}
+.addr-actions{display:flex;gap:24rpx;}
+.addr-act{font-size:24rpx;color:#2d1b2e;}
+.addr-act.del{color:#e11d48;}
+.add-btn{margin-top:20rpx;background:#2d1b2e;color:#fff;text-align:center;padding:28rpx 0;border-radius:14rpx;font-size:30rpx;font-weight:500;}
+.form-wrap{background:#fff;border-radius:16rpx;padding:24rpx;}
+.fi{margin-bottom:24rpx;}
+.fl{font-size:26rpx;color:#333;font-weight:500;margin-bottom:12rpx;display:block;}
+.fin{background:#f7f5f3;border-radius:12rpx;padding:22rpx 24rpx;font-size:28rpx;}
+.picker{color:#333;}
+.fta{background:#f7f5f3;border-radius:12rpx;padding:22rpx 24rpx;font-size:28rpx;height:160rpx;width:auto;box-sizing:border-box;}
+.submit-btn{margin-top:10rpx;background:#2d1b2e;color:#fff;text-align:center;padding:28rpx 0;border-radius:14rpx;font-size:30rpx;font-weight:500;}
+.cancel-btn{margin-top:16rpx;text-align:center;padding:20rpx 0;color:#666;font-size:28rpx;}

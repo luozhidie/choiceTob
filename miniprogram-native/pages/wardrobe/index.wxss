@@ -1,0 +1,11 @@
+.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;}
+.tip-card{background:#fff;border-radius:16rpx;padding:24rpx;margin-bottom:20rpx;}
+.tc-txt{font-size:26rpx;color:#666;line-height:1.5;}
+.add-bar{display:flex;gap:16rpx;margin-bottom:20rpx;}
+.ab-input{flex:1;background:#fff;border-radius:12rpx;padding:22rpx 24rpx;font-size:28rpx;}
+.ab-btn{background:#2d1b2e;color:#fff;padding:0 36rpx;border-radius:12rpx;font-size:28rpx;display:flex;align-items:center;}
+.list{background:#fff;border-radius:16rpx;overflow:hidden;}
+.empty{padding:80rpx 40rpx;text-align:center;color:#999;font-size:26rpx;}
+.li{display:flex;justify-content:space-between;align-items:center;padding:28rpx 24rpx;border-bottom:1rpx solid #f0ede9;}
+.li-name{font-size:28rpx;color:#333;flex:1;}
+.li-del{font-size:24rpx;color:#e11d48;padding:8rpx 16rpx;}

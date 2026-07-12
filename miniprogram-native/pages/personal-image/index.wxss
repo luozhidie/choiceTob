@@ -1,0 +1,4 @@
+.page-loading{height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f5f3f0;gap:20rpx;}
+.pl-dot{width:48rpx;height:48rpx;border:4rpx solid #e0d8dc;border-top-color:#C9A24B;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.pl-txt{font-size:26rpx;color:#999;}

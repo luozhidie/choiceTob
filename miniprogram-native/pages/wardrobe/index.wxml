@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="tip-card">
+    <text class="tc-txt">记录已有单品，避免重复购买，方便搭配推荐。</text>
+  </view>
+
+  <view class="add-bar">
+    <input class="ab-input" placeholder="输入单品名称，如：驼色羊毛大衣" value="{{inputText}}" bindinput="onInput"/>
+    <view class="ab-btn" bindtap="addItem">添加</view>
+  </view>
+
+  <view class="list">
+    <view wx:if="{{items.length===0}}" class="empty">衣橱还是空的，添加第一件单品吧</view>
+    <block wx:for="{{items}}" wx:key="id">
+      <view class="li">
+        <text class="li-name">{{item.name}}</text>
+        <text class="li-del" bindtap="removeItem" data-id="{{item.id}}">删除</text>
+      </view>
+    </block>
+  </view>
+</view>

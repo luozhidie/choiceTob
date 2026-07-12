@@ -5,7 +5,7 @@
   </view>
 
   <!-- 说明卡：区分色彩风格诊断与风格测试 -->
-  <view class="info-card">
+  <view wx:if="{{!isPersonal}}" class="info-card">
     <text class="info-t">色彩风格诊断 vs 风格测试</text>
     <view class="info-body">
       <text class="info-line">本问卷为色彩风格判断题，商城拿货店铺可免费为VIP客户填写。</text>
@@ -15,7 +15,7 @@
   </view>
 
   <!-- 测试会员购买入口（付费风格测试） -->
-  <view class="member-card {{testMode==='male'?'mc-blue':''}}">
+  <view wx:if="{{!isPersonal}}" class="member-card {{testMode==='male'?'mc-blue':''}}">
     <view class="mc-left">
       <view class="mc-title-row">
         <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
@@ -32,8 +32,8 @@
 
   <!-- 当前问卷标题 -->
   <view class="form-title">
-    <text class="form-title-main">色彩风格判断问卷</text>
-    <text class="form-title-sub">商城拿货会员店铺核心VIP客户色彩季型风格在线诊断资料上传</text>
+    <text class="form-title-main">{{testTitle}}</text>
+    <text class="form-title-sub">{{isPersonal?'请填写真实信息，便于为您精准选款拿货':'商城拿货会员店铺核心VIP客户色彩季型风格在线诊断资料上传'}}</text>
   </view>
 
   <!-- 表单区域（男女共用同一套题，与电脑版完全一致） -->

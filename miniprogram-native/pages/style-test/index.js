@@ -7,6 +7,7 @@ Page({
     testTitle:'色彩风格判断问卷',
     testDesc:'商城拿货店铺上传核心VIP客户资料',
     tipText:'所有信息仅用于色彩风格判断，严格保密',
+    isPersonal:false,
 
     /* 测试会员（付费风格测试） */
     isTestMember:false,
@@ -41,18 +42,22 @@ Page({
   },
 
   onLoad:function(options){
-    this.applyMode(options.mode || 'female');
+    var isPersonal = options && options.scene === 'personal';
+    if(isPersonal){wx.setNavigationBarTitle({title:'个人形象诊断'});}
+    this.setData({isPersonal:isPersonal});
+    this.applyMode(options.mode || 'female', isPersonal);
   },
 
   /* ========== 切换男士/女士模式 ========== */
-  applyMode:function(mode){
-    var t = '色彩风格判断问卷', d = '商城拿货店铺上传核心VIP客户资料';
+  applyMode:function(mode, isPersonal){
+    var t = isPersonal ? '个人形象诊断' : '色彩风格判断问卷';
+    var d = isPersonal ? '请仔细填写诊断信息，龙虾按喜欢+适合+需要的规则为您选款拿货' : '商城拿货店铺上传核心VIP客户资料';
     this.setData({testMode:mode,testTitle:t,testDesc:d});
   },
   switchMode:function(e){
     var mode = e.currentTarget.dataset.mode;
     if(mode===this.data.testMode)return;
-    this.applyMode(mode);
+    this.applyMode(mode, this.data.isPersonal);
     this.setData({'isTestMember':false});
   },
 

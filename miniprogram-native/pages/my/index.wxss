@@ -131,6 +131,22 @@ page{background:#f5f3f0;}
 .sv-item{flex:1;min-width:140rpx;background:#faf8f6;border-radius:14rpx;padding:18rpx 14rpx;display:flex;align-items:center;gap:12rpx;border:1rpx solid #f0ede9;}
 .sv-label{font-size:24rpx;font-weight:500;color:#333;}
 
+/* ====== 个人形象服务：5 图标网格 ====== */
+.service-grid{display:flex;justify-content:space-between;padding:8rpx 0 24rpx;}
+.sg-item{display:flex;flex-direction:column;align-items:center;gap:10rpx;flex:1;}
+.sg-icon{width:88rpx;height:88rpx;border-radius:50%;background:#faf8f6;border:1rpx solid #f0ede9;display:flex;align-items:center;justify-content:center;font-size:42rpx;}
+.sg-label{font-size:22rpx;color:#555;font-weight:500;}
+
+/* ====== 个人形象诊断 banner ====== */
+.image-diag-card{margin-top:8rpx;border-radius:20rpx;overflow:hidden;
+  background:linear-gradient(135deg,#2d1b2e 0%,#4a2b4d 50%,#2d1b2e 100%);
+  box-shadow:0 8rpx 24rpx rgba(45,27,46,.25);}
+.idc-body{padding:32rpx 28rpx;display:flex;flex-direction:column;gap:14rpx;}
+.idc-title{font-size:34rpx;font-weight:bold;color:#fff;letter-spacing:2rpx;}
+.idc-desc{font-size:24rpx;color:rgba(255,255,255,.78);line-height:1.5;}
+.idc-highlight{color:#C9A24B;font-weight:600;}
+.idc-btn{align-self:flex-start;background:#C9A24B;color:#2d1b2e;font-size:24rpx;font-weight:600;padding:14rpx 32rpx;border-radius:32rpx;margin-top:6rpx;}
+
 /* ═══════ 未登录：轻量认证入口（粉色·同行截图3）═══════ */
 .cert-entry-card{margin:16rpx 20rpx 12rpx;background:linear-gradient(135deg,#fef2f2,#fce7f3);border:2rpx solid #fecdd3;border-radius:20rpx;overflow:hidden;}
 .cert-entry-card:active{background:linear-gradient(135deg,#fee2e2,#fecaca);}

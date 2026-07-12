@@ -1,0 +1,4 @@
+<view class="page-loading">
+  <view class="pl-dot"></view>
+  <text class="pl-txt">正在进入诊断问卷…</text>
+</view>
