@@ -33,6 +33,7 @@ const menuGroups = [
       { label: "VIP管理", href: "/admin/vip" },
       { label: "VIP加油包", href: "/admin/vip-addons" },
       { label: "形象诊断管理", href: "/admin/vip-diagnosis" },
+      { label: "智能形象诊断", href: "/admin/style-test" },
       { label: "色彩季型录入", href: "/admin/color-analysis" },
     { label: "色彩季型对比", href: "/admin/color-compare" },
     { label: "风格测试记录", href: "/admin/style-tests" },

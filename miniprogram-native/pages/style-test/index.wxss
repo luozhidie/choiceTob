@@ -1,9 +1,15 @@
-page{background:#f8f6f4;}
+page{background:#f8f6f4;padding-bottom:calc(40rpx + env(safe-area-inset-bottom));}
 
 /* 头 */
 .hd{text-align:center;padding:36rpx 24rpx 20rpx;}
 .ht{font-size:38rpx;font-weight:bold;color:#1a1a2e;display:block;letter-spacing:1rpx;}
 .hs{font-size:24rpx;color:#888;display:block;margin-top:10rpx;}
+
+/* 说明卡：区分色彩风格诊断与风格测试 */
+.info-card{margin:0 28rpx 24rpx;padding:24rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
+.info-t{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
+.info-body{display:flex;flex-direction:column;gap:12rpx;}
+.info-line{font-size:24rpx;color:#666;line-height:1.6;}
 
 /* 测试会员购买卡片 */
 .member-card{display:flex;align-items:center;gap:18rpx;margin:0 28rpx 28rpx;padding:22rpx 24rpx;
@@ -24,86 +30,13 @@ page{background:#f8f6f4;}
 .mc-blue .mc-btn{background:linear-gradient(135deg,#1976d2,#1565c0);box-shadow:0 4rpx 12rpx rgba(25,118,210,.3);}
 .mc-done{background:#bbb;color:#fff;box-shadow:none;}
 
-/* 当前问卷标题（放在风格测试会员卡片下方） */
-.form-title{margin:0 28rpx 24rpx;padding:20rpx 24rpx;background:#fff;border-radius:16rpx;border:2rpx solid #eee5df;text-align:center;}
-.form-title-main{font-size:30rpx;font-weight:bold;color:#333;display:block;margin-bottom:8rpx;}
-.form-title-sub{font-size:22rpx;color:#888;display:block;line-height:1.5;}
+/* 后台可配 Hero 大图 */
+.hero-img-wrap{margin:0 28rpx 24rpx;border-radius:20rpx;overflow:hidden;background:#fff;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
+.hero-img{width:100%;display:block;}
 
-/* 说明卡：区分色彩风格诊断与风格测试 */
-.info-card{margin:0 28rpx 24rpx;padding:24rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
-.info-t{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
-.info-body{display:flex;flex-direction:column;gap:12rpx;}
-.info-line{font-size:24rpx;color:#666;line-height:1.6;}
-
-/* 表单滚动区 */
-.form-scroll{height:calc(100vh - 200rpx);}
-.form{padding:0 28rpx 150rpx;}
-
-/* 付费提示卡片 */
-.pay-info{background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-radius:20rpx;padding:24rpx 28rpx;margin-bottom:24rpx;}
-.pay-blue{background:linear-gradient(135deg,#e3f2fd,#bbdefb);}
-.pay-title{font-size:30rpx;font-weight:bold;color:#c2185b;display:block;margin-bottom:6rpx;}
-.pay-blue .pay-title{color:#1565c0;}
-.pay-desc{font-size:22rpx;color:#666;display:block;line-height:1.5;}
-
-/* 题目 */
-.q{margin-bottom:32rpx;}
-.q-input{margin-bottom:28rpx;}
-.ql{font-size:28rpx;color:#333;font-weight:500;display:block;margin-bottom:14rpx;line-height:1.65;}
-.req{color:#e91e63;}
-.qin{width:100%;height:88rpx;background:#fff;border:2rpx solid #e0ddd8;border-radius:16rpx;padding:0 24rpx;font-size:28rpx;color:#333;box-sizing:border-box;}
-
-/* 选项 */
-.opts{display:flex;flex-wrap:wrap;gap:16rpx;margin-bottom:20rpx;}
-.opt{
-  flex:1;min-width:140rpx;
-  padding:22rpx 18rpx;
-  border-radius:16rpx;
-  border:2rpx solid #e0ddd8;
-  font-size:27rpx;color:#555;
-  text-align:center;
-  background:#fff;
-  line-height:1.5;
-  box-sizing:border-box;
-}
-.opt-on{border-color:#2d1b2e;color:#2d1b2e;background:#f5f0eb;font-weight:600;}
-
-/* 提交按钮 */
-.submit-btn{text-align:center;margin:44rpx 0 28rpx;}
-.sb-ok,.sb-dis{display:inline-block;padding:24rpx 130rpx;border-radius:40rpx;font-size:30rpx;font-weight:bold;}
-.sb-ok{background:#2d1b2e;color:#fff;}
-.sb-dis{background:#ccc;color:#999;}
+/* 后台可配满框图片模块 */
+.blocks{display:flex;flex-direction:column;gap:0;margin:0 28rpx;}
+.full-img{width:100%;display:block;}
 
 /* 底部提示 */
-.tip{position:fixed;left:0;right:0;bottom:0;background:#f8f6f4;text-align:center;padding:10rpx 40rpx;font-size:22rpx;color:#bbb;line-height:1.5;z-index:10;}
-
-/* ═══ Q12 上衣长度参考图 ═══ */
-.q12-ref{margin:10rpx 0 28rpx;padding:24rpx;background:#f8f6f4;border-radius:16rpx;border:2rpx solid #eee5df;}
-.q12-ref-t{font-size:24rpx;color:#666;font-weight:bold;display:block;margin-bottom:14rpx;}
-.q12-ref-img{width:100%;border-radius:12rpx;border:2rpx solid #e0ddd8;}
-
-/* ═══ Q18 照片说明区 ═══ */
-.q18-section{margin-top:32rpx;padding:28rpx;background:#fff;border-radius:20rpx;border:2rpx solid #eee5df;}
-.q18-title{font-size:30rpx;color:#333;font-weight:bold;display:block;margin-bottom:18rpx;}
-.q18-desc{font-size:26rpx;color:#666;line-height:1.8;display:flex;flex-direction:column;gap:10rpx;}
-.q18-desc text:first-child{color:#333;font-weight:500;margin-top:4rpx;}
-.q18-sub{padding-left:28rpx;color:#777;}
-.q18-ref-img{width:100%;max-height:300rpx;border-radius:12rpx;margin:14rpx 0;border:2rpx solid #e0ddd8;}
-.q18-textarea{width:100%;min-height:160rpx;margin-top:18rpx;padding:20rpx 24rpx;
-  background:#f8f6f4;border:2rpx solid #e0ddd8;border-radius:16rpx;
-  font-size:27rpx;color:#333;line-height:1.7;box-sizing:border-box;}
-
-/* ═══ Q19-Q21 图片上传卡片 ═══ */
-.upload-card{margin-top:28rpx;padding:28rpx;background:#fff;border-radius:20rpx;
-  border:2rpx dashed #d0c8c0;text-align:center;}
-.upload-label{font-size:29rpx;color:#333;font-weight:bold;display:block;margin-bottom:18rpx;text-align:left;}
-.upload-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16rpx;min-height:420rpx;padding:50rpx 24rpx;}
-.upload-icon{font-size:56rpx;color:#ccc;}
-.upload-hint-pink{font-size:28rpx;color:#e91e63;font-weight:500;}
-.upload-hint-gray{font-size:22rpx;color:#aaa;line-height:1.5;}
-.uploading-txt{font-size:26rpx;color:#888;}
-.uploaded-preview{display:flex;flex-direction:column;align-items:center;gap:10rpx;padding:16rpx;}
-.up-preview-img{width:100%;max-height:360rpx;border-radius:14rpx;border:2rpx solid #e0ddd8;}
-.up-preview-ok{font-size:24rpx;color:#4caf50;font-weight:bold;}
-.rm-btn{display:inline-block;margin-top:12rpx;padding:12rpx 32rpx;
-  border-radius:30rpx;background:#ffebee;color:#c62828;font-size:24rpx;border:2rpx solid #ef9a9a;}
+.tip{text-align:center;padding:24rpx 40rpx 10rpx;font-size:22rpx;color:#bbb;line-height:1.5;}
