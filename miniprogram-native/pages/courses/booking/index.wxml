@@ -1,0 +1,46 @@
+<view class="page">
+  <!-- Hero -->
+  <view class="hero">
+    <image wx:if="{{heroImage}}" src="{{heroImage}}" mode="aspectFill" class="hero-bg" />
+    <view class="hero-mask" />
+    <view class="hero-body">
+      <view class="tag">🔥 形象诊断预约</view>
+      <text class="h-title">{{booking.title}}</text>
+      <text class="h-sub">{{booking.subtitle}}</text>
+      <text class="h-price">¥{{booking.price}}</text>
+    </view>
+  </view>
+
+  <!-- 简介 -->
+  <view class="card">
+    <text class="card-title">预约说明</text>
+    <text class="card-desc">{{booking.desc}}</text>
+    <view class="info-row">
+      <text class="info-k">方式</text>
+      <text class="info-v">一对一 在线 / 线下</text>
+    </view>
+    <view class="info-row">
+      <text class="info-k">地点</text>
+      <text class="info-v">深圳·南油 / 线上</text>
+    </view>
+  </view>
+
+  <!-- 大纲 -->
+  <view class="card">
+    <text class="card-title">服务大纲</text>
+    <view class="outline">
+      <view wx:for="{{booking.outline}}" wx:key="*this" class="outline-row">
+        <text class="outline-num">{{index+1}}</text>
+        <text class="outline-txt">{{item}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-space" />
+</view>
+
+<!-- 底部固定预约栏 -->
+<view class="bottom-bar">
+  <view wx:if="{{booked}}" class="booked">已预约，客服将联系您</view>
+  <view wx:else class="book-btn" bindtap="goBook">立即预约 · ¥{{booking.price}}</view>
+</view>

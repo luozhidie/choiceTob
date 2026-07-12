@@ -42,12 +42,25 @@ const REPORTS = [
 
 export default function PersonalImagePage() {
   const [visible, setVisible] = useState(false);
-  useEffect(() => { setVisible(true); }, []);
+  const [heroImage, setHeroImage] = useState("");
+  useEffect(() => {
+    setVisible(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/public/site-assets?keys=diagnosis_hero");
+        const d = await res.json();
+        if (d.success && d.data && d.data.diagnosis_hero) setHeroImage(d.data.diagnosis_hero);
+      } catch {}
+    })();
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#f5f3f0] pb-28 md:pb-32">
+    <div className="min-h-screen bg-[#f5f3f0] pb-36 md:pb-32">
       {/* Hero */}
       <section className="relative bg-gradient-to-br from-[#2d1b2e] to-[#4a2a3e] py-16 md:py-24 text-center overflow-hidden">
+        {heroImage && (
+          <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+        )}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(201,162,75,.15),transparent_50%)]" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -134,21 +147,28 @@ export default function PersonalImagePage() {
       {/* 底部间距 */}
       <div className="h-10" />
 
-      {/* 固定底部按钮 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 md:px-6 md:py-5 flex gap-4 z-50">
-        <Link
-          href="/courses"
-          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-3 hover:opacity-95 transition"
-        >
-          <span className="text-base font-bold">整体形象诊断</span>
-          <span className="text-sm text-white/80">¥190</span>
-        </Link>
+      {/* 固定底部三按钮 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-3 py-3 md:px-6 md:py-4 flex gap-2 md:gap-4 z-50">
         <Link
           href="/style-test"
-          className="flex-1 flex flex-col items-center justify-center bg-[#C9A24B] text-white rounded-full py-3 hover:opacity-95 transition"
+          className="flex-1 flex flex-col items-center justify-center border border-[#C9A24B] text-[#2d1b2e] rounded-full py-2.5 md:py-3 hover:bg-[#faf8f6] transition"
         >
-          <span className="text-base font-bold">智能形象诊断</span>
-          <span className="text-sm text-white/80">¥0</span>
+          <span className="text-sm md:text-base font-bold">资料上传</span>
+          <span className="text-xs text-gray-400">色彩风格问卷</span>
+        </Link>
+        <Link
+          href="/style-test/female"
+          className="flex-1 flex flex-col items-center justify-center bg-[#C9A24B] text-white rounded-full py-2.5 md:py-3 hover:opacity-95 transition"
+        >
+          <span className="text-sm md:text-base font-bold">智能形象诊断</span>
+          <span className="text-xs text-white/85">¥99 风格测试</span>
+        </Link>
+        <Link
+          href="/courses/booking"
+          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-2.5 md:py-3 hover:opacity-95 transition"
+        >
+          <span className="text-sm md:text-base font-bold">整体形象诊断</span>
+          <span className="text-xs text-white/85">¥190 预约</span>
         </Link>
       </div>
     </div>

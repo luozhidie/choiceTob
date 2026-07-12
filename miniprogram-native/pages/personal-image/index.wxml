@@ -1,6 +1,7 @@
 <view class="page">
   <!-- Hero -->
   <view class="hero">
+    <image wx:if="{{heroImage}}" src="{{heroImage}}" mode="aspectFill" class="hero-bg" />
     <view class="hero-overlay">
       <text class="hero-title">个人形象诊断</text>
       <text class="hero-sub">一次诊断 终身受益</text>
@@ -62,14 +63,18 @@
   <view class="bottom-space"></view>
 </view>
 
-<!-- 底部固定双按钮 -->
+<!-- 底部固定三按钮 -->
 <view class="bottom-bar">
+  <view class="bottom-btn upload" bindtap="goUpload">
+    <text class="btn-title-u">资料上传</text>
+    <text class="btn-price-u">色彩风格问卷</text>
+  </view>
+  <view class="bottom-btn free" bindtap="goTest">
+    <text class="btn-title">智能形象诊断</text>
+    <text class="btn-price">¥99 风格测试</text>
+  </view>
   <view class="bottom-btn paid" bindtap="goPaid">
     <text class="btn-title">整体形象诊断</text>
-    <text class="btn-price">¥190</text>
-  </view>
-  <view class="bottom-btn free" bindtap="goFree">
-    <text class="btn-title">智能形象诊断</text>
-    <text class="btn-price">¥0</text>
+    <text class="btn-price">¥190 预约</text>
   </view>
 </view>

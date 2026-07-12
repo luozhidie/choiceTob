@@ -12,6 +12,7 @@
     "pages/looks/index",
     "pages/courses/index",
     "pages/courses/detail/index",
+    "pages/courses/booking/index",
     "pages/style-test/index",
     "pages/personal-image/index",
     "pages/wardrobe/index",

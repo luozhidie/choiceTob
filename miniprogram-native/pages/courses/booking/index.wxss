@@ -1,0 +1,33 @@
+.page{background:#f5f3f0;min-height:100vh;padding-bottom:calc(180rpx + env(safe-area-inset-bottom));box-sizing:border-box;}
+
+/* Hero */
+.hero{position:relative;height:520rpx;background:linear-gradient(135deg,#2d1b2e,#4a2a3e);display:flex;align-items:flex-end;overflow:hidden;padding:0 40rpx 48rpx;box-sizing:border-box;}
+.hero-bg{position:absolute;inset:0;width:100%;height:100%;opacity:.25;}
+.hero-mask{position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(201,162,75,.15),transparent 50%);}
+.hero-body{position:relative;z-index:2;width:100%;text-align:center;}
+.tag{display:inline-block;background:#e91e63;color:#fff;font-size:22rpx;padding:6rpx 20rpx;border-radius:30rpx;margin-bottom:20rpx;}
+.h-title{display:block;color:#fff;font-size:46rpx;font-weight:bold;}
+.h-sub{display:block;color:#C9A24B;font-size:28rpx;margin-top:12rpx;}
+.h-price{display:block;color:#C9A24B;font-size:46rpx;font-weight:bold;margin-top:16rpx;}
+
+/* 卡片 */
+.card{margin:24rpx;background:#fff;border-radius:24rpx;padding:32rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.04);}
+.card-title{display:block;font-size:32rpx;font-weight:bold;color:#2d1b2e;margin-bottom:20rpx;}
+.card-desc{display:block;font-size:26rpx;color:#666;line-height:1.7;}
+.info-row{display:flex;justify-content:space-between;padding:20rpx 0;border-bottom:1rpx solid #f0f0f0;font-size:26rpx;}
+.info-k{color:#999;}
+.info-v{color:#444;font-weight:500;}
+
+/* 大纲 */
+.outline{display:flex;flex-direction:column;gap:20rpx;margin-top:10rpx;}
+.outline-row{display:flex;align-items:center;gap:20rpx;}
+.outline-num{flex-shrink:0;width:48rpx;height:48rpx;border-radius:50%;background:#2d1b2e;color:#fff;font-size:26rpx;font-weight:bold;display:flex;align-items:center;justify-content:center;}
+.outline-txt{font-size:28rpx;color:#555;}
+
+.bottom-space{height:30rpx;}
+
+/* 底部栏 */
+.bottom-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1rpx solid #eee;padding:16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));box-shadow:0 -4rpx 20rpx rgba(0,0,0,.08);z-index:100;}
+.book-btn{background:#2d1b2e;color:#fff;border-radius:40rpx;padding:24rpx 0;text-align:center;font-size:30rpx;font-weight:bold;}
+.book-btn:active{opacity:.9;}
+.booked{text-align:center;color:#16a34a;font-weight:bold;padding:24rpx 0;font-size:28rpx;}

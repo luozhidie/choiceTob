@@ -28,11 +28,12 @@ const menuGroups = [
   ]},
 
   // ─── VIP会员 ───
-  { label: "VIP会员", items: [
-    { label: "VIP订单", href: "/admin/membership-orders" },
-    { label: "VIP管理", href: "/admin/vip" },
-    { label: "VIP加油包", href: "/admin/vip-addons" },
-    { label: "色彩季型录入", href: "/admin/color-analysis" },
+    { label: "VIP会员", items: [
+      { label: "VIP订单", href: "/admin/membership-orders" },
+      { label: "VIP管理", href: "/admin/vip" },
+      { label: "VIP加油包", href: "/admin/vip-addons" },
+      { label: "形象诊断管理", href: "/admin/vip-diagnosis" },
+      { label: "色彩季型录入", href: "/admin/color-analysis" },
     { label: "色彩季型对比", href: "/admin/color-compare" },
     { label: "风格测试记录", href: "/admin/style-tests" },
     { label: "风格测试结果", href: "/admin/style-test-results" },
