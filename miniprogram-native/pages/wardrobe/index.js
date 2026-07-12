@@ -1,7 +1,12 @@
 Page({
   data:{
+    categories:['每期推荐','衣橱管理','添置清单','搭配需求'],
+    activeCate:'衣橱管理',
     items:[],
-    inputText:''
+    filteredItems:[],
+    showForm:false,
+    form:{name:'',cate:'衣橱管理',img:''},
+    uploading:false
   },
   onShow:function(){
     this.loadItems();
@@ -9,23 +14,56 @@ Page({
   loadItems:function(){
     var items = wx.getStorageSync('wardrobe_items') || [];
     this.setData({items:items});
+    this.filterItems(items,this.data.activeCate);
   },
-  onInput:function(e){
-    this.setData({inputText:e.detail.value});
+  filterItems:function(items,cate){
+    var filtered = items.filter(function(x){return x.cate===cate;});
+    this.setData({filteredItems:filtered});
   },
-  addItem:function(){
-    var t = this.data.inputText.trim();
-    if(!t){wx.showToast({title:'请输入单品名称',icon:'none'});return;}
+  switchCate:function(e){
+    var cate=e.currentTarget.dataset.cate;
+    this.setData({activeCate:cate});
+    this.filterItems(this.data.items,cate);
+  },
+  setFormCate:function(e){
+    this.setF('cate',e.currentTarget.dataset.cate);
+  },
+  setF:function(k,v){
+    var f=this.data.form;f[k]=v;
+    this.setData({form:f});
+  },
+  onName:function(e){this.setF('name',e.detail.value);},
+  toggleForm:function(){this.setData({showForm:!this.data.showForm,form:{name:'',cate:this.data.activeCate,img:''}});},
+  chooseImg:function(){
+    var t=this;
+    wx.chooseImage({count:1,sizeType:['compressed'],sourceType:['album','camera'],
+      success:function(res){
+        t.setData({uploading:true});
+        wx.uploadFile({url:'https://colour-choice.art/api/upload',filePath:res.tempFilePaths[0],name:'file',
+          success:function(r){
+            t.setData({uploading:false});
+            try{var d=JSON.parse(r.data);if(d.url){t.setF('img',d.url);}else{wx.showToast({title:'上传失败',icon:'none'});}}catch(e){wx.showToast({title:'解析失败',icon:'none'});}
+          },
+          fail:function(){t.setData({uploading:false});wx.showToast({title:'上传失败',icon:'none'});}
+        });
+      }
+    });
+  },
+  saveItem:function(){
+    var f=this.data.form;
+    if(!f.name.trim()){wx.showToast({title:'请输入名称',icon:'none'});return;}
     var items = this.data.items;
-    items.unshift({id:Date.now(),name:t});
+    items.unshift({id:Date.now(),name:f.name.trim(),cate:f.cate,img:f.img,date:'刚刚'});
     wx.setStorageSync('wardrobe_items', items);
-    this.setData({items:items,inputText:''});
+    this.setData({items:items,showForm:false,form:{name:'',cate:this.data.activeCate,img:''}});
+    this.filterItems(items,this.data.activeCate);
     wx.showToast({title:'已添加',icon:'success'});
   },
-  removeItem:function(e){
-    var id = e.currentTarget.dataset.id;
-    var items = this.data.items.filter(function(x){return x.id!==id;});
+  delItem:function(e){
+    var id=e.currentTarget.dataset.id;
+    var items=this.data.items.filter(function(x){return x.id!==id;});
     wx.setStorageSync('wardrobe_items', items);
     this.setData({items:items});
+    this.filterItems(items,this.data.activeCate);
   }
 });

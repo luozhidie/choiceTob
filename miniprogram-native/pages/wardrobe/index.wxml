@@ -1,20 +1,52 @@
 <view class="page">
-  <view class="tip-card">
-    <text class="tc-txt">记录已有单品，避免重复购买，方便搭配推荐。</text>
-  </view>
-
-  <view class="add-bar">
-    <input class="ab-input" placeholder="输入单品名称，如：驼色羊毛大衣" value="{{inputText}}" bindinput="onInput"/>
-    <view class="ab-btn" bindtap="addItem">添加</view>
-  </view>
-
-  <view class="list">
-    <view wx:if="{{items.length===0}}" class="empty">衣橱还是空的，添加第一件单品吧</view>
-    <block wx:for="{{items}}" wx:key="id">
-      <view class="li">
-        <text class="li-name">{{item.name}}</text>
-        <text class="li-del" bindtap="removeItem" data-id="{{item.id}}">删除</text>
+  <!-- 顶部分类按钮 -->
+  <view class="cate-row">
+    <view wx:for="{{categories}}" wx:key="*this" class="cate-item {{activeCate===item?'cate-on':''}}" bindtap="switchCate" data-cate="{{item}}">
+      <view class="cate-icon">
+        <text wx:if="{{index===0}}">💎</text>
+        <text wx:elif="{{index===1}}">🚪</text>
+        <text wx:elif="{{index===2}}">➕</text>
+        <text wx:else>❓</text>
       </view>
-    </block>
+      <text class="cate-label">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 图片网格 -->
+  <view class="grid" wx:if="{{filteredItems.length>0}}">
+    <view wx:for="{{filteredItems}}" wx:key="id" class="card">
+      <image wx:if="{{item.img}}" class="card-img" src="{{item.img}}" mode="aspectFill" lazy-load/>
+      <view wx:else class="card-img placeholder">
+        <text class="ph-icon">👗</text>
+        <text class="ph-txt">暂无图片</text>
+      </view>
+      <view class="card-info">
+        <text class="card-title">{{item.name}}</text>
+        <text class="card-date">{{item.date}}</text>
+      </view>
+      <view class="del" bindtap="delItem" data-id="{{item.id}}">×</view>
+    </view>
+  </view>
+
+  <view wx:if="{{filteredItems.length===0}}" class="empty">该分类还没有单品，点击右下角添加</view>
+
+  <!-- 添加按钮 -->
+  <view class="fab" bindtap="toggleForm">+</view>
+
+  <!-- 添加弹窗 -->
+  <view wx:if="{{showForm}}" class="modal">
+    <view class="modal-mask" bindtap="toggleForm"></view>
+    <view class="modal-body">
+      <text class="modal-title">添加单品</text>
+      <view class="modal-cates">
+        <view wx:for="{{categories}}" wx:key="*this" class="mc {{form.cate===item?'mc-on':''}}" bindtap="setFormCate" data-cate="{{item}}">{{item}}</view>
+      </view>
+      <input class="mi" placeholder="单品名称" value="{{form.name}}" bindinput="onName"/>
+      <view class="upload-box" bindtap="chooseImg">
+        <image wx:if="{{form.img}}" class="up-img" src="{{form.img}}" mode="aspectFill"/>
+        <text wx:else class="up-txt">{{uploading?'上传中...':'点击上传照片'}}</text>
+      </view>
+      <view class="modal-btn" bindtap="saveItem">保存</view>
+    </view>
   </view>
 </view>
