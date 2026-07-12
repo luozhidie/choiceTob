@@ -1,0 +1,32 @@
+.page{background:#f5f3f0;min-height:100vh;padding-bottom:calc(120rpx + env(safe-area-inset-bottom));box-sizing:border-box;}
+.loading{padding:120rpx 0;text-align:center;color:#999;font-size:28rpx;}
+
+/* Hero */
+.hero{background:linear-gradient(160deg,#2d1b2e,#4a3a5a);padding:50rpx 40rpx 40rpx;position:relative;}
+.hero-badge{position:absolute;top:24rpx;right:24rpx;background:#e91e63;color:#fff;font-size:20rpx;padding:6rpx 16rpx;border-radius:20rpx;}
+.hero-title{font-size:42rpx;font-weight:bold;color:#fff;display:block;line-height:1.4;}
+.hero-price{font-size:48rpx;color:#C9A24B;font-weight:bold;display:block;margin-top:24rpx;}
+
+/* Block */
+.block{margin:24rpx;background:#fff;border-radius:24rpx;padding:28rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.04);}
+.block-title{font-size:32rpx;font-weight:bold;color:#2d1b2e;display:block;margin-bottom:16rpx;}
+.block-txt{font-size:26rpx;color:#555;line-height:1.8;display:block;}
+
+.tags{display:flex;flex-wrap:wrap;gap:12rpx;margin-top:18rpx;}
+.tag{font-size:22rpx;color:#C9A24B;background:#faf8f6;padding:6rpx 16rpx;border-radius:20rpx;border:1rpx solid #eee5df;}
+
+.meta-row{display:flex;justify-content:space-between;padding:18rpx 0;border-bottom:1rpx solid #f5f3f0;}
+.meta-row:last-child{border-bottom:none;}
+.meta-label{font-size:26rpx;color:#999;}
+.meta-val{font-size:26rpx;color:#333;font-weight:500;}
+
+/* Outline */
+.outline{display:flex;flex-direction:column;gap:14rpx;}
+.outline-row{display:flex;align-items:flex-start;gap:14rpx;}
+.outline-num{flex-shrink:0;width:36rpx;height:36rpx;border-radius:50%;background:#2d1b2e;color:#fff;font-size:22rpx;font-weight:bold;display:flex;align-items:center;justify-content:center;}
+.outline-txt{flex:1;font-size:26rpx;color:#555;line-height:1.55;}
+
+/* Bottom */
+.bottom-bar{position:fixed;left:0;right:0;bottom:0;background:#fff;padding:20rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));box-shadow:0 -4rpx 20rpx rgba(0,0,0,.08);z-index:100;}
+.book-btn{width:100%;background:#2d1b2e;color:#fff;text-align:center;padding:26rpx 0;border-radius:40rpx;font-size:30rpx;font-weight:bold;}
+.book-btn:active{opacity:.9;}

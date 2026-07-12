@@ -1,0 +1,40 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="loading">加载中…</view>
+  <block wx:else>
+    <view class="hero">
+      <view class="hero-badge">🔥 热门课程</view>
+      <text class="hero-title">{{course.title || fallback.title}}</text>
+      <text class="hero-price">¥{{course.price || fallback.price}}</text>
+    </view>
+
+    <view class="block">
+      <text class="block-title">课程简介</text>
+      <text class="block-txt">{{course.description || fallback.description}}</text>
+      <view class="tags">
+        <text wx:for="{{course.tags || fallback.tags}}" wx:key="*this" class="tag">{{item}}</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-label">时长</text>
+        <text class="meta-val">{{course.duration || fallback.duration}}</text>
+      </view>
+      <view class="meta-row">
+        <text class="meta-label">地点</text>
+        <text class="meta-val">{{course.location || fallback.location}}</text>
+      </view>
+    </view>
+
+    <view class="block">
+      <text class="block-title">课程大纲</text>
+      <view class="outline">
+        <view wx:for="{{course.outline || fallback.outline}}" wx:key="*this" class="outline-row">
+          <text class="outline-num">{{index+1}}</text>
+          <text class="outline-txt">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="bottom-bar">
+      <view class="book-btn" bindtap="goBook">立即预约</view>
+    </view>
+  </block>
+</view>

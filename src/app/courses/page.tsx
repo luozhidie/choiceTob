@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   BookOpen, Clock, Star, Filter, Palette, BookType, Wrench,
   ShoppingBag, ChevronRight, Search, X, Home,
+  CalendarDays, PenTool, Droplet, Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CATEGORY_MAP, SUBCATEGORY_MAP, getSubcategories } from "@/lib/categories";
@@ -145,10 +146,65 @@ export default function CoursesPage() {
       {/* ====== Hero ====== */}
       <section className="bg-gradient-to-br from-primary to-primary/80 text-white py-16 md:py-20">
         <div className={`container mx-auto px-4 text-center transition-all duration-700 ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"}`}>
-          <h1 className="text-3xl md:text-4xl font-bold mb-4">线上课程 & 工具商城</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">预约在线课程</h1>
           <p className="text-base md:text-lg text-white/80 max-w-2xl mx-auto">
-            专业色彩形象课程 + 色彩工具、书籍资料、专业工具一站购齐
+            专业形象课程 + 搭配任务 + 美学工具
           </p>
+        </div>
+      </section>
+
+      {/* ====== Hub 入口 + 最新活动 ====== */}
+      <section className="py-6 bg-white border-b border-gray-100">
+        <div className="container mx-auto px-4">
+          {/* 4 入口 */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <Link href="/courses/special-camp" className="group bg-[#faf8f6] hover:bg-[#f5f3f0] rounded-2xl p-5 transition border border-[#eee5df] hover:border-[#C9A24B]/40">
+              <CalendarDays className="w-8 h-8 text-[#C9A24B] mb-3" />
+              <h3 className="font-bold text-[#2d1b2e]">课程预约</h3>
+              <p className="text-xs text-gray-500 mt-1">AI赋能·服装精英销售特训营</p>
+            </Link>
+            <Link href="/wardrobe/styling-request" className="group bg-[#faf8f6] hover:bg-[#f5f3f0] rounded-2xl p-5 transition border border-[#eee5df] hover:border-[#C9A24B]/40">
+              <PenTool className="w-8 h-8 text-[#C9A24B] mb-3" />
+              <h3 className="font-bold text-[#2d1b2e]">搭配任务</h3>
+              <p className="text-xs text-gray-500 mt-1">发布你的搭配需求</p>
+            </Link>
+            <Link href="/exercises" className="group bg-[#faf8f6] hover:bg-[#f5f3f0] rounded-2xl p-5 transition border border-[#eee5df] hover:border-[#C9A24B]/40">
+              <BookOpen className="w-8 h-8 text-[#C9A24B] mb-3" />
+              <h3 className="font-bold text-[#2d1b2e]">试题练习</h3>
+              <p className="text-xs text-gray-500 mt-1">巩固形象专业知识</p>
+            </Link>
+            <Link href="/color-practice" className="group bg-[#faf8f6] hover:bg-[#f5f3f0] rounded-2xl p-5 transition border border-[#eee5df] hover:border-[#C9A24B]/40">
+              <Droplet className="w-8 h-8 text-[#C9A24B] mb-3" />
+              <h3 className="font-bold text-[#2d1b2e]">配色练习</h3>
+              <p className="text-xs text-gray-500 mt-1">提升色彩搭配能力</p>
+            </Link>
+          </div>
+
+          {/* 最新活动 */}
+          <h3 className="font-bold text-[#2d1b2e] mb-3 text-sm">最新活动</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link href="/style-test" className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[#e91e63] to-[#c2185b] text-white">
+              <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-white/20">免费</span>
+              <Zap className="w-8 h-8 mb-3" />
+              <h4 className="font-bold">智能形象诊断</h4>
+              <p className="text-xs text-white/80 mt-1">AI+专业搭配师双重诊断</p>
+            </Link>
+            <button
+              onClick={() => setActiveTab("tools")}
+              className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[#4caf50] to-[#2e7d32] text-white text-left"
+            >
+              <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-white/20">工具</span>
+              <Wrench className="w-8 h-8 mb-3" />
+              <h4 className="font-bold">解锁美学工具</h4>
+              <p className="text-xs text-white/80 mt-1">色彩卡/风格尺一站购齐</p>
+            </button>
+            <Link href="/courses/special-camp" className="relative overflow-hidden rounded-2xl p-5 bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white">
+              <span className="absolute top-3 right-3 text-xs px-2 py-0.5 rounded-full bg-white/20">特训营</span>
+              <Star className="w-8 h-8 mb-3" />
+              <h4 className="font-bold">美学搭配精英特训营</h4>
+              <p className="text-xs text-white/80 mt-1">AI赋能·服装精英销售特训营</p>
+            </Link>
+          </div>
         </div>
       </section>
 

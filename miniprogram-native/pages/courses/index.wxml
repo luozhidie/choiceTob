@@ -1,8 +1,58 @@
 <view class="page">
   <!-- Hero -->
   <view class="hero">
-    <text class="ht">线上课程 & 工具商城</text>
-    <text class="hs">专业色彩形象课程 + 色彩工具、书籍资料、专业工具一站购齐</text>
+    <text class="ht">预约在线课程</text>
+    <text class="hs">专业形象课程 + 搭配任务 + 美学工具</text>
+  </view>
+
+  <!-- Hub 入口 -->
+  <view class="hub">
+    <view class="hub-row">
+      <view class="hub-card" bindtap="goCourseBooking">
+        <text class="hub-icon">📚</text>
+        <text class="hub-title">课程预约</text>
+        <text class="hub-desc">AI赋能·服装精英销售特训营</text>
+      </view>
+      <view class="hub-card" bindtap="goStyling">
+        <text class="hub-icon">🎨</text>
+        <text class="hub-title">搭配任务</text>
+        <text class="hub-desc">发布你的搭配需求</text>
+      </view>
+    </view>
+    <view class="hub-row">
+      <view class="hub-card" bindtap="goQuiz">
+        <text class="hub-icon">📝</text>
+        <text class="hub-title">试题练习</text>
+        <text class="hub-desc">巩固形象专业知识</text>
+      </view>
+      <view class="hub-card" bindtap="goColor">
+        <text class="hub-icon">🎨</text>
+        <text class="hub-title">配色练习</text>
+        <text class="hub-desc">提升色彩搭配能力</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最新活动 -->
+  <view class="section">
+    <text class="sec-title">最新活动</text>
+    <view class="act-list">
+      <view class="act-card act-free" bindtap="goActivity" data-type="free">
+        <text class="act-tag">免费</text>
+        <text class="act-title">智能形象诊断</text>
+        <text class="act-desc">AI+专业搭配师双重诊断</text>
+      </view>
+      <view class="act-card act-tools" bindtap="goActivity" data-type="tools">
+        <text class="act-tag">工具</text>
+        <text class="act-title">解锁美学工具</text>
+        <text class="act-desc">色彩卡/风格尺一站购齐</text>
+      </view>
+      <view class="act-card act-camp" bindtap="goActivity" data-type="camp">
+        <text class="act-tag">特训营</text>
+        <text class="act-title">美学搭配精英特训营</text>
+        <text class="act-desc">AI赋能·服装精英销售特训营</text>
+      </view>
+    </view>
   </view>
 
   <!-- 双Tab -->
@@ -15,7 +65,7 @@
     </view>
   </view>
 
-  <!-- 筛选器 -->
+  <!-- 筛选 -->
   <view class="filters" wx:if="{{activeTab==='course'}}">
     <view class="fil"><text class="fi">🔽</text><text class="ft">{{catLabel}} ▾</text></view>
     <view class="fil"><text class="ft">{{diffLabel}} ◆</text></view>
@@ -23,7 +73,6 @@
 
   <!-- 课程列表 -->
   <block wx:if="{{activeTab==='course'}}">
-    <!-- 有数据 -->
     <view class="list" wx:if="{{courses.length>0}}">
       <view wx:for="{{courses}}" wx:key="id" class="card" bindtap="playCourse" data-id="{{item.id}}">
         <image src="{{item.cover||''}}" mode="aspectFill" class="ci"/>
@@ -39,29 +88,14 @@
         </view>
       </view>
     </view>
-
-    <!-- 空状态 -->
     <view class="emp" wx:if="{{courses.length===0 && !loading}}">
-      <text class="et">暂无已��布的课程</text>
-    </view>
-
-    <!-- 加载 -->
-    <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
-
-    <!-- 底部CTA -->
-    <view class="cta-section">
-      <text class="cta-title">还在等什么？</text>
-      <text class="cta-sub">专业课程 + 工具商城，一站式解决你的色彩形象需求</text>
-      <view class="cta-btns">
-        <view class="cta-btn cta-dark" bindtap="swTab" data-t="course"><text>📖 浏览课程 →</text></view>
-        <view class="cta-btn cta-pink" bindtap="swTab" data-t="tool"><text>🛒 浏览工具 →</text></view>
-      </view>
+      <text class="et">暂无已发布的课程</text>
     </view>
   </block>
 
   <!-- 工具商城 -->
   <block wx:if="{{activeTab==='tool'}}">
-    <view class="list">
+    <view class="list" wx:if="{{tools.length>0}}">
       <view wx:for="{{tools}}" wx:key="id" class="card" bindtap="goTool" data-id="{{item.id}}">
         <image src="{{item.image||''}}" mode="aspectFill" class="ci"/>
         <view class="cb">
@@ -77,8 +111,15 @@
     <view class="emp" wx:if="{{tools.length===0&&!loading}}">
       <text class="et">暂无工具商品</text>
     </view>
-    <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
   </block>
+
+  <view class="ld" wx:if="{{loading}}"><text>加载中...</text></view>
+
+  <!-- CTA -->
+  <view class="cta-section" wx:if="{{!loading}}">
+    <text class="cta-title">专业课程 · 一站式提升</text>
+    <text class="cta-sub">形象课程 + 搭配任务 + 美学工具，系统提升你的审美力</text>
+  </view>
 
   <view class="sbtm"></view>
 </view>

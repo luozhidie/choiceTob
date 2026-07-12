@@ -623,6 +623,39 @@ export default function MyPage() {
               </div>
             )}
 
+            {/* ===== VIP形象服务 ===== */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+              <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Crown className="w-5 h-5 text-[#C9A24B]" /> VIP形象服务
+              </h2>
+              <Link
+                href="/personal-image"
+                className="block rounded-2xl bg-[#2d1b2e] text-white p-5 hover:opacity-95 transition"
+              >
+                <p className="text-lg font-bold">VIP形象诊断</p>
+                <p className="text-white/70 text-xs mt-1">一次诊断 终身受益 · 让你找到气质提升的本源</p>
+                <span className="inline-block mt-3 px-4 py-1.5 rounded-full bg-[#C9A24B] text-white text-sm font-semibold">立即诊断 ›</span>
+              </Link>
+              <div className="grid grid-cols-4 gap-3 mt-4">
+                <Link href="/wardrobe" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
+                  <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">🚪</div>
+                  <span className="text-xs text-gray-600">VIP衣橱</span>
+                </Link>
+                <Link href="/booking" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
+                  <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">⏰</div>
+                  <span className="text-xs text-gray-600">预约陪购</span>
+                </Link>
+                <Link href="/address" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
+                  <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">📍</div>
+                  <span className="text-xs text-gray-600">地址管理</span>
+                </Link>
+                <Link href="/personal-image" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
+                  <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">📤</div>
+                  <span className="text-xs text-gray-600">资料上传</span>
+                </Link>
+              </div>
+            </div>
+
             {/* 常用功能 */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="font-bold text-gray-900 mb-4">常用功能</h2>

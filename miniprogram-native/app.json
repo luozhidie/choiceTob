@@ -11,6 +11,7 @@
     "pages/deposit/index",
     "pages/looks/index",
     "pages/courses/index",
+    "pages/courses/detail/index",
     "pages/style-test/index",
     "pages/personal-image/index",
     "pages/wardrobe/index",
