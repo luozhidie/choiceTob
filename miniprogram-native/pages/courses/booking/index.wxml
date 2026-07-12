@@ -7,7 +7,6 @@
       <view class="tag">🔥 形象诊断预约</view>
       <text class="h-title">{{booking.title}}</text>
       <text class="h-sub">{{booking.subtitle}}</text>
-      <text class="h-price">¥{{booking.price}}</text>
     </view>
   </view>
 
@@ -42,5 +41,5 @@
 <!-- 底部固定预约栏 -->
 <view class="bottom-bar">
   <view wx:if="{{booked}}" class="booked">已预约，客服将联系您</view>
-  <view wx:else class="book-btn" bindtap="goBook">立即预约 · ¥{{booking.price}}</view>
+  <view wx:else class="book-btn" bindtap="goBook">立即预约</view>
 </view>
