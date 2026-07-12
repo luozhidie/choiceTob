@@ -33,7 +33,6 @@ const menuGroups = [
       { label: "VIP管理", href: "/admin/vip" },
       { label: "VIP加油包", href: "/admin/vip-addons" },
       { label: "形象诊断管理", href: "/admin/vip-diagnosis" },
-      { label: "智能形象诊断", href: "/admin/style-test" },
       { label: "色彩季型录入", href: "/admin/color-analysis" },
     { label: "色彩季型对比", href: "/admin/color-compare" },
     { label: "风格测试记录", href: "/admin/style-tests" },
@@ -114,12 +113,13 @@ const menuGroups = [
   ]},
 
   // ─── 陪购管理 ───
-  { label: "陪购管理", items: [
-    { label: "形象顾问", href: "/admin/booking-consultants" },
-    { label: "陪购设置", href: "/admin/booking-settings" },
-    { label: "营销方案", href: "/admin/marketing-plans" },
-    { label: "预约订单", href: "/admin/bookings" },
-  ]},
+    { label: "陪购管理", items: [
+      { label: "形象顾问", href: "/admin/booking-consultants" },
+      { label: "陪购设置", href: "/admin/booking-settings" },
+      { label: "智能形象诊断", href: "/admin/style-test" },
+      { label: "营销方案", href: "/admin/marketing-plans" },
+      { label: "预约订单", href: "/admin/bookings" },
+    ]},
 
   // ─── 潜客管理 ───
   { label: "潜客管理", items: [
