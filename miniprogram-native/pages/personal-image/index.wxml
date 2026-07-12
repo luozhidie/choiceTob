@@ -25,6 +25,6 @@
   </view>
   <view class="bottom-btn paid" bindtap="goPaid">
     <text class="btn-title">整体形象诊断</text>
-    <text class="btn-price">¥190 预约</text>
+    <text class="btn-price">预约</text>
   </view>
 </view>

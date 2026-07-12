@@ -75,7 +75,7 @@ export default function PersonalImagePage() {
           className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-3 hover:opacity-95 transition"
         >
           <span className="text-base font-bold">整体形象诊断</span>
-          <span className="text-sm text-white/80">¥190 预约</span>
+          <span className="text-sm text-white/80">预约</span>
         </Link>
       </div>
     </div>

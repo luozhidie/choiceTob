@@ -31,7 +31,7 @@ Page({
   goTest: function () {
     wx.navigateTo({ url: '/pages/style-test/index' });
   },
-  // 整体形象诊断 ¥190 → 在线课程
+  // 整体形象诊断 → 在线课程
   goPaid: function () {
     wx.navigateTo({ url: '/pages/courses/index' });
   }
