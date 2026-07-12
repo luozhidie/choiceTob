@@ -27,6 +27,27 @@
     </view>
   </block>
 
+  <!-- 搭配需求：帮我搭配列表 -->
+  <block wx:elif="{{activeCate==='搭配需求'}}">
+    <view wx:if="{{stylingRequests.length>0}}" class="req-list">
+      <view wx:for="{{stylingRequests}}" wx:key="id" class="req-card">
+        <view class="req-imgs" wx:if="{{item.images.length>0}}">
+          <image wx:for="{{item.images}}" wx:for-item="img" wx:key="*this" class="req-img" src="{{img}}" mode="aspectFill"/>
+        </view>
+        <text class="req-content">{{item.content}}</text>
+        <view class="req-meta">
+          <text class="req-date">{{item.date}}</text>
+          <text class="req-status">{{item.status}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="req-empty">
+      <view class="req-icon">📋</view>
+      <text class="req-txt">暂无数据</text>
+    </view>
+    <view class="styling-btn" bindtap="goStylingRequest">我要搭配</view>
+  </block>
+
   <!-- 其他分类：图片网格 -->
   <block wx:else>
     <view class="grid" wx:if="{{filteredItems.length>0}}">
@@ -47,7 +68,7 @@
   </block>
 
   <!-- 添加按钮 -->
-  <view class="fab" bindtap="onFab">+</view>
+  <view wx:if="{{activeCate!=='搭配需求'}}" class="fab" bindtap="onFab">+</view>
 
   <!-- 添加弹窗 -->
   <view wx:if="{{showForm}}" class="modal">

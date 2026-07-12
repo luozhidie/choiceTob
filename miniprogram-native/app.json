@@ -16,6 +16,7 @@
     "pages/wardrobe/index",
     "pages/wardrobe/outfits/index",
     "pages/wardrobe/create/index",
+    "pages/wardrobe/styling-request/index",
     "pages/booking/index",
     "pages/address/index",
     "pages/feedback/index",
