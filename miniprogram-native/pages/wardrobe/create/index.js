@@ -1,85 +1,142 @@
 Page({
   data: {
+    tabs: [
+      { key: 'wardrobe', label: 'VIP衣橱', icon: '👗' },
+      { key: 'shop', label: '商城单品', icon: '🛍️' },
+      { key: 'fav', label: '我的收藏', icon: '⭐' },
+      { key: 'history', label: '搭配历史', icon: '📜' }
+    ],
+    activeTab: 'shop',
     scenes: ['职场', '休闲', '社交', '旅游'],
-    form: { name: '', scene: '职场', images: [] },
-    uploading: false
+    scene: '休闲',
+    name: '',
+    selected: [],
+    keyword: '',
+    products: [],
+    loading: false,
+    wardrobeItems: [],
+    favItems: []
   },
-  onName: function (e) {
-    this.setF('name', e.detail.value);
-  },
-  setScene: function (e) {
-    this.setF('scene', e.currentTarget.dataset.scene);
-  },
-  setF: function (k, v) {
-    var f = this.data.form;
-    f[k] = v;
-    this.setData({ form: f });
-  },
-  chooseImg: function () {
-    var t = this;
-    var remain = 9 - this.data.form.images.length;
-    if (remain <= 0) {
-      wx.showToast({ title: '最多 9 张', icon: 'none' });
-      return;
+  onShow: function () {
+    this.loadLocalSources();
+    if (this.data.activeTab === 'shop') {
+      this.searchProducts();
     }
-    wx.chooseImage({
-      count: remain,
-      sizeType: ['compressed'],
-      sourceType: ['album', 'camera'],
-      success: function (res) {
-        t.setData({ uploading: true });
-        var paths = res.tempFilePaths;
-        var done = 0;
-        var urls = t.data.form.images.slice();
-        paths.forEach(function (p) {
-          wx.uploadFile({
-            url: 'https://colour-choice.art/api/upload',
-            filePath: p,
-            name: 'file',
-            success: function (r) {
-              try {
-                var d = JSON.parse(r.data);
-                if (d.url) urls.push(d.url);
-              } catch (e) {}
-            },
-            complete: function () {
-              done += 1;
-              if (done === paths.length) {
-                t.setData({ uploading: false, form: Object.assign({}, t.data.form, { images: urls }) });
-              }
-            }
-          });
-        });
-      }
+  },
+  loadLocalSources: function () {
+    var wardrobe = wx.getStorageSync('wardrobe_items') || [];
+    this.setData({
+      wardrobeItems: wardrobe.map(function (x) { return { id: 'w_' + x.id, img: x.img, name: x.name, type: 'wardrobe' }; })
+    });
+    this.loadFavorites();
+  },
+  loadFavorites: function () {
+    var t = this;
+    var favs = wx.getStorageSync('favorites') || [];
+    if (favs.length === 0) { t.setData({ favItems: [] }); return; }
+    t.setData({ loading: true });
+    wx.request({
+      url: 'https://colour-choice.art/api/public/products?limit=50',
+      method: 'GET',
+      success: function (r) {
+        var list = [];
+        if (r.data && r.data.data) list = r.data.data || [];
+        else if (Array.isArray(r.data)) list = r.data;
+        list = list.filter(function (p) { return favs.indexOf(p.id) >= 0; });
+        var mapped = list.map(function (p) {
+          return { id: 'f_' + p.id, img: p.image_url || p.cover_image || p.image, name: p.title || p.name, type: 'fav' };
+        }).filter(function (x) { return x.img; });
+        t.setData({ favItems: mapped });
+      },
+      complete: function () { t.setData({ loading: false }); }
     });
   },
-  delImg: function (e) {
-    var idx = e.currentTarget.dataset.idx;
-    var images = this.data.form.images.slice();
-    images.splice(idx, 1);
-    this.setF('images', images);
+  onName: function (e) {
+    this.setData({ name: e.detail.value });
   },
-  save: function () {
-    var f = this.data.form;
-    if (!f.name.trim()) {
-      wx.showToast({ title: '请输入搭配名称', icon: 'none' });
+  setScene: function (e) {
+    this.setData({ scene: e.currentTarget.dataset.scene });
+  },
+  switchTab: function (e) {
+    var key = e.currentTarget.dataset.key;
+    if (key === 'history') {
+      wx.navigateTo({ url: '/pages/wardrobe/outfits/index' });
       return;
     }
-    if (f.images.length === 0) {
-      wx.showToast({ title: '请至少添加一张照片', icon: 'none' });
+    this.setData({ activeTab: key });
+    if (key === 'shop' && this.data.products.length === 0) {
+      this.searchProducts();
+    }
+    if (key === 'fav') {
+      this.loadFavorites();
+    }
+  },
+  onSearch: function (e) {
+    this.setData({ keyword: e.detail.value });
+  },
+  searchProducts: function () {
+    var t = this;
+    t.setData({ loading: true });
+    var url = 'https://colour-choice.art/api/public/products?limit=50';
+    if (t.data.keyword) url += '&keyword=' + encodeURIComponent(t.data.keyword);
+    wx.request({
+      url: url,
+      method: 'GET',
+      success: function (r) {
+        var list = [];
+        if (r.data && r.data.success && r.data.data) list = r.data.data || [];
+        else if (Array.isArray(r.data)) list = r.data;
+        var mapped = list.map(function (p) {
+          return {
+            id: 's_' + p.id,
+            img: p.image_url || p.cover_image || p.image,
+            name: p.name || p.title,
+            type: 'shop'
+          };
+        }).filter(function (x) { return x.img; });
+        t.setData({ products: mapped });
+      },
+      complete: function () { t.setData({ loading: false }); }
+    });
+  },
+  addItem: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var img = e.currentTarget.dataset.img;
+    var name = e.currentTarget.dataset.name;
+    if (!img) return;
+    var selected = this.data.selected.slice();
+    if (selected.find(function (x) { return x.id === id; })) return;
+    if (selected.length >= 9) {
+      wx.showToast({ title: '最多 9 件', icon: 'none' });
+      return;
+    }
+    selected.push({ id: id, img: img, name: name || '' });
+    this.setData({ selected: selected });
+  },
+  removeItem: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var selected = this.data.selected.filter(function (x) { return x.id !== id; });
+    this.setData({ selected: selected });
+  },
+  save: function () {
+    if (this.data.selected.length === 0) {
+      wx.showToast({ title: '请先选择单品', icon: 'none' });
       return;
     }
     var outfits = wx.getStorageSync('outfits_list') || [];
+    var imgs = this.data.selected.map(function (x) { return x.img; });
     outfits.unshift({
       id: Date.now(),
-      name: f.name.trim(),
-      scene: f.scene,
-      images: f.images,
-      cover: f.images[0],
+      name: this.data.name.trim() || '未命名搭配',
+      scene: this.data.scene,
+      images: imgs,
+      cover: imgs[0],
       date: '刚刚'
     });
     wx.setStorageSync('outfits_list', outfits);
-    wx.showToast({ title: '已保存', icon: 'success' });
-    setTimeout(function () { wx.navigateBack(); }, 600);
+    wx.showToast({ title: '创建搭配成功', icon: 'success' });
+    setTimeout(function () {
+      wx.navigateTo({ url: '/pages/wardrobe/outfits/index' });
+    }, 500);
   }
 });

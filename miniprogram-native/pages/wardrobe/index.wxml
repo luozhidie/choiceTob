@@ -47,7 +47,7 @@
   </block>
 
   <!-- 添加按钮 -->
-  <view wx:if="{{activeCate!=='衣橱管理'}}" class="fab" bindtap="toggleForm">+</view>
+  <view class="fab" bindtap="onFab">+</view>
 
   <!-- 添加弹窗 -->
   <view wx:if="{{showForm}}" class="modal">

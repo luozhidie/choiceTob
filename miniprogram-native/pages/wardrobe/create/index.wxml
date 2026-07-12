@@ -1,29 +1,88 @@
 <view class="page">
-  <view class="card">
-    <text class="label">搭配名称</text>
-    <input class="input" placeholder="如：通勤气质西装套装" value="{{form.name}}" bindinput="onName"/>
+  <!-- 顶部：标题 + 创建搭配 -->
+  <view class="header">
+    <text class="title">选品搭配</text>
+    <view class="done-btn" bindtap="save">
+      <text class="done-icon">✅</text>
+      <text>创建搭配</text>
+    </view>
   </view>
 
-  <view class="card">
-    <text class="label">适用场景</text>
+  <!-- 场景选择 + 名称 -->
+  <view class="meta-bar">
     <view class="scene-row">
-      <view wx:for="{{scenes}}" wx:key="*this" class="scene-chip {{form.scene===item?'on':''}}" bindtap="setScene" data-scene="{{item}}">{{item}}</view>
+      <view wx:for="{{scenes}}" wx:key="*this" class="scene-chip {{scene===item?'on':''}}" bindtap="setScene" data-scene="{{item}}">{{item}}</view>
+    </view>
+    <input class="name-input" placeholder="搭配名称（可选）" value="{{name}}" bindinput="onName"/>
+  </view>
+
+  <!-- 画布：已选单品 -->
+  <view class="canvas">
+    <view class="canvas-title">已选单品 {{selected.length}}/9</view>
+    <view class="sel-grid" wx:if="{{selected.length>0}}">
+      <view wx:for="{{selected}}" wx:key="id" class="sel-cell" bindtap="removeItem" data-id="{{item.id}}">
+        <image class="sel-img" src="{{item.img}}" mode="aspectFill"/>
+        <view class="sel-del">×</view>
+      </view>
+    </view>
+    <view wx:else class="canvas-empty">
+      <text class="ce-icon">👕</text>
+      <text>点击下方 “商城单品 / VIP衣橱 / 我的收藏” 选款搭配</text>
     </view>
   </view>
 
-  <view class="card">
-    <text class="label">单品照片（最多 9 张）</text>
-    <view class="img-grid">
-      <view wx:for="{{form.images}}" wx:key="*this" class="img-cell">
-        <image class="img" src="{{item}}" mode="aspectFill"/>
-        <view class="img-del" bindtap="delImg" data-idx="{{index}}">×</view>
-      </view>
-      <view wx:if="{{form.images.length<9}}" class="img-cell add" bindtap="chooseImg">
-        <text class="add-icon">{{uploading?'...':'＋'}}</text>
-        <text class="add-txt">添加</text>
-      </view>
-    </view>
+  <!-- 商城单品搜索 -->
+  <view class="search-bar" wx:if="{{activeTab==='shop'}}">
+    <input class="search-input" placeholder="商品搜索" value="{{keyword}}" bindinput="onSearch" confirm-type="search" bindconfirm="searchProducts"/>
+    <view class="search-btn" bindtap="searchProducts">🔍</view>
   </view>
 
-  <view class="save-btn" bindtap="save">保存搭配</view>
+  <!-- 单品来源面板 -->
+  <view class="panel">
+    <!-- 商城单品 -->
+    <block wx:if="{{activeTab==='shop'}}">
+      <view wx:if="{{loading}}" class="panel-loading">加载中…</view>
+      <view wx:elif="{{products.length===0}}" class="panel-empty">搜索或加载商品</view>
+      <view wx:else class="source-grid">
+        <view wx:for="{{products}}" wx:key="id" class="source-cell" bindtap="addItem" data-id="{{item.id}}" data-img="{{item.img}}" data-name="{{item.name}}">
+          <image class="source-img" src="{{item.img}}" mode="aspectFill"/>
+          <text class="source-name" wx:if="{{item.name}}">{{item.name}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- VIP衣橱 -->
+    <block wx:if="{{activeTab==='wardrobe'}}">
+      <view wx:if="{{wardrobeItems.length===0}}" class="panel-empty">衣橱还没有单品</view>
+      <view wx:else class="source-grid">
+        <view wx:for="{{wardrobeItems}}" wx:key="id" class="source-cell" bindtap="addItem" data-id="{{item.id}}" data-img="{{item.img}}" data-name="{{item.name}}">
+          <image class="source-img" src="{{item.img}}" mode="aspectFill"/>
+          <text class="source-name" wx:if="{{item.name}}">{{item.name}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 我的收藏 -->
+    <block wx:if="{{activeTab==='fav'}}">
+      <view wx:if="{{favItems.length===0}}" class="panel-empty">还没有收藏</view>
+      <view wx:else class="source-grid">
+        <view wx:for="{{favItems}}" wx:key="id" class="source-cell" bindtap="addItem" data-id="{{item.id}}" data-img="{{item.img}}" data-name="{{item.name}}">
+          <image class="source-img" src="{{item.img}}" mode="aspectFill"/>
+          <text class="source-name" wx:if="{{item.name}}">{{item.name}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- 底部工具栏 -->
+  <view class="tool-bar">
+    <view wx:for="{{tabs}}" wx:key="key" class="tool {{activeTab===item.key?'on':''}}" bindtap="switchTab" data-key="{{item.key}}">
+      <text class="tool-icon">{{item.icon}}</text>
+      <text class="tool-label">{{item.label}}</text>
+    </view>
+    <view class="tool done" bindtap="save">
+      <text class="tool-icon">✅</text>
+      <text class="tool-label">创建搭配</text>
+    </view>
+  </view>
 </view>

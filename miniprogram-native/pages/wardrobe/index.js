@@ -32,6 +32,11 @@ Page({
     this.filterItems(this.data.items,cate);
   },
   goOutfits:function(){wx.navigateTo({url:'/pages/wardrobe/outfits/index'});},
+  goCreate:function(){wx.navigateTo({url:'/pages/wardrobe/create/index'});},
+  onFab:function(){
+    if(this.data.activeCate==='衣橱管理'){this.goCreate();}
+    else{this.toggleForm();}
+  },
   setFormCate:function(e){
     this.setF('cate',e.currentTarget.dataset.cate);
   },

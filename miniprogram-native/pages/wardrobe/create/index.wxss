@@ -1,18 +1,45 @@
-.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;padding-bottom:160rpx;}
-.card{background:#fff;border-radius:20rpx;padding:28rpx 28rpx;margin-bottom:22rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
-.label{font-size:26rpx;color:#888;display:block;margin-bottom:18rpx;}
-.input{width:100%;background:#f5f3f0;border-radius:12rpx;padding:22rpx 24rpx;font-size:28rpx;box-sizing:border-box;}
+.page{display:flex;flex-direction:column;height:100vh;background:#f5f3f0;}
 
-.scene-row{display:flex;flex-wrap:wrap;gap:16rpx;}
-.scene-chip{font-size:26rpx;padding:14rpx 28rpx;border-radius:12rpx;background:#f5f3f0;color:#555;}
-.scene-chip.on{background:#2d1b2e;color:#fff;font-weight:600;}
+/* 顶部 */
+.header{height:88rpx;display:flex;align-items:center;justify-content:space-between;padding:0 24rpx;background:#fff;flex-shrink:0;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
+.title{font-size:32rpx;font-weight:bold;color:#2d1b2e;}
+.done-btn{display:flex;align-items:center;gap:8rpx;background:#C9A24B;color:#2d1b2e;padding:12rpx 20rpx;border-radius:30rpx;font-size:24rpx;font-weight:600;}
+.done-icon{font-size:24rpx;}
 
-.img-grid{display:flex;flex-wrap:wrap;gap:16rpx;}
-.img-cell{width:200rpx;height:200rpx;border-radius:14rpx;overflow:hidden;background:#f0ede9;position:relative;}
-.img{width:100%;height:100%;display:block;}
-.img-del{position:absolute;top:6rpx;right:6rpx;width:40rpx;height:40rpx;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28rpx;}
-.img-cell.add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8rpx;border:2rpx dashed #ccc;background:#faf8f5;box-sizing:border-box;}
-.add-icon{font-size:52rpx;color:#bbb;}
-.add-txt{font-size:22rpx;color:#999;}
+/* 场景/名称 */
+.meta-bar{padding:16rpx 24rpx;background:#fff;flex-shrink:0;margin-bottom:12rpx;}
+.scene-row{display:flex;gap:16rpx;margin-bottom:12rpx;}
+.scene-chip{font-size:22rpx;padding:10rpx 22rpx;border-radius:10rpx;background:#f5f3f0;color:#555;}
+.scene-chip.on{background:#2d1b2e;color:#fff;}
+.name-input{width:100%;background:#f5f3f0;border-radius:12rpx;padding:18rpx 24rpx;font-size:26rpx;box-sizing:border-box;}
 
-.save-btn{background:#C9A24B;color:#2d1b2e;text-align:center;padding:26rpx 0;border-radius:16rpx;font-size:32rpx;font-weight:600;margin-top:12rpx;}
+/* 画布 */
+.canvas{flex:1;background:#fff;margin:0 24rpx 16rpx;border-radius:20rpx;padding:20rpx;overflow-y:auto;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
+.canvas-title{font-size:24rpx;color:#999;margin-bottom:16rpx;}
+.sel-grid{display:flex;flex-wrap:wrap;gap:16rpx;}
+.sel-cell{width:200rpx;height:200rpx;border-radius:14rpx;overflow:hidden;position:relative;background:#f0ede9;}
+.sel-img{width:100%;height:100%;display:block;}
+.sel-del{position:absolute;top:6rpx;right:6rpx;width:40rpx;height:40rpx;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28rpx;}
+.canvas-empty{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#ccc;font-size:26rpx;text-align:center;}
+.ce-icon{font-size:80rpx;margin-bottom:16rpx;opacity:.4;}
+
+/* 搜索 */
+.search-bar{display:flex;align-items:center;gap:12rpx;padding:0 24rpx 16rpx;flex-shrink:0;}
+.search-input{flex:1;background:#fff;border-radius:30rpx;padding:16rpx 24rpx;font-size:26rpx;box-shadow:0 2rpx 8rpx rgba(0,0,0,.04);}
+.search-btn{width:64rpx;height:64rpx;border-radius:50%;background:#2d1b2e;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28rpx;}
+
+/* 来源面板 */
+.panel{flex:1;background:#fff;border-radius:20rpx 20rpx 0 0;margin:0 24rpx;padding:20rpx 24rpx;overflow-y:auto;box-shadow:0 -2rpx 10rpx rgba(0,0,0,.04);}
+.panel-loading,.panel-empty{text-align:center;color:#999;padding:60rpx 0;font-size:26rpx;}
+.source-grid{display:flex;flex-wrap:wrap;gap:16rpx;}
+.source-cell{width:160rpx;background:#f5f3f0;border-radius:14rpx;overflow:hidden;}
+.source-img{width:160rpx;height:160rpx;display:block;}
+.source-name{font-size:20rpx;color:#666;padding:8rpx 10rpx;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* 底部工具栏 */
+.tool-bar{height:100rpx;background:#fff;border-top:1rpx solid #eee;display:flex;align-items:center;justify-content:space-around;padding-bottom:env(safe-area-inset-bottom);flex-shrink:0;}
+.tool{display:flex;flex-direction:column;align-items:center;gap:4rpx;color:#999;}
+.tool-icon{font-size:36rpx;}
+.tool-label{font-size:20rpx;}
+.tool.on{color:#2d1b2e;}
+.tool.done{color:#C9A24B;font-weight:600;}
