@@ -178,6 +178,11 @@ export default function CoursesPage() {
               <h3 className="font-bold text-[#2d1b2e]">配色练习</h3>
               <p className="text-xs text-gray-500 mt-1">提升色彩搭配能力</p>
             </Link>
+            <Link href="/courses/booking" className="group bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white hover:opacity-95 rounded-2xl p-5 transition border border-[#2d1b2e]">
+              <CalendarDays className="w-8 h-8 text-[#C9A24B] mb-3" />
+              <h3 className="font-bold">形象管理预约</h3>
+              <p className="text-xs text-white/80 mt-1">一对一形象诊断 ¥190</p>
+            </Link>
           </div>
 
           {/* 最新活动 */}

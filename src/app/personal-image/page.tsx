@@ -43,13 +43,22 @@ const REPORTS = [
 export default function PersonalImagePage() {
   const [visible, setVisible] = useState(false);
   const [heroImage, setHeroImage] = useState("");
+  const [blocks, setBlocks] = useState<string[]>([]);
   useEffect(() => {
     setVisible(true);
     (async () => {
       try {
-        const res = await fetch("/api/public/site-assets?keys=diagnosis_hero");
+        const res = await fetch("/api/public/site-assets?keys=diagnosis_hero,diagnosis_blocks");
         const d = await res.json();
-        if (d.success && d.data && d.data.diagnosis_hero) setHeroImage(d.data.diagnosis_hero);
+        if (d.success && d.data) {
+          if (d.data.diagnosis_hero) setHeroImage(d.data.diagnosis_hero);
+          if (d.data.diagnosis_blocks) {
+            try {
+              const list = JSON.parse(d.data.diagnosis_blocks);
+              if (Array.isArray(list)) setBlocks(list);
+            } catch {}
+          }
+        }
       } catch {}
     })();
   }, []);
@@ -144,31 +153,35 @@ export default function PersonalImagePage() {
         </div>
       </section>
 
+      {/* 后台配置的满框大图片模块 */}
+      {blocks.length > 0 && (
+        <section className="max-w-4xl mx-auto px-4 mt-6 space-y-4">
+          {blocks.map((url, i) => (
+            <div key={i} className="w-full rounded-2xl overflow-hidden shadow-sm bg-white">
+              <img src={url} alt="" className="w-full h-auto object-cover" />
+            </div>
+          ))}
+        </section>
+      )}
+
       {/* 底部间距 */}
       <div className="h-10" />
 
-      {/* 固定底部三按钮 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-3 py-3 md:px-6 md:py-4 flex gap-2 md:gap-4 z-50">
-        <Link
-          href="/style-test"
-          className="flex-1 flex flex-col items-center justify-center border border-[#C9A24B] text-[#2d1b2e] rounded-full py-2.5 md:py-3 hover:bg-[#faf8f6] transition"
-        >
-          <span className="text-sm md:text-base font-bold">资料上传</span>
-          <span className="text-xs text-gray-400">色彩风格问卷</span>
-        </Link>
+      {/* 固定底部双按钮 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 md:px-6 md:py-5 flex gap-4 z-50">
         <Link
           href="/style-test/female"
-          className="flex-1 flex flex-col items-center justify-center bg-[#C9A24B] text-white rounded-full py-2.5 md:py-3 hover:opacity-95 transition"
+          className="flex-1 flex flex-col items-center justify-center bg-[#C9A24B] text-white rounded-full py-3 hover:opacity-95 transition"
         >
-          <span className="text-sm md:text-base font-bold">智能形象诊断</span>
-          <span className="text-xs text-white/85">¥99 风格测试</span>
+          <span className="text-base font-bold">智能形象诊断</span>
+          <span className="text-sm text-white/80">¥99 风格测试</span>
         </Link>
         <Link
-          href="/courses/booking"
-          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-2.5 md:py-3 hover:opacity-95 transition"
+          href="/courses"
+          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-3 hover:opacity-95 transition"
         >
-          <span className="text-sm md:text-base font-bold">整体形象诊断</span>
-          <span className="text-xs text-white/85">¥190 预约</span>
+          <span className="text-base font-bold">整体形象诊断</span>
+          <span className="text-sm text-white/80">¥190 预约</span>
         </Link>
       </div>
     </div>

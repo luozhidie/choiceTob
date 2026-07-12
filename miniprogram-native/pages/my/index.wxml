@@ -206,7 +206,7 @@
         <view class="sg-icon"><text>✉️</text></view>
         <text class="sg-label">投诉建议</text>
       </view>
-      <view class="sg-item" bindtap="goPersonalImage">
+      <view class="sg-item" bindtap="goStyleTest">
         <view class="sg-icon"><text>📤</text></view>
         <text class="sg-label">资料上传</text>
       </view>

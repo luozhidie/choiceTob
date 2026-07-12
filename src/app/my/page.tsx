@@ -649,7 +649,7 @@ export default function MyPage() {
                   <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">📍</div>
                   <span className="text-xs text-gray-600">地址管理</span>
                 </Link>
-                <Link href="/personal-image" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
+                <Link href="/style-test" className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition">
                   <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">📤</div>
                   <span className="text-xs text-gray-600">资料上传</span>
                 </Link>

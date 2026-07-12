@@ -59,16 +59,19 @@
     </view>
   </view>
 
+  <!-- 后台配置的满框大图片模块 -->
+  <view wx:if="{{blocks.length > 0}}" class="block block-clean">
+    <view class="block-list">
+      <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
+    </view>
+  </view>
+
   <!-- 底部间距 -->
   <view class="bottom-space"></view>
 </view>
 
-<!-- 底部固定三按钮 -->
+<!-- 底部固定双按钮 -->
 <view class="bottom-bar">
-  <view class="bottom-btn upload" bindtap="goUpload">
-    <text class="btn-title-u">资料上传</text>
-    <text class="btn-price-u">色彩风格问卷</text>
-  </view>
   <view class="bottom-btn free" bindtap="goTest">
     <text class="btn-title">智能形象诊断</text>
     <text class="btn-price">¥99 风格测试</text>

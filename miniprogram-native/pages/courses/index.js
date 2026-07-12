@@ -63,6 +63,7 @@ Page({
   goStyling: function () { wx.navigateTo({ url: '/pages/wardrobe/styling-request/index' }); },
   goQuiz: function () { wx.showModal({ title: '试题练习', content: '试题练习开发中，敬请期待', showCancel: false, confirmText: '知道了' }); },
   goColor: function () { wx.showModal({ title: '配色练习', content: '配色练习开发中，敬请期待', showCancel: false, confirmText: '知道了' }); },
+  goImageBooking: function () { wx.navigateTo({ url: '/pages/courses/booking/index' }); },
   goActivity: function (e) {
     var t = e.currentTarget.dataset.type;
     if (t === 'free') wx.navigateTo({ url: '/pages/style-test/index?scene=personal' });

@@ -31,6 +31,13 @@
         <text class="hub-desc">提升色彩搭配能力</text>
       </view>
     </view>
+    <view class="hub-row">
+      <view class="hub-card hub-card-dark" bindtap="goImageBooking">
+        <text class="hub-icon">📅</text>
+        <text class="hub-title">形象管理预约</text>
+        <text class="hub-desc">一对一形象诊断 ¥190</text>
+      </view>
+    </view>
   </view>
 
   <!-- 最新活动 -->

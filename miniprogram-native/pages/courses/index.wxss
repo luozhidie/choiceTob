@@ -9,6 +9,9 @@ page{background:#f5f3f0;}
 .hub{margin:24rpx 24rpx 0;}
 .hub-row{display:flex;gap:20rpx;margin-bottom:20rpx;}
 .hub-card{flex:1;background:#fff;border-radius:20rpx;padding:28rpx 20rpx;display:flex;flex-direction:column;align-items:center;box-shadow:0 4rpx 16rpx rgba(0,0,0,.04);}
+.hub-card-dark{background:linear-gradient(135deg,#2d1b2e,#4a3a5a);}
+.hub-card-dark .hub-title{color:#fff;}
+.hub-card-dark .hub-desc{color:rgba(255,255,255,.85);}
 .hub-icon{font-size:48rpx;}
 .hub-title{font-size:28rpx;font-weight:bold;color:#2d1b2e;margin-top:14rpx;}
 .hub-desc{font-size:20rpx;color:#999;text-align:center;margin-top:6rpx;line-height:1.4;}

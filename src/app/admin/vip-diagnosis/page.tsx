@@ -18,7 +18,8 @@ interface BookingConfig {
 
 export default function AdminVipDiagnosisPage() {
   const [heroUrl, setHeroUrl] = useState<string>("");
-  const [uploading, setUploading] = useState(false);
+  const [blocks, setBlocks] = useState<string[]>([]);
+  const [uploading, setUploading] = useState<string | null>(null); // 'hero' | 'block'
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -55,6 +56,7 @@ export default function AdminVipDiagnosisPage() {
         if (res.ok) {
           const d = await res.json();
           if (d.success && d.config) setConfig(d.config);
+          if (d.success && Array.isArray(d.blocks)) setBlocks(d.blocks);
         }
       } catch {
         // ignore
@@ -64,24 +66,25 @@ export default function AdminVipDiagnosisPage() {
     })();
   }, []);
 
-  // 上传 Hero 大图（复用 /api/admin/site-assets）
-  const handleHeroUpload = async (file: File) => {
+  // 上传 Hero 大图或图片模块（复用 /api/admin/site-assets）
+  const handleImageUpload = async (type: "hero" | "block", file: File) => {
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) { showToast("error", "图片不能超过10MB"); return; }
-    setUploading(true);
+    setUploading(type);
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("key", "diagnosis_hero");
+      formData.append("key", type === "hero" ? "diagnosis_hero" : `diagnosis_block_${Date.now()}`);
       const res = await fetch("/api/admin/site-assets", { method: "POST", body: formData });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "上传失败");
-      setHeroUrl(result.url);
-      showToast("success", "大图上传成功！");
+      if (type === "hero") setHeroUrl(result.url);
+      else setBlocks((p) => [...p, result.url]);
+      showToast("success", type === "hero" ? "大图上传成功！" : "图片模块上传成功！");
     } catch (err: any) {
       showToast("error", "上传失败：" + err.message);
     } finally {
-      setUploading(false);
+      setUploading(null);
     }
   };
 
@@ -103,7 +106,7 @@ export default function AdminVipDiagnosisPage() {
       const res = await fetch("/api/admin/vip-diagnosis", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
+        body: JSON.stringify({ ...config, blocks }),
       });
       const result = await res.json();
       if (!res.ok) throw new Error(result.error || "保存失败");
@@ -177,14 +180,14 @@ export default function AdminVipDiagnosisPage() {
                     accept="image/jpeg,image/png,image/webp,image/gif"
                     onChange={(e) => {
                       const f = e.target.files?.[0];
-                      if (f) handleHeroUpload(f);
+                      if (f) handleImageUpload("hero", f);
                       e.target.value = "";
                     }}
-                    disabled={uploading}
+                    disabled={!!uploading}
                     className="hidden"
                   />
-                  <span className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${heroUrl ? "border border-border text-foreground hover:bg-muted" : "bg-accent text-white hover:brightness-110 shadow-md shadow-accent/20"} ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
-                    {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  <span className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${heroUrl ? "border border-border text-foreground hover:bg-muted" : "bg-accent text-white hover:brightness-110 shadow-md shadow-accent/20"} ${uploading === "hero" ? "opacity-50 pointer-events-none" : ""}`}>
+                    {uploading === "hero" ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
                     {heroUrl ? "更换大图" : "上传大图"}
                   </span>
                 </label>
@@ -195,6 +198,53 @@ export default function AdminVipDiagnosisPage() {
                 )}
               </div>
             </div>
+          </div>
+
+          {/* ① 落地页图片模块（满框大图片） */}
+          <div className="fashion-card p-6">
+            <h2 className="font-bold text-primary text-lg mb-1 flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-accent" /> 落地页图片模块
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              像同行一样上传满框大图片，一块一块展示在落地页下方。可上传多张，前台按顺序排列展示。
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+              {blocks.map((url, i) => (
+                <div key={url + i} className="relative group overflow-hidden rounded-xl border border-border aspect-[3/4] bg-muted">
+                  <img src={url} alt={`图片模块 ${i + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={() => setBlocks((p) => p.filter((_, idx) => idx !== i))}
+                      className="px-3 py-1.5 bg-white/90 backdrop-blur-sm rounded-lg text-xs font-medium text-red-500"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              ))}
+              <label className="relative overflow-hidden rounded-xl border-2 border-dashed border-border aspect-[3/4] bg-muted flex flex-col items-center justify-center cursor-pointer hover:border-accent/50 transition-colors">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImageUpload("block", f);
+                    e.target.value = "";
+                  }}
+                  disabled={uploading === "block"}
+                  className="hidden"
+                />
+                {uploading === "block" ? (
+                  <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                ) : (
+                  <>
+                    <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                    <span className="text-xs text-muted-foreground">添加图片</span>
+                  </>
+                )}
+              </label>
+            </div>
+            <p className="text-xs text-muted-foreground">• 建议单张宽度 1440px 以上，高度不限；保存后前台立即展示</p>
           </div>
 
           {/* ② 形象诊断预约配置 */}
@@ -238,7 +288,7 @@ export default function AdminVipDiagnosisPage() {
                     <input
                       value={item}
                       onChange={(e) => updateOutline(i, e.target.value)}
-                      className="input flex-1"
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 flex-1"
                       placeholder={`第 ${i + 1} 条`}
                     />
                     <button
