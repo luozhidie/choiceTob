@@ -53,7 +53,7 @@ export default function SpecialCampPage() {
             </div>
             <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-gray-400">地点</span>
-              <span className="text-gray-700 font-medium">深圳·南油服装批发市场</span>
+              <span className="text-gray-700 font-medium">广州</span>
             </div>
           </div>
         </div>

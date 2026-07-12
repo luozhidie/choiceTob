@@ -17,7 +17,7 @@ Page({
       ],
       tags: ['AI赋能', '销售特训', '形象美学'],
       duration: '2天1夜 · 线下集训',
-      location: '深圳·南油服装批发市场'
+      location: '广州'
     }
   },
   onLoad: function (options) {
