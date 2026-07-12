@@ -49,7 +49,12 @@ export default function AdminBookingConsultantsPage() {
   const load = async () => {
     setLoading(true);
     const data = await api("/api/admin/consultants");
-    setList(Array.isArray(data) ? data : []);
+    if (data && data.error) {
+      showToast("加载失败：" + data.error);
+      setList([]);
+    } else {
+      setList(Array.isArray(data) ? data : []);
+    }
     setLoading(false);
   };
 
@@ -77,18 +82,19 @@ export default function AdminBookingConsultantsPage() {
   const save = async () => {
     if (!form.name.trim()) return showToast("请填写姓名");
     const payload = { ...form, sort_order: Number(form.sort_order) || 0 };
-    if (editing) {
-      await api("/api/admin/consultants", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editing.id, ...payload }),
-      });
-    } else {
-      await api("/api/admin/consultants", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+    const res = editing
+      ? await api("/api/admin/consultants", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editing.id, ...payload }),
+        })
+      : await api("/api/admin/consultants", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+    if (res && res.error) {
+      return showToast("保存失败：" + res.error);
     }
     setShowForm(false);
     showToast("已保存");
