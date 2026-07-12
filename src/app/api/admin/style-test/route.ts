@@ -33,6 +33,17 @@ export async function GET(request: NextRequest) {
       } catch {}
     }
 
+    // 合并此前逐张上传产生的独立行（key 形如 style_test_block_xxx），避免用户重复上传
+    try {
+      const { data: indivRows } = await supabase
+        .from("site_assets")
+        .select("image_url")
+        .like("key", "style_test_block_%")
+        .order("updated_at", { ascending: true });
+      const indiv = (indivRows || []).map((r: any) => r.image_url).filter(Boolean);
+      blocks = Array.from(new Set([...blocks, ...indiv]));
+    } catch {}
+
     return NextResponse.json({ success: true, blocks });
   } catch (err: any) {
     return NextResponse.json({ error: "服务器内部错误: " + err.message }, { status: 500 });
