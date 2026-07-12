@@ -36,6 +36,7 @@ export default function AdminBookingConsultantsPage() {
   const [schedConsultant, setSchedConsultant] = useState<Consultant | null>(null);
   const [schedMap, setSchedMap] = useState<Record<string, { time: string; status: string }[]>>({});
   const [toast, setToast] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const showToast = (m: string) => {
     setToast(m);
@@ -99,6 +100,28 @@ export default function AdminBookingConsultantsPage() {
     await api("/api/admin/consultants?delete&id=" + id, { method: "DELETE" });
     showToast("已删除");
     load();
+  };
+
+  const uploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "consultants");
+    try {
+      const r = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: fd });
+      const data = await r.json();
+      if (data.url) {
+        setForm((prev) => ({ ...prev, avatar_url: data.url }));
+        showToast("上传成功");
+      } else {
+        showToast(data.error || "上传失败");
+      }
+    } catch (err) {
+      showToast("上传失败");
+    }
+    setUploading(false);
   };
 
   const openSched = async (c: Consultant) => {
@@ -190,8 +213,19 @@ export default function AdminBookingConsultantsPage() {
             <input className="w-full border rounded-lg px-3 py-2 mb-3" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             <label className="block text-sm mb-1">头衔</label>
             <input className="w-full border rounded-lg px-3 py-2 mb-3" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="如 V5 搭配师" />
-            <label className="block text-sm mb-1">头像 URL</label>
-            <input className="w-full border rounded-lg px-3 py-2 mb-3" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} />
+            <label className="block text-sm mb-1">头像</label>
+            <div className="flex items-center gap-3 mb-2">
+              {form.avatar_url ? (
+                <img src={form.avatar_url} alt="avatar" className="w-16 h-16 rounded-full object-cover border" />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-2xl">👤</div>
+              )}
+              <label className="px-4 py-2 border rounded-lg cursor-pointer text-sm text-gray-700 hover:bg-gray-50">
+                <input type="file" accept="image/*" className="hidden" onChange={uploadAvatar} />
+                {uploading ? "上传中..." : "上传图片"}
+              </label>
+            </div>
+            <input className="w-full border rounded-lg px-3 py-2 mb-3 text-sm" value={form.avatar_url} onChange={(e) => setForm({ ...form, avatar_url: e.target.value })} placeholder="或粘贴图片 URL" />
             <label className="block text-sm mb-1">简介</label>
             <textarea className="w-full border rounded-lg px-3 py-2 mb-3 h-20" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <label className="block text-sm mb-1">排序</label>

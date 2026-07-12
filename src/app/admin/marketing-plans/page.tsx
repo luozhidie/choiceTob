@@ -19,6 +19,7 @@ export default function AdminMarketingPlansPage() {
   const [editing, setEditing] = useState<Plan | null>(null);
   const [form, setForm] = useState({ title: "", description: "", price: 0, image_url: "", is_active: true, sort_order: 0 });
   const [toast, setToast] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   const showToast = (m: string) => {
     setToast(m);
@@ -69,6 +70,28 @@ export default function AdminMarketingPlansPage() {
     load();
   };
 
+  const uploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    fd.append("folder", "marketing-plans");
+    try {
+      const r = await fetch("/api/admin/upload", { method: "POST", credentials: "include", body: fd });
+      const data = await r.json();
+      if (data.url) {
+        setForm((prev) => ({ ...prev, image_url: data.url }));
+        showToast("上传成功");
+      } else {
+        showToast(data.error || "上传失败");
+      }
+    } catch (err) {
+      showToast("上传失败");
+    }
+    setUploading(false);
+  };
+
   return (
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-6">
@@ -106,8 +129,19 @@ export default function AdminMarketingPlansPage() {
             <textarea className="w-full border rounded-lg px-3 py-2 mb-3 h-20" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
             <label className="block text-sm mb-1">价格</label>
             <input type="number" className="w-full border rounded-lg px-3 py-2 mb-3" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} />
-            <label className="block text-sm mb-1">图片 URL</label>
-            <input className="w-full border rounded-lg px-3 py-2 mb-3" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} />
+            <label className="block text-sm mb-1">图片</label>
+            <div className="flex items-center gap-3 mb-2">
+              {form.image_url ? (
+                <img src={form.image_url} alt="plan" className="w-20 h-20 rounded-lg object-cover border" />
+              ) : (
+                <div className="w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center text-2xl">🖼️</div>
+              )}
+              <label className="px-4 py-2 border rounded-lg cursor-pointer text-sm text-gray-700 hover:bg-gray-50">
+                <input type="file" accept="image/*" className="hidden" onChange={uploadImage} />
+                {uploading ? "上传中..." : "上传图片"}
+              </label>
+            </div>
+            <input className="w-full border rounded-lg px-3 py-2 mb-3 text-sm" value={form.image_url} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="或粘贴图片 URL" />
             <label className="block text-sm mb-1">排序</label>
             <input type="number" className="w-full border rounded-lg px-3 py-2 mb-3" value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} />
             <label className="flex items-center gap-2 mb-4">
