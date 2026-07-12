@@ -8,6 +8,16 @@
 .cate-label{font-size:22rpx;color:#555;}
 .cate-item.cate-on .cate-label{color:#2d1b2e;font-weight:600;}
 
+/* 衣橱管理：全部搭配卡片 */
+.outfit-card{display:flex;background:#fff;border-radius:24rpx;padding:40rpx 32rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.06);align-items:center;justify-content:space-between;margin-top:40rpx;}
+.oc-left{display:flex;flex-direction:column;align-items:center;gap:12rpx;}
+.oc-icon{font-size:80rpx;opacity:.3;}
+.oc-empty{font-size:24rpx;color:#ccc;}
+.oc-right{display:flex;flex-direction:column;align-items:center;gap:4rpx;}
+.oc-num{font-size:48rpx;font-weight:bold;color:#333;}
+.oc-label{font-size:24rpx;color:#999;}
+.oc-arrow{font-size:36rpx;color:#ccc;margin-top:8rpx;}
+
 /* 图片网格 */
 .grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
 .card{width:48%;background:#fff;border-radius:16rpx;overflow:hidden;margin-bottom:20rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);position:relative;}

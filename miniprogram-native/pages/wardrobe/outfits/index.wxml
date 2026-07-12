@@ -1,0 +1,60 @@
+<view class="page">
+
+  <!-- 枢纽视图：全部搭配 -->
+  <block wx:if="{{selectedScene===''}}">
+    <view class="hub-head">
+      <text class="hub-title">全部搭配</text>
+      <text class="hub-sub">按场景管理你的专属搭配</text>
+    </view>
+
+    <view class="scene-grid">
+      <view wx:for="{{scenes}}" wx:key="key" class="scene-card" bindtap="openScene" data-scene="{{item.key}}">
+        <view class="sc-icon">{{item.icon}}</view>
+        <text class="sc-name">{{item.key}}</text>
+        <view class="sc-count">
+          <text class="sc-num">{{counts[item.key]}}</text>
+          <text class="sc-unit">套</text>
+        </view>
+        <text class="sc-arrow">›</text>
+      </view>
+    </view>
+
+    <view class="create-entry" bindtap="goCreate">
+      <view class="ce-left">
+        <view class="ce-icon">✨</view>
+        <view class="ce-txt">
+          <text class="ce-title">创建搭配</text>
+          <text class="ce-sub">新建一套专属穿搭方案</text>
+        </view>
+      </view>
+      <text class="ce-arrow">›</text>
+    </view>
+  </block>
+
+  <!-- 场景视图：某场景下的搭配列表 -->
+  <block wx:else>
+    <view class="back-bar" bindtap="backHub">
+      <text class="back-arrow">‹</text>
+      <text class="back-title">{{selectedScene}}搭配</text>
+    </view>
+
+    <view class="outfit-grid" wx:if="{{outfits.length>0}}">
+      <view wx:for="{{outfits}}" wx:key="id" wx:if="{{item.scene===selectedScene}}" class="outfit-card">
+        <image wx:if="{{item.cover}}" class="oc-img" src="{{item.cover}}" mode="aspectFill" lazy-load/>
+        <view wx:else class="oc-img placeholder">
+          <text class="ph-icon">👗</text>
+        </view>
+        <view class="oc-info">
+          <text class="oc-name">{{item.name}}</text>
+          <text class="oc-date">{{item.date}}</text>
+        </view>
+        <view class="oc-del" bindtap="delOutfit" data-id="{{item.id}}">×</view>
+      </view>
+    </view>
+
+    <view wx:else class="empty">该场景还没有搭配，点击右下角创建</view>
+
+    <view class="fab" bindtap="goCreate">＋</view>
+  </block>
+
+</view>

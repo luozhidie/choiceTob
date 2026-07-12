@@ -4,17 +4,23 @@ Page({
     activeCate:'衣橱管理',
     items:[],
     filteredItems:[],
+    outfitCount:0,
     showForm:false,
     form:{name:'',cate:'衣橱管理',img:''},
     uploading:false
   },
   onShow:function(){
     this.loadItems();
+    this.loadOutfitCount();
   },
   loadItems:function(){
     var items = wx.getStorageSync('wardrobe_items') || [];
     this.setData({items:items});
     this.filterItems(items,this.data.activeCate);
+  },
+  loadOutfitCount:function(){
+    var outfits = wx.getStorageSync('outfits_list') || [];
+    this.setData({outfitCount:outfits.length});
   },
   filterItems:function(items,cate){
     var filtered = items.filter(function(x){return x.cate===cate;});
@@ -25,6 +31,7 @@ Page({
     this.setData({activeCate:cate});
     this.filterItems(this.data.items,cate);
   },
+  goOutfits:function(){wx.navigateTo({url:'/pages/wardrobe/outfits/index'});},
   setFormCate:function(e){
     this.setF('cate',e.currentTarget.dataset.cate);
   },

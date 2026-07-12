@@ -14,6 +14,8 @@
     "pages/style-test/index",
     "pages/personal-image/index",
     "pages/wardrobe/index",
+    "pages/wardrobe/outfits/index",
+    "pages/wardrobe/create/index",
     "pages/booking/index",
     "pages/address/index",
     "pages/feedback/index",

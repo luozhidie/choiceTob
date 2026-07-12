@@ -12,26 +12,42 @@
     </view>
   </view>
 
-  <!-- 图片网格 -->
-  <view class="grid" wx:if="{{filteredItems.length>0}}">
-    <view wx:for="{{filteredItems}}" wx:key="id" class="card">
-      <image wx:if="{{item.img}}" class="card-img" src="{{item.img}}" mode="aspectFill" lazy-load/>
-      <view wx:else class="card-img placeholder">
-        <text class="ph-icon">👗</text>
-        <text class="ph-txt">暂无图片</text>
+  <!-- 衣橱管理：全部搭配卡片 -->
+  <block wx:if="{{activeCate==='衣橱管理'}}">
+    <view class="outfit-card" bindtap="goOutfits">
+      <view class="oc-left">
+        <view class="oc-icon">👕</view>
+        <text class="oc-empty" wx:if="{{outfitCount===0}}">暂无搭配</text>
       </view>
-      <view class="card-info">
-        <text class="card-title">{{item.name}}</text>
-        <text class="card-date">{{item.date}}</text>
+      <view class="oc-right">
+        <text class="oc-num">{{outfitCount}}</text>
+        <text class="oc-label">全部搭配</text>
+        <text class="oc-arrow">›</text>
       </view>
-      <view class="del" bindtap="delItem" data-id="{{item.id}}">×</view>
     </view>
-  </view>
+  </block>
 
-  <view wx:if="{{filteredItems.length===0}}" class="empty">该分类还没有单品，点击右下角添加</view>
+  <!-- 其他分类：图片网格 -->
+  <block wx:else>
+    <view class="grid" wx:if="{{filteredItems.length>0}}">
+      <view wx:for="{{filteredItems}}" wx:key="id" class="card">
+        <image wx:if="{{item.img}}" class="card-img" src="{{item.img}}" mode="aspectFill" lazy-load/>
+        <view wx:else class="card-img placeholder">
+          <text class="ph-icon">👗</text>
+          <text class="ph-txt">暂无图片</text>
+        </view>
+        <view class="card-info">
+          <text class="card-title">{{item.name}}</text>
+          <text class="card-date">{{item.date}}</text>
+        </view>
+        <view class="del" bindtap="delItem" data-id="{{item.id}}">×</view>
+      </view>
+    </view>
+    <view wx:if="{{filteredItems.length===0}}" class="empty">该分类还没有单品，点击右下角添加</view>
+  </block>
 
   <!-- 添加按钮 -->
-  <view class="fab" bindtap="toggleForm">+</view>
+  <view wx:if="{{activeCate!=='衣橱管理'}}" class="fab" bindtap="toggleForm">+</view>
 
   <!-- 添加弹窗 -->
   <view wx:if="{{showForm}}" class="modal">

@@ -1,0 +1,46 @@
+.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;padding-bottom:160rpx;}
+
+/* 枢纽头部 */
+.hub-head{margin-bottom:28rpx;}
+.hub-title{font-size:40rpx;font-weight:bold;color:#2d1b2e;display:block;}
+.hub-sub{font-size:24rpx;color:#999;margin-top:8rpx;display:block;}
+
+/* 场景卡片 2x2 */
+.scene-grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
+.scene-card{width:48%;background:#fff;border-radius:24rpx;padding:36rpx 28rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.05);margin-bottom:22rpx;position:relative;box-sizing:border-box;}
+.sc-icon{font-size:64rpx;margin-bottom:16rpx;}
+.sc-name{font-size:30rpx;font-weight:600;color:#2d1b2e;display:block;}
+.sc-count{display:flex;align-items:baseline;gap:4rpx;margin-top:10rpx;}
+.sc-num{font-size:36rpx;font-weight:bold;color:#C9A24B;}
+.sc-unit{font-size:22rpx;color:#999;}
+.sc-arrow{position:absolute;top:28rpx;right:28rpx;font-size:36rpx;color:#ccc;}
+
+/* 创建搭配入口 */
+.create-entry{margin-top:8rpx;background:#2d1b2e;border-radius:24rpx;padding:32rpx 28rpx;display:flex;align-items:center;justify-content:space-between;box-shadow:0 6rpx 20rpx rgba(45,27,46,.3);}
+.ce-left{display:flex;align-items:center;gap:20rpx;}
+.ce-icon{font-size:52rpx;}
+.ce-txt{display:flex;flex-direction:column;}
+.ce-title{font-size:30rpx;font-weight:600;color:#fff;display:block;}
+.ce-sub{font-size:22rpx;color:rgba(255,255,255,.6);margin-top:6rpx;}
+.ce-arrow{font-size:40rpx;color:#C9A24B;}
+
+/* 返回栏 */
+.back-bar{display:flex;align-items:center;gap:8rpx;margin-bottom:24rpx;}
+.back-arrow{font-size:44rpx;color:#2d1b2e;}
+.back-title{font-size:32rpx;font-weight:bold;color:#2d1b2e;}
+
+/* 搭配卡片 */
+.outfit-grid{display:flex;flex-wrap:wrap;justify-content:space-between;}
+.outfit-card{width:48%;background:#fff;border-radius:16rpx;overflow:hidden;margin-bottom:20rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);position:relative;}
+.oc-img{width:100%;height:340rpx;background:#eee;display:block;}
+.oc-img.placeholder{display:flex;align-items:center;justify-content:center;background:#f0ede9;}
+.ph-icon{font-size:64rpx;opacity:.4;}
+.oc-info{padding:16rpx;}
+.oc-name{font-size:26rpx;color:#333;display:block;}
+.oc-date{font-size:20rpx;color:#999;display:block;margin-top:6rpx;}
+.oc-del{position:absolute;top:8rpx;right:8rpx;width:40rpx;height:40rpx;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;display:flex;align-items:center;justify-content:center;font-size:28rpx;}
+
+.empty{padding:80rpx 40rpx;text-align:center;color:#999;font-size:26rpx;}
+
+/* 创建按钮 */
+.fab{position:fixed;right:40rpx;bottom:120rpx;width:96rpx;height:96rpx;border-radius:50%;background:#2d1b2e;color:#fff;font-size:48rpx;display:flex;align-items:center;justify-content:center;box-shadow:0 8rpx 24rpx rgba(45,27,46,.35);z-index:10;}
