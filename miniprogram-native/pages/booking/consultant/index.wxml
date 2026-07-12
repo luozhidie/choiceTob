@@ -1,0 +1,48 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+  <block wx:elif="{{consultant}}">
+    <!-- 头部 -->
+    <view class="head">
+      <image wx:if="{{consultant.avatar_url}}" class="avatar" src="{{consultant.avatar_url}}" mode="aspectFill"/>
+      <view wx:else class="avatar ph">👤</view>
+      <text class="name">{{consultant.name}}</text>
+      <text class="title">{{consultant.title}}</text>
+      <button class="follow-btn {{followed?'on':''}}" bindtap="toggleFollow">{{followed?'已关注':'关注'}}</button>
+      <button class="share-btn" open-type="share">分享</button>
+    </view>
+
+    <!-- 标签 -->
+    <view class="tabs">
+      <view wx:for="{{tabs}}" wx:key="*this" class="tab {{activeTab===item?'on':''}}" bindtap="switchTab" data-tab="{{item}}">{{item}}</view>
+    </view>
+
+    <!-- 全部时间 -->
+    <block wx:if="{{activeTab==='全部时间'}}">
+      <view class="schedule-list">
+        <view wx:for="{{consultant.scheduleDays}}" wx:key="date" class="day-row" bindtap="goTime" data-date="{{item.date}}">
+          <text class="day-label">{{item.label}}</text>
+          <text class="day-remain">{{item.remain>0?('余'+item.remain+'小时'):'已约满'}}</text>
+          <text class="day-arrow">›</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- 简介 -->
+    <block wx:if="{{activeTab==='简介'}}">
+      <view class="block">
+        <text class="block-title">个人简介</text>
+        <text class="block-txt">{{consultant.description || '暂无简介'}}</text>
+      </view>
+      <view class="block">
+        <text class="block-title">擅长</text>
+        <text class="block-txt">{{consultant.expertise || consultant.description || '暂无擅长信息'}}</text>
+      </view>
+    </block>
+
+    <!-- 评价 -->
+    <block wx:if="{{activeTab==='评价(0)'}}">
+      <view class="empty">暂无评价</view>
+    </block>
+  </block>
+  <view wx:else class="empty">顾问不存在</view>
+</view>

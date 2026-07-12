@@ -1,0 +1,36 @@
+.page{background:#f5f3f0;min-height:100vh;box-sizing:border-box;padding-bottom:40rpx;}
+
+.empty{padding:80rpx 40rpx;text-align:center;color:#999;font-size:26rpx;}
+
+/* 头部 */
+.head{background:#2d1b2e;display:flex;flex-direction:column;align-items:center;padding:56rpx 40rpx 44rpx;}
+.avatar{width:150rpx;height:150rpx;border-radius:50%;background:#eee;border:4rpx solid rgba(255,255,255,.25);}
+.avatar.ph{display:flex;align-items:center;justify-content:center;font-size:72rpx;background:rgba(255,255,255,.12);color:#fff;}
+.name{font-size:38rpx;font-weight:600;color:#fff;margin-top:20rpx;}
+.title{font-size:24rpx;color:#C9A24B;margin-top:10rpx;letter-spacing:2rpx;}
+
+.c-btn-row{display:flex;gap:20rpx;margin-top:28rpx;}
+.follow-btn,.share-btn{font-size:26rpx;padding:14rpx 44rpx;border-radius:40rpx;margin:0;line-height:1;border:none;}
+.follow-btn::after,.share-btn::after{border:none;}
+.follow-btn{background:#e91e63;color:#fff;}
+.follow-btn.on{background:rgba(255,255,255,.2);color:#ddd;}
+.share-btn{background:#4caf50;color:#fff;}
+
+/* 标签 */
+.tabs{display:flex;background:#fff;margin:24rpx;border-radius:16rpx;overflow:hidden;box-shadow:0 2rpx 8rpx rgba(0,0,0,.04);}
+.tab{flex:1;text-align:center;padding:26rpx 0;font-size:28rpx;color:#888;position:relative;}
+.tab.on{color:#2d1b2e;font-weight:600;}
+.tab.on::after{content:'';position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:48rpx;height:6rpx;border-radius:4rpx;background:#C9A24B;}
+
+/* 排期 */
+.schedule-list{margin:0 24rpx;background:#fff;border-radius:16rpx;box-shadow:0 2rpx 8rpx rgba(0,0,0,.04);}
+.day-row{display:flex;align-items:center;justify-content:space-between;padding:28rpx 28rpx;border-bottom:1rpx solid #f5f3f0;}
+.day-row:last-child{border-bottom:none;}
+.day-label{font-size:30rpx;color:#333;}
+.day-remain{font-size:27rpx;color:#C9A24B;flex:1;text-align:right;margin-right:16rpx;}
+.day-arrow{font-size:36rpx;color:#ccc;}
+
+/* 简介 */
+.block{background:#fff;border-radius:16rpx;margin:0 24rpx 20rpx;padding:28rpx;}
+.block-title{font-size:28rpx;font-weight:600;color:#2d1b2e;display:block;margin-bottom:16rpx;}
+.block-txt{font-size:26rpx;color:#666;line-height:1.7;display:block;}

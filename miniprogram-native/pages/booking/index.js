@@ -1,43 +1,70 @@
+function pad(n) { return n < 10 ? '0' + n : '' + n; }
+function formatDate(dt) { return dt.getFullYear() + '-' + pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); }
+function formatMD(dt) { return pad(dt.getMonth() + 1) + '-' + pad(dt.getDate()); }
+
 Page({
   data: {
     consultants: [],
     dates: [],
-    activeDate: '',
+    activeDate: 'all',
     settings: { location: '泉州·鲤城服装批发市场', price_per_hour: 200, service_fee: 0, currency: '¥' },
     plans: [],
-    loading: true
+    loading: true,
+    followed: [],
+    shareConsultant: null
   },
   onShow: function () {
     this.loadDates();
+    this.loadFollowed();
     this.loadAll();
   },
+  onShareAppMessage: function () {
+    var c = this.data.shareConsultant;
+    if (c && c.id) {
+      return { title: '推荐形象顾问：' + c.name, path: '/pages/booking/consultant/index?consultant_id=' + c.id };
+    }
+    return { title: '预约陪购', path: '/pages/booking/index' };
+  },
   loadDates: function () {
-    var days = [];
+    var days = [{ key: 'all', week: '全部', md: '日期' }];
     var weekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     var d = new Date();
     for (var i = 0; i < 7; i++) {
       var dt = new Date(d.getTime());
       dt.setDate(d.getDate() + i);
-      var mm = dt.getMonth() + 1;
-      var dd = dt.getDate();
-      var label = (i === 0 ? '今天' : (i === 1 ? '明天' : weekMap[dt.getDay()]));
-      days.push({
-        date: dt.getFullYear() + '-' + (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd),
-        week: label,
-        md: (mm < 10 ? '0' + mm : mm) + '-' + (dd < 10 ? '0' + dd : dd)
-      });
+      days.push({ key: formatDate(dt), week: i === 0 ? '今天' : (i === 1 ? '明天' : weekMap[dt.getDay()]), md: formatMD(dt) });
     }
-    this.setData({ dates: days, activeDate: days[0].date });
+    this.setData({ dates: days, activeDate: 'all' });
     this.decorate();
   },
+  loadFollowed: function () {
+    var followed = wx.getStorageSync('followed_consultants') || [];
+    this.setData({ followed: followed });
+  },
   decorate: function () {
-    var date = this.data.activeDate;
+    var active = this.data.activeDate;
+    var d = new Date();
+    var week = [];
+    for (var i = 0; i < 7; i++) {
+      var dt = new Date(d.getTime());
+      dt.setDate(d.getDate() + i);
+      week.push(formatDate(dt));
+    }
+    var weekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     var list = this.data.consultants.map(function (c) {
       var remain = 0;
-      if (c.schedules && c.schedules[date]) {
-        remain = c.schedules[date].filter(function (s) { return s.status === 'available'; }).length;
+      if (active !== 'all' && c.schedules && c.schedules[active]) {
+        remain = c.schedules[active].filter(function (s) { return s.status === 'available'; }).length;
       }
       c.remain = remain;
+      c.weekSchedule = week.map(function (day) {
+        var r = 0;
+        if (c.schedules && c.schedules[day]) {
+          r = c.schedules[day].filter(function (s) { return s.status === 'available'; }).length;
+        }
+        var dt = new Date(day.replace(/-/g, '/'));
+        return { date: day, label: day.slice(5) + '(' + weekMap[dt.getDay()] + ')', remain: r };
+      });
       return c;
     });
     this.setData({ consultants: list });
@@ -70,12 +97,32 @@ Page({
     });
   },
   selectDate: function (e) {
-    this.setData({ activeDate: e.currentTarget.dataset.date }, function () { this.decorate(); });
+    this.setData({ activeDate: e.currentTarget.dataset.key }, function () { this.decorate(); });
   },
   goTime: function (e) {
     var id = e.currentTarget.dataset.id;
     var name = e.currentTarget.dataset.name;
-    wx.navigateTo({ url: '/pages/booking/time/index?consultant_id=' + id + '&consultant_name=' + encodeURIComponent(name) + '&date=' + this.data.activeDate });
+    var date = e.currentTarget.dataset.date || this.data.activeDate;
+    if (date === 'all') date = formatDate(new Date());
+    wx.navigateTo({ url: '/pages/booking/time/index?consultant_id=' + id + '&consultant_name=' + encodeURIComponent(name) + '&date=' + date });
+  },
+  goConsultant: function (e) {
+    var id = e.currentTarget.dataset.id;
+    wx.navigateTo({ url: '/pages/booking/consultant/index?consultant_id=' + id });
+  },
+  toggleFollow: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var followed = this.data.followed.slice();
+    var idx = followed.indexOf(id);
+    if (idx >= 0) followed.splice(idx, 1);
+    else followed.push(id);
+    wx.setStorageSync('followed_consultants', followed);
+    this.setData({ followed: followed });
+  },
+  setShareData: function (e) {
+    this.setData({
+      shareConsultant: { id: e.currentTarget.dataset.id, name: e.currentTarget.dataset.name }
+    });
   },
   goMy: function () {
     wx.navigateTo({ url: '/pages/booking/my/index' });
