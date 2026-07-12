@@ -2,6 +2,7 @@ Page({
   data: {
     consultantId: '',
     consultantName: '',
+    consultant: null,
     date: '',
     slots: [],
     selected: [],
@@ -39,6 +40,7 @@ Page({
       success: function (r) {
         var list = (r.data && r.data.success && r.data.data) ? r.data.data : [];
         var c = list.find(function (x) { return x.id === t.data.consultantId; });
+        if (c) t.setData({ consultant: c, consultantName: c.name });
         if (c && c.schedules && c.schedules[t.data.date]) {
           t.setData({ slots: c.schedules[t.data.date] });
         } else {

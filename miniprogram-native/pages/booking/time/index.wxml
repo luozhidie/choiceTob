@@ -1,10 +1,12 @@
 <view class="page">
   <!-- 顾问信息 -->
   <view class="c-head">
-    <view class="c-avatar ph">👤</view>
+    <image wx:if="{{consultant.avatar_url}}" class="c-avatar" src="{{consultant.avatar_url}}" mode="aspectFill"/>
+    <view wx:else class="c-avatar ph">👤</view>
     <view class="c-info">
       <text class="c-name">{{consultantName}}</text>
-      <text class="c-sub">{{date}} 陪购</text>
+      <text wx:if="{{consultant.title}}" class="c-title">{{consultant.title}}</text>
+      <text wx:if="{{consultant.description}}" class="c-desc">{{consultant.description}}</text>
     </view>
   </view>
 
