@@ -37,7 +37,7 @@ page{background:#f8f6f4;}
 
 /* 表单滚动区 */
 .form-scroll{height:calc(100vh - 640rpx);}
-.form{padding:0 28rpx 40rpx;}
+.form{padding:0 28rpx 120rpx;}
 
 /* 付费提示卡片 */
 .pay-info{background:linear-gradient(135deg,#fce4ec,#f8bbd0);border-radius:20rpx;padding:24rpx 28rpx;margin-bottom:24rpx;}
@@ -75,7 +75,7 @@ page{background:#f8f6f4;}
 .sb-dis{background:#ccc;color:#999;}
 
 /* 底部提示 */
-.tip{text-align:center;padding:10rpx 40rpx 28rpx;font-size:22rpx;color:#bbb;line-height:1.5;}
+.tip{position:fixed;left:0;right:0;bottom:0;background:#f8f6f4;text-align:center;padding:14rpx 40rpx calc(28rpx + env(safe-area-inset-bottom));font-size:22rpx;color:#bbb;line-height:1.5;z-index:10;}
 
 /* ═══ Q12 上衣长度参考图 ═══ */
 .q12-ref{margin:10rpx 0 28rpx;padding:24rpx;background:#f8f6f4;border-radius:16rpx;border:2rpx solid #eee5df;}
@@ -97,7 +97,7 @@ page{background:#f8f6f4;}
 .upload-card{margin-top:28rpx;padding:28rpx;background:#fff;border-radius:20rpx;
   border:2rpx dashed #d0c8c0;text-align:center;}
 .upload-label{font-size:29rpx;color:#333;font-weight:bold;display:block;margin-bottom:18rpx;text-align:left;}
-.upload-placeholder{display:flex;flex-direction:column;align-items:center;gap:12rpx;padding:40rpx 24rpx;}
+.upload-placeholder{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16rpx;min-height:420rpx;padding:50rpx 24rpx;}
 .upload-icon{font-size:56rpx;color:#ccc;}
 .upload-hint-pink{font-size:28rpx;color:#e91e63;font-weight:500;}
 .upload-hint-gray{font-size:22rpx;color:#aaa;line-height:1.5;}
