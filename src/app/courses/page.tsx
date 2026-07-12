@@ -181,7 +181,7 @@ export default function CoursesPage() {
             <Link href="/courses/booking" className="group bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white hover:opacity-95 rounded-2xl p-5 transition border border-[#2d1b2e]">
               <CalendarDays className="w-8 h-8 text-[#C9A24B] mb-3" />
               <h3 className="font-bold">形象管理预约</h3>
-              <p className="text-xs text-white/80 mt-1">一对一形象诊断 ¥190</p>
+              <p className="text-xs text-white/80 mt-1">一对一形象诊断</p>
             </Link>
           </div>
 

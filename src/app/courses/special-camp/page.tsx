@@ -30,7 +30,6 @@ export default function SpecialCampPage() {
         >
           <span className="inline-block px-3 py-1 rounded-full bg-[#e91e63] text-white text-xs font-semibold mb-4">🔥 热门课程</span>
           <h1 className="text-3xl md:text-4xl font-bold">AI赋能·服装精英销售特训营</h1>
-          <p className="text-3xl md:text-4xl font-bold text-[#C9A24B] mt-4">¥190</p>
         </motion.div>
       </div>
 

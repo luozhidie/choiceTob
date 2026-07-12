@@ -74,7 +74,6 @@ export default function DiagnosisBookingPage() {
           <span className="inline-block px-3 py-1 rounded-full bg-[#e91e63] text-white text-xs font-semibold mb-4">🔥 形象诊断预约</span>
           <h1 className="text-3xl md:text-4xl font-bold">{config.title}</h1>
           <p className="text-lg md:text-xl text-[#C9A24B] mt-2">{config.subtitle}</p>
-          <p className="text-3xl md:text-4xl font-bold text-[#C9A24B] mt-4">¥{config.price}</p>
         </motion.div>
       </div>
 
@@ -122,7 +121,7 @@ export default function DiagnosisBookingPage() {
             onClick={() => setShowWechat(true)}
             className="w-full bg-[#2d1b2e] text-white rounded-full py-3.5 font-bold text-base hover:opacity-95 transition"
           >
-            立即预约 · ¥{config.price}
+            立即预约
           </button>
         )}
       </div>
