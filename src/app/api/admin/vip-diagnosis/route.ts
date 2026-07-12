@@ -21,13 +21,13 @@ export async function GET(request: NextRequest) {
     const supabase = await createServerClient();
     const { data, error } = await supabase
       .from("site_assets")
-      .select("key, value")
+      .select("key, alt_text")
       .in("key", [CONFIG_KEY, BLOCKS_KEY]);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     const map: Record<string, string> = {};
-    (data || []).forEach((item: any) => { map[item.key] = item.value || ""; });
+    (data || []).forEach((item: any) => { map[item.key] = item.alt_text || ""; });
 
     let config: any = {};
     if (map[CONFIG_KEY]) {
@@ -98,10 +98,10 @@ export async function POST(request: NextRequest) {
       if (existing) {
         return await supabase
           .from("site_assets")
-          .update({ value, updated_at: new Date().toISOString() })
+          .update({ alt_text: value, updated_at: new Date().toISOString() })
           .eq("id", existing.id);
       }
-      return await supabase.from("site_assets").insert([{ key, title, value, is_active: true }]);
+      return await supabase.from("site_assets").insert([{ key, title, alt_text: value, is_active: true }]);
     };
 
     const { error: cErr } = await upsert(CONFIG_KEY, JSON.stringify(config), "形象诊断预约配置");

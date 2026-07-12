@@ -16,18 +16,20 @@ export async function GET(request: NextRequest) {
     const keys = keysParam.split(",").filter(Boolean);
 
     
+    // 说明：生产库 site_assets 表缺少 value 列，无法执行 DDL 自动补全，
+    // 因此图片模块的 JSON（blocks / booking 配置）统一存放在已有的 alt_text 字段。
     if (keys.length > 0) {
       // 批量查询指定 key
       const { data, error } = await supabase
         .from("site_assets")
-        .select("key, image_url, value")
+        .select("key, image_url, alt_text")
         .in("key", keys);
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
       const map: Record<string, string> = {};
       (data || []).forEach((item: any) => {
-        map[item.key] = item.image_url || item.value || "";
+        map[item.key] = item.image_url || item.alt_text || "";
       });
       return NextResponse.json({ success: true, data: map });
     }
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     // 返回所有（限制数量）
     const { data, error } = await supabase
       .from("site_assets")
-      .select("key, image_url, value")
+      .select("key, image_url, alt_text")
       .limit(50);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

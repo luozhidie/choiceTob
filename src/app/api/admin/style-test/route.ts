@@ -19,16 +19,16 @@ export async function GET(request: NextRequest) {
     const supabase = await createServerClient();
     const { data, error } = await supabase
       .from("site_assets")
-      .select("key, value")
+      .select("key, alt_text")
       .eq("key", BLOCKS_KEY)
       .maybeSingle();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     let blocks: string[] = [];
-    if (data?.value) {
+    if (data?.alt_text) {
       try {
-        const list = JSON.parse(data.value);
+        const list = JSON.parse(data.alt_text);
         if (Array.isArray(list)) blocks = list.filter((x: any) => typeof x === "string");
       } catch {}
     }
@@ -67,13 +67,13 @@ export async function POST(request: NextRequest) {
     if (existing) {
       const { error } = await supabase
         .from("site_assets")
-        .update({ value: JSON.stringify(blocks), updated_at: new Date().toISOString() })
+        .update({ alt_text: JSON.stringify(blocks), updated_at: new Date().toISOString() })
         .eq("id", existing.id);
       dbError = error;
     } else {
       const { error } = await supabase
         .from("site_assets")
-        .insert([{ key: BLOCKS_KEY, title: "智能形象诊断图片模块", value: JSON.stringify(blocks), is_active: true }]);
+        .insert([{ key: BLOCKS_KEY, title: "智能形象诊断图片模块", alt_text: JSON.stringify(blocks), is_active: true }]);
       dbError = error;
     }
 
