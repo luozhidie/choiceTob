@@ -137,7 +137,7 @@ page{background:#f5f3f0;}
 .sg-icon{width:88rpx;height:88rpx;border-radius:50%;background:#faf8f6;border:1rpx solid #f0ede9;display:flex;align-items:center;justify-content:center;font-size:42rpx;}
 .sg-label{font-size:22rpx;color:#555;font-weight:500;}
 
-/* ====== vip形象诊断 banner ====== */
+/* ====== VIP形象诊断 banner ====== */
 .image-diag-card{margin-top:8rpx;border-radius:20rpx;overflow:hidden;
   background:linear-gradient(135deg,#2d1b2e 0%,#4a2b4d 50%,#2d1b2e 100%);
   box-shadow:0 8rpx 24rpx rgba(45,27,46,.25);}
