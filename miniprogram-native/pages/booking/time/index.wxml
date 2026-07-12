@@ -1,0 +1,59 @@
+<view class="page">
+  <!-- 顾问信息 -->
+  <view class="c-head">
+    <view class="c-avatar ph">👤</view>
+    <view class="c-info">
+      <text class="c-name">{{consultantName}}</text>
+      <text class="c-sub">{{date}} 陪购</text>
+    </view>
+  </view>
+
+  <!-- 地点 -->
+  <view class="row">
+    <text class="rl">陪购地点</text>
+    <text class="rv">{{settings.location}}</text>
+  </view>
+
+  <!-- 日期 -->
+  <view class="row">
+    <text class="rl">陪购日期</text>
+    <text class="rv">{{date}}</text>
+  </view>
+
+  <!-- 费用 -->
+  <view class="row">
+    <text class="rl">陪购费用</text>
+    <text class="rv">{{settings.currency}}{{settings.price_per_hour}}/小时</text>
+  </view>
+
+  <!-- 时段 -->
+  <view class="block">
+    <text class="bl">预约时间（多选）</text>
+    <view class="slot-grid">
+      <view wx:for="{{slots}}" wx:key="time"
+        class="slot {{item.status==='rest'?'rest':''}} {{selected.indexOf(item.time)>=0?'sel':''}}"
+        bindtap="toggleSlot" data-time="{{item.time}}" data-status="{{item.status}}">
+        {{item.time}}
+      </view>
+    </view>
+    <text class="sel-tip" wx:if="{{selected.length>0}}">已选 {{selected.length}} 小时</text>
+  </view>
+
+  <!-- 优惠券 -->
+  <view class="row">
+    <text class="rl">优惠券</text>
+    <input class="ri" placeholder="如有优惠码请填写" value="{{coupon}}" bindinput="onCoupon"/>
+  </view>
+
+  <!-- 服务费 -->
+  <view class="row">
+    <text class="rl">服务费</text>
+    <text class="rv">{{settings.currency}}{{settings.service_fee}}</text>
+  </view>
+
+  <!-- 提交 -->
+  <view class="footer">
+    <view class="total">合计 <text class="t-num">{{settings.currency}}{{total}}</text></view>
+    <view class="submit-btn" bindtap="submit">提交</view>
+  </view>
+</view>

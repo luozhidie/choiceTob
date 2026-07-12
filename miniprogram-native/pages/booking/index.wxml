@@ -1,27 +1,47 @@
 <view class="page">
-  <view class="tip-card">
-    <text class="tc-txt">填写预约信息，客服将在 24 小时内与您确认陪购时间。</text>
+  <!-- 日期标签 -->
+  <scroll-view scroll-x class="date-bar">
+    <view wx:for="{{dates}}" wx:key="date" class="date-item {{activeDate===item.date?'on':''}}" bindtap="selectDate" data-date="{{item.date}}">
+      <text class="dw">{{item.week}}</text>
+      <text class="dm">{{item.md}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 营销方案 -->
+  <view wx:if="{{plans.length>0}}" class="plans">
+    <view class="plans-title">营销方案</view>
+    <scroll-view scroll-x class="plan-scroll">
+      <view wx:for="{{plans}}" wx:key="id" class="plan-card" bindtap="goPlan" data-plan="{{item}}">
+        <image wx:if="{{item.image_url}}" class="plan-img" src="{{item.image_url}}" mode="aspectFill"/>
+        <view wx:else class="plan-img ph">🎁</view>
+        <text class="plan-name">{{item.title}}</text>
+        <text wx:if="{{item.price>0}}" class="plan-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
   </view>
 
-  <view class="form">
-    <view class="fi">
-      <text class="fl">姓名 <text class="req">*</text></text>
-      <input class="fin" placeholder="请输入姓名" value="{{form.name}}" bindinput="onName"/>
-    </view>
-    <view class="fi">
-      <text class="fl">联系电话 <text class="req">*</text></text>
-      <input class="fin" type="number" placeholder="请输入手机号" value="{{form.phone}}" bindinput="onPhone"/>
-    </view>
-    <view class="fi">
-      <text class="fl">预约时间 <text class="req">*</text></text>
-      <picker mode="date" value="{{form.date}}" bindchange="onDate">
-        <view class="fin picker">{{form.date||'请选择日期'}}</view>
-      </picker>
-    </view>
-    <view class="fi">
-      <text class="fl">备注需求</text>
-      <textarea class="fta" placeholder="如：想补充秋冬大衣、预算范围、偏好风格等" value="{{form.note}}" bindinput="onNote"/>
-    </view>
-    <view class="submit-btn" bindtap="submit">提交预约</view>
+  <!-- 顾问列表 -->
+  <view wx:if="{{!loading}}" class="list">
+    <block wx:if="{{consultants.length>0}}">
+      <view wx:for="{{consultants}}" wx:key="id" class="c-card" bindtap="goTime" data-id="{{item.id}}" data-name="{{item.name}}">
+        <image wx:if="{{item.avatar_url}}" class="c-avatar" src="{{item.avatar_url}}" mode="aspectFill"/>
+        <view wx:else class="c-avatar ph">👤</view>
+        <view class="c-info">
+          <text class="c-name">{{item.name}}<text class="c-title">{{item.title}}</text></text>
+          <text class="c-desc">{{item.description}}</text>
+          <text class="c-remain">{{item.remain>0?('余'+item.remain+'小时'):'已约满'}}</text>
+        </view>
+        <text class="c-arrow">›</text>
+      </view>
+    </block>
+    <view wx:else class="empty">暂无形象顾问，请到后台添加</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <!-- 我的预约 -->
+  <view class="my-bar" bindtap="goMy">
+    <text>我的预约</text>
+    <text class="mb-arrow">›</text>
   </view>
 </view>

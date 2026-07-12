@@ -111,6 +111,14 @@ const menuGroups = [
     { label: "交付方案", href: "/admin/deliveries" },
   ]},
 
+  // ─── 陪购管理 ───
+  { label: "陪购管理", items: [
+    { label: "形象顾问", href: "/admin/booking-consultants" },
+    { label: "陪购设置", href: "/admin/booking-settings" },
+    { label: "营销方案", href: "/admin/marketing-plans" },
+    { label: "预约订单", href: "/admin/bookings" },
+  ]},
+
   // ─── 潜客管理 ───
   { label: "潜客管理", items: [
     { label: "门店信息", href: "/admin/crm/stores" },
