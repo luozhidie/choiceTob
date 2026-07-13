@@ -1,7 +1,8 @@
 <view class="page">
-  <!-- Hero -->
+  <!-- Hero：全屏大图 -->
   <view class="hero">
     <image wx:if="{{heroImage}}" src="{{heroImage}}" mode="aspectFill" class="hero-bg" />
+    <view class="hero-darken"></view>
     <view class="hero-overlay">
       <text class="hero-title">个人形象诊断</text>
       <text class="hero-sub">一次诊断 终身受益</text>
