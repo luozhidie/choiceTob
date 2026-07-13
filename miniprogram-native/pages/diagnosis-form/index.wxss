@@ -1,0 +1,256 @@
+.page {
+  background: #f5f3f0;
+  min-height: 100vh;
+  padding-bottom: calc(60rpx + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24rpx 28rpx 8rpx;
+  background: #f5f3f0;
+}
+.back {
+  font-size: 30rpx;
+  color: #2d1b2e;
+}
+.top-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #2d1b2e;
+}
+.top-spacer {
+  width: 60rpx;
+}
+
+.head {
+  padding: 16rpx 36rpx 24rpx;
+}
+.head-title {
+  display: block;
+  font-size: 44rpx;
+  font-weight: bold;
+  color: #2d1b2e;
+  letter-spacing: 2rpx;
+}
+.head-sub {
+  display: block;
+  font-size: 24rpx;
+  color: #8a7f7a;
+  margin-top: 12rpx;
+  line-height: 1.5;
+}
+
+.login-tip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 28rpx 8rpx;
+  padding: 20rpx 28rpx;
+  background: rgba(45, 27, 46, 0.05);
+  border: 1rpx solid rgba(45, 27, 46, 0.1);
+  border-radius: 20rpx;
+}
+.login-text {
+  font-size: 26rpx;
+  color: #2d1b2e;
+}
+.login-btn {
+  font-size: 24rpx;
+  color: #fff;
+  background: #2d1b2e;
+  padding: 10rpx 28rpx;
+  border-radius: 40rpx;
+}
+
+.card {
+  margin: 16rpx 24rpx 0;
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 32rpx 28rpx 40rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.04);
+}
+
+.qblock {
+  margin-bottom: 40rpx;
+}
+.qsep {
+  border-top: 1rpx solid #eee;
+  padding-top: 32rpx;
+}
+
+.q-label {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 18rpx;
+  line-height: 1.5;
+}
+.q-label-big {
+  display: block;
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #1a1a1a;
+  margin-bottom: 18rpx;
+}
+.req {
+  color: #e0392b;
+}
+
+.q-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f7f5f2;
+  border: 1rpx solid #e6e1db;
+  border-radius: 16rpx;
+  padding: 22rpx 24rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+.ph {
+  color: #b8b0a8;
+}
+
+.opts {
+  display: flex;
+  flex-direction: column;
+  gap: 16rpx;
+}
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  border: 1rpx solid #e6e1db;
+  border-radius: 16rpx;
+  padding: 22rpx 24rpx;
+  background: #fff;
+}
+.opt-on {
+  background: #2d1b2e;
+  border-color: #2d1b2e;
+}
+.radio {
+  width: 32rpx;
+  height: 32rpx;
+  border-radius: 50%;
+  border: 2rpx solid #cfc7bf;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.radio-on {
+  border-color: #C9A24B;
+  background: #C9A24B;
+}
+.opt-text {
+  font-size: 28rpx;
+  color: #555;
+}
+.opt-on .opt-text {
+  color: #fff;
+}
+
+.ref-box {
+  margin-top: 20rpx;
+  background: #f7f5f2;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+.ref-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 16rpx;
+}
+.ref-line {
+  display: block;
+  font-size: 24rpx;
+  color: #8a7f7a;
+  line-height: 1.7;
+}
+.ref-img {
+  width: 100%;
+  margin: 12rpx 0;
+  border-radius: 12rpx;
+  border: 1rpx solid #e6e1db;
+}
+
+.q-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 18rpx;
+  background: #f7f5f2;
+  border: 1rpx solid #e6e1db;
+  border-radius: 16rpx;
+  padding: 22rpx 24rpx;
+  font-size: 28rpx;
+  color: #333;
+  height: 180rpx;
+}
+
+.uploader {
+  border: 2rpx dashed #cfc7bf;
+  border-radius: 16rpx;
+  padding: 48rpx 24rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10rpx;
+  background: #faf8f5;
+}
+.up-icon {
+  font-size: 56rpx;
+  color: #b8b0a8;
+}
+.up-text {
+  font-size: 30rpx;
+  color: #C9A24B;
+  font-weight: 500;
+}
+.up-tip {
+  font-size: 22rpx;
+  color: #b8b0a8;
+}
+.up-loading {
+  font-size: 28rpx;
+  color: #8a7f7a;
+}
+.up-preview {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 12rpx;
+}
+.up-done {
+  font-size: 24rpx;
+  color: #2d8a4e;
+}
+
+.submit-btn {
+  margin-top: 16rpx;
+  background: #2d1b2e;
+  color: #fff;
+  text-align: center;
+  font-size: 32rpx;
+  font-weight: bold;
+  padding: 30rpx 0;
+  border-radius: 50rpx;
+}
+.submit-btn.disabled {
+  opacity: 0.5;
+}
+.secret {
+  display: block;
+  text-align: center;
+  font-size: 22rpx;
+  color: #b8b0a8;
+  margin-top: 24rpx;
+}
+
+.bottom-space {
+  height: 40rpx;
+}

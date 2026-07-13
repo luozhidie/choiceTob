@@ -15,6 +15,7 @@
     "pages/courses/booking/index",
     "pages/style-test/index",
     "pages/personal-image/index",
+    "pages/diagnosis-form/index",
     "pages/wardrobe/index",
     "pages/wardrobe/outfits/index",
     "pages/wardrobe/create/index",

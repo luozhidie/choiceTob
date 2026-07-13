@@ -195,7 +195,7 @@ Page({
   goAddress:function(){wx.navigateTo({url:'/pages/address/index'});},
   goFeedback:function(){wx.navigateTo({url:'/pages/feedback/index'});},
   goPersonalImage:function(){wx.navigateTo({url:'/pages/personal-image/index'});},
-  goStyleTest:function(){wx.navigateTo({url:'/pages/style-test/index?scene=personal'});},
+  goStyleTest:function(){wx.navigateTo({url:'/pages/diagnosis-form/index'});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
   goGroupBuy:function(){wx.showToast({title:'社群活动开发中',icon:'none'});},
