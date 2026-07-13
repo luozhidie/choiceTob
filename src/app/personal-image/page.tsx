@@ -64,21 +64,28 @@ export default function PersonalImagePage() {
       {/* 底部间距 */}
       <div className="h-8" />
 
-      {/* 固定底部双按钮 */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 md:px-6 md:py-5 flex gap-4 z-50">
+      {/* 固定底部三按钮 */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-4 md:px-6 md:py-5 flex gap-3 z-50">
         <Link
-          href="/style-test/female"
+          href="/personal-image/questionnaire"
           className="flex-1 flex flex-col items-center justify-center bg-[#C9A24B] text-white rounded-full py-3 hover:opacity-95 transition"
         >
-          <span className="text-base font-bold">智能形象诊断</span>
-          <span className="text-sm text-white/80">¥99 风格测试</span>
+          <span className="text-sm font-bold">VIP形象诊断</span>
+          <span className="text-xs text-white/80">21题问卷</span>
+        </Link>
+        <Link
+          href="/style-test/female"
+          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-3 hover:opacity-95 transition"
+        >
+          <span className="text-sm font-bold">智能形象诊断</span>
+          <span className="text-xs text-white/80">¥99 风格测试</span>
         </Link>
         <Link
           href="/courses"
-          className="flex-1 flex flex-col items-center justify-center bg-[#2d1b2e] text-white rounded-full py-3 hover:opacity-95 transition"
+          className="flex-1 flex flex-col items-center justify-center border border-[#2d1b2e] text-[#2d1b2e] rounded-full py-3 hover:bg-[#2d1b2e]/5 transition"
         >
-          <span className="text-base font-bold">整体形象诊断</span>
-          <span className="text-sm text-white/80">预约</span>
+          <span className="text-sm font-bold">整体形象诊断</span>
+          <span className="text-xs text-[#2d1b2e]/70">预约</span>
         </Link>
       </div>
     </div>
