@@ -12,6 +12,16 @@ const MARKETS = [
 
 const SECTORS = ["上游纺织", "中游制造", "下游品牌零售", "电商渠道", "其他"];
 
+// 小指标卡（用于回测汇总）
+function Stat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-gray-50 rounded-xl p-3">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className="text-lg font-bold text-primary mt-0.5">{value}</div>
+    </div>
+  );
+}
+
 export default function StockMonitorPage() {
   const [list, setList] = useState<any[]>([]);
   const [quotes, setQuotes] = useState<Record<string, any>>({});
@@ -25,6 +35,11 @@ export default function StockMonitorPage() {
   const [form, setForm] = useState({ symbol: "", name: "", market: "hk", sector: "下游品牌零售", industry: "服装" });
   const [error, setError] = useState("");
   const [diag, setDiag] = useState<any>(null);
+  const [positions, setPositions] = useState<any[]>([]);
+  const [paperTrades, setPaperTrades] = useState<any[]>([]);
+  const [backtest, setBacktest] = useState<any>(null);
+  const [backtestLoading, setBacktestLoading] = useState(false);
+  const [backtestError, setBacktestError] = useState("");
 
   const loadList = useCallback(async () => {
     setError("");
@@ -85,7 +100,7 @@ export default function StockMonitorPage() {
     }
   }, []);
 
-  useEffect(() => { loadList(); }, [loadList]);
+  useEffect(() => { loadList(); loadPaperState(); }, [loadList, loadPaperState]);
 
   const refreshAll = async () => {
     setLoading(true);
@@ -117,18 +132,47 @@ export default function StockMonitorPage() {
     }
   };
 
+  // 拉取最新「信号/模拟持仓/成交记录」三件套（打开页面和跑完策略后都调用）
+  const loadPaperState = useCallback(async () => {
+    try {
+      const r = await fetch("/api/finance/signal", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) {
+        setSignals(d.signals || []);
+        setPositions(d.positions || []);
+        setPaperTrades(d.trades || []);
+      }
+    } catch {}
+  }, []);
+
   const runSignal = async () => {
     setSignalRunning(true);
     setSignalError("");
     try {
       const r = await fetch("/api/finance/signal", { method: "POST", credentials: "include" });
       const d = await r.json();
-      if (d.signals) setSignals(d.signals);
-      else setSignalError(d.error || "运行失败");
+      if (d.error) { setSignalError(d.error); return; }
+      // 跑完一轮后刷新持仓/成交，让用户直观看到结果（解决「为什么是 0」）
+      await loadPaperState();
     } catch (e: any) {
       setSignalError("请求异常：" + (e?.message || String(e)));
     } finally {
       setSignalRunning(false);
+    }
+  };
+
+  const runBacktest = async () => {
+    setBacktestLoading(true);
+    setBacktestError("");
+    try {
+      const r = await fetch("/api/finance/backtest", { method: "POST", credentials: "include" });
+      const d = await r.json();
+      if (d.ok) setBacktest(d);
+      else setBacktestError(d.error || "回测失败");
+    } catch (e: any) {
+      setBacktestError("请求异常：" + (e?.message || String(e)));
+    } finally {
+      setBacktestLoading(false);
     }
   };
 
@@ -248,6 +292,9 @@ export default function StockMonitorPage() {
         <button onClick={runSignal} disabled={signalRunning} className="btn-secondary flex items-center gap-2">
           {signalRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}运行策略
         </button>
+        <button onClick={runBacktest} disabled={backtestLoading} className="btn-secondary flex items-center gap-2">
+          {backtestLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}回测验证
+        </button>
       </div>
 
       {(() => {
@@ -318,10 +365,143 @@ export default function StockMonitorPage() {
         </div>
       )}
 
+      {positions.length > 0 || paperTrades.length > 0 ? (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-base font-bold text-primary flex items-center gap-2"><Activity className="w-4 h-4 text-accent" />模拟交易</h3>
+            <span className="text-[11px] text-muted-foreground px-2 py-0.5 rounded bg-amber-50 text-amber-600">纸面模拟 · 不实盘</span>
+          </div>
+
+          {positions.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4">
+              <h4 className="text-sm font-bold text-primary mb-3">📊 模拟持仓（{positions.length}）</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted-foreground border-b border-gray-100">
+                      <th className="py-2 pr-4 font-medium">标的</th>
+                      <th className="py-2 pr-4 font-medium">数量</th>
+                      <th className="py-2 pr-4 font-medium">成本</th>
+                      <th className="py-2 pr-4 font-medium">现价</th>
+                      <th className="py-2 font-medium">浮动盈亏</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {positions.map((p, i) => {
+                      const up = p.pnl != null && p.pnl >= 0;
+                      return (
+                        <tr key={i} className="border-b border-gray-50">
+                          <td className="py-2 pr-4 font-medium">{p.symbol}</td>
+                          <td className="py-2 pr-4">{p.qty}</td>
+                          <td className="py-2 pr-4">{p.avg_cost != null ? p.avg_cost.toFixed(2) : "—"}</td>
+                          <td className="py-2 pr-4">{p.current_price != null ? p.current_price.toFixed(2) : "—"}</td>
+                          <td className={`py-2 font-medium ${up ? "text-emerald-600" : "text-rose-600"}`}>{p.pnl != null ? (up ? "+" : "") + p.pnl.toFixed(2) : "—"}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {paperTrades.length > 0 && (
+            <div className="bg-white border border-gray-100 rounded-2xl p-5">
+              <h4 className="text-sm font-bold text-primary mb-3">🧾 成交记录（{paperTrades.length}）</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-xs text-muted-foreground border-b border-gray-100">
+                      <th className="py-2 pr-4 font-medium">时间</th>
+                      <th className="py-2 pr-4 font-medium">标的</th>
+                      <th className="py-2 pr-4 font-medium">方向</th>
+                      <th className="py-2 pr-4 font-medium">价格</th>
+                      <th className="py-2 pr-4 font-medium">数量</th>
+                      <th className="py-2 font-medium">来源</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {paperTrades.map((t, i) => {
+                      const buy = t.side === "buy";
+                      return (
+                        <tr key={i} className="border-b border-gray-50">
+                          <td className="py-2 pr-4 text-xs text-muted-foreground whitespace-nowrap">{t.created_at ? new Date(t.created_at).toLocaleString("zh-CN") : "—"}</td>
+                          <td className="py-2 pr-4 font-medium">{t.symbol}</td>
+                          <td className={`py-2 pr-4 font-medium ${buy ? "text-emerald-600" : "text-rose-600"}`}>{buy ? "买入" : "卖出"}</td>
+                          <td className="py-2 pr-4">{t.price != null ? t.price.toFixed(2) : "—"}</td>
+                          <td className="py-2 pr-4">{t.qty}</td>
+                          <td className="py-2 text-xs text-muted-foreground">{t.source}{t.note ? " · " + t.note : ""}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 mb-6 text-sm text-muted-foreground">
+          尚未产生模拟成交。点「运行策略」让规则跑一轮（MA金叉买入 / 死叉或止盈止损卖出），结果会实时显示在这里。当前为<strong className="text-amber-600">纸面模拟，不实盘、不涉真实资金</strong>。
+        </div>
+      )}
+
+      {backtest && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
+          <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-accent" /> 回测验证（{backtest.range || "近6个月"}）</h3>
+          {backtest.summary && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+              <Stat label="标的数" value={backtest.summary.stocks} />
+              <Stat label="总成交" value={backtest.summary.totalTrades} />
+              <Stat label="胜率" value={backtest.summary.winRate.toFixed(1) + "%"} />
+              <Stat label="组合收益" value={(backtest.summary.totalReturnPct >= 0 ? "+" : "") + backtest.summary.totalReturnPct.toFixed(2) + "%"} />
+              <Stat label="累计盈亏" value={(backtest.summary.totalPnl >= 0 ? "+" : "") + backtest.summary.totalPnl.toFixed(0)} />
+              <Stat label="最大回撤" value={backtest.summary.maxDrawdown.toFixed(2) + "%"} />
+            </div>
+          )}
+          {backtest.perStock && backtest.perStock.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs text-muted-foreground border-b border-gray-100">
+                    <th className="py-2 pr-4 font-medium">标的</th>
+                    <th className="py-2 pr-4 font-medium">成交</th>
+                    <th className="py-2 pr-4 font-medium">胜率</th>
+                    <th className="py-2 pr-4 font-medium">收益%</th>
+                    <th className="py-2 pr-4 font-medium">盈亏</th>
+                    <th className="py-2 font-medium">最大回撤%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {backtest.perStock.map((s: any, i: number) => (
+                    <tr key={i} className="border-b border-gray-50">
+                      <td className="py-2 pr-4 font-medium">{s.name || s.symbol} <span className="text-xs text-muted-foreground">{s.symbol}</span></td>
+                      <td className="py-2 pr-4">{s.trades}</td>
+                      <td className="py-2 pr-4">{s.winRate != null ? s.winRate.toFixed(1) + "%" : "—"}</td>
+                      <td className={`py-2 pr-4 ${s.returnPct >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{s.returnPct != null ? (s.returnPct >= 0 ? "+" : "") + s.returnPct.toFixed(2) + "%" : "—"}</td>
+                      <td className={`py-2 pr-4 ${s.pnl >= 0 ? "text-emerald-600" : "text-rose-600"}`}>{s.pnl != null ? (s.pnl >= 0 ? "+" : "") + s.pnl.toFixed(0) : "—"}</td>
+                      <td className="py-2">{s.maxDD != null ? s.maxDD.toFixed(2) : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground mt-3">回测基于近 6 个月真实日K逐日回放同一套规则，仅验证策略逻辑，不代表未来收益，亦非投资建议。</p>
+        </div>
+      )}
+
       {signalError && (
         <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-5 text-sm">
           <div className="font-semibold mb-1">⚠️ 策略运行失败</div>
           <div className="break-all">{signalError}</div>
+        </div>
+      )}
+
+      {backtestError && (
+        <div className="bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-5 text-sm">
+          <div className="font-semibold mb-1">⚠️ 回测失败</div>
+          <div className="break-all">{backtestError}</div>
         </div>
       )}
     </div>

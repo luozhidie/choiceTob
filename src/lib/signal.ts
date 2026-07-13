@@ -98,6 +98,7 @@ export function evaluateSignal(closes: number[], volumes: number[], i: number, r
 // 运行一轮策略（实时）：算指标 → 生成信号 → 模拟成交（纸面，不实盘）
 export async function runStrategy(supabase: any) {
   const rule = await readRule(supabase);
+  const executor = getExecutor(supabase);
   const { data: list } = await supabase.from("stock_watchlist").select("*");
   if (!list || list.length === 0) return { signals: [], trades: [], error: "监控清单为空" };
 
@@ -121,21 +122,21 @@ export async function runStrategy(supabase: any) {
 
       let signal = e.signal, reason = e.reason;
       if (signal === "买入" && (!pos || pos.qty === 0)) {
-        await supabase.from("paper_trades").insert({ symbol: item.symbol, side: "buy", price: e.price, qty, source: "rule", note: reason });
+        await executor.recordTrade({ symbol: item.symbol, side: "buy", price: e.price, qty, source: "rule", note: reason });
         const newQty = (pos?.qty || 0) + qty;
         const newAvg = pos?.qty ? ((pos.qty * pos.avg_cost) + qty * e.price) / newQty : e.price;
-        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: newQty, avg_cost: newAvg, peak_price: e.price, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+        await executor.setPosition({ symbol: item.symbol, qty: newQty, avg_cost: newAvg, peak_price: e.price, updated_at: new Date().toISOString() });
         trades.push({ symbol: item.symbol, side: "buy", price: e.price, qty });
       } else if ((signal === "卖出" || hitEntryStop || hitTrailingStop) && pos && pos.qty > 0) {
         const sellQty = Math.min(qty, pos.qty);
         const note = hitTrailingStop ? `移动止盈-${Math.round(rule.trailingStop * 100)}%` : hitEntryStop ? `止损-${Math.round(rule.stopLoss * 100)}%` : reason;
-        await supabase.from("paper_trades").insert({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty, source: hitTrailingStop ? "trailing" : hitEntryStop ? "stop" : "rule", note });
-        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: pos.qty - sellQty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+        await executor.recordTrade({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty, source: hitTrailingStop ? "trailing" : hitEntryStop ? "stop" : "rule", note });
+        await executor.setPosition({ symbol: item.symbol, qty: pos.qty - sellQty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() });
         trades.push({ symbol: item.symbol, side: "sell", price: e.price, qty: sellQty });
         if (signal === "买入") { signal = "持有"; reason = "持仓中，忽略新买点"; }
       } else if (pos && pos.qty > 0) {
         // 持仓中未触发卖出：更新最高点（用于移动止盈）
-        await supabase.from("paper_positions").upsert({ symbol: item.symbol, qty: pos.qty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() }, { onConflict: "symbol" });
+        await executor.setPosition({ symbol: item.symbol, qty: pos.qty, avg_cost: pos.avg_cost, peak_price: currentPeak, updated_at: new Date().toISOString() });
       }
       signals.push({ symbol: item.symbol, name: item.name, signal, reason, score: e.score, price: e.price });
 
@@ -257,4 +258,34 @@ export async function runBacktest(supabase: any) {
       maxDrawdown: portfolioMaxDD * 100,
     },
   };
+}
+
+/* ════════════════════════════════════════════════════
+   可插拔下单执行层（为两三个月后接券商留干净插口）
+   - 现在：PaperExecutor 写数据库（纸面交易）
+   - 将来：BrokerExecutor 调券商 OpenAPI（富途/老虎/IB…），逻辑复用
+   策略/风控/回测逻辑不依赖具体执行方，只依赖本接口
+   ════════════════════════════════════════════════════ */
+
+export interface OrderExecutor {
+  /** 记录一笔成交（买/卖） */
+  recordTrade(trade: { symbol: string; side: "buy" | "sell"; price: number; qty: number; source: string; note?: string }): Promise<void>;
+  /** 设置某标的持仓状态（upsert） */
+  setPosition(pos: { symbol: string; qty: number; avg_cost: number | null; peak_price: number; updated_at: string }): Promise<void>;
+}
+
+/** 纸面执行：写入 paper_trades / paper_positions（不实盘） */
+export class PaperExecutor implements OrderExecutor {
+  constructor(private supabase: any) {}
+  async recordTrade(trade: any) {
+    await this.supabase.from("paper_trades").insert(trade);
+  }
+  async setPosition(pos: any) {
+    await this.supabase.from("paper_positions").upsert(pos, { onConflict: "symbol" });
+  }
+}
+
+/** 获取执行方：当前固定返回纸面执行器；将来按配置返回券商执行器 */
+export function getExecutor(supabase: any): OrderExecutor {
+  return new PaperExecutor(supabase);
 }
