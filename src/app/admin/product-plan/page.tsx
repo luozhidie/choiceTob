@@ -53,6 +53,22 @@ interface WaveItem {
   activity: string;
 }
 
+// 秋冬上架主题（与商品上传页「上架主题」保持一致）
+const AW_THEMES = ["美拉德风", "新中式", "老钱风·静奢", "通勤极简", "新年战袍", "圣诞派对"];
+
+interface AWThemeWave {
+  wave: number;
+  theme: string;
+  date: string;
+  pct: number; // 占秋冬总额比例%
+  sku: number;
+  amount: number;
+  categories: string[];
+  styleFocus: string[];
+  activity: string;
+  colorTone: string; // 主色调
+}
+
 /* ── AI 企划报告类型 ─────────────────────── */
 interface StylePlanItem {
   mainStyle: string;
@@ -181,6 +197,16 @@ export default function ProductPlanPage() {
     { wave: 4, date: "5月第1周", pct: 40, sku: 80, amount: 400000, categories: ["夏装全套"], seasonFocus: ["盛夏"], styleFocus: ["运动", "前卫"], activity: "夏季焕新大促" },
   ]);
 
+  // ── 秋冬上架主题波段（每个主题=一波，复用 wave_plan 表的 wave_name/status 字段，无需改表）──
+  const [awWaves, setAwWaves] = useState<AWThemeWave[]>([
+    { wave: 1, theme: "美拉德风", date: "8月第3周", pct: 15, sku: 45, amount: 225000, categories: ["针织毛衣", "羊毛大衣"], styleFocus: ["自然", "优雅"], activity: "早秋上新", colorTone: "焦糖棕/摩卡" },
+    { wave: 2, theme: "新中式", date: "9月第2周", pct: 18, sku: 50, amount: 300000, categories: ["新中式外套", "改良旗袍"], styleFocus: ["优雅", "古典型"], activity: "中秋国风专场", colorTone: "黛蓝/朱红" },
+    { wave: 3, theme: "老钱风·静奢", date: "10月第1周", pct: 17, sku: 48, amount: 380000, categories: ["羊毛大衣", "真丝衬衫"], styleFocus: ["古典型", "优雅"], activity: "高端会员私享", colorTone: "燕麦/ camel" },
+    { wave: 4, theme: "通勤极简", date: "10月第3周", pct: 18, sku: 52, amount: 260000, categories: ["西装", "直筒裤"], styleFocus: ["少年型", "古典型"], activity: "双十一职场焕新", colorTone: "石墨灰/米白" },
+    { wave: 5, theme: "新年战袍", date: "12月第1周", pct: 17, sku: 46, amount: 320000, categories: ["礼服", "红色针织"], styleFocus: ["浪漫", "戏剧型"], activity: "新年战袍预售", colorTone: "正红/金" },
+    { wave: 6, theme: "圣诞派对", date: "12月第3周", pct: 15, sku: 40, amount: 240000, categories: ["亮片裙", "派对套装"], styleFocus: ["时尚", "戏剧型"], activity: "圣诞狂欢购", colorTone: "酒红/银" },
+  ]);
+
   /* ── 加载店铺列表 ──────────────────────── */
   useEffect(() => {
     (async () => {
@@ -276,6 +302,23 @@ export default function ProductPlanPage() {
           marketing_activity: w.activity,
         });
       }
+
+      // 秋冬上架主题波段：复用 wave_name 存主题名、status='aw' 区分秋冬
+      for (const w of awWaves) {
+        await supabase.from("wave_plan").upsert({
+          store_id: storeId,
+          wave_number: w.wave,
+          wave_name: w.theme,
+          plan_date: w.date,
+          pct: w.pct,
+          sku_count: w.sku,
+          amount: w.amount,
+          core_categories: w.categories,
+          style_focus: w.styleFocus,
+          marketing_activity: w.activity,
+          status: "aw",
+        });
+      }
       alert("保存成功！");
     } catch (e: any) {
       alert("保存失败：" + e.message);
@@ -317,6 +360,13 @@ export default function ProductPlanPage() {
         ...waves.map((w) => [w.wave, w.date, w.pct, w.sku, `¥${w.amount.toLocaleString()}`, w.categories.join("、"), w.seasonFocus.join("、"), w.styleFocus.join("、"), w.activity]),
       ]);
       XLSX.utils.book_append_sheet(wb, ws3, "3.上货波段计划");
+
+      // Sheet4: 秋冬上架主题波段
+      const ws4 = XLSX.utils.aoa_to_sheet([
+        ["主题", "上架时间", "占比%", "SKU数", "金额", "核心品类", "主色调", "风格重点", "营销活动"],
+        ...awWaves.map((w) => [w.theme, w.date, w.pct, w.sku, `¥${w.amount.toLocaleString()}`, w.categories.join("、"), w.colorTone, w.styleFocus.join("、"), w.activity]),
+      ]);
+      XLSX.utils.book_append_sheet(wb, ws4, "4.秋冬上架主题");
 
       const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
       const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
@@ -748,6 +798,49 @@ export default function ProductPlanPage() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        {/* === 4. 秋冬上架主题波段 === */}
+        <section className="mb-8">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-amber-600" /> 4. 秋冬上架主题波段
+            <span className="text-xs font-normal text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">6 大主题 · 每个主题 = 一波</span>
+          </h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-amber-50 text-amber-800">
+                <tr>
+                  <th className="p-3 text-left">主题</th>
+                  <th className="p-3 text-left">上架时间</th>
+                  <th className="p-3 text-left">占比%</th>
+                  <th className="p-3 text-left">SKU数</th>
+                  <th className="p-3 text-left">金额</th>
+                  <th className="p-3 text-left">核心品类</th>
+                  <th className="p-3 text-left">主色调</th>
+                  <th className="p-3 text-left">风格重点</th>
+                  <th className="p-3 text-left">营销活动</th>
+                </tr>
+              </thead>
+              <tbody>
+                {awWaves.map((w, i) => (
+                  <tr key={i} className="border-t border-gray-200">
+                    <td className="p-3">
+                      <span className="font-semibold text-amber-700">第{w.wave}波 · {w.theme}</span>
+                    </td>
+                    <td className="p-3"><input type="text" value={w.date} onChange={(e) => { const ws = [...awWaves]; ws[i].date = e.target.value; setAwWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="number" value={w.pct} onChange={(e) => { const ws = [...awWaves]; ws[i].pct = +e.target.value; setAwWaves(ws); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="number" value={w.sku} onChange={(e) => { const ws = [...awWaves]; ws[i].sku = +e.target.value; setAwWaves(ws); }} className="w-16 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="number" value={w.amount} onChange={(e) => { const ws = [...awWaves]; ws[i].amount = +e.target.value; setAwWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.categories.join("、")} onChange={(e) => { const ws = [...awWaves]; ws[i].categories = e.target.value.split("、"); setAwWaves(ws); }} className="w-40 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.colorTone} onChange={(e) => { const ws = [...awWaves]; ws[i].colorTone = e.target.value; setAwWaves(ws); }} className="w-28 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.styleFocus.join("、")} onChange={(e) => { const ws = [...awWaves]; ws[i].styleFocus = e.target.value.split("、"); setAwWaves(ws); }} className="w-32 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                    <td className="p-3"><input type="text" value={w.activity} onChange={(e) => { const ws = [...awWaves]; ws[i].activity = e.target.value; setAwWaves(ws); }} className="w-36 px-2 py-1 border border-gray-200 rounded-lg text-sm" /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">主题名与商品上传页「上架主题」完全一致，保存后可在 Supabase 的 <code>wave_plan</code> 表以 <code>status='aw'</code> 区分；导出 Excel 含第 4 张表。</p>
         </section>
 
         {/* ── 使用说明 ────────────────────────── */}

@@ -26,6 +26,9 @@ import {
   getCategoryPath,
 } from "@/lib/categories";
 
+// 秋冬上架主题（写入 tags 带「主题·」前缀，无需改表结构）
+const AW_THEMES = ["美拉德风", "新中式", "老钱风·静奢", "通勤极简", "新年战袍", "圣诞派对"];
+
 interface Product {
   id: string;
   title: string;
@@ -137,6 +140,8 @@ export default function AdminProductsPage() {
     color_hex: "",
     color_season_code: "",
     style_conclusion: "",
+    // 上架主题
+    theme: "",
     // 商品参数
     material: "",
     sizes: "",
@@ -222,6 +227,7 @@ export default function AdminProductsPage() {
       color_hex: "",
       color_season_code: "",
       style_conclusion: "",
+      theme: "",
     });
   };
 
@@ -246,12 +252,18 @@ export default function AdminProductsPage() {
       category: form.category || null,
       subcategory: form.subcategory || null,
       stock: parseInt(form.stock) || 0,
-      tags: form.tags
-        ? form.tags
-            .split(",")
-            .map((t) => t.trim())
-            .filter(Boolean)
-        : null,
+      tags: (() => {
+        const base = form.tags
+          ? form.tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [];
+        // 去除旧的「主题·」标签，避免编辑时重复累积
+        const cleaned = base.filter((t) => !t.startsWith("主题·"));
+        if (form.theme) cleaned.push("主题·" + form.theme);
+        return cleaned.length > 0 ? cleaned : null;
+      })(),
       is_published: form.is_published,
       detail: form.detail.trim() || null,
       // 属性编码体系
@@ -367,6 +379,7 @@ export default function AdminProductsPage() {
       color_hex: product.color_hex || "",
       color_season_code: product.color_season_code || "",
       style_conclusion: product.style_conclusion || "",
+      theme: product.tags?.find((t) => t.startsWith("主题·"))?.replace("主题·", "") || "",
     });
     setShowForm(true);
   };
@@ -1252,6 +1265,24 @@ export default function AdminProductsPage() {
                     <option value="自然型">自然型</option>
                     <option value="戏剧型">戏剧型</option>
                   </select>
+                </div>
+
+                {/* 上架主题（秋冬主题，写入 tags 带「主题·」前缀） */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">上架主题（秋冬）</label>
+                  <select
+                    value={form.theme}
+                    onChange={(e) => setForm({ ...form, theme: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">不指定</option>
+                    {AW_THEMES.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-gray-400 mt-1">选中的主题会以「主题·xxx」形式写入商品标签，可用于前台主题筛选与秋冬上架规划。</p>
                 </div>
               </div>
               {/* === 商品参数 === */}
