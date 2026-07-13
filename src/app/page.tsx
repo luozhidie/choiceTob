@@ -990,10 +990,6 @@ export default function Home() {
       )}
 
 
-      {/* ===== 轮播图上方版块 ===== */}
-      {blocksByPosition("hero_top").map(renderBlock)}
-
-      {/* ===== Hero 全屏轮播区域（含搜索+分类标签） ===== */}
       <section className="relative overflow-hidden pt-12" style={{ height: "100svh", minHeight: "500px" }}>
         <div style={{ height: "calc(100% - 48px)", minHeight: "452px", position: "relative", overflow: "hidden" }}>
           {/* 轮播图背景 */}
@@ -1001,6 +997,11 @@ export default function Home() {
 
           {/* 内容层（叠在轮播图上） */}
           <div className="absolute inset-0 z-20 pointer-events-none flex flex-col">
+            {/* 轮播图上方版块（叠在轮播图顶部，全宽） */}
+            <div className="pointer-events-auto w-full">
+              {blocksByPosition("hero_top").map(renderBlock)}
+            </div>
+
             <div className="flex flex-col h-full px-4 pointer-events-auto">
               {/* 顶部区域：品牌标题（左上角固定样式） */}
               <div className="pt-5 pb-2">
