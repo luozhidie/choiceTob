@@ -24,6 +24,11 @@
     </view>
   </view>
 
+  <!-- ========== 轮播图上方模块（position==='hero_top'）========== -->
+  <block wx:for="{{heroTopBlocks}}" wx:key="id">
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac}}"/>
+  </block>
+
   <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
   <view class="hero-banner">
     <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
@@ -64,9 +69,13 @@
     </view>
   </view>
 
-  <!-- ========== 动态模块区 ========== -->
-  <block wx:for="{{blocks}}" wx:key="id" wx:for-index="bIdx">
+  <!-- ========== 动态模块区（轮播图下方/商品上方，已排除 hero_top）========== -->
+  <block wx:for="{{blocks}}" wx:key="id">
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac}}"/>
+  </block>
 
+  <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
+  <template name="blk">
     <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
@@ -119,7 +128,7 @@
             <!-- card_quad -->
             <view wx:if="{{item.type==='card_quad'}}" class="blk-cq" style="padding:16rpx 24rpx;background:{{item.style.bgColor||'#fff'}};">
               <view class="cq-row">
-                <view class="cq-card" wx:for="{{quadItems[bIdx]}}" wx:key="title"
+                <view class="cq-card" wx:for="{{quadItems[item.id]}}" wx:key="title"
                   bindtap="goBlockLink" data-link="{{item.link}}">
                   <image src="{{item.image}}" mode="aspectFill" class="cq-img"/>
                   <text class="cq-title">{{item.title}}</text>
@@ -133,7 +142,7 @@
               <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
                 <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
                   <view class="cr-row">
-                    <view class="cr-item" wx:for="{{circleItems[bIdx]}}" wx:key="image"
+                    <view class="cr-item" wx:for="{{circleItems[item.id]}}" wx:key="image"
                       bindtap="goBlockLink" data-link="{{item.link}}">
                       <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
                       <text class="cr-label" wx:if="{{item.label}}">{{item.label}}</text>
@@ -208,7 +217,7 @@
       </view>
     </view>
 
-  </block>
+  </template>
 
   <!-- ========== 商品区 ========== -->
   <view class="sec">

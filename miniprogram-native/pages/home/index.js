@@ -11,7 +11,8 @@ Page({
     li:false,
     isPriceMember:false,  // 价格会员状态
     /* 动态模块 */
-    blocks:[],          // 全部已发布模块（按 sort_order 排序）
+    blocks:[],          // 轮播图下方模块（排除 hero_top）
+    heroTopBlocks:[],   // 轮播图上方模块（position==='hero_top'）
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
@@ -82,7 +83,7 @@ Page({
           if(b.type==='card_quad'){
             var cards=[];
             for(var k=0;k<=3;k++){if(ct['card'+k])cards.push(ct['card'+k]);}
-            if(cards.length>0)quadData[i]=cards;
+            if(cards.length>0)quadData[b.id]=cards;
           }
           /* 预处理圆形卡片行 */
           if(b.type==='circle_row'){
@@ -92,7 +93,7 @@ Page({
               var key=keys[m];
               if(key.indexOf('item')===0&&ct[key]&&ct[key].image)citems.push(ct[key]);
             }
-            if(citems.length>0)circleData[i]=citems;
+            if(citems.length>0)circleData[b.id]=citems;
           }
           /* 预处理 featured_banner 副图 */
           if(b.type==='featured_banner'){
@@ -105,8 +106,13 @@ Page({
           }
         }
 
+        /* 按展示位置拆分：hero_top 放到轮播图上方，其余放轮播图下方 */
+        var heroTopBlocks = all.filter(function(x){return (x.content&&x.content.position)==='hero_top';});
+        var restBlocks = all.filter(function(x){return (x.content&&x.content.position)!=='hero_top';});
+
         t.setData({
-          blocks:all,
+          blocks:restBlocks,
+          heroTopBlocks:heroTopBlocks,
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
 
