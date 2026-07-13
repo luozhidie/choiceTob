@@ -464,10 +464,84 @@ function SimulateTab({ gameType }: { gameType: LotteryType }) {
 }
 
 /* ════════════════════════════════════════
+   Tab: 每日推荐一注（纯展示，不暗示盈利）
+   ════════════════════════════════════════ */
+function DailyPickTab() {
+  const [state, setState] = useState<{ loading: boolean; data: any; error: string }>({ loading: true, data: null, error: "" });
+  const games = getAllGames();
+
+  const load = useCallback(async () => {
+    setState((s) => ({ ...s, loading: true }));
+    try {
+      const r = await fetch(`/api/lottery?action=daily_picks`);
+      const d = await r.json();
+      if (d.success && d.data?.picks) setState({ loading: false, data: d.data, error: "" });
+      else setState({ loading: false, data: null, error: d.error || "加载失败" });
+    } catch (e: any) { setState({ loading: false, data: null, error: e.message }); }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const strategyLabel: Record<string, string> = {
+    balanced: "均衡", hot: "偏热", cold: "偏冷", omission: "遗漏追号", random: "纯随机",
+  };
+
+  return (
+    <div className="space-y-5">
+      <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg flex items-start gap-2">
+        <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+        <p className="text-xs text-amber-800 leading-relaxed">
+          <strong>每日推荐 · 纯展示：</strong>以下号码基于<strong>最新开奖后的历史统计</strong>，按「加权随机」生成一注候选，每天自动调整。它<strong>不预测未来、不保证中奖、不提高回报率</strong>，与股票量化交易有本质区别（彩票每期独立随机，无信号可捕捉）。仅供娱乐与研究参考，请理性购彩。
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          推荐日期：<strong className="text-gray-800">{state.data?.date || "—"}</strong>
+          <span className="text-gray-400 ml-2 text-xs">（北京时间 · 每天 23:00 自动刷新）</span>
+        </p>
+        <button onClick={load} disabled={state.loading} className="px-3 py-1.5 bg-white border border-gray-300 text-gray-600 text-xs rounded hover:bg-gray-50 disabled:bg-gray-100 flex items-center gap-1.5">
+          {state.loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCcw className="w-3.5 h-3.5" />}
+          {state.loading ? "加载中..." : "刷新"}
+        </button>
+      </div>
+
+      {state.loading && (
+        <div className="flex items-center justify-center py-20"><Loader2 className="w-6 h-6 animate-spin text-blue-500 mr-2" /><span className="text-gray-500">正在生成每日推荐...</span></div>
+      )}
+      {!state.loading && state.error && (
+        <div className="py-10 text-center"><AlertTriangle className="w-8 h-8 text-amber-500 mx-auto mb-2" /><p className="text-red-600 text-sm">{state.error}</p></div>
+      )}
+      {!state.loading && state.data?.picks && (
+        <div className="grid md:grid-cols-2 gap-4">
+          {games.map(({ type, game }) => {
+            const pick = state.data.picks[type];
+            if (!pick) return null;
+            return (
+              <div key={type} className="border rounded-lg overflow-hidden">
+                <div className="px-4 py-2.5 bg-gray-50 border-b flex items-center justify-between">
+                  <h3 className="font-semibold text-sm text-gray-800">{game.config.name}</h3>
+                  <span className="text-[11px] px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-full">{strategyLabel[pick.strategy] || pick.strategy}</span>
+                </div>
+                <div className="p-4">
+                  <PickDisplay result={pick} def={getGameDef(type)} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <p className="text-center text-xs text-gray-400 pt-2">本推荐由系统每日自动生成，与任何预测、内幕无关。彩票有风险，投注需理性。</p>
+    </div>
+  );
+}
+
+/* ════════════════════════════════════════
    主页面
    ════════════════════════════════════════ */
 export default function AdminLotteryPage() {
-  const [tab, setTab] = useState<"analysis" | "info" | "simulate">("analysis");
+  const [tab, setTab] = useState<"analysis" | "info" | "simulate" | "daily">("analysis");
   const [gameType, setGameType] = useState<LotteryType>("ssq");
   const games = getAllGames();
 
@@ -498,6 +572,7 @@ export default function AdminLotteryPage() {
           { key: "analysis", label: "📊 历史数据统计", icon: BarChart3 },
           { key: "info", label: "📋 概率规则", icon: Trophy },
           { key: "simulate", label: "⚡ 蒙特卡洛模拟", icon: Zap },
+          { key: "daily", label: "🎯 每日推荐", icon: Target },
         ].map((t) => (
           <button key={t.key} onClick={() => setTab(t.key as any)}
             className={`px-4 py-2 text-sm font-medium transition-colors ${tab === t.key ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-500 hover:text-gray-700"}`}>
@@ -509,6 +584,7 @@ export default function AdminLotteryPage() {
       {tab === "analysis" && <AnalysisTab gameType={gameType} />}
       {tab === "info" && <InfoTab gameType={gameType} />}
       {tab === "simulate" && <SimulateTab gameType={gameType} />}
+      {tab === "daily" && <DailyPickTab />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { fetchGameData, saveGameData } from "@/lib/lottery/fetcher";
+import { generateDailyPicks } from "@/lib/lottery/dailypicks";
 import { LotteryType } from "@/lib/lottery/types";
 
 /* ════════════════════════════════════════
@@ -28,9 +29,20 @@ export async function POST(request: NextRequest) {
     }
 
     const ok = results.filter((r) => !r.error).length;
+
+    // 同步完成后，基于最新开奖刷新每日推荐一注（纯展示）
+    let dailyMsg = "";
+    try {
+      const snap = await generateDailyPicks(supabase);
+      dailyMsg = `每日推荐已更新(${Object.keys(snap.picks).length}种)`;
+    } catch (e: any) {
+      dailyMsg = "每日推荐刷新失败:" + (e?.message || "");
+    }
+
     return NextResponse.json({
       success: true,
       message: `已同步 ${ok}/${ALL_TYPES.length} 种玩法`,
+      daily: dailyMsg,
       results,
     });
   } catch (error: any) {

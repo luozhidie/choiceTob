@@ -7,6 +7,7 @@ import {
   analyzeGame, generateGamePick,
 } from "@/lib/lottery/analyzer";
 import { fetchGameData, loadGameData, saveGameData } from "@/lib/lottery/fetcher";
+import { ensureDailyPicks, generateDailyPicks } from "@/lib/lottery/dailypicks";
 import { DrawRecord, UnifiedAnalysis, LotteryType } from "@/lib/lottery/types";
 
 const ALL_TYPES: LotteryType[] = ["ssq", "dlt", "fc3d", "pl3", "pl5", "qxc"];
@@ -146,6 +147,12 @@ export async function GET(request: NextRequest) {
         const analysis = await getGameAnalysis(type);
         const pickResult = generateGamePick(strategy, analysis, getGameDef(type));
         return NextResponse.json({ success: true, type, data: pickResult });
+      }
+
+      /* ── 每日推荐一注（纯展示，不暗示盈利） ── */
+      case "daily_picks": {
+        const snap = await ensureDailyPicks(supabase);
+        return NextResponse.json({ success: true, data: snap });
       }
 
       /* ── 手动触发同步（单玩法或全量） ── */
