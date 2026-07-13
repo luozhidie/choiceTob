@@ -100,7 +100,6 @@ export default function StockMonitorPage() {
     }
   }, []);
 
-  useEffect(() => { loadList(); loadPaperState(); }, [loadList, loadPaperState]);
 
   const refreshAll = async () => {
     setLoading(true);
@@ -144,6 +143,8 @@ export default function StockMonitorPage() {
       }
     } catch {}
   }, []);
+
+  useEffect(() => { loadList(); loadPaperState(); }, [loadList, loadPaperState]);
 
   const runSignal = async () => {
     setSignalRunning(true);
