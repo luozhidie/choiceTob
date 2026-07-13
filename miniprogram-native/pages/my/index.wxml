@@ -213,7 +213,7 @@
     </view>
 
     <!-- VIP形象诊断 banner -->
-    <view class="image-diag-card" bindtap="goVipDiagnosis">
+    <view class="image-diag-card" bindtap="goPersonalImage">
       <view class="idc-body">
         <text class="idc-title">VIP形象诊断</text>
         <text class="idc-desc">请仔细填写诊断信息，龙虾按<text class="idc-highlight">喜欢+适合+需要</text>的规则为您选款拿货</text>
