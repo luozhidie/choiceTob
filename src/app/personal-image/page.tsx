@@ -29,17 +29,20 @@ export default function PersonalImagePage() {
 
   return (
     <div className="min-h-screen bg-[#f5f3f0] pb-32 md:pb-28">
-      {/* Hero */}
-      <section className="relative bg-gradient-to-br from-[#2d1b2e] to-[#4a2a3e] py-16 md:py-24 text-center overflow-hidden">
-        {heroImage && (
-          <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" />
+      {/* Hero：全屏大图，暗遮罩保证文字可读 */}
+      <section className="relative h-screen min-h-screen flex items-center justify-center overflow-hidden">
+        {heroImage ? (
+          <img src={heroImage} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2d1b2e] to-[#4a2a3e]" />
         )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(201,162,75,.15),transparent_50%)]" />
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 20 }}
           transition={{ duration: 0.6 }}
-          className="relative z-10 max-w-3xl mx-auto px-4"
+          className="relative z-10 max-w-3xl mx-auto px-4 text-center"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-white tracking-widest">个人形象诊断</h1>
           <p className="inline-block mt-6 px-6 py-2 rounded-full bg-white/10 text-[#C9A24B] text-lg tracking-widest border border-[#C9A24B]/30">
