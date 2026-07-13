@@ -990,6 +990,9 @@ export default function Home() {
       )}
 
 
+      {/* ===== 轮播图上方版块 ===== */}
+      {blocksByPosition("hero_top").map(renderBlock)}
+
       {/* ===== Hero 全屏轮播区域（含搜索+分类标签） ===== */}
       <section className="relative overflow-hidden pt-12" style={{ height: "100svh", minHeight: "500px" }}>
         <div style={{ height: "calc(100% - 48px)", minHeight: "452px", position: "relative", overflow: "hidden" }}>
