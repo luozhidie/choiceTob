@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     } else {
       const { error } = await supabase
         .from("site_assets")
-        .insert([{ key: BLOCKS_KEY, title: "智能形象诊断图片模块", alt_text: JSON.stringify(blocks), is_active: true }]);
+        .insert([{ key: BLOCKS_KEY, title: "智能形象诊断图片模块", image_url: "", alt_text: JSON.stringify(blocks), is_active: true }]);
       dbError = error;
     }
 

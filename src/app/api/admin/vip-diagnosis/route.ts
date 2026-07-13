@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
           .update({ alt_text: value, updated_at: new Date().toISOString() })
           .eq("id", existing.id);
       }
-      return await supabase.from("site_assets").insert([{ key, title, alt_text: value, is_active: true }]);
+      return await supabase.from("site_assets").insert([{ key, title, image_url: "", alt_text: value, is_active: true }]);
     };
 
     const { error: cErr } = await upsert(CONFIG_KEY, JSON.stringify(config), "形象诊断预约配置");
