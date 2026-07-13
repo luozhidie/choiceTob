@@ -1,4 +1,6 @@
 // 模拟交易信号：策略核心逻辑（与 HTTP 路由解耦，供手动/定时/回测复用）
+import type { OrderExecutor } from "./broker/types";
+import { FutuBrokerExecutor } from "./broker/futu";
 
 // 拉历史日K（Yahoo，A股转 .SS/.SZ 后缀），返回收盘价与成交量
 export async function fetchYahooHistory(symbol: string) {
@@ -267,13 +269,6 @@ export async function runBacktest(supabase: any) {
    策略/风控/回测逻辑不依赖具体执行方，只依赖本接口
    ════════════════════════════════════════════════════ */
 
-export interface OrderExecutor {
-  /** 记录一笔成交（买/卖） */
-  recordTrade(trade: { symbol: string; side: "buy" | "sell"; price: number; qty: number; source: string; note?: string }): Promise<void>;
-  /** 设置某标的持仓状态（upsert） */
-  setPosition(pos: { symbol: string; qty: number; avg_cost: number | null; peak_price: number; updated_at: string }): Promise<void>;
-}
-
 /** 纸面执行：写入 paper_trades / paper_positions（不实盘） */
 export class PaperExecutor implements OrderExecutor {
   constructor(private supabase: any) {}
@@ -285,7 +280,15 @@ export class PaperExecutor implements OrderExecutor {
   }
 }
 
-/** 获取执行方：当前固定返回纸面执行器；将来按配置返回券商执行器 */
+/**
+ * 获取执行方：按环境变量 BROKER_TYPE 切换
+ * - 缺省 / "paper" → PaperExecutor（纸面交易，不实盘）
+ * - "futu"        → FutuBrokerExecutor（富途真实/模拟下单，经中继转发）
+ * 未配置富途中继时 FutuBrokerExecutor 会明确报错，不会静默出错。
+ */
 export function getExecutor(supabase: any): OrderExecutor {
+  if (process.env.BROKER_TYPE === "futu") {
+    return new FutuBrokerExecutor(supabase);
+  }
   return new PaperExecutor(supabase);
 }
