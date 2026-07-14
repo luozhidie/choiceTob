@@ -129,21 +129,44 @@ export function getStyleFullLabel(key: string | null | undefined): string {
 
 // ==================== 12季色彩定义 ====================
 
-/** 12季色彩（后端专业术语） */
+/** 12季色彩（后端专业术语，按真实色彩季型特征归类，不做大地/暖/冷等过度色彩家族归类） */
 export const COLOR_SEASONS_PRO = [
-  { value: "light_warm", label: "浅暖型", group: "暖色系", marketLabel: "暖色系" },
-  { value: "warm_bright", label: "暖亮型", group: "暖色系", marketLabel: "暖色系" },
-  { value: "clear_warm", label: "净暖型", group: "暖色系", marketLabel: "暖色系" },
-  { value: "light_cool", label: "浅冷型", group: "冷色系", marketLabel: "冷色系" },
-  { value: "soft_cool", label: "柔冷型", group: "冷色系", marketLabel: "冷色系" },
-  { value: "cool_soft", label: "冷柔型", group: "冷色系", marketLabel: "冷色系" },
-  { value: "warm_soft", label: "暖柔型", group: "大地色系", marketLabel: "大地色系" },
-  { value: "soft_warm", label: "柔暖型", group: "大地色系", marketLabel: "大地色系" },
-  { value: "deep_warm", label: "深暖型", group: "大地色系", marketLabel: "大地色系" },
-  { value: "clear_cool", label: "净冷型", group: "深色系", marketLabel: "深色系" },
-  { value: "cool_bright", label: "冷亮型", group: "中性色系", marketLabel: "中性色系" },
-  { value: "deep_cool", label: "深冷型", group: "深色系", marketLabel: "深色系" },
+  { value: "light_warm", label: "浅暖型", group: "浅春", marketLabel: "浅暖色", desc: "轻浅、明亮、暖色调" },
+  { value: "warm_bright", label: "暖亮型", group: "暖春", marketLabel: "暖亮色", desc: "暖色调、轻浅、亮丽" },
+  { value: "clear_warm", label: "净暖型", group: "净春", marketLabel: "净暖色", desc: "明亮、艳丽、分明" },
+  { value: "light_cool", label: "浅冷型", group: "浅夏", marketLabel: "浅冷色", desc: "轻浅、柔和、淡雅" },
+  { value: "soft_cool", label: "柔冷型", group: "柔夏", marketLabel: "柔冷色", desc: "柔和淡雅、冷色调" },
+  { value: "cool_soft", label: "冷柔型", group: "冷夏", marketLabel: "冷柔色", desc: "冷色调、浅淡、柔和" },
+  { value: "warm_soft", label: "暖柔型", group: "暖秋", marketLabel: "暖柔色", desc: "暖色调、色泽浓重" },
+  { value: "soft_warm", label: "柔暖型", group: "柔秋", marketLabel: "柔暖色", desc: "深厚、低饱和、暖色调" },
+  { value: "deep_warm", label: "深暖型", group: "深秋", marketLabel: "深暖色", desc: "浓郁、厚重" },
+  { value: "clear_cool", label: "净冷型", group: "净冬", marketLabel: "净冷色", desc: "艳丽明亮、深沉浓烈" },
+  { value: "cool_bright", label: "冷亮型", group: "冷冬", marketLabel: "冷亮色", desc: "深沉、明亮、极端" },
+  { value: "deep_cool", label: "深冷型", group: "深冬", marketLabel: "深冷色", desc: "浓郁、艳丽、冷色调" },
 ] as const;
+
+/** 12季色彩详细特征（真实色彩季型，单一事实来源；市场流行色由运营手动设置，不在此对应） */
+export type ColorSeasonDetail = {
+  tone: string; brightness: string; saturation: string;
+  bestColors: string[]; avoidColors: string[];
+  bestFabrics: string[]; bestPatterns: string[];
+  matchingStyles: string[];
+};
+
+export const COLOR_SEASON_DETAILS: Record<string, ColorSeasonDetail> = {
+  light_warm: { tone: "暖", brightness: "高明度", saturation: "高艳度", bestColors: ["浅金黄", "桃粉", "象牙白", "鹅黄", "浅杏"], avoidColors: ["深棕", "墨绿", "纯黑"], bestFabrics: ["雪纺", "真丝", "细棉", "蕾丝"], bestPatterns: ["小碎花", "圆点", "细条纹"], matchingStyles: ["少女型", "优雅型"] },
+  warm_bright: { tone: "暖", brightness: "高明度", saturation: "高艳度", bestColors: ["珊瑚色", "金黄", "南蛇藤色", "橙红", "草绿"], avoidColors: ["灰蓝", "灰紫", "冷灰"], bestFabrics: ["棉质", "亚麻", "丝棉"], bestPatterns: ["花卉", "几何", "波普"], matchingStyles: ["少女型", "时尚型"] },
+  clear_warm: { tone: "暖", brightness: "中高明度", saturation: "高艳度", bestColors: ["亮粉", "鲜绿", "西瓜红", "正红", "明黄"], avoidColors: ["卡其", "灰粉", "雾霾蓝"], bestFabrics: ["丝光棉", "亮面材质", "精细针织"], bestPatterns: ["大花", "撞色", "色块"], matchingStyles: ["戏剧型", "时尚型"] },
+  light_cool: { tone: "冷", brightness: "高明度", saturation: "低艳度", bestColors: ["柔白", "雾粉", "奶柔色", "薰衣草紫", "灰蓝"], avoidColors: ["正红", "亮橙", "鲜绿"], bestFabrics: ["雪纺", "薄纱", "柔软棉"], bestPatterns: ["水彩风", "渐变", "淡雅印花"], matchingStyles: ["优雅型", "少年型"] },
+  soft_cool: { tone: "冷", brightness: "中高明度", saturation: "低艳度", bestColors: ["绿玉色", "宝石蓝", "灰玫瑰色", "梅紫", "薄荷绿"], avoidColors: ["大红", "金黄", "草绿"], bestFabrics: ["精纺羊毛", "真丝", "棉混纺"], bestPatterns: ["暗纹", "提花", "素色"], matchingStyles: ["古典型", "优雅型"] },
+  cool_soft: { tone: "冷", brightness: "中明度", saturation: "低艳度", bestColors: ["玫瑰粉", "石青色", "玫瑰红", "灰粉", "雾霾蓝"], avoidColors: ["橙红", "芥末黄", "焦糖"], bestFabrics: ["棉麻混纺", "柔软针织", "磨毛面料"], bestPatterns: ["抽象", "水墨风", "素色"], matchingStyles: ["自然型", "古典型"] },
+  warm_soft: { tone: "暖", brightness: "中低明度", saturation: "低艳度", bestColors: ["驼色", "橄榄绿", "砖红", "焦糖色", "暖橙"], avoidColors: ["纯白", "宝蓝", "电光蓝"], bestFabrics: ["棉麻", "灯芯绒", "羊毛"], bestPatterns: ["格纹", "民族风", "大地色系"], matchingStyles: ["自然型", "优雅型"] },
+  soft_warm: { tone: "暖", brightness: "低明度", saturation: "低艳度", bestColors: ["卡其", "咖啡", "铁锈红", "米色", "深棕"], avoidColors: ["亮粉", "鲜绿", "天蓝"], bestFabrics: ["粗针织", "丝绒", "皮革"], bestPatterns: ["粗花呢", "编织纹", "深色格纹"], matchingStyles: ["自然型", "古典型"] },
+  deep_warm: { tone: "暖", brightness: "低明度", saturation: "中艳度", bestColors: ["深棕", "墨绿", "酒红", "深金", "咖啡棕"], avoidColors: ["浅粉", "天蓝", "鹅黄"], bestFabrics: ["羊绒", "丝绒", "粗花呢"], bestPatterns: ["大格纹", "动物纹", "深色花纹"], matchingStyles: ["戏剧型", "浪漫型"] },
+  clear_cool: { tone: "冷", brightness: "低明度", saturation: "高艳度", bestColors: ["纯黑", "正红", "电光蓝", "宝蓝", "翠绿"], avoidColors: ["卡其", "驼色", "米色"], bestFabrics: ["真丝缎面", "皮革", "金属感面料"], bestPatterns: ["色块", "几何", "高对比"], matchingStyles: ["戏剧型", "时尚型"] },
+  cool_bright: { tone: "冷", brightness: "低明度", saturation: "高艳度", bestColors: ["黑白", "藏蓝", "冰粉", "宝蓝", "松石绿"], avoidColors: ["焦糖", "暖橙", "芥末黄"], bestFabrics: ["皮革", "真丝", "缎面"], bestPatterns: ["极简", "撞色", "条纹"], matchingStyles: ["古典型", "戏剧型"] },
+  deep_cool: { tone: "冷", brightness: "低明度", saturation: "高艳度", bestColors: ["纯白", "深海军蓝", "木莓红", "酒红", "玫红"], avoidColors: ["浅黄", "暖橙", "焦糖"], bestFabrics: ["精纺羊毛", "缎面", "亮面皮革"], bestPatterns: ["暗纹", "提花", "低调奢华"], matchingStyles: ["古典型", "浪漫型"] },
+};
 
 /** 色彩季型Key → 后端专业术语 */
 export const COLOR_SEASON_PRO_MAP: Record<string, string> = {
@@ -153,13 +176,12 @@ export const COLOR_SEASON_PRO_MAP: Record<string, string> = {
   clear_cool: "净冷型", cool_bright: "冷亮型", deep_cool: "深冷型",
 };
 
-/** 色彩季型Key → 前端通俗色系名 */
+/** 色彩季型Key → 前端通俗色系名（12季真实特征，避免大地/暖/冷等过度归类） */
 export const COLOR_SEASON_MARKET_MAP: Record<string, string> = {
-  light_warm: "暖色系", warm_bright: "暖色系", clear_warm: "暖色系",
-  light_cool: "冷色系", soft_cool: "冷色系", cool_soft: "冷色系",
-  warm_soft: "大地色系", soft_warm: "大地色系", deep_warm: "大地色系",
-  clear_cool: "深色系", deep_cool: "深色系",
-  cool_bright: "中性色系",
+  light_warm: "浅暖色", warm_bright: "暖亮色", clear_warm: "净暖色",
+  light_cool: "浅冷色", soft_cool: "柔冷色", cool_soft: "冷柔色",
+  warm_soft: "暖柔色", soft_warm: "柔暖色", deep_warm: "深暖色",
+  clear_cool: "净冷色", cool_bright: "冷亮色", deep_cool: "深冷色",
 };
 
 /**
