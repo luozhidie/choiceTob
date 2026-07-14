@@ -180,11 +180,11 @@ const menuGroups = [
     { label: "买手中心", href: "/admin/buyer-center" },
   ]},
 
-  // ─── 独立服务（跳转到独立部署的 Vercel 应用，新标签页打开） ───
+  // ─── 独立服务（经主站反向代理内嵌，国内可访问） ───
   { label: "独立服务", items: [
-    { label: "区块链溯源", href: "https://chain-trace-smoky.vercel.app/trace", external: true },
-    { label: "数字藏品", href: "https://web3-collectible-luozhidies-projects.vercel.app/collectible", external: true },
-    { label: "虚拟试衣", href: "https://embodied-ai-eight.vercel.app", external: true },
+    { label: "区块链溯源", href: "/admin/services/trace" },
+    { label: "数字藏品", href: "/admin/services/collectible" },
+    { label: "虚拟试衣", href: "/admin/services/tryon" },
   ]},
 ];
 
