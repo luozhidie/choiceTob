@@ -348,16 +348,24 @@ export function getStyleCombos(gender?: "女士" | "男士"): StyleCombo[] {
     { list: FEMALE_STYLES, g: "女士" },
     { list: MALE_STYLES, g: "男士" },
   ];
+  const lineOf = (v: string): StyleLine => STYLE_DETAILS[v]?.line || "";
   for (const { list, g } of groups) {
     if (gender && g !== gender) continue;
     for (const main of list) {
       for (const lean of list) {
         const isPure = main.value === lean.value;
-        const common: StyleCombo["common"] = isPure
-          ? "纯风格"
-          : STYLE_LEAN[main.value]?.includes(lean.value as string)
-            ? "常见"
-            : "罕见";
+        let common: StyleCombo["common"];
+        if (isPure) {
+          common = "纯风格";
+        } else if (g === "男士") {
+          // 男士不分直曲，5×5=25 组合均成立，无"罕见"
+          common = "常见";
+        } else {
+          // 女士：跨直/曲（直偏曲 / 曲偏直）= 常见；同直/曲（直偏直 / 曲偏曲）= 罕见
+          const ml = lineOf(main.value as string);
+          const ll = lineOf(lean.value as string);
+          common = ml && ll && ml !== ll ? "常见" : "罕见";
+        }
         out.push({
           main: String(main.value),
           lean: String(lean.value),

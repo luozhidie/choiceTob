@@ -11,7 +11,7 @@ import {
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
   getStyleProLabel,
-  STYLE_DETAILS, STYLE_LEAN, getStyleCombos, formatStyleCombo,
+  STYLE_DETAILS, getStyleCombos, formatStyleCombo,
 } from "@/lib/styles";
 import { useCategories } from "@/lib/useCategories";
 import * as XLSX from "xlsx";
