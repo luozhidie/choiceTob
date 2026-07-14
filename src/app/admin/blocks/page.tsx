@@ -35,7 +35,7 @@ interface Block {
   id: string;
   title: string;
   type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner"
-    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav";
+    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -66,6 +66,7 @@ const BLOCK_TYPES = [
   { value: "banner_small", label: "小横幅", icon: Image, description: "较小尺寸的横幅Banner（满减提示等）" },
   { value: "category_nav", label: "分类目录", icon: ListFilter, description: "横向标签导航栏（全部、十三行、24h发货等）" },
   { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
+  { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
 ];
 
 const DEFAULT_STYLES = {
@@ -1337,6 +1338,88 @@ export default function BlocksAdminPage() {
                         })}
                       </div>
                     )}
+
+                    {/* shelf 货架入口 */}
+                    {form.type === "shelf" && (
+                      <div className="space-y-4 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">货架封面图 <span className="text-red-400">*</span></label>
+                          <BlockImageUpload
+                            value={(form.content as any)?.image || ""}
+                            onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">货架副标题</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.subtitle || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: e.target.value } as any })}
+                            placeholder="如：高端时尚风向标"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">标签/徽章</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.badge || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), badge: e.target.value } as any })}
+                            placeholder="如：深圳南油 | 高端"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">商品分类</label>
+                            <select
+                              value={(form.content as any)?.category || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), category: e.target.value || undefined } as any })}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none bg-white"
+                            >
+                              <option value="">不限制</option>
+                              <option value="穿搭">穿搭</option>
+                              <option value="护肤">护肤</option>
+                              <option value="彩妆">彩妆</option>
+                              <option value="养生">养生</option>
+                              <option value="食品">食品</option>
+                              <option value="家居">家居</option>
+                              <option value="文创">文创</option>
+                              <option value="艺术">艺术</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">子分类</label>
+                            <input
+                              type="text"
+                              value={(form.content as any)?.subcategory || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subcategory: e.target.value } as any })}
+                              placeholder="如：上装"
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">商品标签（逗号分隔）</label>
+                          <input
+                            type="text"
+                            value={(form.content as any)?.tags || ""}
+                            onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), tags: e.target.value } as any })}
+                            placeholder="如：韩系,通勤,通勤风"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">商品来源优先级：指定商品 &gt; 分类/子分类 &gt; 标签</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">指定商品（可选）</label>
+                          <ProductPicker
+                            value={(form.content as any)?.productIds || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                   </div>
                     {/* card_single 单格卡片 */}
                     {form.type === "card_single" && (

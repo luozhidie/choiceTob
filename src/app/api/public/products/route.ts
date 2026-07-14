@@ -25,7 +25,8 @@ function formatProducts(data: any[]) {
     description: p.description || null,
     is_published: p.is_published ?? true,
     stock: p.stock ?? 0,
-    tags: p.tags || null,
+    sales: p.sales || 0,
+    created_at: p.created_at || null,
   }));
 }
 
