@@ -198,12 +198,12 @@ export const COLOR_SEASON_KEY_MAP: Record<string, string> = {
   clear_cool: "藏蓝色", cool_bright: "冰白色", deep_cool: "墨灰色",
   // === 旧中文key兼容（mock-data 中的"浅春""冷冬"等，无"型"后缀） ===
   "浅春": "奶茶色", "暖春": "珊瑚橘", "净春": "鹅黄色",
-  "柔夏": "灰紫色", "冷夏": "雾霾蓝", "深夏": "薄荷绿",
+  "柔夏": "灰紫色", "冷夏": "薄荷绿",
   "柔秋": "驼色", "暖秋": "焦糖色", "净秋": "鹅黄色", "深秋": "酒红色",
   "净冬": "藏蓝色", "冷冬": "冰白色",
   // === 旧"形容词+季节型"兼容（supplier/submit, brand 中的"浅春型"等） ===
   "浅春型": "奶茶色", "暖春型": "珊瑚橘", "净春型": "鹅黄色",
-  "浅夏型": "雾霾蓝", "冷夏型": "灰紫色", "柔夏型": "薄荷绿",
+  "浅夏型": "雾霾蓝", "冷夏型": "薄荷绿", "柔夏型": "灰紫色",
   "柔秋型": "驼色", "暖秋型": "焦糖色", "深秋型": "酒红色",
   "净冬型": "藏蓝色", "冷冬型": "冰白色", "深冬型": "墨灰色",
   // === 旧"形容词+季节+型"额外变体（customers 页面中的错误命名） ===
@@ -220,18 +220,18 @@ export const COLOR_SEASON_KEY_MAP: Record<string, string> = {
  * 用于将数据库中的旧中文key转换为标准英文key
  */
 export const COLOR_SEASON_NORMALIZE_MAP: Record<string, string> = {
-  // 旧中文key → 标准英文key
+  // 旧中文key（浅春/暖春…等旧名）→ 标准英文key（与真实十二季型一一对应）
   "浅春": "light_warm", "暖春": "warm_bright", "净春": "clear_warm",
-  "柔夏": "soft_cool", "冷夏": "light_cool", "深夏": "cool_soft",
-  "柔秋": "warm_soft", "暖秋": "soft_warm", "净秋": "clear_warm", "深秋": "deep_warm",
-  "净冬": "clear_cool", "冷冬": "cool_bright",
+  "浅夏": "light_cool", "柔夏": "soft_cool", "冷夏": "cool_soft",
+  "柔秋": "soft_warm", "暖秋": "warm_soft", "净秋": "clear_warm", "深秋": "deep_warm",
+  "净冬": "clear_cool", "冷冬": "cool_bright", "深冬": "deep_cool",
   // 旧"型"后缀key → 标准英文key
   "浅春型": "light_warm", "暖春型": "warm_bright", "净春型": "clear_warm",
-  "浅夏型": "light_cool", "冷夏型": "soft_cool", "柔夏型": "cool_soft",
-  "柔秋型": "warm_soft", "暖秋型": "soft_warm", "深秋型": "deep_warm",
+  "浅夏型": "light_cool", "柔夏型": "soft_cool", "冷夏型": "cool_soft",
+  "柔秋型": "soft_warm", "暖秋型": "warm_soft", "深秋型": "deep_warm",
   "净冬型": "clear_cool", "冷冬型": "cool_bright", "深冬型": "deep_cool",
   // 非标准名 → 最近似标准key
-  "浅秋": "warm_soft", "浅冬": "clear_cool", "柔春": "light_warm",
+  "浅秋": "soft_warm", "浅冬": "clear_cool", "柔春": "light_warm",
   "深春": "warm_bright", "柔冬": "cool_bright",
   // monochrome（黑白型）→ 深冷型（最接近）
   "monochrome": "deep_cool",
@@ -257,10 +257,11 @@ export function normalizeColorSeasonKey(key: string | null | undefined): string 
   return COLOR_SEASON_NORMALIZE_MAP[key] || key;
 }
 
-/** 获取色彩季型前端通俗名 */
+/** 获取色彩季型前端显示名（默认返回真实季型名，如"浅暖型"；市场流行色由运营手动设置，不作为默认显示） */
 export function getColorSeasonLabel(key: string | null | undefined): string {
   if (!key) return "";
-  return COLOR_SEASON_KEY_MAP[key] || COLOR_SEASON_MARKET_MAP[key] || COLOR_SEASON_PRO_MAP[key] || key;
+  const normalized = normalizeColorSeasonKey(key);
+  return COLOR_SEASON_PRO_MAP[normalized] || COLOR_SEASON_MARKET_MAP[normalized] || COLOR_SEASON_KEY_MAP[key] || key;
 }
 
 /** 获取色彩季型后端专业术语 */
