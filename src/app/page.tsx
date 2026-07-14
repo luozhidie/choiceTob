@@ -990,8 +990,21 @@ export default function Home() {
       )}
 
 
-      <section className="relative overflow-hidden pt-12" style={{ height: "100svh", minHeight: "500px" }}>
-        <div style={{ height: "calc(100% - 48px)", minHeight: "452px", position: "relative", overflow: "hidden" }}>
+      {/* 品牌标题区（移到圆型色彩模块上方） */}
+      <section className="w-full bg-white border-b border-gray-100 pt-12">
+        <div className="max-w-7xl mx-auto px-4 py-4 md:py-5">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full mb-2 bg-primary/10 text-primary text-[10px] font-medium tracking-widest">
+            🏷 数据趋动·智选未来
+          </span>
+          <h1 className="font-black text-gray-900 leading-[1.15] tracking-tight" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
+            骆芷蝶·智选<span className="text-[#e89aac] mx-1">|</span>供应链平台
+          </h1>
+          <p className="text-xs md:text-sm text-gray-500 font-light tracking-wide mt-1">服装门店一站式赋能平台</p>
+        </div>
+      </section>
+
+      <section className="relative overflow-hidden" style={{ height: "100svh", minHeight: "500px" }}>
+        <div style={{ height: "100%", minHeight: "500px", position: "relative", overflow: "hidden" }}>
           {/* 轮播图背景 */}
           <HeroCarousel />
 
@@ -1003,21 +1016,9 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col h-full px-4 pointer-events-auto">
-              {/* 顶部区域：品牌标题（左上角固定样式） */}
+              {/* 分类标签栏 */}
               <div className="pt-5 pb-2">
                 <div className="max-w-7xl mx-auto">
-                  {/* 标语标签 */}
-                  <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full mb-2" style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)" }}>
-                    <span className="text-white/70 text-[10px] font-medium tracking-widest">🏷 数据驱动·智选未来</span>
-                  </span>
-                  {/* 品牌名称 - 大字 */}
-                  <h1 className="font-black text-white leading-[1.15] tracking-tight drop-shadow-lg" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
-                    骆芷蝶·智选<span className="text-[#e89aac] mx-1">|</span>供应链平台
-                  </h1>
-                  {/* 副标题 - 小字 */}
-                  <p className="text-xs md:text-sm text-white/80 font-light tracking-wide mt-1">服装门店一站式智选平台</p>
-
-                  {/* 分类标签栏 */}
                   <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide pt-3 pb-1">
                     {homeCategories.map((cat) => (
                       <Link
