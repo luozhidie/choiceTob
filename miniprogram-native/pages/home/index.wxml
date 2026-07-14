@@ -176,11 +176,10 @@
                       <text wx:if="{{item.content.subtitle||item.section_subtitle}}" class="shelf-sub">{{item.content.subtitle||item.section_subtitle}}</text>
                     </view>
                   </view>
-                  <view wx:if="{{shelfPreviews[item.id]&&shelfPreviews[item.id].length>0}}" class="shelf-preview">
-                    <view wx:for="{{shelfPreviews[item.id]}}" wx:key="id" class="sp-item">
-                      <image src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="sp-img"/>
-                      <view class="sp-price">{{item.priceText}}</view>
-                    </view>
+                  <view wx:if="{{item.content.subImage1||item.content.subImage2||item.content.subImage3}}" class="shelf-preview">
+                    <image wx:if="{{item.content.subImage1}}" src="{{item.content.subImage1}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage2}}" src="{{item.content.subImage2}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage3}}" src="{{item.content.subImage3}}" mode="aspectFill" class="sp-img"/>
                   </view>
                 </view>
 

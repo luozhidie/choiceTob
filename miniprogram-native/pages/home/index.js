@@ -16,7 +16,6 @@ Page({
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
-    shelfPreviews:{},   // 货架预览商品 key=blockId
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
   },
 
@@ -117,82 +116,12 @@ Page({
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
 
-        /* 加载货架预览商品 */
-        var shelfBlocks = all.filter(function(x){return x.type==='shelf';});
-        shelfBlocks.forEach(function(b){t.loadShelfPreview(b);});
-
         /* 有分类导航时更新 categories 列表 */
         if(catNavs.length>1){
           t.setData({categories:catNavs.map(function(x){return x.label;})});
         }
       }
     });
-  },
-
-  /* ====== 加载货架预览商品 ====== */
-  loadShelfPreview:function(block){
-    var t=this;
-    var ct=block.content||{};
-    var productIds=ct.productIds||'';
-    var category=ct.category||'';
-    var tags=ct.tags||'';
-    var subcategory=ct.subcategory||'';
-    var ids=productIds.split(',').map(function(s){return s.trim();}).filter(Boolean);
-    var done=function(list){
-      if(subcategory && !productIds){
-        list=list.filter(function(p){return p.subcategory===subcategory||p.sub_category===subcategory;});
-      }
-      list.forEach(function(p){
-        var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
-        p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
-      });
-      var previews=t.data.shelfPreviews||{};
-      previews[block.id]=list.slice(0,3);
-      t.setData({shelfPreviews:previews});
-    };
-
-    if(ids.length>0){
-      wx.request({
-        url:'https://colour-choice.art/api/public/products?ids='+ids.join(',')+'&limit='+ids.length,
-        method:'GET',
-        success:function(r){
-          var data=r.data||{};
-          var list=[];
-          if(data.success&&data.data){
-            list=ids.map(function(id){return data.data.find(function(p){return p.id===id;});}).filter(Boolean);
-          }
-          done(list);
-        },
-        fail:function(){done([]);}
-      });
-    } else if(category){
-      wx.request({
-        url:'https://colour-choice.art/api/public/products?limit=10&category='+encodeURIComponent(category),
-        method:'GET',
-        success:function(r){var data=r.data||{};done(data.success&&data.data?data.data:[]);},
-        fail:function(){done([]);}
-      });
-    } else if(tags){
-      wx.request({
-        url:'https://colour-choice.art/api/public/products?limit=10',
-        method:'GET',
-        success:function(r){
-          var data=r.data||{};
-          var list=data.success&&data.data?data.data:[];
-          var tagList=tags.split(',').map(function(s){return s.trim();}).filter(Boolean);
-          list=list.filter(function(p){var pTags=p.tags||[];return tagList.some(function(tag){return pTags.indexOf(tag)>=0;});});
-          done(list);
-        },
-        fail:function(){done([]);}
-      });
-    } else {
-      wx.request({
-        url:'https://colour-choice.art/api/public/products?limit=10',
-        method:'GET',
-        success:function(r){var data=r.data||{};done(data.success&&data.data?data.data:[]);},
-        fail:function(){done([]);}
-      });
-    }
   },
 
   /* ====== 模块点击跳转 ====== */

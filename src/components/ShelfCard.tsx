@@ -1,88 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 
 interface ShelfCardProps {
   block: any;
 }
 
-function formatPrice(price: number | null | undefined): string {
-  if (!price) return "0";
-  const p = Number(price);
-  const yuan = p >= 100 ? Math.round(p / 100) : p;
-  return "¥" + (yuan % 1 === 0 ? yuan.toString() : yuan.toFixed(2));
-}
-
 export default function ShelfCard({ block }: ShelfCardProps) {
-  const [previewProducts, setPreviewProducts] = useState<any[]>([]);
   const content = block?.content || {};
-
-  useEffect(() => {
-    const loadPreview = async () => {
-      let result: any[] = [];
-      const productIds = content.productIds || "";
-      const category = content.category || "";
-      const tags = content.tags || "";
-      const subcategory = content.subcategory || "";
-
-      try {
-        // 1. 指定商品
-        if (productIds) {
-          const ids = productIds.split(",").map((s: string) => s.trim()).filter(Boolean);
-          if (ids.length > 0) {
-            const res = await fetch(`/api/public/products?ids=${ids.join(",")}&limit=${ids.length}`);
-            const json = await res.json();
-            if (json.success && json.data) {
-              result = ids.map((id: string) => json.data.find((p: any) => p.id === id)).filter(Boolean);
-            }
-          }
-        }
-
-        // 2. 分类
-        if (result.length === 0 && category) {
-          const res = await fetch(`/api/public/products?category=${encodeURIComponent(category)}&limit=10`);
-          const json = await res.json();
-          if (json.success && json.data) result = json.data;
-        }
-
-        // 3. 标签
-        if (result.length === 0 && tags) {
-          const res = await fetch(`/api/public/products?limit=10`);
-          const json = await res.json();
-          if (json.success && json.data) {
-            const tagList = tags.split(",").map((s: string) => s.trim()).filter(Boolean);
-            result = json.data.filter((p: any) => {
-              const pTags = p.tags || [];
-              return tagList.some((t: string) => pTags.includes(t));
-            });
-          }
-        }
-
-        // 4. 兜底
-        if (result.length === 0) {
-          const res = await fetch(`/api/public/products?limit=10`);
-          const json = await res.json();
-          if (json.success && json.data) result = json.data;
-        }
-
-        // 应用子分类过滤（非指定商品时）
-        if (subcategory && !productIds) {
-          result = result.filter((p: any) => p.subcategory === subcategory || p.sub_category === subcategory);
-        }
-
-        setPreviewProducts(result.slice(0, 3));
-      } catch (e) {
-        console.error("[ShelfCard] 加载预览商品失败:", e);
-      }
-    };
-
-    loadPreview();
-  }, [content.productIds, content.category, content.subcategory, content.tags]);
-
   const image = content.image || "";
   const badge = content.badge || "";
   const subtitle = block?.section_subtitle || content.subtitle || "";
+
+  const subImages = [content.subImage1, content.subImage2, content.subImage3].filter(Boolean);
 
   return (
     <div className="max-w-7xl mx-auto">
@@ -113,23 +43,20 @@ export default function ShelfCard({ block }: ShelfCardProps) {
         </div>
       </Link>
 
-      {/* 3 个预览商品 */}
-      {previewProducts.length > 0 && (
+      {/* 3 张副图宣传 */}
+      {subImages.length > 0 && (
         <div className="grid grid-cols-3 gap-3 mt-3">
-          {previewProducts.map((product) => (
+          {subImages.map((src: string, idx: number) => (
             <Link
-              key={product.id}
+              key={idx}
               href={`/shelf/${block.id}`}
               className="group block relative rounded-xl overflow-hidden bg-gray-100 aspect-[3/4]"
             >
               <img
-                src={product.image_url || product.cover_image}
-                alt={product.name || product.title || "商品"}
+                src={src}
+                alt={`${block.title} 副图 ${idx + 1}`}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
-              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-                <p className="text-white font-bold text-sm">{formatPrice(product.price)}</p>
-              </div>
             </Link>
           ))}
         </div>

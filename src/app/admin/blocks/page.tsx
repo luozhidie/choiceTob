@@ -1350,6 +1350,32 @@ export default function BlocksAdminPage() {
                           />
                         </div>
                         <div>
+                          <label className="block text-xs text-gray-500 mb-1">货架副图（3 张商品宣传图）</label>
+                          <div className="grid grid-cols-3 gap-3">
+                            <div>
+                              <BlockImageUpload
+                                value={(form.content as any)?.subImage1 || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), subImage1: url } as any })}
+                              />
+                              <p className="text-[10px] text-center text-gray-400 mt-1">副图 1</p>
+                            </div>
+                            <div>
+                              <BlockImageUpload
+                                value={(form.content as any)?.subImage2 || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), subImage2: url } as any })}
+                              />
+                              <p className="text-[10px] text-center text-gray-400 mt-1">副图 2</p>
+                            </div>
+                            <div>
+                              <BlockImageUpload
+                                value={(form.content as any)?.subImage3 || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), subImage3: url } as any })}
+                              />
+                              <p className="text-[10px] text-center text-gray-400 mt-1">副图 3</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div>
                           <label className="block text-xs text-gray-500 mb-1">货架副标题</label>
                           <input
                             type="text"
