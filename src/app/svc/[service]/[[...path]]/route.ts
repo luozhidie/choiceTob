@@ -11,8 +11,8 @@ const ORIGINS: Record<string, string> = {
 
 export const dynamic = "force-dynamic";
 
-async function handler(req: NextRequest, ctx: { params: { service: string; path?: string[] } }) {
-  const { service, path } = ctx.params;
+async function handler(req: NextRequest, { params }: { params: Promise<{ service: string; path?: string[] }> }) {
+  const { service, path } = await params;
   const origin = ORIGINS[service];
   if (!origin) return new NextResponse("unknown service", { status: 404 });
 
