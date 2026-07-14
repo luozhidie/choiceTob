@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
-import { COLOR_SEASONS_PRO } from "@/lib/styles";
+import {
+  COLOR_SEASONS_PRO,
+  FEMALE_STYLES, MALE_STYLES,
+  STYLE_DETAILS, STYLE_LEAN,
+  getStyleCombos, getStyleProLabel,
+} from "@/lib/styles";
 
 /* ============ 辅助函数：查询店铺VIP画像+购买数据 ============ */
 async function fetchStoreInsights(storeId: string) {
@@ -504,6 +509,44 @@ ${brandLines}
 3. 秀场趋势作为"流行方向参考"，不与测款真实转化、VIP画像冲突——冲突时以真实数据为准`;
 }
 
+/* ============ 辅助函数：构建风格知识约束段（主风格 × 偏风格）============ */
+function buildStyleKnowledgeSection(): string {
+  const allCombos = getStyleCombos();
+  const commonCombos = allCombos.filter((c) => c.common !== "罕见");
+  const femaleNames = FEMALE_STYLES.map((s) => STYLE_DETAILS[s.value as string]?.proLabel || s.proLabel).join("、");
+  const maleNames = MALE_STYLES.map((s) => STYLE_DETAILS[s.value as string]?.proLabel || s.proLabel).join("、");
+
+  const femaleRows = FEMALE_STYLES.map((m) => {
+    const leans = (STYLE_LEAN[m.value as string] || []).map((v) => STYLE_DETAILS[v]?.proLabel || v);
+    return `- ${STYLE_DETAILS[m.value as string]?.proLabel}（${STYLE_DETAILS[m.value as string]?.line || "—"}）：常见偏风格 → ${leans.join("、")}`;
+  }).join("\n");
+
+  const maleRows = MALE_STYLES.map((m) => {
+    const leans = (STYLE_LEAN[m.value as string] || []).map((v) => STYLE_DETAILS[v]?.proLabel || v);
+    return `- ${STYLE_DETAILS[m.value as string]?.proLabel}：常见偏风格 → ${leans.join("、")}`;
+  }).join("\n");
+
+  const sampleCombos = commonCombos.slice(0, 12).map((c) => `「${c.combo}」`).join("、");
+
+  return `
+【风格体系约束 · 必须严格遵守】
+本系统采用「主风格 + 偏风格」双轴模型：
+- 女士主风格（8）：曲线型[${femaleNames.split("、").slice(0, 3).join("、")}]；直线型[${femaleNames.split("、").slice(3).join("、")}]
+- 男士主风格（5，不分直曲）：${maleNames}
+
+女士常见主×偏组合（仅列举，实际以主风格推导）：
+${femaleRows}
+男士常见主×偏组合：
+${maleRows}
+
+规则：
+1. stylePlan 中 mainStyle 必须是上述专业术语之一（如"古典型""浪漫型"），不得自造。
+2. subStyle 必须是单一合法偏风格专业术语（如"浪漫型"），严禁出现"自然偏少年"这类嵌套描述——subStyle 只能是一个风格名，不是组合名。
+3. styleCombo 格式：偏风格=主风格时写「古典型」；否则写「古典型（偏浪漫型）」。示例：${sampleCombos}
+4. 「直偏曲 / 曲偏直」为现实常见组合；「直偏直 / 曲偏曲」理论上存在但罕见，仅在确有理由时使用。
+5. 输出大方向以主风格为主、偏风格为辅；偏风格仅用于细化组货/陈列，不改变主风格定位。`;
+}
+
 /* ============ 主接口 ============ */
 export async function POST(req: NextRequest) {
   try {
@@ -566,7 +609,7 @@ export async function POST(req: NextRequest) {
     {"type": "基础色/主题色/点缀色/流行色", "ratio": "占比", "colors": ["色1", "色2"], "reason": "选色理由"}
   ],
   "stylePlan": [
-    {"mainStyle": "主风格名", "subStyle": "偏风格名", "styleCombo": "组合名", "gender": "女士/男士", "occasions": ["场合1"], "vibe": ["氛围1"], "trafficRatio": "占比", "profitRatio": "占比", "targetAge": "目标年龄"}
+    {"mainStyle": "主风格专业术语（如古典型/浪漫型）", "subStyle": "单一偏风格专业术语（如浪漫型，不可为嵌套组合）", "styleCombo": "组合名（如：古典型（偏浪漫型））", "gender": "女士/男士", "occasions": ["场合1"], "vibe": ["氛围1"], "trafficRatio": "占比", "profitRatio": "占比", "targetAge": "目标年龄"}
   ],
   "productStructure": [
     {"type": "引流款/利润款/形象款/搭配款", "ratio": "占比", "desc": "简述", "keyItems": ["关键单品1"]}
@@ -616,7 +659,9 @@ export async function POST(req: NextRequest) {
     "stockStrategy": "库存策略建议（如：首单60%+追单40%，小批量多批次）"
   }
 }
-|JSON_END|`;
+|JSON_END|
+
+${buildStyleKnowledgeSection()}`;
 
     // 5. 构建用户提示词
     let userPrompt = `请为以下品牌生成${season}商品企划初稿：
@@ -806,6 +851,38 @@ function buildMockPricePlan(priceBand?: string) {
 
 function generateMockReport(brandName: string, season: string, colorLabel: string, styleLabel: string, priceBand?: string) {
   const mainStyleName = styleLabel ? styleLabel.replace(/型$/, "").split("(")[0].trim() : "古典";
+
+  // 基于风格知识库生成合法的主×偏组合（避免"自然偏少年"这类嵌套诡异组合）
+  const commonFemale = getStyleCombos("女士").filter((c) => c.common !== "罕见");
+  const targetMain = styleLabel
+    ? (FEMALE_STYLES.find((s) => {
+        const d = STYLE_DETAILS[s.value as string];
+        return d?.proLabel === styleLabel || d?.market === styleLabel || s.proLabel === styleLabel;
+      })?.value as string)
+    : null;
+  const sortedCombos = targetMain
+    ? [...commonFemale.filter((c) => c.main === targetMain), ...commonFemale.filter((c) => c.main !== targetMain)]
+    : commonFemale;
+  const chosenCombos = sortedCombos.slice(0, 5);
+  const ratioPlan = [
+    { t: "35%", p: "58%" }, { t: "22%", p: "16%" }, { t: "15%", p: "10%" }, { t: "12%", p: "8%" }, { t: "8%", p: "8%" },
+  ];
+  const mockStylePlan = chosenCombos.map((c, i) => {
+    const d = STYLE_DETAILS[c.main];
+    const r = ratioPlan[i] || { t: "8%", p: "8%" };
+    return {
+      mainStyle: d?.proLabel || getStyleProLabel(c.main),
+      subStyle: STYLE_DETAILS[c.lean]?.proLabel || getStyleProLabel(c.lean),
+      styleCombo: c.combo,
+      gender: "女士" as const,
+      occasions: (d?.occasion || "日常").split("、").slice(0, 2),
+      vibe: (d?.keywords || []).slice(0, 2),
+      trafficRatio: r.t,
+      profitRatio: r.p,
+      targetAge: "25-40岁",
+    };
+  });
+
   return {
     brandName: brandName || "示例品牌",
     season,
@@ -827,11 +904,7 @@ function generateMockReport(brandName: string, season: string, colorLabel: strin
       { type: "点缀色", ratio: "15%", colors: ["珊瑚橘", "丁香紫"], reason: "小面积提亮，增加搭配趣味性" },
       { type: "流行色", ratio: "10%", colors: ["数字薰衣草", "薄荷绿"], reason: "跟随Pantone流行色，吸引年轻客群" },
     ],
-    stylePlan: [
-      { mainStyle: mainStyleName, subStyle: "浪漫", styleCombo: `${mainStyleName}偏浪漫`, gender: "女士", occasions: ["上班职场", "社交礼仪"], vibe: ["知性风", "职业风"], trafficRatio: "30%", profitRatio: "60%", targetAge: "30-40岁" },
-      { mainStyle: "优雅", subStyle: "少女", styleCombo: "优雅偏少女", gender: "女士", occasions: ["逛街约会", "社交礼仪"], vibe: ["韩系清新", "知性风"], trafficRatio: "12%", profitRatio: "8%", targetAge: "25-35岁" },
-      { mainStyle: "自然", subStyle: "少年", styleCombo: "自然偏少年", gender: "女士", occasions: ["出行旅游", "逛街约会"], vibe: ["休闲风", "运动休闲"], trafficRatio: "10%", profitRatio: "6%", targetAge: "25-40岁" },
-    ],
+    stylePlan: mockStylePlan,
     productStructure: [
       { type: "引流款", ratio: "15%", desc: "低毛利高流量，吸引进店", keyItems: ["基础T恤", "牛仔裤"] },
       { type: "利润款", ratio: "50%", desc: "核心利润来源，主推SKU", keyItems: ["西装外套", "连衣裙", "针织衫"] },

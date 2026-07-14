@@ -11,6 +11,7 @@ import {
 import {
   FEMALE_STYLES, MALE_STYLES, COLOR_SEASONS_PRO,
   getStyleProLabel,
+  STYLE_DETAILS, STYLE_LEAN, getStyleCombos, formatStyleCombo,
 } from "@/lib/styles";
 import { useCategories } from "@/lib/useCategories";
 import * as XLSX from "xlsx";
@@ -118,6 +119,105 @@ function KeywordLink({ keyword, index }: { keyword: string; index?: number }) {
   );
 }
 
+/* ── 风格矩阵组件：主风格 × 偏风格（组货/陈列/销售参考）── */
+function StyleMatrix({ gender }: { gender: "女士" | "男士" }) {
+  const styles = gender === "女士" ? FEMALE_STYLES : MALE_STYLES;
+  const combos = useMemo(() => {
+    const map: Record<string, Record<string, any>> = {};
+    getStyleCombos(gender).forEach((c) => {
+      if (!map[c.main]) map[c.main] = {};
+      map[c.main][c.lean] = c;
+    });
+    return map;
+  }, [gender]);
+
+  const badge = (common: string) => {
+    if (common === "纯风格") return "bg-gray-200 text-gray-600";
+    if (common === "常见") return "bg-green-50 text-green-700 ring-1 ring-green-200";
+    return "bg-amber-50 text-amber-600 ring-1 ring-amber-200";
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 overflow-x-auto">
+      <table className="w-full text-xs text-center border-collapse">
+        <thead>
+          <tr className="bg-gray-50">
+            <th className="p-2 border border-gray-200 min-w-[96px] sticky left-0 bg-gray-50 z-10">主风格 ＼ 偏风格</th>
+            {styles.map((s) => (
+              <th key={s.value} className="p-2 border border-gray-200 min-w-[78px]">
+                <div>{STYLE_DETAILS[s.value as string]?.proLabel}</div>
+                <div className="text-gray-400 text-[10px]">{STYLE_DETAILS[s.value as string]?.line || "—"}</div>
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {styles.map((row) => (
+            <tr key={row.value}>
+              <td className="p-2 border border-gray-200 font-semibold bg-gray-50 text-left pl-2 sticky left-0 z-10">
+                {STYLE_DETAILS[row.value as string]?.proLabel}
+                <div className="text-gray-400 text-[10px] font-normal">{STYLE_DETAILS[row.value as string]?.line || "—"}</div>
+              </td>
+              {styles.map((col) => {
+                const c = combos[row.value]?.[col.value];
+                const isDiag = row.value === col.value;
+                return (
+                  <td key={col.value} className={`p-1 border border-gray-200 align-middle ${isDiag ? "bg-gray-100" : ""}`}>
+                    {c ? (
+                      <span title={c.combo} className={`inline-block px-2 py-1 rounded-full text-[10px] ${badge(c.common)}`}>
+                        {c.common === "纯风格" ? "纯" : c.common}
+                      </span>
+                    ) : null}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ── 风格特征速查表（组货/陈列/销售落地参考）── */
+function StyleDetailTable() {
+  const all = [...FEMALE_STYLES, ...MALE_STYLES];
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
+      <table className="w-full text-xs text-left border-collapse">
+        <thead className="bg-gray-50 text-gray-600">
+          <tr>
+            <th className="p-2 border border-gray-200">主风格</th>
+            <th className="p-2 border border-gray-200">线条</th>
+            <th className="p-2 border border-gray-200">廓形</th>
+            <th className="p-2 border border-gray-200">面料</th>
+            <th className="p-2 border border-gray-200">图案</th>
+            <th className="p-2 border border-gray-200">适用场合</th>
+            <th className="p-2 border border-gray-200">避雷</th>
+          </tr>
+        </thead>
+        <tbody>
+          {all.map((s) => {
+            const d = STYLE_DETAILS[s.value as string];
+            if (!d) return null;
+            return (
+              <tr key={s.value} className="border-t border-gray-100 align-top">
+                <td className="p-2 font-semibold whitespace-nowrap">{d.proLabel}<div className="text-gray-400 text-[10px] font-normal">{d.market}</div></td>
+                <td className="p-2 whitespace-nowrap">{d.line || "—"}</td>
+                <td className="p-2">{d.silhouette}</td>
+                <td className="p-2">{d.fabric}</td>
+                <td className="p-2">{d.pattern}</td>
+                <td className="p-2">{d.occasion}</td>
+                <td className="p-2 text-red-500/80">{d.avoid}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function ProductPlanPage() {
   const supabase = createClient();
   const { categories: categoryOptions } = useCategories();
@@ -125,7 +225,7 @@ export default function ProductPlanPage() {
   const [stores, setStores] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
-  const [activeTab, setActiveTab] = useState<"ai" | "manual">("ai");
+  const [activeTab, setActiveTab] = useState<"ai" | "manual" | "matrix">("ai");
 
   // ── AI 生成相关状态 ──────────────────
   const [aiForm, setAiForm] = useState({
@@ -157,6 +257,13 @@ export default function ProductPlanPage() {
     ...FEMALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（女士）` })),
     ...MALE_STYLES.map((s: any) => ({ value: String(s.value), label: `${s.proLabel || s.label}（男士）` })),
   ];
+
+  /* ── 专业术语 → value 反查（用于从报告里的风格名取特征）── */
+  const proToValue = useMemo(() => {
+    const m: Record<string, string> = {};
+    for (const [k, v] of Object.entries(STYLE_DETAILS)) m[v.proLabel] = k;
+    return m;
+  }, []);
 
   // ── 商品结构规划 ────────────────────────
   const [structure, setStructure] = useState<StructureItem[]>([
@@ -501,10 +608,12 @@ export default function ProductPlanPage() {
       children.push(new Paragraph({ children: [new PageBreak()] }));
       children.push(h1("三、风格企划方案"));
       (r.stylePlan || []).forEach((sp, i) => {
+        const wd = Object.entries(STYLE_DETAILS).find(([, v]) => v.proLabel === sp.mainStyle)?.[1];
         children.push(h2(`${i + 1}. ${sp.styleCombo}（${sp.gender}）`));
         children.push(body(`主风格：${sp.mainStyle} ｜ 偏风格：${sp.subStyle}`));
         children.push(body(`适用场合：${(sp.occasions || []).join("、")} ｜ 风情：${(sp.vibe || []).join("、")}`));
         children.push(body(`引流占比：${sp.trafficRatio} ｜ 利润占比：${sp.profitRatio}`));
+        if (wd) children.push(body(`风格特征：廓形 ${wd.silhouette}；面料 ${wd.fabric}；图案 ${wd.pattern}；适用场合 ${wd.occasion}；避雷 ${wd.avoid}`));
         children.push(el());
       });
       if (r.imageKeywords?.styleImages?.length) { children.push(el()); children.push(h2("风格参考图")); for (let si = 0; si < r.imageKeywords.styleImages.length; si++) { children.push(...await imgBlock(r.imageKeywords.styleImages[si], `风格参考 ${si + 1}`)); } }
@@ -598,6 +707,9 @@ export default function ProductPlanPage() {
               </button>
               <button onClick={() => setActiveTab("manual")} className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === "manual" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
                 <Calculator className="w-4 h-4" /> 手动规划
+              </button>
+              <button onClick={() => setActiveTab("matrix")} className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${activeTab === "matrix" ? "bg-blue-600 text-white shadow-md" : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"}`}>
+                <Layers className="w-4 h-4" /> 风格矩阵
               </button>
             </div>
             <button onClick={autoFillMatrix} disabled={saving || !storeId} className="px-4 py-2.5 bg-blue-100 text-blue-700 rounded-xl text-sm font-semibold hover:bg-blue-200 disabled:opacity-50 flex items-center gap-2">
@@ -856,6 +968,30 @@ export default function ProductPlanPage() {
         </div>
         </>)}
 
+        {activeTab === "matrix" && (<>
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Layers className="w-5 h-5 text-blue-600" /> 风格矩阵（主风格 × 偏风格）
+            </h2>
+            <p className="text-xs text-gray-400 mb-3">
+              绿=常见组合 ｜ 琥珀=罕见组合（直偏直/曲偏曲，理论存在但现实少）｜ 灰=纯风格（无偏）。
+              用法：<strong>主风格定大方向</strong>（决定货盘主力），<strong>偏风格做细化</strong>（组货搭配 / 陈列分区 / 销售话术），不喧宾夺主。
+            </p>
+            <h3 className="font-semibold text-gray-700 mb-2">女士八大风格（8×8 = 64 组合）</h3>
+            <StyleMatrix gender="女士" />
+            <h3 className="font-semibold text-gray-700 mt-6 mb-2">男士五大风格（5×5 = 25 组合，不分直曲）</h3>
+            <StyleMatrix gender="男士" />
+          </section>
+
+          <section className="mb-8">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Layers className="w-5 h-5 text-blue-600" /> 风格特征速查（组货 / 陈列 / 销售落地）
+            </h2>
+            <StyleDetailTable />
+            <p className="text-xs text-gray-400 mt-2">说明：以上为形象顾问体系标准特征基线，市场风格映射（通俗名）由运营在风格设置中手动调整，此处不自动对应。</p>
+          </section>
+        </>)}
+
         {activeTab === "ai" && (
         <>
           {/* === AI 参数表单 === */}
@@ -989,13 +1125,20 @@ export default function ProductPlanPage() {
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
               <h3 className="text-lg font-bold text-gray-800 mb-4">✨ 风格企划方案</h3>
               <div className="space-y-6">
-                {aiReport.stylePlan?.map((sp, i) => (
+                {aiReport.stylePlan?.map((sp, i) => {
+                  const d = STYLE_DETAILS[proToValue[sp.mainStyle]];
+                  return (
                   <div key={i} className="border border-gray-200 rounded-xl p-4">
                     <h4 className="font-bold text-gray-800 mb-2">{i + 1}. {sp.styleCombo}（{sp.gender}）</h4>
                     <div className="text-sm text-gray-600 space-y-1">
-                      <p>主风格：{sp.mainStyle} ｜ 偏风格：{sp.subStyle}</p>
+                      <p>主风格：<span className="font-semibold text-gray-800">{sp.mainStyle}</span> ｜ 偏风格：<span className="font-semibold text-gray-800">{sp.subStyle}</span></p>
                       <p>适用场合：{(sp.occasions || []).join("、")} ｜ 风情：{(sp.vibe || []).join("、")}</p>
                       <p>引流占比：{sp.trafficRatio} ｜ 利润占比：{sp.profitRatio}</p>
+                      {d && (
+                        <p className="text-xs text-gray-400 pt-1 border-t border-gray-100 mt-1">
+                          廓形：{d.silhouette} ｜ 面料：{d.fabric} ｜ 图案：{d.pattern}
+                        </p>
+                      )}
                     </div>
                     {aiReport.imageKeywords?.styleImages?.[i] && (
                       <div className="mt-3">
@@ -1003,7 +1146,8 @@ export default function ProductPlanPage() {
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

@@ -127,6 +127,250 @@ export function getStyleFullLabel(key: string | null | undefined): string {
   return market || pro || key;
 }
 
+// ==================== 风格特征 + 偏风格（主风格 × 偏风格）====================
+// 女士八大风格：曲线型（少女/优雅/浪漫）/ 直线型（少年/时尚/古典/自然/戏剧）
+// 男士五大风格：不分直曲（时尚/浪漫/古典/自然/戏剧）
+// 说明：以下为形象顾问体系「标准特征基线」，用于商品企划/组货/陈列/销售落地。
+//       市场风格映射由运营在 styleRefs 手动设置，此处不自动对应（避免覆盖人工判断）。
+
+export type StyleLine = "曲线型" | "直线型" | "";
+
+export type StyleDetail = {
+  proLabel: string;   // 专业术语（少女型…）
+  market: string;     // 通俗名（淑女风…）
+  line: StyleLine;    // 女士：曲线/直线；男士：空
+  keywords: string[]; // 风格关键词
+  silhouette: string; // 廓形
+  fabric: string;     // 面料
+  pattern: string;    // 图案
+  detail: string;     // 细节设计
+  occasion: string;   // 适用场合
+  body: string;       // 适合人群 / 量感
+  avoid: string;      // 避雷
+};
+
+export const STYLE_DETAILS: Record<string, StyleDetail> = {
+  /* ── 女士曲线型 ── */
+  shao_nv: {
+    proLabel: "少女型", market: "淑女风", line: "曲线型",
+    keywords: ["甜美", "可爱", "活泼", "圆润"],
+    silhouette: "圆润可爱、A字、泡泡袖、抽褶、高腰",
+    fabric: "棉、针织、雪纺、蕾丝、灯芯绒",
+    pattern: "圆点、小碎花、卡通、荷叶边、糖果色",
+    detail: "蝴蝶结、木耳边、抽褶、娃娃领",
+    occasion: "校园、约会、日常休闲、轻旅行",
+    body: "小骨架、娇小量感、面部圆润柔和",
+    avoid: "成熟厚重、中性硬朗、夸张廓形",
+  },
+  you_ya: {
+    proLabel: "优雅型", market: "知性风", line: "曲线型",
+    keywords: ["柔美", "知性", "精致", "温婉"],
+    silhouette: "X型、收腰、柔美垂坠、合身",
+    fabric: "真丝、羊绒、精纺毛料、软糯针织",
+    pattern: "小花卉、暗纹、素色、细条纹",
+    detail: "珍珠、细腻镶边、小立领、低调配饰",
+    occasion: "职场通勤、约会、正式社交、茶歇",
+    body: "中等偏瘦量感、曲线柔和",
+    avoid: "夸张前卫、运动休闲、硬朗直线",
+  },
+  lang_man_f: {
+    proLabel: "浪漫型", market: "名媛风", line: "曲线型",
+    keywords: ["华丽", "妩媚", "女人味", "浓郁"],
+    silhouette: "X型、鱼尾、收腰大摆、贴身",
+    fabric: "真丝缎、丝绒、蕾丝、雪纺",
+    pattern: "大花卉、华丽印花、渐变",
+    detail: "荷叶边、亮片、立领、水晶点缀",
+    occasion: "宴会、晚装、约会、红毯",
+    body: "中大量感、丰满曲线明显",
+    avoid: "中性直线、极简冷淡、运动风",
+  },
+  /* ── 女士直线型 ── */
+  shao_nian_f: {
+    proLabel: "少年型", market: "中性风", line: "直线型",
+    keywords: ["利落", "中性", "少年感", "清爽"],
+    silhouette: "H型、直线、boyfriend、中性",
+    fabric: "棉、牛仔、牛津纺、帆布、工装布",
+    pattern: "格纹、条纹、字母、素色",
+    detail: "工装袋、拉链、金属扣、平领",
+    occasion: "校园、街头、休闲、运动",
+    body: "小骨架、平肩、量感偏小",
+    avoid: "柔美蕾丝、繁琐堆砌、贴身曲线",
+  },
+  shi_shang_f: {
+    proLabel: "时尚型", market: "潮牌风", line: "直线型",
+    keywords: ["个性", "前卫", "混搭", "潮流"],
+    silhouette: "不规则、解构、O型、层叠混搭",
+    fabric: "新型混纺、PVC、牛仔、科技面料",
+    pattern: "几何、撞色、抽象、标语",
+    detail: "露脐、破洞、层叠、金属装饰",
+    occasion: "街头、派对、潮玩、音乐节",
+    body: "适中量感、骨感或适中",
+    avoid: "传统正式、老气保守",
+  },
+  gu_dian_f: {
+    proLabel: "古典型", market: "职业风", line: "直线型",
+    keywords: ["严谨", "端庄", "精致", "克制"],
+    silhouette: "H型、合身收腰、对称、利落",
+    fabric: "精纺羊毛、真丝、高支棉、哔叽",
+    pattern: "素色、细条纹、小格纹、暗纹",
+    detail: "翻领、排扣、精致剪裁、低调配饰",
+    occasion: "职场、商务、正式场合",
+    body: "中等量感、端庄匀称",
+    avoid: "夸张廓形、破洞、过于休闲运动",
+  },
+  zi_ran_f: {
+    proLabel: "自然型", market: "休闲风", line: "直线型",
+    keywords: ["潇洒", "松弛", "文艺", "质朴"],
+    silhouette: "H型、宽松直线、自然垂坠",
+    fabric: "棉麻、针织、麂皮、灯芯绒",
+    pattern: "大地色、民族风、格纹、素色",
+    detail: "原色、自然褶皱、木质扣、手作感",
+    occasion: "度假、日常、文艺、休闲",
+    body: "中到中大量感、自然舒展",
+    avoid: "精致华丽、紧身束缚、金属感强",
+  },
+  xi_ju_f: {
+    proLabel: "戏剧型", market: "大牌风", line: "直线型",
+    keywords: ["气场", "夸张", "华丽", "个性"],
+    silhouette: "T型、夸张长线条、建筑感、大廓形",
+    fabric: "皮革、缎面、金属感、挺括羊毛",
+    pattern: "几何大图案、高对比、动物纹",
+    detail: "夸张配饰、垫肩、大廓形、强对比",
+    occasion: "红毯、舞台、晚宴、个性表达",
+    body: "大量感、高大骨架、存在感强",
+    avoid: "小家子气、琐碎细节、平庸",
+  },
+  /* ── 男士五大风格（不分直曲）── */
+  xi_ju_m: {
+    proLabel: "戏剧型", market: "气场型男", line: "",
+    keywords: ["气场", "华丽", "国王级别", "存在感"],
+    silhouette: "宽肩、长款、挺括、强对比",
+    fabric: "羊毛、皮革、缎面、金属感",
+    pattern: "几何、高对比、大图案",
+    detail: "垫肩、夸张配饰、强结构",
+    occasion: "商务精英、舞台、红毯",
+    body: "大量感、高大骨架",
+    avoid: "小家子气、琐碎",
+  },
+  zi_ran_m: {
+    proLabel: "自然型", market: "随性达人", line: "",
+    keywords: ["潇洒", "阳刚", "有朝气", "松弛"],
+    silhouette: "宽松、直线、自然垂坠",
+    fabric: "棉麻、针织、麂皮、牛仔",
+    pattern: "素色、格纹、大地色",
+    detail: "原色、休闲剪裁、木质扣",
+    occasion: "休闲、度假、商务休闲",
+    body: "中大量感、自然舒展",
+    avoid: "精致华丽、紧身束缚",
+  },
+  gu_dian_m: {
+    proLabel: "古典型", market: "精英绅士", line: "",
+    keywords: ["严谨", "稳重", "端正", "精英"],
+    silhouette: "合身、对称、H型、利落",
+    fabric: "精纺羊毛、高支棉、真丝",
+    pattern: "素色、细条纹、暗纹",
+    detail: "精致剪裁、领带、翻领",
+    occasion: "商务、正式、职场",
+    body: "中等量感、端庄匀称",
+    avoid: "夸张、破洞、运动休闲",
+  },
+  lang_man_m: {
+    proLabel: "浪漫型", market: "优雅先生", line: "",
+    keywords: ["儒雅", "温柔", "华丽", "绅士"],
+    silhouette: "收腰、X型、柔和线条",
+    fabric: "真丝、羊绒、缎面",
+    pattern: "花卉、暗纹、低饱和",
+    detail: "柔和领型、细腻配饰",
+    occasion: "社交、约会、正式晚宴",
+    body: "中量感、柔和五官",
+    avoid: "硬朗中性、运动粗犷",
+  },
+  shi_shang_m: {
+    proLabel: "时尚型", market: "潮流先锋", line: "",
+    keywords: ["年轻", "个性", "多变", "潮流"],
+    silhouette: "不规则、混搭、层叠",
+    fabric: "科技面料、牛仔、混纺",
+    pattern: "几何、标语、撞色",
+    detail: "层叠、破洞、金属装饰",
+    occasion: "街头、派对、潮玩",
+    body: "适中量感、骨感或适中",
+    avoid: "传统正式、老气",
+  },
+};
+
+/** 主风格 → 常见偏风格集合（含自身=纯风格）。
+ *  基于「直偏曲 / 曲偏直」为现实常见、「直偏直 / 曲偏曲」罕见的理论框架。 */
+export const STYLE_LEAN: Record<string, string[]> = {
+  // 女士曲线型
+  shao_nv: ["shao_nv", "you_ya", "lang_man_f", "shao_nian_f"], // 纯少女 / 偏优雅 / 偏浪漫 / 偏少年(甜酷)
+  you_ya: ["you_ya", "shao_nv", "lang_man_f", "gu_dian_f"],    // 纯优雅 / 偏少女 / 偏浪漫 / 偏古典(知性职业)
+  lang_man_f: ["lang_man_f", "shao_nian_f", "shi_shang_f", "gu_dian_f", "zi_ran_f", "xi_ju_f"], // 用户给定：曲偏直
+  // 女士直线型
+  shao_nian_f: ["shao_nian_f", "shao_nv", "you_ya", "shi_shang_f", "zi_ran_f"], // 偏少女(盐系)/偏优雅(clean)/偏时尚/偏自然
+  shi_shang_f: ["shi_shang_f", "shao_nian_f", "xi_ju_f", "lang_man_f", "zi_ran_f"], // 偏少年/偏戏剧/偏浪漫/偏自然
+  gu_dian_f: ["gu_dian_f", "shao_nv", "you_ya", "lang_man_f"],  // 用户给定：直偏曲
+  zi_ran_f: ["zi_ran_f", "shao_nian_f", "you_ya", "gu_dian_f", "shi_shang_f"], // 偏少年(森系)/偏优雅(文艺)/偏古典/偏时尚
+  xi_ju_f: ["xi_ju_f", "lang_man_f", "shi_shang_f", "gu_dian_f"], // 偏浪漫(华丽)/偏时尚(前卫)/偏古典
+  // 男士五大风格（不分直曲，互偏皆常见）
+  xi_ju_m: ["xi_ju_m", "gu_dian_m", "lang_man_m", "shi_shang_m"],
+  zi_ran_m: ["zi_ran_m", "gu_dian_m", "shi_shang_m", "lang_man_m"],
+  gu_dian_m: ["gu_dian_m", "xi_ju_m", "lang_man_m", "zi_ran_m"],
+  lang_man_m: ["lang_man_m", "gu_dian_m", "xi_ju_m", "zi_ran_m"],
+  shi_shang_m: ["shi_shang_m", "xi_ju_m", "zi_ran_m", "lang_man_m"],
+};
+
+export type StyleCombo = {
+  main: string;       // 主风格 value
+  lean: string;       // 偏风格 value
+  combo: string;      // 组合展示名（古典型（偏浪漫型）/ 古典型）
+  gender: "女士" | "男士";
+  common: "纯风格" | "常见" | "罕见";
+};
+
+/** 列出某主风格的常见偏风格（含自身），用于下拉/约束 */
+export function getStyleLeanOptions(main: string): string[] {
+  return STYLE_LEAN[main] || [main];
+}
+
+/** 格式化组合名：主风格（偏XX型）；若偏=主则只显示主风格 */
+export function formatStyleCombo(main: string, lean: string): string {
+  const m = STYLE_DETAILS[main]?.proLabel || getStyleProLabel(main);
+  const l = STYLE_DETAILS[lean]?.proLabel || getStyleProLabel(lean);
+  if (!m) return "";
+  if (!l || l === m) return m;
+  return `${m}（偏${l}）`;
+}
+
+/** 生成全部 主×偏 组合：女士 8×8=64，男士 5×5=25 */
+export function getStyleCombos(gender?: "女士" | "男士"): StyleCombo[] {
+  const out: StyleCombo[] = [];
+  const groups: { list: typeof FEMALE_STYLES | typeof MALE_STYLES; g: "女士" | "男士" }[] = [
+    { list: FEMALE_STYLES, g: "女士" },
+    { list: MALE_STYLES, g: "男士" },
+  ];
+  for (const { list, g } of groups) {
+    if (gender && g !== gender) continue;
+    for (const main of list) {
+      for (const lean of list) {
+        const isPure = main.value === lean.value;
+        const common: StyleCombo["common"] = isPure
+          ? "纯风格"
+          : STYLE_LEAN[main.value]?.includes(lean.value as string)
+            ? "常见"
+            : "罕见";
+        out.push({
+          main: String(main.value),
+          lean: String(lean.value),
+          combo: formatStyleCombo(String(main.value), String(lean.value)),
+          gender: g,
+          common,
+        });
+      }
+    }
+  }
+  return out;
+}
+
 // ==================== 12季色彩定义 ====================
 
 /** 12季色彩（后端专业术语；label 为季型名，group 为其所属四季家族，不做大地/暖/冷等过度色彩家族归类） */
