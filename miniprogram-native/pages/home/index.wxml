@@ -165,6 +165,19 @@
                   </scroll-view>
                 </view>
 
+                <view wx:if="{{item.type==='shelf'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goShelf" data-id="{{item.id}}">
+                  <view class="shelf-card">
+                    <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="shelf-img"/>
+                    <view wx:else class="shelf-bg"></view>
+                    <view class="shelf-mask"></view>
+                    <view class="shelf-body">
+                      <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
+                      <text class="shelf-title">{{item.title}}</text>
+                      <text wx:if="{{item.content.subtitle||item.section_subtitle}}" class="shelf-sub">{{item.content.subtitle||item.section_subtitle}}</text>
+                    </view>
+                  </view>
+                </view>
+
                 <view wx:else>
                   <!-- promotion -->
                   <view wx:if="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">

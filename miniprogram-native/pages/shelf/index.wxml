@@ -1,0 +1,91 @@
+<view class="page">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
+    <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
+    <text class="title">{{block.title||'货架'}}</text>
+  </view>
+
+  <!-- 货架 Banner -->
+  <view class="banner">
+    <image wx:if="{{block.content.image}}" src="{{block.content.image}}" mode="aspectFill" class="banner-img"/>
+    <view wx:else class="banner-ph">
+      <text>暂无货架图片</text>
+    </view>
+    <view class="banner-mask"></view>
+    <view class="banner-info">
+      <text wx:if="{{block.content.badge}}" class="badge">{{block.content.badge}}</text>
+      <text class="b-title">{{block.title}}</text>
+      <text wx:if="{{block.section_subtitle||block.content.subtitle}}" class="b-sub">{{block.section_subtitle||block.content.subtitle}}</text>
+    </view>
+  </view>
+
+  <!-- 搜索框 -->
+  <view class="search-bar">
+    <text class="search-icon">🔍</text>
+    <input type="text" value="{{keyword}}" placeholder="搜索商品..." class="search-input" bindinput="onKeywordChange"/>
+  </view>
+
+  <!-- 排序 Tab -->
+  <view class="sort-bar">
+    <view wx:for="{{['综合','销量','上新','批发价','筛选']}}" wx:key="*this"
+      class="sort-tab {{activeSort===item?'sort-on':''}} {{item==='筛选'?'sort-filter':''}}"
+      bindtap="onSort" data-tab="{{item}}">
+      <text>{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 筛选面板 -->
+  <view wx:if="{{showFilter}}" class="filter-panel">
+    <view class="filter-head">
+      <text>筛选</text>
+      <text class="reset" bindtap="resetFilter">重置</text>
+    </view>
+    <view wx:if="{{subCategories.length>0}}" class="filter-sub">
+      <view class="sub-tag {{subCategory===''?'sub-on':''}}" bindtap="onSubCategory" data-sub="">全部</view>
+      <view wx:for="{{subCategories}}" wx:key="*this" class="sub-tag {{subCategory===item?'sub-on':''}}"
+        bindtap="onSubCategory" data-sub="{{item}}">{{item}}</view>
+    </view>
+    <view class="filter-price">
+      <input type="number" value="{{minPrice}}" placeholder="最低价" class="price-input" bindinput="onMinPrice"/>
+      <text class="price-sep">-</text>
+      <input type="number" value="{{maxPrice}}" placeholder="最高价" class="price-input" bindinput="onMaxPrice"/>
+      <text class="price-unit">分</text>
+    </view>
+  </view>
+
+  <!-- 非筛选状态下的子分类 -->
+  <view wx:if="{{!showFilter&&subCategories.length>0}}" class="sub-bar">
+    <view class="sub-tag {{subCategory===''?'sub-on':''}}" bindtap="onSubCategory" data-sub="">全部</view>
+    <view wx:for="{{subCategories}}" wx:key="*this" class="sub-tag {{subCategory===item?'sub-on':''}}"
+      bindtap="onSubCategory" data-sub="{{item}}">{{item}}</view>
+  </view>
+
+  <!-- 商品计数 -->
+  <view class="count">共 {{products.length}} 件</view>
+
+  <!-- 加载 -->
+  <view wx:if="{{loading}}" class="loading">
+    <view wx:for="{{[1,2,3,4]}}" wx:key="*this" class="sk">
+      <view class="sk-img"></view><view class="sk-line"></view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:elif="{{products.length===0}}" class="empty">
+    <text class="empty-icon">📦</text>
+    <text class="empty-text">该货架暂无商品</text>
+  </view>
+
+  <!-- 商品网格 -->
+  <view wx:else class="grid">
+    <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
+      <view class="card-img-wrap">
+        <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="card-img" lazy-load/>
+        <view wx:else class="card-ph">暂无图片</view>
+      </view>
+      <text class="card-name">{{item.name||item.title||'商品'}}</text>
+      <text class="card-price">{{item.priceText}}</text>
+    </view>
+  </view>
+</view>

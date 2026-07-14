@@ -148,6 +148,11 @@ Page({
     if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});
   },
 
+  goShelf:function(e){
+    var id=e.currentTarget.dataset.id;
+    if(id)wx.navigateTo({url:'/pages/shelf/index?id='+id});
+  },
+
   /* ====== 菜单 ====== */
   togMenu:function(){this.setData({mo:!this.data.mo});},
   clsMenu:function(){this.setData({mo:false});},
