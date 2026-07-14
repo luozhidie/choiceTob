@@ -988,7 +988,7 @@ export default function ProductPlanPage() {
               <Layers className="w-5 h-5 text-blue-600" /> 风格特征速查（组货 / 陈列 / 销售落地）
             </h2>
             <StyleDetailTable />
-            <p className="text-xs text-gray-400 mt-2">说明：以上为形象顾问体系标准特征基线，市场风格映射（通俗名）由运营在风格设置中手动调整，此处不自动对应。</p>
+            <p className="text-xs text-gray-400 mt-2">说明：以上风格特征数据来自属性编码管理体系（面料/图案/剪裁种子数据），市场风格映射（通俗名）由运营在风格设置中手动调整，此处不自动对应。</p>
           </section>
         </>)}
 
