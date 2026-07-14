@@ -17,6 +17,10 @@ Page({
     specList:[],
     reviews:[],
     recList:[],
+    tryonLoading:false,
+    tryonResult:'',
+    tryonIsDemo:false,
+    showTryon:false,
   },
 
   onLoad:function(opt){
@@ -200,4 +204,43 @@ Page({
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
+
+  onTryOn:function(){
+    var t=this;
+    var images=t.data.images||[];
+    var garment=images[0]||(t.data.product&&t.data.product.image_url)||'';
+    if(!garment){wx.showToast({title:'暂无商品图',icon:'none'});return;}
+    wx.chooseMedia({
+      count:1,
+      mediaType:['image'],
+      sourceType:['album','camera'],
+      success:function(res){
+        var personPath=res.tempFiles[0].tempFilePath;
+        t.setData({tryonLoading:true});
+        wx.uploadFile({
+          url:'https://embodied-ai-eight.vercel.app/api/virtual-tryon',
+          filePath:personPath,
+          name:'personImage',
+          formData:{ garmentImageUrl: garment, industry:'clothing' },
+          success:function(up){
+            var data={};
+            try{data=JSON.parse(up.data);}catch(e){}
+            if(data.ok){
+              t.setData({tryonLoading:false, tryonResult:data.resultUrl, tryonIsDemo:(data.resultUrl||'').indexOf('data:image')===0, showTryon:true});
+            }else{
+              t.setData({tryonLoading:false});
+              wx.showToast({title:(data.error||'试穿失败'),icon:'none'});
+            }
+          },
+          fail:function(){
+            t.setData({tryonLoading:false});
+            wx.showToast({title:'试穿请求失败',icon:'none'});
+          }
+        });
+      }
+    });
+  },
+
+  closeTryon:function(){this.setData({showTryon:false});},
+  stopProp:function(){},
 });

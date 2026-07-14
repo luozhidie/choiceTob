@@ -112,8 +112,17 @@
       </view>
     </view>
     <view class="bar-right">
+      <view class="btn-tryon" bindtap="onTryon">{{tryonLoading?'试穿中...':'试穿'}}</view>
       <view class="btn-cart" bindtap="addCart">加入购物车</view>
       <view class="btn-buy" bindtap="buyNow">立即购买</view>
+    </view>
+
+  <!-- 试穿结果弹层 -->
+  <view class="tryon-mask" wx:if="{{showTryon}}" bindtap="closeTryon">
+    <view class="tryon-panel" catchtap="stopProp">
+      <image src="{{tryonResult}}" mode="widthFix" class="tryon-img"/>
+      <view class="tryon-tip" wx:if="{{tryonIsDemo}}">演示效果（示意合成），接入真实引擎后变为真人试穿</view>
+      <view class="tryon-close" bindtap="closeTryon">关闭</view>
     </view>
   </view>
 </view>
