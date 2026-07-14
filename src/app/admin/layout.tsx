@@ -179,6 +179,13 @@ const menuGroups = [
     { label: "趋势预测", href: "/admin/trend-predict" },
     { label: "买手中心", href: "/admin/buyer-center" },
   ]},
+
+  // ─── 独立服务（跳转到独立部署的 Vercel 应用，新标签页打开） ───
+  { label: "独立服务", items: [
+    { label: "区块链溯源", href: "https://chain-trace-smoky.vercel.app/trace", external: true },
+    { label: "数字藏品", href: "https://web3-collectible-luozhidies-projects.vercel.app/collectible", external: true },
+    { label: "虚拟试衣", href: "https://embodied-ai-eight.vercel.app", external: true },
+  ]},
 ];
 
 export default function AdminLayout({
@@ -386,6 +393,7 @@ export default function AdminLayout({
                           key={item.href}
                           href={item.href}
                           title={collapsed ? item.label : undefined}
+                          {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                           onClick={() => {
                             try { sessionStorage.setItem("activeMenuGroup", group.label); } catch {}
                           }}
