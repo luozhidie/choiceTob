@@ -129,20 +129,20 @@ export function getStyleFullLabel(key: string | null | undefined): string {
 
 // ==================== 12季色彩定义 ====================
 
-/** 12季色彩（后端专业术语，按真实色彩季型特征归类，不做大地/暖/冷等过度色彩家族归类） */
+/** 12季色彩（后端专业术语；label 为季型名，group 为其所属四季家族，不做大地/暖/冷等过度色彩家族归类） */
 export const COLOR_SEASONS_PRO = [
-  { value: "light_warm", label: "浅暖型", group: "浅春", marketLabel: "浅暖色", desc: "轻浅、明亮、暖色调" },
-  { value: "warm_bright", label: "暖亮型", group: "暖春", marketLabel: "暖亮色", desc: "暖色调、轻浅、亮丽" },
-  { value: "clear_warm", label: "净暖型", group: "净春", marketLabel: "净暖色", desc: "明亮、艳丽、分明" },
-  { value: "light_cool", label: "浅冷型", group: "浅夏", marketLabel: "浅冷色", desc: "轻浅、柔和、淡雅" },
-  { value: "soft_cool", label: "柔冷型", group: "柔夏", marketLabel: "柔冷色", desc: "柔和淡雅、冷色调" },
-  { value: "cool_soft", label: "冷柔型", group: "冷夏", marketLabel: "冷柔色", desc: "冷色调、浅淡、柔和" },
-  { value: "warm_soft", label: "暖柔型", group: "暖秋", marketLabel: "暖柔色", desc: "暖色调、色泽浓重" },
-  { value: "soft_warm", label: "柔暖型", group: "柔秋", marketLabel: "柔暖色", desc: "深厚、低饱和、暖色调" },
-  { value: "deep_warm", label: "深暖型", group: "深秋", marketLabel: "深暖色", desc: "浓郁、厚重" },
-  { value: "clear_cool", label: "净冷型", group: "净冬", marketLabel: "净冷色", desc: "艳丽明亮、深沉浓烈" },
-  { value: "cool_bright", label: "冷亮型", group: "冷冬", marketLabel: "冷亮色", desc: "深沉、明亮、极端" },
-  { value: "deep_cool", label: "深冷型", group: "深冬", marketLabel: "深冷色", desc: "浓郁、艳丽、冷色调" },
+  { value: "light_warm", label: "浅暖型", group: "春", marketLabel: "浅暖色", desc: "轻浅、明亮、暖色调" },
+  { value: "warm_bright", label: "暖亮型", group: "春", marketLabel: "暖亮色", desc: "暖色调、轻浅、亮丽" },
+  { value: "clear_warm", label: "净暖型", group: "春", marketLabel: "净暖色", desc: "明亮、艳丽、分明" },
+  { value: "light_cool", label: "浅冷型", group: "夏", marketLabel: "浅冷色", desc: "轻浅、柔和、淡雅" },
+  { value: "soft_cool", label: "柔冷型", group: "夏", marketLabel: "柔冷色", desc: "柔和淡雅、冷色调" },
+  { value: "cool_soft", label: "冷柔型", group: "夏", marketLabel: "冷柔色", desc: "冷色调、浅淡、柔和" },
+  { value: "warm_soft", label: "暖柔型", group: "秋", marketLabel: "暖柔色", desc: "暖色调、色泽浓重" },
+  { value: "soft_warm", label: "柔暖型", group: "秋", marketLabel: "柔暖色", desc: "深厚、低饱和、暖色调" },
+  { value: "deep_warm", label: "深暖型", group: "秋", marketLabel: "深暖色", desc: "浓郁、厚重" },
+  { value: "clear_cool", label: "净冷型", group: "冬", marketLabel: "净冷色", desc: "艳丽明亮、深沉浓烈" },
+  { value: "cool_bright", label: "冷亮型", group: "冬", marketLabel: "冷亮色", desc: "深沉、明亮、极端" },
+  { value: "deep_cool", label: "深冷型", group: "冬", marketLabel: "深冷色", desc: "浓郁、艳丽、冷色调" },
 ] as const;
 
 /** 12季色彩详细特征（真实色彩季型，单一事实来源；市场流行色由运营手动设置，不在此对应） */
@@ -270,14 +270,14 @@ export function getColorSeasonProLabel(key: string | null | undefined): string {
   return COLOR_SEASON_PRO_MAP[normalized] || key;
 }
 
-/** 获取带专业术语的色彩季型展示名，如"奶茶色（浅暖春）" */
+/** 获取带专业术语的色彩季型展示名，如"浅暖色（浅暖型·春）" */
 export function getColorSeasonFullLabel(key: string | null | undefined): string {
   if (!key) return "";
   const normalized = normalizeColorSeasonKey(key);
   const market = COLOR_SEASON_MARKET_MAP[normalized];
   const pro = COLOR_SEASON_PRO_MAP[normalized];
   const season = COLOR_SEASONS_PRO.find(c => c.value === normalized)?.group;
-  if (market && pro && season) return `${market}（${pro}${season}）`;
+  if (market && pro && season) return `${market}（${pro}·${season}）`;
   if (market && pro) return `${market}（${pro}）`;
   return market || pro || key;
 }
