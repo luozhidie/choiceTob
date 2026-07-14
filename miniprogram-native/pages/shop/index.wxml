@@ -116,6 +116,7 @@
       <view class="btn-cart" bindtap="addCart">加入购物车</view>
       <view class="btn-buy" bindtap="buyNow">立即购买</view>
     </view>
+  </view>
 
   <!-- 试穿结果弹层 -->
   <view class="tryon-mask" wx:if="{{showTryon}}" bindtap="closeTryon">
