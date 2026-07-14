@@ -226,7 +226,7 @@ Page({
             var data={};
             try{data=JSON.parse(up.data);}catch(e){}
             if(data.ok){
-              t.setData({tryonLoading:false, tryonResult:data.resultUrl, tryonIsDemo:(data.resultUrl||'').indexOf('data:image')===0, showTryon:true});
+              t.setData({tryonLoading:false, tryonResult:data.resultUrl, tryonIsDemo:!!data.demo, showTryon:true});
             }else{
               t.setData({tryonLoading:false});
               wx.showToast({title:(data.error||'试穿失败'),icon:'none'});
