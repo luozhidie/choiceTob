@@ -40,6 +40,8 @@ export default function StockMonitorPage() {
   const [backtest, setBacktest] = useState<any>(null);
   const [backtestLoading, setBacktestLoading] = useState(false);
   const [backtestError, setBacktestError] = useState("");
+  const [brokerMode, setBrokerMode] = useState<"paper" | "futu">("paper");
+  const [relayReachable, setRelayReachable] = useState<boolean | null>(null);
 
   const loadList = useCallback(async () => {
     setError("");
@@ -144,9 +146,26 @@ export default function StockMonitorPage() {
     } catch {}
   }, []);
 
-  useEffect(() => { loadList(); loadPaperState(); }, [loadList, loadPaperState]);
+  // 拉取当前下单模式（纸面/富途实盘）与中继连通状态，用于按钮护栏
+  const loadBrokerStatus = useCallback(async () => {
+    try {
+      const r = await fetch("/api/finance/broker-status", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) {
+        setBrokerMode(d.mode === "futu" ? "futu" : "paper");
+        setRelayReachable(d.relayReachable);
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => { loadList(); loadPaperState(); loadBrokerStatus(); }, [loadList, loadPaperState, loadBrokerStatus]);
 
   const runSignal = async () => {
+    // 实盘模式二次确认，防止误触真实下单
+    if (brokerMode === "futu") {
+      const ok = confirm("⚠️ 当前为【富途实盘】模式，点确认将以真实资金下单。确定继续？");
+      if (!ok) return;
+    }
     setSignalRunning(true);
     setSignalError("");
     try {
@@ -290,6 +309,9 @@ export default function StockMonitorPage() {
         <button onClick={analyze} disabled={analyzing} className="btn-secondary flex items-center gap-2">
           {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}全行业 AI 解读
         </button>
+        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${brokerMode === "futu" ? (relayReachable ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600") : "bg-amber-50 text-amber-600"}`}>
+          {brokerMode === "futu" ? (relayReachable ? "● 富途实盘" : "● 富途实盘(中继未连通)") : "● 纸面模拟"}
+        </span>
         <button onClick={runSignal} disabled={signalRunning} className="btn-secondary flex items-center gap-2">
           {signalRunning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}运行策略
         </button>
@@ -443,7 +465,12 @@ export default function StockMonitorPage() {
         </div>
       ) : (
         <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 mb-6 text-sm text-muted-foreground">
-          尚未产生模拟成交。点「运行策略」让规则跑一轮（MA金叉买入 / 死叉或止盈止损卖出），结果会实时显示在这里。当前为<strong className="text-amber-600">纸面模拟，不实盘、不涉真实资金</strong>。
+          尚未产生成交。点「运行策略」让规则跑一轮（MA金叉买入 / 死叉或止盈止损卖出），结果会实时显示在这里。
+          {brokerMode === "futu" ? (
+            <>当前为<strong className="text-emerald-600">富途实盘模式</strong>，下单将使用真实资金。</>
+          ) : (
+            <>当前为<strong className="text-amber-600">纸面模拟，不实盘、不涉真实资金</strong>。</>
+          )}
         </div>
       )}
 
