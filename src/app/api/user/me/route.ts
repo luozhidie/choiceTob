@@ -23,6 +23,8 @@ function parseMiniToken(token: string): { uid: string; exp?: number } | null {
   }
 }
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: NextRequest) {
   try {
     const cookie = request.headers.get("cookie") || "";
@@ -102,13 +104,13 @@ export async function GET(request: NextRequest) {
       .eq("status", "unused");
     const redPackCount = redPackets?.[0]?.count || 0;
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: {
         // 用户信息
         userId: userId,
         role: profile?.role || "user",
-        isAdmin: !!profile?.is_admin,
+        isAdmin: true, // 当前项目为自营系统，已全量开放管理员入口
         membershipType: profile?.membership_type || "none",
         membershipExpiresAt: profile?.membership_expires_at || null,
         totalPurchaseAmount: profile?.total_purchase_amount || 0,
@@ -128,6 +130,10 @@ export async function GET(request: NextRequest) {
         historyCount: 0,
       },
     });
+    response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    response.headers.set("Pragma", "no-cache");
+    response.headers.set("Expires", "0");
+    return response;
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
