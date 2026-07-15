@@ -321,14 +321,23 @@ export default function ImageGrabberPage() {
     }
   }, []);
 
-  // 使用 Puppeteer 抓取（新API）
+  // 使用服务端接口抓取页面图片（当前后端为 /api/image-grabber/fetch）
   const handlePuppeteerGrab = async (url: string) => {
-    const response = await fetch("/api/image-grabber/puppeteer", {
-      method: "POST",
+    const encoded = encodeURIComponent(url);
+    const response = await fetch(`/api/image-grabber/fetch?url=${encoded}`, {
+      method: "GET",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
     });
-    return await response.json();
+    const data = await response.json();
+    const isMiniprogram = url.indexOf("#小程序://") > -1 || url.indexOf("#微信小程序://") > -1;
+    return {
+      success: !data.error && (data.images?.length || 0) > 0,
+      images: data.images || [],
+      error: data.error || (data.images?.length ? "" : "未找到图片"),
+      isMiniprogram,
+      isDynamicSite: !!data.error && !isMiniprogram && !url.match(/\.(jpg|jpeg|png|gif|webp|bmp)$/i),
+      productInfo: data.productInfo || null,
+    };
   };
 
   // 开始抓取 URL 模式
@@ -344,21 +353,29 @@ export default function ImageGrabberPage() {
       let imageUrls: string[] = [];
 
       // 检测输入中是否有动态页面链接（1688/淘宝/微信小程序）
-      const dynamicSitePatterns = [/1688\.com\/offer\//, /taobao\.com/, /tmall\.com/, /#小程序\/|#微信小程序\/]/];
+      const dynamicSitePatterns = [/1688\.com\/offer\//, /taobao\.com/, /tmall\.com/, /#小程序:\/\//, /#微信小程序:\/\//];
       const hasDynamicLinks = dynamicSitePatterns.some(p => p.test(inputText));
 
       if (hasDynamicLinks) {
+        const isMiniprogramLink = /#小程序:\/\//.test(inputText) || /#微信小程序:\/\//.test(inputText);
         setProductInfo({
-          title: "⚠️ 检测到动态页面链接",
-          description: "1688/淘宝等网站的详情页是JS动态加载，服务端无法直接抓取图片",
-          specs: [
+          title: isMiniprogramLink ? "⚠️ 微信小程序链接无法自动抓取" : "⚠️ 检测到动态页面链接",
+          description: isMiniprogramLink
+            ? "微购相册等微信小程序是封闭环境，服务端无法访问。请按下方步骤手动保存图片后上传。"
+            : "1688/淘宝等网站的详情页是JS动态加载，服务端无法直接抓取图片",
+          specs: isMiniprogramLink ? [
+            "① 在微信中打开该小程序链接",
+            "② 进入商品页，长按图片 → 保存到手机相册",
+            "③ 回到本页，切换到「微信图片上传」模式",
+            "④ 选择刚保存的图片批量上传",
+          ] : [
             "① 浏览器打开商品页，右键图片 → 复制图片地址",
             "② 或长按图片保存到手机相册后上传",
             "③ 切换到「批量粘贴链接」模式粘贴图片URL（.jpg结尾）",
             "④ 图片地址格式如：https://xxx.alicdn.com/img.jpg",
           ],
         });
-        showToast("error", "检测到动态页面链接，请使用图片URL而非商品页链接");
+        showToast("error", isMiniprogramLink ? "小程序链接无法自动抓取，请手动保存图片后上传" : "检测到动态页面链接，请使用图片URL而非商品页链接");
         setIsProcessing(false);
         return;
       }
