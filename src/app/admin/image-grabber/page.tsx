@@ -1114,7 +1114,7 @@ export default function ImageGrabberPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
-                  微信转发/监听器自动上传的图片会出现在这里，点「转为商品」一键生成草稿商品，再去商品管理填价格与参数。
+                  粘贴 1688 商品 JSON 存入的图片会出现在这里，点「转为商品」一键生成草稿商品，再去商品管理核对/发布。
                 </p>
                 <div className="flex gap-2 shrink-0">
                   <a

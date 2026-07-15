@@ -38,6 +38,8 @@ interface Product {
   /* 预售字段 */
   is_preorder?: boolean;
   preorder_days?: number | null;
+  /* 商品详情（HTML） */
+  detail?: string | null;
 }
 
 export default function ProductDetailPage() {
@@ -113,6 +115,7 @@ export default function ProductDetailPage() {
             source: "platform",
             is_preorder: false,
             preorder_days: null,
+            detail: p.detail || null,
           });
           setLoading(false);
           return;
@@ -599,6 +602,23 @@ export default function ProductDetailPage() {
           </motion.div>
         </div>
       </section>
+
+      {/* 商品详情（HTML，支持图文） */}
+      {product.detail && (
+        <section className="py-12 border-t border-gray-100">
+          <div className="container mx-auto px-4">
+            <div className="max-w-5xl mx-auto">
+              <h2 className="text-xl font-bold text-primary mb-6">商品详情</h2>
+              <div className="bg-white rounded-2xl p-4 md:p-8 border border-gray-100 overflow-hidden">
+                <div
+                  className="leading-relaxed text-gray-700 [&_img]:w-full [&_img]:rounded-lg [&_div]:my-4"
+                  dangerouslySetInnerHTML={{ __html: product.detail }}
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 一品三搭：搭配方案展示 */}
       <section className="py-12 border-t border-gray-100 bg-gradient-to-b from-white to-gray-50/50">

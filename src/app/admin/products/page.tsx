@@ -78,6 +78,8 @@ export default function AdminProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   // 批量选择 + 归类
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [uploadingDetail, setUploadingDetail] = useState(false);
+  const [detailCursor, setDetailCursor] = useState(0);
   const [batchCategory, setBatchCategory] = useState("");
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
@@ -458,6 +460,54 @@ export default function AdminProductsPage() {
     }
     setUploading(false);
     e.target.value = "";
+  };
+
+  // 商品详情里上传图片：在光标位置插入 <img> 标签
+  const handleDetailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert("图片不能超过5MB");
+      e.target.value = "";
+      return;
+    }
+    setUploadingDetail(true);
+    try {
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("文件读取失败"));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch("/api/image-grabber/upload", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          filename: (file.name || `detail_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, "_"),
+          mimeType: file.type || "image/jpeg",
+          dataUrl,
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+
+      const imgTag = `\n<div style="margin:16px 0;">\n  <img src="${json.storedUrl}" style="width:100%;border-radius:8px;" alt="商品详情图" />\n</div>\n`;
+      const cursor = detailCursor || 0;
+      const before = form.detail.slice(0, cursor);
+      const after = form.detail.slice(cursor);
+      setForm(f => ({ ...f, detail: before + imgTag + after }));
+      // 更新光标到插入后位置
+      setDetailCursor(cursor + imgTag.length);
+      showToast("success", "详情图片已插入");
+    } catch (err: any) {
+      console.error("详情图片上传失败:", err);
+      showToast("error", "详情图片上传失败：" + err.message);
+    } finally {
+      setUploadingDetail(false);
+      e.target.value = "";
+    }
   };
 
   const removeImage = (idx: number) => {
@@ -1097,17 +1147,34 @@ export default function AdminProductsPage() {
 
               {/* 商品详情（富文本/长描述） */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  商品详情
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium text-gray-700">
+                    商品详情
+                  </label>
+                  <label className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-primary text-white rounded cursor-pointer hover:bg-primary/90">
+                    {uploadingDetail ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Upload className="w-3 h-3" />
+                    )}
+                    <span>{uploadingDetail ? "上传中" : "插入图片"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleDetailImageUpload}
+                      disabled={uploadingDetail}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
                 <textarea
                   value={form.detail}
-                  onChange={(e) =>
-                    setForm({ ...form, detail: e.target.value })
-                  }
-                  rows={4}
+                  onChange={(e) => setForm({ ...form, detail: e.target.value })}
+                  onSelect={(e) => setDetailCursor(e.currentTarget.selectionStart)}
+                  onClick={(e) => setDetailCursor(e.currentTarget.selectionStart)}
+                  rows={5}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                  placeholder="填写商品详细信息、尺码表、材质说明等..."
+                  placeholder="填写商品详细信息、尺码表、材质说明等... 支持点右上角「插入图片」上传详情图"
                 />
               </div>
               <div>
