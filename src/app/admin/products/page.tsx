@@ -53,6 +53,13 @@ interface Product {
   color_season_code?: string | null;
   style_conclusion?: string | null;
   sku?: string | null;
+  // 商品参数
+  material?: string | null;
+  sizes?: string | null;
+  origin?: string | null;
+  care_instructions?: string | null;
+  weight?: string | null;
+  brand?: string | null;
 }
 
 export default function AdminProductsPage() {
@@ -227,6 +234,12 @@ export default function AdminProductsPage() {
       color_hex: "",
       color_season_code: "",
       style_conclusion: "",
+      material: "",
+      sizes: "",
+      origin: "",
+      weight: "",
+      care_instructions: "",
+      brand: "",
       theme: "",
     });
   };
@@ -274,6 +287,13 @@ export default function AdminProductsPage() {
       color_hex: form.color_hex.trim() || null,
       color_season_code: form.color_season_code.trim() || null,
       style_conclusion: form.style_conclusion.trim() || null,
+      // 商品参数
+      material: form.material.trim() || null,
+      sizes: form.sizes.trim() || null,
+      origin: form.origin.trim() || null,
+      care_instructions: form.care_instructions.trim() || null,
+      weight: form.weight.trim() || null,
+      brand: form.brand.trim() || null,
     };
 
     try {
@@ -379,6 +399,12 @@ export default function AdminProductsPage() {
       color_hex: product.color_hex || "",
       color_season_code: product.color_season_code || "",
       style_conclusion: product.style_conclusion || "",
+      material: product.material || "",
+      sizes: product.sizes || "",
+      origin: product.origin || "",
+      weight: product.weight || "",
+      care_instructions: product.care_instructions || "",
+      brand: product.brand || "",
       theme: product.tags?.find((t) => t.startsWith("主题·"))?.replace("主题·", "") || "",
     });
     setShowForm(true);

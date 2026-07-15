@@ -99,7 +99,7 @@ export default function ImageGrabberPage() {
   // 待处理图片（监听器/微信转发自动上传）
   const [incomingImages, setIncomingImages] = useState<Array<{
     id: string; url: string; filename: string | null;
-    status: string; created_at: string;
+    status: string; created_at: string; product_meta?: any;
   }>>([]);
   const [loadingIncoming, setLoadingIncoming] = useState(false);
 
@@ -137,28 +137,56 @@ export default function ImageGrabberPage() {
     showToast("success", "图片链接已复制");
   };
 
+  // 粘贴 1688 商品 JSON → 存入待处理（带标题/价格/规格）
+  const [ingestText, setIngestText] = useState("");
+  const ingest1688 = async () => {
+    if (!ingestText.trim()) {
+      showToast("error", "请先粘贴 1688 商品 JSON");
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/incoming-images/ingest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ json: ingestText }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "导入失败");
+      showToast("success", `已存入 ${json.count || 0} 张图，去点「转为商品」`);
+      setIngestText("");
+      loadIncoming();
+    } catch (err: any) {
+      showToast("error", err.message || "导入失败");
+    }
+  };
+
   const [convertingId, setConvertingId] = useState<string | null>(null);
 
   // 一键转为商品：创建草稿商品 + 标记原图已用
-  const convertIncoming = async (id: string) => {
-    setConvertingId(id);
+  const convertIncoming = async (it: { id: string; product_meta?: any }) => {
+    setConvertingId(it.id);
     try {
       const res = await fetch("/api/admin/incoming-images/convert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ id }),
+        body: JSON.stringify({ id: it.id }),
       });
       const json = await res.json();
       if (!res.ok && !json.alreadyUsed) {
         throw new Error(json.error || "转换失败");
       }
       setIncomingImages((prev) =>
-        prev.map((it) =>
-          it.id === id ? { ...it, status: "used" } : it
+        prev.map((x) =>
+          x.id === it.id ? { ...x, status: "used" } : x
         )
       );
-      showToast("success", "✅ 已转为商品，去商品管理填价格/参数");
+      if (it.product_meta) {
+        showToast("success", "✅ 已转为带参数的商品，去商品管理核对/发布");
+      } else {
+        showToast("success", "✅ 已转为商品草稿，去商品管理填价格/参数");
+      }
     } catch (err: any) {
       showToast("error", err.message || "操作失败");
     } finally {
@@ -1105,6 +1133,25 @@ export default function ImageGrabberPage() {
                 </div>
               </div>
 
+              {/* 粘贴 1688 商品 JSON → 存入待处理（带参数） */}
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                <p className="text-xs text-amber-700 mb-2">
+                  粘贴 1688 商品 JSON（浏览器控制台提取脚本复制的结果，可一次多个），存入待处理并带出标题/价格/规格，再点图片下「转为商品」即生成带参数的草稿商品。
+                </p>
+                <textarea
+                  value={ingestText}
+                  onChange={(e) => setIngestText(e.target.value)}
+                  placeholder='{"platform":"1688","title":"复古羊毛大衣","price":"299","specs":["材质:羊毛","尺码:S M L"],"images":["https://..."]}'
+                  className="w-full h-24 px-3 py-2 text-xs border border-amber-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-amber-300"
+                />
+                <button
+                  onClick={ingest1688}
+                  className="mt-2 px-3 py-1.5 text-sm bg-amber-500 text-white rounded-lg hover:bg-amber-600"
+                >
+                  存入待处理（带参数）
+                </button>
+              </div>
+
               {incomingImages.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
                   <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
@@ -1131,7 +1178,21 @@ export default function ImageGrabberPage() {
                         )}
                       </div>
                       <div className="p-2 space-y-1.5">
-                        <p className="text-xs text-gray-400 truncate">{it.filename || it.created_at}</p>
+                        <p className="text-xs text-gray-700 font-medium truncate">
+                          {it.product_meta?.title || it.filename || it.created_at}
+                        </p>
+                        {it.product_meta?.price ? (
+                          <p className="text-xs text-primary font-semibold">
+                            ¥{(it.product_meta.price / 100).toFixed(2)}
+                            {it.product_meta.specs?.length ? (
+                              <span className="text-gray-400 font-normal ml-1">
+                                · {it.product_meta.specs.length}项参数
+                              </span>
+                            ) : null}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-gray-400 truncate">{it.filename || it.created_at}</p>
+                        )}
                         <div className="flex gap-1">
                           <button
                             onClick={() => copyIncoming(it.url)}
@@ -1149,7 +1210,7 @@ export default function ImageGrabberPage() {
                           </a>
                         </div>
                         <button
-                          onClick={() => convertIncoming(it.id)}
+                          onClick={() => convertIncoming(it)}
                           disabled={it.status === "used" || convertingId === it.id}
                           className="w-full px-2 py-1.5 text-xs font-medium rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
