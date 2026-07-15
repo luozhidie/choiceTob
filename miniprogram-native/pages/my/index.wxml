@@ -230,6 +230,10 @@
         <text class="sv-icon-text">📦</text>
         <text class="sv-label">一键导入</text>
       </view>
+      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goAlbumGrab">
+        <text class="sv-icon-text">🖼️</text>
+        <text class="sv-label">相册抓取</text>
+      </view>
       <view class="sv-item" bindtap="goOneKeyImport">
         <text class="sv-icon-text">📥</text>
         <text class="sv-label">一键入库</text>

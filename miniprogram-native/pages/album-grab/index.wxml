@@ -1,0 +1,50 @@
+<view class="page">
+  <view class="head">
+    <text class="ht">微购相册抓取</text>
+    <text class="hs">小程序内部链接无法自动下载，需先手动保存图片再上传</text>
+  </view>
+
+  <!-- 粘贴链接（仅作记录/复制用） -->
+  <view class="card">
+    <text class="ct">粘贴相册链接（可选）</text>
+    <textarea class="ta" placeholder="粘贴 #小程序:// 链接，方便复制回微信打开" value="{{link}}" bindinput="onLink" auto-height maxlength="-1" />
+    <view class="row">
+      <view class="btn-ghost" bindtap="pasteLink">粘贴</view>
+      <view class="btn-ghost" bindtap="copyLink">复制链接</view>
+    </view>
+  </view>
+
+  <!-- 三步流程 -->
+  <view class="card">
+    <text class="ct">抓取流程</text>
+
+    <view class="step">
+      <text class="sn">1</text>
+      <view class="sb">
+        <text class="st">在微信打开相册</text>
+        <text class="sd">长按上方可粘贴的链接 → 在微信中打开微购相册该商品/店铺页</text>
+      </view>
+    </view>
+
+    <view class="step">
+      <text class="sn">2</text>
+      <view class="sb">
+        <text class="st">长按保存图片</text>
+        <text class="sd">逐张长按商品图 → 保存到手机相册（可多选保存）</text>
+      </view>
+    </view>
+
+    <view class="step">
+      <text class="sn">3</text>
+      <view class="sb">
+        <text class="st">后台上传入库</text>
+        <text class="sd">打开「图片抓取工具」→ 微信图片上传 → 选相册里的图批量上传</text>
+      </view>
+    </view>
+
+    <view class="btn-copy" bindtap="copyTool">复制图片抓取工具地址</view>
+    <text class="tool-url">https://colour-choice.art/admin/image-grabber</text>
+  </view>
+
+  <view class="note">提示：图片抓取工具在电脑/手机浏览器打开后台「其他 → 图片抓取工具」即可使用。</view>
+</view>
