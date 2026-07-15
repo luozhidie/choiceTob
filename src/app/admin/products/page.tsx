@@ -545,6 +545,17 @@ export default function AdminProductsPage() {
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
 
+  // 从 detail HTML 中提取详情图片 URL，用于管理端预览
+  const detailImageUrls = useMemo(() => {
+    const html = form.detail || "";
+    const matches = html.match(/<img[^>]+src=["']([^"']+)["']/g);
+    return matches
+      ? (matches
+          .map((m) => m.match(/src=["']([^"']+)["']/)?.[1])
+          .filter(Boolean) as string[])
+      : [];
+  }, [form.detail]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <AnimatePresence>
@@ -1188,6 +1199,21 @@ export default function AdminProductsPage() {
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                   placeholder="填写商品详细信息、尺码表、材质说明等... 支持点右上角「插入图片」上传详情图（可多选一次多张）"
                 />
+                {detailImageUrls.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-500 mb-2">已插入详情图预览（实际效果以前台商品详情页为准）：</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {detailImageUrls.map((url, idx) => (
+                        <div
+                          key={idx}
+                          className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-100"
+                        >
+                          <img src={url} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

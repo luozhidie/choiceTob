@@ -71,7 +71,17 @@ Page({
         if(p.category)specList.push({label:'分类',value:p.category});
         if(p.material)specList.push({label:'材质',value:p.material});
         if(p.size)specList.push({label:'尺码',value:p.size});
+        if(p.sizes)specList.push({label:'尺码',value:p.sizes});
         if(p.color)specList.push({label:'颜色',value:p.color});
+        /* 商品详情图：从 detail HTML 中提取 <img> src */
+        var detailImages=[];
+        if(p.detail){
+          var html=typeof p.detail==='string'?p.detail:'';
+          var re=/<img[^>]+src=["']([^"']+)["']/gi;
+          var m;
+          while((m=re.exec(html))!==null){ detailImages.push(m[1]); }
+        }
+        p.detail_images=detailImages;
         /* 推荐 */
         t.setData({
           product:p,
