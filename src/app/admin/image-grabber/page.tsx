@@ -137,6 +137,35 @@ export default function ImageGrabberPage() {
     showToast("success", "图片链接已复制");
   };
 
+  const [convertingId, setConvertingId] = useState<string | null>(null);
+
+  // 一键转为商品：创建草稿商品 + 标记原图已用
+  const convertIncoming = async (id: string) => {
+    setConvertingId(id);
+    try {
+      const res = await fetch("/api/admin/incoming-images/convert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (!res.ok && !json.alreadyUsed) {
+        throw new Error(json.error || "转换失败");
+      }
+      setIncomingImages((prev) =>
+        prev.map((it) =>
+          it.id === id ? { ...it, status: "used" } : it
+        )
+      );
+      showToast("success", "✅ 已转为商品，去商品管理填价格/参数");
+    } catch (err: any) {
+      showToast("error", err.message || "操作失败");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
   // 加载商品列表（用 fetch 代替 supabase 客户端）
   useEffect(() => {
     const loadProducts = async () => {
@@ -1057,15 +1086,23 @@ export default function ImageGrabberPage() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <p className="text-sm text-gray-600">
-                  微信转发/监听器自动上传的图片会出现在这里，复制链接或下载后分配给商品即可。
+                  微信转发/监听器自动上传的图片会出现在这里，点「转为商品」一键生成草稿商品，再去商品管理填价格与参数。
                 </p>
-                <button
-                  onClick={loadIncoming}
-                  disabled={loadingIncoming}
-                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  {loadingIncoming ? "刷新中..." : "↻ 刷新"}
-                </button>
+                <div className="flex gap-2 shrink-0">
+                  <a
+                    href="/admin/products"
+                    className="px-3 py-1.5 text-sm bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors"
+                  >
+                    前往商品管理
+                  </a>
+                  <button
+                    onClick={loadIncoming}
+                    disabled={loadingIncoming}
+                    className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    {loadingIncoming ? "刷新中..." : "↻ 刷新"}
+                  </button>
+                </div>
               </div>
 
               {incomingImages.length === 0 ? (
@@ -1111,6 +1148,17 @@ export default function ImageGrabberPage() {
                             下载
                           </a>
                         </div>
+                        <button
+                          onClick={() => convertIncoming(it.id)}
+                          disabled={it.status === "used" || convertingId === it.id}
+                          className="w-full px-2 py-1.5 text-xs font-medium rounded bg-primary text-white hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {convertingId === it.id
+                            ? "转换中..."
+                            : it.status === "used"
+                            ? "已转为商品"
+                            : "🛍 转为商品"}
+                        </button>
                         <button
                           onClick={() => markIncoming(it.id, it.status === "used" ? "pending" : "used")}
                           className={`w-full px-2 py-1 text-xs rounded ${
