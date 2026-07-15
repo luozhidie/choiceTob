@@ -462,45 +462,56 @@ export default function AdminProductsPage() {
     e.target.value = "";
   };
 
-  // 商品详情里上传图片：在光标位置插入 <img> 标签
+  // 商品详情里上传图片：在光标位置插入 <img> 标签（支持多选一次多张）
   const handleDetailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const valid = Array.from(files).filter((f) => f.size <= 5 * 1024 * 1024);
+    const oversized = files.length - valid.length;
+    if (valid.length === 0) {
       alert("图片不能超过5MB");
       e.target.value = "";
       return;
     }
     setUploadingDetail(true);
     try {
-      const dataUrl = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error("文件读取失败"));
-        reader.readAsDataURL(file);
-      });
+      let inserted = "";
+      for (let i = 0; i < valid.length; i++) {
+        const file = valid[i];
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("文件读取失败"));
+          reader.readAsDataURL(file);
+        });
 
-      const res = await fetch("/api/image-grabber/upload", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          filename: (file.name || `detail_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, "_"),
-          mimeType: file.type || "image/jpeg",
-          dataUrl,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+        const res = await fetch("/api/image-grabber/upload", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: (file.name || `detail_${Date.now()}.jpg`).replace(/[^a-zA-Z0-9._-]/g, "_"),
+            mimeType: file.type || "image/jpeg",
+            dataUrl,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
 
-      const imgTag = `\n<div style="margin:16px 0;">\n  <img src="${json.storedUrl}" style="width:100%;border-radius:8px;" alt="商品详情图" />\n</div>\n`;
-      const cursor = detailCursor || 0;
-      const before = form.detail.slice(0, cursor);
-      const after = form.detail.slice(cursor);
-      setForm(f => ({ ...f, detail: before + imgTag + after }));
-      // 更新光标到插入后位置
-      setDetailCursor(cursor + imgTag.length);
-      showToast("success", "详情图片已插入");
+        inserted += `\n<div style="margin:16px 0;">\n  <img src="${json.storedUrl}" style="width:100%;border-radius:8px;" alt="商品详情图" />\n</div>\n`;
+      }
+
+      if (inserted) {
+        const cursor = detailCursor || 0;
+        const before = form.detail.slice(0, cursor);
+        const after = form.detail.slice(cursor);
+        setForm(f => ({ ...f, detail: before + inserted + after }));
+        setDetailCursor(cursor + inserted.length);
+      }
+      showToast(
+        "success",
+        `已插入 ${valid.length} 张详情图${oversized ? `，${oversized} 张超过5MB已跳过` : ""}`
+      );
     } catch (err: any) {
       console.error("详情图片上传失败:", err);
       showToast("error", "详情图片上传失败：" + err.message);
@@ -1161,6 +1172,7 @@ export default function AdminProductsPage() {
                     <input
                       type="file"
                       accept="image/*"
+                      multiple
                       onChange={handleDetailImageUpload}
                       disabled={uploadingDetail}
                       className="hidden"
@@ -1174,7 +1186,7 @@ export default function AdminProductsPage() {
                   onClick={(e) => setDetailCursor(e.currentTarget.selectionStart)}
                   rows={5}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                  placeholder="填写商品详细信息、尺码表、材质说明等... 支持点右上角「插入图片」上传详情图"
+                  placeholder="填写商品详细信息、尺码表、材质说明等... 支持点右上角「插入图片」上传详情图（可多选一次多张）"
                 />
               </div>
               <div>
