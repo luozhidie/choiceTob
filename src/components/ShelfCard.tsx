@@ -20,12 +20,12 @@ export default function ShelfCard({ block }: ShelfCardProps) {
         href={`/shelf/${block.id}`}
         className="group block relative w-full rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
       >
-        <div className="aspect-[3/2] md:aspect-[16/9] relative">
+        <div className="aspect-[4/3] md:aspect-[3/2] relative bg-gradient-to-br from-gray-100 to-gray-200">
           {image ? (
             <img
               src={image}
               alt={block.title}
-              className="w-full h-full object-cover object-center group-hover:scale-[1.02] transition-transform duration-500"
+              className="w-full h-full object-contain object-center group-hover:scale-[1.02] transition-transform duration-500"
             />
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300" />

@@ -167,12 +167,12 @@ export default function ShelfPage() {
       </div>
 
       {/* 货架 Banner */}
-      <div className="relative w-full aspect-[16/9] md:aspect-[21/9] bg-gray-100">
+      <div className="relative w-full aspect-[4/3] md:aspect-[16/9] bg-gradient-to-br from-gray-100 to-gray-200">
         {image ? (
           <img
             src={image}
             alt={block?.title || "货架"}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain object-center"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
