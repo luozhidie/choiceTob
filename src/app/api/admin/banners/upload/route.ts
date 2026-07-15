@@ -34,7 +34,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少文件或bannerId" }, { status: 400 });
     }
 
-    const filePath = `banners/${Date.now()}_${file.name}`;
+    const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    const safeExt = /^[a-z0-9]+$/.test(ext) ? ext : "jpg";
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const filePath = `banners/${uniqueId}.${safeExt}`;
     
     // 上传到 Storage
     const { data, error } = await supabase.storage
