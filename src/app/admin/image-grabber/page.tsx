@@ -96,6 +96,47 @@ export default function ImageGrabberPage() {
     imageCount?: number; message?: string;
   }>>([]);
 
+  // 待处理图片（监听器/微信转发自动上传）
+  const [incomingImages, setIncomingImages] = useState<Array<{
+    id: string; url: string; filename: string | null;
+    status: string; created_at: string;
+  }>>([]);
+  const [loadingIncoming, setLoadingIncoming] = useState(false);
+
+  const loadIncoming = async () => {
+    setLoadingIncoming(true);
+    try {
+      const res = await fetch("/api/admin/incoming-images", { credentials: "include" });
+      const json = await res.json();
+      if (res.ok && json.data) setIncomingImages(json.data);
+    } catch {
+      // 静默失败
+    } finally {
+      setLoadingIncoming(false);
+    }
+  };
+
+  const markIncoming = async (id: string, status: "pending" | "used") => {
+    try {
+      await fetch("/api/admin/incoming-images", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, status }),
+      });
+      setIncomingImages((prev) =>
+        prev.map((it) => (it.id === id ? { ...it, status } : it))
+      );
+    } catch {
+      showToast("error", "操作失败");
+    }
+  };
+
+  const copyIncoming = (url: string) => {
+    navigator.clipboard?.writeText(url);
+    showToast("success", "图片链接已复制");
+  };
+
   // 加载商品列表（用 fetch 代替 supabase 客户端）
   useEffect(() => {
     const loadProducts = async () => {
@@ -774,6 +815,17 @@ export default function ImageGrabberPage() {
               <Package className="w-4 h-4 inline-block mr-1 -mt-0.5" />
               商品导入
             </button>
+            <button
+              onClick={() => { setMode("incoming"); loadIncoming(); }}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                mode === "incoming"
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}
+            >
+              <ImageIcon className="w-4 h-4 inline-block mr-1 -mt-0.5" />
+              待处理图片
+            </button>
           </div>
 
           {/* 微信图片上传模式 */}
@@ -997,6 +1049,83 @@ export default function ImageGrabberPage() {
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* 待处理图片（监听器自动上传） */}
+          {mode === "incoming" && (
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-gray-600">
+                  微信转发/监听器自动上传的图片会出现在这里，复制链接或下载后分配给商品即可。
+                </p>
+                <button
+                  onClick={loadIncoming}
+                  disabled={loadingIncoming}
+                  className="px-3 py-1.5 text-sm bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  {loadingIncoming ? "刷新中..." : "↻ 刷新"}
+                </button>
+              </div>
+
+              {incomingImages.length === 0 ? (
+                <div className="text-center py-16 bg-white rounded-2xl border border-gray-200">
+                  <ImageIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">暂无待处理图片</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    运行本地监听器脚本，转发到微信的图片会自动出现在这里
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {incomingImages.map((it) => (
+                    <div
+                      key={it.id}
+                      className={`bg-white rounded-xl border overflow-hidden ${
+                        it.status === "used" ? "border-green-200 opacity-70" : "border-gray-200"
+                      }`}
+                    >
+                      <div className="aspect-square bg-gray-100 relative">
+                        <img src={it.url} alt={it.filename || "待处理"} className="w-full h-full object-cover" />
+                        {it.status === "used" && (
+                          <span className="absolute top-2 right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                            已用
+                          </span>
+                        )}
+                      </div>
+                      <div className="p-2 space-y-1.5">
+                        <p className="text-xs text-gray-400 truncate">{it.filename || it.created_at}</p>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => copyIncoming(it.url)}
+                            className="flex-1 px-2 py-1 text-xs bg-primary text-white rounded hover:bg-primary/90"
+                          >
+                            复制链接
+                          </button>
+                          <a
+                            href={it.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex-1 px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded text-center hover:bg-gray-200"
+                          >
+                            下载
+                          </a>
+                        </div>
+                        <button
+                          onClick={() => markIncoming(it.id, it.status === "used" ? "pending" : "used")}
+                          className={`w-full px-2 py-1 text-xs rounded ${
+                            it.status === "used"
+                              ? "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                              : "bg-green-50 text-green-700 hover:bg-green-100"
+                          }`}
+                        >
+                          {it.status === "used" ? "↺ 标为待处理" : "✓ 标记已用"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
