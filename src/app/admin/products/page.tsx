@@ -60,6 +60,10 @@ interface Product {
   care_instructions?: string | null;
   weight?: string | null;
   brand?: string | null;
+  // 媒体字段
+  video_url?: string | null;
+  model_images?: string[] | null;
+  size_chart_image?: string | null;
 }
 
 export default function AdminProductsPage() {
@@ -158,6 +162,10 @@ export default function AdminProductsPage() {
     care_instructions: "",
     weight: "",
     brand: "",
+    // 媒体字段
+    video_url: "",
+    model_images: [] as string[],
+    size_chart_image: "",
   });
 
   const supabase = createClient();
@@ -242,6 +250,9 @@ export default function AdminProductsPage() {
       weight: "",
       care_instructions: "",
       brand: "",
+      video_url: "",
+      model_images: [] as string[],
+      size_chart_image: "",
       theme: "",
     });
   };
@@ -296,6 +307,10 @@ export default function AdminProductsPage() {
       care_instructions: form.care_instructions.trim() || null,
       weight: form.weight.trim() || null,
       brand: form.brand.trim() || null,
+      // 媒体字段
+      video_url: form.video_url.trim() || null,
+      model_images: form.model_images.length > 0 ? form.model_images : null,
+      size_chart_image: form.size_chart_image.trim() || null,
     };
 
     try {
@@ -407,6 +422,9 @@ export default function AdminProductsPage() {
       weight: product.weight || "",
       care_instructions: product.care_instructions || "",
       brand: product.brand || "",
+      video_url: product.video_url || "",
+      model_images: product.model_images || [],
+      size_chart_image: product.size_chart_image || "",
       theme: product.tags?.find((t) => t.startsWith("主题·"))?.replace("主题·", "") || "",
     });
     setShowForm(true);
@@ -1148,6 +1166,111 @@ export default function AdminProductsPage() {
                     }
                     <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} className="hidden" />
                   </label>
+                </div>
+              </div>
+
+              {/* 媒体素材：视频 / 模特图 / 尺码表 */}
+              <div className="pt-4 border-t border-gray-200">
+                <h4 className="text-sm font-semibold text-primary mb-3">媒体素材（视频 / 模特图 / 尺码表）</h4>
+
+                {/* 视频地址 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">视频地址（URL）</label>
+                  <input
+                    type="text"
+                    value={form.video_url}
+                    onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="https://...mp4 或 腾讯视频/抖音外链"
+                  />
+                </div>
+
+                {/* 尺码表图片 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码表图片</label>
+                  <div className="flex gap-2 items-start">
+                    <input
+                      type="text"
+                      value={form.size_chart_image}
+                      onChange={(e) => setForm({ ...form, size_chart_image: e.target.value })}
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="https://..."
+                    />
+                    <label className="shrink-0 w-10 h-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
+                      <input type="file" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
+                        setUploading(true);
+                        try {
+                          const dataUrl = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = () => reject(new Error("文件读取失败"));
+                            reader.readAsDataURL(file);
+                          });
+                          const res = await fetch("/api/image-grabber/upload", {
+                            method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "image/jpeg", dataUrl }),
+                          });
+                          const json = await res.json();
+                          if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+                          setForm(f => ({ ...f, size_chart_image: json.storedUrl }));
+                        } catch (err: any) { alert("上传失败：" + err.message); }
+                        setUploading(false); e.target.value = "";
+                      }} className="hidden" />
+                    </label>
+                    {form.size_chart_image && (
+                      <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden">
+                        <img src={form.size_chart_image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* 模特图（多张） */}
+                <div className="mb-1">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">模特图（可多选）</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {form.model_images.map((img, idx) => (
+                      <div key={idx} className="relative w-16 h-16 rounded-lg overflow-hidden">
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                        <button type="button" onClick={() => setForm(f => ({ ...f, model_images: f.model_images.filter((_, i) => i !== idx) }))}
+                          className="absolute top-0 right-0 w-5 h-5 bg-red-500 text-white rounded-bl-lg flex items-center justify-center">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                    <label className={`w-16 h-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? "border-accent bg-accent/10" : "border-gray-300 hover:border-accent hover:bg-accent/5"}`}>
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent mb-0.5" /> : <><Upload className="w-4 h-4 text-gray-400 mb-0.5" /><span className="text-[9px] text-gray-400">添加</span></>}
+                      <input type="file" accept="image/*" multiple onChange={async (e) => {
+                        const files = e.target.files;
+                        if (!files || files.length === 0) return;
+                        setUploading(true);
+                        try {
+                          for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            if (file.size > 5 * 1024 * 1024) continue;
+                            const dataUrl = await new Promise<string>((resolve, reject) => {
+                              const reader = new FileReader();
+                              reader.onload = () => resolve(reader.result as string);
+                              reader.onerror = () => reject(new Error("文件读取失败"));
+                              reader.readAsDataURL(file);
+                            });
+                            const res = await fetch("/api/image-grabber/upload", {
+                              method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "image/jpeg", dataUrl }),
+                            });
+                            const json = await res.json();
+                            if (!res.ok || json.error) continue;
+                            setForm(f => ({ ...f, model_images: [...f.model_images, json.storedUrl] }));
+                          }
+                        } catch (err) { console.error(err); }
+                        setUploading(false); e.target.value = "";
+                      }} className="hidden" />
+                    </label>
+                  </div>
                 </div>
               </div>
 

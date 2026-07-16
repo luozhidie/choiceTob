@@ -13,13 +13,13 @@ Page({
   },
 
   loadCart: function() {
-    var cart = wx.getStorageSync('cart') || [];
+    var cart = wx.getStorageSync('cart_v2') || [];
     cart.forEach(function(item) {
       if (item.checked === undefined) item.checked = false;
       if (!item.quantity) item.quantity = 1;
-      /* 统一价格格式：分→元 + 加¥前缀 */
+      /* 统一价格格式：分→元 + 加¥前缀（只计算展示值，不改写存储的「分」） */
       var p = Number(item.price) || 0;
-      if (p >= 100) { p = Math.round(p / 100); item.price = p; }
+      if (p >= 100) { p = Math.round(p / 100); }
       item.priceDisplay = '¥' + (p % 1 === 0 ? p : p.toFixed(2));
     });
     this.setData({ cartItems: cart, loading: false });
@@ -55,7 +55,7 @@ Page({
     var items = this.data.cartItems.slice();
     items.forEach(function(item){ if(item.id===id) item.checked=!item.checked; });
     this.setData({ cartItems: items });
-    wx.setStorageSync('cart', items);
+    wx.setStorageSync('cart_v2', items);
     this.recalc();
   },
 
@@ -64,7 +64,7 @@ Page({
     var items = this.data.cartItems.slice();
     items.forEach(function(item){ item.checked = newAll; });
     this.setData({ cartItems: items, allChecked: newAll });
-    wx.setStorageSync('cart', items);
+    wx.setStorageSync('cart_v2', items);
     this.recalc();
   },
 
@@ -73,7 +73,7 @@ Page({
     var items = this.data.cartItems.slice();
     items.forEach(function(item){ if(item.id===id) item.quantity = (item.quantity||1)+1; });
     this.setData({ cartItems: items });
-    wx.setStorageSync('cart', items);
+    wx.setStorageSync('cart_v2', items);
     this.recalc();
   },
 
@@ -82,7 +82,7 @@ Page({
     var items = this.data.cartItems.slice();
     items.forEach(function(item){ if(item.id===id && item.quantity>1) item.quantity -= 1; });
     this.setData({ cartItems: items });
-    wx.setStorageSync('cart', items);
+    wx.setStorageSync('cart_v2', items);
     this.recalc();
   },
 
@@ -95,7 +95,7 @@ Page({
         if (res.confirm) {
           var items = that.data.cartItems.filter(function(i){ return i.id !== id; });
           that.setData({ cartItems: items });
-          wx.setStorageSync('cart', items);
+          wx.setStorageSync('cart_v2', items);
           that.recalc();
         }
       }
@@ -110,7 +110,7 @@ Page({
       success: function(res) {
         if (res.confirm) {
           that.setData({ cartItems: [] });
-          wx.removeStorageSync('cart');
+          wx.removeStorageSync('cart_v2');
           that.recalc();
         }
       }

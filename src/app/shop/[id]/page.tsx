@@ -5,11 +5,11 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft, ShoppingBag, Building2, Truck, X,
+  ShoppingBag, Building2, Truck, X,
   ChevronLeft, ChevronRight, Layers, Star,
   Clock, ShoppingCart, Share2, Copy, Check,
-  Image as ImageIcon, MessageCircle, QrCode,
-  Lock, LogIn, UserPlus,
+  Image as ImageIcon, MessageCircle,
+  Lock, BookOpen, Lightbulb, Tag,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -18,6 +18,10 @@ import {
 } from "@/lib/categories";
 import { useCart } from "@/lib/cart-context";
 import { useAuth } from "@/lib/auth-context";
+import MembershipCard from "@/components/product/MembershipCard";
+import CouponClaim, { CouponTemplate } from "@/components/product/CouponClaim";
+import SizeChart from "@/components/product/SizeChart";
+import { WHOLESALE_GUIDE, WHOLESALE_TIPS } from "@/lib/wholesale-content";
 
 interface Product {
   id: string;
@@ -40,13 +44,24 @@ interface Product {
   preorder_days?: number | null;
   /* 商品详情（HTML） */
   detail?: string | null;
+  /* 新增媒体字段 */
+  video_url?: string | null;
+  model_images?: string[] | null;
+  size_chart_image?: string | null;
+  /* 参数 */
+  material?: string | null;
+  sizes?: string | null;
+  origin?: string | null;
+  brand?: string | null;
+  weight?: string | null;
+  care_instructions?: string | null;
 }
 
 export default function ProductDetailPage() {
   const router = useRouter();
   const params = useParams();
   const productId = params.id as string;
-  const { user: authUser, canViewWholesale, isCertifiedStoreOwner } = useAuth();
+  const { user: authUser, canViewWholesale, isCertifiedStoreOwner, profile } = useAuth();
 
   // ✅ 所有 hooks 必须在组件顶层
   const [product, setProduct] = useState<Product | null>(null);
@@ -60,6 +75,9 @@ export default function ProductDetailPage() {
   const [showWholesalePrompt, setShowWholesalePrompt] = useState(false);
   const [user, setUser] = useState<any>(null); // 用户登录状态
   const [isPriceMember, setIsPriceMember] = useState(false); // 是否价格会员
+  // 优惠券
+  const [couponTemplates, setCouponTemplates] = useState<CouponTemplate[]>([]);
+  const [claimedIds, setClaimedIds] = useState<string[]>([]);
   const { addItem } = useCart();
 
   // 检查用户登录状态 + 是否价格会员
@@ -91,11 +109,8 @@ export default function ProductDetailPage() {
       setLoading(true);
       try {
         const url = `/api/public/products?id=${encodeURIComponent(productId)}`;
-        console.log('[ProductDetail] 开始获取商品:', url);
         const res = await fetch(url);
-        console.log('[ProductDetail] API响应状态:', res.status);
         const json = await res.json();
-        console.log('[ProductDetail] API返回数据:', JSON.stringify(json).slice(0, 200));
         if (json.success && json.data && json.data.length > 0 && !cancelled) {
           const p = json.data[0];
           setProduct({
@@ -116,14 +131,23 @@ export default function ProductDetailPage() {
             is_preorder: false,
             preorder_days: null,
             detail: p.detail || null,
+            video_url: p.video_url || null,
+            model_images: p.model_images || null,
+            size_chart_image: p.size_chart_image || null,
+            material: p.material || null,
+            sizes: p.sizes || null,
+            origin: p.origin || null,
+            brand: p.brand || null,
+            weight: p.weight || null,
+            care_instructions: p.care_instructions || null,
           });
           setLoading(false);
           return;
         } else {
           console.warn('[ProductDetail] 商品数据为空或格式错误:', json);
         }
-      } catch (e) { 
-        console.error("查询商品失败:", e); 
+      } catch (e) {
+        console.error("查询商品失败:", e);
       }
 
       if (!cancelled) {
@@ -160,7 +184,53 @@ export default function ProductDetailPage() {
     return () => { cancelled = true; };
   }, [product?.supplier_name, product?.id, product?.source]);
 
+  // 获取可领优惠券模板（公开）
+  useEffect(() => {
+    fetch("/api/coupons/templates")
+      .then((r) => r.json())
+      .then((j) => { if (j.success) setCouponTemplates(j.data || []); })
+      .catch(() => {});
+  }, []);
+
+  // 已登录用户：标记已领取的券
+  useEffect(() => {
+    if (!authUser) { setClaimedIds([]); return; }
+    fetch(`/api/coupons?user_id=${authUser.id}&status=unused`)
+      .then((r) => r.json())
+      .then((j) => {
+        if (j.data) {
+          const ids = j.data.filter((c: any) => c.template_id).map((c: any) => c.template_id);
+          setClaimedIds(ids);
+        }
+      })
+      .catch(() => {});
+  }, [authUser]);
+
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+
+  // 领取优惠券
+  const handleClaim = async (templateId: string) => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) return { ok: false, error: "请先登录" };
+    try {
+      const res = await fetch("/api/coupons/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ template_id: templateId }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setClaimedIds((prev) => [...prev, templateId]);
+        return { ok: true };
+      }
+      if (j.code === "already_claimed") return { ok: false, already: true };
+      return { ok: false, error: j.error || "领取失败" };
+    } catch (e: any) {
+      return { ok: false, error: e.message };
+    }
+  };
 
   // ---- 加载中 ----
   if (loading) {
@@ -186,10 +256,19 @@ export default function ProductDetailPage() {
     );
   }
 
-  // ---- 商品详情（1688 风格）----
+  // ---- 媒体资源 ----
   const allImages = product.images?.length
     ? [product.cover_image, ...product.images].filter(Boolean)
     : [product.cover_image];
+  const modelImages = (product.model_images || []).filter(Boolean) as string[];
+  const paramRows = [
+    product.material && { label: "材质", value: product.material },
+    product.sizes && { label: "尺码", value: product.sizes },
+    product.origin && { label: "产地", value: product.origin },
+    product.brand && { label: "品牌", value: product.brand },
+    product.weight && { label: "重量", value: product.weight },
+    product.care_instructions && { label: "洗涤说明", value: product.care_instructions },
+  ].filter(Boolean) as { label: string; value: string }[];
 
   const categoryLink = product.category
     ? `/buyer?category=${product.category}`
@@ -212,7 +291,6 @@ export default function ProductDetailPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // fallback: 选中输入框内容让用户手动复制
       const input = document.createElement("input");
       input.value = shareUrl;
       document.body.appendChild(input);
@@ -241,7 +319,7 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 面包屑 + 分享按钮 */}
-      <div className="bg-white border-b border-gray-100">
+      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <nav className="flex items-center gap-1.5 text-sm text-muted-foreground flex-wrap flex-1 min-w-0">
             <Link href="/" className="hover:text-primary shrink-0">首页</Link>
@@ -264,7 +342,6 @@ export default function ProductDetailPage() {
               </>
             )}
           </nav>
-          {/* 分享按钮 */}
           <button
             onClick={() => setShareOpen(true)}
             className="ml-3 p-2 rounded-full hover:bg-gray-100 active:scale-90 transition-all shrink-0"
@@ -275,360 +352,421 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* 商品详情 — 1688 风格 */}
-      <section className="py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8"
-          >
-            {/* 左侧缩略图（竖排）- 仅桌面端 */}
+      <div className="container mx-auto px-4 max-w-5xl pb-16">
+        {/* ====== 1. 视频 ====== */}
+        {product.video_url && (
+          <section className="pt-4">
+            <video
+              src={product.video_url}
+              controls
+              playsInline
+              className="w-full rounded-2xl bg-black aspect-video object-contain"
+            />
+          </section>
+        )}
+
+        {/* ====== 2-3. 实拍图主图 + 模特图横滑 ====== */}
+        <section className="pt-4">
+          {/* 主图轮播 */}
+          <div className="relative">
+            <div
+              className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center group cursor-zoom-in"
+              onClick={() => setLightboxOpen(true)}
+            >
+              {allImages[currentImage] ? (
+                <img
+                  src={allImages[currentImage]!}
+                  alt={product.title}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                />
+              ) : (
+                <ShoppingBag className="w-16 h-16 text-primary/30" />
+              )}
+            </div>
+            {/* 缩略图 */}
             {allImages.length > 1 && (
-              <div className="hidden md:flex md:col-span-2 flex-col gap-2 order-1 md:order-1">
+              <div className="flex gap-2 mt-3 overflow-x-auto pb-1">
                 {allImages.map((img, i) => (
                   <button
                     key={i}
-                    onClick={() => setCurrentImage(i)}
-                    className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                      currentImage === i ? "border-accent" : "border-transparent hover:border-gray-300"
+                    onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
+                    className={`w-14 h-14 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
+                      currentImage === i ? "border-accent" : "border-transparent"
                     }`}
                   >
                     {img ? (
                       <img src={img} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                        <ShoppingBag className="w-4 h-4 text-gray-400" />
-                      </div>
+                      <div className="w-full h-full bg-gray-100" />
                     )}
                   </button>
                 ))}
               </div>
             )}
 
-            {/* 中间大图 */}
-            <div className={allImages.length > 1 ? "md:col-span-7" : "md:col-span-9"} style={{ order: 2 }}>
-              <div
-                className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl overflow-hidden flex items-center justify-center group cursor-zoom-in"
-                onClick={() => setLightboxOpen(true)}
-              >
-                {allImages[currentImage] ? (
-                  <img
+            {/* Lightbox 放大查看 */}
+            <AnimatePresence>
+              {lightboxOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+                  onClick={() => setLightboxOpen(false)}
+                >
+                  <button
+                    onClick={() => setLightboxOpen(false)}
+                    className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                  >
+                    <X className="w-5 h-5 text-white" />
+                  </button>
+                  {allImages.length > 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i - 1 + allImages.length) % allImages.length); }}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                  {allImages.length > 1 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i + 1) % allImages.length); }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5 text-white" />
+                    </button>
+                  )}
+                  <motion.img
+                    initial={{ scale: 0.9 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.9 }}
                     src={allImages[currentImage]!}
                     alt={product.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                    className="max-w-[90vw] max-h-[90vh] object-contain"
+                    onClick={(e) => e.stopPropagation()}
                   />
-                ) : (
-                  <ShoppingBag className="w-16 h-16 text-primary/30" />
-                )}
-              </div>
-              {/* 移动端横排缩略图 */}
-              {allImages.length > 1 && (
-                <div className="flex md:hidden gap-2 mt-3">
-                  {allImages.map((img, i) => (
-                    <button
-                      key={i}
-                      onClick={(e) => { e.stopPropagation(); setCurrentImage(i); }}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition-colors ${
-                        currentImage === i ? "border-accent" : "border-transparent"
-                      }`}
-                    >
-                      {img ? (
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <ShoppingBag className="w-4 h-4 text-gray-400" />
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Lightbox 放大查看 */}
-              <AnimatePresence>
-                {lightboxOpen && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
-                    onClick={() => setLightboxOpen(false)}
-                  >
-                    <button
-                      onClick={() => setLightboxOpen(false)}
-                      className="absolute top-4 right-4 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <X className="w-5 h-5 text-white" />
-                    </button>
-                    {allImages.length > 1 && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i - 1 + allImages.length) % allImages.length); }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <ChevronLeft className="w-5 h-5 text-white" />
-                      </button>
-                    )}
-                    {allImages.length > 1 && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setCurrentImage(i => (i + 1) % allImages.length); }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center transition-colors"
-                      >
-                        <ChevronRight className="w-5 h-5 text-white" />
-                      </button>
-                    )}
-                    <motion.img
-                      initial={{ scale: 0.9 }}
-                      animate={{ scale: 1 }}
-                      exit={{ scale: 0.9 }}
-                      src={allImages[currentImage]!}
-                      alt={product.title}
-                      className="max-w-[90vw] max-h-[90vh] object-contain"
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                    {allImages.length > 1 && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
-                        {currentImage + 1} / {allImages.length}
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* 右侧商品信息 */}
-            <div className="md:col-span-3" style={{ order: 3 }}>
-              {/* 品类标签 */}
-              <div className="flex items-center gap-2 mb-3">
-                {product.category && (
-                  <Link href={categoryLink}>
-                    <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors">
-                      {CATEGORY_MAP[product.category] || product.category}
-                    </span>
-                  </Link>
-                )}
-                {product.subcategory && (
-                  <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
-                    {SUBCATEGORY_MAP[product.subcategory] || product.subcategory}
-                  </span>
-                )}
-              </div>
-
-              <h1 className="text-2xl md:text-3xl font-bold text-primary mb-4">
-                {product.title}
-              </h1>
-              {product.description && (
-                <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-                  {product.description}
-                </p>
-              )}
-
-              {/* 预售标签 */}
-              {product.is_preorder && (
-                <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200">
-                  <Clock className="w-4 h-4 text-orange-500" />
-                  <span className="text-sm font-semibold text-orange-600">
-                    预售{product.preorder_days ? `，${product.preorder_days}天内发货` : ""}
-                  </span>
-                </div>
-              )}
-
-              {/* 价格 - 只显示零售价，批发价隐藏 */}
-              <div className="mb-2">
-                {/* 价格 - 显示优惠价（与首页一致），原价用删除线 */}
-                <div className="flex items-end gap-2">
-                  <span className="text-3xl font-bold text-gray-900">
-                    {formatPrice(product.price)}
-                  </span>
-                  {product.original_price && product.original_price > product.price && (
-                    <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
-                  )}
-                  <span className="text-sm text-gray-400 mb-1">零售价</span>
-                </div>
-
-                {/* 批发价区域 */}
-                <div className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${canViewWholesale && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
-                   onClick={() => {
-                     if (!authUser) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
-                     if (!canViewWholesale) setShowWholesalePrompt(true);
-                   }}
-                >
-                  <Lock className="w-4 h-4 text-blue-500 shrink-0" />
-                  <span className="text-sm font-medium text-blue-700">批发价</span>
-                  {!authUser ? (
-                    <span className="text-lg font-bold text-blue-600 ml-auto">登录可见</span>
-                  ) : canViewWholesale && product.wholesale_price ? (
-                    <span className="text-lg font-bold text-green-600 ml-auto">{formatPrice(product.wholesale_price)}</span>
-                  ) : canViewWholesale ? (
-                    <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
-                  ) : (
-                    <span className="text-lg font-bold text-blue-600 ml-auto">认证/会员可见</span>
-                  )}
-                  <span className="text-[10px] text-blue-400 ml-1">{
-                    !authUser ? "去登录" : canViewWholesale ? "批发价" : isCertifiedStoreOwner ? "批发价" : "认证/开通"
-                  }</span>
-                </div>
-              </div>
-
-              {/* 数量选择 */}
-              <div className="mb-4">
-                <p className="text-sm font-medium text-gray-700 mb-2">数量</p>
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
-                  >-</button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
-                  <button
-                    onClick={() => {
-                      setQuantity(q => Math.min(product.stock, q + 1));
-                      if (quantity + 1 >= 3 && !showWholesalePrompt) {
-                        setTimeout(() => setShowWholesalePrompt(true), 300);
-                      }
-                    }}
-                    className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
-                  >+</button>
-                  <span className="text-xs text-gray-400">库存{product.stock}件</span>
-                </div>
-                {/* 拿货提示 */}
-                {quantity >= 3 && showWholesalePrompt && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                    className="mt-2 p-2.5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
-                    <div className="flex items-start gap-2">
-                      <Truck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <p className="text-xs font-medium text-amber-800">提示：同色同款3件起可享拿货折扣</p>
-                        <Link href="/vip" className="text-[11px] text-amber-700 hover:text-amber-800 mt-1 inline-block">
-                          了解拿货会员 →
-                        </Link>
-                      </div>
-                      <button onClick={() => setShowWholesalePrompt(false)} className="text-amber-400 text-xs">✕</button>
+                  {allImages.length > 1 && (
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white text-sm px-3 py-1 rounded-full">
+                      {currentImage + 1} / {allImages.length}
                     </div>
-                  </motion.div>
-                )}
-              </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-              {/* 库存 */}
-              <div className="mb-6">
-                <span className={`text-xs font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
-                  {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
+          {/* 模特图横滑条 */}
+          {modelImages.length > 0 && (
+            <div className="mt-4">
+              <div className="flex items-center gap-1.5 mb-2">
+                <ImageIcon className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-gray-700">模特图</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {modelImages.map((img, i) => (
+                  <img
+                    key={i}
+                    src={img}
+                    alt={`模特图${i + 1}`}
+                    className="w-24 h-32 shrink-0 rounded-lg object-cover border border-gray-100"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* ====== 4-5. 标题 / 价格 / 购买 ====== */}
+        <section className="mt-4 bg-white rounded-2xl p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            {product.category && (
+              <Link href={categoryLink}>
+                <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors">
+                  {CATEGORY_MAP[product.category] || product.category}
                 </span>
-              </div>
+              </Link>
+            )}
+            {product.subcategory && (
+              <span className="inline-block text-xs px-2.5 py-1 rounded-full bg-accent/10 text-accent font-medium">
+                {SUBCATEGORY_MAP[product.subcategory] || product.subcategory}
+              </span>
+            )}
+          </div>
 
-              {/* 标签 */}
-              {product.tags && product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {product.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+          <h1 className="text-2xl font-bold text-primary mb-2">
+            {product.title}
+          </h1>
+          {product.description && (
+            <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+              {product.description}
+            </p>
+          )}
+
+          {product.is_preorder && (
+            <div className="mb-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-orange-50 border border-orange-200">
+              <Clock className="w-4 h-4 text-orange-500" />
+              <span className="text-sm font-semibold text-orange-600">
+                预售{product.preorder_days ? `，${product.preorder_days}天内发货` : ""}
+              </span>
+            </div>
+          )}
+
+          {/* 价格 */}
+          <div className="mb-2">
+            <div className="flex items-end gap-2">
+              <span className="text-3xl font-bold text-gray-900">
+                {formatPrice(product.price)}
+              </span>
+              {product.original_price && product.original_price > product.price && (
+                <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
               )}
+              <span className="text-sm text-gray-400 mb-1">零售价</span>
+            </div>
 
-              {/* 供应商信息 */}
-              {product.supplier_name && (
-                <div className="mb-6 p-3 bg-gray-50 rounded-lg flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-primary" />
-                  <span className="text-sm text-gray-600">供应商：</span>
-                  <span className="text-sm font-medium text-primary">{product.supplier_name}</span>
-                </div>
+            <div
+              className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${canViewWholesale && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
+              onClick={() => {
+                if (!authUser) { router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`); return; }
+                if (!canViewWholesale) setShowWholesalePrompt(true);
+              }}
+            >
+              <Lock className="w-4 h-4 text-blue-500 shrink-0" />
+              <span className="text-sm font-medium text-blue-700">批发价</span>
+              {!authUser ? (
+                <span className="text-lg font-bold text-blue-600 ml-auto">登录可见</span>
+              ) : canViewWholesale && product.wholesale_price ? (
+                <span className="text-lg font-bold text-green-600 ml-auto">{formatPrice(product.wholesale_price)}</span>
+              ) : canViewWholesale ? (
+                <span className="text-lg font-bold text-blue-600 ml-auto">¥???</span>
+              ) : (
+                <span className="text-lg font-bold text-blue-600 ml-auto">认证/会员可见</span>
               )}
+              <span className="text-[10px] text-blue-400 ml-1">{
+                !authUser ? "去登录" : canViewWholesale ? "批发价" : isCertifiedStoreOwner ? "批发价" : "认证/开通"
+              }</span>
+            </div>
+          </div>
 
-              {/* 加入购物车 / 立即下单 按钮 */}
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    if (!product) return;
-                    // 未登录 → 跳转登录
-                    if (!user) {
-                      router.push(`/login?redirect=/shop/${product.id}`);
-                      return;
-                    }
-                    addItem({
-                      id: product.id,
-                      title: product.title,
-                      image: product.cover_image,
-                      price: product.price,
-                      originalPrice: null,
-                      source: product.source || "buyer",
-                    });
-                    alert("已加入购物车！");
-                  }}
-                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
-                >
-                  <ShoppingCart className="w-5 h-5" /> 加入购物车
-                </button>
-                <button
-                  onClick={() => {
-                    // 未登录 → 跳转登录
-                    if (!user) {
-                      router.push(`/login?redirect=/shop/${product.id}`);
-                      return;
-                    }
-                    if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
-                    router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
-                  }}
-                  disabled={product.stock === 0}
-                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white disabled:opacity-50"
-                  style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
-                >
-                  {product.is_preorder ? (<><Clock className="w-5 h-5" />立即预定</>) : (<><ShoppingBag className="w-5 h-5" />立即下单</>)}
-                </button>
-              </div>
-              <p className="mt-2 text-xs text-center text-muted-foreground">
-                {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
-              </p>
-
-              {/* 分享入口 */}
+          {/* 数量 */}
+          <div className="mb-4">
+            <p className="text-sm font-medium text-gray-700 mb-2">数量</p>
+            <div className="flex items-center gap-3">
               <button
-                onClick={() => setShareOpen(true)}
-                className="mt-3 w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 border border-dashed border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all"
-              >
-                <Share2 className="w-4 h-4" />
-                分享给好友
-              </button>
-
-              {/* 同品类推荐 */}
-              {product.category && (
-                <Link
-                  href={categoryLink}
-                  className="mt-6 block text-center text-sm text-primary hover:text-accent transition-colors font-medium"
-                >
-                  查看更多「{CATEGORY_MAP[product.category]}」商品 →
-                </Link>
-              )}
+                onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
+              >-</button>
+              <span className="w-12 text-center font-medium">{quantity}</span>
+              <button
+                onClick={() => {
+                  setQuantity(q => Math.min(product.stock, q + 1));
+                  if (quantity + 1 >= 3 && !showWholesalePrompt) {
+                    setTimeout(() => setShowWholesalePrompt(true), 300);
+                  }
+                }}
+                className="w-9 h-9 rounded-lg border border-gray-200 flex items-center justify-center hover:border-gray-300 text-lg"
+              >+</button>
+              <span className="text-xs text-gray-400">库存{product.stock}件</span>
             </div>
-          </motion.div>
-        </div>
-      </section>
+            {quantity >= 3 && showWholesalePrompt && (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                className="mt-2 p-2.5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-200">
+                <div className="flex items-start gap-2">
+                  <Truck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs font-medium text-amber-800">提示：同色同款3件起可享拿货折扣</p>
+                    <Link href="/vip" className="text-[11px] text-amber-700 hover:text-amber-800 mt-1 inline-block">
+                      了解拿货会员 →
+                    </Link>
+                  </div>
+                  <button onClick={() => setShowWholesalePrompt(false)} className="text-amber-400 text-xs">✕</button>
+                </div>
+              </motion.div>
+            )}
+          </div>
 
-      {/* 商品详情（HTML，支持图文） */}
-      {product.detail && (
-        <section className="py-12 border-t border-gray-100">
-          <div className="container mx-auto px-4">
-            <div className="max-w-5xl mx-auto">
-              <h2 className="text-xl font-bold text-primary mb-6">商品详情</h2>
-              <div className="bg-white rounded-2xl p-4 md:p-8 border border-gray-100 overflow-hidden">
-                <div
-                  className="leading-relaxed text-gray-700 [&_img]:w-full [&_img]:rounded-lg [&_div]:my-4"
-                  dangerouslySetInnerHTML={{ __html: product.detail }}
-                />
+          {/* 库存 */}
+          <div className="mb-3">
+            <span className={`text-xs font-medium ${product.stock > 0 ? "text-green-600" : "text-red-500"}`}>
+              {product.stock > 0 ? `库存 ${product.stock} 件` : "暂时缺货"}
+            </span>
+          </div>
+
+          {/* 标签 */}
+          {product.tags && product.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {product.tags.map((tag) => (
+                <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                  {tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* 供应商信息 */}
+          {product.supplier_name && (
+            <div className="mb-4 p-3 bg-gray-50 rounded-lg flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-primary" />
+              <span className="text-sm text-gray-600">供应商：</span>
+              <span className="text-sm font-medium text-primary">{product.supplier_name}</span>
+            </div>
+          )}
+
+          {/* 加入购物车 / 立即下单 按钮 */}
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                if (!product) return;
+                if (!user) {
+                  router.push(`/login?redirect=/shop/${product.id}`);
+                  return;
+                }
+                addItem({
+                  id: product.id,
+                  title: product.title,
+                  image: product.cover_image,
+                  price: product.price,
+                  originalPrice: null,
+                  source: product.source || "buyer",
+                });
+                alert("已加入购物车！");
+              }}
+              className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
+            >
+              <ShoppingCart className="w-5 h-5" /> 加入购物车
+            </button>
+            <button
+              onClick={() => {
+                if (!user) {
+                  router.push(`/login?redirect=/shop/${product.id}`);
+                  return;
+                }
+                if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
+                router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
+              }}
+              disabled={product.stock === 0}
+              className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white disabled:opacity-50"
+              style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
+            >
+              {product.is_preorder ? (<><Clock className="w-5 h-5" />立即预定</>) : (<><ShoppingBag className="w-5 h-5" />立即下单</>)}
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-center text-muted-foreground">
+            {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
+          </p>
+
+          <button
+            onClick={() => setShareOpen(true)}
+            className="mt-3 w-full py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 flex items-center justify-center gap-1.5 border border-dashed border-gray-200 rounded-xl hover:border-gray-300 hover:bg-gray-50 transition-all"
+          >
+            <Share2 className="w-4 h-4" />
+            分享给好友
+          </button>
+
+          {product.category && (
+            <Link
+              href={categoryLink}
+              className="mt-4 block text-center text-sm text-primary hover:text-accent transition-colors font-medium"
+            >
+              查看更多「{CATEGORY_MAP[product.category]}」商品 →
+            </Link>
+          )}
+        </section>
+
+        {/* ====== 6. 会员权益 ====== */}
+        <section className="mt-4">
+          <MembershipCard
+            membershipType={profile?.membership_type}
+            expiresAt={profile?.membership_expires_at}
+          />
+        </section>
+
+        {/* ====== 7. 优惠券（可领取） ====== */}
+        <section className="mt-4">
+          <CouponClaim
+            templates={couponTemplates}
+            claimedIds={claimedIds}
+            loggedIn={!!authUser}
+            onClaim={handleClaim}
+          />
+        </section>
+
+        {/* ====== 8. 尺码 ====== */}
+        <section className="mt-4">
+          <SizeChart image={product.size_chart_image} sizesText={product.sizes} />
+        </section>
+
+        {/* ====== 9. 商品参数 ====== */}
+        {paramRows.length > 0 && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="w-4 h-4 text-primary" />
+              <h2 className="text-base font-bold text-primary">商品参数</h2>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {paramRows.map((row) => (
+                <div key={row.label} className="flex py-2.5 text-sm">
+                  <span className="w-20 shrink-0 text-gray-400">{row.label}</span>
+                  <span className="flex-1 text-gray-700">{row.value}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* ====== 10. 商品详情（HTML，支持图文） ====== */}
+        {product.detail && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <ImageIcon className="w-4 h-4 text-primary" />
+              <h2 className="text-base font-bold text-primary">商品详情</h2>
+            </div>
+            <div
+              className="leading-relaxed text-gray-700 [&_img]:w-full [&_img]:rounded-lg [&_div]:my-4"
+              dangerouslySetInnerHTML={{ __html: product.detail }}
+            />
+          </section>
+        )}
+
+        {/* ====== 11. 拿货指南 ====== */}
+        <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <BookOpen className="w-4 h-4 text-primary" />
+            <h2 className="text-base font-bold text-primary">拿货指南</h2>
+          </div>
+          <div className="space-y-3">
+            {WHOLESALE_GUIDE.map((g) => (
+              <div key={g.title}>
+                <p className="text-sm font-semibold text-gray-800">{g.title}</p>
+                <p className="text-sm text-gray-500 leading-relaxed mt-0.5">{g.desc}</p>
               </div>
-            </div>
+            ))}
           </div>
         </section>
-      )}
 
-      {/* 一品三搭：搭配方案展示 */}
-      <section className="py-12 border-t border-gray-100 bg-gradient-to-b from-white to-gray-50/50">
-        <div className="container mx-auto px-4">
+        {/* ====== 12. 拿货技巧 ====== */}
+        <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-4 h-4 text-primary" />
+            <h2 className="text-base font-bold text-primary">拿货技巧</h2>
+          </div>
+          <div className="space-y-3">
+            {WHOLESALE_TIPS.map((t) => (
+              <div key={t.title}>
+                <p className="text-sm font-semibold text-gray-800">{t.title}</p>
+                <p className="text-sm text-gray-500 leading-relaxed mt-0.5">{t.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ====== 一品三搭：搭配方案展示 ====== */}
+        <section className="mt-4 bg-gradient-to-b from-white to-gray-50/50 border border-gray-100 rounded-2xl p-4 md:p-6">
           <div className="flex items-center gap-2 mb-2">
             <Layers className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold text-primary">一品三搭 · 搭配灵感</h2>
+            <h2 className="text-base font-bold text-primary">一品三搭 · 搭配灵感</h2>
           </div>
           <p className="text-sm text-gray-500 mb-6">一件单品，三种风格，提升连带率</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               {
                 title: "职场通勤风",
@@ -681,17 +819,17 @@ export default function ProductDetailPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* 同供应商商品 */}
-      {supplierProducts.length > 0 && (
-        <section className="py-12 border-t border-gray-100">
-          <div className="container mx-auto px-4">
+        {/* ====== 13. 同款式 / 相似推荐 ====== */}
+        {supplierProducts.length > 0 && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 md:p-6">
             <div className="flex items-center gap-2 mb-6">
               <Building2 className="w-5 h-5 text-primary" />
-              <h2 className="text-xl font-bold text-primary">该供应商其他商品</h2>
-              <span className="text-xs text-gray-400 ml-2">{product.supplier_name}</span>
+              <h2 className="text-base font-bold text-primary">同款式 · 相似推荐</h2>
+              {product.supplier_name && (
+                <span className="text-xs text-gray-400 ml-2">{product.supplier_name}</span>
+              )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
               {supplierProducts.map((p) => (
@@ -712,9 +850,9 @@ export default function ProductDetailPage() {
                 </Link>
               ))}
             </div>
-          </div>
-        </section>
-      )}
+          </section>
+        )}
+      </div>
 
       {/* ====== 分享弹窗 ====== */}
       <AnimatePresence>
@@ -726,10 +864,7 @@ export default function ProductDetailPage() {
             className="fixed inset-0 z-[200] flex items-end justify-center sm:items-center"
             onClick={() => setShareOpen(false)}
           >
-            {/* 遮罩 */}
             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-
-            {/* 弹窗内容 */}
             <motion.div
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
@@ -738,7 +873,6 @@ export default function ProductDetailPage() {
               onClick={(e) => e.stopPropagation()}
               className="relative bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md overflow-hidden shadow-2xl"
             >
-              {/* 头部拖拽条（移动端）+ 关闭按钮 */}
               <div className="sm:hidden flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-gray-300 rounded-full" />
               </div>
@@ -752,7 +886,6 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* 商品预览卡片 */}
               <div className="px-5 py-4">
                 <div className="flex gap-3 p-3 bg-gradient-to-br from-pink-50 to-orange-50 rounded-xl border border-pink-100">
                   {product.cover_image ? (
@@ -770,35 +903,23 @@ export default function ProductDetailPage() {
                     <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">
                       {product.title}
                     </h4>
-                    <p className="text-red-500 font-bold mt-1.5">¥{product.price}</p>
+                    <p className="text-red-500 font-bold mt-1.5">{formatPrice(product.price)}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       骆芷蝶智选 · 不自用不分享
                     </p>
                   </div>
                 </div>
 
-                {/* 分享选项 */}
                 <div className="mt-4 grid grid-cols-4 gap-3">
-                  {/* 复制链接 */}
                   <button
                     onClick={copyShareLink}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
                   >
-                    <div className={`w-11 h-11 rounded-full flex items-center justify-center ${
-                      copied ? "bg-green-100" : "bg-blue-100"
-                    }`}>
-                      {copied ? (
-                        <Check className="w-5 h-5 text-green-600" />
-                      ) : (
-                        <Copy className="w-5 h-5 text-blue-600" />
-                      )}
+                    <div className={`w-11 h-11 rounded-full flex items-center justify-center ${copied ? "bg-green-100" : "bg-blue-100"}`}>
+                      {copied ? <Check className="w-5 h-5 text-green-600" /> : <Copy className="w-5 h-5 text-blue-600" />}
                     </div>
-                    <span className="text-[11px] font-medium text-gray-700">
-                      {copied ? "已复制" : "复制链接"}
-                    </span>
+                    <span className="text-[11px] font-medium text-gray-700">{copied ? "已复制" : "复制链接"}</span>
                   </button>
-
-                  {/* 系统分享 */}
                   <button
                     onClick={handleNativeShare}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
@@ -808,12 +929,8 @@ export default function ProductDetailPage() {
                     </div>
                     <span className="text-[11px] font-medium text-gray-700">系统分享</span>
                   </button>
-
-                  {/* 分享图片（生成海报） */}
                   <button
-                    onClick={() => {
-                      if (product.cover_image) window.open(product.cover_image, "_blank");
-                    }}
+                    onClick={() => { if (product.cover_image) window.open(product.cover_image, "_blank"); }}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
                   >
                     <div className="w-11 h-11 rounded-full bg-purple-100 flex items-center justify-center">
@@ -821,8 +938,6 @@ export default function ProductDetailPage() {
                     </div>
                     <span className="text-[11px] font-medium text-gray-700">分享图片</span>
                   </button>
-
-                  {/* 微信好友提示 */}
                   <button
                     onClick={copyShareLink}
                     className="flex flex-col items-center gap-1.5 p-3 rounded-xl hover:bg-gray-50 active:scale-95 transition-all"
@@ -834,7 +949,6 @@ export default function ProductDetailPage() {
                   </button>
                 </div>
 
-                {/* 分享链接展示区 */}
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">
                   <p className="text-[11px] text-gray-400 mb-1.5">商品链接</p>
                   <div className="flex items-center gap-2">
@@ -843,18 +957,13 @@ export default function ProductDetailPage() {
                     </code>
                     <button
                       onClick={copyShareLink}
-                      className={`shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${
-                        copied
-                          ? "bg-green-500 text-white"
-                          : "bg-gray-800 text-white hover:bg-gray-700"
-                      }`}
+                      className={`shrink-0 px-3 py-2 text-xs font-medium rounded-lg transition-colors ${copied ? "bg-green-500 text-white" : "bg-gray-800 text-white hover:bg-gray-700"}`}
                     >
                       {copied ? "✓ 已复制" : "复制"}
                     </button>
                   </div>
                 </div>
 
-                {/* 提示文字 */}
                 <p className="mt-4 text-center text-xs text-gray-400 leading-relaxed">
                   分享给好友，一起发现好物<br />
                   每次分享都可能获得推荐奖励
@@ -882,7 +991,6 @@ export default function ProductDetailPage() {
               onClick={(e) => e.stopPropagation()}
               className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
             >
-              {/* 头部 */}
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-2">
                   <Lock className="w-5 h-5 text-primary" />
@@ -896,13 +1004,11 @@ export default function ProductDetailPage() {
                 </button>
               </div>
 
-              {/* 内容 */}
               <div className="px-6 py-5">
                 <p className="text-sm text-gray-500 mb-4">
                   查看所有商品批发价，享受专属采购权益
                 </p>
 
-                {/* 免费认证入口 */}
                 {!isCertifiedStoreOwner && (
                   <Link
                     href="/certify"
@@ -920,14 +1026,11 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <div className="text-sm font-black text-accent">免费</div>
-                      <div className="text-[10px] text-accent font-medium group-hover:underline">
-                        去认证 →
-                      </div>
+                      <div className="text-[10px] text-accent font-medium group-hover:underline">去认证 →</div>
                     </div>
                   </Link>
                 )}
 
-                {/* 套餐选项 */}
                 <div className="space-y-3">
                   {[
                     { id: "price_trial", name: "体验会员", price: "¥19.9", days: "14天", desc: "短期体验批发价查看" },
@@ -947,9 +1050,7 @@ export default function ProductDetailPage() {
                       </div>
                       <div className="text-right">
                         <div className="text-lg font-black">{plan.price}</div>
-                        <div className="text-[10px] text-primary font-medium group-hover:text-accent transition-colors">
-                          立即开通 →
-                        </div>
+                        <div className="text-[10px] text-primary font-medium group-hover:text-accent transition-colors">立即开通 →</div>
                       </div>
                     </Link>
                   ))}

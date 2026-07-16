@@ -12,7 +12,7 @@ Page({
 
   onLoad:function(opt){
     /* 从购物车勾选商品进入 */
-    var cart=wx.getStorageSync('cart')||[];
+    var cart=wx.getStorageSync('cart_v2')||[];
     var items=cart.filter(function(i){return i.checked;});
     if(items.length===0){
       /* 尝试从参数获取单个商品 */
@@ -126,10 +126,10 @@ Page({
           paySign:params.paySign,
           success:function(){
             /* 清除购物车中已结算商品 */
-            var cart=wx.getStorageSync('cart')||[];
+            var cart=wx.getStorageSync('cart_v2')||[];
             var ids=t.data.items.map(function(i){return i.id;});
             cart=cart.filter(function(c){return ids.indexOf(c.id)<0;});
-            wx.setStorageSync('cart',cart);
+            wx.setStorageSync('cart_v2',cart);
             wx.showToast({title:'支付成功',icon:'success'});
             setTimeout(function(){wx.redirectTo({url:'/pages/orders/index?status=paid'});},1200);
           },

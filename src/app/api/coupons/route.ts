@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("coupons")
-    .select("id, title, discount_desc, min_amount, discount_amount, status, expire_at, coupon_type, created_at")
+    .select("id, title, discount_desc, min_amount, discount_amount, status, expire_at, coupon_type, created_at, template_id")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 

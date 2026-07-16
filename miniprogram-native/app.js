@@ -72,7 +72,7 @@ App({
 
   // 更新购物车角标数量
   updateCartBadge: function() {
-    var cart = wx.getStorageSync('cart') || [];
+    var cart = wx.getStorageSync('cart_v2') || [];
     var count = 0;
     cart.forEach(function(item) { count += item.quantity || 1; });
     if (count > 0) {

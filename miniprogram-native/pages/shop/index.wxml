@@ -1,5 +1,8 @@
 <view class="page">
-  <!-- 商品图片 -->
+  <!-- 视频 -->
+  <video wx:if="{{videoUrl}}" src="{{videoUrl}}" controls play-btn-center class="vid"></video>
+
+  <!-- 实拍图轮播 -->
   <swiper class="swiper" indicator-dots="{{images.length>1}}" autoplay circular>
     <swiper-item wx:for="{{images}}" wx:key="*this">
       <image src="{{item}}" mode="aspectFill" class="slide-img" />
@@ -12,6 +15,12 @@
   <!-- 收藏按钮 -->
   <view class="fav-btn {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
 
+  <!-- 模特图横滑 -->
+  <scroll-view wx:if="{{modelImages.length>0}}" scroll-x class="model-scroll">
+    <text class="model-label">模特图</text>
+    <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="model-img"/>
+  </scroll-view>
+
   <!-- 价格区 -->
   <view class="price-sec">
     <view class="pr-row">
@@ -20,7 +29,6 @@
       <text class="disc" wx:if="{{discountText}}">{{discountText}}</text>
     </view>
     <text class="sales" wx:if="{{product.sales_count}}">已售 {{product.sales_count}}</text>
-    <!-- 批发价区域 -->
     <view class="wp-row" wx:if="{{wholesalePriceText}}">
       <text class="wp-label">批发价</text>
       <text class="wp-val {{isPriceMember?'wp-show':'wp-blur'}}">{{wholesalePriceText}}</text>
@@ -34,45 +42,87 @@
     <text class="desc">{{product.description || ''}}</text>
   </view>
 
-  <!-- Tab区 -->
-  <view class="tab-sec">
-    <view class="tabs">
-      <text class="tab {{activeTab==='detail'?'tab-on':''}}" bindtap="swTab" data-t="detail">商品详情</text>
-      <text class="tab {{activeTab==='spec'?'tab-on':''}}" bindtap="swTab" data-t="spec">规格参数</text>
-      <text class="tab {{activeTab==='review'?'tab-on':''}}" bindtap="swTab" data-t="review">用户评价</text>
-    </view>
-
-    <!-- 详情 -->
-    <view class="tab-body" wx:if="{{activeTab==='detail'}}">
-      <view wx:if="{{product.detail_images && product.detail_images.length>0}}">
-        <image wx:for="{{product.detail_images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="detail-img"/>
+  <!-- 会员权益 -->
+  <view class="member-sec">
+    <block wx:if="{{memberTier}}">
+      <view class="member-card">
+        <view class="member-head"><text class="member-icon">{{memberTier.icon}}</text><text class="member-title">您的会员权益</text></view>
+        <view class="member-sub">当前等级：{{memberTier.label}}</view>
+        <view class="member-desc">{{memberTier.desc}}</view>
+        <view class="member-link" bindtap="goVip">查看全部会员权益 ›</view>
       </view>
-      <view wx:else class="tab-empty"><text>暂无详情图文</text></view>
-    </view>
-
-    <!-- 规格 -->
-    <view class="tab-body" wx:if="{{activeTab==='spec'}}">
-      <view class="spec-table" wx:if="{{specList.length>0}}">
-        <view class="spec-row" wx:for="{{specList}}" wx:key="label">
-          <text class="spec-label">{{item.label}}</text>
-          <text class="spec-value">{{item.value}}</text>
-        </view>
+    </block>
+    <block wx:else>
+      <view class="member-card upsell">
+        <view class="member-head"><text class="member-icon">👑</text><text class="member-title">开通会员 · 享专属折扣</text></view>
+        <view class="member-link" bindtap="goVip">查看全部会员权益 ›</view>
       </view>
-      <view wx:else class="tab-empty"><text>暂无规格参数</text></view>
-    </view>
+    </block>
+  </view>
 
-    <!-- 评价 -->
-    <view class="tab-body" wx:if="{{activeTab==='review'}}">
-      <view wx:if="{{reviews.length>0}}">
-        <view class="review" wx:for="{{reviews}}" wx:key="id">
-          <view class="rv-header">
-            <text class="rv-name">{{item.nickname||'匿名'}}</text>
-            <text class="rv-date">{{item.created_at||''}}</text>
-          </view>
-          <text class="rv-content">{{item.content||''}}</text>
-        </view>
+  <!-- 优惠券领券 -->
+  <view class="coupon-sec" wx:if="{{couponTpls.length>0}}">
+    <text class="sec-title">🎟️ 领券中心</text>
+    <scroll-view scroll-x class="coupon-scroll">
+      <view class="coupon" wx:for="{{couponTpls}}" wx:key="id">
+        <view class="coupon-amt">¥{{item.discountLabel}}</view>
+        <view class="coupon-cond">{{item.discount_desc}}</view>
+        <view class="coupon-min">{{item.minLabel}}</view>
+        <button class="coupon-btn {{item.claimed?'claimed':''}}" bindtap="claimCoupon" data-id="{{item.id}}" disabled="{{item.claimed}}">{{item.claimed?'已领取':'领取'}}</button>
       </view>
-      <view wx:else class="tab-empty"><text>暂无评价</text></view>
+    </scroll-view>
+  </view>
+
+  <!-- 尺码表 -->
+  <view class="size-sec" wx:if="{{sizeChartImage}}">
+    <text class="sec-title">📏 尺码</text>
+    <image src="{{sizeChartImage}}" mode="widthFix" class="size-img"/>
+  </view>
+
+  <!-- 商品参数 -->
+  <view class="block-sec" wx:if="{{specList.length>0}}">
+    <text class="sec-title">📋 商品参数</text>
+    <view class="spec-table">
+      <view class="spec-row" wx:for="{{specList}}" wx:key="label">
+        <text class="spec-label">{{item.label}}</text>
+        <text class="spec-value">{{item.value}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品详情 -->
+  <view class="block-sec" wx:if="{{product.detail_images && product.detail_images.length>0}}">
+    <text class="sec-title">🖼️ 商品详情</text>
+    <image wx:for="{{product.detail_images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="detail-img"/>
+  </view>
+
+  <!-- 拿货指南 -->
+  <view class="block-sec">
+    <text class="sec-title">📖 拿货指南</text>
+    <view class="guide-item" wx:for="{{wholesaleGuide}}" wx:key="title">
+      <text class="guide-t">{{item.title}}</text>
+      <text class="guide-d">{{item.desc}}</text>
+    </view>
+  </view>
+
+  <!-- 拿货技巧 -->
+  <view class="block-sec">
+    <text class="sec-title">💡 拿货技巧</text>
+    <view class="guide-item" wx:for="{{wholesaleTips}}" wx:key="title">
+      <text class="guide-t">{{item.title}}</text>
+      <text class="guide-d">{{item.desc}}</text>
+    </view>
+  </view>
+
+  <!-- 用户评价 -->
+  <view class="block-sec" wx:if="{{reviews.length>0}}">
+    <text class="sec-title">💬 用户评价</text>
+    <view class="review" wx:for="{{reviews}}" wx:key="id">
+      <view class="rv-header">
+        <text class="rv-name">{{item.nickname||'匿名'}}</text>
+        <text class="rv-date">{{item.created_at||''}}</text>
+      </view>
+      <text class="rv-content">{{item.content||''}}</text>
     </view>
   </view>
 
