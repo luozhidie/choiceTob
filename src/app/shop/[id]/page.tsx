@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Layers, Star,
   Clock, ShoppingCart, Share2, Copy, Check,
   Image as ImageIcon, MessageCircle,
-  Lock, BookOpen, Lightbulb, Tag,
+  Lock, BookOpen, Lightbulb, Tag, Shirt,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -189,6 +189,14 @@ export default function ProductDetailPage() {
     fetch("/api/coupons/templates")
       .then((r) => r.json())
       .then((j) => { if (j.success) setCouponTemplates(j.data || []); })
+      .catch(() => {});
+  }, []);
+
+  // 获取店铺可编辑内容（拿货指南/技巧/面料洗护/发货，后台 store-content 编辑）
+  useEffect(() => {
+    fetch("/api/public/store-content")
+      .then((r) => r.json())
+      .then((j) => { if (j.success && j.data) setStoreContent(j.data); })
       .catch(() => {});
   }, []);
 
@@ -727,15 +735,18 @@ export default function ProductDetailPage() {
           </section>
         )}
 
-        {/* ====== 11. 拿货指南 ====== */}
+        {/* ====== 11. 拿货指南（后台 store-content 可编辑） ====== */}
         <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <BookOpen className="w-4 h-4 text-primary" />
             <h2 className="text-base font-bold text-primary">拿货指南</h2>
           </div>
           <div className="space-y-3">
-            {WHOLESALE_GUIDE.map((g) => (
-              <div key={g.title}>
+            {(storeContent?.wholesale_guide && storeContent.wholesale_guide.length > 0
+              ? storeContent.wholesale_guide
+              : WHOLESALE_GUIDE
+            ).map((g: any, i: number) => (
+              <div key={i}>
                 <p className="text-sm font-semibold text-gray-800">{g.title}</p>
                 <p className="text-sm text-gray-500 leading-relaxed mt-0.5">{g.desc}</p>
               </div>
@@ -743,20 +754,32 @@ export default function ProductDetailPage() {
           </div>
         </section>
 
-        {/* ====== 12. 拿货技巧 ====== */}
+        {/* ====== 12. 拿货技巧 + 面料洗护（后台 store-content 可编辑） ====== */}
         <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
             <Lightbulb className="w-4 h-4 text-primary" />
             <h2 className="text-base font-bold text-primary">拿货技巧</h2>
           </div>
           <div className="space-y-3">
-            {WHOLESALE_TIPS.map((t) => (
-              <div key={t.title}>
+            {(storeContent?.seller_tips && storeContent.seller_tips.length > 0
+              ? storeContent.seller_tips
+              : WHOLESALE_TIPS
+            ).map((t: any, i: number) => (
+              <div key={i}>
                 <p className="text-sm font-semibold text-gray-800">{t.title}</p>
                 <p className="text-sm text-gray-500 leading-relaxed mt-0.5">{t.desc}</p>
               </div>
             ))}
           </div>
+          {storeContent?.fabric_care && (
+            <div className="mt-4 pt-3 border-t border-gray-50">
+              <div className="flex items-center gap-2 mb-2">
+                <Shirt className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-bold text-primary">面料洗护</h3>
+              </div>
+              <p className="text-sm text-gray-500 leading-relaxed">{storeContent.fabric_care}</p>
+            </div>
+          )}
         </section>
 
         {/* ====== 一品三搭：搭配方案展示 ====== */}

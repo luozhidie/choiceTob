@@ -59,9 +59,18 @@ Page({
     // 优惠券
     couponTpls: [],
     claimedIds: [],
-    // 静态内容
+    // 静态内容（fallback，加载 store_content 后覆盖）
     wholesaleGuide: WHOLESALE_GUIDE,
     wholesaleTips: WHOLESALE_TIPS,
+    // 顶部 Tab
+    currentTab: 'photo',
+    // 店铺内容（后台可编辑）
+    shopName: '骆芷蝶智选',
+    shopIntro: '',
+    shippingNote: '',
+    fabricCare: '',
+    // 相似推荐
+    similarList: [],
   },
 
   onLoad: function (opt) {
@@ -76,6 +85,7 @@ Page({
     this.loadMembership();
     this.loadCoupons();
     this.loadClaimed();
+    this.loadStoreContent();
   },
 
   loadProduct: function (id) {
@@ -367,6 +377,31 @@ Page({
   goCart: function () { wx.switchTab({ url: '/pages/cart/index' }); },
   goShop: function (e) { var id = e.currentTarget.dataset.id; if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id }); },
   goVip: function () { wx.navigateTo({ url: '/pages/vip/index' }); },
+
+  // 店铺可编辑内容（后台 /api/public/store-content）
+  loadStoreContent: function () {
+    var t = this;
+    wx.request({
+      url: 'https://colour-choice.art/api/public/store-content',
+      method: 'GET',
+      success: function (r) {
+        var d = (r.data && r.data.data) || null;
+        if (!d) return;
+        t.setData({
+          wholesaleGuide: Array.isArray(d.wholesale_guide) ? d.wholesale_guide : t.data.wholesaleGuide,
+          sellerTips: Array.isArray(d.seller_tips) ? d.seller_tips : t.data.sellerTips,
+          fabricCare: d.fabric_care || '',
+          shippingNote: d.shipping_note || '',
+          shopName: d.shop_name || t.data.shopName,
+          shopIntro: d.intro || '',
+        });
+      }
+    });
+  },
+
+  switchTab: function (e) { this.setData({ currentTab: e.currentTarget.dataset.tab }); },
+
+  goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
 
   onTryon: function () {
     var t = this;

@@ -18,6 +18,7 @@ const menuGroups = [
     { label: "品类管理", href: "/admin/categories" },
     { label: "首页行业标签", href: "/admin/home-categories" },
     { label: "店铺买手决策", href: "/admin/buyer-features" },
+    { label: "店铺内容", href: "/admin/store-content" },
   ]},
 
   // ─── 会员权益 ───
