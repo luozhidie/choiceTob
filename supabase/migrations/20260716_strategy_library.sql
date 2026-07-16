@@ -1,10 +1,18 @@
--- ══════════════════════════════════════════════════════════════
+-- ════════════════════════════════════════════════════════════════
 -- 量化地基：策略库 + 回测历史（积累策略 / 积累市场经验）
 -- 设计原则：全行业覆盖、长期沉淀，学梁文锋「从 2008 起积累」的复利思路
+--
+-- 注意：线上已存在一张 signal_rules(id uuid)，与代码期望的 bigint 不一致，
+--       导致 backtest_runs 外键无法建立。此处先 DROP 再按代码 schema 重建，
+--       保证 DB 与代码一致。原表无有效种子数据，可安全重建。
 -- ════════════════════════════════════════════════════════════════
 
--- 策略库（原本 readRule 读的 signal_rules 从未建表，这里正式建好）
-CREATE TABLE IF NOT EXISTS signal_rules (
+-- 清掉旧表（含可能的外键引用），按代码期望重建
+DROP TABLE IF EXISTS backtest_runs;
+DROP TABLE IF EXISTS signal_rules CASCADE;
+
+-- 策略库（与 readRule 代码字段严格一致：bigint id + 完整参数）
+CREATE TABLE signal_rules (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL DEFAULT '默认策略',
   description TEXT NOT NULL DEFAULT '',
@@ -22,7 +30,7 @@ CREATE TABLE IF NOT EXISTS signal_rules (
 );
 
 -- 回测历史：每跑一次回测沉淀一条，随时间长成「市场经验」
-CREATE TABLE IF NOT EXISTS backtest_runs (
+CREATE TABLE backtest_runs (
   id BIGSERIAL PRIMARY KEY,
   strategy_id BIGINT REFERENCES signal_rules(id) ON DELETE SET NULL,
   strategy_name TEXT,
