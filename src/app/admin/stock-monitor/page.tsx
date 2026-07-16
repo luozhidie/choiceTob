@@ -42,6 +42,9 @@ export default function StockMonitorPage() {
   const [backtestError, setBacktestError] = useState("");
   const [brokerMode, setBrokerMode] = useState<"paper" | "futu">("paper");
   const [relayReachable, setRelayReachable] = useState<boolean | null>(null);
+  const [strategies, setStrategies] = useState<any[]>([]);
+  const [selectedStrategyId, setSelectedStrategyId] = useState<string>("");
+  const [backtestHistory, setBacktestHistory] = useState<any[]>([]);
 
   const loadList = useCallback(async () => {
     setError("");
@@ -158,7 +161,28 @@ export default function StockMonitorPage() {
     } catch {}
   }, []);
 
-  useEffect(() => { loadList(); loadPaperState(); loadBrokerStatus(); }, [loadList, loadPaperState, loadBrokerStatus]);
+  // 拉取策略库（供回测选择不同哲学的策略）
+  const loadStrategies = useCallback(async () => {
+    try {
+      const r = await fetch("/api/finance/strategies", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok && d.strategies) {
+        setStrategies(d.strategies);
+        setSelectedStrategyId((prev) => prev || (d.strategies[0]?.id ?? ""));
+      }
+    } catch {}
+  }, []);
+
+  // 拉取回测历史（长期积累的市场经验）
+  const loadBacktestHistory = useCallback(async () => {
+    try {
+      const r = await fetch("/api/finance/backtest", { credentials: "include" });
+      const d = await r.json().catch(() => ({}));
+      if (d.ok) setBacktestHistory(d.runs || []);
+    } catch {}
+  }, []);
+
+  useEffect(() => { loadList(); loadPaperState(); loadBrokerStatus(); loadStrategies(); loadBacktestHistory(); }, [loadList, loadPaperState, loadBrokerStatus, loadStrategies, loadBacktestHistory]);
 
   const runSignal = async () => {
     // 实盘模式二次确认，防止误触真实下单
@@ -185,10 +209,17 @@ export default function StockMonitorPage() {
     setBacktestLoading(true);
     setBacktestError("");
     try {
-      const r = await fetch("/api/finance/backtest", { method: "POST", credentials: "include" });
+      const r = await fetch("/api/finance/backtest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ strategyId: selectedStrategyId || undefined }),
+      });
       const d = await r.json();
-      if (d.ok) setBacktest(d);
-      else setBacktestError(d.error || "回测失败");
+      if (d.ok) {
+        setBacktest(d);
+        await loadBacktestHistory(); // 回测后刷新历史，最新一条会置顶
+      } else setBacktestError(d.error || "回测失败");
     } catch (e: any) {
       setBacktestError("请求异常：" + (e?.message || String(e)));
     } finally {
@@ -272,7 +303,7 @@ export default function StockMonitorPage() {
           {JSON.stringify(diag, null, 2)}
         </div>
       )}
-      <p className="text-sm text-muted-foreground mb-5">跨行业监控港股/美股/日股（Yahoo 免 token）与 A股（新浪财经免 token）实时行情，按行业分组研判景气度。添加标的时填「行业」即可归入对应分组。</p>
+      <p className="text-sm text-muted-foreground mb-5">跨行业监控港股/美股/日股与 A股实时行情，按行业分组研判景气度。这里也是你的<strong className="text-primary">量化地基</strong>：多套策略并行验证、回测历史长期沉淀——像梁文锋从 2008 年起那样，一点一点积累数据、策略与市场经验。先用纸面模拟跑起来，跑通后再接券商实盘。</p>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
         <div className="flex flex-wrap items-end gap-3">
@@ -319,6 +350,16 @@ export default function StockMonitorPage() {
           {backtestLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Activity className="w-4 h-4" />}回测验证
         </button>
       </div>
+
+      {strategies.length > 0 && (
+        <div className="flex items-center gap-3 mb-4 flex-wrap">
+          <label className="text-xs font-medium text-primary">回测策略</label>
+          <select value={selectedStrategyId} onChange={(e) => setSelectedStrategyId(e.target.value)} className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+            {strategies.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          </select>
+          <span className="text-[11px] text-muted-foreground">选不同策略点「回测验证」，结果沉淀到下方回测历史</span>
+        </div>
+      )}
 
       {(() => {
         const groups: Record<string, any[]> = {};
@@ -516,6 +557,44 @@ export default function StockMonitorPage() {
             </div>
           )}
           <p className="text-xs text-muted-foreground mt-3">回测基于近 6 个月真实日K逐日回放同一套规则，仅验证策略逻辑，不代表未来收益，亦非投资建议。</p>
+        </div>
+      )}
+
+      {backtestHistory.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-6">
+          <h3 className="text-base font-bold text-primary mb-3 flex items-center gap-2"><Activity className="w-4 h-4 text-accent" /> 回测历史（累计 {backtestHistory.length} 次）</h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs text-muted-foreground border-b border-gray-100">
+                  <th className="py-2 pr-4 font-medium">时间</th>
+                  <th className="py-2 pr-4 font-medium">策略</th>
+                  <th className="py-2 pr-4 font-medium">标的数</th>
+                  <th className="py-2 pr-4 font-medium">胜率</th>
+                  <th className="py-2 pr-4 font-medium">组合收益</th>
+                  <th className="py-2 font-medium">最大回撤</th>
+                </tr>
+              </thead>
+              <tbody>
+                {backtestHistory.map((h: any, i: number) => {
+                  const s = h.summary || {};
+                  const ret = s.totalReturnPct;
+                  const up = ret != null && ret >= 0;
+                  return (
+                    <tr key={h.id || i} className="border-b border-gray-50">
+                      <td className="py-2 pr-4 text-xs text-muted-foreground whitespace-nowrap">{h.created_at ? new Date(h.created_at).toLocaleString("zh-CN", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }) : "—"}</td>
+                      <td className="py-2 pr-4 font-medium">{h.strategy_name || "—"}</td>
+                      <td className="py-2 pr-4">{s.stocks ?? "—"}</td>
+                      <td className="py-2 pr-4">{s.winRate != null ? s.winRate.toFixed(1) + "%" : "—"}</td>
+                      <td className={`py-2 pr-4 font-medium ${up ? "text-emerald-600" : "text-rose-600"}`}>{ret != null ? (up ? "+" : "") + ret.toFixed(2) + "%" : "—"}</td>
+                      <td className="py-2">{s.maxDrawdown != null ? s.maxDrawdown.toFixed(2) + "%" : "—"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">每次回测沉淀一条记录，长期累积即「市场经验库」。可跨时段、跨策略横向对比，观察同一套规则在不同行情下的稳定性。</p>
         </div>
       )}
 

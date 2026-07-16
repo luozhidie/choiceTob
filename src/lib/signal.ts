@@ -46,10 +46,13 @@ export interface RuleThresholds {
   trailingStop: number;
 }
 
-export async function readRule(supabase: any): Promise<RuleThresholds> {
-  const { data: rules } = await supabase.from("signal_rules").select("*").eq("enabled", true).order("created_at").limit(1);
+export async function readRule(supabase: any, strategyId?: number | string): Promise<RuleThresholds & { id?: any; name?: string }> {
+  let query = supabase.from("signal_rules").select("*");
+  if (strategyId != null) query = query.eq("id", strategyId);
+  else query = query.eq("enabled", true);
+  const { data: rules } = await query.order("created_at").limit(1);
   const r = rules && rules[0] ? rules[0] : {};
-  return {
+  const out: any = {
     maShort: r.ma_short || 5,
     maLong: r.ma_long || 20,
     maTrend: r.ma_trend || 60,
@@ -60,6 +63,9 @@ export async function readRule(supabase: any): Promise<RuleThresholds> {
     stopLoss: r.stop_loss ?? 0.08,
     trailingStop: r.trailing_stop ?? 0.05,
   };
+  out.id = r.id;
+  out.name = r.name;
+  return out;
 }
 
 // 在「截至第 i 根（含）」的部分序列上评估信号（实时信号与回测共用，避免规则漂移）
@@ -98,8 +104,8 @@ export function evaluateSignal(closes: number[], volumes: number[], i: number, r
 }
 
 // 运行一轮策略（实时）：算指标 → 生成信号 → 模拟成交（纸面，不实盘）
-export async function runStrategy(supabase: any) {
-  const rule = await readRule(supabase);
+export async function runStrategy(supabase: any, strategyId?: number | string) {
+  const rule = await readRule(supabase, strategyId);
   const executor = getExecutor(supabase);
   const { data: list } = await supabase.from("stock_watchlist").select("*");
   if (!list || list.length === 0) return { signals: [], trades: [], error: "监控清单为空" };
@@ -157,8 +163,8 @@ export async function runStrategy(supabase: any) {
 }
 
 // 回测：用过去半年真实日K，逐日回放同一套规则，统计胜率/收益/回撤
-export async function runBacktest(supabase: any) {
-  const rule = await readRule(supabase);
+export async function runBacktest(supabase: any, strategyId?: number | string) {
+  const rule = await readRule(supabase, strategyId);
   const { data: list } = await supabase.from("stock_watchlist").select("*");
   if (!list || list.length === 0) return { error: "监控清单为空" };
 
@@ -248,6 +254,8 @@ export async function runBacktest(supabase: any) {
   return {
     ok: true,
     rule,
+    strategyId: (rule as any).id,
+    strategyName: (rule as any).name,
     range: "近6个月",
     perStock: perStock.sort((a, b) => (b.pnl || 0) - (a.pnl || 0)),
     summary: {
