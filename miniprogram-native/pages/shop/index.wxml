@@ -5,11 +5,11 @@
       <swiper-item wx:if="{{videoUrl}}">
         <video class="media-video" src="{{videoUrl}}" controls play-btn-center></video>
       </swiper-item>
-      <swiper-item wx:if="{{modelImages.length>0}}">
-        <scroll-view scroll-y class="media-scroll">
-          <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
-        </scroll-view>
-      </swiper-item>
+    <swiper-item wx:if="{{modelImages.length>0}}">
+      <scroll-view scroll-x class="media-scroll-x" enable-flex>
+        <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="heightFix" class="media-model-img"/>
+      </scroll-view>
+    </swiper-item>
       <swiper-item>
         <scroll-view scroll-y class="media-scroll">
           <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
