@@ -1,34 +1,36 @@
 <view class="page">
   <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码（左右滑动切换，对标一手） -->
-  <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}">
-    <swiper-item wx:if="{{videoUrl}}">
-      <video class="media-video" src="{{videoUrl}}" controls play-btn-center></video>
-    </swiper-item>
-    <swiper-item wx:if="{{modelImages.length>0}}">
-      <scroll-view scroll-y class="media-scroll">
-        <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
-      </scroll-view>
-    </swiper-item>
-    <swiper-item>
-      <scroll-view scroll-y class="media-scroll">
-        <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
-        <view wx:if="{{!images || images.length===0}}" class="ph">暂无图片</view>
-      </scroll-view>
-    </swiper-item>
-    <swiper-item wx:if="{{sizeChartImage}}">
-      <scroll-view scroll-y class="media-scroll">
-        <image src="{{sizeChartImage}}" mode="widthFix" class="media-item-img"/>
-      </scroll-view>
-    </swiper-item>
-  </swiper>
+  <view class="media-area">
+    <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}">
+      <swiper-item wx:if="{{videoUrl}}">
+        <video class="media-video" src="{{videoUrl}}" controls play-btn-center></video>
+      </swiper-item>
+      <swiper-item wx:if="{{modelImages.length>0}}">
+        <scroll-view scroll-y class="media-scroll">
+          <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item>
+        <scroll-view scroll-y class="media-scroll">
+          <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
+          <view wx:if="{{!images || images.length===0}}" class="ph">暂无图片</view>
+        </scroll-view>
+      </swiper-item>
+      <swiper-item wx:if="{{sizeChartImage}}">
+        <scroll-view scroll-y class="media-scroll">
+          <image src="{{sizeChartImage}}" mode="widthFix" class="media-item-img"/>
+        </scroll-view>
+      </swiper-item>
+    </swiper>
 
-  <!-- 媒体切换 Tab：视频 / 模特图 / 实拍图 / 尺码（当前位置指示器） -->
-  <view class="media-tab-wrap">
-    <scroll-view scroll-x class="media-tab-scroll" scroll-with-animation>
-      <view class="media-tab {{mediaIndex===index?'active':''}}" wx:for="{{mediaTabs}}" wx:key="key" data-index="{{index}}" bindtap="switchMediaTab">
-        {{item.label}}
-      </view>
-    </scroll-view>
+    <!-- 媒体切换 Tab：叠在媒体区下方（半透明胶囊） -->
+    <view class="media-tab-wrap">
+      <scroll-view scroll-x class="media-tab-scroll" scroll-with-animation>
+        <view class="media-tab {{mediaIndex===index?'active':''}}" wx:for="{{mediaTabs}}" wx:key="key" data-index="{{index}}" bindtap="switchMediaTab">
+          {{item.label}}
+        </view>
+      </scroll-view>
+    </view>
   </view>
 
   <!-- 收藏按钮 -->
