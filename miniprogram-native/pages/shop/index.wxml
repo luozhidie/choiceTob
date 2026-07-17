@@ -1,12 +1,4 @@
 <view class="page">
-  <!-- 顶部 Tab 切换：实拍图 / 模特图 / 视频 / 尺码 -->
-  <view style="display:flex; background:#fff; border-bottom:1px solid #eee;">
-    <view data-tab="photo" bindtap="switchTab" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='photo'?'#e4393c':'#666'}}; font-weight:{{currentTab==='photo'?'600':'400'}}; border-bottom:{{currentTab==='photo'?'2px solid #e4393c':'2px solid transparent'}};">实拍图</view>
-    <view data-tab="model" bindtap="switchTab" wx:if="{{modelImages.length>0}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='model'?'#e4393c':'#666'}}; font-weight:{{currentTab==='model'?'600':'400'}}; border-bottom:{{currentTab==='model'?'2px solid #e4393c':'2px solid transparent'}};">模特图</view>
-    <view data-tab="video" bindtap="switchTab" wx:if="{{videoUrl}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='video'?'#e4393c':'#666'}}; font-weight:{{currentTab==='video'?'600':'400'}}; border-bottom:{{currentTab==='video'?'2px solid #e4393c':'2px solid transparent'}};">视频</view>
-    <view data-tab="size" bindtap="switchTab" wx:if="{{sizeChartImage}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='size'?'#e4393c':'#666'}}; font-weight:{{currentTab==='size'?'600':'400'}}; border-bottom:{{currentTab==='size'?'2px solid #e4393c':'2px solid transparent'}};">尺码</view>
-  </view>
-
   <!-- 图区：实拍图 -->
   <block wx:if="{{currentTab==='photo'}}">
     <swiper class="swiper" indicator-dots="{{images.length>1}}" autoplay circular>
@@ -35,6 +27,14 @@
   <block wx:elif="{{currentTab==='size'}}">
     <image wx:if="{{sizeChartImage}}" src="{{sizeChartImage}}" mode="widthFix" class="size-img"/>
   </block>
+
+  <!-- 媒体切换 Tab：视频 / 模特图 / 实拍图 / 尺码（置于媒体展示区下方，对标一手） -->
+  <view style="display:flex; background:#fff; border-top:1px solid #eee;">
+    <view data-tab="video" bindtap="switchTab" wx:if="{{videoUrl}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='video'?'#e4393c':'#666'}}; font-weight:{{currentTab==='video'?'600':'400'}}; border-bottom:{{currentTab==='video'?'2px solid #e4393c':'2px solid transparent'}};">视频</view>
+    <view data-tab="model" bindtap="switchTab" wx:if="{{modelImages.length>0}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='model'?'#e4393c':'#666'}}; font-weight:{{currentTab==='model'?'600':'400'}}; border-bottom:{{currentTab==='model'?'2px solid #e4393c':'2px solid transparent'}};">模特图</view>
+    <view data-tab="photo" bindtap="switchTab" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='photo'?'#e4393c':'#666'}}; font-weight:{{currentTab==='photo'?'600':'400'}}; border-bottom:{{currentTab==='photo'?'2px solid #e4393c':'2px solid transparent'}};">实拍图</view>
+    <view data-tab="size" bindtap="switchTab" wx:if="{{sizeChartImage}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='size'?'#e4393c':'#666'}}; font-weight:{{currentTab==='size'?'600':'400'}}; border-bottom:{{currentTab==='size'?'2px solid #e4393c':'2px solid transparent'}};">尺码</view>
+  </view>
 
   <!-- 收藏按钮 -->
   <view class="fav-btn {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>

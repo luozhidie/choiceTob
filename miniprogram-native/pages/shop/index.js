@@ -178,6 +178,7 @@ Page({
           videoUrl: videoUrl,
           modelImages: modelImages,
           sizeChartImage: sizeChartImage,
+          currentTab: videoUrl ? 'video' : 'photo',
           priceText: price ? '¥' + price : '¥0',
           originalPriceText: ori ? '¥' + ori : '',
           discountText: disc,
