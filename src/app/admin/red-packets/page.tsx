@@ -24,7 +24,10 @@ export default function AdminRedPacketsPage() {
     packet_type: "general",
     expire_days: 30,
     batch_send: false,
+    quantity: 1,       // 发放数量（每人）
   });
+
+  const [profiles, setProfiles] = useState<any[]>([]);
 
   const showToast = (type: "success" | "error", message: string) => {
     setToast({ type, message });
@@ -55,8 +58,18 @@ export default function AdminRedPacketsPage() {
   useEffect(() => { loadPackets(); }, [page, statusFilter]);
   useEffect(() => { if (!showModal) { setPage(1); loadPackets(); } }, [keyword]);
 
+  // 加载发放对象列表
+  async function loadProfiles() {
+    try {
+      const res = await fetch(`/api/admin/profiles`, { credentials: "include" });
+      const json = await res.json();
+      if (json.data) setProfiles(json.data);
+    } catch (e: any) { /* 忽略 */ }
+  }
+  useEffect(() => { loadProfiles(); }, []);
+
   function openAdd() {
-    setForm({ user_id: "", title: "", amount: 0, packet_type: "general", expire_days: 30, batch_send: false });
+    setForm({ user_id: "", title: "", amount: 0, packet_type: "general", expire_days: 30, batch_send: false, quantity: 1 });
     setShowModal(true);
   }
 
@@ -72,13 +85,14 @@ export default function AdminRedPacketsPage() {
         amount: Number(form.amount),
         packet_type: form.packet_type,
         expire_days: Number(form.expire_days),
+        quantity: Math.max(1, Number(form.quantity) || 1),
       };
 
       if (form.batch_send) {
         body.batch_send = true;
       } else {
-        if (!form.user_id) {
-          showToast("error", "请填写用户ID或选择批量发放");
+        if (!form.user_id || form.user_id === "placeholder") {
+          showToast("error", "请选择发放对象或勾选全部用户");
           setSaving(false);
           return;
         }
@@ -282,28 +296,42 @@ export default function AdminRedPacketsPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="batchSendPkt"
-                  checked={form.batch_send}
-                  onChange={e => setForm(f => ({ ...f, batch_send: e.target.checked }))}
-                  className="rounded"
-                />
-                <label htmlFor="batchSendPkt" className="text-sm text-gray-700">批量发放给所有用户</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">发放对象 *</label>
+                <select
+                  value={form.batch_send ? "all" : (form.user_id || "placeholder")}
+                  onChange={e => {
+                    const v = e.target.value;
+                    if (v === "all") setForm(f => ({ ...f, batch_send: true, user_id: "" }));
+                    else setForm(f => ({ ...f, batch_send: false, user_id: v }));
+                  }}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                >
+                  <option value="placeholder" disabled>请选择发放对象</option>
+                  <option value="all">全部用户（每人 1 个起）</option>
+                  {profiles.map((u: any) => (
+                    <option key={u.id} value={u.id}>
+                      {u.full_name || u.email || u.phone || u.id}
+                      {u.phone ? `（${u.phone}）` : u.email ? `（${u.email}）` : ""}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-400 mt-1">
+                  {form.batch_send ? "将发放给全部用户" : "将发放给选定用户"}
+                </p>
               </div>
 
-              {!form.batch_send && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">用户ID（user_id）</label>
-                  <input
-                    value={form.user_id}
-                    onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))}
-                    placeholder="输入用户UUID"
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                  />
-                </div>
-              )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">发放数量（每人）</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={form.quantity}
+                  onChange={e => setForm(f => ({ ...f, quantity: Math.max(1, Number(e.target.value) || 1) }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                />
+                <p className="text-xs text-gray-400 mt-1">每个发放对象获得的个数，默认 1</p>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-6">

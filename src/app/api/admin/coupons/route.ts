@@ -4,7 +4,7 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -89,39 +89,43 @@ export async function POST(req: NextRequest) {
       coupon_type = "general",
       expire_days = 30,   // 30天后过期
       batch_send = false,  // 是否批量发放
+      quantity = 1,        // 每人发放张数
     } = body;
 
     if (!title || !discount_amount) {
       return NextResponse.json({ error: "标题和抵扣金额必填" }, { status: 400 });
     }
 
+    const qty = Math.max(1, Number(quantity) || 1);
     const expireAt = new Date();
     expireAt.setDate(expireAt.getDate() + expire_days);
+    const expireStr = expireAt.toISOString().split("T")[0];
+
+    const buildRow = (uid: string) => ({
+      user_id: uid,
+      title,
+      discount_desc,
+      min_amount: Number(min_amount),
+      discount_amount: Number(discount_amount),
+      coupon_type,
+      expire_at: expireStr,
+      status: "unused",
+    });
 
     // 指定单个用户
     if (user_id && !batch_send) {
+      const rows = Array.from({ length: qty }, () => buildRow(user_id));
       const { data, error } = await supabase
         .from("coupons")
-        .insert({
-          user_id,
-          title,
-          discount_desc,
-          min_amount: Number(min_amount),
-          discount_amount: Number(discount_amount),
-          coupon_type,
-          expire_at: expireAt.toISOString().split("T")[0],
-          status: "unused",
-        })
-        .select()
-        .single();
+        .insert(rows)
+        .select();
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true, data });
+      return NextResponse.json({ success: true, count: data?.length || 0 });
     }
 
     // 批量发放：发给所有用户
     if (batch_send) {
-      // 获取所有用户
       const { data: users, error: userError } = await supabase
         .from("profiles")
         .select("id");
@@ -132,20 +136,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "没有用户可发放" }, { status: 400 });
       }
 
-      const insertData = users.map((u: any) => ({
-        user_id: u.id,
-        title,
-        discount_desc,
-        min_amount: Number(min_amount),
-        discount_amount: Number(discount_amount),
-        coupon_type,
-        expire_at: expireAt.toISOString().split("T")[0],
-        status: "unused",
-      }));
+      const rows: any[] = [];
+      users.forEach((u: any) => {
+        for (let i = 0; i < qty; i++) rows.push(buildRow(u.id));
+      });
 
       const { data, error } = await supabase
         .from("coupons")
-        .insert(insertData)
+        .insert(rows)
         .select();
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });

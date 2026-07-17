@@ -82,32 +82,37 @@ export async function POST(req: NextRequest) {
       packet_type = "general",
       expire_days = 30,
       batch_send = false,
+      quantity = 1,
     } = body;
 
     if (!title || !amount) {
       return NextResponse.json({ error: "标题和金额必填" }, { status: 400 });
     }
 
+    const qty = Math.max(1, Number(quantity) || 1);
     const expireAt = new Date();
     expireAt.setDate(expireAt.getDate() + expire_days);
+    const expireStr = expireAt.toISOString().split("T")[0];
+
+    const buildRow = (uid: string) => ({
+      user_id: uid,
+      title,
+      amount: Number(amount),
+      packet_type,
+      expire_at: expireStr,
+      status: "unused",
+    });
 
     // 单个用户
     if (user_id && !batch_send) {
+      const rows = Array.from({ length: qty }, () => buildRow(user_id));
       const { data, error } = await supabase
         .from("red_packets")
-        .insert({
-          user_id,
-          title,
-          amount: Number(amount),
-          packet_type,
-          expire_at: expireAt.toISOString().split("T")[0],
-          status: "unused",
-        })
-        .select()
-        .single();
+        .insert(rows)
+        .select();
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-      return NextResponse.json({ success: true, data });
+      return NextResponse.json({ success: true, count: data?.length || 0 });
     }
 
     // 批量发放
@@ -121,18 +126,14 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "没有用户可发放" }, { status: 400 });
       }
 
-      const insertData = users.map((u: any) => ({
-        user_id: u.id,
-        title,
-        amount: Number(amount),
-        packet_type,
-        expire_at: expireAt.toISOString().split("T")[0],
-        status: "unused",
-      }));
+      const rows: any[] = [];
+      users.forEach((u: any) => {
+        for (let i = 0; i < qty; i++) rows.push(buildRow(u.id));
+      });
 
       const { data, error } = await supabase
         .from("red_packets")
-        .insert(insertData)
+        .insert(rows)
         .select();
 
       if (error) return NextResponse.json({ error: error.message }, { status: 500 });
