@@ -1176,13 +1176,46 @@ export default function AdminProductsPage() {
                 {/* 视频地址 */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">视频地址（URL）</label>
-                  <input
-                    type="text"
-                    value={form.video_url}
-                    onChange={(e) => setForm({ ...form, video_url: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="https://...mp4 或 腾讯视频/抖音外链"
-                  />
+                  <div className="flex gap-2 items-start">
+                    <input
+                      type="text"
+                      value={form.video_url}
+                      onChange={(e) => setForm({ ...form, video_url: e.target.value })}
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="https://...mp4 或 腾讯视频/抖音外链"
+                    />
+                    <label className="shrink-0 w-10 h-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
+                      <input type="file" accept="video/mp4,video/quicktime,video/x-msvideo,video/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 50 * 1024 * 1024) { alert("视频不能超过50MB"); return; }
+                        setUploading(true);
+                        try {
+                          const dataUrl = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = () => reject(new Error("文件读取失败"));
+                            reader.readAsDataURL(file);
+                          });
+                          const res = await fetch("/api/image-grabber/upload", {
+                            method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "video/mp4", dataUrl }),
+                          });
+                          const json = await res.json();
+                          if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+                          setForm(f => ({ ...f, video_url: json.storedUrl }));
+                        } catch (err: any) { alert("上传失败：" + err.message); }
+                        setUploading(false); e.target.value = "";
+                      }} className="hidden" />
+                    </label>
+                    {form.video_url && (
+                      <div className="shrink-0 w-16 h-10 rounded-lg overflow-hidden bg-black">
+                        <video src={form.video_url} className="w-full h-full object-cover" muted playsInline />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">支持直接上传本地视频（MP4/MOV/AVI，≤50MB）或粘贴外链</p>
                 </div>
 
                 {/* 尺码表图片 */}
