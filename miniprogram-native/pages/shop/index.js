@@ -702,19 +702,48 @@ Page({
   // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
   loadShopRecs: function (cat, excludeId) {
     var t = this;
-    var url = 'https://colour-choice.art/api/public/products?limit=10';
+    var normalize = function (list) {
+      list.forEach(function (p) {
+        var n = Number(p.price) || 0;
+        if (n >= 100) n = Math.round(n / 100);
+        p.priceLabel = '¥' + n;
+      });
+    };
+    var finish = function (list, isFallback) {
+      if (excludeId) list = list.filter(function (x) { return x.id !== excludeId; });
+      normalize(list);
+      var latest = list.slice(0, 6);
+      var hot = list.slice().sort(function (a, b) { return (Number(b.sales) || 0) - (Number(a.sales) || 0); }).slice(0, 6);
+      t.setData({ shopRecLatest: latest, shopRecHot: hot });
+      if (latest.length === 0 && hot.length === 0 && cat && !isFallback) {
+        doFallback();
+      }
+    };
+    var doFallback = function () {
+      wx.request({
+        url: 'https://colour-choice.art/api/public/products?limit=20',
+        method: 'GET',
+        success: function (r2) {
+          var list2 = (r2.data && r2.data.data) || [];
+          finish(list2, true);
+        },
+        fail: function () { finish([], true); }
+      });
+    };
+    var url = 'https://colour-choice.art/api/public/products?limit=20';
     if (cat) url += '&category=' + encodeURIComponent(cat);
     wx.request({
       url: url,
       method: 'GET',
       success: function (r) {
         var list = (r.data && r.data.data) || [];
-        if (excludeId) list = list.filter(function (x) { return x.id !== excludeId; });
-        list.forEach(function (p) { var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100); p.priceLabel = '¥' + n; });
-        var latest = list.slice(0, 6);
-        var hot = list.slice().sort(function (a, b) { return (Number(b.sales) || 0) - (Number(a.sales) || 0); }).slice(0, 6);
-        t.setData({ shopRecLatest: latest, shopRecHot: hot });
-      }
+        if (list.length === 0 && cat) {
+          doFallback();
+          return;
+        }
+        finish(list, false);
+      },
+      fail: function () { doFallback(); }
     });
     wx.request({
       url: 'https://colour-choice.art/api/public/products?limit=10',
