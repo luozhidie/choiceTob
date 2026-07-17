@@ -24,8 +24,15 @@
     </view>
   </view>
 
+  <!-- 未登录提示 -->
+  <view class="empty" wx:if="{{!loading && notLogin}}">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-text">请先登录后查看优惠券</text>
+    <view class="empty-btn" bindtap="goLogin">去登录</view>
+  </view>
+
   <!-- 空状态 -->
-  <view class="empty" wx:if="{{!loading && list.length===0}}">
+  <view class="empty" wx:if="{{!loading && !notLogin && list.length===0}}">
     <text class="empty-icon">🎫</text>
     <text class="empty-text">暂无{{activeTab==='unused'?'未使用':activeTab==='used'?'已使用':'已过期'}}优惠券</text>
   </view>

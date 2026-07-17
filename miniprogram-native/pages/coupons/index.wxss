@@ -24,6 +24,7 @@ page{background:#f5f5f5;}
 .empty{text-align:center;padding:120rpx 0;color:#ccc;}
 .empty-icon{font-size:80rpx;display:block;margin-bottom:20rpx;}
 .empty-text{font-size:26rpx;}
+.empty-btn{margin-top:30rpx;background:#e91e63;color:#fff;font-size:26rpx;padding:14rpx 56rpx;border-radius:40rpx;display:inline-block;}
 
 /* loading */
 .loading{text-align:center;padding:80rpx 0;}

@@ -6,6 +6,7 @@ Page({
     activeTab:'unused',
     list:[],
     loading:true,
+    notLogin:false,
   },
 
   onShow:function(){ this.loadPackets(); },
@@ -18,8 +19,8 @@ Page({
   loadPackets:function(){
     var t=this;
     var token=wx.getStorageSync('token')||'';
-    if(!token){ t.setData({loading:false,list:[]}); return; }
-    t.setData({loading:true});
+    if(!token){ t.setData({loading:false,list:[],notLogin:true}); return; }
+    t.setData({loading:true,notLogin:false});
     wx.request({
       url:'https://colour-choice.art/api/red-packets?status='+t.data.activeTab,
       method:'GET',
@@ -34,6 +35,11 @@ Page({
 
   useRedPacket:function(e){
     wx.switchTab({url:'/pages/home/index'});
+  },
+
+  /* 未登录：跳转登录页 */
+  goLogin:function(){
+    wx.navigateTo({url:'/pages/login/index'});
   },
 
   onPullDownRefresh:function(){
