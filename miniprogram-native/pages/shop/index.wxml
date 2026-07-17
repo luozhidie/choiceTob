@@ -145,23 +145,14 @@
 
   <!-- 档口区：店铺大卡片 + 系列切换 + 小卡轮播 -->
   <view id="section-shop">
-    <!-- 店铺大卡片 -->
+    <!-- 店铺大卡片：展示买手选品货架 banner 图，点击进入货架 -->
     <view class="shop-hero-card" bindtap="goShelf">
-      <view class="shop-hero-bg">
-        <view class="shop-hero-mask"></view>
-        <view class="shop-hero-content">
-          <view class="shop-hero-top">
-            <view class="shop-hero-logo">🏪</view>
-            <view class="shop-hero-info">
-              <text class="shop-hero-name">{{shopIntro || shopName}}</text>
-              <text class="shop-hero-tags">粉丝{{shopStats.fans}} · 综合体验{{shopStats.score}} · 返单率{{shopStats.repurchaseRate}}</text>
-            </view>
-          </view>
-          <view class="shop-hero-bottom">
-            <text class="shop-hero-brand" wx:if="{{shopStats.selectedBrand}}">严选品牌</text>
-            <view class="shop-hero-btn">进来看看</view>
-          </view>
-        </view>
+      <image wx:if="{{shelfBanner}}" src="{{shelfBanner}}" mode="aspectFill" class="shop-hero-img"/>
+      <view wx:else class="shop-hero-ph"><text>{{shelfTitle}}</text></view>
+      <view class="shop-hero-mask"></view>
+      <view class="shop-hero-foot">
+        <text class="shop-hero-foot-title">{{shelfTitle}}</text>
+        <view class="shop-hero-btn">进店看看 ›</view>
       </view>
     </view>
 

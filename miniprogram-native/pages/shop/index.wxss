@@ -217,17 +217,12 @@ page { background: #f5f3f0; }
 .shop-btn { font-size: 24rpx; color: #fff; background: #1a1a2e; padding: 10rpx 24rpx; border-radius: 30rpx; }
 
 /* ==================== 店铺大卡片 / 系列推荐 / 相似推荐 ==================== */
-.shop-hero-card { margin: 16rpx; border-radius: 24rpx; overflow: hidden; box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.08); }
-.shop-hero-bg { position: relative; height: 260rpx; background: linear-gradient(135deg, #1a1a2e, #3d2b3d); display: flex; align-items: flex-end; }
-.shop-hero-mask { position: absolute; left: 0; right: 0; top: 0; bottom: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.55)); }
-.shop-hero-content { position: relative; z-index: 1; width: 100%; padding: 24rpx; box-sizing: border-box; }
-.shop-hero-top { display: flex; align-items: center; gap: 16rpx; }
-.shop-hero-logo { width: 80rpx; height: 80rpx; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 40rpx; flex-shrink: 0; }
-.shop-hero-info { flex: 1; min-width: 0; }
-.shop-hero-name { font-size: 32rpx; font-weight: 700; color: #fff; display: block; }
-.shop-hero-tags { font-size: 22rpx; color: rgba(255,255,255,0.85); margin-top: 8rpx; display: block; }
-.shop-hero-bottom { display: flex; align-items: center; justify-content: space-between; margin-top: 20rpx; }
-.shop-hero-brand { font-size: 20rpx; color: #fff; background: rgba(255,255,255,0.2); padding: 4rpx 14rpx; border-radius: 10rpx; }
+.shop-hero-card { margin: 16rpx; border-radius: 24rpx; overflow: hidden; box-shadow: 0 4rpx 20rpx rgba(0,0,0,0.08); position: relative; }
+.shop-hero-img { width: 100%; height: 320rpx; display: block; }
+.shop-hero-ph { width: 100%; height: 320rpx; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1a1a2e, #3d2b3d); color: rgba(255,255,255,0.9); font-size: 30rpx; }
+.shop-hero-mask { position: absolute; left: 0; right: 0; bottom: 0; top: 0; background: linear-gradient(to bottom, rgba(0,0,0,0) 40%, rgba(0,0,0,0.6)); pointer-events: none; }
+.shop-hero-foot { position: absolute; left: 0; right: 0; bottom: 0; z-index: 1; display: flex; align-items: center; justify-content: space-between; padding: 22rpx 24rpx; box-sizing: border-box; }
+.shop-hero-foot-title { font-size: 34rpx; font-weight: 800; color: #fff; text-shadow: 0 2rpx 8rpx rgba(0,0,0,0.4); }
 .shop-hero-btn { font-size: 24rpx; color: #1a1a2e; background: #fff; padding: 10rpx 26rpx; border-radius: 30rpx; font-weight: 600; }
 
 .shop-two-col { display: flex; gap: 16rpx; margin: 16rpx; }

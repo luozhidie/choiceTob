@@ -96,6 +96,10 @@ Page({
     shopRecHot: [],            // 档口大爆款
     shopRecNewbie: [],         // 新人推荐
     seriesActive: 'latest',    // 系列切换：latest / hot
+    // 买手选品货架入口（卡片展示货架 banner 图，点击进入货架）
+    shelfBanner: '',           // 买手选品货架 banner 图
+    shelfId: '',               // 买手选品货架 block id
+    shelfTitle: '买手选品',    // 货架标题（兜底）
     // 弹窗与 SKU 数据
     showSkuPanel: false,         // 下单详情弹窗
     showCouponPanel: false,      // 优惠明细弹窗
@@ -137,6 +141,7 @@ Page({
     this.loadCoupons();
     this.loadClaimed();
     this.loadStoreContent();
+    this.loadShelfBanner();
   },
 
   onReady: function () { this.measureSectionTops(); },
@@ -663,7 +668,36 @@ Page({
     this.setData({ seriesActive: type });
   },
 
-  goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
+  goShelf: function () {
+    var id = this.data.shelfId || 'a161744a-aec1-4849-875f-dcebe52ff91c';
+    wx.navigateTo({ url: '/pages/shelf/index?id=' + id });
+  },
+
+  // 拉取买手选品货架 block，取 banner 图用于商品页入口卡片
+  loadShelfBanner: function () {
+    var t = this;
+    wx.request({
+      url: 'https://colour-choice.art/api/public/blocks',
+      method: 'GET',
+      success: function (r) {
+        var list = (r.data && r.data.data) || [];
+        var block = null;
+        for (var i = 0; i < list.length; i++) {
+          if (list[i].type === 'shelf') {
+            if (list[i].title === '买手选品') { block = list[i]; break; }
+            if (!block) block = list[i];
+          }
+        }
+        if (block) {
+          var img = (block.content && block.content.image) || '';
+          var upd = { shelfId: block.id };
+          if (img) upd.shelfBanner = img;
+          if (block.title) upd.shelfTitle = block.title;
+          t.setData(upd);
+        }
+      }
+    });
+  },
 
   // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
   loadShopRecs: function (cat, excludeId) {
