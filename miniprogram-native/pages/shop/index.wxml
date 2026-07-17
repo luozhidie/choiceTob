@@ -12,7 +12,7 @@
     <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}" wx:if="{{mediaList.length>0}}">
       <swiper-item wx:for="{{mediaList}}" wx:key="*this">
         <block wx:if="{{item.type==='video'}}">
-          <video class="media-video" src="{{item.src}}" controls play-btn-center object-fit="cover"></video>
+          <video class="media-video" src="{{item.src}}" controls play-btn-center object-fit="contain"></video>
         </block>
         <block wx:elif="{{item.type==='size'}}">
           <scroll-view scroll-y class="media-scroll">
@@ -21,7 +21,7 @@
         </block>
         <block wx:else>
           <view class="media-item">
-            <image src="{{item.src}}" mode="aspectFill" class="media-fit-img"/>
+            <image src="{{item.src}}" mode="aspectFit" class="media-fit-img"/>
           </view>
         </block>
       </swiper-item>
