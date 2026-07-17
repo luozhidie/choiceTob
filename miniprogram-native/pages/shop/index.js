@@ -62,9 +62,11 @@ Page({
     // 静态内容（fallback，加载 store_content 后覆盖）
     wholesaleGuide: WHOLESALE_GUIDE,
     wholesaleTips: WHOLESALE_TIPS,
-    // 顶部媒体轮播
-    mediaIndex: 0,             // 当前媒体页：0 视频 / 1 模特图 / 2 实拍图 / 3 尺码
-    mediaTabs: [],             // 动态生成的媒体 Tab [{key,label},...]
+    // 顶部媒体轮播（平铺：视频→模特图→实拍图→尺码）
+    mediaList: [],             // 所有媒体项 [{type,src},...]
+    mediaIndex: 0,             // 当前所在媒体项下标
+    mediaTabs: [],             // 动态生成的媒体 Tab [{key,label,start},...]
+    mediaTabIndex: 0,          // 当前激活的 Tab 下标
     // 店铺内容（后台可编辑）
     shopName: '骆芷蝶智选',
     shopIntro: '',
@@ -173,13 +175,32 @@ Page({
         var modelImages = Array.isArray(p.model_images) ? p.model_images.filter(Boolean) : [];
         var videoUrl = p.video_url || '';
         var sizeChartImage = p.size_chart_image || '';
-        /* 媒体页签：视频 / 模特图 / 实拍图 / 尺码 */
+        /* 媒体页签：平铺为 视频 → 模特图 → 实拍图 → 尺码，统一左右滑动切换 */
+        var mediaList = [];
         var mediaTabs = [];
-        if (videoUrl) mediaTabs.push({ key: 'video', label: '视频' });
-        if (modelImages.length > 0) mediaTabs.push({ key: 'model', label: '模特图' });
-        mediaTabs.push({ key: 'photo', label: '实拍图' });
-        if (sizeChartImage) mediaTabs.push({ key: 'size', label: '尺码' });
-        var mediaIndex = videoUrl ? 0 : 0; // 默认落在第一个，因视频排首位
+        if (videoUrl) {
+          mediaList.push({ type: 'video', src: videoUrl });
+          mediaTabs.push({ key: 'video', label: '视频', start: 0 });
+        }
+        var modelStart = mediaList.length;
+        modelImages.forEach(function (src) { mediaList.push({ type: 'model', src: src }); });
+        if (modelImages.length > 0) mediaTabs.push({ key: 'model', label: '模特图', start: modelStart });
+        var photoStart = mediaList.length;
+        var photoSrcs = images.filter(Boolean);
+        if (photoSrcs.length === 0) photoSrcs = [''];
+        photoSrcs.forEach(function (src) { mediaList.push({ type: 'photo', src: src }); });
+        mediaTabs.push({ key: 'photo', label: '实拍图', start: photoStart });
+        var sizeStart = mediaList.length;
+        if (sizeChartImage) {
+          mediaList.push({ type: 'size', src: sizeChartImage });
+          mediaTabs.push({ key: 'size', label: '尺码', start: sizeStart });
+        }
+
+        function tabIndexByType(type) {
+          for (var i = 0; i < mediaTabs.length; i++) if (mediaTabs[i].key === type) return i;
+          return 0;
+        }
+        var mediaTabIndex = tabIndexByType(mediaList[0] ? mediaList[0].type : 'photo');
 
         t.setData({
           product: p,
@@ -187,8 +208,10 @@ Page({
           videoUrl: videoUrl,
           modelImages: modelImages,
           sizeChartImage: sizeChartImage,
+          mediaList: mediaList,
           mediaTabs: mediaTabs,
-          mediaIndex: mediaIndex,
+          mediaIndex: 0,
+          mediaTabIndex: mediaTabIndex,
           priceText: price ? '¥' + price : '¥0',
           originalPriceText: ori ? '¥' + ori : '',
           discountText: disc,
@@ -443,8 +466,21 @@ Page({
     });
   },
 
-  onMediaSwiperChange: function (e) { this.setData({ mediaIndex: e.detail.current }); },
-  switchMediaTab: function (e) { this.setData({ mediaIndex: Number(e.currentTarget.dataset.index) }); },
+  onMediaSwiperChange: function (e) {
+    var idx = e.detail.current;
+    var list = this.data.mediaList;
+    var type = (list[idx] && list[idx].type) || 'photo';
+    var tabIdx = 0;
+    for (var i = 0; i < this.data.mediaTabs.length; i++) {
+      if (this.data.mediaTabs[i].key === type) { tabIdx = i; break; }
+    }
+    this.setData({ mediaIndex: idx, mediaTabIndex: tabIdx });
+  },
+  switchMediaTab: function (e) {
+    var tabIdx = Number(e.currentTarget.dataset.index);
+    var start = this.data.mediaTabs[tabIdx].start;
+    this.setData({ mediaIndex: start, mediaTabIndex: tabIdx });
+  },
 
   goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
 
