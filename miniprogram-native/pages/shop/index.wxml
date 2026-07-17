@@ -1,17 +1,22 @@
 <view class="page">
-  <!-- 自定义顶部导航（透明浮层，覆盖在媒体区上方） -->
-  <view class="custom-nav" style="padding-top:{{statusBarHeight}}px;">
+  <!-- 自定义顶部导航（透明浮层，覆盖在媒体区上方；上拉后出现吸顶栏则隐藏，避免两层导航重叠） -->
+  <view class="custom-nav" style="padding-top:{{statusBarHeight}}px;" wx:if="{{!showSectionTabs}}">
     <view class="nav-bar">
       <view class="nav-back" bindtap="goBack">‹</view>
       <view class="nav-fav {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
     </view>
   </view>
 
-  <!-- 商品/档口/详情 吸顶切换（上拉出现） -->
-  <view class="section-tabs {{showSectionTabs?'show':''}}" style="top:{{customNavTotalHeightPx}}px;">
-    <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
-    <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">档口</view>
-    <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
+  <!-- 商品/档口/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 -->
+  <view class="section-tabs {{showSectionTabs?'show':''}}" style="padding-top:{{statusBarHeight}}px;">
+    <view class="section-tabs-inner">
+      <view class="st-back" bindtap="goBack">‹</view>
+      <view class="st-tabs">
+        <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
+        <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">档口</view>
+        <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
+      </view>
+    </view>
   </view>
 
   <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码 平铺为统一 swiper，左右滑动切换（对标一手） -->
@@ -19,7 +24,7 @@
     <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}" wx:if="{{mediaList.length>0}}">
       <swiper-item wx:for="{{mediaList}}" wx:key="*this">
         <block wx:if="{{item.type==='video'}}">
-          <video class="media-video" src="{{item.src}}" controls play-btn-center object-fit="contain"></video>
+          <video class="media-video" src="{{item.src}}" controls play-btn-center object-fit="cover"></video>
         </block>
         <block wx:elif="{{item.type==='size'}}">
           <scroll-view scroll-y class="media-scroll">
@@ -28,7 +33,7 @@
         </block>
         <block wx:else>
           <view class="media-item">
-            <image src="{{item.src}}" mode="aspectFit" class="media-fit-img"/>
+            <image src="{{item.src}}" mode="aspectFill" class="media-fit-img"/>
           </view>
         </block>
       </swiper-item>

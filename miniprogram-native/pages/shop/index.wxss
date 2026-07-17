@@ -8,10 +8,13 @@ page { background: #f5f3f0; }
 .nav-back { font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; }
 .nav-fav.fav-on { color: #e91e63; background: rgba(233,30,99,.15); }
 
-/* 商品/档口/详情 吸顶切换 */
-.section-tabs { position: fixed; left: 0; right: 0; z-index: 99; height: 80rpx; background: #fff; display: flex; align-items: center; justify-content: space-around; border-bottom: 1rpx solid #f0ece8; opacity: 0; pointer-events: none; transform: translateY(-20rpx); transition: opacity 0.2s, transform 0.2s; }
+/* 商品/档口/详情 吸顶切换：单一白底顶部栏（含返回键 + 居中页签） */
+.section-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 99; background: #fff; box-shadow: 0 1rpx 6rpx rgba(0,0,0,0.06); opacity: 0; pointer-events: none; transform: translateY(-100%); transition: opacity 0.22s ease, transform 0.22s ease; }
 .section-tabs.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
-.section-tab { font-size: 28rpx; color: #666; position: relative; padding: 10rpx 20rpx; }
+.section-tabs-inner { height: 88rpx; display: flex; align-items: center; padding: 0 16rpx; }
+.st-back { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; color: #333; margin-right: 4rpx; }
+.st-tabs { flex: 1; display: flex; align-items: center; justify-content: center; gap: 56rpx; }
+.section-tab { font-size: 28rpx; color: #666; position: relative; padding: 10rpx 0; }
 .section-tab.active { color: #e4393c; font-weight: 600; }
 .section-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40rpx; height: 4rpx; background: #e4393c; border-radius: 4rpx; }
 
@@ -19,22 +22,22 @@ page { background: #f5f3f0; }
 .vid { width: 100%; height: 750rpx; background: #000; display: block; }
 
 /* 媒体轮播（视频 / 模特图 / 实拍图 / 尺码） */
-.media-area { position: relative; width: 100%; height: 100vh; overflow: hidden; }
-.media-swiper { width: 100%; height: 100vh; background: #000; }
+.media-area { position: relative; width: 100%; height: 1000rpx; overflow: hidden; }
+.media-swiper { width: 100%; height: 1000rpx; background: #000; }
 .media-swiper swiper-item { width: 100%; height: 100%; }
 .media-video { width: 100%; height: 100%; display: block; }
-.media-scroll { height: 100vh; width: 100%; background: #000; }
+.media-scroll { height: 1000rpx; width: 100%; background: #000; }
 .media-item-img { width: 100%; display: block; background: #000; }
-.media-item { width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: #000; }
+.media-item { width: 100%; height: 1000rpx; display: flex; align-items: center; justify-content: center; background: #000; }
 .media-fit-img { width: 100%; height: 100%; }
 
 /* 图片轮播 */
-.swiper { width: 100%; height: 100vh; }
+.swiper { width: 100%; height: 1000rpx; }
 .slide-img { width: 100%; height: 100%; }
-.ph { width: 100%; height: 100vh; background: #eee; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 28rpx; }
+.ph { width: 100%; height: 1000rpx; background: #eee; display: flex; align-items: center; justify-content: center; color: #ccc; font-size: 28rpx; }
 
 /* 媒体类型切换 Tab（叠在媒体区下方半透明胶囊） */
-.media-tab-wrap { position: absolute; bottom: 140rpx; left: 50%; transform: translateX(-50%); z-index: 5; max-width: 86%; background: rgba(255,255,255,0.82); border-radius: 40rpx; padding: 8rpx 14rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.08); }
+.media-tab-wrap { position: absolute; bottom: 24rpx; left: 50%; transform: translateX(-50%); z-index: 5; max-width: 86%; background: rgba(255,255,255,0.82); border-radius: 40rpx; padding: 8rpx 14rpx; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.08); }
 .media-tab-scroll { white-space: nowrap; }
 .media-tab { display: inline-block; padding: 10rpx 26rpx; font-size: 26rpx; color: #333; border-radius: 30rpx; }
 .media-tab.active { background: #fff; color: #e4393c; font-weight: 600; box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.06); }

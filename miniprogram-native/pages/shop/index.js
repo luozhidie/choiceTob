@@ -73,6 +73,7 @@ Page({
     statusBarHeight: 20,         // 状态栏高度（px）
     customNavTotalHeightPx: 64,  // 状态栏+自定义导航高度（px）
     tabsHeightPx: 36,            // 吸顶 Tab 高度（px）
+    mediaAreaHeightPx: 500,      // 媒体区高度（px）
     windowHeight: 667,           // 视口高度（px）
     sectionShopTop: 0,           // 档口区距页面顶部距离
     sectionDetailTop: 0,         // 详情区距页面顶部距离
@@ -471,7 +472,7 @@ Page({
   onPageScroll: function (e) {
     var t = this;
     var scrollTop = e.scrollTop || 0;
-    var offset = t.data.customNavTotalHeightPx + t.data.tabsHeightPx;
+    var offset = t.data.customNavTotalHeightPx;
     var show = scrollTop > 100;
     var active = 'product';
     if (t.data.sectionShopTop && scrollTop >= t.data.sectionShopTop - offset) active = 'shop';
@@ -500,7 +501,7 @@ Page({
   scrollToSection: function (e) {
     var section = e.currentTarget.dataset.section;
     var t = this;
-    var offset = t.data.customNavTotalHeightPx + t.data.tabsHeightPx;
+    var offset = t.data.customNavTotalHeightPx;
     var top = 0;
     if (section === 'shop') top = t.data.sectionShopTop;
     else if (section === 'detail') top = t.data.sectionDetailTop;
