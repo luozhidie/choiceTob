@@ -161,6 +161,8 @@ Page({
         var d=r.data;
         if(!d||!d.success)return;
         var data=d.data||{};
+        var isCert=!!data.storeOwnerCertified;
+        var certStyle=data.certifiedStyle||'';
         t.setData({
           subCount:data.orderStats?(data.orderStats.unpaid||0):'--',
           walletBalance:data.walletBalance!=null?data.walletBalance:'--',
@@ -168,8 +170,15 @@ Page({
           redPackCount:data.redPackCount!=null?data.redPackCount:'--',
           favCount:data.favCount||(wx.getStorageSync('favorites')||[]).length,
           historyCount:data.historyCount||(wx.getStorageSync('view_history')||[]).length,
-          isAdmin:!!data.isAdmin
+          isAdmin:!!data.isAdmin,
+          isCertified:isCert,
+          certifiedStyle:certStyle,
+          roleText:isCert?'已认证店主':'未认证店主'
         });
+        wx.setStorageSync('is_certified_store_owner',isCert);
+        wx.setStorageSync('certified_style',certStyle);
+        var app=getApp();
+        if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=isCert;
       },
       fail:function(){}
     });

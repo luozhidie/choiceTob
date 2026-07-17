@@ -48,10 +48,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "未登录" }, { status: 401 });
     }
 
-    // 2. 读取 profiles（会员状态 + 拿货金额 + 管理员标识）
+    // 2. 读取 profiles（会员状态 + 拿货金额 + 管理员标识 + 认证店主）
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate, total_purchase_amount, is_admin")
+      .select("role, membership_type, membership_expires_at, deposit_amount, deposit_discount_rate, total_purchase_amount, is_admin, store_owner_certified, certified_style")
       .eq("id", userId)
       .single();
 
@@ -116,6 +116,8 @@ export async function GET(request: NextRequest) {
         totalPurchaseAmount: profile?.total_purchase_amount || 0,
         depositAmount: profile?.deposit_amount || 0,
         depositDiscountRate: profile?.deposit_discount_rate || 1.0,
+        storeOwnerCertified: !!profile?.store_owner_certified,
+        certifiedStyle: profile?.certified_style || null,
 
         // 订单统计
         orderStats,
