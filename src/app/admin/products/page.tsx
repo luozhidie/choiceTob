@@ -1192,19 +1192,21 @@ export default function AdminProductsPage() {
                         if (file.size > 50 * 1024 * 1024) { alert("视频不能超过50MB"); return; }
                         setUploading(true);
                         try {
-                          const dataUrl = await new Promise<string>((resolve, reject) => {
-                            const reader = new FileReader();
-                            reader.onload = () => resolve(reader.result as string);
-                            reader.onerror = () => reject(new Error("文件读取失败"));
-                            reader.readAsDataURL(file);
-                          });
-                          const res = await fetch("/api/image-grabber/upload", {
+                          // 1. 从后端获取 Supabase 签名上传 URL
+                          const signedRes = await fetch("/api/admin/storage/signed-upload", {
                             method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "video/mp4", dataUrl }),
+                            body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "video/mp4", bucket: "products" }),
                           });
-                          const json = await res.json();
-                          if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
-                          setForm(f => ({ ...f, video_url: json.storedUrl }));
+                          const signedJson = await signedRes.json();
+                          if (!signedRes.ok || signedJson.error) throw new Error(signedJson.error || "获取上传链接失败");
+                          // 2. 直接 PUT 到 Supabase Storage，不经过 Vercel（避免请求体过大）
+                          const uploadRes = await fetch(signedJson.signedUrl, {
+                            method: "PUT",
+                            body: file,
+                            headers: { "Content-Type": file.type || "video/mp4" },
+                          });
+                          if (!uploadRes.ok) throw new Error(`上传失败: ${uploadRes.status}`);
+                          setForm(f => ({ ...f, video_url: signedJson.publicUrl }));
                         } catch (err: any) { alert("上传失败：" + err.message); }
                         setUploading(false); e.target.value = "";
                       }} className="hidden" />
