@@ -62,8 +62,9 @@ Page({
     // 静态内容（fallback，加载 store_content 后覆盖）
     wholesaleGuide: WHOLESALE_GUIDE,
     wholesaleTips: WHOLESALE_TIPS,
-    // 顶部 Tab
-    currentTab: 'photo',
+    // 顶部媒体轮播
+    mediaIndex: 0,             // 当前媒体页：0 视频 / 1 模特图 / 2 实拍图 / 3 尺码
+    mediaTabs: [],             // 动态生成的媒体 Tab [{key,label},...]
     // 店铺内容（后台可编辑）
     shopName: '骆芷蝶智选',
     shopIntro: '',
@@ -172,13 +173,22 @@ Page({
         var modelImages = Array.isArray(p.model_images) ? p.model_images.filter(Boolean) : [];
         var videoUrl = p.video_url || '';
         var sizeChartImage = p.size_chart_image || '';
+        /* 媒体页签：视频 / 模特图 / 实拍图 / 尺码 */
+        var mediaTabs = [];
+        if (videoUrl) mediaTabs.push({ key: 'video', label: '视频' });
+        if (modelImages.length > 0) mediaTabs.push({ key: 'model', label: '模特图' });
+        mediaTabs.push({ key: 'photo', label: '实拍图' });
+        if (sizeChartImage) mediaTabs.push({ key: 'size', label: '尺码' });
+        var mediaIndex = videoUrl ? 0 : 0; // 默认落在第一个，因视频排首位
+
         t.setData({
           product: p,
           images: images,
           videoUrl: videoUrl,
           modelImages: modelImages,
           sizeChartImage: sizeChartImage,
-          currentTab: videoUrl ? 'video' : 'photo',
+          mediaTabs: mediaTabs,
+          mediaIndex: mediaIndex,
           priceText: price ? '¥' + price : '¥0',
           originalPriceText: ori ? '¥' + ori : '',
           discountText: disc,
@@ -433,7 +443,8 @@ Page({
     });
   },
 
-  switchTab: function (e) { this.setData({ currentTab: e.currentTarget.dataset.tab }); },
+  onMediaSwiperChange: function (e) { this.setData({ mediaIndex: e.detail.current }); },
+  switchMediaTab: function (e) { this.setData({ mediaIndex: Number(e.currentTarget.dataset.index) }); },
 
   goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
 

@@ -1,39 +1,34 @@
 <view class="page">
-  <!-- 图区：实拍图 -->
-  <block wx:if="{{currentTab==='photo'}}">
-    <swiper class="swiper" indicator-dots="{{images.length>1}}" autoplay circular>
-      <swiper-item wx:for="{{images}}" wx:key="*this">
-        <image src="{{item}}" mode="aspectFill" class="slide-img" />
-      </swiper-item>
-      <swiper-item wx:if="{{!images || images.length===0}}">
-        <view class="ph">暂无图片</view>
-      </swiper-item>
-    </swiper>
-  </block>
+  <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码（左右滑动切换，对标一手） -->
+  <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}">
+    <swiper-item wx:if="{{videoUrl}}">
+      <video class="media-video" src="{{videoUrl}}" controls play-btn-center></video>
+    </swiper-item>
+    <swiper-item wx:if="{{modelImages.length>0}}">
+      <scroll-view scroll-y class="media-scroll">
+        <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
+      </scroll-view>
+    </swiper-item>
+    <swiper-item>
+      <scroll-view scroll-y class="media-scroll">
+        <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="media-item-img"/>
+        <view wx:if="{{!images || images.length===0}}" class="ph">暂无图片</view>
+      </scroll-view>
+    </swiper-item>
+    <swiper-item wx:if="{{sizeChartImage}}">
+      <scroll-view scroll-y class="media-scroll">
+        <image src="{{sizeChartImage}}" mode="widthFix" class="media-item-img"/>
+      </scroll-view>
+    </swiper-item>
+  </swiper>
 
-  <!-- 图区：模特图 -->
-  <block wx:elif="{{currentTab==='model'}}">
-    <scroll-view scroll-x class="model-scroll">
-      <image wx:for="{{modelImages}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="model-img"/>
+  <!-- 媒体切换 Tab：视频 / 模特图 / 实拍图 / 尺码（当前位置指示器） -->
+  <view class="media-tab-wrap">
+    <scroll-view scroll-x class="media-tab-scroll" scroll-with-animation>
+      <view class="media-tab {{mediaIndex===index?'active':''}}" wx:for="{{mediaTabs}}" wx:key="key" data-index="{{index}}" bindtap="switchMediaTab">
+        {{item.label}}
+      </view>
     </scroll-view>
-  </block>
-
-  <!-- 图区：视频 -->
-  <block wx:elif="{{currentTab==='video'}}">
-    <video wx:if="{{videoUrl}}" src="{{videoUrl}}" controls play-btn-center class="vid"></video>
-  </block>
-
-  <!-- 图区：尺码 -->
-  <block wx:elif="{{currentTab==='size'}}">
-    <image wx:if="{{sizeChartImage}}" src="{{sizeChartImage}}" mode="widthFix" class="size-img"/>
-  </block>
-
-  <!-- 媒体切换 Tab：视频 / 模特图 / 实拍图 / 尺码（置于媒体展示区下方，对标一手） -->
-  <view style="display:flex; background:#fff; border-top:1px solid #eee;">
-    <view data-tab="video" bindtap="switchTab" wx:if="{{videoUrl}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='video'?'#e4393c':'#666'}}; font-weight:{{currentTab==='video'?'600':'400'}}; border-bottom:{{currentTab==='video'?'2px solid #e4393c':'2px solid transparent'}};">视频</view>
-    <view data-tab="model" bindtap="switchTab" wx:if="{{modelImages.length>0}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='model'?'#e4393c':'#666'}}; font-weight:{{currentTab==='model'?'600':'400'}}; border-bottom:{{currentTab==='model'?'2px solid #e4393c':'2px solid transparent'}};">模特图</view>
-    <view data-tab="photo" bindtap="switchTab" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='photo'?'#e4393c':'#666'}}; font-weight:{{currentTab==='photo'?'600':'400'}}; border-bottom:{{currentTab==='photo'?'2px solid #e4393c':'2px solid transparent'}};">实拍图</view>
-    <view data-tab="size" bindtap="switchTab" wx:if="{{sizeChartImage}}" style="flex:1; text-align:center; padding:11px 0; font-size:14px; color:{{currentTab==='size'?'#e4393c':'#666'}}; font-weight:{{currentTab==='size'?'600':'400'}}; border-bottom:{{currentTab==='size'?'2px solid #e4393c':'2px solid transparent'}};">尺码</view>
   </view>
 
   <!-- 收藏按钮 -->
