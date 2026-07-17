@@ -46,7 +46,11 @@
       <text class="ori" wx:if="{{originalPriceText}}">{{originalPriceText}}</text>
       <text class="disc" wx:if="{{discountText}}">{{discountText}}</text>
     </view>
-    <text class="sales" wx:if="{{product.sales_count}}">已售 {{product.sales_count}}</text>
+    <view class="est-row" wx:if="{{estPriceText}}">
+      <text class="est-label">动力预估价</text>
+      <text class="est-val">{{estPriceText}}</text>
+    </view>
+    <text class="sales" wx:if="{{product.sales_count}}">今日已拼 {{product.sales_count}} 件</text>
     <view class="wp-row" wx:if="{{wholesalePriceText}}">
       <text class="wp-label">批发价</text>
       <text class="wp-val {{isPriceMember?'wp-show':'wp-blur'}}">{{wholesalePriceText}}</text>
@@ -58,6 +62,28 @@
   <view class="name-sec">
     <text class="name">{{product.title || product.name || '商品名称'}}</text>
     <text class="desc">{{product.description || ''}}</text>
+  </view>
+
+  <!-- 商品标签（会员 / 货源 / 新品 / 自定义） -->
+  <view class="tag-row" wx:if="{{tagList.length>0}}">
+    <text class="tag" wx:for="{{tagList}}" wx:key="*this">{{item}}</text>
+  </view>
+
+  <!-- 选择：尺码 / 颜色 -->
+  <view class="block-sec" wx:if="{{sizeOptions.length>0 || colorOptions.length>0}}">
+    <text class="sec-title">📐 选择</text>
+    <view class="sel-block" wx:if="{{sizeOptions.length>0}}">
+      <text class="sel-label">尺码</text>
+      <view class="chips">
+        <text class="chip {{selectedSize===item?'chip-on':''}}" wx:for="{{sizeOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSize">{{item}}</text>
+      </view>
+    </view>
+    <view class="sel-block" wx:if="{{colorOptions.length>0}}">
+      <text class="sel-label">颜色</text>
+      <view class="chips">
+        <text class="chip {{selectedColor===item?'chip-on':''}}" wx:for="{{colorOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectColor">{{item}}</text>
+      </view>
+    </view>
   </view>
 
   <!-- 店铺入口卡（进店逛逛→货架） -->
@@ -176,9 +202,45 @@
     </view>
   </view>
 
-  <!-- 推荐商品 -->
+  <!-- 店铺推荐：档口最新款 -->
+  <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
+    <text class="rec-title">🆕 档口最新款</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 店铺推荐：档口大爆款 -->
+  <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
+    <text class="rec-title">🔥 档口大爆款</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 店铺推荐：新人推荐 -->
+  <view class="rec-sec" wx:if="{{shopRecNewbie.length>0}}">
+    <text class="rec-title">👤 新人推荐</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecNewbie}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 相似推荐 -->
   <view class="rec-sec" wx:if="{{recList.length>0}}">
-    <text class="rec-title">相似推荐</text>
+    <text class="rec-title">同款相似推荐</text>
     <scroll-view scroll-x class="rec-scroll">
       <view class="rec-item" wx:for="{{recList}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
         <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
@@ -191,19 +253,22 @@
   <!-- 底部操作栏 -->
   <view class="bar">
     <view class="bar-left">
-      <view class="bar-icon" bindtap="goCart">
-        <text class="ic">🛒</text>
-        <text class="badge" wx:if="{{cartCount>0}}">{{cartCount}}</text>
-        <text class="lab">购物车</text>
-      </view>
       <view class="bar-icon" bindtap="toggleFav">
         <text class="ic">{{isFav?'♥':'♡'}}</text>
         <text class="lab">{{isFav?'已收藏':'收藏'}}</text>
       </view>
+      <view class="bar-icon" bindtap="goShelf">
+        <text class="ic">🏪</text>
+        <text class="lab">进店</text>
+      </view>
+      <view class="bar-icon" bindtap="goCart">
+        <text class="ic">🛒</text>
+        <text class="badge" wx:if="{{cartCount>0}}">{{cartCount}}</text>
+        <text class="lab">进货车</text>
+      </view>
     </view>
     <view class="bar-right">
-      <view class="btn-tryon" bindtap="onTryon">{{tryonLoading?'试穿中...':'试穿'}}</view>
-      <view class="btn-cart" bindtap="addCart">加入购物车</view>
+      <view class="btn-cart" bindtap="addCart">加入进货车</view>
       <view class="btn-buy" bindtap="buyNow">立即购买</view>
     </view>
   </view>

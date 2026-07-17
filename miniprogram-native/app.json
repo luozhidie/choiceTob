@@ -68,7 +68,7 @@
       },
       {
         "pagePath": "pages/cart/index",
-        "text": "购物车",
+        "text": "进货车",
         "iconPath": "assets/tabbar/cart.png",
         "selectedIconPath": "assets/tabbar/cart-active.png"
       },

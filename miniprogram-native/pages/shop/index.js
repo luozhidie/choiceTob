@@ -71,6 +71,16 @@ Page({
     fabricCare: '',
     // 相似推荐
     similarList: [],
+    // 1:1 一手增强
+    estPriceText: '',          // 动力预估价（拿货会员价）
+    tagList: [],               // 商品标签：会员 / 货源 / 新品 / 自定义
+    sizeOptions: [],           // 可选尺码
+    colorOptions: [],          // 可选颜色
+    selectedSize: '',
+    selectedColor: '',
+    shopRecLatest: [],         // 档口最新款
+    shopRecHot: [],            // 档口大爆款
+    shopRecNewbie: [],         // 新人推荐
   },
 
   onLoad: function (opt) {
@@ -140,6 +150,29 @@ Page({
           while ((m = re.exec(html)) !== null) { detailImages.push(m[1]); }
         }
         p.detail_images = detailImages;
+        /* 动力预估价（拿货会员价） */
+        var estText = '';
+        if (wp > 0) {
+          estText = isPriceMember ? ('¥' + Math.round(wp / 100)) : '开通会员看预估价';
+        }
+        /* 商品标签：会员 / 货源 / 新品 / 自定义 */
+        var tags = [];
+        if (Array.isArray(p.tags)) tags = tags.concat(p.tags);
+        if (isPriceMember || t.data.memberTier) tags.push('会员');
+        if (p.origin) tags.push(p.origin + '货源');
+        else if (p.supplier_name) tags.push(p.supplier_name);
+        try {
+          if (p.created_at && (Date.now() - new Date(p.created_at).getTime() < 7 * 24 * 3600 * 1000)) tags.push('今日新款');
+        } catch (e) {}
+        tags = tags.filter(function (v, i) { return tags.indexOf(v) === i; });
+        /* 尺码 / 颜色 选项 */
+        var sizeOptions = [];
+        if (Array.isArray(p.sizes)) sizeOptions = p.sizes.map(String);
+        else if (typeof p.sizes === 'string') sizeOptions = p.sizes.split(/[,，\/、]/).map(function (s) { return s.trim(); }).filter(Boolean);
+        else if (p.size) sizeOptions = [String(p.size)];
+        var colorOptions = [];
+        if (Array.isArray(p.color)) colorOptions = p.color.map(String);
+        else if (p.color) colorOptions = String(p.color).split(/[,，\/、]/).map(function (s) { return s.trim(); }).filter(Boolean);
         /* 模特图 / 尺码表 */
         var modelImages = Array.isArray(p.model_images) ? p.model_images.filter(Boolean) : [];
         var videoUrl = p.video_url || '';
@@ -154,10 +187,15 @@ Page({
           originalPriceText: ori ? '¥' + ori : '',
           discountText: disc,
           wholesalePriceText: wholesaleText,
+          estPriceText: estText,
+          tagList: tags,
+          sizeOptions: sizeOptions,
+          colorOptions: colorOptions,
           specList: specList,
         });
         t.loadReviews(id);
         t.loadRec(p.category, id);
+        t.loadShopRecs(p.category, id);
       }
     });
   },
@@ -402,6 +440,37 @@ Page({
   switchTab: function (e) { this.setData({ currentTab: e.currentTarget.dataset.tab }); },
 
   goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
+
+  // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
+  loadShopRecs: function (cat, excludeId) {
+    var t = this;
+    var url = 'https://colour-choice.art/api/public/products?limit=10';
+    if (cat) url += '&category=' + encodeURIComponent(cat);
+    wx.request({
+      url: url,
+      method: 'GET',
+      success: function (r) {
+        var list = (r.data && r.data.data) || [];
+        if (excludeId) list = list.filter(function (x) { return x.id !== excludeId; });
+        list.forEach(function (p) { var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100); p.priceLabel = '¥' + n; });
+        var latest = list.slice(0, 6);
+        var hot = list.slice().sort(function (a, b) { return (Number(b.sales) || 0) - (Number(a.sales) || 0); }).slice(0, 6);
+        t.setData({ shopRecLatest: latest, shopRecHot: hot });
+      }
+    });
+    wx.request({
+      url: 'https://colour-choice.art/api/public/products?limit=10',
+      method: 'GET',
+      success: function (r) {
+        var list2 = (r.data && r.data.data) || [];
+        list2.forEach(function (p) { var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100); p.priceLabel = '¥' + n; });
+        t.setData({ shopRecNewbie: list2.slice(0, 6) });
+      }
+    });
+  },
+
+  selectSize: function (e) { this.setData({ selectedSize: e.currentTarget.dataset.v }); },
+  selectColor: function (e) { this.setData({ selectedColor: e.currentTarget.dataset.v }); },
 
   onTryon: function () {
     var t = this;
