@@ -48,6 +48,7 @@ Page({
     cartCount: 0,
     isFav: false,
     specList: [],
+    paramList: [],            // 详细参数（服装规格）网格，用于下单详情弹窗
     reviews: [],
     recList: [],
     tryonLoading: false,
@@ -192,6 +193,23 @@ Page({
         if (p.brand) specList.push({ label: '品牌', value: p.brand });
         if (p.weight) specList.push({ label: '重量', value: p.weight });
         if (p.care_instructions) specList.push({ label: '洗涤', value: p.care_instructions });
+        /* 详细参数（服装规格 JSONB）：并入 specList 供参数行展示，并单独成 paramList 供下单详情网格 */
+        var PARAM_LABELS = {
+          fabric: '面料', accessories: '配件', lining: '里布', thickness: '厚度',
+          season: '季节', skirt_type: '裙型', silhouette: '廓形', collar: '领型',
+          skirt_length: '裙长', scene: '穿着场景', fit: '版型', placket: '门襟',
+          sleeve_type: '袖型', sleeve_length: '袖长', craft: '工艺', pattern: '图案'
+        };
+        var paramList = [];
+        if (p.params && typeof p.params === 'object') {
+          for (var pk in PARAM_LABELS) {
+            var pv = p.params[pk];
+            if (pv !== undefined && pv !== null && pv !== '') {
+              specList.push({ label: PARAM_LABELS[pk], value: pv });
+              paramList.push({ label: PARAM_LABELS[pk], value: pv });
+            }
+          }
+        }
         var specText = specList.map(function (s) { return s.label + '：' + s.value; }).join(' | ');
         /* 商品详情图：从 detail HTML 中提取 <img> src */
         var detailImages = [];
@@ -274,6 +292,7 @@ Page({
           colorOptions: colorOptions,
           specList: specList,
           specText: specText,
+          paramList: paramList,
           priceValue: priceValue,
           bulkPriceValue: bulkPriceValue,
           sizeQuantities: sizeQuantities,

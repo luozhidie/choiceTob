@@ -297,10 +297,15 @@
           </view>
         </view>
 
-        <!-- 参数 -->
-        <view class="sku-row" wx:if="{{specList.length>0}}">
+        <!-- 参数（详细规格网格） -->
+        <view class="sku-params" wx:if="{{paramList.length>0}}">
           <text class="sku-row-label">参数</text>
-          <text class="sku-row-val sku-row-ellipsis">{{specText}}</text>
+          <view class="sku-params-grid">
+            <view class="sku-param-item" wx:for="{{paramList}}" wx:key="label">
+              <text class="sku-param-label">{{item.label}}</text>
+              <text class="sku-param-value">{{item.value}}</text>
+            </view>
+          </view>
         </view>
 
         <!-- 服务 -->

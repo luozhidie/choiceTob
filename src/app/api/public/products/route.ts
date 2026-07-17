@@ -17,6 +17,7 @@ function formatProducts(data: any[]) {
     original_price: p.original_price || null,
     wholesale_price: p.wholesale_price || null,
     bulk_price: p.bulk_price || null,
+    params: p.params || null,
     image_url: p.image_url || p.cover_image,
     cover_image: p.cover_image || p.image_url,
     images: p.images || null,

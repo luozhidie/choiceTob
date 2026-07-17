@@ -261,6 +261,13 @@ page { background: #f5f3f0; }
 .sku-row-val { font-size: 28rpx; color: #333; }
 .sku-row-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
 
+/* 详细参数网格（下单详情弹窗） */
+.sku-params { padding: 24rpx 0; border-bottom: 1rpx solid #f5f2ef; }
+.sku-params-grid { display: flex; flex-wrap: wrap; margin-top: 16rpx; background: #faf8f6; border-radius: 12rpx; padding: 8rpx 0; }
+.sku-param-item { width: 50%; display: flex; align-items: baseline; padding: 10rpx 20rpx; box-sizing: border-box; }
+.sku-param-label { font-size: 24rpx; color: #999; flex-shrink: 0; margin-right: 10rpx; }
+.sku-param-value { font-size: 26rpx; color: #333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .sku-chips { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .sku-chip { font-size: 26rpx; color: #333; background: #f5f5f5; padding: 12rpx 28rpx; border-radius: 30rpx; border: 1rpx solid transparent; }
 .sku-chip-on { color: #e91e63; background: #fff0f4; border-color: #e91e63; }

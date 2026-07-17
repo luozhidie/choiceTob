@@ -29,6 +29,26 @@ import {
 // 秋冬上架主题（写入 tags 带「主题·」前缀，无需改表结构）
 const AW_THEMES = ["美拉德风", "新中式", "老钱风·静奢", "通勤极简", "新年战袍", "圣诞派对"];
 
+// 商品详细参数（服装规格）——对标同行一手/1688 的参数表，存入 products.params JSONB
+const PARAM_FIELDS: { key: string; label: string; placeholder: string }[] = [
+  { key: "fabric", label: "面料", placeholder: "如：真丝、棉麻、聚酯纤维" },
+  { key: "accessories", label: "配件", placeholder: "如：金属扣、拉链" },
+  { key: "lining", label: "里布", placeholder: "如：雪纺里、无里" },
+  { key: "thickness", label: "厚度", placeholder: "如：常规、加厚" },
+  { key: "season", label: "季节", placeholder: "如：春秋、夏季" },
+  { key: "skirt_type", label: "裙型", placeholder: "如：A字裙、直筒裙" },
+  { key: "silhouette", label: "廓形", placeholder: "如：X型、H型" },
+  { key: "collar", label: "领型", placeholder: "如：圆领、V领" },
+  { key: "skirt_length", label: "裙长", placeholder: "如：短裙、及踝" },
+  { key: "scene", label: "穿着场景", placeholder: "如：通勤、度假" },
+  { key: "fit", label: "版型", placeholder: "如：宽松、修身" },
+  { key: "placket", label: "门襟", placeholder: "如：单排扣、拉链" },
+  { key: "sleeve_type", label: "袖型", placeholder: "如：泡泡袖、落肩袖" },
+  { key: "sleeve_length", label: "袖长", placeholder: "如：短袖、七分袖" },
+  { key: "craft", label: "工艺", placeholder: "如：压褶、刺绣" },
+  { key: "pattern", label: "图案", placeholder: "如：纯色、碎花" },
+];
+
 interface Product {
   id: string;
   title: string;
@@ -61,6 +81,8 @@ interface Product {
   care_instructions?: string | null;
   weight?: string | null;
   brand?: string | null;
+  // 详细参数（服装规格）JSONB
+  params?: { [key: string]: string | null } | null;
   // 媒体字段
   video_url?: string | null;
   model_images?: string[] | null;
@@ -164,6 +186,8 @@ export default function AdminProductsPage() {
     care_instructions: "",
     weight: "",
     brand: "",
+    // 详细参数（服装规格）JSONB
+    params: {} as Record<string, string>,
     // 媒体字段
     video_url: "",
     model_images: [] as string[],
@@ -253,6 +277,7 @@ export default function AdminProductsPage() {
       weight: "",
       care_instructions: "",
       brand: "",
+      params: {},
       video_url: "",
       model_images: [] as string[],
       size_chart_image: "",
@@ -313,6 +338,15 @@ export default function AdminProductsPage() {
       care_instructions: form.care_instructions.trim() || null,
       weight: form.weight.trim() || null,
       brand: form.brand.trim() || null,
+      // 详细参数（服装规格）：清洗空值后写入 JSONB
+      params: (() => {
+        const cleaned: Record<string, string> = {};
+        Object.keys(form.params || {}).forEach((k) => {
+          const v = (form.params[k] || "").trim();
+          if (v) cleaned[k] = v;
+        });
+        return Object.keys(cleaned).length > 0 ? cleaned : null;
+      })(),
       // 媒体字段
       video_url: form.video_url.trim() || null,
       model_images: form.model_images.length > 0 ? form.model_images : null,
@@ -431,6 +465,12 @@ export default function AdminProductsPage() {
       weight: product.weight || "",
       care_instructions: product.care_instructions || "",
       brand: product.brand || "",
+      params: (() => {
+        const base = (product.params && typeof product.params === "object" ? product.params : {}) as Record<string, string>;
+        const next: Record<string, string> = {};
+        PARAM_FIELDS.forEach((f) => { next[f.key] = base[f.key] || ""; });
+        return next;
+      })(),
       video_url: product.video_url || "",
       model_images: product.model_images || [],
       size_chart_image: product.size_chart_image || "",
@@ -1672,6 +1712,30 @@ export default function AdminProductsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="如：ZARA、优衣库"
                   />
+                </div>
+
+                {/* 详细参数（服装规格） */}
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-500 mb-3">详细参数（服装规格，对标同行参数表，可选项填）</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {PARAM_FIELDS.map((f) => (
+                      <div key={f.key}>
+                        <label className="block text-[11px] font-medium text-gray-600 mb-1">{f.label}</label>
+                        <input
+                          type="text"
+                          value={form.params[f.key] || ""}
+                          onChange={(e) =>
+                            setForm({
+                              ...form,
+                              params: { ...form.params, [f.key]: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          placeholder={f.placeholder}
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               {/* === 商品参数结束 === */}
