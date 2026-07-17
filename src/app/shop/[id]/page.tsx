@@ -32,6 +32,7 @@ interface Product {
   price: number;
   original_price: number | null;
   wholesale_price: number | null;   // 批发价
+  sales_count?: number | null;      // 销量（已拼件数）
   category: string | null;
   subcategory: string | null;
   tags: string[] | null;
@@ -80,6 +81,11 @@ export default function ProductDetailPage() {
   const [claimedIds, setClaimedIds] = useState<string[]>([]);
   const { addItem } = useCart();
 
+  // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
+  const [shopRecLatest, setShopRecLatest] = useState<Product[]>([]);
+  const [shopRecHot, setShopRecHot] = useState<Product[]>([]);
+  const [shopRecNewbie, setShopRecNewbie] = useState<Product[]>([]);
+
   // 检查用户登录状态 + 是否价格会员
   useEffect(() => {
     const supabase = createClient();
@@ -122,6 +128,7 @@ export default function ProductDetailPage() {
             price: p.price || 0,
             original_price: p.original_price || null,
             wholesale_price: p.wholesale_price || null,
+            sales_count: p.sales_count || null,
             category: p.category || null,
             subcategory: p.subcategory || null,
             tags: p.tags || null,
@@ -200,6 +207,28 @@ export default function ProductDetailPage() {
       .catch(() => {});
   }, []);
 
+  // 店铺推荐位：最新款 / 大爆款(按销量) / 新人推荐
+  useEffect(() => {
+    if (!product) return;
+    let cancelled = false;
+    const cat = product.category;
+    const base = `/api/public/products?limit=10${cat ? `&category=${encodeURIComponent(cat)}` : ""}`;
+    fetch(base).then((r) => r.json()).then((j: any) => {
+      if (!j.success) return;
+      const list: any[] = (j.data || []).filter((p: any) => p.id !== product.id);
+      if (cancelled) return;
+      setShopRecLatest(list.slice(0, 8));
+      const hot = [...list].sort((a: any, b: any) => (b.sales || 0) - (a.sales || 0)).slice(0, 8);
+      setShopRecHot(hot);
+    }).catch(() => {});
+    fetch(`/api/public/products?limit=10`).then((r) => r.json()).then((j: any) => {
+      if (!j.success || cancelled) return;
+      const list2: any[] = (j.data || []).filter((p: any) => p.id !== product.id);
+      setShopRecNewbie(list2.slice(0, 8));
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [product?.category, product?.id]);
+
   // 已登录用户：标记已领取的券
   useEffect(() => {
     if (!authUser) { setClaimedIds([]); return; }
@@ -215,6 +244,45 @@ export default function ProductDetailPage() {
   }, [authUser]);
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+
+  // 商品标签：自定义 tags + 自动（会员 / 货源 / 今日新款）
+  const tagColor = (t: string) => {
+    if (t === "会员") return "bg-red-50 text-red-500";
+    if (t.includes("货源")) return "bg-blue-50 text-blue-500";
+    if (t === "今日新款") return "bg-green-50 text-green-600";
+    return "bg-gray-100 text-gray-600";
+  };
+  const displayTags = (() => {
+    const auto: string[] = [];
+    if (isPriceMember || canViewWholesale) auto.push("会员");
+    if (product?.origin) auto.push(product.origin + "货源");
+    else if (product?.supplier_name) auto.push(product.supplier_name as string);
+    if (product?.created_at) {
+      try {
+        if (Date.now() - new Date(product.created_at).getTime() < 7 * 24 * 3600 * 1000) auto.push("今日新款");
+      } catch (e) {}
+    }
+    return Array.from(new Set([...(product?.tags || []), ...auto]));
+  })();
+
+  // 推荐位卡片
+  const renderRecCard = (p: any) => (
+    <Link key={p.id} href={`/shop/${p.id}`}>
+      <div className="bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
+        <div className="aspect-square bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center">
+          {p.cover_image ? (
+            <img src={p.cover_image} alt={p.title} className="w-full h-full object-cover" />
+          ) : (
+            <ShoppingBag className="w-8 h-8 text-primary/30" />
+          )}
+        </div>
+        <div className="p-3">
+          <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
+          <p className="text-sm text-accent font-bold mt-1">{formatPrice(p.price)}</p>
+        </div>
+      </div>
+    </Link>
+  );
 
   // 领取优惠券
   const handleClaim = async (templateId: string) => {
@@ -531,6 +599,18 @@ export default function ProductDetailPage() {
               <span className="text-sm text-gray-400 mb-1">零售价</span>
             </div>
 
+            {product.wholesale_price && (
+              <div className="flex items-center gap-2 mt-1.5 text-sm">
+                <span className="text-gray-400">动力预估价</span>
+                <span className="text-orange-500 font-semibold">
+                  {canViewWholesale ? formatPrice(product.wholesale_price) : "开通会员看预估价"}
+                </span>
+              </div>
+            )}
+            {product.sales_count ? (
+              <div className="text-xs text-gray-400 mt-1">今日已拼 {product.sales_count} 件</div>
+            ) : null}
+
             <div
               className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${canViewWholesale && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}
               onClick={() => {
@@ -600,10 +680,10 @@ export default function ProductDetailPage() {
           </div>
 
           {/* 标签 */}
-          {product.tags && product.tags.length > 0 && (
+          {displayTags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-4">
-              {product.tags.map((tag) => (
-                <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+              {displayTags.map((tag) => (
+                <span key={tag} className={`px-2.5 py-1 rounded-full text-xs ${tagColor(tag)}`}>
                   {tag}
                 </span>
               ))}
@@ -875,6 +955,33 @@ export default function ProductDetailPage() {
             </div>
           </section>
         )}
+
+        {/* ====== 14-16. 店铺推荐位（对标一手） ====== */}
+        {shopRecLatest.length > 0 && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 md:p-6">
+            <h2 className="text-base font-bold text-primary mb-6">🆕 档口最新款</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+              {shopRecLatest.map(renderRecCard)}
+            </div>
+          </section>
+        )}
+        {shopRecHot.length > 0 && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 md:p-6">
+            <h2 className="text-base font-bold text-primary mb-6">🔥 档口大爆款</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+              {shopRecHot.map(renderRecCard)}
+            </div>
+          </section>
+        )}
+        {shopRecNewbie.length > 0 && (
+          <section className="mt-4 bg-white border border-gray-100 rounded-2xl p-4 md:p-6">
+            <h2 className="text-base font-bold text-primary mb-6">👤 新人推荐</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
+              {shopRecNewbie.map(renderRecCard)}
+            </div>
+          </section>
+        )}
+
       </div>
 
       {/* ====== 分享弹窗 ====== */}
