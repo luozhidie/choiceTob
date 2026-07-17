@@ -141,47 +141,83 @@
       <view class="info-content"><text class="info-text">{{serviceText}}</text></view>
       <text class="info-arrow">›</text>
     </view>
+
+    <!-- 货架入口：点击进入档口区 -->
+    <view class="info-row" bindtap="scrollToSection" data-section="shop">
+      <text class="info-label">货架</text>
+      <view class="info-content">
+        <text class="info-text">进店逛逛，查看更多系列款</text>
+      </view>
+      <text class="info-arrow">›</text>
+    </view>
   </view>
 
-  <!-- 档口区：店铺卡片 / 推荐 -->
+  <!-- 档口区：店铺大卡片 / 系列最新款+爆款 / 同款式相似推荐 -->
   <view id="section-shop">
-    <!-- 店铺入口卡 -->
-    <view class="shop-card" bindtap="goShelf">
-      <view class="shop-card-left">
-        <view class="shop-logo">🏪</view>
-        <view class="shop-info">
-          <text class="shop-name">{{shopName}}</text>
-          <text class="shop-tags">粉丝{{shopStats.fans}} · 综合体验{{shopStats.score}} · 返单率{{shopStats.repurchaseRate}}</text>
+    <!-- 店铺大卡片 -->
+    <view class="shop-hero-card" bindtap="goShelf">
+      <view class="shop-hero-bg">
+        <view class="shop-hero-mask"></view>
+        <view class="shop-hero-content">
+          <view class="shop-hero-top">
+            <view class="shop-hero-logo">🏪</view>
+            <view class="shop-hero-info">
+              <text class="shop-hero-name">{{shopName}}</text>
+              <text class="shop-hero-tags">粉丝{{shopStats.fans}} · 综合体验{{shopStats.score}} · 返单率{{shopStats.repurchaseRate}}</text>
+            </view>
+          </view>
+          <view class="shop-hero-bottom">
+            <text class="shop-hero-brand" wx:if="{{shopStats.selectedBrand}}">严选品牌</text>
+            <view class="shop-hero-btn">进店逛逛</view>
+          </view>
         </view>
-      </view>
-      <view class="shop-right">
-        <view class="shop-brand" wx:if="{{shopStats.selectedBrand}}">严选品牌</view>
-        <view class="shop-btn">进店逛逛</view>
       </view>
     </view>
 
-    <!-- 店铺推荐：档口最新款 -->
-    <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
-      <text class="rec-title">档口最新款</text>
-      <scroll-view scroll-x class="rec-scroll">
-        <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-          <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-          <text class="rec-price">{{item.priceLabel}}</text>
+    <!-- 系列最新款 / 系列最爆款：并排两列 -->
+    <view class="shop-two-col" wx:if="{{shopRecLatest.length>0 || shopRecHot.length>0}}">
+      <view class="shop-col" wx:if="{{shopRecLatest.length>0}}">
+        <view class="shop-col-head">
+          <text class="shop-col-title">系列最新款</text>
+          <text class="shop-col-more" bindtap="goShelf">更多 ›</text>
         </view>
-      </scroll-view>
+        <view class="shop-col-list">
+          <view class="shop-col-item" wx:for="{{shopRecLatest}}" wx:key="id" wx:if="{{index<3}}" bindtap="goShop" data-id="{{item.id}}">
+            <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="shop-col-img"/>
+            <text class="shop-col-name">{{item.title||item.name||'商品'}}</text>
+            <text class="shop-col-price">{{item.priceLabel}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="shop-col" wx:if="{{shopRecHot.length>0}}">
+        <view class="shop-col-head">
+          <text class="shop-col-title">系列最爆款</text>
+          <text class="shop-col-more" bindtap="goShelf">更多 ›</text>
+        </view>
+        <view class="shop-col-list">
+          <view class="shop-col-item" wx:for="{{shopRecHot}}" wx:key="id" wx:if="{{index<3}}" bindtap="goShop" data-id="{{item.id}}">
+            <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="shop-col-img"/>
+            <text class="shop-col-name">{{item.title||item.name||'商品'}}</text>
+            <text class="shop-col-price">{{item.priceLabel}}</text>
+          </view>
+        </view>
+      </view>
     </view>
 
-    <!-- 店铺推荐：档口大爆款 -->
-    <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
-      <text class="rec-title">档口大爆款</text>
-      <scroll-view scroll-x class="rec-scroll">
-        <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-          <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-          <text class="rec-price">{{item.priceLabel}}</text>
+    <!-- 同款式相似推荐：两列商品并排 -->
+    <view class="similar-sec" wx:if="{{recList.length>0}}">
+      <view class="similar-header">
+        <view class="similar-line"></view>
+        <text class="similar-title">同款式相似推荐</text>
+        <view class="similar-line"></view>
+      </view>
+      <view class="similar-grid">
+        <view class="similar-item" wx:for="{{recList}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="similar-img"/>
+          <text class="similar-name">{{item.title||item.name||'商品'}}</text>
+          <text class="similar-price">{{item.priceLabel}}</text>
         </view>
-      </scroll-view>
+      </view>
     </view>
   </view>
 
