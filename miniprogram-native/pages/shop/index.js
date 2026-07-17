@@ -252,7 +252,7 @@ Page({
           shipEstDate = (sd.getMonth() + 1) + '月' + sd.getDate() + '日';
         }
         var shipSummary = '';
-        if (shipFrom) shipSummary += shipFrom + '发货';
+        if (shipFrom) shipSummary += shipFrom + (shipFrom.endsWith('发货') ? '' : '发货');
         if (shipEstDate) shipSummary += (shipSummary ? ' · ' : '') + '预计' + shipEstDate + '发出';
         if (!shipSummary && t.data.shippingNote) shipSummary = t.data.shippingNote;
         var hasProductShip = !!(shipFrom || shipEstDate || shipText || shipImage);
