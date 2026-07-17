@@ -1,5 +1,11 @@
 <view class="page">
-  <view class="card">
+  <!-- 有解释图：只展示图片 -->
+  <view wx:if="{{shipImage}}" class="ship-image-wrap" bindtap="previewImage">
+    <image src="{{shipImage}}" mode="widthFix" class="ship-image" lazy-load />
+  </view>
+
+  <!-- 无解释图：文字版 -->
+  <view wx:else class="card">
     <view class="title">发货说明</view>
 
     <view class="row" wx:if="{{shipFrom}}">
@@ -18,11 +24,6 @@
     <view class="divider"></view>
 
     <view class="explain">{{shipText}}</view>
-
-    <!-- 发货解释图片 -->
-    <view class="ship-image-wrap" wx:if="{{shipImage}}" bindtap="previewImage">
-      <image src="{{shipImage}}" mode="widthFix" class="ship-image" lazy-load />
-    </view>
 
     <view class="tips">
       <view class="tip">· 当前下单，按上述预计日期陆续发出；</view>

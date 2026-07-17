@@ -108,9 +108,12 @@
     </view>
 
     <!-- 发货 -->
-    <view class="info-row" wx:if="{{shipSummary || shipImage}}" bindtap="goShippingExplanation">
+    <view class="info-row ship-row" wx:if="{{shipSummary || shipText || shipImage}}" bindtap="goShippingExplanation">
       <text class="info-label">发货</text>
-      <view class="info-content"><text class="info-text">{{shipSummary || '点击查看发货说明'}}</text></view>
+      <view class="info-content ship-content">
+        <text class="info-text ship-text" wx:if="{{shipText}}">{{shipText}}</text>
+        <text class="info-text" wx:elif="{{shipSummary}}">{{shipSummary}}</text>
+      </view>
       <text class="info-arrow">›</text>
     </view>
 

@@ -190,6 +190,9 @@ page { background: #f5f3f0; }
 .info-content { flex: 1; display: flex; align-items: center; gap: 12rpx; overflow: hidden; }
 .info-text { font-size: 28rpx; color: #333; }
 .spec-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ship-row { align-items: flex-start; }
+.ship-content { flex-direction: column; align-items: flex-start; gap: 0; padding: 4rpx 0; }
+.ship-text { font-size: 24rpx; color: #888; line-height: 1.55; white-space: normal; word-break: break-all; }
 .info-arrow { font-size: 28rpx; color: #ccc; margin-left: 8rpx; }
 
 /* 会员行 */
