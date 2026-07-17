@@ -51,227 +51,123 @@
     </view>
   </view>
 
-  <!-- 商品区：价格 / 名称 / 规格 / 数量 -->
+  <!-- 商品区：标题 / 会员 / 优惠 / 发货 / 选择 / 参数 / 服务 -->
   <view id="section-product">
-    <!-- 价格区 -->
-    <view class="price-sec">
-    <view class="pr-row">
-      <text class="price">{{priceText}}</text>
-      <text class="ori" wx:if="{{originalPriceText}}">{{originalPriceText}}</text>
-      <text class="disc" wx:if="{{discountText}}">{{discountText}}</text>
+    <!-- 商品名 -->
+    <view class="name-sec">
+      <text class="name">{{product.title || product.name || '商品名称'}}</text>
+      <text class="desc" wx:if="{{product.description}}">{{product.description}}</text>
     </view>
-    <view class="est-row" wx:if="{{estPriceText}}">
-      <text class="est-label">动力预估价</text>
-      <text class="est-val">{{estPriceText}}</text>
-    </view>
-    <text class="sales" wx:if="{{product.sales_count}}">今日已拼 {{product.sales_count}} 件</text>
-    <view class="wp-row" wx:if="{{wholesalePriceText}}">
-      <text class="wp-label">批发价</text>
-      <text class="wp-val {{isPriceMember?'wp-show':'wp-blur'}}">{{wholesalePriceText}}</text>
-      <text class="wp-hint" wx:if="{{!isPriceMember}}" bindtap="goVip">开通会员查看</text>
-    </view>
-  </view>
 
-  <!-- 商品名 -->
-  <view class="name-sec">
-    <text class="name">{{product.title || product.name || '商品名称'}}</text>
-    <text class="desc">{{product.description || ''}}</text>
-  </view>
-
-  <!-- 商品标签（会员 / 货源 / 新品 / 自定义） -->
-  <view class="tag-row" wx:if="{{tagList.length>0}}">
-    <text class="tag" wx:for="{{tagList}}" wx:key="*this">{{item}}</text>
-  </view>
-
-  <!-- 选择：尺码 / 颜色 -->
-  <view class="block-sec" wx:if="{{sizeOptions.length>0 || colorOptions.length>0}}">
-    <text class="sec-title">📐 选择</text>
-    <view class="sel-block" wx:if="{{sizeOptions.length>0}}">
-      <text class="sel-label">尺码</text>
-      <view class="chips">
-        <text class="chip {{selectedSize===item?'chip-on':''}}" wx:for="{{sizeOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSize">{{item}}</text>
+    <!-- 会员 -->
+    <view class="info-row" bindtap="goVip">
+      <text class="info-label">会员</text>
+      <view class="info-content">
+        <block wx:if="{{memberTier}}">
+          <view class="vip-badge"><text class="vip-icon">V</text><text>{{memberTier.label}}</text></view>
+          <text class="vip-text">{{memberTier.desc}}</text>
+        </block>
+        <block wx:else>
+          <text class="vip-text">开通会员 · 享专属折扣</text>
+        </block>
       </view>
+      <text class="info-arrow">›</text>
     </view>
-    <view class="sel-block" wx:if="{{colorOptions.length>0}}">
-      <text class="sel-label">颜色</text>
-      <view class="chips">
-        <text class="chip {{selectedColor===item?'chip-on':''}}" wx:for="{{colorOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectColor">{{item}}</text>
+
+    <!-- 优惠 -->
+    <view class="info-row" bindtap="openCouponPanel">
+      <text class="info-label">优惠</text>
+      <view class="info-content">
+        <text class="coupon-tag" wx:if="{{couponTpls.length>0}}">红包</text>
+        <text class="coupon-text" wx:for="{{couponTpls}}" wx:key="id">{{item.displayText}}</text>
+        <text class="coupon-empty" wx:if="{{couponTpls.length===0}}">暂无可用优惠</text>
       </view>
+      <text class="info-arrow">›</text>
+    </view>
+
+    <!-- 发货 -->
+    <view class="info-row" wx:if="{{shippingNote}}">
+      <text class="info-label">发货</text>
+      <view class="info-content"><text class="info-text">{{shippingNote}}</text></view>
+      <text class="info-arrow">›</text>
+    </view>
+
+    <!-- 选择 -->
+    <view class="info-row" bindtap="openSkuPanel">
+      <text class="info-label">选择</text>
+      <view class="info-content">
+        <text class="info-text">尺码、颜色</text>
+      </view>
+      <text class="info-arrow">›</text>
+    </view>
+
+    <!-- 参数 -->
+    <view class="info-row" wx:if="{{specList.length>0}}" bindtap="openSkuPanel">
+      <text class="info-label">参数</text>
+      <view class="info-content">
+        <text class="info-text spec-ellipsis">{{specText}}</text>
+      </view>
+      <text class="info-arrow">›</text>
+    </view>
+
+    <!-- 服务 -->
+    <view class="info-row" wx:if="{{serviceText}}">
+      <text class="info-label">服务</text>
+      <view class="info-content"><text class="info-text">{{serviceText}}</text></view>
+      <text class="info-arrow">›</text>
     </view>
   </view>
 
-  <!-- 数量选择 -->
-  <view class="qty-sec">
-    <text class="ql">数量</text>
-    <view class="qb">
-      <view class="qbtn" bindtap="dec">-</view>
-      <text class="qnum">{{quantity}}</text>
-      <view class="qbtn" bindtap="inc">+</view>
-    </view>
-  </view>
-
-  </view>
-
-  <!-- 档口区：店铺 / 优惠 / 参数 / 推荐 -->
+  <!-- 档口区：店铺卡片 / 推荐 -->
   <view id="section-shop">
-    <!-- 店铺入口卡（进店逛逛→货架） -->
-  <view bindtap="goShelf" style="display:flex; align-items:center; background:#fff; margin:8px; padding:12px; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
-    <view style="width:40px; height:40px; border-radius:50%; background:#fff0f0; display:flex; align-items:center; justify-content:center; font-size:20px; margin-right:10px;">🏪</view>
-    <view style="flex:1;">
-      <text style="display:block; font-size:15px; font-weight:600; color:#1f1f1f;">{{shopName}}</text>
-      <text style="display:block; font-size:12px; color:#999; margin-top:2px;">{{shopIntro || '一手货源 · 一件起批 · 支持退换'}}</text>
+    <!-- 店铺入口卡 -->
+    <view class="shop-card" bindtap="goShelf">
+      <view class="shop-card-left">
+        <view class="shop-logo">🏪</view>
+        <view class="shop-info">
+          <text class="shop-name">{{shopName}}</text>
+          <text class="shop-tags">粉丝{{shopStats.fans}} · 综合体验{{shopStats.score}} · 返单率{{shopStats.repurchaseRate}}</text>
+        </view>
+      </view>
+      <view class="shop-right">
+        <view class="shop-brand" wx:if="{{shopStats.selectedBrand}}">严选品牌</view>
+        <view class="shop-btn">进店逛逛</view>
+      </view>
     </view>
-    <text style="font-size:13px; color:#e4393c;">进店逛逛 ›</text>
-  </view>
 
-  <!-- 发货信息条 -->
-  <view wx:if="{{shippingNote}}" style="display:flex; align-items:center; background:#f7f8fa; margin:0 8px 8px; padding:10px 12px; border-radius:10px;">
-    <text style="font-size:14px; margin-right:6px;">🚚</text>
-    <text style="font-size:12px; color:#666; flex:1;">{{shippingNote}}</text>
-  </view>
+    <!-- 店铺推荐：档口最新款 -->
+    <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
+      <text class="rec-title">档口最新款</text>
+      <scroll-view scroll-x class="rec-scroll">
+        <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+          <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+          <text class="rec-price">{{item.priceLabel}}</text>
+        </view>
+      </scroll-view>
+    </view>
 
-  <!-- 会员权益 -->
-  <view class="member-sec">
-    <block wx:if="{{memberTier}}">
-      <view class="member-card">
-        <view class="member-head"><text class="member-icon">{{memberTier.icon}}</text><text class="member-title">您的会员权益</text></view>
-        <view class="member-sub">当前等级：{{memberTier.label}}</view>
-        <view class="member-desc">{{memberTier.desc}}</view>
-        <view class="member-link" bindtap="goVip">查看全部会员权益 ›</view>
-      </view>
-    </block>
-    <block wx:else>
-      <view class="member-card upsell">
-        <view class="member-head"><text class="member-icon">👑</text><text class="member-title">开通会员 · 享专属折扣</text></view>
-        <view class="member-link" bindtap="goVip">查看全部会员权益 ›</view>
-      </view>
-    </block>
-  </view>
-
-  <!-- 优惠券领券 -->
-  <view class="coupon-sec" wx:if="{{couponTpls.length>0}}">
-    <text class="sec-title">🎟️ 领券中心</text>
-    <scroll-view scroll-x class="coupon-scroll">
-      <view class="coupon" wx:for="{{couponTpls}}" wx:key="id">
-        <view class="coupon-amt">¥{{item.discountLabel}}</view>
-        <view class="coupon-cond">{{item.discount_desc}}</view>
-        <view class="coupon-min">{{item.minLabel}}</view>
-        <button class="coupon-btn {{item.claimed?'claimed':''}}" bindtap="claimCoupon" data-id="{{item.id}}" disabled="{{item.claimed}}">{{item.claimed?'已领取':'领取'}}</button>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 尺码表 -->
-  <view class="size-sec" wx:if="{{sizeChartImage}}">
-    <text class="sec-title">📏 尺码</text>
-    <image src="{{sizeChartImage}}" mode="widthFix" class="size-img"/>
-  </view>
-
-  <!-- 商品参数 -->
-  <view class="block-sec" wx:if="{{specList.length>0}}">
-    <text class="sec-title">📋 商品参数</text>
-    <view class="spec-table">
-      <view class="spec-row" wx:for="{{specList}}" wx:key="label">
-        <text class="spec-label">{{item.label}}</text>
-        <text class="spec-value">{{item.value}}</text>
-      </view>
+    <!-- 店铺推荐：档口大爆款 -->
+    <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
+      <text class="rec-title">档口大爆款</text>
+      <scroll-view scroll-x class="rec-scroll">
+        <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+          <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+          <text class="rec-price">{{item.priceLabel}}</text>
+        </view>
+      </scroll-view>
     </view>
   </view>
 
-  <!-- 店铺推荐：档口最新款 -->
-  <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
-    <text class="rec-title">🆕 档口最新款</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 店铺推荐：档口大爆款 -->
-  <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
-    <text class="rec-title">🔥 档口大爆款</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 店铺推荐：新人推荐 -->
-  <view class="rec-sec" wx:if="{{shopRecNewbie.length>0}}">
-    <text class="rec-title">👤 新人推荐</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecNewbie}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  </view>
-
-  <!-- 详情区：商品详情 / 拿货指南 / 评价 / 相似推荐 -->
+  <!-- 详情区：图片详情 -->
   <view id="section-detail">
-    <!-- 商品详情 -->
-  <view class="block-sec" wx:if="{{product.detail_images && product.detail_images.length>0}}">
-    <text class="sec-title">🖼️ 商品详情</text>
+    <view class="detail-header" wx:if="{{product.detail_images && product.detail_images.length>0}}">
+      <view class="detail-line"></view>
+      <text class="detail-title">图片详情</text>
+      <view class="detail-line"></view>
+    </view>
     <image wx:for="{{product.detail_images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="detail-img"/>
-  </view>
-
-  <!-- 拿货指南 -->
-  <view class="block-sec">
-    <text class="sec-title">📖 拿货指南</text>
-    <view class="guide-item" wx:for="{{wholesaleGuide}}" wx:key="title">
-      <text class="guide-t">{{item.title}}</text>
-      <text class="guide-d">{{item.desc}}</text>
-    </view>
-  </view>
-
-  <!-- 拿货技巧 -->
-  <view class="block-sec">
-    <text class="sec-title">💡 拿货技巧</text>
-    <view class="guide-item" wx:for="{{wholesaleTips}}" wx:key="title">
-      <text class="guide-t">{{item.title}}</text>
-      <text class="guide-d">{{item.desc}}</text>
-    </view>
-  </view>
-
-  <!-- 面料洗护 -->
-  <view class="block-sec" wx:if="{{fabricCare}}">
-    <text class="sec-title">🧺 面料洗护</text>
-    <text class="guide-d">{{fabricCare}}</text>
-  </view>
-
-  <!-- 用户评价 -->
-  <view class="block-sec" wx:if="{{reviews.length>0}}">
-    <text class="sec-title">💬 用户评价</text>
-    <view class="review" wx:for="{{reviews}}" wx:key="id">
-      <view class="rv-header">
-        <text class="rv-name">{{item.nickname||'匿名'}}</text>
-        <text class="rv-date">{{item.created_at||''}}</text>
-      </view>
-      <text class="rv-content">{{item.content||''}}</text>
-    </view>
-  </view>
-
-  <!-- 相似推荐 -->
-  <view class="rec-sec" wx:if="{{recList.length>0}}">
-    <text class="rec-title">同款相似推荐</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{recList}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">¥{{item.price>100?Math.round(item.price/100):item.price}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
   </view>
 
   <!-- 底部操作栏 -->
@@ -294,6 +190,119 @@
     <view class="bar-right">
       <view class="btn-cart" bindtap="addCart">加入进货车</view>
       <view class="btn-buy" bindtap="buyNow">立即购买</view>
+    </view>
+  </view>
+
+  <!-- 优惠明细弹窗 -->
+  <view class="panel-mask" wx:if="{{showCouponPanel}}" bindtap="closeCouponPanel">
+    <view class="coupon-panel" catchtap="stopCouponPanelProp">
+      <view class="panel-head">
+        <text class="panel-title">优惠明细</text>
+        <view class="panel-close" bindtap="closeCouponPanel">✕</view>
+      </view>
+      <view class="panel-body">
+        <text class="coupon-sub">红包优惠（领取后满足红包金额门槛可用于当前商品）</text>
+        <view class="coupon-detail" wx:for="{{couponTpls}}" wx:key="id">
+          <view class="coupon-detail-left">
+            <text class="coupon-detail-tag">全平台红包</text>
+            <view class="coupon-detail-amt">¥<text>{{item.discountLabel}}</text></view>
+            <text class="coupon-detail-min">满{{item.minLabel}}可用</text>
+          </view>
+          <view class="coupon-detail-mid">
+            <text class="coupon-detail-type">平台券</text>
+            <text class="coupon-detail-desc">可购买全平台商品</text>
+            <text class="coupon-detail-valid">领取后72小时内有效</text>
+          </view>
+          <button class="coupon-detail-btn {{item.claimed?'claimed':''}}" bindtap="claimCoupon" data-id="{{item.id}}" disabled="{{item.claimed}}">{{item.claimed?'已领取':'领取'}}</button>
+        </view>
+        <view wx:if="{{couponTpls.length===0}}" class="coupon-empty-detail">暂无可用优惠</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 下单详情 / SKU 弹窗 -->
+  <view class="panel-mask" wx:if="{{showSkuPanel}}" bindtap="closeSkuPanel">
+    <view class="sku-panel" catchtap="stopSkuPanelProp">
+      <view class="panel-head">
+        <text class="panel-title">下单详情</text>
+        <view class="panel-close" bindtap="closeSkuPanel">✕</view>
+      </view>
+      <view class="panel-body">
+        <!-- 商品缩略图 + 价格 -->
+        <view class="sku-head">
+          <image class="sku-img" src="{{images[0]||product.image_url||''}}" mode="aspectFill"/>
+          <view class="sku-price-col">
+            <view class="sku-price-row">
+              <text class="sku-price">¥{{priceValue}}</text>
+              <text class="sku-price-bulk">¥{{bulkPriceValue}}</text>
+            </view>
+            <view class="sku-price-label-row">
+              <text class="sku-price-label">1件起批</text>
+              <text class="sku-price-bulk-label">≥5件</text>
+            </view>
+          </view>
+        </view>
+
+        <!-- 服务保障 -->
+        <view class="sku-row">
+          <text class="sku-row-label">服务保障</text>
+          <text class="sku-row-val">{{serviceGuaranteeText}}</text>
+        </view>
+
+        <!-- 颜色 -->
+        <view class="sku-row" wx:if="{{colorOptions.length>0}}">
+          <text class="sku-row-label">颜色</text>
+          <view class="sku-chips">
+            <text class="sku-chip {{skuColor===item?'sku-chip-on':''}}" wx:for="{{colorOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSkuColor">{{item}}</text>
+          </view>
+        </view>
+
+        <!-- 尺码 -->
+        <view class="sku-row" wx:if="{{sizeOptions.length>0}}">
+          <view class="sku-row-head">
+            <text class="sku-row-label">尺码</text>
+            <text class="sku-size-link" bindtap="showSizeChart">查看尺码 ›</text>
+          </view>
+          <view class="sku-size-list">
+            <view class="sku-size-item" wx:for="{{sizeOptions}}" wx:key="*this">
+              <text class="sku-size-name">{{item}}</text>
+              <view class="sku-qb">
+                <view class="sku-qbtn" data-s="{{item}}" bindtap="decSkuSize">-</view>
+                <text class="sku-qnum">{{sizeQuantities[item]||0}}</text>
+                <view class="sku-qbtn" data-s="{{item}}" bindtap="incSkuSize">+</view>
+              </view>
+            </view>
+          </view>
+        </view>
+
+        <!-- 参数 -->
+        <view class="sku-row" wx:if="{{specList.length>0}}">
+          <text class="sku-row-label">参数</text>
+          <text class="sku-row-val sku-row-ellipsis">{{specText}}</text>
+        </view>
+
+        <!-- 服务 -->
+        <view class="sku-row">
+          <text class="sku-row-label">服务</text>
+          <text class="sku-row-val">{{serviceText}}</text>
+        </view>
+      </view>
+      <view class="sku-bar">
+        <view class="sku-confirm {{skuTotal>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">确定({{skuTotal}})</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 尺码图弹窗 -->
+  <view class="panel-mask" wx:if="{{showSizeChart}}" bindtap="closeSizeChart">
+    <view class="sizechart-panel" catchtap="stopSizeChartProp">
+      <view class="panel-head">
+        <text class="panel-title">查看尺码</text>
+        <view class="panel-close" bindtap="closeSizeChart">✕</view>
+      </view>
+      <scroll-view scroll-y class="sizechart-body">
+        <image wx:if="{{sizeChartImage}}" src="{{sizeChartImage}}" mode="widthFix" class="sizechart-img"/>
+      </scroll-view>
     </view>
   </view>
 
