@@ -33,10 +33,10 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("red_packets")
-    .select(`
-      id, user_id, title, amount, status, expire_at, packet_type, created_at,
-      profiles:user_id ( full_name, email )
-    `, { count: "exact" })
+    .select(
+      "id, user_id, title, amount, status, expire_at, packet_type, created_at",
+      { count: "exact" }
+    )
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -46,8 +46,21 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // 手动补齐用户信息，避免 Supabase schema cache 关联失败
+  const userIds = [...new Set((data || []).map((p: any) => p.user_id).filter(Boolean))];
+  const profileMap: Record<string, any> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", userIds);
+    (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+  }
+
+  const rows = (data || []).map((p: any) => ({ ...p, profiles: profileMap[p.user_id] || null }));
+
   return NextResponse.json({
-    data: data || [],
+    data: rows,
     total: count || 0,
     page,
     pageSize,

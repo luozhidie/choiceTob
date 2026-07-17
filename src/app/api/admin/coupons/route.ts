@@ -36,11 +36,10 @@ export async function GET(req: NextRequest) {
 
   let query = supabase
     .from("coupons")
-    .select(`
-      id, user_id, title, discount_desc, min_amount, discount_amount,
-      status, expire_at, coupon_type, created_at,
-      profiles:user_id ( full_name, email, phone )
-    `, { count: "exact" })
+    .select(
+      "id, user_id, title, discount_desc, min_amount, discount_amount, status, expire_at, coupon_type, created_at",
+      { count: "exact" }
+    )
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -52,8 +51,21 @@ export async function GET(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  // 手动补齐用户信息，避免 Supabase schema cache 关联失败
+  const userIds = [...new Set((data || []).map((c: any) => c.user_id).filter(Boolean))];
+  const profileMap: Record<string, any> = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, full_name, email, phone")
+      .in("id", userIds);
+    (profiles || []).forEach((p: any) => { profileMap[p.id] = p; });
+  }
+
+  const rows = (data || []).map((c: any) => ({ ...c, profiles: profileMap[c.user_id] || null }));
+
   return NextResponse.json({
-    data: data || [],
+    data: rows,
     total: count || 0,
     page,
     pageSize,
