@@ -91,6 +91,7 @@ interface Product {
   ship_from?: string | null;        // 发货地（自由文本，可含备选）
   ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期）
   ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消）
+  ship_image?: string | null;       // 发货解释图片 URL
 }
 
 export default function AdminProductsPage() {
@@ -200,6 +201,7 @@ export default function AdminProductsPage() {
     ship_from: "",
     ship_est_days: 7,
     ship_text: "",
+    ship_image: "",
   });
 
   const supabase = createClient();
@@ -293,6 +295,7 @@ export default function AdminProductsPage() {
       ship_from: "",
       ship_est_days: 7,
       ship_text: "",
+      ship_image: "",
     });
   };
 
@@ -366,6 +369,7 @@ export default function AdminProductsPage() {
       ship_from: form.ship_from.trim() || null,
       ship_est_days: form.ship_est_days ? Number(form.ship_est_days) : null,
       ship_text: form.ship_text.trim() || null,
+      ship_image: form.ship_image.trim() || null,
     };
 
     try {
@@ -494,6 +498,7 @@ export default function AdminProductsPage() {
       ship_from: product.ship_from || "",
       ship_est_days: product.ship_est_days ?? 7,
       ship_text: product.ship_text || "",
+      ship_image: product.ship_image || "",
     });
     setShowForm(true);
   };
@@ -1800,6 +1805,57 @@ export default function AdminProductsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
                     placeholder="如：受限于真实面料短缺等影响，可能存在15%不准确，未发可取消"
                   />
+                </div>
+                {/* 发货解释图片 */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">发货解释图片</label>
+                  <div className="flex gap-2 items-start">
+                    <input
+                      type="text"
+                      value={form.ship_image}
+                      onChange={(e) => setForm({ ...form, ship_image: e.target.value })}
+                      className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="https://..."
+                    />
+                    <label className="shrink-0 w-10 h-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
+                      {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
+                      <input type="file" accept="image/*" onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        if (file.size > 5 * 1024 * 1024) { alert("图片不能超过5MB"); return; }
+                        setUploading(true);
+                        try {
+                          const dataUrl = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => resolve(reader.result as string);
+                            reader.onerror = () => reject(new Error("文件读取失败"));
+                            reader.readAsDataURL(file);
+                          });
+                          const res = await fetch("/api/image-grabber/upload", {
+                            method: "POST",
+                            credentials: "include",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"),
+                              mimeType: file.type || "image/jpeg",
+                              dataUrl,
+                            }),
+                          });
+                          const json = await res.json();
+                          if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
+                          setForm(f => ({ ...f, ship_image: json.storedUrl }));
+                        } catch (err: any) { console.error(err); alert("上传失败：" + err.message); }
+                        setUploading(false);
+                        e.target.value = "";
+                      }} className="hidden" />
+                    </label>
+                    {form.ship_image && (
+                      <div className="shrink-0 w-10 h-10 rounded-lg overflow-hidden border border-gray-200">
+                        <img src={form.ship_image} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-1">小程序点击发货文案进入解释页时展示此图</p>
                 </div>
               </div>
 

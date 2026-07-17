@@ -1,10 +1,11 @@
-// 发货解释页：展示商品级发货信息 + 统一兜底说明
+// 发货解释页：展示商品级发货信息 + 发货解释图片 + 统一兜底说明
 Page({
   data: {
     shipFrom: '',
     shipEstDate: '',
     shipDays: '',
     shipText: '',
+    shipImage: '',
   },
 
   onLoad: function (opt) {
@@ -12,6 +13,7 @@ Page({
     var est = decodeURIComponent(opt.est || '');
     var days = decodeURIComponent(opt.days || '');
     var text = decodeURIComponent(opt.text || '');
+    var image = decodeURIComponent(opt.image || '');
     // 后台未填发货说明时，使用统一兜底文案
     if (!text) {
       text = '受限于真实面料短缺等影响，可能存在约15%不准确；' +
@@ -22,7 +24,14 @@ Page({
       shipEstDate: est,
       shipDays: days,
       shipText: text,
+      shipImage: image,
     });
+  },
+
+  previewImage: function () {
+    var img = this.data.shipImage;
+    if (!img) return;
+    wx.previewImage({ urls: [img], current: img });
   },
 
   goBack: function () { wx.navigateBack({ delta: 1 }); },

@@ -19,6 +19,11 @@
 
     <view class="explain">{{shipText}}</view>
 
+    <!-- 发货解释图片 -->
+    <view class="ship-image-wrap" wx:if="{{shipImage}}" bindtap="previewImage">
+      <image src="{{shipImage}}" mode="widthFix" class="ship-image" lazy-load />
+    </view>
+
     <view class="tips">
       <view class="tip">· 当前下单，按上述预计日期陆续发出；</view>
       <view class="tip">· 受真实面料 / 产能影响，发货时间可能存在小幅偏差；</view>

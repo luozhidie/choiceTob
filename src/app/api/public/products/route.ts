@@ -33,6 +33,7 @@ function formatProducts(data: any[]) {
     ship_from: p.ship_from || null,
     ship_est_days: p.ship_est_days ?? null,
     ship_text: p.ship_text || null,
+    ship_image: p.ship_image || null,
   }));
 }
 

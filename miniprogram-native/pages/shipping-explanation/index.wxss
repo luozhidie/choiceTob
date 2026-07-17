@@ -52,6 +52,19 @@
   padding: 12rpx 0;
 }
 
+.ship-image-wrap {
+  margin-top: 20rpx;
+  border-radius: 14rpx;
+  overflow: hidden;
+  background: #f9f9f9;
+}
+
+.ship-image {
+  width: 100%;
+  display: block;
+  border-radius: 14rpx;
+}
+
 .tips {
   margin-top: 20rpx;
   background: #faf7fb;

@@ -241,10 +241,11 @@ Page({
         /* 各尺码默认数量 */
         var sizeQuantities = {};
         sizeOptions.forEach(function (s) { sizeQuantities[s] = 0; });
-        /* 发货信息（商品级）：发货地 + 系统自动推算的预计发货日期 */
+        /* 发货信息（商品级）：发货地 + 系统自动推算的预计发货日期 + 解释图片 */
         var shipFrom = p.ship_from || '';
         var shipDays = (p.ship_est_days !== undefined && p.ship_est_days !== null && p.ship_est_days !== '') ? Number(p.ship_est_days) : 0;
         var shipText = p.ship_text || '';
+        var shipImage = p.ship_image || '';
         var shipEstDate = '';
         if (shipDays > 0) {
           var sd = new Date(Date.now() + shipDays * 86400000);
@@ -254,7 +255,7 @@ Page({
         if (shipFrom) shipSummary += shipFrom + '发货';
         if (shipEstDate) shipSummary += (shipSummary ? ' · ' : '') + '预计' + shipEstDate + '发出';
         if (!shipSummary && t.data.shippingNote) shipSummary = t.data.shippingNote;
-        var hasProductShip = !!(shipFrom || shipEstDate || shipText);
+        var hasProductShip = !!(shipFrom || shipEstDate || shipText || shipImage);
         /* 模特图 / 尺码表 */
         var modelImages = Array.isArray(p.model_images) ? p.model_images.filter(Boolean) : [];
         var videoUrl = p.video_url || '';
@@ -315,6 +316,7 @@ Page({
           shipDays: shipDays,
           shipEstDate: shipEstDate,
           shipText: shipText,
+          shipImage: shipImage,
           shipSummary: shipSummary,
           hasProductShip: hasProductShip,
         }, function () {
@@ -559,7 +561,8 @@ Page({
     var params = 'from=' + encodeURIComponent(d.shipFrom || '') +
       '&est=' + encodeURIComponent(d.shipEstDate || '') +
       '&days=' + encodeURIComponent(String(d.shipDays || '')) +
-      '&text=' + encodeURIComponent(d.shipText || '');
+      '&text=' + encodeURIComponent(d.shipText || '') +
+      '&image=' + encodeURIComponent(d.shipImage || '');
     wx.navigateTo({ url: '/pages/shipping-explanation/index?' + params });
   },
 
