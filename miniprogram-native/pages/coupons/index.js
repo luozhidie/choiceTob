@@ -19,16 +19,13 @@ Page({
 
   loadCoupons:function(){
     var t=this;
-    var ui=wx.getStorageSync('user_info')||{};
-    if(!ui.id){
-      t.setData({loading:false,list:[]});
-      return;
-    }
+    var token=wx.getStorageSync('token')||'';
+    if(!token){ t.setData({loading:false,list:[]}); return; }
     t.setData({loading:true});
     wx.request({
-      url:'https://colour-choice.art/api/coupons?user_id='+ui.id+'&status='+t.data.activeTab,
+      url:'https://colour-choice.art/api/coupons?status='+t.data.activeTab,
       method:'GET',
-      header:{'Authorization':'Bearer '+(wx.getStorageSync('token')||'')},
+      header:{'Authorization':'Bearer '+token},
       success:function(r){
         var d=r.data||{};
         // 格式化金额显示
