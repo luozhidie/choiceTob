@@ -38,7 +38,7 @@ Page({
         var d=r.data||{};
         if(d.error){wx.showModal({title:'登录失败',content:d.error,showCancel:false});return;}
         wx.setStorageSync('token',d.token);
-        wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
+        wx.setStorageSync('user_info',{id: d.user && d.user.id, nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         wx.showToast({title:'登录成功',icon:'success'});
@@ -46,7 +46,7 @@ Page({
       },
       fail:function(){
         t.setData({loading:false});
-        wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
+        wx.setStorageSync('user_info',{id: d.user && d.user.id, nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',true);
         wx.showToast({title:'已登录（本地）',icon:'success'});
@@ -82,7 +82,7 @@ Page({
         }
         // 已自动登录
         wx.setStorageSync('token',d.token);
-        wx.setStorageSync('user_info',{nickName:e.split('@')[0],avatarUrl:''});
+        wx.setStorageSync('user_info',{id: d.user && d.user.id, nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         wx.showToast({title:'注册成功',icon:'success'});

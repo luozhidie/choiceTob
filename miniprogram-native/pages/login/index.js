@@ -102,6 +102,7 @@ Page({
         var u=d.user||{};
         wx.setStorageSync('token',d.token);
         wx.setStorageSync('user_info',{
+          id: u.id,
           nickName:u.phone_number||u.full_name||'用户',
           avatarUrl:'',
           phone:u.phone_number||''

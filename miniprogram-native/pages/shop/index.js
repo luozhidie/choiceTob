@@ -340,9 +340,8 @@ Page({
 
   // 会员等级（调 /api/user/me 取 membershipType）
   loadMembership: function () {
-    var ui = wx.getStorageSync('user_info') || {};
-    if (!ui.id) { this.setData({ memberTier: null }); return; }
     var token = wx.getStorageSync('token') || '';
+    if (!token) { this.setData({ memberTier: null }); return; }
     var t = this;
     wx.request({
       url: 'https://colour-choice.art/api/user/me',
@@ -387,12 +386,11 @@ Page({
 
   // 已领取的券（用于标记）
   loadClaimed: function () {
-    var ui = wx.getStorageSync('user_info') || {};
-    if (!ui.id) { this.setData({ claimedIds: [] }); return; }
     var token = wx.getStorageSync('token') || '';
+    if (!token) { this.setData({ claimedIds: [] }); return; }
     var t = this;
     wx.request({
-      url: 'https://colour-choice.art/api/coupons?user_id=' + ui.id + '&status=unused',
+      url: 'https://colour-choice.art/api/coupons?status=unused',
       method: 'GET',
       header: { 'Authorization': 'Bearer ' + token },
       success: function (r) {
@@ -415,9 +413,9 @@ Page({
   claimCoupon: function (e) {
     var id = e.currentTarget.dataset.id;
     var ui = wx.getStorageSync('user_info') || {};
-    if (!ui.id) { wx.navigateTo({ url: '/pages/login/index' }); return; }
-    if (this.data.claimedIds.indexOf(id) >= 0) return;
     var token = wx.getStorageSync('token') || '';
+    if (!ui.id && !token) { wx.navigateTo({ url: '/pages/login/index' }); return; }
+    if (this.data.claimedIds.indexOf(id) >= 0) return;
     var t = this;
     wx.showLoading({ title: '领取中...' });
     wx.request({
@@ -428,6 +426,10 @@ Page({
       success: function (r) {
         wx.hideLoading();
         var d = r.data || {};
+        if (r.statusCode === 401 || d.code === 'unauthorized') {
+          wx.navigateTo({ url: '/pages/login/index' });
+          return;
+        }
         if (d.success) {
           var claimed = t.data.claimedIds.concat([id]);
           t.setData({ claimedIds: claimed }, function () { t.applyClaimed(); });
