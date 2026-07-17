@@ -241,6 +241,20 @@ page { background: #f5f3f0; }
 .shop-col-name { font-size: 24rpx; color: #333; margin-top: 10rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .shop-col-price { font-size: 26rpx; color: #e91e63; font-weight: 700; margin-top: 6rpx; }
 
+/* 系列切换 + 小卡轮播 */
+.series-tabs { display: flex; justify-content: center; gap: 60rpx; padding: 28rpx 0 16rpx; background: #fff; }
+.series-tab { font-size: 30rpx; color: #999; position: relative; padding: 8rpx 0; }
+.series-tab.active { color: #1a1a2e; font-weight: 700; }
+.series-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40rpx; height: 5rpx; background: #e91e63; border-radius: 4rpx; }
+
+.series-carousel { background: #fff; padding: 0 24rpx 32rpx; }
+.series-scroll { white-space: nowrap; }
+.series-card { display: inline-block; width: 220rpx; margin-right: 16rpx; vertical-align: top; }
+.series-card:last-child { margin-right: 0; }
+.series-img { width: 220rpx; height: 280rpx; border-radius: 16rpx; background: #f5f5f5; }
+.series-name { font-size: 24rpx; color: #333; margin-top: 12rpx; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+.series-price { font-size: 28rpx; color: #e91e63; font-weight: 700; margin-top: 8rpx; display: block; }
+
 .similar-sec { background: #fff; margin-top: 16rpx; padding: 24rpx 16rpx; }
 .similar-header { display: flex; align-items: center; justify-content: center; gap: 20rpx; margin-bottom: 24rpx; }
 .similar-line { flex: 1; height: 1rpx; background: #e5e5e5; max-width: 120rpx; }

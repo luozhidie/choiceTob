@@ -95,6 +95,7 @@ Page({
     shopRecLatest: [],         // 档口最新款
     shopRecHot: [],            // 档口大爆款
     shopRecNewbie: [],         // 新人推荐
+    seriesActive: 'latest',    // 系列切换：latest / hot
     // 弹窗与 SKU 数据
     showSkuPanel: false,         // 下单详情弹窗
     showCouponPanel: false,      // 优惠明细弹窗
@@ -653,6 +654,13 @@ Page({
     var tabIdx = Number(e.currentTarget.dataset.index);
     var start = this.data.mediaTabs[tabIdx].start;
     this.setData({ mediaIndex: start, mediaTabIndex: tabIdx });
+  },
+
+  // 系列切换：最新款 / 最爆款
+  switchSeries: function (e) {
+    var type = e.currentTarget.dataset.type;
+    if (type === this.data.seriesActive) return;
+    this.setData({ seriesActive: type });
   },
 
   goShelf: function () { wx.switchTab({ url: '/pages/shelf/index' }); },
