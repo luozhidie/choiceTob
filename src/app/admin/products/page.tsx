@@ -38,6 +38,7 @@ interface Product {
   price: number;
   original_price: number | null;
   wholesale_price: number | null;
+  bulk_price: number | null;
   category: string | null;
   subcategory: string | null;
   tags: string[] | null;
@@ -139,6 +140,7 @@ export default function AdminProductsPage() {
     price: "",
     original_price: "",
     wholesale_price: "",
+    bulk_price: "",
     category: "",
     subcategory: "",
     stock: "0",
@@ -231,6 +233,7 @@ export default function AdminProductsPage() {
       price: "",
       original_price: "",
       wholesale_price: "",
+      bulk_price: "",
       category: "",
       subcategory: "",
       stock: "0",
@@ -274,6 +277,9 @@ export default function AdminProductsPage() {
         : null,
       wholesale_price: form.wholesale_price
         ? parseInt(form.wholesale_price) * 100
+        : null,
+      bulk_price: form.bulk_price
+        ? parseInt(form.bulk_price) * 100
         : null,
       category: form.category || null,
       subcategory: form.subcategory || null,
@@ -402,6 +408,9 @@ export default function AdminProductsPage() {
         : "",
       wholesale_price: product.wholesale_price
         ? (product.wholesale_price / 100).toString()
+        : "",
+      bulk_price: product.bulk_price
+        ? (product.bulk_price / 100).toString()
         : "",
       category: product.category || "",
       subcategory: product.subcategory || "",
@@ -986,7 +995,7 @@ export default function AdminProductsPage() {
                   placeholder="商品标题"
                 />
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     零售价（元）*
@@ -1013,7 +1022,21 @@ export default function AdminProductsPage() {
                       setForm({ ...form, wholesale_price: e.target.value })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="价格会员可见"
+                    placeholder="价格会员可见，即1件起批价"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    批量价（元）
+                  </label>
+                  <input
+                    type="number"
+                    value={form.bulk_price}
+                    onChange={(e) =>
+                      setForm({ ...form, bulk_price: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="≥5件批发价，空则按批发价95%估算"
                   />
                 </div>
                 <div>

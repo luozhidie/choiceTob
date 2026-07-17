@@ -35,6 +35,13 @@ export async function POST(request: NextRequest) {
       if (safeData.wholesale_price !== undefined && 
           (updateError?.message?.includes("wholesale_price") || updateError?.code === "42703")) {
         delete safeData.wholesale_price;
+      }
+      if (safeData.bulk_price !== undefined && 
+          (updateError?.message?.includes("bulk_price") || updateError?.code === "42703")) {
+        delete safeData.bulk_price;
+      }
+      // 删除后重试一次
+      if (safeData.wholesale_price === undefined || safeData.bulk_price === undefined) {
         const { error } = await supabase.from(tableName).update(safeData).eq("id", id);
         if (error) throw error;
         return NextResponse.json({ success: true });
