@@ -7,7 +7,7 @@
     </view>
   </view>
 
-  <!-- 商品/档口/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 -->
+  <!-- 商品/档口/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 + 分享键 -->
   <view class="section-tabs {{showSectionTabs?'show':''}}" style="padding-top:{{statusBarHeight}}px;">
     <view class="section-tabs-inner">
       <view class="st-back" bindtap="goBack">‹</view>
@@ -16,6 +16,7 @@
         <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">档口</view>
         <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
       </view>
+      <button class="st-share" open-type="share">↗</button>
     </view>
   </view>
 

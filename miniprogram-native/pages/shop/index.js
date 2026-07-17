@@ -616,4 +616,13 @@ Page({
 
   closeTryon: function () { this.setData({ showTryon: false }); },
   stopProp: function () { },
+
+  onShareAppMessage: function () {
+    var p = this.data.product || {};
+    return {
+      title: p.title || p.name || '骆芷蝶智选',
+      path: '/pages/shop/index?id=' + this.data.productId,
+      imageUrl: p.image_url || ''
+    };
+  },
 });
