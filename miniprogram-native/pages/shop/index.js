@@ -241,6 +241,20 @@ Page({
         /* 各尺码默认数量 */
         var sizeQuantities = {};
         sizeOptions.forEach(function (s) { sizeQuantities[s] = 0; });
+        /* 发货信息（商品级）：发货地 + 系统自动推算的预计发货日期 */
+        var shipFrom = p.ship_from || '';
+        var shipDays = (p.ship_est_days !== undefined && p.ship_est_days !== null && p.ship_est_days !== '') ? Number(p.ship_est_days) : 0;
+        var shipText = p.ship_text || '';
+        var shipEstDate = '';
+        if (shipDays > 0) {
+          var sd = new Date(Date.now() + shipDays * 86400000);
+          shipEstDate = (sd.getMonth() + 1) + '月' + sd.getDate() + '日';
+        }
+        var shipSummary = '';
+        if (shipFrom) shipSummary += shipFrom + '发货';
+        if (shipEstDate) shipSummary += (shipSummary ? ' · ' : '') + '预计' + shipEstDate + '发出';
+        if (!shipSummary && t.data.shippingNote) shipSummary = t.data.shippingNote;
+        var hasProductShip = !!(shipFrom || shipEstDate || shipText);
         /* 模特图 / 尺码表 */
         var modelImages = Array.isArray(p.model_images) ? p.model_images.filter(Boolean) : [];
         var videoUrl = p.video_url || '';
@@ -297,6 +311,12 @@ Page({
           bulkPriceValue: bulkPriceValue,
           sizeQuantities: sizeQuantities,
           selectedColor: colorOptions[0] || '',
+          shipFrom: shipFrom,
+          shipDays: shipDays,
+          shipEstDate: shipEstDate,
+          shipText: shipText,
+          shipSummary: shipSummary,
+          hasProductShip: hasProductShip,
         }, function () {
           setTimeout(function () { t.measureSectionTops(); }, 500);
         });
@@ -532,6 +552,16 @@ Page({
   goBack: function () { wx.navigateBack({ delta: 1 }); },
   goShop: function (e) { var id = e.currentTarget.dataset.id; if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id }); },
   goVip: function () { wx.navigateTo({ url: '/pages/vip/index' }); },
+
+  // 发货解释页：把商品级发货信息带过去
+  goShippingExplanation: function () {
+    var d = this.data;
+    var params = 'from=' + encodeURIComponent(d.shipFrom || '') +
+      '&est=' + encodeURIComponent(d.shipEstDate || '') +
+      '&days=' + encodeURIComponent(String(d.shipDays || '')) +
+      '&text=' + encodeURIComponent(d.shipText || '');
+    wx.navigateTo({ url: '/pages/shipping-explanation/index?' + params });
+  },
 
   // 商品/档口/详情 吸顶切换
   onPageScroll: function (e) {

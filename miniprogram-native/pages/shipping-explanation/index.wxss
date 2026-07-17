@@ -1,0 +1,76 @@
+.page {
+  min-height: 100vh;
+  background: #f6f6f8;
+  padding: 24rpx 24rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.card {
+  background: #fff;
+  border-radius: 20rpx;
+  padding: 40rpx 32rpx 32rpx;
+  box-shadow: 0 4rpx 24rpx rgba(0, 0, 0, 0.04);
+}
+
+.title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #2d1b2e;
+  margin-bottom: 28rpx;
+}
+
+.row {
+  display: flex;
+  align-items: flex-start;
+  padding: 18rpx 0;
+}
+
+.label {
+  width: 150rpx;
+  flex-shrink: 0;
+  font-size: 28rpx;
+  color: #999;
+}
+
+.value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.5;
+}
+
+.divider {
+  height: 1rpx;
+  background: #f0f0f0;
+  margin: 16rpx 0;
+}
+
+.explain {
+  font-size: 28rpx;
+  color: #555;
+  line-height: 1.7;
+  padding: 12rpx 0;
+}
+
+.tips {
+  margin-top: 20rpx;
+  background: #faf7fb;
+  border-radius: 14rpx;
+  padding: 24rpx 20rpx;
+}
+
+.tip {
+  font-size: 25rpx;
+  color: #888;
+  line-height: 1.9;
+}
+
+.back-btn {
+  margin-top: 40rpx;
+  background: #2d1b2e;
+  color: #fff;
+  font-size: 30rpx;
+  text-align: center;
+  padding: 26rpx 0;
+  border-radius: 44rpx;
+}

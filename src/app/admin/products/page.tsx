@@ -87,6 +87,10 @@ interface Product {
   video_url?: string | null;
   model_images?: string[] | null;
   size_chart_image?: string | null;
+  // 发货信息
+  ship_from?: string | null;        // 发货地（自由文本，可含备选）
+  ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期）
+  ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消）
 }
 
 export default function AdminProductsPage() {
@@ -192,6 +196,10 @@ export default function AdminProductsPage() {
     video_url: "",
     model_images: [] as string[],
     size_chart_image: "",
+    // 发货信息
+    ship_from: "",
+    ship_est_days: 7,
+    ship_text: "",
   });
 
   const supabase = createClient();
@@ -282,6 +290,9 @@ export default function AdminProductsPage() {
       model_images: [] as string[],
       size_chart_image: "",
       theme: "",
+      ship_from: "",
+      ship_est_days: 7,
+      ship_text: "",
     });
   };
 
@@ -351,6 +362,10 @@ export default function AdminProductsPage() {
       video_url: form.video_url.trim() || null,
       model_images: form.model_images.length > 0 ? form.model_images : null,
       size_chart_image: form.size_chart_image.trim() || null,
+      // 发货信息
+      ship_from: form.ship_from.trim() || null,
+      ship_est_days: form.ship_est_days ? Number(form.ship_est_days) : null,
+      ship_text: form.ship_text.trim() || null,
     };
 
     try {
@@ -475,6 +490,10 @@ export default function AdminProductsPage() {
       model_images: product.model_images || [],
       size_chart_image: product.size_chart_image || "",
       theme: product.tags?.find((t) => t.startsWith("主题·"))?.replace("主题·", "") || "",
+      // 发货信息
+      ship_from: product.ship_from || "",
+      ship_est_days: product.ship_est_days ?? 7,
+      ship_text: product.ship_text || "",
     });
     setShowForm(true);
   };
@@ -1739,6 +1758,48 @@ export default function AdminProductsPage() {
                 </div>
               </div>
               {/* === 商品参数结束 === */}
+
+              {/* === 发货信息 === */}
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <h4 className="text-sm font-semibold text-primary mb-3">发货信息</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* 发货地 */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">发货地（可含备选）</label>
+                    <input
+                      type="text"
+                      value={form.ship_from}
+                      onChange={(e) => setForm({ ...form, ship_from: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="如：广州（杭州/深圳）"
+                    />
+                  </div>
+                  {/* 预计发货天数 */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">预计发货天数</label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={form.ship_est_days}
+                      onChange={(e) => setForm({ ...form, ship_est_days: Number(e.target.value) })}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="如：7"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">展示时自动往后推日期；预售约 7 天</p>
+                  </div>
+                </div>
+                {/* 发货说明 */}
+                <div className="mt-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">发货说明 / 备注</label>
+                  <textarea
+                    value={form.ship_text}
+                    onChange={(e) => setForm({ ...form, ship_text: e.target.value })}
+                    rows={3}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
+                    placeholder="如：受限于真实面料短缺等影响，可能存在15%不准确，未发可取消"
+                  />
+                </div>
+              </div>
 
               <div className="flex items-center gap-2">
                 <input

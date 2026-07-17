@@ -29,6 +29,10 @@ function formatProducts(data: any[]) {
     stock: p.stock ?? 0,
     sales: p.sales || 0,
     created_at: p.created_at || null,
+    // 发货信息
+    ship_from: p.ship_from || null,
+    ship_est_days: p.ship_est_days ?? null,
+    ship_text: p.ship_text || null,
   }));
 }
 

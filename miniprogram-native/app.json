@@ -40,7 +40,8 @@
     "pages/import/index",
     "pages/album-grab/index",
     "pages/certify/index",
-    "pages/email-login/index"
+    "pages/email-login/index",
+    "pages/shipping-explanation/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

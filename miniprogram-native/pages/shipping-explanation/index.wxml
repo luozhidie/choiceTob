@@ -1,0 +1,30 @@
+<view class="page">
+  <view class="card">
+    <view class="title">发货说明</view>
+
+    <view class="row" wx:if="{{shipFrom}}">
+      <text class="label">发货地</text>
+      <text class="value">{{shipFrom}}</text>
+    </view>
+    <view class="row" wx:if="{{shipEstDate}}">
+      <text class="label">预计发货</text>
+      <text class="value">{{shipEstDate}}发出</text>
+    </view>
+    <view class="row" wx:if="{{shipDays}}">
+      <text class="label">发货周期</text>
+      <text class="value">下单后约 {{shipDays}} 天内发出</text>
+    </view>
+
+    <view class="divider"></view>
+
+    <view class="explain">{{shipText}}</view>
+
+    <view class="tips">
+      <view class="tip">· 当前下单，按上述预计日期陆续发出；</view>
+      <view class="tip">· 受真实面料 / 产能影响，发货时间可能存在小幅偏差；</view>
+      <view class="tip">· 逾期未发可联系客服取消订单并退款。</view>
+    </view>
+  </view>
+
+  <view class="back-btn" bindtap="goBack">我知道了</view>
+</view>
