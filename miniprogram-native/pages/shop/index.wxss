@@ -8,6 +8,13 @@ page { background: #f5f3f0; }
 .nav-back { font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; }
 .nav-fav.fav-on { color: #e91e63; background: rgba(233,30,99,.15); }
 
+/* 商品/档口/详情 吸顶切换 */
+.section-tabs { position: fixed; left: 0; right: 0; z-index: 99; height: 80rpx; background: #fff; display: flex; align-items: center; justify-content: space-around; border-bottom: 1rpx solid #f0ece8; opacity: 0; pointer-events: none; transform: translateY(-20rpx); transition: opacity 0.2s, transform 0.2s; }
+.section-tabs.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+.section-tab { font-size: 28rpx; color: #666; position: relative; padding: 10rpx 20rpx; }
+.section-tab.active { color: #e4393c; font-weight: 600; }
+.section-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 40rpx; height: 4rpx; background: #e4393c; border-radius: 4rpx; }
+
 /* 视频 */
 .vid { width: 100%; height: 750rpx; background: #000; display: block; }
 

@@ -7,6 +7,13 @@
     </view>
   </view>
 
+  <!-- 商品/档口/详情 吸顶切换（上拉出现） -->
+  <view class="section-tabs {{showSectionTabs?'show':''}}" style="top:{{customNavTotalHeightPx}}px;">
+    <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
+    <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">档口</view>
+    <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
+  </view>
+
   <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码 平铺为统一 swiper，左右滑动切换（对标一手） -->
   <view class="media-area">
     <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}" wx:if="{{mediaList.length>0}}">
@@ -38,8 +45,10 @@
     </view>
   </view>
 
-  <!-- 价格区 -->
-  <view class="price-sec">
+  <!-- 商品区：价格 / 名称 / 规格 / 数量 -->
+  <view id="section-product">
+    <!-- 价格区 -->
+    <view class="price-sec">
     <view class="pr-row">
       <text class="price">{{priceText}}</text>
       <text class="ori" wx:if="{{originalPriceText}}">{{originalPriceText}}</text>
@@ -85,7 +94,21 @@
     </view>
   </view>
 
-  <!-- 店铺入口卡（进店逛逛→货架） -->
+  <!-- 数量选择 -->
+  <view class="qty-sec">
+    <text class="ql">数量</text>
+    <view class="qb">
+      <view class="qbtn" bindtap="dec">-</view>
+      <text class="qnum">{{quantity}}</text>
+      <view class="qbtn" bindtap="inc">+</view>
+    </view>
+  </view>
+
+  </view>
+
+  <!-- 档口区：店铺 / 优惠 / 参数 / 推荐 -->
+  <view id="section-shop">
+    <!-- 店铺入口卡（进店逛逛→货架） -->
   <view bindtap="goShelf" style="display:flex; align-items:center; background:#fff; margin:8px; padding:12px; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,0.04);">
     <view style="width:40px; height:40px; border-radius:50%; background:#fff0f0; display:flex; align-items:center; justify-content:center; font-size:20px; margin-right:10px;">🏪</view>
     <view style="flex:1;">
@@ -149,7 +172,47 @@
     </view>
   </view>
 
-  <!-- 商品详情 -->
+  <!-- 店铺推荐：档口最新款 -->
+  <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
+    <text class="rec-title">🆕 档口最新款</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 店铺推荐：档口大爆款 -->
+  <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
+    <text class="rec-title">🔥 档口大爆款</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 店铺推荐：新人推荐 -->
+  <view class="rec-sec" wx:if="{{shopRecNewbie.length>0}}">
+    <text class="rec-title">👤 新人推荐</text>
+    <scroll-view scroll-x class="rec-scroll">
+      <view class="rec-item" wx:for="{{shopRecNewbie}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
+        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
+        <text class="rec-price">{{item.priceLabel}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  </view>
+
+  <!-- 详情区：商品详情 / 拿货指南 / 评价 / 相似推荐 -->
+  <view id="section-detail">
+    <!-- 商品详情 -->
   <view class="block-sec" wx:if="{{product.detail_images && product.detail_images.length>0}}">
     <text class="sec-title">🖼️ 商品详情</text>
     <image wx:for="{{product.detail_images}}" wx:key="*this" src="{{item}}" mode="widthFix" class="detail-img"/>
@@ -191,52 +254,6 @@
     </view>
   </view>
 
-  <!-- 数量选择 -->
-  <view class="qty-sec">
-    <text class="ql">数量</text>
-    <view class="qb">
-      <view class="qbtn" bindtap="dec">-</view>
-      <text class="qnum">{{quantity}}</text>
-      <view class="qbtn" bindtap="inc">+</view>
-    </view>
-  </view>
-
-  <!-- 店铺推荐：档口最新款 -->
-  <view class="rec-sec" wx:if="{{shopRecLatest.length>0}}">
-    <text class="rec-title">🆕 档口最新款</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecLatest}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 店铺推荐：档口大爆款 -->
-  <view class="rec-sec" wx:if="{{shopRecHot.length>0}}">
-    <text class="rec-title">🔥 档口大爆款</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecHot}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
-  <!-- 店铺推荐：新人推荐 -->
-  <view class="rec-sec" wx:if="{{shopRecNewbie.length>0}}">
-    <text class="rec-title">👤 新人推荐</text>
-    <scroll-view scroll-x class="rec-scroll">
-      <view class="rec-item" wx:for="{{shopRecNewbie}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="rec-img"/>
-        <text class="rec-name">{{item.title||item.name||'商品'}}</text>
-        <text class="rec-price">{{item.priceLabel}}</text>
-      </view>
-    </scroll-view>
-  </view>
-
   <!-- 相似推荐 -->
   <view class="rec-sec" wx:if="{{recList.length>0}}">
     <text class="rec-title">同款相似推荐</text>
@@ -247,6 +264,8 @@
         <text class="rec-price">¥{{item.price>100?Math.round(item.price/100):item.price}}</text>
       </view>
     </scroll-view>
+  </view>
+
   </view>
 
   <!-- 底部操作栏 -->

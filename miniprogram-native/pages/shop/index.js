@@ -67,6 +67,15 @@ Page({
     mediaIndex: 0,             // 当前所在媒体项下标
     mediaTabs: [],             // 动态生成的媒体 Tab [{key,label,start},...]
     mediaTabIndex: 0,          // 当前激活的 Tab 下标
+    // 商品/档口/详情 吸顶切换
+    showSectionTabs: false,      // 是否显示吸顶 Tab
+    sectionActive: 'product',    // 当前激活：product/shop/detail
+    statusBarHeight: 20,         // 状态栏高度（px）
+    customNavTotalHeightPx: 64,  // 状态栏+自定义导航高度（px）
+    tabsHeightPx: 36,            // 吸顶 Tab 高度（px）
+    windowHeight: 667,           // 视口高度（px）
+    sectionShopTop: 0,           // 档口区距页面顶部距离
+    sectionDetailTop: 0,         // 详情区距页面顶部距离
     // 店铺内容（后台可编辑）
     shopName: '骆芷蝶智选',
     shopIntro: '',
@@ -89,10 +98,16 @@ Page({
   onLoad: function (opt) {
     var app = getApp();
     var sys = wx.getSystemInfoSync();
+    var pxPerRpx = sys.windowWidth / 750;
+    var navBarHeightPx = Math.round(88 * pxPerRpx);
+    var tabsHeightPx = Math.round(80 * pxPerRpx);
     this.setData({
       productId: opt.id || '',
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember),
-      statusBarHeight: sys.statusBarHeight || 20
+      statusBarHeight: sys.statusBarHeight || 20,
+      customNavTotalHeightPx: (sys.statusBarHeight || 20) + navBarHeightPx,
+      tabsHeightPx: tabsHeightPx,
+      windowHeight: sys.windowHeight || 667
     });
     this.loadProduct(opt.id);
     this.loadCartCount();
@@ -102,6 +117,8 @@ Page({
     this.loadClaimed();
     this.loadStoreContent();
   },
+
+  onReady: function () { this.measureSectionTops(); },
 
   loadProduct: function (id) {
     var t = this;
@@ -223,6 +240,8 @@ Page({
           sizeOptions: sizeOptions,
           colorOptions: colorOptions,
           specList: specList,
+        }, function () {
+          setTimeout(function () { t.measureSectionTops(); }, 500);
         });
         t.loadReviews(id);
         t.loadRec(p.category, id);
@@ -447,6 +466,46 @@ Page({
   goBack: function () { wx.navigateBack({ delta: 1 }); },
   goShop: function (e) { var id = e.currentTarget.dataset.id; if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id }); },
   goVip: function () { wx.navigateTo({ url: '/pages/vip/index' }); },
+
+  // 商品/档口/详情 吸顶切换
+  onPageScroll: function (e) {
+    var t = this;
+    var scrollTop = e.scrollTop || 0;
+    var offset = t.data.customNavTotalHeightPx + t.data.tabsHeightPx;
+    var show = scrollTop > 100;
+    var active = 'product';
+    if (t.data.sectionShopTop && scrollTop >= t.data.sectionShopTop - offset) active = 'shop';
+    if (t.data.sectionDetailTop && scrollTop >= t.data.sectionDetailTop - offset) active = 'detail';
+    if (show !== t.data.showSectionTabs || active !== t.data.sectionActive) {
+      t.setData({ showSectionTabs: show, sectionActive: active });
+    }
+  },
+  measureSectionTops: function () {
+    var t = this;
+    var query = wx.createSelectorQuery();
+    query.select('#section-shop').boundingClientRect();
+    query.select('#section-detail').boundingClientRect();
+    query.selectViewport().scrollOffset();
+    query.exec(function (res) {
+      var shopRect = res[0] || {};
+      var detailRect = res[1] || {};
+      var scrollOffset = res[2] || {};
+      var scrollTop = scrollOffset.scrollTop || 0;
+      t.setData({
+        sectionShopTop: scrollTop + (shopRect.top || 0),
+        sectionDetailTop: scrollTop + (detailRect.top || 0)
+      });
+    });
+  },
+  scrollToSection: function (e) {
+    var section = e.currentTarget.dataset.section;
+    var t = this;
+    var offset = t.data.customNavTotalHeightPx + t.data.tabsHeightPx;
+    var top = 0;
+    if (section === 'shop') top = t.data.sectionShopTop;
+    else if (section === 'detail') top = t.data.sectionDetailTop;
+    wx.pageScrollTo({ scrollTop: Math.max(0, top - offset), duration: 300 });
+  },
 
   // 店铺可编辑内容（后台 /api/public/store-content）
   loadStoreContent: function () {
