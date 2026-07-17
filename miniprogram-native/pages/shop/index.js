@@ -88,9 +88,11 @@ Page({
 
   onLoad: function (opt) {
     var app = getApp();
+    var sys = wx.getSystemInfoSync();
     this.setData({
       productId: opt.id || '',
-      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember),
+      statusBarHeight: sys.statusBarHeight || 20
     });
     this.loadProduct(opt.id);
     this.loadCartCount();
@@ -442,6 +444,7 @@ Page({
   },
 
   goCart: function () { wx.switchTab({ url: '/pages/cart/index' }); },
+  goBack: function () { wx.navigateBack({ delta: 1 }); },
   goShop: function (e) { var id = e.currentTarget.dataset.id; if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id }); },
   goVip: function () { wx.navigateTo({ url: '/pages/vip/index' }); },
 

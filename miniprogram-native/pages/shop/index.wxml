@@ -1,10 +1,18 @@
 <view class="page">
+  <!-- 自定义顶部导航（透明浮层，覆盖在媒体区上方） -->
+  <view class="custom-nav" style="padding-top:{{statusBarHeight}}px;">
+    <view class="nav-bar">
+      <view class="nav-back" bindtap="goBack">‹</view>
+      <view class="nav-fav {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
+    </view>
+  </view>
+
   <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码 平铺为统一 swiper，左右滑动切换（对标一手） -->
   <view class="media-area">
     <swiper class="media-swiper" current="{{mediaIndex}}" bindchange="onMediaSwiperChange" indicator-dots="{{false}}" autoplay="{{false}}" wx:if="{{mediaList.length>0}}">
       <swiper-item wx:for="{{mediaList}}" wx:key="*this">
         <block wx:if="{{item.type==='video'}}">
-          <video class="media-video" src="{{item.src}}" controls play-btn-center></video>
+          <video class="media-video" src="{{item.src}}" controls play-btn-center object-fit="cover"></video>
         </block>
         <block wx:elif="{{item.type==='size'}}">
           <scroll-view scroll-y class="media-scroll">
@@ -13,7 +21,7 @@
         </block>
         <block wx:else>
           <view class="media-item">
-            <image src="{{item.src}}" mode="aspectFit" class="media-fit-img"/>
+            <image src="{{item.src}}" mode="aspectFill" class="media-fit-img"/>
           </view>
         </block>
       </swiper-item>
@@ -29,9 +37,6 @@
       </scroll-view>
     </view>
   </view>
-
-  <!-- 收藏按钮 -->
-  <view class="fav-btn {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
 
   <!-- 价格区 -->
   <view class="price-sec">

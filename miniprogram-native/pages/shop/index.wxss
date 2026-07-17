@@ -1,6 +1,13 @@
 page { background: #f5f3f0; }
 .page { padding-bottom: 140rpx; }
 
+/* 自定义顶部导航（透明浮层） */
+.custom-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: transparent; pointer-events: none; }
+.nav-bar { height: 88rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 20rpx; pointer-events: auto; }
+.nav-back, .nav-fav { width: 64rpx; height: 64rpx; background: rgba(0,0,0,.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; color: #fff; }
+.nav-back { font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; }
+.nav-fav.fav-on { color: #e91e63; background: rgba(233,30,99,.15); }
+
 /* 视频 */
 .vid { width: 100%; height: 750rpx; background: #000; display: block; }
 
@@ -24,15 +31,6 @@ page { background: #f5f3f0; }
 .media-tab-scroll { white-space: nowrap; }
 .media-tab { display: inline-block; padding: 10rpx 26rpx; font-size: 26rpx; color: #333; border-radius: 30rpx; }
 .media-tab.active { background: #fff; color: #e4393c; font-weight: 600; box-shadow: 0 2rpx 6rpx rgba(0,0,0,0.06); }
-
-/* 收藏按钮 */
-.fav-btn { position: fixed; top: 24rpx; right: 24rpx; width: 72rpx; height: 72rpx; background: rgba(0,0,0,.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; color: #fff; z-index: 10; }
-.fav-on { color: #e91e63; background: rgba(233,30,99,.15); }
-
-/* 模特图横滑 */
-.model-scroll { background: #fff; padding: 20rpx 24rpx; margin-top: 8rpx; white-space: nowrap; }
-.model-label { display: block; font-size: 26rpx; font-weight: 700; color: #1a1a2e; margin-bottom: 14rpx; }
-.model-img { display: inline-block; width: 180rpx; height: 240rpx; border-radius: 12rpx; margin-right: 14rpx; background: #eee; vertical-align: top; }
 
 /* 价格区 */
 .price-sec { background: #fff; padding: 20rpx 24rpx; border-bottom: 1rpx solid #f0ece8; }
