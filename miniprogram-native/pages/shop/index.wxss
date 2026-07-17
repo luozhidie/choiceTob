@@ -165,6 +165,21 @@ page { background: #f5f3f0; }
 .tryon-close { margin-top: 18rpx; text-align: center; color: #7b61ff; font-size: 30rpx; font-weight: 600; }
 
 /* ==================== 同行风信息行（会员/优惠/发货/选择/参数/服务） ==================== */
+
+/* 价格卡（标题上方） */
+.price-card { background: #fff; padding: 24rpx 24rpx 0; }
+.price-card-main { background: linear-gradient(135deg, #fff5f7, #fff0f0); border-radius: 20rpx; padding: 28rpx; display: flex; align-items: center; }
+.price-item { flex: 1; display: flex; flex-direction: column; }
+.price-amt { font-size: 44rpx; font-weight: 800; color: #e91e63; line-height: 1; }
+.price-amt.bulk { color: #e91e63; }
+.price-label { font-size: 22rpx; color: #999; margin-top: 10rpx; }
+.price-tag { font-size: 20rpx; color: #e91e63; background: #fff; border: 1rpx solid #ffd6e3; padding: 2rpx 10rpx; border-radius: 8rpx; margin-left: 8rpx; }
+.price-label-row { display: flex; align-items: center; margin-top: 10rpx; }
+.price-divider { width: 1rpx; height: 64rpx; background: #ffd6e3; margin: 0 24rpx; }
+.price-sales { display: flex; flex-direction: column; align-items: center; padding-left: 24rpx; border-left: 1rpx solid #ffd6e3; min-width: 110rpx; }
+.sales-num { font-size: 36rpx; font-weight: 700; color: #333; line-height: 1; }
+.sales-label { font-size: 22rpx; color: #999; margin-top: 8rpx; }
+
 .name-sec { background: #fff; padding: 24rpx; }
 .name-sec .name { font-size: 34rpx; font-weight: 700; color: #1a1a2e; line-height: 1.45; display: block; }
 .name-sec .desc { font-size: 25rpx; color: #888; margin-top: 10rpx; line-height: 1.5; display: block; }

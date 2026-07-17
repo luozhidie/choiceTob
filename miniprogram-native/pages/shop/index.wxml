@@ -53,6 +53,28 @@
 
   <!-- 商品区：标题 / 会员 / 优惠 / 发货 / 选择 / 参数 / 服务 -->
   <view id="section-product">
+    <!-- 价格卡（标题上方） -->
+    <view class="price-card">
+      <view class="price-card-main">
+        <view class="price-item">
+          <view class="price-amt">¥{{priceValue}}</view>
+          <text class="price-label">1件起批</text>
+        </view>
+        <view class="price-divider"></view>
+        <view class="price-item">
+          <view class="price-amt bulk">¥{{bulkPriceValue}}</view>
+          <view class="price-label-row">
+            <text class="price-label">≥5件</text>
+            <text class="price-tag">批量采购价</text>
+          </view>
+        </view>
+        <view class="price-sales">
+          <text class="sales-num">{{product.sales_count || 0}}</text>
+          <text class="sales-label">今日已拼</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 商品名 -->
     <view class="name-sec">
       <text class="name">{{product.title || product.name || '商品名称'}}</text>
