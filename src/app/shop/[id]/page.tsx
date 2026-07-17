@@ -255,13 +255,6 @@ export default function ProductDetailPage() {
   const displayTags = (() => {
     const auto: string[] = [];
     if (isPriceMember || canViewWholesale) auto.push("会员");
-    if (product?.origin) auto.push(product.origin + "货源");
-    else if (product?.supplier_name) auto.push(product.supplier_name as string);
-    if (product?.created_at) {
-      try {
-        if (Date.now() - new Date(product.created_at).getTime() < 7 * 24 * 3600 * 1000) auto.push("今日新款");
-      } catch (e) {}
-    }
     return Array.from(new Set([...(product?.tags || []), ...auto]));
   })();
 

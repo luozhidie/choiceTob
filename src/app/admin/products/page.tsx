@@ -1340,7 +1340,7 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  标签（逗号分隔）
+                  商品标签（逗号分隔，详情页原样展示）
                 </label>
                 <input
                   type="text"
@@ -1349,8 +1349,9 @@ export default function AdminProductsPage() {
                     setForm({ ...form, tags: e.target.value })
                   }
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  placeholder="如：新品,热销,推荐"
+                  placeholder="如：今日新款,沙河货源,清仓"
                 />
+                <p className="text-xs text-gray-400 mt-1">多个标签用逗号分隔；详情页会按你填的内容展示（会员标识由系统自动加）</p>
               </div>
 
               {/* === 属性编码体系 === */}

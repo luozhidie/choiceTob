@@ -155,15 +155,10 @@ Page({
         if (wp > 0) {
           estText = isPriceMember ? ('¥' + Math.round(wp / 100)) : '开通会员看预估价';
         }
-        /* 商品标签：会员 / 货源 / 新品 / 自定义 */
+        /* 商品标签：自定义 tags + 会员（权益标识） */
         var tags = [];
         if (Array.isArray(p.tags)) tags = tags.concat(p.tags);
         if (isPriceMember || t.data.memberTier) tags.push('会员');
-        if (p.origin) tags.push(p.origin + '货源');
-        else if (p.supplier_name) tags.push(p.supplier_name);
-        try {
-          if (p.created_at && (Date.now() - new Date(p.created_at).getTime() < 7 * 24 * 3600 * 1000)) tags.push('今日新款');
-        } catch (e) {}
         tags = tags.filter(function (v, i) { return tags.indexOf(v) === i; });
         /* 尺码 / 颜色 选项 */
         var sizeOptions = [];
