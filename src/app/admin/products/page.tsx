@@ -451,7 +451,7 @@ export default function AdminProductsPage() {
       description: product.description || "",
       cover_image: product.cover_image || "",
       images: product.images || [],
-      price: (product.price / 100).toString(),
+      price: product.price != null ? (product.price / 100).toString() : "",
       original_price: product.original_price
         ? (product.original_price / 100).toString()
         : "",
@@ -1060,11 +1060,13 @@ export default function AdminProductsPage() {
                     零售价（元）*
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
                     required
                     value={form.price}
                     onChange={(e) =>
-                      setForm({ ...form, price: e.target.value })
+                      setForm({ ...form, price: e.target.value.replace(/[^0-9]/g, "") })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="如 99"
