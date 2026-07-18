@@ -1,5 +1,8 @@
 /* ── 小程序「我的」页 — 三态：未登录 / 已登录未认证 / 已登录已认证 ── */
 
+/* 档口订阅：服务端（openid）持久化 + 本地兜底 */
+var sub = require('../../utils/stallSubscribe.js');
+
 /* 拿货会员等级（累计拿货额自动升级，连续6月不拿货降级） */
 var TIERS=[
   {key:'normal',name:'普通',badge:'L1',threshold:0,discount:''},
@@ -148,6 +151,12 @@ Page({
     var hists=(wx.getStorageSync('view_history')||[]).length;
     var subs=(wx.getStorageSync('subscribed_stalls')||[]).length;
     t.setData({favCount:favs||'--',historyCount:hists||'--',subCount:subs||'--'});
+    // 服务端订阅数（openid）为准，本地兜底
+    sub.getOpenid().then(function(openid){
+      sub.fetchSubscribedIds(openid).then(function(ids){
+        if(ids&&Array.isArray(ids))t.setData({subCount:ids.length||'--'});
+      }).catch(function(){});
+    }).catch(function(){});
   },
 
   /* 资产（后端）*/

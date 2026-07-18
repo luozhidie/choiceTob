@@ -1,4 +1,6 @@
 /* 档口列表页：某个市场的档口（头图+筛选+档口卡片） */
+var sub = require('../../utils/stallSubscribe.js');
+
 Page({
   data: {
     marketId: '',
@@ -33,24 +35,45 @@ Page({
       marketId: id,
       marketName: name,
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
-      subscribed: wx.getStorageSync('subscribed_stalls') || []
+      subscribed: sub.localIds()
     });
     if (id) {
       this.loadMarket();
       this.loadStalls();
+      this.syncSubscribe();
     } else {
       this.setData({ loading: false });
     }
   },
 
   onShow: function () {
-    var subs = wx.getStorageSync('subscribed_stalls') || [];
-    var stalls = this.data.stalls.map(function (s) {
-      s.subscribed = subs.indexOf(s.id) >= 0;
-      return s;
+    var t = this;
+    this.syncSubscribe(function () {
+      var subs = t.data.subscribed;
+      var stalls = t.data.stalls.map(function (s) {
+        s.subscribed = subs.indexOf(s.id) >= 0;
+        return s;
+      });
+      t.setData({ stalls: stalls });
+      t.applyFilter();
     });
-    this.setData({ subscribed: subs, stalls: stalls });
-    this.applyFilter();
+  },
+
+  // 以服务端订阅为准，合并本地兜底；after(subs) 回调
+  syncSubscribe: function (after) {
+    var t = this;
+    var locals = sub.localIds();
+    sub.getOpenid().then(function (openid) {
+      sub.fetchSubscribedIds(openid).then(function (ids) {
+        var merged = locals.slice();
+        if (ids && Array.isArray(ids)) {
+          ids.forEach(function (i) { if (merged.indexOf(i) < 0) merged.push(i); });
+        }
+        sub.saveLocal(merged); // 服务端订阅回写本地，兜底一致
+        t.setData({ subscribed: merged });
+        if (after) after();
+      }).catch(function () { t.setData({ subscribed: locals }); if (after) after(); });
+    }).catch(function () { t.setData({ subscribed: locals }); if (after) after(); });
   },
 
   loadMarket: function () {
@@ -145,16 +168,23 @@ Page({
   },
 
   toggleSub: function (e) {
+    var t = this;
     var id = e.currentTarget.dataset.id;
-    var subs = this.data.subscribed.slice();
+    var subs = t.data.subscribed.slice();
     var idx = subs.indexOf(id);
     var nowSub = idx < 0;
     if (nowSub) subs.push(id); else subs.splice(idx, 1);
-    wx.setStorageSync('subscribed_stalls', subs);
-    var stalls = this.data.stalls.map(function (s) { if (s.id === id) s.subscribed = nowSub; return s; });
-    this.setData({ subscribed: subs, stalls: stalls });
-    this.applyFilter();
+    t.setData({ subscribed: subs });
+    var stalls = t.data.stalls.map(function (s) { if (s.id === id) s.subscribed = nowSub; return s; });
+    t.setData({ stalls: stalls });
+    t.applyFilter();
     wx.showToast({ title: nowSub ? '已订阅' : '已取消订阅', icon: 'none' });
+    // 本地兜底
+    sub.saveLocal(subs);
+    // 服务端（openid）
+    sub.getOpenid().then(function (openid) {
+      sub.toggleSubscribe(openid, id, nowSub).catch(function () {});
+    }).catch(function () {});
   },
 
   goDetail: function (e) {

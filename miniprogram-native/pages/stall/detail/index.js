@@ -1,4 +1,6 @@
 /* 档口详情页：头像/订阅/粉丝/返单率/简介/评价/商品列表 */
+var sub = require('../../utils/stallSubscribe.js');
+
 Page({
   data: {
     stallId: '',
@@ -6,28 +8,53 @@ Page({
     reviews: [],
     loading: true,
     subscribed: false,
-    isPriceMember: false
+    isPriceMember: false,
+    // 写评价弹窗
+    showReview: false,
+    reviewRating: 5,
+    reviewName: '',
+    reviewContent: '',
+    submitting: false
   },
 
   onLoad: function (opt) {
     var app = getApp();
     var id = opt.id || '';
+    var ui = wx.getStorageSync('user_info') || {};
     this.setData({
       stallId: id,
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
-      subscribed: (wx.getStorageSync('subscribed_stalls') || []).indexOf(id) >= 0
+      subscribed: (wx.getStorageSync('subscribed_stalls') || []).indexOf(id) >= 0,
+      reviewName: ui.nickName || ''
     });
     if (id) {
       this.loadStall();
       this.loadReviews();
+      this.syncSubscribe();
     } else {
       this.setData({ loading: false });
     }
   },
 
   onShow: function () {
-    var sub = (wx.getStorageSync('subscribed_stalls') || []).indexOf(this.data.stallId) >= 0;
-    this.setData({ subscribed: sub });
+    this.syncSubscribe();
+  },
+
+  // 以服务端订阅为准，本地作兜底
+  syncSubscribe: function () {
+    var t = this;
+    var id = t.data.stallId;
+    var locals = sub.localIds();
+    var localSub = locals.indexOf(id) >= 0;
+    sub.getOpenid().then(function (openid) {
+      sub.fetchSubscribedIds(openid).then(function (ids) {
+        if (ids && Array.isArray(ids)) {
+          t.setData({ subscribed: ids.indexOf(id) >= 0 });
+        } else {
+          t.setData({ subscribed: localSub });
+        }
+      }).catch(function () { t.setData({ subscribed: localSub }); });
+    }).catch(function () { t.setData({ subscribed: localSub }); });
   },
 
   loadStall: function () {
@@ -95,14 +122,72 @@ Page({
   },
 
   toggleSub: function () {
-    var id = this.data.stallId;
-    var subs = wx.getStorageSync('subscribed_stalls') || [];
-    var idx = subs.indexOf(id);
-    var nowSub = idx < 0;
-    if (nowSub) subs.push(id); else subs.splice(idx, 1);
-    wx.setStorageSync('subscribed_stalls', subs);
-    this.setData({ subscribed: nowSub });
+    var t = this;
+    var id = t.data.stallId;
+    var nowSub = !t.data.subscribed;
+    t.setData({ subscribed: nowSub });
+    // 本地兜底
+    var locals = sub.localIds();
+    var li = locals.indexOf(id);
+    if (nowSub && li < 0) locals.push(id);
+    if (!nowSub && li >= 0) locals.splice(li, 1);
+    sub.saveLocal(locals);
+    // 服务端（openid）
+    sub.getOpenid().then(function (openid) {
+      sub.toggleSubscribe(openid, id, nowSub).catch(function () {});
+    }).catch(function () {});
     wx.showToast({ title: nowSub ? '已订阅' : '已取消订阅', icon: 'none' });
+  },
+
+  /* ===== 写评价 ===== */
+  openReview: function () {
+    var ui = wx.getStorageSync('user_info') || {};
+    this.setData({ showReview: true, reviewRating: 5, reviewName: ui.nickName || '', reviewContent: '' });
+  },
+  closeReview: function () {
+    this.setData({ showReview: false });
+  },
+  setRating: function (e) {
+    this.setData({ reviewRating: Number(e.currentTarget.dataset.n) });
+  },
+  onReviewName: function (e) {
+    this.setData({ reviewName: e.detail.value });
+  },
+  onReviewContent: function (e) {
+    this.setData({ reviewContent: e.detail.value });
+  },
+  submitReview: function () {
+    var t = this;
+    var content = (t.data.reviewContent || '').trim();
+    if (!content) { wx.showToast({ title: '请输入评价内容', icon: 'none' }); return; }
+    t.setData({ submitting: true });
+    wx.request({
+      url: 'https://colour-choice.art/api/public/stall-reviews',
+      method: 'POST',
+      header: { 'Content-Type': 'application/json' },
+      data: {
+        stall_id: t.data.stallId,
+        user_name: t.data.reviewName || '',
+        content: content,
+        rating: t.data.reviewRating
+      },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.success) {
+          wx.showToast({ title: '评价已提交', icon: 'success' });
+          t.setData({ showReview: false });
+          t.loadReviews();
+        } else {
+          wx.showToast({ title: d.error || '提交失败', icon: 'none' });
+        }
+      },
+      fail: function () {
+        wx.showToast({ title: '网络错误', icon: 'none' });
+      },
+      complete: function () {
+        t.setData({ submitting: false });
+      }
+    });
   },
 
   goShop: function (e) {

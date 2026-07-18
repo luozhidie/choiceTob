@@ -37,6 +37,45 @@
 
 .block { background: #fff; margin-top: 20rpx; padding: 26rpx 24rpx; }
 .block-title { display: block; font-size: 30rpx; font-weight: 600; color: #333; margin-bottom: 18rpx; }
+.block-title-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+.block-title-row .block-title { margin-bottom: 0; }
+.write-btn {
+  font-size: 22rpx; color: #fff; background: #2d1b2e;
+  padding: 8rpx 22rpx; border-radius: 30rpx;
+}
+
+/* 写评价弹窗 */
+.modal-mask {
+  position: fixed; left: 0; right: 0; top: 0; bottom: 0;
+  background: rgba(0,0,0,0.45); z-index: 999;
+  display: flex; align-items: flex-end;
+}
+.modal {
+  width: 100%; background: #fff; border-radius: 28rpx 28rpx 0 0;
+  padding: 30rpx 30rpx 50rpx; box-sizing: border-box;
+}
+.modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24rpx; }
+.modal-title { font-size: 32rpx; font-weight: 700; color: #333; }
+.modal-close { font-size: 36rpx; color: #999; padding: 0 10rpx; }
+.modal-row { display: flex; align-items: center; margin-bottom: 24rpx; }
+.modal-row.col { flex-direction: column; align-items: stretch; }
+.modal-label { font-size: 26rpx; color: #666; width: 110rpx; flex-shrink: 0; }
+.stars { display: flex; gap: 12rpx; }
+.star { font-size: 44rpx; color: #ddd; }
+.star-on { color: #f59e0b; }
+.modal-input {
+  flex: 1; background: #f7f7f7; border-radius: 12rpx;
+  padding: 16rpx 20rpx; font-size: 26rpx; color: #333;
+}
+.modal-textarea {
+  width: 100%; background: #f7f7f7; border-radius: 12rpx;
+  padding: 16rpx 20rpx; font-size: 26rpx; color: #333; height: 200rpx; box-sizing: border-box;
+}
+.modal-submit {
+  margin-top: 10rpx; background: #2d1b2e; color: #fff;
+  font-size: 30rpx; border-radius: 44rpx; padding: 22rpx 0;
+}
+.modal-submit[disabled] { opacity: 0.6; }
 .block-text { display: block; font-size: 26rpx; color: #666; line-height: 1.7; }
 
 .no-review { font-size: 24rpx; color: #aaa; padding: 20rpx 0; text-align: center; }
