@@ -77,6 +77,7 @@ interface Product {
   // 商品参数
   material?: string | null;
   sizes?: string | null;
+  color?: string | null; // 商品颜色，逗号分隔
   origin?: string | null;
   care_instructions?: string | null;
   weight?: string | null;
@@ -187,6 +188,7 @@ export default function AdminProductsPage() {
     // 商品参数
     material: "",
     sizes: "",
+    color: "",
     origin: "",
     care_instructions: "",
     weight: "",
@@ -283,6 +285,7 @@ export default function AdminProductsPage() {
       style_conclusion: "",
       material: "",
       sizes: "",
+      color: "",
       origin: "",
       weight: "",
       care_instructions: "",
@@ -348,6 +351,7 @@ export default function AdminProductsPage() {
       // 商品参数
       material: form.material.trim() || null,
       sizes: form.sizes.trim() || null,
+      color: form.color.trim() || null,
       origin: form.origin.trim() || null,
       care_instructions: form.care_instructions.trim() || null,
       weight: form.weight.trim() || null,
@@ -480,6 +484,7 @@ export default function AdminProductsPage() {
       style_conclusion: product.style_conclusion || "",
       material: product.material || "",
       sizes: product.sizes || "",
+      color: product.color || "",
       origin: product.origin || "",
       weight: product.weight || "",
       care_instructions: product.care_instructions || "",
@@ -1682,13 +1687,25 @@ export default function AdminProductsPage() {
 
                 {/* 尺码 */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码表</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码</label>
                   <input
                     type="text"
                     value={form.sizes}
                     onChange={(e) => setForm({ ...form, sizes: e.target.value })}
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="如：S/M/L/XL 或 均码"
+                  />
+                </div>
+
+                {/* 颜色 */}
+                <div className="mb-3">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">颜色</label>
+                  <input
+                    type="text"
+                    value={form.color}
+                    onChange={(e) => setForm({ ...form, color: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="如：白色,黑色,米色"
                   />
                 </div>
 

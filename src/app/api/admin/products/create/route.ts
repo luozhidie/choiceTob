@@ -197,6 +197,10 @@ export async function POST(request: NextRequest) {
             stock: 0,
             tags: ["导入", item.platform || ""].filter(Boolean),
           };
+          // 尺码/颜色（JSON 导入时若提供则写入）
+          if (item.sizes) payload.sizes = Array.isArray(item.sizes) ? item.sizes.join(',') : String(item.sizes);
+          if (item.color) payload.color = Array.isArray(item.color) ? item.color.join(',') : String(item.color);
+          else if (item.colors) payload.color = Array.isArray(item.colors) ? item.colors.join(',') : String(item.colors);
           let { data, error: createError } = await supabase.from("products").insert(payload).select().single();
           if (createError) {
             const { data: d2, error: e2 } = await supabase.from("products").insert(payload).select().single();

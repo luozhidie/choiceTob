@@ -29,6 +29,8 @@ function formatProducts(data: any[]) {
     stock: p.stock ?? 0,
     sales: p.sales || 0,
     created_at: p.created_at || null,
+    sizes: p.sizes || null,
+    color: p.color || null,
     // 发货信息
     ship_from: p.ship_from || null,
     ship_est_days: p.ship_est_days ?? null,
