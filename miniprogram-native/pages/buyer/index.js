@@ -56,12 +56,15 @@ Page({
         var isPriceMember = t.data.isPriceMember;
         list.forEach(function(p){
           var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
-          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
-          /* 批发价 */
-          var wp=Number(p.wholesale_price)||0;
-          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
-          else if(wp>0)p.wholesalePriceText='\u00A5???';
-          else p.wholesalePriceText='';
+          var wp=Number(p.wholesale_price)||0;if(wp>=100)wp=Math.round(wp/100);
+          if(isPriceMember && wp>0){
+            // 会员（含认证店主）：主价显示批发价，不显示零售价
+            p.priceText='\u00A5'+(wp%1===0?wp:wp.toFixed(2));
+            p.wholesalePriceText='';
+          } else {
+            p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+            p.wholesalePriceText = wp>0 ? '\u00A5???' : '';
+          }
         });
         t.setData({products:list,hasMore:list.length>=20});
       },
@@ -84,11 +87,15 @@ Page({
         var isPriceMember = t.data.isPriceMember;
         list.forEach(function(p){
           var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
-          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
-          var wp=Number(p.wholesale_price)||0;
-          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
-          else if(wp>0)p.wholesalePriceText='\u00A5???';
-          else p.wholesalePriceText='';
+          var wp=Number(p.wholesale_price)||0;if(wp>=100)wp=Math.round(wp/100);
+          if(isPriceMember && wp>0){
+            // 会员（含认证店主）：主价显示批发价，不显示零售价
+            p.priceText='\u00A5'+(wp%1===0?wp:wp.toFixed(2));
+            p.wholesalePriceText='';
+          } else {
+            p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+            p.wholesalePriceText = wp>0 ? '\u00A5???' : '';
+          }
         });
         t.setData({products:t.data.products.concat(list),hasMore:list.length>=20});
       },

@@ -128,7 +128,7 @@ Page({
     var tabsHeightPx = Math.round(80 * pxPerRpx);
     this.setData({
       productId: opt.id || '',
-      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember),
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
       statusBarHeight: sys.statusBarHeight || 20,
       customNavTotalHeightPx: (sys.statusBarHeight || 20) + navBarHeightPx,
       tabsHeightPx: tabsHeightPx,
@@ -179,14 +179,18 @@ Page({
           }
         }
         // 1件起批 / ≥5件价格（用于下单详情弹窗）
-        var priceValue = wp > 0 ? Math.round(wp / 100) : price;
-        var bulkPriceValue = priceValue;
-        if (p.bulk_price) {
-          bulkPriceValue = Number(p.bulk_price) >= 100 ? Math.round(Number(p.bulk_price) / 100) : Number(p.bulk_price);
-        } else if (wp > 0) {
-          bulkPriceValue = Math.round(wp / 100 * 0.95);
-        } else if (price > 0) {
-          bulkPriceValue = Math.round(price * 0.95);
+        // 会员（含认证店主）显示批发价；非会员显示零售价
+        var priceValue, bulkPriceValue;
+        if (isPriceMember && wp > 0) {
+          priceValue = Math.round(wp / 100);
+          if (p.bulk_price) {
+            bulkPriceValue = Number(p.bulk_price) >= 100 ? Math.round(Number(p.bulk_price) / 100) : Number(p.bulk_price);
+          } else {
+            bulkPriceValue = Math.round(wp / 100 * 0.95);
+          }
+        } else {
+          priceValue = price;
+          bulkPriceValue = price;
         }
         /* 规格 */
         var specList = [];
@@ -360,17 +364,31 @@ Page({
         if (r.data && r.data.data) list = r.data.data || [];
         else if (Array.isArray(r.data)) list = r.data;
         if (excludeId) list = list.filter(function (x) { return x.id !== excludeId; });
-        list.forEach(function (p) { var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100); p.priceLabel = '¥' + n; });
+        var isPM = t.data.isPriceMember;
+        list.forEach(function (p) {
+          var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100);
+          var wp = Number(p.wholesale_price) || 0; if (wp >= 100) wp = Math.round(wp / 100);
+          var main = (isPM && wp > 0) ? wp : n;
+          p.priceLabel = '¥' + (main % 1 === 0 ? main : main.toFixed(2));
+        });
         t.setData({ recList: list.slice(0, 6) });
       }
     });
   },
 
-  // 会员等级（调 /api/user/me 取 membershipType）
+  // 会员等级（调 /api/user/me 取 membershipType + storeOwnerCertified）
   loadMembership: function () {
     var token = wx.getStorageSync('token') || '';
-    if (!token) { this.setData({ memberTier: null }); return; }
     var t = this;
+    if (!token) {
+      // 未登录但本地已标记认证店主，仍展示会员权益
+      if (!!wx.getStorageSync('is_certified_store_owner')) {
+        t.setData({ memberTier: { icon: '👁️', label: '认证店主', desc: '已认证，可查看全部商品批发价' } });
+      } else {
+        t.setData({ memberTier: null });
+      }
+      return;
+    }
     wx.request({
       url: 'https://colour-choice.art/api/user/me',
       method: 'GET',
@@ -378,7 +396,13 @@ Page({
       success: function (r) {
         var d = r.data || {};
         var mt = (d.data && d.data.membershipType) || 'none';
-        t.setData({ memberTier: MEMBER_MAP[mt] || null });
+        var isCert = !!(d.data && d.data.storeOwnerCertified);
+        var tier = MEMBER_MAP[mt] || null;
+        // 认证店主等同于普通价格会员，展示会员权益
+        if (isCert && !tier) {
+          tier = { icon: '👁️', label: '认证店主', desc: '已认证，可查看全部商品批发价' };
+        }
+        t.setData({ memberTier: tier });
       },
       fail: function () { t.setData({ memberTier: null }); }
     });
@@ -703,10 +727,14 @@ Page({
   loadShopRecs: function (cat, excludeId) {
     var t = this;
     var normalize = function (list) {
+      var isPM = t.data.isPriceMember;
       list.forEach(function (p) {
         var n = Number(p.price) || 0;
         if (n >= 100) n = Math.round(n / 100);
-        p.priceLabel = '¥' + n;
+        var wp = Number(p.wholesale_price) || 0;
+        if (wp >= 100) wp = Math.round(wp / 100);
+        var main = (isPM && wp > 0) ? wp : n;
+        p.priceLabel = '¥' + (main % 1 === 0 ? main : main.toFixed(2));
       });
     };
     var finish = function (list, isFallback) {
@@ -750,7 +778,13 @@ Page({
       method: 'GET',
       success: function (r) {
         var list2 = (r.data && r.data.data) || [];
-        list2.forEach(function (p) { var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100); p.priceLabel = '¥' + n; });
+        var isPM2 = t.data.isPriceMember;
+        list2.forEach(function (p) {
+          var n = Number(p.price) || 0; if (n >= 100) n = Math.round(n / 100);
+          var wp = Number(p.wholesale_price) || 0; if (wp >= 100) wp = Math.round(wp / 100);
+          var main = (isPM2 && wp > 0) ? wp : n;
+          p.priceLabel = '¥' + (main % 1 === 0 ? main : main.toFixed(2));
+        });
         t.setData({ shopRecNewbie: list2.slice(0, 6) });
       }
     });

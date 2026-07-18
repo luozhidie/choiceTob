@@ -111,14 +111,15 @@ Page({
         wx.setStorageSync('member_type',u.membership_type||'');
         wx.setStorageSync('vip_level',u.vip_level||'');
         wx.setStorageSync('vip_expire',u.membership_expires_at||'');
-        wx.setStorageSync('is_price_member',!!(u.membership_type==='view_price'));
+        var isPriceMember=!!(u.membership_type==='view_price' || u.store_owner_certified);
+        wx.setStorageSync('is_price_member',isPriceMember);
         wx.setStorageSync('is_certified_store_owner',!!u.store_owner_certified);
         wx.setStorageSync('certified_style',u.certified_style||'');
 
         /* 全局状态同步 */
         var app=getApp();
         if(app&&app.globalData){
-          app.globalData.isPriceMember=!!(u.membership_type==='view_price');
+          app.globalData.isPriceMember=isPriceMember;
           app.globalData.isCertifiedStoreOwner=!!u.store_owner_certified;
         }
 

@@ -5,9 +5,13 @@ Page({
     loading: false,
     history: [],
     hots: ['穿搭', '护肤', '连衣裙', '拿货', '新品'],
+    isPriceMember: false,
   },
 
   onLoad: function () {
+    var app = getApp();
+    var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
+    this.setData({ isPriceMember: isPriceMember });
     var h = wx.getStorageSync('search_history') || [];
     this.setData({ history: h });
   },
@@ -42,16 +46,20 @@ Page({
                  (p.title && p.title.toLowerCase().indexOf(k) >= 0) ||
                  (p.description && p.description.toLowerCase().indexOf(k) >= 0);
         });
-        // 格式化价格
+        // 格式化价格：会员（含认证店主）显示批发价，非会员显示零售价
+        var isPriceMember = that.data.isPriceMember;
         var results = filtered.map(function (p) {
           var price = Number(p.price) || 0;
           if (price >= 100) price = Math.round(price / 100);
+          var wp = Number(p.wholesale_price) || 0;
+          if (wp >= 100) wp = Math.round(wp / 100);
+          var mainPrice = (isPriceMember && wp > 0) ? wp : price;
           return {
             id: p.id,
             name: p.name || p.title,
             image_url: p.image_url || p.cover_image,
-            price: price,
-            priceLabel: price ? '¥' + (price % 1 === 0 ? price : price.toFixed(2)) : '¥0',
+            price: mainPrice,
+            priceLabel: mainPrice ? '¥' + (mainPrice % 1 === 0 ? mainPrice : mainPrice.toFixed(2)) : '¥0',
           };
         });
         that.setData({ results: results, loading: false });

@@ -21,8 +21,9 @@ Page({
 
   onLoad:function(){
     var app = getApp();
+    var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
     this.setData({
-      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember)
+      isPriceMember: isPriceMember
     });
     // 读取真实版本号（CI 上传时设置的 version，与体验版版本号一致）
     try {
@@ -210,13 +211,17 @@ Page({
         else if(Array.isArray(r.data))l=r.data;
         var isPriceMember = t.data.isPriceMember;
         l.forEach(function(p){
-          var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
-          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
-          /* 批发价 */
+          var price=Number(p.price)||0;if(price>=100)price=Math.round(price/100);
           var wp=Number(p.wholesale_price)||0;
-          if(wp>0 && isPriceMember)p.wholesalePriceText='\u00A5'+Math.round(wp/100);
-          else if(wp>0)p.wholesalePriceText='\u00A5???';
-          else p.wholesalePriceText='';
+          if(wp>=100)wp=Math.round(wp/100);
+          if(isPriceMember && wp>0){
+            p.priceText='\u00A5'+(wp%1===0?wp:wp.toFixed(2));
+            p.wholesalePriceText='';
+          } else {
+            p.priceText='\u00A5'+(price%1===0?price:price.toFixed(2));
+            if(wp>0)p.wholesalePriceText='批发价 \u00A5???';
+            else p.wholesalePriceText='';
+          }
           p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;
           t.saveViewHistory(p);
         });

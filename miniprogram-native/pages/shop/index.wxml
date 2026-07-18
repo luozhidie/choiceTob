@@ -58,16 +58,18 @@
       <view class="price-card-main">
         <view class="price-item">
           <view class="price-amt">¥{{priceValue}}</view>
-          <text class="price-label">1件起批</text>
+          <text class="price-label">{{isPriceMember ? '1件起批' : '零售价'}}</text>
         </view>
-        <view class="price-divider"></view>
-        <view class="price-item">
-          <view class="price-amt bulk">¥{{bulkPriceValue}}</view>
-          <view class="price-label-row">
-            <text class="price-label">≥5件</text>
-            <text class="price-tag">批量采购价</text>
+        <block wx:if="{{isPriceMember}}">
+          <view class="price-divider"></view>
+          <view class="price-item">
+            <view class="price-amt bulk">¥{{bulkPriceValue}}</view>
+            <view class="price-label-row">
+              <text class="price-label">≥5件</text>
+              <text class="price-tag">批量采购价</text>
+            </view>
           </view>
-        </view>
+        </block>
         <view class="price-sales">
           <text class="sales-num">{{product.sales_count || 0}}</text>
           <text class="sales-label">今日已拼</text>
@@ -268,11 +270,11 @@
           <view class="sku-price-col">
             <view class="sku-price-row">
               <text class="sku-price">¥{{priceValue}}</text>
-              <text class="sku-price-bulk">¥{{bulkPriceValue}}</text>
+              <text class="sku-price-bulk" wx:if="{{isPriceMember}}">¥{{bulkPriceValue}}</text>
             </view>
             <view class="sku-price-label-row">
-              <text class="sku-price-label">1件起批</text>
-              <text class="sku-price-bulk-label">≥5件</text>
+              <text class="sku-price-label">{{isPriceMember ? '1件起批' : '零售价'}}</text>
+              <text class="sku-price-bulk-label" wx:if="{{isPriceMember}}">≥5件</text>
             </view>
           </view>
         </view>

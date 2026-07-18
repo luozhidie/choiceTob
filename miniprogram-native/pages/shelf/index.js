@@ -12,11 +12,16 @@ Page({
     showFilter: false,
     minPrice: '',
     maxPrice: '',
+    isPriceMember: false,
   },
 
   onLoad: function (opt) {
+    var app = getApp();
     var id = opt.id || '';
-    this.setData({ shelfId: id });
+    this.setData({
+      shelfId: id,
+      isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner')
+    });
     if (id) this.loadShelf();
   },
 
@@ -87,9 +92,16 @@ Page({
       list.forEach(function (p) {
         var n = Number(p.price) || 0;
         if (n >= 100) n = Math.round(n / 100);
-        p.priceText = '\u00A5' + (n % 1 === 0 ? n : n.toFixed(2));
         var wp = Number(p.wholesale_price) || 0;
-        p.wholesalePriceText = wp > 0 ? '\u00A5' + Math.round(wp / 100) : '';
+        if (wp >= 100) wp = Math.round(wp / 100);
+        if (t.data.isPriceMember && wp > 0) {
+          p.priceText = '\u00A5' + (wp % 1 === 0 ? wp : wp.toFixed(2));
+          p.wholesalePriceText = '';
+        } else {
+          p.priceText = '\u00A5' + (n % 1 === 0 ? n : n.toFixed(2));
+          // 非会员不暴露批发价，统一打码
+          p.wholesalePriceText = wp > 0 ? '\u00A5???' : '';
+        }
       });
       // 提取子分类
       var subSet = {};
