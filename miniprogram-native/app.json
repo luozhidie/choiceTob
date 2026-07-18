@@ -41,7 +41,11 @@
     "pages/album-grab/index",
     "pages/certify/index",
     "pages/email-login/index",
-    "pages/shipping-explanation/index"
+    "pages/shipping-explanation/index",
+    "pages/stall/markets/index",
+    "pages/stall/index/index",
+    "pages/stall/detail/index",
+    "pages/stall/subscribed/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

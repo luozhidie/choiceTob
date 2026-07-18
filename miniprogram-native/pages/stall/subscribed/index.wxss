@@ -1,0 +1,56 @@
+.page { min-height: 100vh; background: #f5f5f5; }
+
+.header {
+  display: flex; align-items: center; gap: 20rpx;
+  padding: 16rpx 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  background: #fff;
+  position: sticky; top: 0; z-index: 100;
+}
+.back, .home { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; color: #666; font-size: 40rpx; }
+.title { flex: 1; text-align: center; font-size: 28rpx; font-weight: 500; color: #333; padding-right: 132rpx; }
+
+.loading { text-align: center; padding: 80rpx 0; color: #999; font-size: 26rpx; }
+
+.empty { text-align: center; padding: 120rpx 0; color: #999; }
+.empty-icon { display: block; font-size: 80rpx; margin-bottom: 16rpx; }
+.empty-text { display: block; font-size: 26rpx; margin-bottom: 30rpx; }
+.empty-btn {
+  display: inline-block; padding: 16rpx 48rpx; font-size: 26rpx;
+  color: #fff; background: #2d1b2e; border-radius: 40rpx;
+}
+
+.stall-list { padding: 20rpx 24rpx; }
+.stall-card {
+  background: #fff; border-radius: 18rpx; padding: 24rpx;
+  margin-bottom: 20rpx; box-shadow: 0 4rpx 16rpx rgba(0,0,0,0.04);
+}
+.sc-row { display: flex; align-items: flex-start; }
+.sc-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: #eee; flex-shrink: 0; }
+.sc-ph { display: flex; align-items: center; justify-content: center; color: #fff; font-size: 36rpx; font-weight: 700; background: linear-gradient(135deg, #c9a36a, #b07d3e); }
+.sc-main { flex: 1; margin-left: 20rpx; min-width: 0; }
+.sc-name-row { display: flex; align-items: center; }
+.sc-name { font-size: 30rpx; font-weight: 600; color: #333; }
+.sc-rating { margin-left: 14rpx; font-size: 24rpx; color: #f59e0b; }
+.sc-tags { margin-top: 10rpx; display: flex; flex-wrap: wrap; }
+.sc-tag { font-size: 20rpx; color: #b07d3e; background: #fbf3e6; border-radius: 6rpx; padding: 4rpx 12rpx; margin-right: 10rpx; margin-top: 6rpx; }
+.sc-metrics { margin-top: 12rpx; display: flex; gap: 24rpx; }
+.sc-metric { font-size: 22rpx; color: #888; }
+.sc-sub-btn {
+  flex-shrink: 0; margin-left: 16rpx;
+  font-size: 24rpx; color: #fff; background: #2d1b2e;
+  padding: 12rpx 22rpx; border-radius: 30rpx;
+}
+.sc-sub-btn.sub-on { background: #f0f0f0; color: #999; }
+
+.sc-reason {
+  display: block; margin-top: 16rpx; font-size: 24rpx; color: #777;
+  background: #faf7f2; border-radius: 10rpx; padding: 14rpx 18rpx; line-height: 1.5;
+}
+.sc-previews { display: flex; gap: 14rpx; margin-top: 18rpx; }
+.sc-pre { width: 31%; }
+.sc-pre-img { width: 100%; height: 180rpx; border-radius: 10rpx; background: #eee; }
+.sc-pre-ph { display: flex; align-items: center; justify-content: center; color: #999; font-size: 22rpx; }
+.sc-pre-price { display: block; margin-top: 8rpx; font-size: 22rpx; color: #e11d48; font-weight: 600; text-align: center; }
+
+.sbtm { height: 40rpx; }

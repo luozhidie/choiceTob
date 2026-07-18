@@ -92,6 +92,12 @@ const menuGroups = [
     { label: "属性编码管理", href: "/admin/attribute-encoding" },
   ]},
 
+  // ─── 同行档口货架 ───
+  { label: "同行档口货架", items: [
+    { label: "市场/商圈", href: "/admin/markets" },
+    { label: "同行档口", href: "/admin/stalls" },
+  ]},
+
   // ─── 营销&内容 ───
   { label: "营销&内容", items: [
     { label: "营销策划", href: "/admin/marketing" },

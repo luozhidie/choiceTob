@@ -63,6 +63,10 @@ const ALLOWED_TABLES = new Set([
   // 版块
   "blocks",
   "page_blocks",
+  // 同行档口货架
+  "markets",
+  "peer_stalls",
+  "stall_reviews",
   // 店铺
   "stores",
   "store_reports",

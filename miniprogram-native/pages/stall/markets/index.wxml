@@ -1,0 +1,41 @@
+<view class="page">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
+    <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
+    <text class="title">档口市场</text>
+  </view>
+
+  <!-- 头图 -->
+  <view class="hero">
+    <text class="hero-title">2026 全国精选档口</text>
+    <text class="hero-sub">十三行 · 沙河 · 杭州 · 南油 · 中纺… 一手货源直供</text>
+  </view>
+
+  <!-- 我订阅的档口 -->
+  <view class="sub-entry" bindtap="goSubscribed">
+    <text class="se-icon">🔔</text>
+    <text class="se-text">我订阅的档口</text>
+    <text class="se-go">›</text>
+  </view>
+
+  <!-- 加载 -->
+  <view wx:if="{{loading}}" class="loading"><text>加载中…</text></view>
+
+  <!-- 空 -->
+  <view wx:elif="{{markets.length===0}}" class="empty">
+    <text class="empty-icon">🏬</text>
+    <text class="empty-text">暂无市场，敬请期待</text>
+  </view>
+
+  <!-- 市场圆形网格 -->
+  <view wx:else class="market-grid">
+    <view wx:for="{{markets}}" wx:key="id" class="market-item"
+      bindtap="goList" data-id="{{item.id}}" data-name="{{item.name}}">
+      <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="market-avatar"/>
+      <view wx:else class="market-avatar market-ph">{{item.initial}}</view>
+      <text class="market-name">{{item.name}}</text>
+      <text wx:if="{{item.location}}" class="market-loc">{{item.location}}</text>
+    </view>
+  </view>
+</view>

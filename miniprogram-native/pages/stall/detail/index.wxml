@@ -1,0 +1,78 @@
+<view class="page">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
+    <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
+    <text class="title">{{stall.name||'档口详情'}}</text>
+  </view>
+
+  <!-- 头图 + 头像 -->
+  <view class="hero">
+    <image wx:if="{{stall.cover_image}}" src="{{stall.cover_image}}" mode="aspectFill" class="hero-img"/>
+    <view wx:else class="hero-img hero-ph"></view>
+    <view class="hero-mask"></view>
+    <view class="hero-info">
+      <image wx:if="{{stall.avatar}}" src="{{stall.avatar}}" mode="aspectFill" class="hero-avatar"/>
+      <view wx:else class="hero-avatar hero-ph2">{{stall.initial}}</view>
+      <view class="hero-text">
+        <text class="hn">{{stall.name}}</text>
+        <text wx:if="{{stall.market_floor}}" class="hf">📍 {{stall.market_floor}}</text>
+      </view>
+      <view class="sub-fab {{subscribed?'sub-on':''}}" bindtap="toggleSub">{{subscribed?'已订阅':'+订阅'}}</view>
+    </view>
+  </view>
+
+  <!-- 数据条 -->
+  <view class="stats">
+    <view class="st"><text class="st-num">★ {{stall.rating}}</text><text class="st-label">评分</text></view>
+    <view class="st"><text class="st-num">{{stall.fan_count}}</text><text class="st-label">粉丝</text></view>
+    <view class="st"><text class="st-num">{{stall.reorder_rate}}%</text><text class="st-label">返单率</text></view>
+    <view class="st"><text class="st-num">{{stall.delivery_rate}}%</text><text class="st-label">发货率</text></view>
+  </view>
+
+  <!-- 标签 -->
+  <view wx:if="{{stall.tags.length>0}}" class="tags">
+    <text wx:for="{{stall.tags}}" wx:key="*this" class="tag">{{item}}</text>
+  </view>
+
+  <!-- 简介 -->
+  <view wx:if="{{stall.intro}}" class="block">
+    <text class="block-title">档口简介</text>
+    <text class="block-text">{{stall.intro}}</text>
+  </view>
+
+  <!-- 评价 -->
+  <view class="block">
+    <text class="block-title">客户评价（{{reviews.length}}）</text>
+    <view wx:if="{{reviews.length===0}}" class="no-review">暂无评价</view>
+    <view wx:for="{{reviews}}" wx:key="id" class="review">
+      <view class="rv-avatar">{{item.initial}}</view>
+      <view class="rv-main">
+        <view class="rv-head">
+          <text class="rv-name">{{item.user_name||'匿名买手'}}</text>
+          <text class="rv-date">{{item.date}}</text>
+        </view>
+        <text class="rv-stars">★ {{item.rating}}</text>
+        <text class="rv-content">{{item.content}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 商品 -->
+  <view class="block">
+    <text class="block-title">档口商品（{{stall.products.length}}）</text>
+    <view wx:if="{{stall.products.length===0}}" class="no-review">暂无商品</view>
+    <view wx:else class="grid">
+      <view wx:for="{{stall.products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
+        <view class="card-img-wrap">
+          <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="card-img" lazy-load/>
+          <view wx:else class="card-ph">暂无图片</view>
+        </view>
+        <text class="card-name">{{item.name||item.title||'商品'}}</text>
+        <text class="card-price">{{item.priceText}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="sbtm"></view>
+</view>

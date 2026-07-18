@@ -1,0 +1,87 @@
+<view class="page">
+  <!-- 顶部导航 -->
+  <view class="header">
+    <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
+    <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
+    <text class="title">{{marketName||'档口列表'}}</text>
+  </view>
+
+  <!-- 市场头图 -->
+  <view class="banner">
+    <image wx:if="{{market.cover_image}}" src="{{market.cover_image}}" mode="aspectFill" class="banner-img"/>
+    <view wx:else class="banner-ph"></view>
+    <view class="banner-mask"></view>
+    <view class="banner-info">
+      <text class="b-name">{{market.name||marketName}}</text>
+      <text wx:if="{{market.location}}" class="b-loc">{{market.location}}</text>
+      <text wx:if="{{market.intro}}" class="b-intro">{{market.intro}}</text>
+    </view>
+  </view>
+
+  <!-- 我订阅的档口入口 -->
+  <view class="sub-entry" bindtap="goSubEntry">
+    <text class="se-icon">🔔</text>
+    <text class="se-text">我订阅的档口</text>
+    <text class="se-go">›</text>
+  </view>
+
+  <!-- 筛选 chips -->
+  <scroll-view scroll-x class="chip-bar">
+    <view wx:for="{{tabs}}" wx:key="key"
+      class="chip {{activeTab===item.key?'chip-on':''}}"
+      bindtap="onTab" data-key="{{item.key}}">{{item.label}}</view>
+  </scroll-view>
+
+  <!-- 排序 -->
+  <view class="sort-bar">
+    <view wx:for="{{sorts}}" wx:key="key"
+      class="sort-tab {{activeSort===item.key?'sort-on':''}}"
+      bindtap="onSort" data-key="{{item.key}}">{{item.label}}</view>
+  </view>
+
+  <!-- 加载 -->
+  <view wx:if="{{loading}}" class="loading"><text>加载中…</text></view>
+
+  <!-- 空 -->
+  <view wx:elif="{{filtered.length===0}}" class="empty">
+    <text class="empty-icon">🏪</text>
+    <text class="empty-text">该分类暂无档口</text>
+  </view>
+
+  <!-- 档口列表 -->
+  <view wx:else class="stall-list">
+    <view wx:for="{{filtered}}" wx:key="id" class="stall-card" bindtap="goDetail" data-id="{{item.id}}">
+      <view class="sc-row">
+        <image wx:if="{{item.avatar}}" src="{{item.avatar}}" mode="aspectFill" class="sc-avatar"/>
+        <view wx:else class="sc-avatar sc-ph">{{item.initial}}</view>
+        <view class="sc-main">
+          <view class="sc-name-row">
+            <text class="sc-name">{{item.name}}</text>
+            <text class="sc-rating">★{{item.rating}}</text>
+          </view>
+          <view wx:if="{{item.tags.length>0}}" class="sc-tags">
+            <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="sc-tag">{{tag}}</text>
+          </view>
+          <view class="sc-metrics">
+            <text class="sc-metric">🔁 返单 {{item.reorder_rate}}%</text>
+            <text class="sc-metric">👥 {{item.fan_count}} 粉丝</text>
+          </view>
+        </view>
+        <view class="sc-sub-btn {{item.subscribed?'sub-on':''}}" catchtap="toggleSub" data-id="{{item.id}}">{{item.subscribed?'已订阅':'+订阅'}}</view>
+      </view>
+
+      <text wx:if="{{item.recommend_reason}}" class="sc-reason">{{item.recommend_reason}}</text>
+
+      <view wx:if="{{item.previewProducts.length>0}}" class="sc-previews">
+        <view wx:for="{{item.previewProducts}}" wx:for-item="p" wx:key="id"
+          class="sc-pre" bindtap="goDetail" data-id="{{item.id}}">
+          <image wx:if="{{p.image_url||p.cover_image}}" src="{{p.image_url||p.cover_image}}" mode="aspectFill" class="sc-pre-img"/>
+          <view wx:else class="sc-pre-img sc-pre-ph">暂无</view>
+          <text class="sc-pre-price">{{p.priceText}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="sbtm"></view>
+</view>

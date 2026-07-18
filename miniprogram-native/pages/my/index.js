@@ -146,7 +146,8 @@ Page({
     var t=this;
     var favs=(wx.getStorageSync('favorites')||[]).length;
     var hists=(wx.getStorageSync('view_history')||[]).length;
-    t.setData({favCount:fav||'--',historyCount:hists||'--'});
+    var subs=(wx.getStorageSync('subscribed_stalls')||[]).length;
+    t.setData({favCount:favs||'--',historyCount:hists||'--',subCount:subs||'--'});
   },
 
   /* 资产（后端）*/
@@ -164,7 +165,6 @@ Page({
         var isCert=!!data.storeOwnerCertified;
         var certStyle=data.certifiedStyle||'';
         t.setData({
-          subCount:data.orderStats?(data.orderStats.unpaid||0):'--',
           walletBalance:data.walletBalance!=null?data.walletBalance:'--',
           couponCount:data.couponCount!=null?data.couponCount:'--',
           redPackCount:data.redPackCount!=null?data.redPackCount:'--',
@@ -190,6 +190,8 @@ Page({
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
   goVipDeposit:function(){wx.navigateTo({url:'/pages/vip/index?tab=deposit'});},
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
+  goMarkets:function(){wx.navigateTo({url:'/pages/stall/markets/index'});},
+  goSubscribedStalls:function(){wx.navigateTo({url:'/pages/stall/subscribed/index'});},
   goFavorites:function(){wx.navigateTo({url:'/pages/favorites/index'});},
   goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
