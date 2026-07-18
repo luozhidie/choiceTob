@@ -96,6 +96,7 @@ const menuGroups = [
   { label: "同行档口货架", items: [
     { label: "市场/商圈", href: "/admin/markets" },
     { label: "同行档口", href: "/admin/stalls" },
+    { label: "档口评价", href: "/admin/stall-reviews" },
   ]},
 
   // ─── 营销&内容 ───
