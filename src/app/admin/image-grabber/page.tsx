@@ -620,9 +620,10 @@ export default function ImageGrabberPage() {
   };
 
   // 商品导入（调用 /api/admin/products/create?action=import）
+  // 开始导入：支持 商品页URL 或 1688 JSON（单个对象/数组/多对象）
   const handleImport = async () => {
     if (!inputText.trim()) {
-      showToast("error", "请输入商品页链接");
+      showToast("error", "请输入商品页链接或粘贴 1688 JSON");
       return;
     }
 
@@ -630,13 +631,29 @@ export default function ImageGrabberPage() {
     setImportResults([]);
 
     try {
-      const urls = inputText
-        .split(/[\n\r]+/)
-        .map(l => l.trim())
-        .filter(l => l.startsWith("http"));
+      const raw = inputText.trim();
+      let urls: string[];
+
+      // 先尝试整体解析为 JSON（单个对象 / 数组 / 多对象换行拼接）
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          urls = parsed.map((o) => JSON.stringify(o));
+        } else if (parsed && typeof parsed === "object") {
+          urls = [raw];
+        } else {
+          urls = [];
+        }
+      } catch {
+        // 不是完整 JSON，则按行取 URL 或 JSON 对象行
+        urls = raw
+          .split(/[\n\r]+/)
+          .map((l) => l.trim())
+          .filter((l) => l.startsWith("http") || l.startsWith("{") || l.startsWith("["));
+      }
 
       if (urls.length === 0) {
-        showToast("error", "没有有效的URL");
+        showToast("error", "没有有效的 URL 或 JSON");
         setIsProcessing(false);
         return;
       }
@@ -997,12 +1014,12 @@ export default function ImageGrabberPage() {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <Package className="w-4 h-4 inline-block mr-1 -mt-0.5" />
-                  粘贴商品页链接（每行一个，支持1688/淘宝/拼多多/京东/抖音）
+                  粘贴商品页链接或 1688 JSON（支持商品页链接 / 浏览器提取脚本 JSON）
                 </label>
                 <textarea
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder={"粘贴商品页链接，每行一个：\nhttps://detail.1688.com/offer/xxxx.html\nhttps://item.taobao.com/xxxx.htm\n..."}
+                  placeholder={"粘贴商品页链接，每行一个；或粘贴 1688 提取脚本复制的 JSON：\nhttps://detail.1688.com/offer/xxxx.html\nhttps://item.taobao.com/xxxx.htm\n或 JSON：{\"platform\":\"1688\",\"title\":\"...\",\"images\":[\"...\"]}"}
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none h-40 resize-y font-mono text-sm"
                 />
               </div>
