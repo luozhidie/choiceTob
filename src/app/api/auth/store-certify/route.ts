@@ -168,6 +168,10 @@ export async function POST(req: NextRequest) {
 
     if (pErr) {
       console.error("[Store Certify] 更新 profiles 失败:", pErr);
+      return NextResponse.json(
+        { error: "认证状态保存失败：" + pErr.message },
+        { status: 500 }
+      );
     }
 
     // 数据积累表（非核心路径，失败不阻断）
