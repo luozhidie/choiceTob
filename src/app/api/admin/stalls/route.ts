@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
       recommend_reason: recommend_reason || null,
       is_published: is_published !== undefined ? is_published : false,
       sort_order: sort_order || 0,
-      updated_at: now,
     };
 
     let result;

@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
       user_name: user_name && user_name.trim() ? user_name.trim() : "匿名买手",
       content: content.trim(),
       rating: rating !== undefined && rating !== null && rating !== "" ? Number(rating) : 5,
-      updated_at: now,
     };
 
     let result;
