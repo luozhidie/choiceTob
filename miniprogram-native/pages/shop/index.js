@@ -535,7 +535,7 @@ Page({
     var idx = -1;
     cart.forEach(function (i, ii) { if (i.id === p.id) idx = ii; });
     if (idx >= 0) { cart[idx].quantity = (cart[idx].quantity || 1) + t.data.quantity; }
-    else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), image: p.image_url || '', quantity: t.data.quantity }); }
+    else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), wholesale_price: Number(p.wholesale_price) || 0, image: p.image_url || '', quantity: t.data.quantity }); }
     wx.setStorageSync('cart_v2', cart);
     t.loadCartCount();
     wx.showToast({ title: '已加购物车', icon: 'success' });
@@ -545,6 +545,9 @@ Page({
     var t = this;
     var p = this.data.product;
     if (!p) return;
+    // 会员（含认证店主）按批发价下单
+    var wp = Number(p.wholesale_price) || 0;
+    var unitCents = (t.data.isPriceMember && wp > 0) ? Math.round(wp / 100) * 100 : Number(p.price);
     app.getOpenid().then(function (openid) {
       wx.showLoading({ title: '调起支付...' });
       wx.request({
@@ -553,7 +556,7 @@ Page({
         data: {
           product_id: p.id,
           product_title: p.title || p.name,
-          total_fee: Number(p.price),
+          total_fee: unitCents * t.data.quantity,
           quantity: t.data.quantity,
           platform: 'mini',
           openid: openid,
@@ -886,7 +889,7 @@ Page({
       var existingIdx = -1;
       cart.forEach(function (i, ii) { if (i.id === p.id && i.size === sz && i.color === t.data.skuColor) existingIdx = ii; });
       if (existingIdx >= 0) { cart[existingIdx].quantity = (cart[existingIdx].quantity || 0) + q; }
-      else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), image: p.image_url || '', size: sz, color: t.data.skuColor, quantity: q }); }
+      else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), wholesale_price: Number(p.wholesale_price) || 0, image: p.image_url || '', size: sz, color: t.data.skuColor, quantity: q }); }
     });
     wx.setStorageSync('cart_v2', cart);
     t.setData({ showSkuPanel: false, selectedSize: sizes[0], selectedColor: t.data.skuColor, quantity: total }, function () {

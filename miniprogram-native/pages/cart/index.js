@@ -13,13 +13,17 @@ Page({
   },
 
   loadCart: function() {
+    var app = getApp();
+    var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
     var cart = wx.getStorageSync('cart_v2') || [];
     cart.forEach(function(item) {
       if (item.checked === undefined) item.checked = false;
       if (!item.quantity) item.quantity = 1;
-      /* 统一价格格式：分→元 + 加¥前缀（只计算展示值，不改写存储的「分」） */
-      var p = Number(item.price) || 0;
-      if (p >= 100) { p = Math.round(p / 100); }
+      /* 会员（含认证店主）按批发价展示，否则零售价 */
+      var rp = Number(item.price) || 0;
+      var wp = Number(item.wholesale_price) || 0;
+      var effCents = (isPriceMember && wp > 0) ? wp : rp;
+      var p = effCents >= 100 ? Math.round(effCents / 100) : effCents;
       item.priceDisplay = '¥' + (p % 1 === 0 ? p : p.toFixed(2));
     });
     this.setData({ cartItems: cart, loading: false });
@@ -27,6 +31,8 @@ Page({
   },
 
   recalc: function() {
+    var app = getApp();
+    var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
     var items = this.data.cartItems;
     var total = 0;
     var selected = 0;
@@ -35,9 +41,10 @@ Page({
       count += (item.quantity || 1);
       if (item.checked) {
         selected += (item.quantity || 1);
-        var p = Number(item.price || 0);
-        /* 防御：如果价格>=100说明是分单位（数据库原始值），需转元 */
-        if (p >= 100) p = Math.round(p / 100);
+        var rp = Number(item.price || 0);
+        var wp = Number(item.wholesale_price || 0);
+        var effCents = (isPriceMember && wp > 0) ? wp : rp;
+        var p = effCents >= 100 ? Math.round(effCents / 100) : effCents;
         total += p * (item.quantity || 1);
       }
     });

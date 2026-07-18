@@ -25,18 +25,25 @@ Page({
             if(r.data&&r.data.data&&r.data.data.length>0)p=r.data.data[0];
             else if(Array.isArray(r.data))p=r.data[0];
             if(p){
-              var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
-              items=[{id:p.id,name:p.title||p.name,price:p.price,priceText:n,image:p.image_url||'',quantity:Number(opt.quantity)||1}];
+              var isPM = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
+              var rp=Number(p.price)||0;
+              var wp=Number(p.wholesale_price)||0;
+              var effCents=(isPM && wp>0)?wp:rp;
+              var yuan=effCents>=100?Math.round(effCents/100):effCents;
+              items=[{id:p.id,name:p.title||p.name,price:rp,wholesale_price:wp,priceText:yuan,image:p.image_url||'',quantity:Number(opt.quantity)||1}];
               wx.setStorageSync('checkout_items',items);
             }
           },complete:function(){this.calc();}.bind(this)
         });
       }
     }else{
-      /* 格式化价格 */
+      /* 格式化价格：会员（含认证店主）按批发价，否则零售价 */
+      var isPM = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
       items.forEach(function(i){
-        var p=Number(i.price)||0;if(p>=100)p=Math.round(p/100);
-        i.priceText=p;
+        var rp=Number(i.price)||0;
+        var wp=Number(i.wholesale_price)||0;
+        var effCents=(isPM && wp>0)?wp:rp;
+        i.priceText = effCents>=100 ? Math.round(effCents/100) : effCents;
       });
       this.setData({items:items});
       this.calc();

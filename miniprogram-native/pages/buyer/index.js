@@ -128,7 +128,7 @@ Page({
     var cart=wx.getStorageSync('cart_v2')||[];
     var ex=cart.find(function(c){return c.id===p.id;});
     if(ex)ex.quantity+=1;
-    else cart.push({id:p.id,name:p.name||p.title,price:p.price,image:p.image_url||p.cover_image,quantity:1});
+    else cart.push({id:p.id,name:p.name||p.title,price:p.price,wholesale_price:Number(p.wholesale_price)||0,image:p.image_url||p.cover_image,quantity:1});
     wx.setStorageSync('cart_v2',cart);
     wx.showToast({title:'已加购',icon:'success',duration:800});
   },
