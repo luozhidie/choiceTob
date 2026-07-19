@@ -18,7 +18,7 @@ interface Banner {
 // 内嵌 SVG 渐变图（品牌紫），不依赖外部网络，避免图片被拦截时黑屏
 const FALLBACK_BANNER =
   "data:image/svg+xml;base64," +
-  "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQxYjJlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNGEzYTRiIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjE2MDAiIGhlaWdodD0iNDAwIiBmaWxsPSJ1cmwoI2cpIi8+PC9zdmc+";
+  "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNmIzZjcwIi8+PHN0b3Agb2Zmc2V0PSI1NSUiIHN0eWxlPSJzdG9wLWNvbG9yOiNhODZmYTAiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNkOWE3YzciLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=";
 
 export default function HeroCarousel() {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -164,7 +164,7 @@ export default function HeroCarousel() {
             className={`absolute inset-0 transition-all duration-700 ease-in-out ${
               index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
-            style={{ background: "linear-gradient(135deg,#2d1b2e,#4a3a4b)" }}
+            style={{ background: "linear-gradient(135deg,#6b3f70,#a86fa0,#d9a7c7)" }}
           >
             <img
               src={banner.image_url}
