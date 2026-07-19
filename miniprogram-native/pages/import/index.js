@@ -3,9 +3,12 @@ var app = getApp();
 Page({
   data: {
     inputText: '',
-    mode: 'url',         // url | batch
+    mode: 'url',         // url | batch | excel
     urls: [],
     results: [],
+    excelName: '',
+    excelPath: '',
+    excelSummary: '',
     isProcessing: false,
     toastText: '',
     toastType: '',   // success | error
@@ -23,9 +26,53 @@ Page({
     wx.navigateTo({ url: '/pages/smart-create/index' });
   },
 
+  chooseExcel: function () {
+    var t = this;
+    wx.chooseMessageFile({
+      count: 1,
+      type: 'file',
+      extension: ['xlsx', 'xls', 'csv'],
+      success: function (r) {
+        var f = r.tempFiles[0];
+        t.setData({ excelName: f.name, excelPath: f.path });
+      },
+      fail: function () {
+        t.showToast('请选择 Excel/CSV 文件');
+      }
+    });
+  },
+
+  uploadExcel: function () {
+    var t = this;
+    if (!t.data.excelPath) { t.showToast('请先选择文件'); return; }
+    var token = wx.getStorageSync('token') || '';
+    t.setData({ isProcessing: true, results: [], toastText: '正在导入…' });
+    wx.uploadFile({
+      url: 'https://colour-choice.art/api/admin/products/import-excel',
+      filePath: t.data.excelPath,
+      name: 'file',
+      header: token ? { 'Authorization': 'Bearer ' + token } : {},
+      success: function (res) {
+        t.setData({ isProcessing: false });
+        var j = {};
+        try { j = JSON.parse(res.data); } catch (e) {}
+        if (j && j.success) {
+          t.setData({ results: j.results || [], excelSummary: '成功 ' + j.success + ' · 跳过 ' + j.skipped + ' · 失败 ' + j.error });
+          t.showToast('导入完成：成功 ' + j.success + ' 个');
+        } else {
+          t.showToast(j.error || '导入失败');
+        }
+      },
+      fail: function () {
+        t.setData({ isProcessing: false });
+        t.showToast('网络错误');
+      }
+    });
+  },
+
   // 切换模式
   switchMode: function (e) {
-    this.setData({ mode: e.currentTarget.dataset.mode, inputText: '', results: [] });
+    this.setData({ mode: e.currentTarget.dataset.mode, inputText: '', results: [], excelName: '', excelPath: '' });
   },
 
   // 输入变化

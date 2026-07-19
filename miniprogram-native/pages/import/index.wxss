@@ -68,6 +68,19 @@ page {
   box-sizing: border-box;
 }
 
+/* Excel 选文件 */
+.excel-pick {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  background: #f6f4f5;
+  border: 2rpx dashed #c9bcd0;
+  border-radius: 12rpx;
+  padding: 28rpx 20rpx;
+}
+.ep-icon { font-size: 40rpx; }
+.ep-text { font-size: 26rpx; color: #666; flex: 1; }
+
 /* 导入按钮 */
 .btn-import {
   margin-top: 20rpx;

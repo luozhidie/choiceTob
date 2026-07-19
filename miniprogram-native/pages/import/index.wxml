@@ -12,6 +12,7 @@
   <view class="tabs">
     <view class="tab {{mode==='url'?'tab-on':''}}" data-mode="url" bindtap="switchMode">单链接</view>
     <view class="tab {{mode==='batch'?'tab-on':''}}" data-mode="batch" bindtap="switchMode">批量粘贴</view>
+    <view class="tab {{mode==='excel'?'tab-on':''}}" data-mode="excel" bindtap="switchMode">Excel导入</view>
   </view>
 
   <!-- 输入区 -->
@@ -39,6 +40,19 @@
   <!-- 提示 -->
   <view class="tip" wx:if="{{mode=='batch'}}">
     <text class="tip-text">💡 支持平台：1688、淘宝、拼多多、京东、抖音、小红书、微店、微信小店\n💡 每行一个链接，可粘贴多个</text>
+  </view>
+
+  <!-- Excel 导入区 -->
+  <view class="input-area" wx:if="{{mode=='excel'}}">
+    <view class="excel-pick" bindtap="chooseExcel">
+      <text class="ep-icon">📄</text>
+      <text class="ep-text">{{excelName || '从聊天选择 Excel/CSV 文件（档口数据包）'}}</text>
+    </view>
+    <view class="btn-import" bindtap="uploadExcel">
+      <text wx:if="{{isProcessing}}">导入中...</text>
+      <text wx:else>开始导入</text>
+    </view>
+    <view class="tip" wx:if="{{excelSummary}}"><text class="tip-text">{{excelSummary}}</text></view>
   </view>
 
   <!-- 结果列表 -->
