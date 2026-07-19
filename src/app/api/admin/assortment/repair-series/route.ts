@@ -22,7 +22,12 @@ const RELIABLE_BANNER_URL = (() => {
 
 function isUnreliableImage(url: string | null | undefined): boolean {
   if (!url) return true;
-  return url.includes("pollinations.ai") || url.startsWith("//") || url.trim() === "";
+  const u = url.trim();
+  if (u === "") return true;
+  // 历史生成的占位 banner 是 data:image/svg 渐变（含近黑 #2d1b2e / #4a3a4b），一律视为不可靠
+  if (u.startsWith("data:image/svg")) return true;
+  if (u.startsWith("//")) return true;
+  return u.includes("pollinations.ai");
 }
 
 export async function POST(request: NextRequest) {

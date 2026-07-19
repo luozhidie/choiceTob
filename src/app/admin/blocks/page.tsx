@@ -69,6 +69,25 @@ const BLOCK_TYPES = [
   { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
 ];
 
+// 商品分类 slug → 中文标签（下拉展示用，value 仍为库内 slug）
+const CATEGORY_LABELS: Record<string, string> = {
+  accessory: "配饰",
+  jewelry: "珠宝首饰",
+  clothing: "服装",
+  tops: "上装",
+  bottoms: "下装",
+  dress: "连衣裙",
+  outerwear: "外套",
+  shoes: "鞋靴",
+  bag: "箱包",
+  beauty: "美妆",
+  skincare: "护肤",
+  makeup: "彩妆",
+  home: "家居",
+  food: "食品",
+  art: "艺术",
+};
+
 const DEFAULT_STYLES = {
   bgColor: "#ffffff",
   textColor: "#333333",
@@ -299,6 +318,8 @@ export default function BlocksAdminPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [saving, setSaving] = useState(false);
+  // 真实商品分类（数据库 slug），用于货架分类下拉，避免中文标签与库内 slug 不匹配导致货架为空
+  const [productCategories, setProductCategories] = useState<string[]>([]);
 
   // 表单状态
   const [form, setForm] = useState({
@@ -370,6 +391,21 @@ export default function BlocksAdminPage() {
 
   useEffect(() => {
     fetchBlocks();
+  }, []);
+
+  // 加载真实商品分类（slug），用于货架“商品分类”下拉，确保能选中库内存在的分类
+  useEffect(() => {
+    fetch("/api/public/products?limit=200")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          const cats = Array.from(
+            new Set(json.data.map((p: any) => p.category).filter(Boolean))
+          ) as string[];
+          setProductCategories(cats);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // 打开新建表单
@@ -1404,14 +1440,23 @@ export default function BlocksAdminPage() {
                               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none bg-white"
                             >
                               <option value="">不限制</option>
-                              <option value="穿搭">穿搭</option>
-                              <option value="护肤">护肤</option>
-                              <option value="彩妆">彩妆</option>
-                              <option value="养生">养生</option>
-                              <option value="食品">食品</option>
-                              <option value="家居">家居</option>
-                              <option value="文创">文创</option>
-                              <option value="艺术">艺术</option>
+                              {productCategories.length > 0 && (
+                                <optgroup label="实际分类（推荐）">
+                                  {productCategories.map((c) => (
+                                    <option key={c} value={c}>{CATEGORY_LABELS[c] || c}（{c}）</option>
+                                  ))}
+                                </optgroup>
+                              )}
+                              <optgroup label="其他（若库内无此分类将显示为空）">
+                                <option value="穿搭">穿搭</option>
+                                <option value="护肤">护肤</option>
+                                <option value="彩妆">彩妆</option>
+                                <option value="养生">养生</option>
+                                <option value="食品">食品</option>
+                                <option value="家居">家居</option>
+                                <option value="文创">文创</option>
+                                <option value="艺术">艺术</option>
+                              </optgroup>
                             </select>
                           </div>
                           <div>

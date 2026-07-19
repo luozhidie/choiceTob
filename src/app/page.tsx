@@ -125,6 +125,18 @@ function formatPrice(price: number | null | undefined): string {
   return "¥" + (yuan % 1 === 0 ? yuan.toString() : yuan.toFixed(2));
 }
 
+/* ===== 当季系列横幅：历史生成的近黑/不可靠渐变统一替换为品牌粉渐变，杜绝“黑图” ===== */
+const SERIES_BANNER_FALLBACK = "data:image/svg+xml;base64," + btoa(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6b3f70"/><stop offset="55%" style="stop-color:#a86fa0"/><stop offset="100%" style="stop-color:#d9a7c7"/></linearGradient></defs><rect width="1600" height="600" fill="url(#g)"/></svg>`
+);
+function safeSeriesBanner(url?: string | null): string {
+  if (!url || url.trim() === "") return SERIES_BANNER_FALLBACK;
+  // 历史生成的 banner 是 data:image/svg 渐变（含近黑/不可靠图），统一替换为品牌粉渐变
+  if (url.startsWith("data:image/svg")) return SERIES_BANNER_FALLBACK;
+  if (url.includes("pollinations.ai")) return SERIES_BANNER_FALLBACK;
+  return url;
+}
+
 
 function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; bgColor: string }) {
   const minPeople = content.minPeople || 3;
@@ -1070,7 +1082,7 @@ export default function Home() {
             {seriesPromos.map((p) => (
               <Link key={p.id} href={p.link_url || "/assortment"} className="group relative rounded-3xl overflow-hidden h-60 md:h-80 block">
                 <img
-                  src={p.banner_image_url || "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format"}
+                  src={safeSeriesBanner(p.banner_image_url)}
                   alt={p.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition"
                   onError={(e) => {
