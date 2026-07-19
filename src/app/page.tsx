@@ -1016,8 +1016,8 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="relative overflow-hidden" style={{ height: "100svh", minHeight: "500px" }}>
-        <div style={{ height: "100%", minHeight: "500px", position: "relative", overflow: "hidden" }}>
+      <section className="relative overflow-hidden" style={{ height: "50vh", minHeight: "320px" }}>
+        <div style={{ height: "100%", minHeight: "320px", position: "relative", overflow: "hidden" }}>
           {/* 轮播图背景 */}
           <HeroCarousel />
 
@@ -1060,12 +1060,12 @@ export default function Home() {
       {blocksByPosition("hero_bottom").map(renderBlock)}
 
       {/* ===== 当季系列/限时专题 ===== */}
-      {seriesPromos.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-5">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold text-gray-900">当季系列</h2>
-            <Link href="/assortment" className="text-xs text-gray-400">查看全部 →</Link>
-          </div>
+      <section className="max-w-7xl mx-auto px-4 py-5">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold text-gray-900">当季系列</h2>
+          <Link href="/assortment" className="text-xs text-gray-400">查看全部 →</Link>
+        </div>
+        {seriesPromos.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {seriesPromos.map((p) => (
               <Link key={p.id} href={p.link_url || "/assortment"} className="group relative rounded-2xl overflow-hidden h-40 md:h-48 block">
@@ -1086,8 +1086,17 @@ export default function Home() {
               </Link>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Link href="/assortment" className="group relative rounded-2xl overflow-hidden h-40 md:h-48 block">
+            <div className="w-full h-full bg-gradient-to-r from-[#2d1b2e] to-[#4a3a4b] group-hover:scale-105 transition" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-4 text-white">
+              <h3 className="font-bold text-base mb-0.5">当季系列</h3>
+              <p className="text-xs opacity-90 line-clamp-1">AI 组货 · 一键照单拿货</p>
+            </div>
+          </Link>
+        )}
+      </section>
 
       {/* ===== 商品列表上方版块 ===== */}
       {blocksByPosition("product_top").map(renderBlock)}
