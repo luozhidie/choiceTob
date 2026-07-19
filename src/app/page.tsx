@@ -12,6 +12,7 @@ import ProductBlock from "@/components/ProductBlock";
 import ShelfCard from "@/components/ShelfCard";
 import AssortmentCard from "@/components/AssortmentCard";
 import SpecialShelfCard from "@/components/SpecialShelfCard";
+import ProductCollage from "@/components/ProductCollage";
 
 /* ------------------------------------------------------------------ */
 /*  Block 接口                                                        */
@@ -510,7 +511,7 @@ function PreSaleCard({ block, content, bgColor }: { block: any; content: any; bg
 }
 
 /* ===== 精选横幅：大图 + 3小图 ===== */
-function FeaturedBannerBlock({ content }: { content: any }) {
+function FeaturedBannerBlock({ content, fallbackImages = [] }: { content: any; fallbackImages?: string[] }) {
   const mainImage = content.mainImage || "";
   const mainLink = content.mainLink || "/buyer";
   // 检查副图中至少有多少张有效图片
@@ -519,8 +520,22 @@ function FeaturedBannerBlock({ content }: { content: any }) {
     return sub?.image ? { ...sub, key: i } : null;
   }).filter(Boolean);
 
-  // 如果既没有主图也没有副图，不渲染
-  if (!mainImage && validSubs.length === 0) return null;
+  // 如果既没有主图也没有副图，用商品图墙自动兜底（运营无需手画图）
+  if (!mainImage && validSubs.length === 0) {
+    return (
+      <section className="w-full">
+        <div className="relative w-full rounded-xl overflow-hidden shadow-sm" style={{ minHeight: "220px" }}>
+          <ProductCollage images={fallbackImages} gradient="bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500" />
+          <div className="absolute inset-0 bg-black/25" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-white font-black text-2xl md:text-3xl drop-shadow-lg px-4 text-center">
+              {content.title || "精选好物"}
+            </span>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="w-full">
@@ -565,6 +580,7 @@ export default function Home() {
   const [heroBgUrl, setHeroBgUrl] = useState<string>("");
   const [heroTopBgUrl, setHeroTopBgUrl] = useState<string>("");
   const [blocks, setBlocks] = useState<Block[]>([]);
+  const [fallbackImages, setFallbackImages] = useState<string[]>([]);
   const [homePopup, setHomePopup] = useState<any>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -575,6 +591,20 @@ export default function Home() {
     fetch("/api/public/promotions?type=series&limit=5")
       .then((r) => r.json())
       .then((j) => { if (j.success) setSeriesPromos(j.data || []); })
+      .catch(() => {});
+  }, []);
+
+  // 板块自动配图：拉取若干商品图，供无自定义图的横幅板块合成照片墙
+  useEffect(() => {
+    fetch("/api/public/products?limit=6")
+      .then((r) => r.json())
+      .then((j) => {
+        const imgs = ((j && j.data) || [])
+          .map((p: any) => p.image_url || (p.images && p.images[0]) || "")
+          .filter(Boolean)
+          .slice(0, 6);
+        setFallbackImages(imgs);
+      })
       .catch(() => {});
   }, []);
 
@@ -767,7 +797,7 @@ export default function Home() {
         {/* ===== featured_banner 精选横幅（大图+3小图） ===== */}
         {block.type === "featured_banner" && (
           <div className="max-w-7xl mx-auto">
-            <FeaturedBannerBlock content={content} />
+            <FeaturedBannerBlock content={content} fallbackImages={fallbackImages} />
           </div>
         )}
 
@@ -775,8 +805,12 @@ export default function Home() {
         {block.type === "card_single" && (
           <div className="max-w-7xl mx-auto">
             <a href={content.link || "/buyer"} className="group block rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow bg-white">
-              {content.image && (
+              {content.image ? (
                 <img src={content.image} alt={content.title || ""} className="w-full h-auto object-cover group-hover:scale-[1.02] transition-transform duration-500" style={{ minHeight: "200px" }} />
+              ) : (
+                <div className="relative w-full" style={{ minHeight: "200px" }}>
+                  <ProductCollage images={fallbackImages} />
+                </div>
               )}
               {(content.title || content.subtitle || content.buttonText) && (
                 <div className="p-4 text-center">
@@ -843,8 +877,8 @@ export default function Home() {
               {content.image ? (
                 <img src={content.image} alt="" className="w-full h-auto block" />
               ) : (
-                <div className="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500 py-10 md:py-16 text-center">
-                  {content.title && <h2 className="text-white font-black text-2xl md:text-4xl tracking-tight drop-shadow-lg">{content.title}</h2>}
+                <div className="relative w-full" style={{ minHeight: "180px" }}>
+                  <ProductCollage images={fallbackImages} gradient="bg-gradient-to-r from-pink-500 via-red-500 to-orange-500" />
                 </div>
               )}
               {(content.title || content.subtitle) && (
@@ -864,13 +898,13 @@ export default function Home() {
               {content.image ? (
                 <img src={content.image} alt="" className="w-full h-auto group-hover:scale-[1.02] transition-transform duration-300" />
               ) : (
-                <div className="px-5 py-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl text-center">
-                  {content.title && <span className="text-sm font-bold text-amber-700">{content.title}</span>}
+                <div className="relative w-full" style={{ minHeight: "90px" }}>
+                  <ProductCollage images={fallbackImages} gradient="bg-gradient-to-r from-amber-100 to-orange-200" />
                 </div>
               )}
               {!content.image && content.title && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm font-bold text-amber-700">{content.title}</span>
+                  <span className="text-sm font-bold text-amber-900 drop-shadow">{content.title}</span>
                 </div>
               )}
             </a>
@@ -902,7 +936,7 @@ export default function Home() {
         )}
 
         {/* ===== 当季系列/组货方案（大图+3小图） ===== */}
-        {block.type === "assortment" && <AssortmentCard block={block} />}
+        {block.type === "assortment" && <AssortmentCard block={block} fallbackImages={fallbackImages} />}
 
         {/* ===== 特价·换季清仓（自动按折扣筛商品，带 Tab） ===== */}
         {block.type === "special" && <SpecialShelfCard block={block} />}

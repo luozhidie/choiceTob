@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ProductCollage from "./ProductCollage";
 
 interface SpecialProduct {
   id: string;
@@ -64,7 +65,10 @@ export default function SpecialShelfCard({ block }: { block: any }) {
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
           />
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-[#5a3a3a] via-[#7a5a52] to-[#a89f91]" />
+          <ProductCollage
+            images={products.map((p) => p.image_url).filter(Boolean)}
+            gradient="bg-gradient-to-br from-[#5a3a3a] via-[#7a5a52] to-[#a89f91]"
+          />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="absolute inset-0 flex flex-col justify-between p-4 md:p-6">
