@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
   try {
     if (!verifyAdmin(request)) return NextResponse.json({ error: "未授权" }, { status: 401 });
     const body = await request.json();
-    const { id, title, season, categories, price_bands, waves, source, status } = body;
+    const { id, title, season, categories, price_bands, waves, source, status, source_report } = body;
 
     if (!title) return NextResponse.json({ error: "缺少方案标题" }, { status: 400 });
 
@@ -58,6 +58,9 @@ export async function POST(request: NextRequest) {
       source: source || "manual",
       total_sku: totalSku,
       updated_at: now,
+      marketing: source_report
+        ? { source_report, updated_at: now }
+        : undefined,
     };
     if (status) payload.status = status;
 

@@ -1,4 +1,4 @@
-// 管理员 API：把组货方案「写入商城」——品类落到 categories 分类树 + 方案置 published
+// 管理员 API：把组货方案「写入商城」——品类 + 营销活动 + 首页横幅 + AI 文案
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -19,6 +19,76 @@ async function withClient<T>(fn: (s: ReturnType<typeof createClient>) => Promise
     } catch {}
   }
   return await fn(createClient(url, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_PUBLISHABLE));
+}
+
+/* —— 从 AI 报告提取营销文案 —— */
+function extractMarketing(source: any, title: string) {
+  const report = source || {};
+  const season = report.season || "";
+  const brandName = report.brandName || "骆芷蝶智选";
+  const summary = report.summary || "";
+
+  const colorPlan: any[] = Array.isArray(report.colorPlan) ? report.colorPlan : [];
+  const stylePlan: any[] = Array.isArray(report.stylePlan) ? report.stylePlan : [];
+  const productStructure: any[] = Array.isArray(report.productStructure) ? report.productStructure : [];
+  const displayAdvice = report.displayAdvice || {};
+  const topsTips: string[] = Array.isArray(displayAdvice.topsTips) ? displayAdvice.topsTips : [];
+
+  const headline = title || `${season}${brandName}系列上新`;
+  const subheadline = summary.length > 80 ? summary.slice(0, 80) + "…" : summary;
+
+  const selling_points: string[] = [];
+  colorPlan.slice(0, 2).forEach((c: any) => {
+    if (c.type && c.reason) selling_points.push(`${c.type}：${c.reason}`);
+  });
+  stylePlan.slice(0, 2).forEach((s: any) => {
+    if (s.styleCombo) selling_points.push(`${s.styleCombo}风格，${s.occasions?.join("/") || ""}`);
+  });
+  productStructure.slice(0, 2).forEach((p: any) => {
+    if (p.type && p.desc) selling_points.push(`${p.type}：${p.desc}`);
+  });
+  topsTips.slice(0, 2).forEach((t: string) => selling_points.push(t));
+
+  if (selling_points.length === 0) {
+    selling_points.push("精选当季流行款，批发价直出", "VIP 拿货专享折扣，现货速发");
+  }
+
+  const hashtags: string[] = [];
+  colorPlan.forEach((c: any) => (c.colors || []).forEach((col: string) => { if (!hashtags.includes(col)) hashtags.push(col); }));
+  stylePlan.forEach((s: any) => { if (s.styleCombo) hashtags.push(s.styleCombo); });
+  if (hashtags.length === 0) hashtags.push(season, brandName, "组货上新");
+
+  const imageKeywords = buildImageKeywords(report);
+  const bannerPrompt = `Fashion e-commerce banner, ${season} collection, ${imageKeywords}, elegant women's clothing, professional photography, soft lighting, clean background, high quality`;
+
+  return {
+    headline,
+    subheadline,
+    selling_points: selling_points.slice(0, 6),
+    cta: "立即选款，抢现货 →",
+    hashtags: hashtags.slice(0, 5),
+    image_keywords: imageKeywords,
+    banner_prompt: bannerPrompt,
+    banner_image_url: buildPollinationsUrl(bannerPrompt),
+  };
+}
+
+function buildImageKeywords(report: any) {
+  const ik = report.imageKeywords || {};
+  const parts: string[] = [];
+  (ik.colorImages || []).slice(0, 2).forEach((k: string) => parts.push(k));
+  (ik.styleImages || []).slice(0, 2).forEach((k: string) => parts.push(k));
+  (ik.waveImages || []).slice(0, 1).forEach((w: any) => (w.keywords || []).slice(0, 2).forEach((k: string) => parts.push(k)));
+  if (parts.length === 0) {
+    const season = report.season || "";
+    const style = (report.stylePlan || []).map((s: any) => s.mainStyle).filter(Boolean)[0] || "fashion";
+    parts.push(season, style, "women clothing");
+  }
+  return parts.join(", ");
+}
+
+function buildPollinationsUrl(prompt: string) {
+  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=400&nologo=true&seed=1`;
 }
 
 export async function POST(request: NextRequest) {
@@ -66,7 +136,7 @@ export async function POST(request: NextRequest) {
         code = ex.code;
       } else {
         seq += 1;
-        code = "AI" + String(seq).padStart(3, "0"); // ≤6 位，唯一
+        code = "AI" + String(seq).padStart(3, "0");
         const { error: insErr } = await supabase.from("categories").insert({
           code,
           label,
@@ -75,7 +145,6 @@ export async function POST(request: NextRequest) {
           is_default: false,
         });
         if (insErr) {
-          // 万一 code 冲突，回退用时间戳后缀
           code = "AI" + String(Date.now()).slice(-5);
           await supabase
             .from("categories")
@@ -86,17 +155,106 @@ export async function POST(request: NextRequest) {
       resolved.push({ ...cat, code });
     }
 
-    // 3. 方案置 published
+    // 3. 生成营销文案
+    const marketing = extractMarketing(plan.marketing?.source_report || null, plan.title);
+
+    // 4. 创建/更新 promotions（系列营销活动）
+    const existingPromoId = plan.marketing?.promo_id;
+    let promoId = existingPromoId;
+    if (existingPromoId) {
+      const promoUpdate: any = {
+        title: marketing.headline,
+        description: marketing.subheadline,
+        banner_image_url: marketing.banner_image_url,
+        link_url: `/assortment/${id}`,
+        status: "active",
+        updated_at: new Date().toISOString(),
+      };
+      const { data: existingPromo } = await supabase.from("promotions").select("end_date").eq("id", existingPromoId).single();
+      if (!existingPromo?.end_date) promoUpdate.end_date = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+      await supabase.from("promotions").update(promoUpdate).eq("id", existingPromoId);
+    } else {
+      const endDate = new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0];
+      const { data: promo, error: promoErr } = await supabase.from("promotions").insert({
+        title: marketing.headline,
+        description: marketing.subheadline,
+        promo_type: "series",
+        banner_image_url: marketing.banner_image_url,
+        link_url: `/assortment/${id}`,
+        status: "active",
+        sort_order: 0,
+        end_date: endDate,
+      }).select().single();
+      if (promoErr) console.error("[publish] promotions insert error:", promoErr);
+      if (promo) promoId = promo.id;
+    }
+
+    // 5. 创建/更新 site_assets 首页横幅
+    const existingAssetId = plan.marketing?.site_asset_id;
+    let assetId = existingAssetId;
+    const assetKey = `hero_banner_assortment_${id}`;
+    if (existingAssetId) {
+      await supabase.from("site_assets").update({
+        title: marketing.headline,
+        subtitle: marketing.subheadline,
+        image_url: marketing.banner_image_url,
+        link_url: `/assortment/${id}`,
+        sort_order: 0,
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      }).eq("id", existingAssetId);
+    } else {
+      const { data: asset, error: assetErr } = await supabase.from("site_assets").insert({
+        key: assetKey,
+        title: marketing.headline,
+        subtitle: marketing.subheadline,
+        image_url: marketing.banner_image_url,
+        link_url: `/assortment/${id}`,
+        alt_text: marketing.headline,
+        sort_order: 0,
+        is_active: true,
+      }).select().single();
+      if (assetErr) console.error("[publish] site_assets insert error:", assetErr);
+      if (asset) assetId = asset.id;
+    }
+
+    // 6. 写一条 ai_marketing_copies 记录
+    try {
+      await supabase.from("ai_marketing_copies").insert({
+        title: marketing.headline,
+        product_desc: marketing.subheadline,
+        keywords: marketing.hashtags.join(", "),
+        image_url: marketing.banner_image_url,
+        platform: "group",
+        tone: "爆款",
+        result_json: marketing,
+      });
+    } catch (e) {
+      console.error("[publish] ai_marketing_copies insert error:", e);
+    }
+
+    // 7. 方案置 published 并写入 marketing
     const now = new Date().toISOString();
+    const fullMarketing = {
+      ...marketing,
+      source_report: plan.marketing?.source_report || null,
+      promo_id: promoId || null,
+      site_asset_id: assetId || null,
+    };
     const { data: updated, error: updErr } = await supabase
       .from("assortment_plans")
-      .update({ status: "published", categories: resolved, updated_at: now })
+      .update({ status: "published", categories: resolved, marketing: fullMarketing, updated_at: now })
       .eq("id", id)
       .select()
       .single();
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-    return NextResponse.json({ success: true, data: updated, createdCategories: resolved.length });
+    return NextResponse.json({
+      success: true,
+      data: updated,
+      createdCategories: resolved.length,
+      marketing: fullMarketing,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

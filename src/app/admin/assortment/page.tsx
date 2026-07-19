@@ -37,6 +37,7 @@ interface PlanRow {
   categories: any[];
   total_sku: number;
   created_at: string;
+  marketing: any;
 }
 
 interface ProgressItem {
@@ -126,6 +127,7 @@ export default function AssortmentAdmin() {
   const [generating, setGenerating] = useState(false);
   const [draft, setDraft] = useState<Draft>(emptyDraft());
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [sourceReport, setSourceReport] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [plans, setPlans] = useState<PlanRow[]>([]);
   const [progressOpen, setProgressOpen] = useState<string | null>(null);
@@ -167,6 +169,7 @@ export default function AssortmentAdmin() {
       }
       setDraft(d);
       setDraftId(null);
+      setSourceReport(j.report);
     } catch (e: any) {
       flash("err", "生成异常：" + e.message);
     } finally {
@@ -189,6 +192,7 @@ export default function AssortmentAdmin() {
     status: "planned",
     price_bands: draft.price_bands,
     waves: draft.waves,
+    source_report: sourceReport || undefined,
     categories: draft.categories.map((c) => ({
       category: c.category,
       code: c.code,
@@ -373,6 +377,27 @@ export default function AssortmentAdmin() {
 
                 {progressOpen === p.id && (
                   <div className="px-4 pb-4 border-t border-gray-100">
+                    {p.marketing && p.status === "published" && (
+                      <div className="py-4 border-b border-gray-50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xs font-medium text-gray-500">营销预览</span>
+                          <Link href={`/assortment/${p.id}`} className="text-xs px-2 py-0.5 bg-primary/10 text-primary rounded hover:bg-primary/20">看专题页</Link>
+                        </div>
+                        <div className="flex gap-3 items-start">
+                          <img src={p.marketing.banner_image_url} alt="" className="w-24 h-14 object-cover rounded-lg border border-gray-100 bg-gray-50" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-bold text-gray-800 text-sm">{p.marketing.headline}</div>
+                            <div className="text-xs text-gray-500 mt-0.5">{p.marketing.subheadline}</div>
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {p.marketing.selling_points?.slice(0, 3).map((s: string, i: number) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-orange-50 text-orange-700 text-[10px] rounded">{s}</span>
+                              ))}
+                            </div>
+                            <div className="text-[10px] text-gray-400 mt-1">CTA：{p.marketing.cta}</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {loadingProgress ? (
                       <div className="py-6 text-center text-gray-400 text-sm">加载进度…</div>
                     ) : progress ? (

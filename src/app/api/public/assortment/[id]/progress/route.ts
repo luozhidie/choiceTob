@@ -97,6 +97,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         title: plan.title,
         season: plan.season,
         status: plan.status,
+        marketing: plan.marketing || null,
+        categories: plan.categories || [],
         items,
         total_target: totalTarget,
         total_uploaded: totalUploaded,
