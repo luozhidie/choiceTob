@@ -11,6 +11,7 @@ import HeroCarousel from "@/components/HeroCarousel";
 import ProductBlock from "@/components/ProductBlock";
 import ShelfCard from "@/components/ShelfCard";
 import AssortmentCard from "@/components/AssortmentCard";
+import SpecialShelfCard from "@/components/SpecialShelfCard";
 
 /* ------------------------------------------------------------------ */
 /*  Block 接口                                                        */
@@ -18,7 +19,7 @@ import AssortmentCard from "@/components/AssortmentCard";
 interface Block {
   id: string;
   title: string;
-  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "pre_sale" | "shelf" | "assortment";
+  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "pre_sale" | "shelf" | "assortment" | "special";
   content?: Record<string, any>;
   style?: { bgColor?: string; textColor?: string; padding?: number; borderRadius?: number };
   section_title?: string | null;
@@ -902,6 +903,9 @@ export default function Home() {
 
         {/* ===== 当季系列/组货方案（大图+3小图） ===== */}
         {block.type === "assortment" && <AssortmentCard block={block} />}
+
+        {/* ===== 特价·换季清仓（自动按折扣筛商品，带 Tab） ===== */}
+        {block.type === "special" && <SpecialShelfCard block={block} />}
       </section>
     );
   };

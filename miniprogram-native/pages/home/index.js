@@ -17,6 +17,8 @@ Page({
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
+    specTabs:['特价甄选','首次降价','3折以下','反季特价'],
+    specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
   },
 
   onLoad:function(){
@@ -121,8 +123,45 @@ Page({
         if(catNavs.length>1){
           t.setData({categories:catNavs.map(function(x){return x.label;})});
         }
+
+        /* 特价货架：加载每个 special 模块的商品 */
+        restBlocks.forEach(function(b){
+          if(b.type==='special'){
+            var ct=b.content||{};
+            var markets=[];
+            for(var i=0;i<2;i++){
+              var n=ct['market'+i+'Name'];
+              if(n)markets.push({name:n,link:ct['market'+i+'Link']||'#',desc:''});
+            }
+            t.setData({['specMap.'+b.id]:{mode:'special',products:[],markets:markets}});
+            t.loadSpecial(b.id,'special');
+          }
+        });
       }
     });
+  },
+
+  /* ====== 特价货架：按模式加载折扣商品 ====== */
+  loadSpecial:function(blockId,mode){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/special-products?mode='+mode+'&limit=20',
+      method:'GET',
+      success:function(r){
+        var l=[];
+        if(r.data&&r.data.success&&r.data.data)l=r.data.data;
+        else if(Array.isArray(r.data))l=r.data;
+        var prev=t.data.specMap[blockId]||{mode:mode,products:[],markets:[]};
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,markets:prev.markets||[]}});
+      }
+    });
+  },
+  swSpecMode:function(e){
+    var id=e.currentTarget.dataset.id;
+    var m=e.currentTarget.dataset.m;
+    var prev=this.data.specMap[id]||{mode:m,products:[],markets:[]};
+    this.setData({['specMap.'+id]:{mode:m,products:prev.products,markets:prev.markets||[]}});
+    this.loadSpecial(id,m);
   },
 
   /* ====== 模块点击跳转 ====== */

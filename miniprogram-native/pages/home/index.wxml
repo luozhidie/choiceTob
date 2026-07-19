@@ -201,6 +201,37 @@
                   </view>
                 </view>
 
+                <view wx:elif="{{item.type==='special'}}" class="blk-spec" style="padding:16rpx 24rpx;">
+                  <view wx:if="{{item.section_title}}" class="spec-head">
+                    <text class="spec-title">{{item.section_title}}</text>
+                    <text wx:if="{{item.section_subtitle}}" class="spec-sub">{{item.section_subtitle}}</text>
+                  </view>
+                  <view wx:if="{{specMap[item.id].markets.length>0}}" class="spec-markets">
+                    <view wx:for="{{specMap[item.id].markets}}" wx:key="name" wx:for-item="mk" class="spec-mkt" bindtap="goBlockLink" data-link="{{mk.link}}">
+                      <view class="spec-mkt-name">{{mk.name}}</view>
+                      <view wx:if="{{mk.desc}}" class="spec-mkt-desc">{{mk.desc}}</view>
+                    </view>
+                  </view>
+                  <view class="spec-tabs">
+                    <view wx:for="{{specTabs}}" wx:key="*this" wx:for-item="t" class="spec-tab {{specMap[item.id].mode===t?'on':''}}" bindtap="swSpecMode" data-id="{{item.id}}" data-m="{{t}}">{{t}}</view>
+                  </view>
+                  <view wx:if="{{specMap[item.id].products.length>0}}" class="spec-grid">
+                    <view wx:for="{{specMap[item.id].products}}" wx:key="id" wx:for-item="p" class="spec-card" bindtap="goShop" data-id="{{p.id}}">
+                      <view class="sci">
+                        <image wx:if="{{p.image_url||p.cover_image}}" src="{{p.image_url||p.cover_image}}" mode="aspectFill" class="sci-img"/>
+                        <view wx:else class="sci-ph">暂无图</view>
+                        <view wx:if="{{p.discountText}}" class="spec-badge">{{p.discountText}}</view>
+                      </view>
+                      <view class="spec-cnf">
+                        <text class="spec-cn">{{p.title}}</text>
+                        <text class="spec-cwp">{{p.wholesaleText}}</text>
+                        <text class="spec-cp">¥{{p.priceText}}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view wx:else class="spec-empty">该分类暂无特价商品</view>
+                </view>
+
                 <view wx:else>
                   <!-- promotion -->
                   <view wx:if="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">

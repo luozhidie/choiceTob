@@ -37,7 +37,7 @@ interface Block {
   id: string;
   title: string;
   type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner"
-    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf" | "assortment";
+    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf" | "assortment" | "special";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -70,6 +70,7 @@ const BLOCK_TYPES = [
   { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
   { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
   { value: "assortment", label: "当季系列", icon: Sparkles, description: "大图+3小图，跳转组货方案" },
+  { value: "special", label: "特价货架", icon: Flame, description: "特价·换季清仓，按折扣自动筛商品，带 Tab 切换" },
 ];
 
 // 商品分类 slug → 中文标签（下拉展示用，value 仍为库内 slug）
@@ -1706,6 +1707,31 @@ export default function BlocksAdminPage() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {form.type === "special" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <p className="text-xs text-gray-500">商品按折扣自动从商品库拉取，无需手动挑选。可设置市场入口卡片（可选）。</p>
+                        <ImeInput type="text" value={form.title} onChange={(val) => setForm({ ...form, title: val })} placeholder="模块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        {[0, 1].map((i) => (
+                          <div key={i} className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={(form.content as any)?.[`market${i}Name`] || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), [`market${i}Name`]: e.target.value } as any })}
+                              placeholder={`市场${i + 1}名称（如 十三行市场）`}
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={(form.content as any)?.[`market${i}Link`] || ""}
+                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), [`market${i}Link`]: e.target.value } as any })}
+                              placeholder="跳转链接（如 /buyer）"
+                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
+                            />
+                          </div>
+                        ))}
                       </div>
                     )}
 
