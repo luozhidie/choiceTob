@@ -1,6 +1,7 @@
 // ProductBlock：根据版块配置加载并渲染商品
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { isValidImage } from "@/components/ProductCollage";
 
 // 价格格式化
 function formatPrice(price: number | null | undefined): string {
@@ -132,7 +133,7 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
       <div className="max-w-7xl mx-auto">
         <h2 className="font-bold text-lg mb-4">{block.title}</h2>
         {/* 版块宣传横幅 */}
-        {content.promoBanner && (
+        {content.promoBanner && isValidImage(content.promoBanner) && (
           <div className="mb-4 rounded-xl overflow-hidden shadow-sm">
             <img src={content.promoBanner} alt="" className="w-full h-auto" />
           </div>
@@ -141,7 +142,7 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
           {blockProducts.map((product: any) => (
             <Link key={product.id} href={`/shop/${product.id}`} className="group block min-w-[180px]">
               <div className="relative overflow-hidden rounded-xl bg-gray-50 mb-2 aspect-[3/4]">
-                {product.image_url || product.cover_image ? (
+                {(product.image_url && isValidImage(product.image_url)) || (product.cover_image && isValidImage(product.cover_image)) ? (
                   <img src={product.image_url || product.cover_image} alt={product.name || product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>
