@@ -29,7 +29,7 @@ export default function SpecialShelfCard({ block }: { block: any }) {
   const content = block?.content || {};
   const [active, setActive] = useState("special");
   const [products, setProducts] = useState<SpecialProduct[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;

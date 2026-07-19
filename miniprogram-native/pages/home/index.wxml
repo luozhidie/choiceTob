@@ -220,7 +220,7 @@
                   <view class="spec-tabs">
                     <view wx:for="{{specTabs}}" wx:key="*this" wx:for-item="t" class="spec-tab {{specMap[item.id].mode===t?'on':''}}" bindtap="swSpecMode" data-id="{{item.id}}" data-m="{{t}}">{{t}}</view>
                   </view>
-                  <view wx:if="{{specMap[item.id].products.length>0}}" class="spec-grid">
+                  <view wx:if="{{specMap[item.id].products.length>0 && !specMap[item.id].loading}}" class="spec-grid">
                     <view wx:for="{{specMap[item.id].products}}" wx:key="id" wx:for-item="p" class="spec-card" bindtap="goShop" data-id="{{p.id}}">
                       <view class="sci">
                         <image wx:if="{{p.image_url||p.cover_image}}" src="{{p.image_url||p.cover_image}}" mode="aspectFill" class="sci-img"/>
@@ -231,6 +231,15 @@
                         <text class="spec-cn">{{p.title}}</text>
                         <text class="spec-cwp">{{p.wholesaleText}}</text>
                         <text class="spec-cp">¥{{p.priceText}}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view wx:elif="{{specMap[item.id].loading}}" class="spec-grid">
+                    <view wx:for="[0,1]" wx:key="*this" class="spec-card">
+                      <view class="sci spec-skeleton"/>
+                      <view class="spec-cnf">
+                        <view class="spec-skeleton-line" style="width:60%"/>
+                        <view class="spec-skeleton-line" style="width:40%;margin-top:8rpx"/>
                       </view>
                     </view>
                   </view>

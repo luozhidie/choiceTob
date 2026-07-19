@@ -136,7 +136,7 @@ Page({
               descriptor:ct.descriptor||'全国批发市场 · 优质大牌',
               link:ct.link||'#'
             };
-            t.setData({['specMap.'+b.id]:{mode:'special',products:[],banner:banner}});
+            t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner}});
             t.loadSpecial(b.id,'special');
           }
         });
@@ -154,16 +154,16 @@ Page({
         var l=[];
         if(r.data&&r.data.success&&r.data.data)l=r.data.data;
         else if(Array.isArray(r.data))l=r.data;
-        var prev=t.data.specMap[blockId]||{mode:mode,products:[],banner:{}};
-        t.setData({['specMap.'+blockId]:{mode:mode,products:l,banner:prev.banner||{}}});
+        var prev=t.data.specMap[blockId]||{mode:mode,products:[],loading:true,banner:{}};
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{}}});
       }
     });
   },
   swSpecMode:function(e){
     var id=e.currentTarget.dataset.id;
     var m=e.currentTarget.dataset.m;
-    var prev=this.data.specMap[id]||{mode:m,products:[],banner:{}};
-    this.setData({['specMap.'+id]:{mode:m,products:prev.products,banner:prev.banner||{}}});
+    var prev=this.data.specMap[id]||{mode:m,products:[],loading:true,banner:{}};
+    this.setData({['specMap.'+id]:{mode:m,products:prev.products,loading:true,banner:prev.banner||{}}});
     this.loadSpecial(id,m);
   },
 
