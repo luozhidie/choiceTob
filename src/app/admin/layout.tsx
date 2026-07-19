@@ -60,7 +60,7 @@ const menuGroups = [
     { label: "爆款图片", href: "/admin/hot-picks-images" },
     { label: "买手选品", href: "/admin/buyer" },
     { label: "选品步骤", href: "/admin/planning-steps" },
-    { label: "选品功能", href: "/admin/assortment" },
+    { label: "自动组货", href: "/admin/assortment" },
     { label: "买手中心", href: "/admin/buyer-center" },
     { label: "买手步骤", href: "/admin/buyer-steps" },
     { label: "货盘规划", href: "/admin/product-evaluation" },

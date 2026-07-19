@@ -59,6 +59,7 @@ interface Product {
   original_price: number | null;
   wholesale_price: number | null;
   bulk_price: number | null;
+  cost_price: number | null;
   category: string | null;
   subcategory: string | null;
   tags: string[] | null;
@@ -169,6 +170,7 @@ export default function AdminProductsPage() {
     original_price: "",
     wholesale_price: "",
     bulk_price: "",
+    cost_price: "",
     category: "",
     subcategory: "",
     stock: "0",
@@ -250,6 +252,14 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, [filterCategory, filterSubcategory]);
 
+  // 支持从组货看板「去上传」带 ?category= 预填主分类
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const q = new URLSearchParams(window.location.search).get("category");
+      if (q) setForm((f) => ({ ...f, category: q }));
+    }
+  }, []);
+
   // 切换筛选主分类时重置子分类
   useEffect(() => {
     setFilterSubcategory("");
@@ -270,6 +280,7 @@ export default function AdminProductsPage() {
       original_price: "",
       wholesale_price: "",
       bulk_price: "",
+      cost_price: "",
       category: "",
       subcategory: "",
       stock: "0",
@@ -322,6 +333,9 @@ export default function AdminProductsPage() {
         : null,
       bulk_price: form.bulk_price
         ? parseInt(form.bulk_price) * 100
+        : null,
+      cost_price: form.cost_price
+        ? parseInt(form.cost_price) * 100
         : null,
       category: form.category || null,
       subcategory: form.subcategory || null,
@@ -468,6 +482,9 @@ export default function AdminProductsPage() {
         : "",
       bulk_price: product.bulk_price
         ? (product.bulk_price / 100).toString()
+        : "",
+      cost_price: product.cost_price
+        ? (product.cost_price / 100).toString()
         : "",
       category: product.category || "",
       subcategory: product.subcategory || "",
@@ -1112,6 +1129,20 @@ export default function AdminProductsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                    成本价（元）
+                  </label>
+                  <input
+                    type="number"
+                    value={form.cost_price}
+                    onChange={(e) =>
+                      setForm({ ...form, cost_price: e.target.value })
+                    }
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    placeholder="拿货/成本价，用于算毛利"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     原价（元）
                   </label>
                   <input
@@ -1125,6 +1156,21 @@ export default function AdminProductsPage() {
                   />
                 </div>
               </div>
+              {/* 实时毛利率（成本价 vs 批发/批量价） */}
+              {(() => {
+                const costY = form.cost_price ? Number(form.cost_price) : 0;
+                const wsY = form.wholesale_price ? Number(form.wholesale_price) : 0;
+                const bkY = form.bulk_price ? Number(form.bulk_price) : 0;
+                if (costY <= 0) return null;
+                const wsM = wsY > 0 ? Math.round(((wsY - costY) / costY) * 100) : null;
+                const bkM = bkY > 0 ? Math.round(((bkY - costY) / costY) * 100) : null;
+                return (
+                  <div className="mt-2 text-xs text-gray-500 flex gap-4">
+                    <span>批发毛利率：<b className={wsM != null && wsM < 0 ? "text-red-500" : "text-green-600"}>{wsM != null ? wsM + "%" : "—"}</b></span>
+                    <span>批量毛利率：<b className={bkM != null && bkM < 0 ? "text-red-500" : "text-green-600"}>{bkM != null ? bkM + "%" : "—"}</b></span>
+                  </div>
+                );
+              })()}
 
               {/* 品类选择：主分类 + 子分类联动 */}
               <div className="grid grid-cols-2 gap-4">
