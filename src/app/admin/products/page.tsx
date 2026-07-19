@@ -254,11 +254,14 @@ export default function AdminProductsPage() {
     fetchProducts();
   }, [filterCategory, filterSubcategory]);
 
-  // 支持从组货看板「去上传」带 ?category= 预填主分类
+  // 支持从组货看板「去上传」带 ?category= 预填主分类并自动打开表单
   useEffect(() => {
     if (typeof window !== "undefined") {
       const q = new URLSearchParams(window.location.search).get("category");
-      if (q) setForm((f) => ({ ...f, category: q }));
+      if (q) {
+        setForm((f) => ({ ...f, category: q }));
+        setShowForm(true); // 从组货看板过来时直接打开上传表单
+      }
     }
   }, []);
 
@@ -720,6 +723,11 @@ export default function AdminProductsPage() {
           onClick={() => {
             setEditingProduct(null);
             resetForm();
+            // 若从组货看板带 ?category= 过来，保持该品类预填，方便连续上传同一品类
+            if (typeof window !== "undefined") {
+              const q = new URLSearchParams(window.location.search).get("category");
+              if (q) setForm((f) => ({ ...f, category: q }));
+            }
             setShowForm(true);
           }}
           className="btn-primary inline-flex items-center gap-2 px-5 py-2.5 text-sm rounded-xl"
