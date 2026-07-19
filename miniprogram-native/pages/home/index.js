@@ -262,7 +262,7 @@ Page({
         var isPriceMember = t.data.isPriceMember;
         l.forEach(function(p){
           var fbImg = p.image_url || p.cover_image || (p.images && p.images[0]);
-          if(fbImg) fbImgs.push(fbImg);
+          if(fbImg && typeof fbImg === 'string' && fbImg.indexOf('http') === 0 && fbImg.indexOf('example.com') === -1 && fbImg.indexOf('localhost') === -1) fbImgs.push(fbImg);
 
           var price=Number(p.price)||0;if(price>=100)price=Math.round(price/100);
           var wp=Number(p.wholesale_price)||0;

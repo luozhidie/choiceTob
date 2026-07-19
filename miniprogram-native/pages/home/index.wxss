@@ -4,6 +4,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .pc-bg{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(135deg,#8a6d5b,#b08968,#d9c2a8);overflow:hidden;}
 .pc-grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:2rpx;}
 .pc-img{width:100%;height:100%;}
+.pc-full{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0.9;}
 
 
 /* ========== 粘性头部 ========== */

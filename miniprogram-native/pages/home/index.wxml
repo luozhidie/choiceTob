@@ -72,7 +72,8 @@
   <!-- ========== 商品照片墙模板（横幅无图时自动兜底）========== -->
   <template name="prod-collage">
     <view class="pc-bg">
-      <view class="pc-grid">
+      <image wx:if="{{images.length===1}}" src="{{images[0]}}" mode="aspectFill" class="pc-full" lazy-load/>
+      <view wx:else class="pc-grid">
         <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="pc-img" lazy-load/>
       </view>
     </view>
