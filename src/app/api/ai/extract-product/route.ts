@@ -97,51 +97,58 @@ export async function POST(request: NextRequest) {
     const openrouterKey = process.env.OPENROUTER_API_KEY;
 
     // ===== 方案 A0：OpenRouter 视觉识别（OpenAI 兼容，支持多种视觉模型）=====
+    // 注意：Google/OpenAI 模型在该账户所属地区常被屏蔽，默认首选 Qwen-VL（中国区可用），
+    // 其余作为回退；可通过 OPENROUTER_MODEL 环境变量用逗号自定义顺序。
     if (openrouterKey && images.length > 0) {
-      try {
-        const content: any[] = [
-          {
-            type: "text",
-            text:
-              "请识别这些服装商品并抽取参数。" +
-              (note ? `供应商备注：${note}` : ""),
-          },
-        ];
-        for (const url of images.slice(0, 5)) {
-          content.push({ type: "image_url", image_url: { url } });
-        }
-        const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 55000);
-        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${openrouterKey}`,
-            "HTTP-Referer": "https://colour-choice.art",
-            "X-Title": "骆芷蝶智选",
-          },
-          body: JSON.stringify({
-            model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-1.5",
-            messages: [
-              { role: "system", content: SYSTEM },
-              { role: "user", content },
-            ],
-            temperature: 0.3,
-            max_tokens: 1200,
-          }),
-          signal: controller.signal,
-        });
-        clearTimeout(timer);
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.choices?.[0]?.message?.content || "";
-          const parsed = extractJSON(text);
-          if (parsed) {
-            return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
+      const orModels = (process.env.OPENROUTER_MODEL ||
+        "qwen/qwen2.5-vl-72b-instruct,google/gemini-2.5-flash,openai/gpt-4o-mini")
+        .split(",").map((s) => s.trim()).filter(Boolean);
+      const content: any[] = [
+        {
+          type: "text",
+          text:
+            "请识别这些服装商品并抽取参数。" +
+            (note ? `供应商备注：${note}` : ""),
+        },
+      ];
+      for (const url of images.slice(0, 5)) {
+        content.push({ type: "image_url", image_url: { url } });
+      }
+      for (const model of orModels) {
+        try {
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), 55000);
+          const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${openrouterKey}`,
+              "HTTP-Referer": "https://colour-choice.art",
+              "X-Title": "骆芷蝶智选",
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: SYSTEM },
+                { role: "user", content },
+              ],
+              temperature: 0.3,
+              max_tokens: 1200,
+            }),
+            signal: controller.signal,
+          });
+          clearTimeout(timer);
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.choices?.[0]?.message?.content || "";
+            const parsed = extractJSON(text);
+            if (parsed) {
+              return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
+            }
           }
+        } catch {
+          // 该模型失败，尝试列表中的下一个
         }
-      } catch {
-        // 视觉失败转下方兜底
       }
     }
 
