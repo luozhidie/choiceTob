@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Clock, Flame, ShoppingCart } from "lucide-react";
+import { ChevronLeft, Clock, Flame, ShoppingCart, Layers } from "lucide-react";
 
 interface Product {
   id: string;
@@ -22,6 +22,12 @@ interface PlanCategory {
   code: string;
   target_sku: number;
   wave: string;
+  note: string;
+  retail_band: number[] | null;
+  wholesale_band: number[] | null;
+  bulk_band: number[] | null;
+  uploaded: number;
+  progress: number;
 }
 
 interface Marketing {
@@ -34,6 +40,16 @@ interface Marketing {
 }
 
 const yuan = (n: number) => (n ? (n / 100).toFixed(2) : "0");
+const bandText = (b: number[] | null) =>
+  b && b.length === 2 ? `¥${yuan(b[0])}-${yuan(b[1])}` : "—";
+
+// 近黑内嵌渐变 / pollinations 生成图一律视为不可靠，走品牌粉兜底，避免黑屏
+function isSafeImage(u?: string | null): boolean {
+  if (!u || u.trim() === "") return false;
+  if (u.startsWith("data:image/svg")) return false;
+  if (u.includes("pollinations.ai")) return false;
+  return true;
+}
 
 function Countdown({ target }: { target: string }) {
   const [left, setLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
@@ -84,10 +100,33 @@ export default function AssortmentTopicPage() {
     }).catch(() => setLoading(false));
   }, [id]);
 
-  const marketing: Marketing | undefined = progress?.marketing || progress?.plan?.marketing;
-  const categories: PlanCategory[] = progress?.plan?.categories || progress?.items?.map((i: any) => ({ category: i.category, code: i.code, target_sku: i.target_sku, wave: i.wave })) || [];
+  // 接口返回扁平结构（data 直接含 marketing / categories / items），无 plan 嵌套层
+  const data = progress || {};
+  const marketing: Marketing | undefined = data.marketing || undefined;
+  const endDate = data.end_date || new Date(Date.now() + 7 * 86400000).toISOString();
+
+  // 合并 categories（含目标/说明/波段）与 items（含已传/进度）为品类架构
+  const itemsByCat: Record<string, any> = {};
+  (data.items || []).forEach((it: any) => { itemsByCat[String(it.category)] = it; });
+  const categories: PlanCategory[] = (data.categories || []).map((c: any) => {
+    const lbl = String(c.category || "").trim();
+    const it = itemsByCat[lbl] || {};
+    return {
+      category: lbl,
+      code: c.code || "",
+      target_sku: Number(c.target_sku) || 0,
+      wave: c.wave || "",
+      note: c.note || "",
+      retail_band: c.retail_band || null,
+      wholesale_band: c.wholesale_band || null,
+      bulk_band: c.bulk_band || null,
+      uploaded: it.uploaded || 0,
+      progress: it.progress || 0,
+    };
+  }).filter((c: PlanCategory) => c.category);
+
   const labels = categories.map((c) => c.category);
-  const endDate = progress?.plan?.end_date || new Date(Date.now() + 7 * 86400000).toISOString();
+  const heroImg = isSafeImage(marketing?.banner_image_url) ? marketing!.banner_image_url! : "";
 
   const filtered = activeCat === "全部" ? products : products.filter((p) => p.category === activeCat);
 
@@ -97,12 +136,15 @@ export default function AssortmentTopicPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Hero Banner */}
-      <div className="relative h-72 md:h-96 overflow-hidden">
-        <img
-          src={marketing?.banner_image_url || "https://image.pollinations.ai/prompt/fashion%20banner%20autumn?width=800&height=400&nologo=true&seed=1"}
-          alt={marketing?.headline || "组货专题"}
-          className="w-full h-full object-cover"
-        />
+      <div className="relative h-72 md:h-96 overflow-hidden bg-gradient-to-br from-[#6b3f70] via-[#a86fa0] to-[#d9a7c7]">
+        {heroImg ? (
+          <img
+            src={heroImg}
+            alt={marketing?.headline || data.title || "组货专题"}
+            className="w-full h-full object-cover"
+            onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+          />
+        ) : null}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
         <div className="absolute top-4 left-4">
           <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white">
@@ -112,10 +154,10 @@ export default function AssortmentTopicPage() {
         <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
           <div className="flex items-center gap-2 mb-2">
             <span className="px-2 py-0.5 bg-red-500 rounded text-xs font-bold">限时专题</span>
-            {progress.plan?.season && <span className="text-xs opacity-90">{progress.plan.season}</span>}
+            {data.season && <span className="text-xs opacity-90">{data.season}</span>}
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold mb-1">{marketing?.headline || progress.plan?.title}</h1>
-          <p className="text-sm opacity-90 line-clamp-2">{marketing?.subheadline || progress.plan?.title}</p>
+          <h1 className="text-2xl md:text-3xl font-bold mb-1">{marketing?.headline || data.title}</h1>
+          <p className="text-sm opacity-90 line-clamp-2">{marketing?.subheadline || data.title}</p>
           <div className="flex items-center gap-2 mt-3 text-xs">
             <Clock className="w-3.5 h-3.5" />
             <Countdown target={endDate} />
@@ -123,12 +165,52 @@ export default function AssortmentTopicPage() {
         </div>
       </div>
 
-      {/* Selling Points */}
-      {marketing?.selling_points && marketing.selling_points.length > 0 && (
+      {/* 方案介绍（写进来：之前只在首页卡片上显示，现在放进专题内） */}
+      {marketing?.subheadline && (
         <div className="bg-white mx-4 -mt-4 relative z-10 rounded-xl shadow-sm p-4">
-          <div className="flex flex-wrap gap-2">
-            {marketing.selling_points.slice(0, 4).map((p, i) => (
-              <span key={i} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">{p}</span>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-sm font-bold text-gray-800">方案介绍</span>
+            {data.season && <span className="text-xs text-gray-400">{data.season}</span>}
+          </div>
+          <p className="text-sm text-gray-600 leading-relaxed">{marketing.subheadline}</p>
+          {marketing.selling_points && marketing.selling_points.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {marketing.selling_points.slice(0, 6).map((p, i) => (
+                <span key={i} className="px-2.5 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">{p}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 品类架构（点进来应看到的架构：品类 / 波段 / 目标 / 已传进度 / 说明） */}
+      {categories.length > 0 && (
+        <div className="bg-white mx-4 mt-4 rounded-xl shadow-sm p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="w-4 h-4 text-primary" />
+            <span className="text-sm font-bold text-gray-800">品类架构</span>
+            <span className="text-xs text-gray-400">共 {categories.length} 个品类 · 目标 {data.total_target || categories.reduce((s, c) => s + c.target_sku, 0)} SKU</span>
+          </div>
+          <div className="space-y-3">
+            {categories.map((c) => (
+              <div key={c.category} className="border border-gray-50 rounded-xl p-3">
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-800">{c.category}</span>
+                    {c.wave && <span className="text-xs text-primary bg-primary/10 px-2 py-0.5 rounded-full">{c.wave}</span>}
+                  </div>
+                  <span className="text-xs text-gray-400">已传 {c.uploaded}/{c.target_sku} · {c.progress}%</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden mb-2">
+                  <div className={`h-full ${c.progress >= 100 ? "bg-green-500" : "bg-primary"}`} style={{ width: `${c.progress}%` }} />
+                </div>
+                {c.note && <p className="text-xs text-gray-500 leading-relaxed">{c.note}</p>}
+                <div className="flex items-center gap-3 text-xs text-gray-400 mt-1.5">
+                  <span>零售 {bandText(c.retail_band)}</span>
+                  <span>批发 {bandText(c.wholesale_band)}</span>
+                  <span>批量 {bandText(c.bulk_band)}</span>
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -155,7 +237,7 @@ export default function AssortmentTopicPage() {
       <div className="p-4">
         {activeCat !== "全部" && (
           <div className="text-xs text-gray-400 mb-3">
-            {activeCat} · 已传 {progress.items?.find((i: any) => i.category === activeCat)?.uploaded || 0} / {progress.items?.find((i: any) => i.category === activeCat)?.target_sku || 0} 件
+            {activeCat} · 已传 {categories.find((c) => c.category === activeCat)?.uploaded || 0} / {categories.find((c) => c.category === activeCat)?.target_sku || 0} 件
           </div>
         )}
         {filtered.length === 0 ? (

@@ -193,6 +193,25 @@ export default function HeroCarousel() {
       {/* 遮罩层 - 让叠在上面的文字更清晰 */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20" />
 
+      {/* 文案层：渲染后台编辑的标题 / 副标题 / 按钮（pointer-events-none 不挡整图跳转） */}
+      <div className="absolute inset-0 z-20 flex flex-col justify-center px-6 md:px-12 pointer-events-none">
+        {currentBanner.title && (
+          <h2 className="text-white text-2xl md:text-4xl font-bold drop-shadow-lg leading-tight">
+            {currentBanner.title}
+          </h2>
+        )}
+        {currentBanner.subtitle && (
+          <p className="text-white/90 text-sm md:text-base mt-2 max-w-md drop-shadow">
+            {currentBanner.subtitle}
+          </p>
+        )}
+        {currentBanner.button_text && (
+          <span className="mt-4 w-fit inline-flex items-center gap-1 px-4 py-2 rounded-full bg-white/90 text-gray-900 text-sm font-medium shadow">
+            {currentBanner.button_text} →
+          </span>
+        )}
+      </div>
+
       {/* 左右箭头 */}
       {banners.length > 1 && (
         <>
