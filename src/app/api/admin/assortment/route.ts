@@ -87,3 +87,38 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
+
+// DELETE - 删除方案及关联营销资产
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!verifyAdmin(request)) return NextResponse.json({ error: "未授权" }, { status: 401 });
+    const body = await request.json().catch(() => ({}));
+    const { id } = body;
+    if (!id || String(id).startsWith("demo-")) {
+      return NextResponse.json({ error: "缺少有效的方案 id" }, { status: 400 });
+    }
+
+    const plan = await withClient((s) =>
+      s.from("assortment_plans").select("id, marketing").eq("id", id).single()
+    );
+    if (plan.error) return NextResponse.json({ error: plan.error.message }, { status: 500 });
+
+    const marketing = plan.data?.marketing || {};
+
+    // 删除关联营销资产（首页横幅、促销活动）
+    if (marketing.promo_id) {
+      await withClient((s) => s.from("promotions").delete().eq("id", marketing.promo_id));
+    }
+    if (marketing.site_asset_id) {
+      await withClient((s) => s.from("site_assets").delete().eq("id", marketing.site_asset_id));
+    }
+
+    // 删除方案本身
+    const { error } = await withClient((s) => s.from("assortment_plans").delete().eq("id", id));
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

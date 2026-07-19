@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Sparkles, Save, UploadCloud, Layers, Package, TrendingUp, CheckCircle2,
-  ChevronDown, ExternalLink,
+  ChevronDown, ExternalLink, Trash2,
 } from "lucide-react";
 
 interface DraftCat {
@@ -133,6 +133,7 @@ export default function AssortmentAdmin() {
   const [progressOpen, setProgressOpen] = useState<string | null>(null);
   const [progress, setProgress] = useState<any>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const flash = (type: "ok" | "err", text: string) => {
@@ -147,6 +148,32 @@ export default function AssortmentAdmin() {
       .catch(() => {});
   };
   useEffect(() => { loadPlans(); }, []);
+
+  const deletePlan = async (id: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (!confirm("确定删除该组货方案？关联的专题页、首页横幅和促销活动会一并清理。商品不会被删除。")) return;
+    setDeletingId(id);
+    try {
+      const res = await fetch("/api/admin/assortment", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id }),
+      });
+      const j = await res.json();
+      if (!j.success) {
+        flash("err", "删除失败：" + (j.error || ""));
+        return;
+      }
+      flash("ok", "已删除方案");
+      setPlans((prev) => prev.filter((p) => p.id !== id));
+      if (progressOpen === id) setProgressOpen(null);
+    } catch (e: any) {
+      flash("err", "删除异常：" + e.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const onGenerate = async () => {
     setGenerating(true);
@@ -358,7 +385,7 @@ export default function AssortmentAdmin() {
           <div className="space-y-3">
             {plans.map((p) => (
               <div key={p.id} className="border border-gray-100 rounded-lg">
-                <button onClick={() => openProgress(p.id)} className="w-full flex items-center justify-between px-4 py-3 text-left">
+                <div onClick={() => openProgress(p.id)} className="cursor-pointer w-full flex items-center justify-between px-4 py-3 text-left hover:bg-gray-50 transition-colors">
                   <div>
                     <div className="font-medium text-gray-800">{p.title}</div>
                     <div className="text-xs text-gray-400 mt-0.5">
@@ -371,9 +398,18 @@ export default function AssortmentAdmin() {
                     ) : (
                       <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded">草稿</span>
                     )}
+                    <button
+                      type="button"
+                      onClick={(e) => deletePlan(p.id, e)}
+                      disabled={deletingId === p.id}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50"
+                      title="删除方案"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
                     <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${progressOpen === p.id ? "rotate-180" : ""}`} />
                   </div>
-                </button>
+                </div>
 
                 {progressOpen === p.id && (
                   <div className="px-4 pb-4 border-t border-gray-100">
@@ -410,6 +446,11 @@ export default function AssortmentAdmin() {
                           <span className="font-medium text-gray-700">{progress.overall_progress}%</span>
                           <span className="text-xs text-gray-400">（{progress.total_uploaded}/{progress.total_target}）</span>
                         </div>
+                        {progress.total_uploaded === 0 && (
+                          <div className="text-xs text-gray-500 bg-gray-50 rounded-lg px-3 py-2 mb-3">
+                            进度需要按品类上传商品后才会更新。点击每个品类右侧的「去上传」添加商品，该品类即会计入进度。
+                          </div>
+                        )}
                         <div className="space-y-2">
                           {progress.items.map((it: ProgressItem, idx: number) => (
                             <div key={idx} className="flex items-center gap-3 text-sm border border-gray-50 rounded-lg px-3 py-2">
