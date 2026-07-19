@@ -19,8 +19,28 @@ const FALLBACK_BANNER =
   "data:image/svg+xml;base64," +
   "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNmIzZjcwIi8+PHN0b3Agb2Zmc2V0PSI1NSUiIHN0eWxlPSJzdG9wLWNvbG9yOiNhODZmYTAiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiNkOWE3YzciLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTYwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9InVybCgjZykiLz48L3N2Zz4=";
 
+// 兜底轮播数据：不依赖接口，页面一渲染就有图，避免白屏/黑屏
+const DEFAULT_BANNERS: Banner[] = [
+  {
+    id: "default-1",
+    image: FALLBACK_BANNER,
+    link_url: "/buyer",
+    title: "爆款选品 · 拿货精选",
+    subtitle: "骆芷蝶智选 · 专业推荐",
+    button_text: "全部商品 →",
+  },
+  {
+    id: "default-2",
+    image: FALLBACK_BANNER,
+    link_url: "/vip",
+    title: "开通价格会员",
+    subtitle: "解锁批发价，享受更多优惠",
+    button_text: "立即开通 →",
+  },
+];
+
 export default function HeroCarousel() {
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<Banner[]>(DEFAULT_BANNERS);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showCloseBtn, setShowCloseBtn] = useState(false);
@@ -40,24 +60,7 @@ export default function HeroCarousel() {
         // 忽略，走兜底
       }
       // 兜底示例数据（使用内嵌 SVG，避免外部图被拦截黑屏）
-      setBanners([
-        {
-          id: "default-1",
-          image: FALLBACK_BANNER,
-          link_url: "/buyer",
-          title: "爆款选品 · 拿货精选",
-          subtitle: "骆芷蝶智选 · 专业推荐",
-          button_text: "全部商品 →",
-        },
-        {
-          id: "default-2",
-          image: FALLBACK_BANNER,
-          link_url: "/vip",
-          title: "开通价格会员",
-          subtitle: "解锁批发价，享受更多优惠",
-          button_text: "立即开通 →",
-        },
-      ]);
+      setBanners(DEFAULT_BANNERS);
     };
     loadBanners();
   }, []);

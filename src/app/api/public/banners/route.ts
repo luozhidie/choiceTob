@@ -8,13 +8,12 @@ export const dynamic = 'force-dynamic';
 // GET /api/public/banners
 // 返回已启用的轮播图列表（按 sort_order 排序）
 export async function GET(request: NextRequest) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const supabase = createClient(url, key);
   const { data, error } = await supabase
     .from("site_assets")
-    .select("id, key, image_url, link_url, title, subtitle, button_text, sort_order")
+    .select("id, key, image_url, link_url, title, subtitle, sort_order")
     .like("key", "hero_banner%")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
