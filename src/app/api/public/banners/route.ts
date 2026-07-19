@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   );
   const { data, error } = await supabase
     .from("site_assets")
-    .select("id, key, image_url, link_url, title, subtitle, sort_order")
+    .select("id, key, image_url, link_url, title, subtitle, button_text, sort_order")
     .like("key", "hero_banner%")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
       link_url: b.link_url,
       title: b.title,
       subtitle: b.subtitle,
+      button_text: b.button_text,
     }));
   return NextResponse.json(valid);
 }

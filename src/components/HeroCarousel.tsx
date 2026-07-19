@@ -2,17 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 interface Banner {
   id: string;
-  image_url: string;
+  image: string;
   link_url?: string | null;
   title?: string | null;
   subtitle?: string | null;
   button_text?: string | null;
-  is_active: boolean;
+  is_active?: boolean;
 }
 
 // 内嵌 SVG 渐变图（品牌紫），不依赖外部网络，避免图片被拦截时黑屏
@@ -26,54 +25,39 @@ export default function HeroCarousel() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showCloseBtn, setShowCloseBtn] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const supabase = createClient();
 
-  // 从后台加载轮播图
+  // 从公开接口加载轮播图（服务端 service_role 绕过 RLS，确保后台编辑的文案生效）
   useEffect(() => {
     const loadBanners = async () => {
       try {
-        const { data, error } = await supabase
-          .from("site_assets")
-          .select("*")
-          .like("key", "hero_banner%")
-          .eq("is_active", true)
-          .order("sort_order", { ascending: true });
-
-        if (!error && data && data.length > 0) {
+        const res = await fetch("/api/public/banners");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
           setBanners(data);
-        } else {
-          // 默认示例数据（使用内嵌 SVG，避免外部图被拦截黑屏）
-          setBanners([
-            { 
-              id: "default-1", 
-              image_url: FALLBACK_BANNER,
-              link_url: "/buyer",
-              title: "爆款选品 · 拿货精选",
-              subtitle: "骆芷蝶智选 · 专业推荐",
-              button_text: "全部商品 →",
-              is_active: true,
-            },
-            { 
-              id: "default-2", 
-              image_url: FALLBACK_BANNER,
-              link_url: "/vip",
-              title: "开通价格会员",
-              subtitle: "解锁批发价，享受更多优惠",
-              button_text: "立即开通 →",
-              is_active: true,
-            },
-          ]);
+          return;
         }
       } catch {
-        setBanners([
-          { 
-            id: "default-1", 
-            image_url: FALLBACK_BANNER,
-            link_url: "/buyer",
-            is_active: true,
-          },
-        ]);
+        // 忽略，走兜底
       }
+      // 兜底示例数据（使用内嵌 SVG，避免外部图被拦截黑屏）
+      setBanners([
+        {
+          id: "default-1",
+          image: FALLBACK_BANNER,
+          link_url: "/buyer",
+          title: "爆款选品 · 拿货精选",
+          subtitle: "骆芷蝶智选 · 专业推荐",
+          button_text: "全部商品 →",
+        },
+        {
+          id: "default-2",
+          image: FALLBACK_BANNER,
+          link_url: "/vip",
+          title: "开通价格会员",
+          subtitle: "解锁批发价，享受更多优惠",
+          button_text: "立即开通 →",
+        },
+      ]);
     };
     loadBanners();
   }, []);
@@ -167,7 +151,7 @@ export default function HeroCarousel() {
             style={{ background: "linear-gradient(135deg,#6b3f70,#a86fa0,#d9a7c7)" }}
           >
             <img
-              src={banner.image_url}
+              src={banner.image}
               alt={banner.title || ""}
               className="w-full h-full object-cover"
               onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
