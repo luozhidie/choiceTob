@@ -55,6 +55,7 @@ interface Block {
 
 const BLOCK_TYPES = [
   { value: "products", label: "商品展示", icon: ShoppingBag, description: "展示特定分类或推荐商品" },
+  { value: "special", label: "特价货架", icon: Flame, description: "特价·换季清仓，按折扣自动筛商品，带 Tab 切换" },
   { value: "promotion", label: "营销活动", icon: Flame, description: "限时优惠、满减活动等" },
   { value: "custom", label: "自定义内容", icon: Tag, description: "富文本/图片/视频等自由内容" },
   { value: "group_buy", label: "团购拼单", icon: Users, description: "团购活动，多人拼单优惠" },
@@ -70,7 +71,6 @@ const BLOCK_TYPES = [
   { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
   { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
   { value: "assortment", label: "当季系列", icon: Sparkles, description: "大图+3小图，跳转组货方案" },
-  { value: "special", label: "特价货架", icon: Flame, description: "特价·换季清仓，按折扣自动筛商品，带 Tab 切换" },
 ];
 
 // 商品分类 slug → 中文标签（下拉展示用，value 仍为库内 slug）
