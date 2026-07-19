@@ -23,7 +23,7 @@ interface Progress {
   overall_progress: number;
 }
 
-const yuan = (n: number) => (n ? (n / 100).toFixed(0) : "0");
+const yuan = (n: number) => (n ? (n / 100).toFixed(2) : "0");
 const bandText = (b: number[] | null) => (b && b.length === 2 ? `¥${yuan(b[0])}-${yuan(b[1])}` : "—");
 
 export default function AssortmentBoard() {

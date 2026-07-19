@@ -262,7 +262,7 @@ export default function AssortmentAdmin() {
       .finally(() => setLoadingProgress(false));
   };
 
-  const yuan = (n: number) => (n ? (n / 100).toFixed(0) : "0");
+  const yuan = (n: number) => (n ? (n / 100).toFixed(2) : "0");
 
   return (
     <div className="max-w-6xl mx-auto">

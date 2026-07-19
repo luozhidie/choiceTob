@@ -656,7 +656,7 @@ export default function AdminProductsPage() {
     setSelectedIds(allSelected ? [] : [...new Set([...selectedIds, ...allVisibleIds])]);
   };
 
-  const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
+  const formatPrice = (price: number) => `¥${(price / 100).toFixed(2)}`;
 
   // 从 detail HTML 中提取详情图片 URL，用于管理端预览
   const detailImageUrls = useMemo(() => {
