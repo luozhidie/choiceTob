@@ -15,7 +15,6 @@
       <view class="hero-mask"></view>
       <view class="hero-info">
         <text class="hero-title">{{plan.marketing.headline || plan.title}}</text>
-        <text wx:if="{{plan.marketing.subheadline}}" class="hero-sub">{{plan.marketing.subheadline}}</text>
       </view>
     </view>
 
@@ -27,11 +26,6 @@
         <text class="ov-pct">{{overall}}%</text>
       </view>
       <text class="ov-count">已上传 {{totalUploaded}}/{{totalTarget}} 件</text>
-    </view>
-
-    <!-- 卖点 -->
-    <view class="points" wx:if="{{plan.marketing.selling_points.length>0}}">
-      <view class="point" wx:for="{{plan.marketing.selling_points}}" wx:key="*this">{{item}}</view>
     </view>
 
     <!-- 品类 tab -->

@@ -183,6 +183,24 @@
                   </view>
                 </view>
 
+                <view wx:elif="{{item.type==='assortment'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goSeries" data-id="{{item.content.planId}}">
+                  <view class="shelf-card">
+                    <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
+                    <view wx:else class="shelf-bg"></view>
+                    <view class="shelf-mask"></view>
+                    <view class="shelf-body">
+                      <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
+                      <text class="shelf-title">{{item.title}}</text>
+                      <text wx:if="{{item.content.subtitle||item.section_subtitle}}" class="shelf-sub">{{item.content.subtitle||item.section_subtitle}}</text>
+                    </view>
+                  </view>
+                  <view wx:if="{{item.content.subImage1||item.content.subImage2||item.content.subImage3}}" class="shelf-preview">
+                    <image wx:if="{{item.content.subImage1}}" src="{{item.content.subImage1}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage2}}" src="{{item.content.subImage2}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage3}}" src="{{item.content.subImage3}}" mode="aspectFill" class="sp-img"/>
+                  </view>
+                </view>
+
                 <view wx:else>
                   <!-- promotion -->
                   <view wx:if="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">
@@ -236,30 +254,6 @@
     </view>
 
   </template>
-
-  <!-- ========== 当季系列（组货方案） ========== -->
-  <view class="series-sec" wx:if="{{series.length>0}}">
-    <view class="ss-head">
-      <view class="ss-t">
-        <text class="ss-bar"></text>
-        <text class="ss-title">当季系列</text>
-        <text class="ss-sub">AI 组货 · 一键照单拿货</text>
-      </view>
-    </view>
-    <view class="series-scroll">
-      <view class="series-row">
-        <view class="series-card" wx:for="{{series}}" wx:key="id" bindtap="goSeries" data-id="{{item.id}}">
-          <image wx:if="{{item.banner_image_url}}" src="{{item.banner_image_url}}" mode="aspectFill" class="series-img" lazy-load/>
-          <view wx:else class="series-img series-ph">系列</view>
-          <view class="series-mask"></view>
-          <view class="series-info">
-            <text class="series-name">{{item.title}}</text>
-            <text class="series-desc" wx:if="{{item.description}}">{{item.description}}</text>
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
 
   <!-- ========== 商品区 ========== -->
   <view class="sec">
