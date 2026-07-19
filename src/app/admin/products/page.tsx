@@ -105,6 +105,8 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [filterSubcategory, setFilterSubcategory] = useState("");
+  // 动态品类（含方案发布写入的 AI 品类，如「针织衫」），用于商品分类下拉与进度看板对齐
+  const [dbCategories, setDbCategories] = useState<{ code: string; label: string }[]>([]);
   const [toast, setToast] = useState<{
     type: "success" | "error";
     message: string;
@@ -258,6 +260,26 @@ export default function AdminProductsPage() {
       const q = new URLSearchParams(window.location.search).get("category");
       if (q) setForm((f) => ({ ...f, category: q }));
     }
+  }, []);
+
+  // 加载动态品类（categories 表），含方案发布写入的 AI 品类，使商品分类与进度看板对齐
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const sb = createClient();
+        const { data } = await sb
+          .from("categories")
+          .select("code, label")
+          .order("sort_order", { ascending: true });
+        if (alive && data) setDbCategories(data as { code: string; label: string }[]);
+      } catch {
+        /* 忽略：动态品类加载失败时仅回退到静态分类 */
+      }
+    })();
+    return () => {
+      alive = false;
+    };
   }, []);
 
   // 切换筛选主分类时重置子分类
@@ -1189,6 +1211,18 @@ export default function AdminProductsPage() {
                         {cat.label}
                       </option>
                     ))}
+                    {/* 动态品类（含方案 AI 品类），value 直接存中文 label 以便进度看板匹配 */}
+                    {dbCategories
+                      .filter(
+                        (c) =>
+                          !!c.label &&
+                          !CATEGORIES.some((cat) => cat.label === c.label)
+                      )
+                      .map((c) => (
+                        <option key={"db-" + c.code} value={c.label}>
+                          {c.label}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div>
