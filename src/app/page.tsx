@@ -1074,7 +1074,8 @@ export default function Home() {
                   alt={p.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format";
+                    const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"400\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#2d1b2e\"/><stop offset=\"100%\" style=\"stop-color:#4a3a4b\"/></linearGradient></defs><rect width=\"1600\" height=\"400\" fill=\"url(#g)\"/></svg>`);
+                    (e.target as HTMLImageElement).src = svg;
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />

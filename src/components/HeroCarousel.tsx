@@ -162,8 +162,8 @@ export default function HeroCarousel() {
             style={{ backgroundImage: `url('${banner.image_url}')`, backgroundColor: '#1a1a2e' }}
             onError={(e) => {
               // 图片加载失败时显示品牌渐变背景，避免黑屏
-              (e.target as HTMLDivElement).style.backgroundImage =
-                "linear-gradient(135deg, #2d1b2e 0%, #4a3a4b 100%)";
+              const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"400\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#2d1b2e\"/><stop offset=\"100%\" style=\"stop-color:#4a3a4b\"/></linearGradient></defs><rect width=\"1600\" height=\"400\" fill=\"url(#g)\"/></svg>`);
+              (e.target as HTMLDivElement).style.backgroundImage = `url('${svg}')`;
             }}
           />
         ))}

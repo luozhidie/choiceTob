@@ -88,9 +88,9 @@ function buildImageKeywords(report: any) {
 }
 
 function buildPollinationsUrl(prompt: string) {
-  // 用可靠静态图替换 pollinations.ai（生成图域名常被拦截，导致黑屏）
-  // prompt 仅保留用于 banner alt/描述，不直接用于图片生成
-  return `https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format`;
+  // 使用内嵌 SVG 渐变图，避免 pollinations.ai/unsplash 等外部域名被拦截导致黑屏
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2d1b2e"/><stop offset="100%" style="stop-color:#4a3a4b"/></linearGradient></defs><rect width="1600" height="400" fill="url(#g)"/></svg>`;
+  return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
 }
 
 export async function POST(request: NextRequest) {

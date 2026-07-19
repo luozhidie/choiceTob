@@ -15,7 +15,10 @@ function verifyAdmin(request: NextRequest): boolean {
   return cookie.includes("admin_logged_in=true");
 }
 
-const RELIABLE_BANNER_URL = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format";
+const RELIABLE_BANNER_URL = (() => {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="400"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#2d1b2e"/><stop offset="100%" style="stop-color:#4a3a4b"/></linearGradient></defs><rect width="1600" height="400" fill="url(#g)"/></svg>`;
+  return "data:image/svg+xml;base64," + Buffer.from(svg).toString("base64");
+})();
 
 function isUnreliableImage(url: string | null | undefined): boolean {
   if (!url) return true;
