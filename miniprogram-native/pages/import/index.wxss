@@ -21,7 +21,7 @@ page {
   position: relative;
 }
 .tab-on {
-  color: #e91e63;
+  color: #2d1b2e;
   font-weight: 700;
 }
 .tab-on::after {
@@ -32,7 +32,7 @@ page {
   transform: translateX(-50%);
   width: 60rpx;
   height: 4rpx;
-  background: #e91e63;
+  background: #2d1b2e;
   border-radius: 2rpx;
 }
 
@@ -64,7 +64,7 @@ page {
 /* 导入按钮 */
 .btn-import {
   margin-top: 20rpx;
-  background: linear-gradient(135deg, #e91e63, #c2185b);
+  background: linear-gradient(135deg, #2d1b2e, #4a3a4b);
   color: #fff;
   padding: 22rpx 0;
   text-align: center;
@@ -109,7 +109,7 @@ page {
 }
 .rh-view {
   font-size: 24rpx;
-  color: #e91e63;
+  color: #2d1b2e;
 }
 
 /* 结果项 */
@@ -163,7 +163,7 @@ page {
 }
 .ri-btn {
   font-size: 22rpx;
-  color: #e91e63;
+  color: #2d1b2e;
   margin-top: 8rpx;
 }
 .ri-skipped {

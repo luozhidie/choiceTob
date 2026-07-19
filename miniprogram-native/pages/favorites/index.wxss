@@ -8,7 +8,7 @@ page{background:#f5f3f0;}
 .ci{width:140rpx;height:140rpx;border-radius:12rpx;background:#eee;flex-shrink:0;margin-right:16rpx;}
 .cb{flex:1;}
 .ct{font-size:27rpx;font-weight:500;color:#333;display:block;margin-bottom:6rpx;}
-.cp{font-size:30rpx;color:#e91e63;font-weight:700;}
+.cp{font-size:30rpx;color:#2d1b2e;font-weight:700;}
 .del{font-size:28rpx;color:#ccc;padding:8rpx 16rpx;flex-shrink:0;}
 
 .emp{text-align:center;padding:120rpx 0;}

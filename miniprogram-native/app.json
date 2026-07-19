@@ -45,7 +45,8 @@
     "pages/stall/markets/index",
     "pages/stall/index/index",
     "pages/stall/detail/index",
-    "pages/stall/subscribed/index"
+    "pages/stall/subscribed/index",
+    "pages/assortment/detail/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

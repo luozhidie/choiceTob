@@ -12,7 +12,7 @@
 .c-btn-row{display:flex;gap:20rpx;margin-top:28rpx;}
 .follow-btn,.share-btn{font-size:26rpx;padding:14rpx 44rpx;border-radius:40rpx;margin:0;line-height:1;border:none;}
 .follow-btn::after,.share-btn::after{border:none;}
-.follow-btn{background:#e91e63;color:#fff;}
+.follow-btn{background:#2d1b2e;color:#fff;}
 .follow-btn.on{background:rgba(255,255,255,.2);color:#ddd;}
 .share-btn{background:#4caf50;color:#fff;}
 

@@ -8,10 +8,10 @@ page{background:#f8f6f4;}
 
 /* VIP条 */
 .vip-bar{display:flex;align-items:center;justify-content:space-between;padding:16rpx 24rpx;background:#fff0f5;border-bottom:1rpx solid #fce4ec;}
-.vb-left{font-size:24rpx;color:#c2185b;font-weight:600;}
+.vb-left{font-size:24rpx;color:#4a3a4b;font-weight:600;}
 .vb-btns{display:flex;gap:10rpx;}
-.vbm{font-size:21rpx;color:#fff;background:#e91e63;padding:6rpx 18rpx;border-radius:14rpx;font-weight:700;}
-.vby{font-size:21rpx;color:#e91e63;background:#fce4ec;padding:6rpx 18rpx;border-radius:14rpx;font-weight:700;}
+.vbm{font-size:21rpx;color:#fff;background:#2d1b2e;padding:6rpx 18rpx;border-radius:14rpx;font-weight:700;}
+.vby{font-size:21rpx;color:#2d1b2e;background:#fce4ec;padding:6rpx 18rpx;border-radius:14rpx;font-weight:700;}
 
 /* 分类Tab */
 .cats{padding:16rpx 20rpx;white-space:nowrap;background:#fff;display:flex;gap:12rpx;border-bottom:1rpx solid #f0ece8;}
@@ -47,7 +47,7 @@ page{background:#f8f6f4;}
 
 /* 信息区 */
 .linfo{padding:18rpx 18rpx 22rpx;}
-.ltag{font-size:20rpx;color:#e91e63;background:#fce4ec;padding:3rpx 14rpx;border-radius:12rpx;display:inline-block;margin-bottom:8rpx;}
+.ltag{font-size:20rpx;color:#2d1b2e;background:#fce4ec;padding:3rpx 14rpx;border-radius:12rpx;display:inline-block;margin-bottom:8rpx;}
 .lname{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:6rpx;}
 .ldesc{font-size:23rpx;color:#888;line-height:1.4;display:block;margin-bottom:12rpx;}
 .cdots{display:flex;gap:10rpx;}

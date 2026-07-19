@@ -35,7 +35,7 @@ page{background:#f5f3f0;}
 .gc-f{font-size:19rpx;color:#16a34a;font-weight:500;}
 .gc-btn{margin-top:auto;padding:16rpx 0;text-align:center;border-radius:12rpx;font-size:23rpx;font-weight:bold;}
 .gc-btn-sec{background:#f1f3f5;color:#495057;}
-.gc-btn-main{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;box-shadow:0 4rpx 12rpx rgba(233,30,99,.25);}
+.gc-btn-main{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;box-shadow:0 4rpx 12rpx rgba(233,30,99,.25);}
 
 /* 充值套餐标题 */
 .deposit-header{text-align:center;padding:28rpx 20rpx 10rpx;}
@@ -46,15 +46,15 @@ page{background:#f5f3f0;}
 .plans{padding:16rpx 20rpx;display:flex;flex-direction:column;gap:16rpx;}
 .plan-card{background:#fff;border-radius:22rpx;padding:32rpx 24rpx;position:relative;box-shadow:0 3rpx 16rpx rgba(0,0,0,.05);}
 .pc-hl{border:2rpx solid #f8bbd0;background:linear-gradient(180deg,#fff 0%,#fce4ec 100%);}
-.pc-tag{position:absolute;top:-12rpx;right:20rpx;background:#e91e63;color:#fff;font-size:20rpx;font-weight:700;padding:5rpx 20rpx;border-radius:14rpx;}
+.pc-tag{position:absolute;top:-12rpx;right:20rpx;background:#2d1b2e;color:#fff;font-size:20rpx;font-weight:700;padding:5rpx 20rpx;border-radius:14rpx;}
 .pc-name{font-size:30rpx;font-weight:bold;color:#1a1a2e;display:block;margin-bottom:10rpx;}
 .pc-price-row{display:flex;align-items:baseline;gap:10rpx;margin-bottom:8rpx;}
-.pc-price{font-size:44rpx;font-weight:800;color:#e91e63;}
+.pc-price{font-size:44rpx;font-weight:800;color:#2d1b2e;}
 .pc-ori{font-size:24rpx;color:#aaa;text-decoration:line-through;}
 .pc-save{font-size:22rpx;color:#4caf50;background:#e8f5e9;padding:3rpx 14rpx;border-radius:10rpx;margin-bottom:14rpx;display:inline-block;}
 .pc-features{margin-bottom:20rpx;}
 .pc-f{font-size:24rpx;color:#555;display:block;padding:5rpx 0;line-height:1.5;}
-.pc-btn{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;padding:22rpx 0;text-align:center;border-radius:14rpx;font-size:28rpx;font-weight:600;}
+.pc-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;padding:22rpx 0;text-align:center;border-radius:14rpx;font-size:28rpx;font-weight:600;}
 .pc-btn-test_free{background:linear-gradient(135deg,#4caf50,#388e3c);}
 .pc-icon{font-size:48rpx;display:block;text-align:center;margin-bottom:8rpx;}
 .pc-free{color:#4caf50 !important;font-size:36rpx !important;}
@@ -65,20 +65,20 @@ page{background:#f5f3f0;}
 .modal-close{position:absolute;top:16rpx;right:20rpx;font-size:30rpx;color:#ccc;padding:8rpx;}
 .m-title{font-size:32rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
 .m-name{font-size:27rpx;color:#666;display:block;margin-bottom:10rpx;}
-.m-price{font-size:40rpx;font-weight:bold;color:#e91e63;display:block;margin-bottom:8rpx;}
+.m-price{font-size:40rpx;font-weight:bold;color:#2d1b2e;display:block;margin-bottom:8rpx;}
 .m-tip{font-size:24rpx;color:#999;display:block;margin-bottom:28rpx;}
-.m-btn{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;padding:22rpx 0;border-radius:14rpx;font-size:29rpx;font-weight:600;}
+.m-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;padding:22rpx 0;border-radius:14rpx;font-size:29rpx;font-weight:600;}
 
 /* 拿货升级进度卡片 */
 .upgrade-card{background:#fff;border-radius:22rpx;padding:28rpx 24rpx;margin-bottom:20rpx;box-shadow:0 3rpx 16rpx rgba(0,0,0,.05);}
 .uc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16rpx;}
 .uc-title{font-size:28rpx;font-weight:bold;color:#1a1a2e;}
-.uc-amount{font-size:26rpx;font-weight:700;color:#e91e63;}
+.uc-amount{font-size:26rpx;font-weight:700;color:#2d1b2e;}
 .uc-progress-bar{height:16rpx;background:#f0ece8;border-radius:8rpx;overflow:hidden;margin-bottom:12rpx;}
-.uc-progress-fill{height:100%;background:linear-gradient(90deg,#e91e63,#ff6090);border-radius:8rpx;transition:width .5s ease;}
+.uc-progress-fill{height:100%;background:linear-gradient(90deg,#2d1b2e,#ff6090);border-radius:8rpx;transition:width .5s ease;}
 .uc-levels{display:flex;justify-content:space-between;margin-bottom:12rpx;}
 .uc-level{font-size:20rpx;color:#bbb;}
-.uc-level-active{color:#e91e63;font-weight:700;}
+.uc-level-active{color:#2d1b2e;font-weight:700;}
 .uc-tip{font-size:22rpx;color:#888;}
-.uc-next{color:#e91e63;font-weight:700;}
+.uc-next{color:#2d1b2e;font-weight:700;}
 .uc-tip-done{color:#4caf50;font-weight:600;}

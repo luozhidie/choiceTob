@@ -53,8 +53,8 @@ page {
   flex: 1;
   text-align: center;
   padding: 16rpx 0;
-  border: 1rpx solid #e91e63;
-  color: #e91e63;
+  border: 1rpx solid #2d1b2e;
+  color: #2d1b2e;
   border-radius: 12rpx;
   font-size: 26rpx;
 }
@@ -74,7 +74,7 @@ page {
   width: 44rpx;
   height: 44rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, #e91e63, #c2185b);
+  background: linear-gradient(135deg, #2d1b2e, #4a3a4b);
   color: #fff;
   font-size: 26rpx;
   font-weight: 700;
@@ -100,7 +100,7 @@ page {
 
 .btn-copy {
   margin-top: 20rpx;
-  background: linear-gradient(135deg, #e91e63, #c2185b);
+  background: linear-gradient(135deg, #2d1b2e, #4a3a4b);
   color: #fff;
   text-align: center;
   padding: 22rpx 0;

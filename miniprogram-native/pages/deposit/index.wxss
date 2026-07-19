@@ -2,7 +2,7 @@ page{background:#faf8f6;}
 
 /* 标题区 */
 .header{padding:36rpx 28rpx 20rpx;}
-.htitle text{font-size:34rpx;font-weight:bold;color:#c2185b;display:block;}
+.htitle text{font-size:34rpx;font-weight:bold;color:#4a3a4b;display:block;}
 .hdesc{font-size:25rpx;color:#888;margin-top:8rpx;display:block;line-height:1.5;}
 
 /* 卡片 */
@@ -17,24 +17,24 @@ page{background:#faf8f6;}
   border:2rpx solid #fce4ec;
 }
 .card-rec{border-color:#f8bbd0;background:linear-gradient(180deg,#fce4ec 0%,#fce4ec 100%);}
-.rec-tag{position:absolute;top:-12rpx;right:14rpx;background:#e91e63;color:#fff;font-size:19rpx;font-weight:700;padding:4rpx 18rpx;border-radius:14rpx;}
+.rec-tag{position:absolute;top:-12rpx;right:14rpx;background:#2d1b2e;color:#fff;font-size:19rpx;font-weight:700;padding:4rpx 18rpx;border-radius:14rpx;}
 
 .camt{font-size:44rpx;font-weight:800;color:#333;display:block;}
 .csub{font-size:22rpx;color:#999;display:block;margin-bottom:12rpx;}
-.cdisc{font-size:38rpx;font-weight:bold;color:#e91e63;display:block;margin-bottom:4rpx;}
+.cdisc{font-size:38rpx;font-weight:bold;color:#2d1b2e;display:block;margin-bottom:4rpx;}
 .crefund{font-size:22rpx;color:#999;display:block;margin-bottom:16rpx;}
 .cexample{font-size:21rpx;color:#bbb;background:#f5f5f5;display:inline-block;padding:6rpx 16rpx;border-radius:10rpx;}
 
 /* 提示 */
 .tip{text-align:center;padding:20rpx 30rpx 6rpx;font-size:23rpx;color:#aaa;}
 .contact{text-align:center;padding:6rpx 30rpx 40rpx;font-size:24rpx;color:#888;}
-.clink{color:#e91e63;font-weight:600;}
+.clink{color:#2d1b2e;font-weight:600;}
 
 /* 弹窗 */
 .mask{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;}
 .modal{width:80%;background:#fff;border-radius:24rpx;padding:40rpx 30rpx;text-align:center;}
 .mtit{font-size:32rpx;font-weight:bold;color:#333;display:block;margin-bottom:16rpx;}
 .mname{font-size:27rpx;color:#666;display:block;margin-bottom:10rpx;}
-.mpr{font-size:40rpx;font-weight:bold;color:#e91e63;display:block;margin-bottom:8rpx;}
+.mpr{font-size:40rpx;font-weight:bold;color:#2d1b2e;display:block;margin-bottom:8rpx;}
 .mdesc{font-size:24rpx;color:#999;display:block;margin-bottom:28rpx;}
-.mbtn{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;padding:22rpx 0;border-radius:14rpx;font-size:29rpx;font-weight:600;}
+.mbtn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;padding:22rpx 0;border-radius:14rpx;font-size:29rpx;font-weight:600;}

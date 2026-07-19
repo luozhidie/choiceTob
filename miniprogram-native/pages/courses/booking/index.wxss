@@ -5,7 +5,7 @@
 .hero-bg{position:absolute;inset:0;width:100%;height:100%;opacity:.25;}
 .hero-mask{position:absolute;inset:0;background:radial-gradient(circle at 30% 30%,rgba(201,162,75,.15),transparent 50%);}
 .hero-body{position:relative;z-index:2;width:100%;text-align:center;}
-.tag{display:inline-block;background:#e91e63;color:#fff;font-size:22rpx;padding:6rpx 20rpx;border-radius:30rpx;margin-bottom:20rpx;}
+.tag{display:inline-block;background:#2d1b2e;color:#fff;font-size:22rpx;padding:6rpx 20rpx;border-radius:30rpx;margin-bottom:20rpx;}
 .h-title{display:block;color:#fff;font-size:46rpx;font-weight:bold;}
 .h-sub{display:block;color:#C9A24B;font-size:28rpx;margin-top:12rpx;}
 .h-price{display:block;color:#C9A24B;font-size:46rpx;font-weight:bold;margin-top:16rpx;}

@@ -17,7 +17,7 @@ page{background:#f5f3f0;}
 .gi-info{flex:1;display:flex;flex-direction:column;justify-content:space-between;}
 .gi-name{font-size:27rpx;color:#333;font-weight:500;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
 .gi-meta{display:flex;justify-content:space-between;align-items:baseline;}
-.gi-price{font-size:30rpx;color:#e91e63;font-weight:700;}
+.gi-price{font-size:30rpx;color:#2d1b2e;font-weight:700;}
 .gi-qty{font-size:24rpx;color:#999;}
 
 /* 备注 */
@@ -29,10 +29,10 @@ page{background:#f5f3f0;}
 .fee-sec{background:#fff;padding:20rpx 24rpx;margin-bottom:12rpx;}
 .fee-row{display:flex;justify-content:space-between;padding:10rpx 0;font-size:26rpx;color:#666;}
 .fee-total{border-top:1rpx solid #f0ece8;padding-top:16rpx;margin-top:8rpx;}
-.fee-num{font-size:34rpx;font-weight:800;color:#e91e63;}
+.fee-num{font-size:34rpx;font-weight:800;color:#2d1b2e;}
 
 /* 提交栏 */
 .submit-bar{position:fixed;bottom:0;left:0;width:100%;background:#fff;display:flex;align-items:center;padding:16rpx 24rpx;box-shadow:0 -2rpx 12rpx rgba(0,0,0,.06);padding-bottom:env(safe-area-inset-bottom);z-index:50;}
 .st-label{font-size:26rpx;color:#666;}
-.st-total{font-size:36rpx;font-weight:800;color:#e91e63;margin-right:16rpx;}
-.st-btn{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;padding:20rpx 80rpx;border-radius:40rpx;font-size:29rpx;font-weight:700;}
+.st-total{font-size:36rpx;font-weight:800;color:#2d1b2e;margin-right:16rpx;}
+.st-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;padding:20rpx 80rpx;border-radius:40rpx;font-size:29rpx;font-weight:700;}

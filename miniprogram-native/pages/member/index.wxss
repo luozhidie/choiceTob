@@ -19,7 +19,7 @@ page{background:#f5f3f0;}
 
 /* 功能区标题 */
 .sect-title{padding:28rpx 24rpx 16rpx;display:flex;align-items:center;gap:8rpx;}
-.st-icon{font-size:32rpx;color:#e91e63;}
+.st-icon{font-size:32rpx;color:#2d1b2e;}
 .sect-title text:nth-child(2){font-size:30rpx;font-weight:bold;color:#1a1a2e;}
 
 /* 卡片网格 */
@@ -38,13 +38,13 @@ page{background:#f5f3f0;}
 .ctag{position:absolute;top:14rpx;right:14rpx;font-size:19rpx;font-weight:700;padding:4rpx 14rpx;border-radius:12rpx;color:#fff;}
 .ctag-hot{background:#ff9800;}
 .ctag-ai{background:#2196f3;}
-.ctag-excl{background:#e91e63;}
+.ctag-excl{background:#2d1b2e;}
 .ctag-smart{background:#4caf50;}
 
 .cicon{width:60rpx;height:60rpx;border-radius:14rpx;display:flex;align-items:center;justify-content:center;font-size:26rpx;font-weight:bold;color:#fff;margin-bottom:12rpx;}
 .card-hot .cicon{background:linear-gradient(135deg,#ff9800,#f57c00);}
 .card-ai .cicon{background:linear-gradient(135deg,#2196f3,#1565c0);}
-.card-hot-item .cicon{background:linear-gradient(135deg,#e91e63,#c2185b);}
+.card-hot-item .cicon{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);}
 .card-marketing .cicon{background:linear-gradient(135deg,#4caf50,#388e3c);}
 
 .cname{font-size:28rpx;font-weight:700;color:#1a1a2e;display:block;margin-bottom:6rpx;}

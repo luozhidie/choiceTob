@@ -4,7 +4,7 @@ page{background:#f5f3f0;}
 .tabs{display:flex;background:#fff;padding:0 8rpx;border-bottom:1rpx solid #f0ece8;position:sticky;top:0;z-index:10;}
 .tab{flex:1;text-align:center;padding:20rpx 0;font-size:25rpx;color:#888;position:relative;}
 .tab-on{color:#1a1a2e;font-weight:700;}
-.tab-on::after{content:'';position:absolute;bottom:0;left:20%;width:60%;height:4rpx;background:#e91e63;border-radius:2rpx;}
+.tab-on::after{content:'';position:absolute;bottom:0;left:20%;width:60%;height:4rpx;background:#2d1b2e;border-radius:2rpx;}
 
 /* 列表 */
 .list{padding:12rpx 16rpx;}
@@ -13,20 +13,20 @@ page{background:#f5f3f0;}
 .card{background:#fff;border-radius:16rpx;margin-bottom:16rpx;overflow:hidden;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
 .card-header{display:flex;justify-content:space-between;align-items:center;padding:18rpx 20rpx;border-bottom:1rpx solid #f5f2ef;}
 .ch-no{font-size:23rpx;color:#888;}
-.ch-status{font-size:24rpx;font-weight:600;color:#e91e63;}
+.ch-status{font-size:24rpx;font-weight:600;color:#2d1b2e;}
 
 .card-body{display:flex;padding:16rpx 20rpx;align-items:center;}
 .cb-img{width:140rpx;height:140rpx;border-radius:12rpx;background:#eee;flex-shrink:0;margin-right:16rpx;}
 .cb-info{flex:1;}
 .cb-name{font-size:27rpx;font-weight:500;color:#333;display:block;margin-bottom:6rpx;}
-.cb-price{font-size:30rpx;color:#e91e63;font-weight:700;}
+.cb-price{font-size:30rpx;color:#2d1b2e;font-weight:700;}
 .cb-qty{font-size:22rpx;color:#999;margin-left:8rpx;}
 
 /* 操作按钮 */
 .card-actions{display:flex;justify-content:flex-end;gap:14rpx;padding:14rpx 20rpx;border-top:1rpx solid #f5f2ef;}
 .ca-btn{padding:12rpx 28rpx;border-radius:24rpx;font-size:24rpx;font-weight:500;}
 .ca-cancel{border:1rpx solid #ddd;color:#888;}
-.ca-pay{background:linear-gradient(135deg,#e91e63,#c2185b);color:#fff;}
+.ca-pay{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;}
 .ca-confirm{border:1rpx solid #4caf50;color:#4caf50;}
 .ca-refund{border:1rpx solid #ff9800;color:#ff9800;}
 

@@ -31,7 +31,7 @@
 .c-actions{display:flex;flex-direction:column;gap:10rpx;}
 .act-btn{font-size:22rpx;padding:8rpx 18rpx;border-radius:30rpx;border:none;margin:0;line-height:1;}
 .act-btn::after{border:none;}
-.act-btn.follow{background:#e91e63;color:#fff;}
+.act-btn.follow{background:#2d1b2e;color:#fff;}
 .act-btn.follow.on{background:#ddd;color:#666;}
 .act-btn.share{background:#4caf50;color:#fff;}
 

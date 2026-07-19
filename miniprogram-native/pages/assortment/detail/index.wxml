@@ -1,0 +1,79 @@
+<view class="page">
+  <!-- 加载 -->
+  <view wx:if="{{loading}}" class="loading">
+    <view class="sk"></view>
+    <view class="sk"></view>
+    <view class="sk"></view>
+    <view class="sk"></view>
+  </view>
+
+  <block wx:elif="{{plan}}">
+    <!-- 顶部横幅 -->
+    <view class="hero">
+      <image wx:if="{{plan.marketing.banner_image_url}}" src="{{plan.marketing.banner_image_url}}" mode="aspectFill" class="hero-img" lazy-load/>
+      <view wx:else class="hero-img hero-ph"></view>
+      <view class="hero-mask"></view>
+      <view class="hero-info">
+        <text class="hero-title">{{plan.marketing.headline || plan.title}}</text>
+        <text wx:if="{{plan.marketing.subheadline}}" class="hero-sub">{{plan.marketing.subheadline}}</text>
+      </view>
+    </view>
+
+    <!-- 进度概览 -->
+    <view class="overview">
+      <view class="ov-row">
+        <text class="ov-label">整体完成度</text>
+        <view class="ov-bar"><view class="ov-fill" style="width:{{overall}}%"></view></view>
+        <text class="ov-pct">{{overall}}%</text>
+      </view>
+      <text class="ov-count">已上传 {{totalUploaded}}/{{totalTarget}} 件</text>
+    </view>
+
+    <!-- 卖点 -->
+    <view class="points" wx:if="{{plan.marketing.selling_points.length>0}}">
+      <view class="point" wx:for="{{plan.marketing.selling_points}}" wx:key="*this">{{item}}</view>
+    </view>
+
+    <!-- 品类 tab -->
+    <view class="tabs" wx:if="{{categories.length>0}}">
+      <scroll-view scroll-x show-scrollbar="{{false}}" class="tab-scroll">
+        <view class="tab-row">
+          <view class="tab {{activeCat==='全部'?'tab-on':''}}" bindtap="swCat" data-c="全部">全部</view>
+          <view class="tab {{activeCat===item.category?'tab-on':''}}" wx:for="{{items}}" wx:key="category"
+            bindtap="swCat" data-c="{{item.category}}">
+            {{item.category}}
+            <text class="tab-badge">{{item.uploaded}}/{{item.target_sku}}</text>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
+    <!-- 商品网格 -->
+    <view class="grid" wx:if="{{products.length>0}}">
+      <view class="card" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+        <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="ci" lazy-load/>
+        <view wx:else class="ci ci-ph">暂无图</view>
+        <view class="cnf">
+          <text class="cn">{{item.name||item.title||'商品'}}</text>
+          <text class="cpri">{{item.priceText}}</text>
+          <text wx:if="{{item.wholesaleText}}" class="cwp">{{item.wholesaleText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 空 -->
+    <view wx:else class="empty">
+      <text class="ei">📦</text>
+      <text class="et">该品类暂无商品</text>
+      <view class="eb" bindtap="goBuyer">去选品页逛逛 →</view>
+    </view>
+
+    <view class="sb"></view>
+  </block>
+
+  <!-- 无数据 -->
+  <view wx:else class="empty">
+    <text class="ei">🔍</text>
+    <text class="et">系列不存在或已下架</text>
+  </view>
+</view>

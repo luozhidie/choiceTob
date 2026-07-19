@@ -17,6 +17,7 @@ Page({
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
+    series:[],           // 当季系列（组货方案发布的营销活动）
   },
 
   onLoad:function(){
@@ -35,6 +36,7 @@ Page({
     this.loadP();
     this.loadCategories();  // 从后台读取分类标签
     this.loadBlocks();
+    this.loadSeries();      // 当季系列（组货方案）
     this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
@@ -149,6 +151,12 @@ Page({
     if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});
   },
 
+  /* 当季系列 → 组货专题详情 */
+  goSeries:function(e){
+    var id=e.currentTarget.dataset.id;
+    if(id)wx.navigateTo({url:'/pages/assortment/detail/index?id='+id});
+  },
+
   goShelf:function(e){
     var id=e.currentTarget.dataset.id;
     if(id)wx.navigateTo({url:'/pages/shelf/index?id='+id});
@@ -192,6 +200,21 @@ Page({
       success:function(r){
         var d=r.data;
         if(Array.isArray(d)&&d.length>0)t.setData({banners:d});
+      },
+    });
+  },
+
+  /* ====== 当季系列（组货方案发布的营销活动）====== */
+  loadSeries:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/promotions?type=series&limit=10',
+      method:'GET',
+      success:function(r){
+        var l=[];
+        if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
+        else if(Array.isArray(r.data))l=r.data;
+        t.setData({series:l});
       },
     });
   },

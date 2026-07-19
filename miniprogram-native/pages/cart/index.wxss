@@ -10,7 +10,7 @@ page { background: #f5f2ef; }
 /* 头部 */
 .cart-header { display: flex; justify-content: space-between; align-items: center; padding: 28rpx 28rpx 16rpx; }
 .cart-title { font-size: 34rpx; font-weight: 700; color: #1a1a2e; }
-.cart-clear { font-size: 25rpx; color: #e91e63; padding: 8rpx 16rpx; }
+.cart-clear { font-size: 25rpx; color: #2d1b2e; padding: 8rpx 16rpx; }
 
 /* 列表 */
 .cart-list { padding: 0 24rpx; }
@@ -54,7 +54,7 @@ page { background: #f5f2ef; }
 /* 信息 */
 .item-info { flex: 1; min-width: 0; overflow: hidden; }
 .item-name { font-size: 26rpx; color: #333; font-weight: 500; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.35; }
-.item-price { font-size: 30rpx; color: #e91e63; font-weight: 800; display: block; margin-top: 10rpx; }
+.item-price { font-size: 30rpx; color: #2d1b2e; font-weight: 800; display: block; margin-top: 10rpx; }
 
 /* 数量控制 */
 .qty-control { display: flex; align-items: center; gap: 6rpx; margin-top: 14rpx; }
@@ -106,7 +106,7 @@ page { background: #f5f2ef; }
 
 .total-area { flex: 1; text-align: right; margin-right: 24rpx; }
 .total-label { font-size: 26rpx; color: #666; }
-.total-price { font-size: 36rpx; color: #e91e63; font-weight: 900; }
+.total-price { font-size: 36rpx; color: #2d1b2e; font-weight: 900; }
 
 .checkout-btn {
   background: linear-gradient(to right,#ec4899,#ef4444);

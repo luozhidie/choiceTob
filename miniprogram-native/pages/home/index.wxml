@@ -237,6 +237,30 @@
 
   </template>
 
+  <!-- ========== 当季系列（组货方案） ========== -->
+  <view class="series-sec" wx:if="{{series.length>0}}">
+    <view class="ss-head">
+      <view class="ss-t">
+        <text class="ss-bar"></text>
+        <text class="ss-title">当季系列</text>
+        <text class="ss-sub">AI 组货 · 一键照单拿货</text>
+      </view>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="series-scroll">
+      <view class="series-row">
+        <view class="series-card" wx:for="{{series}}" wx:key="id" bindtap="goSeries" data-id="{{item.id}}">
+          <image wx:if="{{item.banner_image_url}}" src="{{item.banner_image_url}}" mode="aspectFill" class="series-img" lazy-load/>
+          <view wx:else class="series-img series-ph">系列</view>
+          <view class="series-mask"></view>
+          <view class="series-info">
+            <text class="series-name">{{item.title}}</text>
+            <text class="series-desc" wx:if="{{item.description}}">{{item.description}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- ========== 商品区 ========== -->
   <view class="sec">
     <view class="sh">
