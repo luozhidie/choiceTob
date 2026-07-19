@@ -179,13 +179,22 @@ export async function POST(request: NextRequest) {
         title: marketing.headline,
         description: marketing.subheadline,
         promo_type: "series",
+        discount_rate: null,
+        start_date: new Date().toISOString(),
         banner_image_url: marketing.banner_image_url,
         link_url: `/assortment/${id}`,
         status: "active",
         sort_order: 0,
         end_date: endDate,
       }).select().single();
-      if (promoErr) console.error("[publish] promotions insert error:", promoErr);
+      // 不再静默吞掉：创建系列促销失败必须明确报错，
+      // 避免方案被误判为「已发布」却无当季系列入口。
+      if (promoErr) {
+        return NextResponse.json(
+          { error: "创建系列促销活动失败：" + promoErr.message, code: "PROMO_INSERT_FAILED", detail: promoErr },
+          { status: 500 }
+        );
+      }
       if (promo) promoId = promo.id;
     }
 

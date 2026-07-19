@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Sparkles, Save, UploadCloud, Layers, Package, TrendingUp, CheckCircle2,
-  ChevronDown, ExternalLink, Trash2,
+  ChevronDown, ExternalLink, Trash2, Wrench,
 } from "lucide-react";
 
 interface DraftCat {
@@ -134,6 +134,7 @@ export default function AssortmentAdmin() {
   const [progress, setProgress] = useState<any>(null);
   const [loadingProgress, setLoadingProgress] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [repairing, setRepairing] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
 
   const flash = (type: "ok" | "err", text: string) => {
@@ -281,6 +282,28 @@ export default function AssortmentAdmin() {
     }
   };
 
+  const onRepairSeries = async () => {
+    if (!confirm("为所有「已发布但缺少系列促销」的组货方案补建「当季系列」入口（首页/小程序可见）。继续？")) return;
+    setRepairing(true);
+    try {
+      const res = await fetch("/api/admin/assortment/repair-series", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+      const j = await res.json();
+      if (!j.success) {
+        flash("err", "修复失败：" + (j.error || ""));
+        return;
+      }
+      flash("ok", `已修复 ${j.repaired} 个方案的当季系列入口` + (j.errors?.length ? `（${j.errors.length} 个失败）` : ""));
+    } catch (e: any) {
+      flash("err", "修复异常：" + e.message);
+    } finally {
+      setRepairing(false);
+    }
+  };
+
   const openProgress = (id: string) => {
     if (progressOpen === id) { setProgressOpen(null); setProgress(null); return; }
     setProgressOpen(id);
@@ -378,7 +401,17 @@ export default function AssortmentAdmin() {
 
       {/* 已发布方案 & 进度 */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
-        <h2 className="font-semibold text-gray-800 mb-3 flex items-center gap-2"><Package className="w-4 h-4 text-primary" /> 组货方案（{plans.length}）</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-semibold text-gray-800 flex items-center gap-2"><Package className="w-4 h-4 text-primary" /> 组货方案（{plans.length}）</h2>
+          <button
+            onClick={onRepairSeries}
+            disabled={repairing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 disabled:opacity-50"
+            title="为已发布但缺少系列促销的方案补建当季系列入口"
+          >
+            <Wrench className="w-3.5 h-3.5" /> {repairing ? "修复中…" : "修复当季系列入口"}
+          </button>
+        </div>
         {plans.length === 0 ? (
           <div className="text-center py-8 text-gray-400 text-sm">暂无方案，先用上方 AI 生成并写入商城</div>
         ) : (
