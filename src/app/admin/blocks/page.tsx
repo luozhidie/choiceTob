@@ -31,6 +31,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import ImeInput from "@/components/ImeInput";
 
 interface Block {
   id: string;
@@ -749,10 +750,10 @@ export default function BlocksAdminPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       版块名称（选填）
                     </label>
-                    <input
+                    <ImeInput
                       type="text"
                       value={form.title}
-                      onChange={(e) => setForm({ ...form, title: e.target.value })}
+                      onChange={(val) => setForm({ ...form, title: val })}
                       placeholder="如：爆款选品、团购拼单..."
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                     />
@@ -764,10 +765,10 @@ export default function BlocksAdminPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         板块大标题（可选）
                       </label>
-                      <input
+                      <ImeInput
                         type="text"
                         value={form.section_title}
-                        onChange={(e) => setForm({ ...form, section_title: e.target.value })}
+                        onChange={(val) => setForm({ ...form, section_title: val })}
                         placeholder="如：今日特惠"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                       />
@@ -776,10 +777,10 @@ export default function BlocksAdminPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         板块小标题（可选）
                       </label>
-                      <input
+                      <ImeInput
                         type="text"
                         value={form.section_subtitle}
-                        onChange={(e) => setForm({ ...form, section_subtitle: e.target.value })}
+                        onChange={(val) => setForm({ ...form, section_subtitle: val })}
                         placeholder="如：限时限量，先到先得"
                         className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                       />
@@ -1688,9 +1689,9 @@ export default function BlocksAdminPage() {
                             ))}
                           </select>
                         </div>
-                        <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="模块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
-                        <input type="text" value={(form.content as any)?.subtitle || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: e.target.value } as any })} placeholder="副标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
-                        <input type="text" value={(form.content as any)?.badge || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), badge: e.target.value } as any })} placeholder="徽章/标签（如：AI 组货）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={form.title} onChange={(val) => setForm({ ...form, title: val })} placeholder="模块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={(form.content as any)?.subtitle || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: val } as any })} placeholder="副标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={(form.content as any)?.badge || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), badge: val } as any })} placeholder="徽章/标签（如：AI 组货）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                         <BlockImageUpload
                           value={(form.content as any)?.image || ""}
                           onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}

@@ -6,6 +6,7 @@ import {
   Loader2, Megaphone, Save, Trash2, Edit3, Plus,
   ArrowRight, Image as ImageIcon, Link, Tag,
 } from "lucide-react";
+import ImeInput from "@/components/ImeInput";
 
 /* ========== 类型定义 ========== */
 interface Promotion {
@@ -307,9 +308,9 @@ export default function AdminPromotionsPage() {
               {/* 标题 */}
               <div>
                 <label className="block text-xs text-gray-500 mb-1">活动标题 *</label>
-                <input
+                <ImeInput
                   type="text" value={form.title || ""}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  onChange={val => setForm(f => ({ ...f, title: val }))}
                   placeholder="如：夏季清仓特惠"
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
                 />
@@ -318,9 +319,9 @@ export default function AdminPromotionsPage() {
               {/* 描述 */}
               <div>
                 <label className="block text-xs text-gray-500 mb-1">活动描述</label>
-                <input
+                <ImeInput
                   type="text" value={form.description || ""}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  onChange={val => setForm(f => ({ ...f, description: val }))}
                   placeholder="如：全场2.8折起"
                   className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none"
                 />

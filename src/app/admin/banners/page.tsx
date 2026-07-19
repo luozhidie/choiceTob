@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Plus, Trash2, ArrowUp, ArrowDown, Eye, EyeOff, Image as ImageIcon, Upload } from "lucide-react";
 import { motion } from "framer-motion";
+import ImeInput from "@/components/ImeInput";
 
 interface Banner {
   id: string;
@@ -325,10 +326,10 @@ export default function BannersAdminPage() {
                       {/* 标题 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">标题（选填）</label>
-                        <input
+                        <ImeInput
                           type="text"
                           value={banner.title || ""}
-                          onChange={(e) => updateBanner(banner.id, { title: e.target.value })}
+                          onChange={(val) => updateBanner(banner.id, { title: val })}
                           placeholder="例如：爆款选品"
                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                         />
@@ -337,10 +338,10 @@ export default function BannersAdminPage() {
                       {/* 副标题 */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">副标题（选填）</label>
-                        <input
+                        <ImeInput
                           type="text"
                           value={banner.subtitle || ""}
-                          onChange={(e) => updateBanner(banner.id, { subtitle: e.target.value })}
+                          onChange={(val) => updateBanner(banner.id, { subtitle: val })}
                           placeholder="例如：拿货精选"
                           className="w-full px-4 py-2.5 border border-gray-200 rounded-xl focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
                         />

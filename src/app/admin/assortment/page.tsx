@@ -6,6 +6,7 @@ import {
   Sparkles, Save, UploadCloud, Layers, Package, TrendingUp, CheckCircle2,
   ChevronDown, ExternalLink, Trash2, Wrench,
 } from "lucide-react";
+import ImeInput from "@/components/ImeInput";
 
 interface DraftCat {
   category: string;
@@ -356,8 +357,8 @@ export default function AssortmentAdmin() {
             <h2 className="font-semibold text-gray-800">组货架构预览（可改）</h2>
             <span className="text-xs text-gray-400">共 {draft.categories.length} 品类 · 目标 {draft.categories.reduce((s, c) => s + (c.target_sku || 0), 0)} SKU</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-            <div className="col-span-2 md:col-span-2"><label className="block text-xs text-gray-500 mb-1">方案标题</label><input value={draft.title} onChange={(e) => setDraft({ ...draft, title: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="col-span-2 md:col-span-2"><label className="block text-xs text-gray-500 mb-1">方案标题</label><ImeInput value={draft.title} onChange={(val) => setDraft({ ...draft, title: val })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
             <div><label className="block text-xs text-gray-500 mb-1">季节</label><input value={draft.season} onChange={(e) => setDraft({ ...draft, season: e.target.value })} className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm" /></div>
             <div className="flex items-end"><button onClick={() => setDraft(emptyDraft())} className="px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50">清空</button></div>
           </div>
