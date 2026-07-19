@@ -1,0 +1,85 @@
+<view class="sc-page">
+  <!-- 步骤1：选图 -->
+  <view class="sc-card">
+    <view class="sc-card-title">① 选商品图（转发/相册里的供应商图，最多9张）</view>
+    <view class="sc-imgs">
+      <view class="sc-img" wx:for="{{images}}" wx:key="*this" wx:for-item="src">
+        <image src="{{src}}" mode="aspectFill" bindtap="previewImg" data-src="{{src}}"/>
+        <view class="sc-img-del" catchtap="removeImage" data-i="{{index}}">×</view>
+      </view>
+      <view class="sc-img sc-add" bindtap="chooseImages" wx:if="{{images.length<9}}">＋</view>
+    </view>
+    <textarea class="sc-note" placeholder="可选：粘贴供应商报价文字（如：棉麻连衣裙 批发68 零售139 均码 杏色）" value="{{note}}" bindinput="onNote"/>
+  </view>
+
+  <!-- 步骤2：识别 -->
+  <button class="sc-btn sc-btn-primary" loading="{{extracting}}" bindtap="extract">
+    {{extracting ? 'AI 识别中…' : 'AI 一键识别参数'}}
+  </button>
+
+  <!-- 步骤3：核对 -->
+  <view class="sc-card" wx:if="{{product}}">
+    <view class="sc-card-title">② 核对并修改（确认即上架）</view>
+
+    <view class="sc-field">
+      <text class="sc-label">标题</text>
+      <input class="sc-input" value="{{product.title}}" data-field="title" bindinput="onField" placeholder="商品标题"/>
+    </view>
+    <view class="sc-field">
+      <text class="sc-label">品类</text>
+      <picker mode="selector" range="{{categoryOptions}}" bindchange="onCategory">
+        <view class="sc-input sc-picker">{{product.category || '选择品类'}}</view>
+      </picker>
+    </view>
+    <view class="sc-row">
+      <view class="sc-field sc-half">
+        <text class="sc-label">零售价(元)</text>
+        <input class="sc-input" type="digit" value="{{product.price}}" data-field="price" bindinput="onField"/>
+      </view>
+      <view class="sc-field sc-half">
+        <text class="sc-label">批发价(元)</text>
+        <input class="sc-input" type="digit" value="{{product.wholesale_price}}" data-field="wholesale_price" bindinput="onField"/>
+      </view>
+    </view>
+    <view class="sc-row">
+      <view class="sc-field sc-half">
+        <text class="sc-label">尺码</text>
+        <input class="sc-input" value="{{product.sizes}}" data-field="sizes" bindinput="onField" placeholder="S,M,L 或 均码"/>
+      </view>
+      <view class="sc-field sc-half">
+        <text class="sc-label">颜色</text>
+        <input class="sc-input" value="{{product.color}}" data-field="color" bindinput="onField" placeholder="黑,白,杏"/>
+      </view>
+    </view>
+    <view class="sc-row">
+      <view class="sc-field sc-half">
+        <text class="sc-label">材质</text>
+        <input class="sc-input" value="{{product.material}}" data-field="material" bindinput="onField" placeholder="棉/涤纶"/>
+      </view>
+      <view class="sc-field sc-half">
+        <text class="sc-label">季节</text>
+        <picker mode="selector" range="{{seasonOptions}}" bindchange="onSeason">
+          <view class="sc-input sc-picker">{{product.season || '选择季节'}}</view>
+        </picker>
+      </view>
+    </view>
+    <view class="sc-field">
+      <text class="sc-label">卖点</text>
+      <input class="sc-input" value="{{product.description}}" data-field="description" bindinput="onField" placeholder="一句话卖点"/>
+    </view>
+
+    <view class="sc-imgs" wx:if="{{uploadedUrls.length}}">
+      <image wx:for="{{uploadedUrls}}" wx:key="*this" wx:for-item="u" src="{{u}}" mode="aspectFill" class="sc-thumb"/>
+    </view>
+
+    <view class="sc-actions">
+      <button class="sc-btn sc-btn-ghost" loading="{{saving}}" bindtap="save" data-publish="0">存草稿</button>
+      <button class="sc-btn sc-btn-primary" loading="{{saving}}" bindtap="save" data-publish="1">直接上架</button>
+    </view>
+  </view>
+
+  <view class="sc-tip">原理：选图/转发供应商图 → AI 自动识别标题、品类、价格、尺码、材质 → 你只核对确认。</view>
+</view>
+
+<!-- toast -->
+<view wx:if="{{toastText}}" class="sc-toast">{{toastText}}</view>

@@ -18,6 +18,11 @@ Page({
     }
   },
 
+  // 跳转到智能建商品
+  goSmartCreate: function () {
+    wx.navigateTo({ url: '/pages/smart-create/index' });
+  },
+
   // 切换模式
   switchMode: function (e) {
     this.setData({ mode: e.currentTarget.dataset.mode, inputText: '', results: [] });

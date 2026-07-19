@@ -4,6 +4,13 @@ page {
   min-height: 100vh;
 }
 
+/* 智能建商品入口 */
+.smart-entry{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#2d1b2e,#6b3f70);border-radius:16rpx;padding:24rpx;margin-bottom:20rpx;box-shadow:0 4rpx 14rpx rgba(45,27,46,0.2);}
+.se-left{display:flex;flex-direction:column;}
+.se-title{font-size:30rpx;font-weight:bold;color:#fff;}
+.se-sub{font-size:21rpx;color:rgba(255,255,255,0.82);margin-top:6rpx;}
+.se-arrow{color:#fff;font-size:40rpx;font-weight:bold;}
+
 /* Tab */
 .tabs {
   display: flex;

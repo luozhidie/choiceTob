@@ -1,4 +1,13 @@
 <view class="page">
+  <!-- 智能建商品入口（拍照/转发识图，AI 自动填参数） -->
+  <view class="smart-entry" bindtap="goSmartCreate">
+    <view class="se-left">
+      <text class="se-title">🤖 智能建商品</text>
+      <text class="se-sub">选图/转发供应商图 → AI 自动识别标题·价格·尺码·材质</text>
+    </view>
+    <view class="se-arrow">→</view>
+  </view>
+
   <!-- 顶部 Tab -->
   <view class="tabs">
     <view class="tab {{mode==='url'?'tab-on':''}}" data-mode="url" bindtap="switchMode">单链接</view>

@@ -38,6 +38,7 @@
     "pages/coupons/index",
     "pages/red-packets/index",
     "pages/import/index",
+    "pages/smart-create/index",
     "pages/album-grab/index",
     "pages/certify/index",
     "pages/email-login/index",
