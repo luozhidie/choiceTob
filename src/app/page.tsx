@@ -1069,7 +1069,14 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {seriesPromos.map((p) => (
               <Link key={p.id} href={p.link_url || "/assortment"} className="group relative rounded-2xl overflow-hidden h-40 md:h-48 block">
-                <img src={p.banner_image_url || "https://image.pollinations.ai/prompt/fashion%20series%20banner?width=800&height=400&nologo=true&seed=1"} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
+                <img
+                  src={p.banner_image_url || "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format"}
+                  alt={p.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format";
+                  }}
+                />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-4 text-white">
                   <h3 className="font-bold text-base mb-0.5">{p.title}</h3>

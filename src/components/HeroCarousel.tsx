@@ -160,6 +160,11 @@ export default function HeroCarousel() {
               index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
             style={{ backgroundImage: `url('${banner.image_url}')`, backgroundColor: '#1a1a2e' }}
+            onError={(e) => {
+              // 图片加载失败时显示品牌渐变背景，避免黑屏
+              (e.target as HTMLDivElement).style.backgroundImage =
+                "linear-gradient(135deg, #2d1b2e 0%, #4a3a4b 100%)";
+            }}
           />
         ))}
         

@@ -88,7 +88,9 @@ function buildImageKeywords(report: any) {
 }
 
 function buildPollinationsUrl(prompt: string) {
-  return `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=400&nologo=true&seed=1`;
+  // 用可靠静态图替换 pollinations.ai（生成图域名常被拦截，导致黑屏）
+  // prompt 仅保留用于 banner alt/描述，不直接用于图片生成
+  return `https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format`;
 }
 
 export async function POST(request: NextRequest) {
