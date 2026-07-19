@@ -90,6 +90,14 @@ const CATEGORY_LABELS: Record<string, string> = {
   art: "艺术",
 };
 
+// 与首页 safeSeriesBanner / AssortmentCard 一致：近黑内嵌渐变、pollinations 生成图视为不可靠，选方案时不自动填入封面
+function isUnreliablePlanImage(u?: string | null): boolean {
+  if (!u || u.trim() === "") return true;
+  if (u.startsWith("data:image/svg")) return true;
+  if (u.includes("pollinations.ai")) return true;
+  return false;
+}
+
 const DEFAULT_STYLES = {
   bgColor: "#ffffff",
   textColor: "#333333",
@@ -1667,7 +1675,7 @@ export default function BlocksAdminPage() {
                                 content: {
                                   ...(form.content as object || {}),
                                   planId,
-                                  image: (form.content as any)?.image || m.banner_image_url || "",
+                                  image: (form.content as any)?.image || (isUnreliablePlanImage(m.banner_image_url) ? "" : m.banner_image_url) || "",
                                   subtitle: (form.content as any)?.subtitle || m.subheadline || "",
                                 },
                               });

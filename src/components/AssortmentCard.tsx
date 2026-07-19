@@ -6,9 +6,18 @@ interface AssortmentBlockProps {
   block: any;
 }
 
+// 与首页 safeSeriesBanner 一致：近黑内嵌渐变 / pollinations 生成图一律视为不可靠，走品牌粉兜底
+function isSafeImage(u?: string | null): boolean {
+  if (!u || u.trim() === "") return false;
+  if (u.startsWith("data:image/svg")) return false;
+  if (u.includes("pollinations.ai")) return false;
+  return true;
+}
+
 export default function AssortmentCard({ block }: AssortmentBlockProps) {
   const content = block?.content || {};
   const image = content.image || "";
+  const safeImage = isSafeImage(image) ? image : "";
   const badge = content.badge || "";
   const subtitle = block?.section_subtitle || content.subtitle || "";
   const planId = content.planId || "";
@@ -24,9 +33,9 @@ export default function AssortmentCard({ block }: AssortmentBlockProps) {
         className="group block relative w-full rounded-3xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow"
       >
         <div className="aspect-[16/9] md:aspect-[2.5/1] relative bg-gradient-to-br from-[#6b3f70] via-[#a86fa0] to-[#d9a7c7]">
-          {image ? (
+          {safeImage ? (
             <img
-              src={image}
+              src={safeImage}
               alt={block.title}
               className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
               onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
