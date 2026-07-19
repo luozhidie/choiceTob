@@ -40,10 +40,7 @@ page{background:#faf8f6;}
 .skl1{height:22rpx;background:#f0ece8;margin:10rpx 14rpx 6rpx;width:70%;}
 .skl2{height:22rpx;background:#f0ece8;margin:0 14rpx;width:40%;}
 
-/* 空/底部 */
-.emp{text-align:center;padding:120rpx 0;}
-.ei{font-size:80rpx;display:block;color:#ddd;}
-.et{font-size:27rpx;color:#ccc;display:block;margin-top:12rpx;}
+/* 空/底部（空状态改用全局 .empty，旧 .emp 已弃用） */
 .more,.nomore{text-align:center;padding:28rpx 0;font-size:24rpx;color:#bbb;}
 .sb{height:30rpx;}
 

@@ -44,8 +44,9 @@
   <!-- 非加载状态 -->
   <block wx:else>
     <!-- 空 -->
-    <view class="emp" wx:if="{{!loading && products.length===0}}">
-      <text class="ei">📦</text><text class="et">暂无商品</text>
+    <view class="empty" wx:if="{{!loading && products.length===0}}">
+      <text class="ei">📦</text><text class="et">该分类暂无商品</text>
+      <view class="eb" bindtap="goHome">去首页逛逛 →</view>
     </view>
 
     <!-- 商品列表 -->

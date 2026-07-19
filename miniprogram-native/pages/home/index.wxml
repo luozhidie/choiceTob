@@ -255,9 +255,9 @@
     <!-- 非加载状态 -->
     <view wx:else>
       <!-- 空 -->
-      <view wx:if="{{products.length===0}}" class="emp">
+      <view wx:if="{{products.length===0}}" class="empty">
         <text class="ei">📦</text>
-        <text class="et">暂无选品</text>
+        <text class="et">该分类暂无选品</text>
         <view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
       </view>
 

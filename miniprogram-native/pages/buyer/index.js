@@ -122,6 +122,8 @@ Page({
 
   goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
 
+  goHome:function(){wx.switchTab({url:'/pages/home/index'});},
+
   addToCart:function(e){
     var p=e.currentTarget.dataset.product;
     if(!p)return;

@@ -1,0 +1,107 @@
+/* ============================================================
+   全局设计令牌 (Design Tokens)
+   统一品牌色 / 间距 / 圆角 / 阴影 / 文字色
+   各页面通过 var(--xxx) 引用，保证全站视觉一致
+   ============================================================ */
+page {
+  /* 品牌色 */
+  --brand: #2d1b2e;          /* 主品牌深紫 */
+  --brand-soft: #4a3a4b;
+  --accent: #e91e63;         /* 强调粉（价格/主按钮） */
+  --accent-2: #c2185b;
+  --warm: #ff7a3d;           /* 暖橙（辅助 CTA） */
+  /* 中性色 */
+  --bg: #faf8f6;             /* 页面底色 */
+  --surface: #ffffff;        /* 卡片底 */
+  --line: #f0ece8;           /* 分割线 */
+  --text: #1a1a2e;           /* 主文字 */
+  --text-2: #666;            /* 次文字 */
+  --text-3: #999;            /* 弱文字 */
+  --text-4: #ccc;            /* 最弱 */
+  /* 间距 */
+  --sp-xs: 8rpx;
+  --sp-sm: 16rpx;
+  --sp-md: 24rpx;
+  --sp-lg: 32rpx;
+  /* 圆角 */
+  --r-sm: 12rpx;
+  --r-md: 18rpx;
+  --r-lg: 28rpx;
+  --r-pill: 999rpx;
+  /* 阴影 */
+  --sh-1: 0 2rpx 10rpx rgba(0,0,0,.04);
+  --sh-2: 0 6rpx 22rpx rgba(0,0,0,.06);
+  --sh-3: 0 8rpx 30rpx rgba(45,27,46,.12);
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;
+  font-size: 28rpx;
+  line-height: 1.5;
+}
+
+/* ===== 共享：卡片 ===== */
+.card {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  box-shadow: var(--sh-1);
+}
+
+/* ===== 共享：主按钮 ===== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  text-align: center;
+}
+
+/* ===== 共享：空状态 ===== */
+.empty {
+  text-align: center;
+  padding: 100rpx 0;
+}
+.empty .ei {
+  font-size: 84rpx;
+  display: block;
+  filter: grayscale(1);
+  opacity: .25;
+  margin-bottom: 14rpx;
+}
+.empty .et {
+  font-size: 28rpx;
+  color: var(--text-4);
+  display: block;
+  margin-bottom: 28rpx;
+}
+.empty .eb {
+  display: inline-block;
+  padding: 20rpx 44rpx;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-size: 26rpx;
+  font-weight: 700;
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-2);
+}
+
+/* ===== 共享：骨架屏 ===== */
+.sk {
+  background: var(--surface);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.sk-img { width: 100%; background: #f0ece8; }
+.sk-l1 { height: 22rpx; background: #f0ece8; border-radius: 8rpx; }
+.sk-l2 { height: 20rpx; background: #f0ece8; border-radius: 8rpx; }
+@keyframes sk-pulse { 0% { opacity: 1 } 50% { opacity: .4 } 100% { opacity: 1 } }
+.sk-img, .sk-l1, .sk-l2 { animation: sk-pulse 1.5s infinite; }
+
+/* ===== 共享：分区标题 ===== */
+.sec-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--text);
+}
+.sec-sub { font-size: 23rpx; color: var(--text-4); }
