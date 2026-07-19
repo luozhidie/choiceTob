@@ -16,7 +16,15 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ service
   const origin = ORIGINS[service];
   if (!origin) return new NextResponse("unknown service", { status: 404 });
 
-  const sub = (path || []).join("/");
+  // tryon 页面挂在 /tryon，其前端用相对路径 "api/virtual-tryon" 发起请求，
+  // 被浏览器解析成 /tryon/api/virtual-tryon（多一层 tryon 前缀），打不到上游
+  // 真实的 /api/virtual-tryon 路由（404）。这里精准去掉首段 tryon 以对齐路由。
+  let pathArr = path || [];
+  if (service === "tryon" && pathArr[0] === "tryon" && pathArr[1] === "api") {
+    pathArr = pathArr.slice(1);
+  }
+
+  const sub = pathArr.join("/");
   const target = origin + (sub ? "/" + sub : "") + (req.nextUrl.search || "");
 
   const upstreamRes = await fetch(target, {
