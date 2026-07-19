@@ -28,6 +28,7 @@ import {
   ImageIcon,
   Image,
   ListFilter,
+  Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -35,7 +36,7 @@ interface Block {
   id: string;
   title: string;
   type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner"
-    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf";
+    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf" | "assortment";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -67,6 +68,7 @@ const BLOCK_TYPES = [
   { value: "category_nav", label: "分类目录", icon: ListFilter, description: "横向标签导航栏（全部、十三行、24h发货等）" },
   { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
   { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
+  { value: "assortment", label: "当季系列", icon: Sparkles, description: "大图+3小图，跳转组货方案" },
 ];
 
 // 商品分类 slug → 中文标签（下拉展示用，value 仍为库内 slug）
@@ -320,6 +322,8 @@ export default function BlocksAdminPage() {
   const [saving, setSaving] = useState(false);
   // 真实商品分类（数据库 slug），用于货架分类下拉，避免中文标签与库内 slug 不匹配导致货架为空
   const [productCategories, setProductCategories] = useState<string[]>([]);
+  // 已发布组货方案，用于「当季系列」模块选择方案
+  const [assortmentPlans, setAssortmentPlans] = useState<any[]>([]);
 
   // 表单状态
   const [form, setForm] = useState({
@@ -403,6 +407,18 @@ export default function BlocksAdminPage() {
             new Set(json.data.map((p: any) => p.category).filter(Boolean))
           ) as string[];
           setProductCategories(cats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 加载已发布组货方案，用于「当季系列」模块选择方案
+  useEffect(() => {
+    fetch("/api/public/assortment")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setAssortmentPlans(json.data);
         }
       })
       .catch(() => {});
@@ -1631,6 +1647,55 @@ export default function BlocksAdminPage() {
                             onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
                           />
                           <p className="text-[10px] text-gray-400 mt-1">选择参与预售的商品</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {form.type === "assortment" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">选择组货方案</label>
+                          <select
+                            value={(form.content as any)?.planId || ""}
+                            onChange={(e) => {
+                              const planId = e.target.value;
+                              const plan = assortmentPlans.find((p) => p.id === planId);
+                              const m = plan?.marketing || {};
+                              setForm({
+                                ...form,
+                                title: form.title || m.headline || plan?.title || "当季系列",
+                                content: {
+                                  ...(form.content as object || {}),
+                                  planId,
+                                  image: (form.content as any)?.image || m.banner_image_url || "",
+                                  subtitle: (form.content as any)?.subtitle || m.subheadline || "",
+                                },
+                              });
+                            }}
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:border-primary outline-none bg-white"
+                          >
+                            <option value="">请选择已发布的组货方案</option>
+                            {assortmentPlans.map((p) => (
+                              <option key={p.id} value={p.id}>{p.title}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <input type="text" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="模块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <input type="text" value={(form.content as any)?.subtitle || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: e.target.value } as any })} placeholder="副标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <input type="text" value={(form.content as any)?.badge || ""} onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), badge: e.target.value } as any })} placeholder="徽章/标签（如：AI 组货）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <BlockImageUpload
+                          value={(form.content as any)?.image || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), image: url } as any })}
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          {[1, 2, 3].map((i) => (
+                            <div key={i}>
+                              <BlockImageUpload
+                                value={(form.content as any)?.[`subImage${i}`] || ""}
+                                onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), [`subImage${i}`]: url } as any })}
+                              />
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}

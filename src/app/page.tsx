@@ -10,6 +10,7 @@ import TabBar from "@/components/TabBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import ProductBlock from "@/components/ProductBlock";
 import ShelfCard from "@/components/ShelfCard";
+import AssortmentCard from "@/components/AssortmentCard";
 
 /* ------------------------------------------------------------------ */
 /*  Block 接口                                                        */
@@ -17,7 +18,7 @@ import ShelfCard from "@/components/ShelfCard";
 interface Block {
   id: string;
   title: string;
-  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "pre_sale" | "shelf";
+  type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "pre_sale" | "shelf" | "assortment";
   content?: Record<string, any>;
   style?: { bgColor?: string; textColor?: string; padding?: number; borderRadius?: number };
   section_title?: string | null;
@@ -899,8 +900,8 @@ export default function Home() {
           </div>
         )}
 
-        {/* ===== shelf 货架入口（大图 + 3 小图预览） ===== */}
-        {block.type === "shelf" && <ShelfCard block={block} />}
+        {/* ===== 当季系列/组货方案（大图+3小图） ===== */}
+        {block.type === "assortment" && <AssortmentCard block={block} />}
       </section>
     );
   };
@@ -1071,7 +1072,8 @@ export default function Home() {
       {/* ===== 轮播图下方版块 ===== */}
       {blocksByPosition("hero_bottom").map(renderBlock)}
 
-      {/* ===== 当季系列/限时专题 ===== */}
+      {/* ===== 当季系列/限时专题（未添加「当季系列」模块时兜底） ===== */}
+      {!blocks.some((b) => b.type === "assortment") && (
       <section className="max-w-7xl mx-auto px-4 py-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-gray-900">当季系列</h2>
@@ -1086,7 +1088,7 @@ export default function Home() {
                   alt={p.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition"
                   onError={(e) => {
-                    const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"600\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#6b3f70\"/><stop offset=\"55%\" style=\"stop-color:#a86fa0\"/><stop offset=\"100%\" style=\"stop-color:#d9a7c7\"/></linearGradient></defs><rect width=\"1600\" height=\"600\" fill=\"url(#g)\"/></svg>`);
+                    const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"600\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#6b3f70\"/><stop offset=\"55%\" style=\"stop-color:#a86fa0\"/><stop offset=\"100%\" style=\"stop-color:#d9a7c7\"/></linearGradient></defs><rect width=\"1600\" height=\"600\" fill=\"url(#g)"/></svg>`);
                     (e.target as HTMLImageElement).src = svg;
                   }}
                 />
@@ -1109,6 +1111,7 @@ export default function Home() {
           </Link>
         )}
       </section>
+      )}
 
       {/* ===== 商品列表上方版块 ===== */}
       {blocksByPosition("product_top").map(renderBlock)}
