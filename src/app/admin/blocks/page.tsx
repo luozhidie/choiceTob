@@ -1712,26 +1712,17 @@ export default function BlocksAdminPage() {
 
                     {form.type === "special" && (
                       <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
-                        <p className="text-xs text-gray-500">商品按折扣自动从商品库拉取，无需手动挑选。可设置市场入口卡片（可选）。</p>
-                        <ImeInput type="text" value={form.title} onChange={(val) => setForm({ ...form, title: val })} placeholder="模块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
-                        {[0, 1].map((i) => (
-                          <div key={i} className="grid grid-cols-2 gap-2">
-                            <input
-                              type="text"
-                              value={(form.content as any)?.[`market${i}Name`] || ""}
-                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), [`market${i}Name`]: e.target.value } as any })}
-                              placeholder={`市场${i + 1}名称（如 十三行市场）`}
-                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
-                            />
-                            <input
-                              type="text"
-                              value={(form.content as any)?.[`market${i}Link`] || ""}
-                              onChange={(e) => setForm({ ...form, content: { ...(form.content as object || {}), [`market${i}Link`]: e.target.value } as any })}
-                              placeholder="跳转链接（如 /buyer）"
-                              className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none"
-                            />
-                          </div>
-                        ))}
+                        <p className="text-xs text-gray-500">商品按折扣自动从商品库拉取，无需手动挑选。顶部横幅参考「一手特价」大促风格。</p>
+                        <ImeInput type="text" value={form.title} onChange={(val) => setForm({ ...form, title: val })} placeholder="模块标题（后台用）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <BlockImageUpload
+                          value={((form.content as any)?.banner_image as string) || ""}
+                          onChange={(url: string) => setForm({ ...form, content: { ...(form.content as object || {}), banner_image: url } as any })}
+                        />
+                        <ImeInput type="text" value={((form.content as any)?.tag as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), tag: val } as any })} placeholder="左上角标签，如：限时采购" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={((form.content as any)?.headline as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), headline: val } as any })} placeholder="大标题，如：SALE" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={((form.content as any)?.subheadline as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), subheadline: val } as any })} placeholder="副标题，如：季末·特价捡漏" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={((form.content as any)?.descriptor as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), descriptor: val } as any })} placeholder="底部描述，如：全国批发市场 · 优质大牌" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={((form.content as any)?.link as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), link: val } as any })} placeholder="横幅点击跳转链接（可选）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                       </div>
                     )}
 

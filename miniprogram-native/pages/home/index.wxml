@@ -206,10 +206,15 @@
                     <text class="spec-title">{{item.section_title}}</text>
                     <text wx:if="{{item.section_subtitle}}" class="spec-sub">{{item.section_subtitle}}</text>
                   </view>
-                  <view wx:if="{{specMap[item.id].markets.length>0}}" class="spec-markets">
-                    <view wx:for="{{specMap[item.id].markets}}" wx:key="name" wx:for-item="mk" class="spec-mkt" bindtap="goBlockLink" data-link="{{mk.link}}">
-                      <view class="spec-mkt-name">{{mk.name}}</view>
-                      <view wx:if="{{mk.desc}}" class="spec-mkt-desc">{{mk.desc}}</view>
+                  <view class="spec-banner" bindtap="goBlockLink" data-link="{{specMap[item.id].banner.link||'#'}}">
+                    <image wx:if="{{specMap[item.id].banner.image}}" src="{{specMap[item.id].banner.image}}" mode="aspectFill" class="spec-banner-img"/>
+                    <view wx:else class="spec-banner-bg"/>
+                    <view class="spec-banner-mask"/>
+                    <view class="spec-banner-body">
+                      <view class="spec-banner-tag">{{specMap[item.id].banner.tag||'限时采购'}}</view>
+                      <view class="spec-banner-title">{{specMap[item.id].banner.headline||'SALE'}}</view>
+                      <view class="spec-banner-sub">{{specMap[item.id].banner.subheadline||'季末·特价捡漏'}}</view>
+                      <view class="spec-banner-desc">{{specMap[item.id].banner.descriptor||'全国批发市场 · 优质大牌'}}</view>
                     </view>
                   </view>
                   <view class="spec-tabs">

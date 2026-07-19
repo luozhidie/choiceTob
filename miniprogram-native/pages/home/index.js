@@ -128,12 +128,15 @@ Page({
         restBlocks.forEach(function(b){
           if(b.type==='special'){
             var ct=b.content||{};
-            var markets=[];
-            for(var i=0;i<2;i++){
-              var n=ct['market'+i+'Name'];
-              if(n)markets.push({name:n,link:ct['market'+i+'Link']||'#',desc:''});
-            }
-            t.setData({['specMap.'+b.id]:{mode:'special',products:[],markets:markets}});
+            var banner={
+              image:ct.banner_image||'',
+              tag:ct.tag||'限时采购',
+              headline:ct.headline||'SALE',
+              subheadline:ct.subheadline||'季末·特价捡漏',
+              descriptor:ct.descriptor||'全国批发市场 · 优质大牌',
+              link:ct.link||'#'
+            };
+            t.setData({['specMap.'+b.id]:{mode:'special',products:[],banner:banner}});
             t.loadSpecial(b.id,'special');
           }
         });
@@ -151,16 +154,16 @@ Page({
         var l=[];
         if(r.data&&r.data.success&&r.data.data)l=r.data.data;
         else if(Array.isArray(r.data))l=r.data;
-        var prev=t.data.specMap[blockId]||{mode:mode,products:[],markets:[]};
-        t.setData({['specMap.'+blockId]:{mode:mode,products:l,markets:prev.markets||[]}});
+        var prev=t.data.specMap[blockId]||{mode:mode,products:[],banner:{}};
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,banner:prev.banner||{}}});
       }
     });
   },
   swSpecMode:function(e){
     var id=e.currentTarget.dataset.id;
     var m=e.currentTarget.dataset.m;
-    var prev=this.data.specMap[id]||{mode:m,products:[],markets:[]};
-    this.setData({['specMap.'+id]:{mode:m,products:prev.products,markets:prev.markets||[]}});
+    var prev=this.data.specMap[id]||{mode:m,products:[],banner:{}};
+    this.setData({['specMap.'+id]:{mode:m,products:prev.products,banner:prev.banner||{}}});
     this.loadSpecial(id,m);
   },
 

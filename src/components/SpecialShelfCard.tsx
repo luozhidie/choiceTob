@@ -44,37 +44,48 @@ export default function SpecialShelfCard({ block }: { block: any }) {
     return () => { cancelled = true; };
   }, [active]);
 
-  const markets: any[] = (() => {
-    if (Array.isArray(content.markets) && content.markets.length) return content.markets;
-    const arr: any[] = [];
-    for (let i = 0; i < 2; i++) {
-      const name = content[`market${i}Name`];
-      const link = content[`market${i}Link`];
-      if (name) arr.push({ name, link: link || "#" });
-    }
-    return arr;
-  })();
+  const bannerImage = content.banner_image || "";
+  const tag = content.tag || "限时采购";
+  const headline = content.headline || "SALE";
+  const subheadline = content.subheadline || "季末·特价捡漏";
+  const descriptor = content.descriptor || "全国批发市场 · 优质大牌";
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* 市场入口卡（可选） */}
-      {markets.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 px-4 mb-3">
-          {markets.map((m: any, i: number) => (
-            <a key={i} href={m.link || "#"} className="group relative rounded-2xl overflow-hidden shadow-sm">
-              {m.image ? (
-                <img src={m.image} alt={m.name || ""} className="w-full h-24 object-cover group-hover:scale-105 transition" />
-              ) : (
-                <div className="h-24 bg-gradient-to-br from-[#6b3f70] to-[#d9a7c7]" />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-end p-3">
-                <span className="text-white font-bold text-sm">{m.name}</span>
-                {m.desc && <span className="text-white/80 text-[11px]">{m.desc}</span>}
-              </div>
-            </a>
-          ))}
+      {/* 大促横幅：参考「一手特价」风格 */}
+      <a
+        href={content.link || "#"}
+        className="group relative block mx-4 mb-4 rounded-2xl overflow-hidden shadow-md aspect-[16/9] md:aspect-[21/9]"
+      >
+        {bannerImage ? (
+          <img
+            src={bannerImage}
+            alt={headline}
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#5a3a3a] via-[#7a5a52] to-[#a89f91]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-between p-4 md:p-6">
+          <div>
+            <span className="inline-block px-2.5 py-1 bg-white/90 text-[#5a3a3a] text-[11px] md:text-xs font-bold rounded-full shadow-sm">
+              {tag}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-white font-black text-4xl md:text-6xl tracking-tight drop-shadow-lg">
+              {headline}
+            </h3>
+            <p className="text-white/95 text-sm md:text-lg font-medium mt-1 drop-shadow">
+              {subheadline}
+            </p>
+            <p className="text-white/75 text-[11px] md:text-xs mt-2 drop-shadow">
+              {descriptor}
+            </p>
+          </div>
         </div>
-      )}
+      </a>
 
       {/* Tab 切换 */}
       <div className="flex items-center gap-2 px-4 mb-3 overflow-x-auto no-scrollbar">
