@@ -94,6 +94,56 @@ export async function POST(request: NextRequest) {
 
     const openaiKey = process.env.OPENAI_API_KEY;
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+
+    // ===== 方案 A0：OpenRouter 视觉识别（OpenAI 兼容，支持多种视觉模型）=====
+    if (openrouterKey && images.length > 0) {
+      try {
+        const content: any[] = [
+          {
+            type: "text",
+            text:
+              "请识别这些服装商品并抽取参数。" +
+              (note ? `供应商备注：${note}` : ""),
+          },
+        ];
+        for (const url of images.slice(0, 5)) {
+          content.push({ type: "image_url", image_url: { url } });
+        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 55000);
+        const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${openrouterKey}`,
+            "HTTP-Referer": "https://colour-choice.art",
+            "X-Title": "骆芷蝶智选",
+          },
+          body: JSON.stringify({
+            model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-1.5",
+            messages: [
+              { role: "system", content: SYSTEM },
+              { role: "user", content },
+            ],
+            temperature: 0.3,
+            max_tokens: 1200,
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || "";
+          const parsed = extractJSON(text);
+          if (parsed) {
+            return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
+          }
+        }
+      } catch {
+        // 视觉失败转下方兜底
+      }
+    }
 
     // ===== 方案 A：OpenAI 视觉识别（gpt-4o-mini 支持看图）=====
     if (openaiKey && images.length > 0) {
