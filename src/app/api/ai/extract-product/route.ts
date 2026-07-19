@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
     const openaiKey = process.env.OPENAI_API_KEY;
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
-    let orLastError: string | null = null;
 
     // ===== 方案 A0：OpenRouter 视觉识别（OpenAI 兼容，支持多种视觉模型）=====
     // 注意：Google/OpenAI 模型在该账户所属地区常被屏蔽，默认首选 Qwen-VL（中国区可用），
@@ -125,7 +124,7 @@ export async function POST(request: NextRequest) {
               "Content-Type": "application/json",
               Authorization: `Bearer ${openrouterKey}`,
               "HTTP-Referer": "https://colour-choice.art",
-              "X-Title": "骆芷蝶智选",
+              "X-Title": "Luozhidie Zhixuan",
             },
             body: JSON.stringify({
               model,
@@ -146,12 +145,9 @@ export async function POST(request: NextRequest) {
             if (parsed) {
               return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
             }
-          } else {
-            const body = await res.text().catch(() => "");
-            orLastError = `${model} HTTP ${res.status}: ${body.slice(0, 200)}`;
           }
-        } catch (e) {
-          orLastError = `${model} ERR ${String(e).slice(0, 200)}`;
+        } catch {
+          // 该模型失败，尝试列表中的下一个
         }
       }
     }
@@ -234,7 +230,7 @@ export async function POST(request: NextRequest) {
     }
 
     // ===== 兜底：生成待核对草稿 =====
-    return NextResponse.json({ success: true, source: "mock", product: mockResult(images, note), _debug: { orKey: !!openrouterKey, orLastError } });
+    return NextResponse.json({ success: true, source: "mock", product: mockResult(images, note) });
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "服务器错误" }, { status: 500 });
   }
