@@ -73,8 +73,9 @@
 
   <!-- 空状态 -->
   <view wx:elif="{{products.length===0}}" class="empty">
-    <text class="empty-icon">📦</text>
-    <text class="empty-text">该货架暂无商品</text>
+    <text class="ei">📦</text>
+    <text class="et">该货架暂无商品</text>
+    <view class="eb" bindtap="goHome">去首页逛逛 →</view>
   </view>
 
   <!-- 商品网格 -->
