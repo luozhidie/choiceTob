@@ -15,6 +15,11 @@ interface Banner {
   is_active: boolean;
 }
 
+// 内嵌 SVG 渐变图（品牌紫），不依赖外部网络，避免图片被拦截时黑屏
+const FALLBACK_BANNER =
+  "data:image/svg+xml;base64," +
+  "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAwIiBoZWlnaHQ9IjQwMCI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCUiIHkxPSIwJSIgeDI9IjEwMCUiIHkyPSIxMDAlIj48c3RvcCBvZmZzZXQ9IjAlIiBzdHlsZT0ic3RvcC1jb2xvcjojMmQxYjJlIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdHlsZT0ic3RvcC1jb2xvcjojNGEzYTRiIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjE2MDAiIGhlaWdodD0iNDAwIiBmaWxsPSJ1cmwoI2cpIi8+PC9zdmc+";
+
 export default function HeroCarousel() {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,11 +42,11 @@ export default function HeroCarousel() {
         if (!error && data && data.length > 0) {
           setBanners(data);
         } else {
-          // 默认示例数据（方便测试）
+          // 默认示例数据（使用内嵌 SVG，避免外部图被拦截黑屏）
           setBanners([
             { 
               id: "default-1", 
-              image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format",
+              image_url: FALLBACK_BANNER,
               link_url: "/buyer",
               title: "爆款选品 · 拿货精选",
               subtitle: "骆芷蝶智选 · 专业推荐",
@@ -50,7 +55,7 @@ export default function HeroCarousel() {
             },
             { 
               id: "default-2", 
-              image_url: "https://images.unsplash.com/photo-1469337982187-4a8d9b1eeeb?w=1600&q=80&auto=format",
+              image_url: FALLBACK_BANNER,
               link_url: "/vip",
               title: "开通价格会员",
               subtitle: "解锁批发价，享受更多优惠",
@@ -63,7 +68,7 @@ export default function HeroCarousel() {
         setBanners([
           { 
             id: "default-1", 
-            image_url: "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&q=80&auto=format",
+            image_url: FALLBACK_BANNER,
             link_url: "/buyer",
             is_active: true,
           },
@@ -151,21 +156,23 @@ export default function HeroCarousel() {
       onTouchStart={() => stopAutoPlay()}
       onTouchEnd={() => startAutoPlay()}
     >
-      {/* 轮播图片 */}
+      {/* 轮播图片：渐变兜底 + img 标签（onError 隐藏破图，绝不黑屏） */}
       <div className="absolute inset-0">
         {banners.map((banner, index) => (
           <div
             key={banner.id}
-            className={`absolute inset-0 bg-no-repeat bg-cover bg-center transition-all duration-700 ease-in-out ${
+            className={`absolute inset-0 transition-all duration-700 ease-in-out ${
               index === currentIndex ? "opacity-100 scale-100" : "opacity-0 scale-105"
             }`}
-            style={{ backgroundImage: `url('${banner.image_url}')`, backgroundColor: '#1a1a2e' }}
-            onError={(e) => {
-              // 图片加载失败时显示品牌渐变背景，避免黑屏
-              const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"400\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#2d1b2e\"/><stop offset=\"100%\" style=\"stop-color:#4a3a4b\"/></linearGradient></defs><rect width=\"1600\" height=\"400\" fill=\"url(#g)\"/></svg>`);
-              (e.target as HTMLDivElement).style.backgroundImage = `url('${svg}')`;
-            }}
-          />
+            style={{ background: "linear-gradient(135deg,#2d1b2e,#4a3a4b)" }}
+          >
+            <img
+              src={banner.image_url}
+              alt={banner.title || ""}
+              className="w-full h-full object-cover"
+              onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0"; }}
+            />
+          </div>
         ))}
         
         {/* 整个区域可点击跳转 */}
