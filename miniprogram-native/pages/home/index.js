@@ -1,3 +1,15 @@
+/* 过滤假图/本地图链接，避免显示破图 */
+function isValidImgUrl(url){
+  if(!url || typeof url !== 'string') return false;
+  var lower = url.toLowerCase();
+  if(lower.indexOf('http://') !== 0 && lower.indexOf('https://') !== 0) return false;
+  if(lower.indexOf('example.com') >= 0 || lower.indexOf('placeholder.com') >= 0 || lower.indexOf('localhost') >= 0 || lower.indexOf('127.0.0.1') >= 0 || lower.indexOf('dummy') >= 0) return false;
+  return true;
+}
+function safeImg(url){
+  return isValidImgUrl(url) ? url : '';
+}
+
 Page({
   data:{
     banners:[],
@@ -155,6 +167,11 @@ Page({
         var l=[];
         if(r.data&&r.data.success&&r.data.data)l=r.data.data;
         else if(Array.isArray(r.data))l=r.data;
+        l.forEach(function(p){
+          p.image_url = safeImg(p.image_url);
+          p.cover_image = safeImg(p.cover_image);
+          if(p.images && Array.isArray(p.images)) p.images = p.images.filter(isValidImgUrl);
+        });
         var prev=t.data.specMap[blockId]||{mode:mode,products:[],loading:true,banner:{}};
         t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{}}});
       }
@@ -261,8 +278,12 @@ Page({
         else if(Array.isArray(r.data))l=r.data;
         var isPriceMember = t.data.isPriceMember;
         l.forEach(function(p){
+          p.image_url = safeImg(p.image_url);
+          p.cover_image = safeImg(p.cover_image);
+          if(p.images && Array.isArray(p.images)) p.images = p.images.filter(isValidImgUrl);
+
           var fbImg = p.image_url || p.cover_image || (p.images && p.images[0]);
-          if(fbImg && typeof fbImg === 'string' && fbImg.indexOf('http') === 0 && fbImg.indexOf('example.com') === -1 && fbImg.indexOf('localhost') === -1) fbImgs.push(fbImg);
+          if(fbImg) fbImgs.push(fbImg);
 
           var price=Number(p.price)||0;if(price>=100)price=Math.round(price/100);
           var wp=Number(p.wholesale_price)||0;
@@ -290,7 +311,7 @@ Page({
     var hists=wx.getStorageSync('view_history')||[];
     var idx=hists.findIndex(function(h){return h.id===p.id;});
     if(idx>=0)hists.splice(idx,1);
-    hists.unshift({id:p.id,name:p.name||p.title,image:p.image_url||p.cover_image,time:Date.now()});
+    hists.unshift({id:p.id,name:p.name||p.title,image:safeImg(p.image_url||p.cover_image),time:Date.now()});
     if(hists.length>50)hists=hists.slice(0,50);
     wx.setStorageSync('view_history',hists);
   },

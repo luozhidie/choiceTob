@@ -12,7 +12,7 @@ import ProductBlock from "@/components/ProductBlock";
 import ShelfCard from "@/components/ShelfCard";
 import AssortmentCard from "@/components/AssortmentCard";
 import SpecialShelfCard from "@/components/SpecialShelfCard";
-import ProductCollage from "@/components/ProductCollage";
+import ProductCollage, { isValidImage } from "@/components/ProductCollage";
 
 /* ------------------------------------------------------------------ */
 /*  Block 接口                                                        */
@@ -133,7 +133,7 @@ const SERIES_BANNER_FALLBACK = "data:image/svg+xml;base64," + btoa(
   `<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="600"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:#6b3f70"/><stop offset="55%" style="stop-color:#a86fa0"/><stop offset="100%" style="stop-color:#d9a7c7"/></linearGradient></defs><rect width="1600" height="600" fill="url(#g)"/></svg>`
 );
 function safeSeriesBanner(url?: string | null): string {
-  if (!url || url.trim() === "") return SERIES_BANNER_FALLBACK;
+  if (!isValidImage(url)) return SERIES_BANNER_FALLBACK;
   // 历史生成的 banner 是 data:image/svg 渐变（含近黑/不可靠图），统一替换为品牌粉渐变
   if (url.startsWith("data:image/svg")) return SERIES_BANNER_FALLBACK;
   if (url.includes("pollinations.ai")) return SERIES_BANNER_FALLBACK;
@@ -201,7 +201,7 @@ function GroupBuyCard({ block, content, bgColor }: { block: any; content: any; b
             {groupProducts.map((p: any) => (
               <Link key={p.id} href={`/shop/${p.id}`} className="group block">
                 <div className="rounded-xl overflow-hidden bg-white/50 mb-1.5 aspect-[3/4] relative">
-                  {p.image_url ? (
+                  {isValidImage(p.image_url) ? (
                     <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">暂无图片</div>
@@ -274,7 +274,7 @@ function PromotionCard({ block, content, bgColor, textColor }: { block: any; con
 
   return (
     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ backgroundColor: bgColor }}>
-      {content.imageUrl && (
+      {isValidImage(content.imageUrl) && (
         <img src={content.imageUrl} alt={content.promoTitle || block.title} className="w-full h-auto" />
       )}
       <div className="p-5 md:p-6">
@@ -478,7 +478,7 @@ function PreSaleCard({ block, content, bgColor }: { block: any; content: any; bg
             {preProducts.map((p: any) => (
               <Link key={p.id} href={`/shop/${p.id}`} className="group block">
                 <div className="rounded-xl overflow-hidden bg-white/50 mb-1.5 aspect-[3/4] relative">
-                  {p.image_url ? (
+                  {isValidImage(p.image_url) ? (
                     <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-[10px]">暂无图片</div>
@@ -594,14 +594,14 @@ export default function Home() {
       .catch(() => {});
   }, []);
 
-  // 板块自动配图：拉取若干商品图，供无自定义图的横幅板块合成照片墙
+  // 板块自动配图：拉取若干商品图，供无自定义图的横幅板块合成照片墙（过滤假图/本地图）
   useEffect(() => {
     fetch("/api/public/products?limit=6")
       .then((r) => r.json())
       .then((j) => {
         const imgs = ((j && j.data) || [])
           .map((p: any) => p.image_url || (p.images && p.images[0]) || "")
-          .filter(Boolean)
+          .filter(isValidImage)
           .slice(0, 6);
         setFallbackImages(imgs);
       })
@@ -1017,7 +1017,7 @@ export default function Home() {
             >
               <X className="w-5 h-5" />
             </button>
-            {homePopup.image_url && (
+            {isValidImage(homePopup.image_url) && (
               <div className="w-full max-h-60 overflow-hidden rounded-t-2xl">
                 {homePopup.link_url ? (
                   <Link href={homePopup.link_url} className="block">
@@ -1196,7 +1196,7 @@ export default function Home() {
             {products.map((product) => (
               <Link key={product.id} href={`/shop/${product.id}`} className="group block">
                 <div className="relative overflow-hidden rounded-xl bg-gray-50 mb-2.5 aspect-[3/4]">
-                  {product.image_url ? (
+                  {isValidImage(product.image_url) ? (
                     <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-gray-300 text-xs">暂无图片</div>

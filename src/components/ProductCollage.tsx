@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 
 const BLOCKED_PATTERNS = ["example.com", "placeholder.com", "localhost", "127.0.0.1", "dummy"];
 
-function isValidImage(u?: string | null): boolean {
+export function isValidImage(u?: string | null): boolean {
   if (!u || u.trim() === "" || u.trim() === "null") return false;
   const lower = u.toLowerCase();
   if (!lower.startsWith("http://") && !lower.startsWith("https://")) return false;
