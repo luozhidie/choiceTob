@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import ProductCollage from "./ProductCollage";
+import ProductCollage, { isValidImage } from "./ProductCollage";
 
 interface SpecialProduct {
   id: string;
@@ -120,7 +120,7 @@ export default function SpecialShelfCard({ block }: { block: any }) {
           {products.map((p) => (
             <Link key={p.id} href={`/shop/${p.id}`} className="group bg-white rounded-xl overflow-hidden shadow-sm">
               <div className="aspect-[3/4] bg-gray-100 relative overflow-hidden">
-                {p.image_url ? (
+                {isValidImage(p.image_url) ? (
                   <img src={p.image_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-gray-300">无图</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { isValidImage } from "@/components/ProductCollage";
 
 interface ShelfCardProps {
   block: any;
@@ -8,11 +9,11 @@ interface ShelfCardProps {
 
 export default function ShelfCard({ block }: ShelfCardProps) {
   const content = block?.content || {};
-  const image = content.image || "";
+  const image = isValidImage(content.image) ? content.image : "";
   const badge = content.badge || "";
   const subtitle = block?.section_subtitle || content.subtitle || "";
 
-  const subImages = [content.subImage1, content.subImage2, content.subImage3].filter(Boolean);
+  const subImages = [content.subImage1, content.subImage2, content.subImage3].filter(Boolean).filter(isValidImage);
 
   return (
     <div className="max-w-7xl mx-auto">
