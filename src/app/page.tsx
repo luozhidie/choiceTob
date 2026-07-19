@@ -1060,39 +1060,39 @@ export default function Home() {
       {blocksByPosition("hero_bottom").map(renderBlock)}
 
       {/* ===== 当季系列/限时专题 ===== */}
-      <section className="max-w-7xl mx-auto px-4 py-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-gray-900">当季系列</h2>
-          <Link href="/assortment" className="text-xs text-gray-400">查看全部 →</Link>
+      <section className="max-w-7xl mx-auto px-4 py-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-gray-900">当季系列</h2>
+          <Link href="/assortment" className="text-sm text-gray-400">查看全部 →</Link>
         </div>
         {seriesPromos.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-4">
             {seriesPromos.map((p) => (
-              <Link key={p.id} href={p.link_url || "/assortment"} className="group relative rounded-2xl overflow-hidden h-40 md:h-48 block">
+              <Link key={p.id} href={p.link_url || "/assortment"} className="group relative rounded-3xl overflow-hidden h-60 md:h-80 block">
                 <img
                   src={p.banner_image_url || "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1600&h=400&fit=crop&q=80&auto=format"}
                   alt={p.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition"
                   onError={(e) => {
-                    const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"400\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#2d1b2e\"/><stop offset=\"100%\" style=\"stop-color:#4a3a4b\"/></linearGradient></defs><rect width=\"1600\" height=\"400\" fill=\"url(#g)\"/></svg>`);
+                    const svg = "data:image/svg+xml;base64," + btoa(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"1600\" height=\"600\"><defs><linearGradient id=\"g\" x1=\"0%\" y1=\"0%\" x2=\"100%\" y2=\"100%\"><stop offset=\"0%\" style=\"stop-color:#6b3f70\"/><stop offset=\"55%\" style=\"stop-color:#a86fa0\"/><stop offset=\"100%\" style=\"stop-color:#d9a7c7\"/></linearGradient></defs><rect width=\"1600\" height=\"600\" fill=\"url(#g)\"/></svg>`);
                     (e.target as HTMLImageElement).src = svg;
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 p-4 text-white">
-                  <h3 className="font-bold text-base mb-0.5">{p.title}</h3>
-                  <p className="text-xs opacity-90 line-clamp-1">{p.description}</p>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-6 text-white">
+                  <h3 className="font-bold text-2xl mb-1">{p.title}</h3>
+                  <p className="text-sm opacity-90 line-clamp-2 max-w-xl">{p.description}</p>
                 </div>
               </Link>
             ))}
           </div>
         ) : (
-          <Link href="/assortment" className="group relative rounded-2xl overflow-hidden h-40 md:h-48 block">
-            <div className="w-full h-full bg-gradient-to-r from-[#2d1b2e] to-[#4a3a4b] group-hover:scale-105 transition" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
-            <div className="absolute bottom-0 left-0 p-4 text-white">
-              <h3 className="font-bold text-base mb-0.5">当季系列</h3>
-              <p className="text-xs opacity-90 line-clamp-1">AI 组货 · 一键照单拿货</p>
+          <Link href="/assortment" className="group relative rounded-3xl overflow-hidden h-60 md:h-80 block">
+            <div className="w-full h-full bg-gradient-to-br from-[#6b3f70] via-[#a86fa0] to-[#d9a7c7] group-hover:scale-105 transition" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-6 text-white">
+              <h3 className="font-bold text-2xl mb-1">当季系列</h3>
+              <p className="text-sm opacity-90 line-clamp-2 max-w-xl">AI 组货 · 一键照单拿货</p>
             </div>
           </Link>
         )}
