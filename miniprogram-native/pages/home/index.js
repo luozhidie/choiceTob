@@ -16,6 +16,7 @@ Page({
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
+    fallbackImages:[],  // 商品图兜底：无图横幅自动拼照片墙
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
     specTabs:['特价甄选','首次降价','3折以下','反季特价'],
     specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
@@ -255,10 +256,14 @@ Page({
       method:'GET',
       success:function(r){
         var l=[];
+        var fbImgs=[];
         if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
         else if(Array.isArray(r.data))l=r.data;
         var isPriceMember = t.data.isPriceMember;
         l.forEach(function(p){
+          var fbImg = p.image_url || p.cover_image || (p.images && p.images[0]);
+          if(fbImg) fbImgs.push(fbImg);
+
           var price=Number(p.price)||0;if(price>=100)price=Math.round(price/100);
           var wp=Number(p.wholesale_price)||0;
           if(wp>=100)wp=Math.round(wp/100);
@@ -273,7 +278,7 @@ Page({
           p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;
           t.saveViewHistory(p);
         });
-        t.setData({products:l,ld:false});
+        t.setData({products:l,ld:false,fallbackImages:fbImgs});
       },
       fail:function(){t.setData({ld:false});},
       complete:function(){if(cb)cb();}

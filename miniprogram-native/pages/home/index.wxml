@@ -26,7 +26,7 @@
 
   <!-- ========== 轮播图上方模块（position==='hero_top'）========== -->
   <block wx:for="{{heroTopBlocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
   </block>
 
   <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
@@ -69,9 +69,18 @@
     </view>
   </view>
 
+  <!-- ========== 商品照片墙模板（横幅无图时自动兜底）========== -->
+  <template name="prod-collage">
+    <view class="pc-bg">
+      <view class="pc-grid">
+        <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="pc-img" lazy-load/>
+      </view>
+    </view>
+  </template>
+
   <!-- ========== 动态模块区（轮播图下方/商品上方，已排除 hero_top）========== -->
   <block wx:for="{{blocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
   </block>
 
   <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
@@ -79,8 +88,11 @@
     <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
-        <image src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
-        <view class="fb-ov" wx:if="{{item.content.mainLink}}"><text class="fb-tap">点击跳转 →</text></view>
+        <image wx:if="{{item.content.mainImage}}" src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
+        <view wx:else class="fb-main-fallback">
+          <template is="prod-collage" data="{{images:fallbackImages}}"/>
+          <view class="fb-ov"><text class="fb-tap">{{item.content.title||'精选好物'}}</text></view>
+        </view>
       </view>
       <view class="fb-subs" wx:if="{{item.content._subs&&item.content._subs.length>0}}">
         <view class="fb-sub" wx:for="{{item.content._subs}}" wx:key="image"
@@ -99,8 +111,11 @@
       <view wx:if="{{item.type==='banner_large'}}" class="blk-bl" style="padding:{{item.style.padding||16}}rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
         <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="bl-img"/>
         <view wx:else class="bl-bg">
-          <text class="bl-title">{{item.content.title}}</text>
-          <text class="bl-sub">{{item.content.subtitle}}</text>
+          <template is="prod-collage" data="{{images:fallbackImages}}"/>
+          <view class="bl-text">
+            <text class="bl-title">{{item.content.title}}</text>
+            <text class="bl-sub">{{item.content.subtitle}}</text>
+          </view>
         </view>
       </view>
 
@@ -108,14 +123,20 @@
         <!-- banner_small -->
         <view wx:if="{{item.type==='banner_small'}}" class="blk-bs" style="padding:8rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
           <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="widthFix" class="bs-img"/>
-          <view class="bs-bar"><text class="bs-title">{{item.content.title}}</text></view>
+          <view wx:else class="bs-bar bs-bar-collage">
+            <template is="prod-collage" data="{{images:fallbackImages}}"/>
+            <text class="bs-title">{{item.content.title}}</text>
+          </view>
         </view>
 
         <view wx:else>
           <!-- card_single -->
           <view wx:if="{{item.type==='card_single'}}" class="blk-cs" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
-            <view class="cs-card">
-              <image src="{{item.content.image}}" mode="aspectFill" class="cs-img"/>
+            <view class="cs-card" style="position:relative">
+              <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="cs-img"/>
+              <view wx:else class="cs-img cs-img-fallback">
+                <template is="prod-collage" data="{{images:fallbackImages}}"/>
+              </view>
               <view class="cs-body">
                 <text class="cs-title">{{item.content.title}}</text>
                 <text class="cs-sub">{{item.content.subtitle}}</text>
@@ -167,8 +188,10 @@
 
                 <view wx:if="{{item.type==='shelf'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goShelf" data-id="{{item.id}}">
                   <view class="shelf-card">
-                    <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
-                    <view wx:else class="shelf-bg"></view>
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
+                  <view wx:else class="shelf-bg">
+                    <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                  </view>
                     <view class="shelf-mask"></view>
                     <view class="shelf-body">
                       <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
@@ -185,8 +208,10 @@
 
                 <view wx:elif="{{item.type==='assortment'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goSeries" data-id="{{item.content.planId}}">
                   <view class="shelf-card">
-                    <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
-                    <view wx:else class="shelf-bg"></view>
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
+                  <view wx:else class="shelf-bg">
+                    <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                  </view>
                     <view class="shelf-mask"></view>
                     <view class="shelf-body">
                       <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
@@ -208,7 +233,9 @@
                   </view>
                   <view class="spec-banner" bindtap="goBlockLink" data-link="{{specMap[item.id].banner.link||'#'}}">
                     <image wx:if="{{specMap[item.id].banner.image}}" src="{{specMap[item.id].banner.image}}" mode="aspectFill" class="spec-banner-img"/>
-                    <view wx:else class="spec-banner-bg"/>
+                    <view wx:else class="spec-banner-bg">
+                      <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                    </view>
                     <view class="spec-banner-mask"/>
                     <view class="spec-banner-body">
                       <view class="spec-banner-tag">{{specMap[item.id].banner.tag||'限时采购'}}</view>

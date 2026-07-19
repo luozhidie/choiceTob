@@ -1,5 +1,11 @@
 page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; }
 
+/* 商品照片墙：横幅无图时自动兜底 */
+.pc-bg{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(135deg,#8a6d5b,#b08968,#d9c2a8);overflow:hidden;}
+.pc-grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:2rpx;}
+.pc-img{width:100%;height:100%;}
+
+
 /* ========== 粘性头部 ========== */
 .sticky-header{
   position:sticky;
@@ -147,8 +153,9 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 
 /* featured_banner 精选横幅 - 大图+3小图 */
 .blk-fb{background:#faf8f6;}
-.fb-main{width:100%;border-radius:20rpx;overflow:hidden;position:relative;margin-bottom:12rpx;}
+.fb-main{width:100%;border-radius:20rpx;overflow:hidden;position:relative;margin-bottom:12rpx;min-height:220rpx;}
 .fb-main-img{width:100%;display:block;}
+.fb-main-fallback{position:relative;width:100%;min-height:220rpx;border-radius:20rpx;overflow:hidden;}
 .fb-ov{position:absolute;bottom:16rpx;right:16rpx;background:rgba(0,0,0,.5);color:#fff;padding:8rpx 22rpx;border-radius:14rpx;font-size:21rpx;}
 .fb-tap{font-weight:600;}
 .fb-subs{display:flex;gap:10rpx;}
@@ -161,20 +168,23 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 /* banner_large 大横幅 */
 .blk-bl{}
 .bl-img{width:100%;height:300rpx;border-radius:20rpx;}
-.bl-bg{width:100%;height:240rpx;background:linear-gradient(135deg,#2d1b2e,#6b3f70);border-radius:20rpx;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30rpx;}
+.bl-bg{position:relative;width:100%;height:240rpx;background:linear-gradient(135deg,#2d1b2e,#6b3f70);border-radius:20rpx;overflow:hidden;}
+.bl-text{position:absolute;left:0;right:0;top:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30rpx;z-index:2;}
 .bl-title{font-size:36rpx;font-weight:bold;color:#fff;text-align:center;line-height:1.4;}
 .bl-sub{font-size:23rpx;color:rgba(255,255,255,.75);margin-top:8rpx;}
 
 /* banner_small 小横幅 */
 .blk-bs{}
 .bs-img{width:100%;border-radius:14rpx;}
-.bs-bar{margin-top:10rpx;padding:12rpx 16rpx;background:#fff9ed;border:1rpx solid #ffe082;border-radius:12rpx;display:flex;align-items:center;}
-.bs-title{font-size:24rpx;font-weight:700;color:#f57c00;}
+.bs-bar{position:relative;margin-top:10rpx;padding:12rpx 16rpx;background:#fff9ed;border:1rpx solid #ffe082;border-radius:12rpx;display:flex;align-items:center;overflow:hidden;}
+.bs-bar-collage{min-height:80rpx;align-items:center;justify-content:center;}
+.bs-title{position:relative;z-index:2;font-size:24rpx;font-weight:700;color:#f57c00;text-shadow:0 1rpx 4rpx rgba(255,255,255,.6);}
 
 /* card_single 单格卡片 */
 .blk-cs{}
 .cs-card{border-radius:20rpx;overflow:hidden;box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);background:#fff;}
-.cs-img{width:100%;height:260rpx;}
+.cs-img{width:100%;height:260rpx;border-radius:16rpx 16rpx 0 0;}
+.cs-img-fallback{position:relative;overflow:hidden;}
 .cs-body{padding:22rpx 24rpx;}
 .cs-title{font-size:29rpx;font-weight:bold;color:#333;display:block;margin-bottom:6rpx;}
 .cs-sub{font-size:22rpx;color:#999;display:block;margin-bottom:14rpx;}
@@ -236,7 +246,7 @@ page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacS
 .blk-shelf{}
 .shelf-card{position:relative;width:100%;height:420rpx;border-radius:18rpx;overflow:hidden;background:linear-gradient(135deg,#2d1b2e,#6b3f70);}
 .shelf-img{width:100%;height:100%;}
-.shelf-bg{width:100%;height:100%;background:linear-gradient(135deg,#e0e0e0,#bdbdbd);}
+.shelf-bg{position:relative;width:100%;height:100%;background:linear-gradient(135deg,#e0e0e0,#bdbdbd);overflow:hidden;}
 .shelf-mask{position:absolute;left:0;right:0;bottom:0;top:0;background:linear-gradient(to top,rgba(0,0,0,0.55),rgba(0,0,0,0.15) 50%,transparent);}
 .shelf-body{position:absolute;left:0;right:0;bottom:0;padding:24rpx;color:#fff;}
 .shelf-badge{display:inline-block;padding:4rpx 14rpx;border-radius:18rpx;background:rgba(255,255,255,0.25);font-size:20rpx;margin-bottom:8rpx;}
