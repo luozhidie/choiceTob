@@ -45,24 +45,53 @@ Page({
     var queue = t.data.images.slice();
     if (queue.length === 0) { cb([]); return; }
     var idx = 0;
-    function next() {
-      if (idx >= queue.length) { cb(urls); return; }
-      var p = queue[idx++];
+    var lastErr = '';
+
+    function uploadOne(path, done) {
       wx.uploadFile({
         url: 'https://colour-choice.art/api/upload',
-        filePath: p,
+        filePath: path,
         name: 'file',
         header: token ? { 'Authorization': 'Bearer ' + token } : {},
         success: function (res) {
-          try {
-            var j = JSON.parse(res.data);
-            if (j && j.success && j.url) urls.push(j.url);
-          } catch (e) {}
-          next();
+          var err = '';
+          if (res.statusCode !== 200) {
+            err = 'HTTP' + res.statusCode + ': ' + (res.data || '').slice(0, 60);
+          } else {
+            try {
+              var j = JSON.parse(res.data);
+              if (j && j.success && j.url) { urls.push(j.url); }
+              else if (j && j.error) { err = j.error; }
+              else { err = '上传返回异常'; }
+            } catch (e) { err = '解析失败'; }
+          }
+          if (err) { lastErr = err; }
+          done();
         },
-        fail: function () { next(); }
+        fail: function (res) {
+          lastErr = 'uploadFile失败: ' + (res && res.errMsg || '未知');
+          done();
+        }
       });
     }
+
+    // 小程序临时图可能为 HEIC 或无扩展名，先压缩成 JPEG 再上传，提高成功率
+    function compressThenUpload(path, done) {
+      if (!wx.compressImage) { uploadOne(path, done); return; }
+      wx.compressImage({
+        src: path,
+        quality: 80,
+        success: function (res) { uploadOne(res.tempFilePath, done); },
+        fail: function () { uploadOne(path, done); }
+      });
+    }
+
+    function next() {
+      if (idx >= queue.length) { cb(urls, lastErr); return; }
+      var p = queue[idx++];
+      compressThenUpload(p, next);
+    }
+
     next();
   },
 
@@ -74,10 +103,10 @@ Page({
       return;
     }
     t.setData({ extracting: true });
-    t.uploadAll(function (urls) {
+    t.uploadAll(function (urls, lastErr) {
       if (urls.length === 0 && t.data.images.length > 0) {
         t.setData({ extracting: false });
-        t.showToast('图片上传失败，请重试');
+        t.showToast(lastErr || '图片上传失败，请重试');
         return;
       }
       var token = wx.getStorageSync('token') || '';
