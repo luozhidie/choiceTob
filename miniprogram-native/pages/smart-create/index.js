@@ -12,6 +12,8 @@ Page({
     toastType: '',
     categoryOptions: ['上装', '下装', '连衣裙', '外套', '鞋靴', '箱包', '配饰', '珠宝首饰', '其他'],
     seasonOptions: ['春', '夏', '秋', '冬', '四季'],
+    categoryCustomMode: false,
+    seasonCustomMode: false,
     // 套装拆分价：部件名 + 零售价(元) + 批发价(元)，保存时换算成分并入 params.set_items
     setItems: [],
     setSumR: 0,
@@ -190,8 +192,12 @@ Page({
     product[field] = e.detail.value;
     this.setData({ product: product });
   },
-  onCategory: function (e) { var p = Object.assign({}, this.data.product); p.category = this.data.categoryOptions[e.detail.value]; this.setData({ product: p }); },
-  onSeason: function (e) { var p = Object.assign({}, this.data.product); p.season = this.data.seasonOptions[e.detail.value]; this.setData({ product: p }); },
+  onCategory: function (e) { var p = Object.assign({}, this.data.product); p.category = this.data.categoryOptions[e.detail.value]; this.setData({ product: p, categoryCustomMode: false }); },
+  onSeason: function (e) { var p = Object.assign({}, this.data.product); p.season = this.data.seasonOptions[e.detail.value]; this.setData({ product: p, seasonCustomMode: false }); },
+  toggleCategoryCustom: function () { this.setData({ categoryCustomMode: !this.data.categoryCustomMode }); },
+  onCategoryCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.category = e.detail.value; this.setData({ product: p }); },
+  toggleSeasonCustom: function () { this.setData({ seasonCustomMode: !this.data.seasonCustomMode }); },
+  onSeasonCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.season = e.detail.value; this.setData({ product: p }); },
 
   /* 保存：草稿 / 直接上架 */
   save: function (e) {

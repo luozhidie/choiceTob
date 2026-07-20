@@ -15,7 +15,9 @@
 .sc-field{margin-bottom:16rpx;}
 .sc-row{display:flex;gap:16rpx;}
 .sc-half{flex:1;}
-.sc-label{display:block;font-size:22rpx;color:#888;margin-bottom:6rpx;}
+.sc-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6rpx;}
+.sc-label-row .sc-label{margin-bottom:0;}
+.sc-custom-toggle{font-size:22rpx;color:#b45309;font-weight:600;}
 .sc-input{background:#f6f4f5;border-radius:12rpx;padding:18rpx 20rpx;font-size:26rpx;color:#333;}
 .sc-picker{color:#333;}
 

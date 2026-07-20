@@ -26,10 +26,18 @@
       <input class="sc-input" value="{{product.title}}" data-field="title" bindinput="onField" placeholder="商品标题"/>
     </view>
     <view class="sc-field">
-      <text class="sc-label">品类</text>
-      <picker mode="selector" range="{{categoryOptions}}" bindchange="onCategory">
-        <view class="sc-input sc-picker">{{product.category || '选择品类'}}</view>
-      </picker>
+      <view class="sc-label-row">
+        <text class="sc-label">品类</text>
+        <text class="sc-custom-toggle" bindtap="toggleCategoryCustom">{{categoryCustomMode ? '选择预设' : '自定义'}}</text>
+      </view>
+      <block wx:if="{{categoryCustomMode}}">
+        <input class="sc-input" value="{{product.category}}" bindinput="onCategoryCustomInput" placeholder="输入自定义品类"/>
+      </block>
+      <block wx:else>
+        <picker mode="selector" range="{{categoryOptions}}" bindchange="onCategory">
+          <view class="sc-input sc-picker">{{product.category || '选择品类'}}</view>
+        </picker>
+      </block>
     </view>
     <view class="sc-row">
       <view class="sc-field sc-half">
@@ -75,10 +83,18 @@
         <input class="sc-input" value="{{product.material}}" data-field="material" bindinput="onField" placeholder="棉/涤纶"/>
       </view>
       <view class="sc-field sc-half">
-        <text class="sc-label">季节</text>
-        <picker mode="selector" range="{{seasonOptions}}" bindchange="onSeason">
-          <view class="sc-input sc-picker">{{product.season || '选择季节'}}</view>
-        </picker>
+        <view class="sc-label-row">
+          <text class="sc-label">季节</text>
+          <text class="sc-custom-toggle" bindtap="toggleSeasonCustom">{{seasonCustomMode ? '选择预设' : '自定义'}}</text>
+        </view>
+        <block wx:if="{{seasonCustomMode}}">
+          <input class="sc-input" value="{{product.season}}" bindinput="onSeasonCustomInput" placeholder="自定义季节"/>
+        </block>
+        <block wx:else>
+          <picker mode="selector" range="{{seasonOptions}}" bindchange="onSeason">
+            <view class="sc-input sc-picker">{{product.season || '选择季节'}}</view>
+          </picker>
+        </block>
       </view>
     </view>
     <view class="sc-field">
