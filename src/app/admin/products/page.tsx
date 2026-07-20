@@ -120,24 +120,26 @@ export default function AdminProductsPage() {
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
 
-  // 套装拆分价（上下装/两件套/三件套）：部件名 + 零售价(元) + 批发价(元)
+  // 套装拆分价（上下装/两件套/三件套）：部件名 + 零售价/批发价/批量价/成本价(元)
   // 仅用于表单编辑，提交时换算成分(cent)并入 params.set_items，避免新增数据库列
   const [setItems, setSetItems] = useState<
-    { name: string; retail: string; wholesale: string }[]
+    { name: string; retail: string; wholesale: string; bulk: string; cost: string }[]
   >([]);
   const addSetItem = () =>
-    setSetItems((prev) => [...prev, { name: "", retail: "", wholesale: "" }]);
+    setSetItems((prev) => [...prev, { name: "", retail: "", wholesale: "", bulk: "", cost: "" }]);
   const removeSetItem = (i: number) =>
     setSetItems((prev) => prev.filter((_, j) => j !== i));
-  const updateSetItem = (i: number, field: "name" | "retail" | "wholesale", val: string) =>
+  const updateSetItem = (i: number, field: "name" | "retail" | "wholesale" | "bulk" | "cost", val: string) =>
     setSetItems((prev) =>
       prev.map((s, j) => (j === i ? { ...s, [field]: val } : s))
     );
-  const applySetTotal = (r: number, w: number) =>
+  const applySetTotal = (r: number, w: number, b: number, c: number) =>
     setForm((f) => ({
       ...f,
       price: r ? String(r) : f.price,
       wholesale_price: w ? String(w) : f.wholesale_price,
+      bulk_price: b ? String(b) : f.bulk_price,
+      cost_price: c ? String(c) : f.cost_price,
     }));
 
   const toggleSelect = (id: string) => {
@@ -447,11 +449,13 @@ export default function AdminProductsPage() {
           if (v) cleaned[k] = v;
         });
         const arr = setItems
-          .filter((s) => s.name.trim() || s.retail || s.wholesale)
+          .filter((s) => s.name.trim() || s.retail || s.wholesale || s.bulk || s.cost)
           .map((s) => ({
             name: s.name.trim(),
             retail: s.retail ? Math.round(Number(s.retail) * 100) : 0,
             wholesale: s.wholesale ? Math.round(Number(s.wholesale) * 100) : 0,
+            bulk: s.bulk ? Math.round(Number(s.bulk) * 100) : 0,
+            cost: s.cost ? Math.round(Number(s.cost) * 100) : 0,
           }));
         if (arr.length > 0) cleaned.set_items = arr;
         return Object.keys(cleaned).length > 0 ? cleaned : null;
@@ -608,6 +612,8 @@ export default function AdminProductsPage() {
             retail: it?.retail != null ? String(Math.round(it.retail / 100)) : "",
             wholesale:
               it?.wholesale != null ? String(Math.round(it.wholesale / 100)) : "",
+            bulk: it?.bulk != null ? String(Math.round(it.bulk / 100)) : "",
+            cost: it?.cost != null ? String(Math.round(it.cost / 100)) : "",
           }))
         : []
     );
@@ -1271,8 +1277,16 @@ export default function AdminProductsPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
-                  分别填写每个部件的名称、零售价、批发价（元）。下方自动合计，可一键填入上方总价。
+                  分别填写每个部件的名称、零售价、批发价、批量价、成本价（元）。下方自动合计，可一键填入上方总价。
                 </p>
+                <div className="flex gap-2 items-center mb-1 px-1">
+                  <span className="flex-1 text-[11px] text-gray-400">部件名</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">零售价</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">批发价</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">批量价</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">成本价</span>
+                  <span className="shrink-0 w-7" />
+                </div>
                 {setItems.map((it, idx) => (
                   <div key={idx} className="flex gap-2 items-center mb-2">
                     <input
@@ -1289,8 +1303,8 @@ export default function AdminProductsPage() {
                       onChange={(e) =>
                         updateSetItem(idx, "retail", e.target.value.replace(/[^0-9.]/g, ""))
                       }
-                      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="零售价"
+                      className="w-20 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="零售"
                     />
                     <input
                       type="text"
@@ -1299,8 +1313,28 @@ export default function AdminProductsPage() {
                       onChange={(e) =>
                         updateSetItem(idx, "wholesale", e.target.value.replace(/[^0-9.]/g, ""))
                       }
-                      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="批发价"
+                      className="w-20 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="批发"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={it.bulk}
+                      onChange={(e) =>
+                        updateSetItem(idx, "bulk", e.target.value.replace(/[^0-9.]/g, ""))
+                      }
+                      className="w-20 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="批量"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={it.cost}
+                      onChange={(e) =>
+                        updateSetItem(idx, "cost", e.target.value.replace(/[^0-9.]/g, ""))
+                      }
+                      className="w-20 px-2 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="成本"
                     />
                     <button
                       type="button"
@@ -1325,14 +1359,22 @@ export default function AdminProductsPage() {
                       (a, b) => a + (Number(b.wholesale) || 0),
                       0
                     );
+                    const sumB = setItems.reduce(
+                      (a, b) => a + (Number(b.bulk) || 0),
+                      0
+                    );
+                    const sumC = setItems.reduce(
+                      (a, b) => a + (Number(b.cost) || 0),
+                      0
+                    );
                     return (
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-gray-600">
-                          拆分价合计：零售 ¥{sumR} ／ 批发 ¥{sumW}
+                          拆分价合计：零售 ¥{sumR} ／ 批发 ¥{sumW} ／ 批量 ¥{sumB} ／ 成本 ¥{sumC}
                         </span>
                         <button
                           type="button"
-                          onClick={() => applySetTotal(sumR, sumW)}
+                          onClick={() => applySetTotal(sumR, sumW, sumB, sumC)}
                           className="text-xs px-2.5 py-1 border border-primary text-primary rounded-lg hover:bg-primary/5"
                         >
                           填入总价
