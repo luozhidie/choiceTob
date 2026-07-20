@@ -160,11 +160,12 @@ Page({
               shelfId:ct.shelfId||''
             };
             var pids=ct.productIds||'';
-            t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner,productIds:pids}});
+            var eids=ct.excludeIds||'';
+            t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner,productIds:pids,excludeIds:eids}});
             if(pids){
-              t.loadManualSpecial(b.id,pids,'special');
+              t.loadManualSpecial(b.id,pids,'special',eids);
             } else {
-              t.loadSpecial(b.id,'special');
+              t.loadSpecial(b.id,'special',eids);
             }
           }
         });
@@ -173,10 +174,12 @@ Page({
   },
 
   /* ====== 特价货架：按模式加载折扣商品 ====== */
-  loadSpecial:function(blockId,mode){
+  loadSpecial:function(blockId,mode,excludeIds){
     var t=this;
+    var url='https://colour-choice.art/api/public/special-products?mode='+mode+'&limit=20';
+    if(excludeIds)url+='&exclude='+encodeURIComponent(excludeIds);
     wx.request({
-      url:'https://colour-choice.art/api/public/special-products?mode='+mode+'&limit=20',
+      url:url,
       method:'GET',
       success:function(r){
         var l=[];
@@ -188,15 +191,17 @@ Page({
           if(p.images && Array.isArray(p.images)) p.images = p.images.filter(isValidImgUrl);
         });
         var prev=t.data.specMap[blockId]||{mode:mode,products:[],loading:true,banner:{}};
-        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{}}});
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{},excludeIds:excludeIds||''}});
       }
     });
   },
   /* 特价货架：手动挑选商品时，按 ids 加载指定商品（tab 仍可切换折扣类型筛选） */
-  loadManualSpecial:function(blockId,ids,mode){
+  loadManualSpecial:function(blockId,ids,mode,excludeIds){
     var t=this;
+    var url='https://colour-choice.art/api/public/special-products?ids='+encodeURIComponent(ids)+'&mode='+(mode||'special');
+    if(excludeIds)url+='&exclude='+encodeURIComponent(excludeIds);
     wx.request({
-      url:'https://colour-choice.art/api/public/special-products?ids='+encodeURIComponent(ids)+'&mode='+(mode||'special'),
+      url:url,
       method:'GET',
       success:function(r){
         var l=[];
@@ -208,7 +213,7 @@ Page({
           if(p.images && Array.isArray(p.images)) p.images = p.images.filter(isValidImgUrl);
         });
         var prev=t.data.specMap[blockId]||{mode:mode,products:[],loading:true,banner:{}};
-        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{},productIds:ids}});
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{},productIds:ids,excludeIds:excludeIds||''}});
       }
     });
   },
@@ -216,11 +221,11 @@ Page({
     var id=e.currentTarget.dataset.id;
     var m=e.currentTarget.dataset.m;
     var prev=this.data.specMap[id]||{mode:m,products:[],loading:true,banner:{}};
-    this.setData({['specMap.'+id]:{mode:m,products:prev.products,loading:true,banner:prev.banner||{},productIds:prev.productIds||''}});
+    this.setData({['specMap.'+id]:{mode:m,products:prev.products,loading:true,banner:prev.banner||{},productIds:prev.productIds||'',excludeIds:prev.excludeIds||''}});
     if(prev.productIds){
-      this.loadManualSpecial(id,prev.productIds,m);
+      this.loadManualSpecial(id,prev.productIds,m,prev.excludeIds);
     } else {
-      this.loadSpecial(id,m);
+      this.loadSpecial(id,m,prev.excludeIds);
     }
   },
 

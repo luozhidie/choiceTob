@@ -1766,6 +1766,14 @@ export default function BlocksAdminPage() {
                           />
                           <p className="text-[10px] text-gray-400 mt-1">勾选后只展示这些商品，避免自动拉取导致同款重复进多个货架；不填则按折扣自动</p>
                         </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">排除商品（可选）</label>
+                          <ProductPicker
+                            value={((form.content as any)?.excludeIds as string) || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), excludeIds: val } as any })}
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">自动模式下，勾选的商品即使符合折扣也不展示；手动挑选时用处不大</p>
+                        </div>
                       </div>
                     )}
 
