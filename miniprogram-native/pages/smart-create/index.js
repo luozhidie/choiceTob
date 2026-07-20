@@ -211,7 +211,6 @@ Page({
       sizes: p.sizes || '',
       color: p.color || '',
       material: p.material || '',
-      season: p.season || '四季',
       description: p.description || '',
       cover_image: (t.data.uploadedUrls[0]) || (p.images && p.images[0]) || null,
       images: t.data.uploadedUrls.length ? t.data.uploadedUrls : (p.images || []),
@@ -219,7 +218,10 @@ Page({
       stock: 0,
       tags: Array.isArray(p.tags) ? p.tags : []
     };
-    // 套装拆分价：换算成分(cent)后并入 params.set_items
+    // 季节、套装拆分价等存入 params JSONB（products 表没有 season 列，不能作为顶层字段）
+    var paramsObj = {};
+    if (p.season) paramsObj.season = p.season;
+    // 套装拆分价：换算成分(cent)
     var setArr = t.data.setItems
       .filter(function (s) { return s.name || s.retail || s.wholesale; })
       .map(function (s) {
@@ -229,7 +231,8 @@ Page({
           wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0
         };
       });
-    if (setArr.length) payload.params = { set_items: setArr };
+    if (setArr.length) paramsObj.set_items = setArr;
+    if (Object.keys(paramsObj).length) payload.params = paramsObj;
     t.setData({ saving: true });
     var token = wx.getStorageSync('token') || '';
     wx.request({
