@@ -315,6 +315,29 @@ export default function AdminProductsPage() {
     setForm((f) => ({ ...f, category: val, subcategory: "" }));
   };
 
+  // 价格体系：成本价 → 零售价/批发价/批量价
+  const calcPricesFromCost = (costY: number) => {
+    const retail = Math.round(costY / 0.26 * 1.10);
+    const wholesale = Math.round(retail * 0.33);
+    const bulk = Math.round(retail * 0.28);
+    return { retail, wholesale, bulk };
+  };
+  const handleCostPriceChange = (val: string) => {
+    const costY = parseFloat(val) || 0;
+    if (costY > 0) {
+      const { retail, wholesale, bulk } = calcPricesFromCost(costY);
+      setForm((f) => ({
+        ...f,
+        cost_price: val,
+        price: String(retail),
+        wholesale_price: String(wholesale),
+        bulk_price: String(bulk),
+      }));
+    } else {
+      setForm((f) => ({ ...f, cost_price: val }));
+    }
+  };
+
   const resetForm = () => {
     setForm({
       title: "",
@@ -1205,11 +1228,9 @@ export default function AdminProductsPage() {
                   <input
                     type="number"
                     value={form.cost_price}
-                    onChange={(e) =>
-                      setForm({ ...form, cost_price: e.target.value })
-                    }
+                    onChange={(e) => handleCostPriceChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="拿货/成本价，用于算毛利"
+                    placeholder="拿货/成本价，输入后自动按体系换算"
                   />
                 </div>
                 <div>
@@ -1226,6 +1247,13 @@ export default function AdminProductsPage() {
                     placeholder="原价"
                   />
                 </div>
+              </div>
+
+              {/* 价格体系说明 */}
+              <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
+                <b>价格体系：</b>零售价🟰成本价÷2.6折×110%；一件起批🟰零售价×33%；5件起批🟰零售价×28%。
+                <br />
+                充值会员：5万／10万／30万会员价均为零售价×28%，退换比例分别为5%／10%／20%。
               </div>
 
               {/* 套装拆分价（上下装 / 两件套 / 三件套） */}

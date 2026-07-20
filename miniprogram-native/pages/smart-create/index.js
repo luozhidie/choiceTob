@@ -198,6 +198,21 @@ Page({
   onCategoryCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.category = e.detail.value; this.setData({ product: p }); },
   toggleSeasonCustom: function () { this.setData({ seasonCustomMode: !this.data.seasonCustomMode }); },
   onSeasonCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.season = e.detail.value; this.setData({ product: p }); },
+  /* 成本价输入自动换算价格体系 */
+  onCostPrice: function (e) {
+    var costY = parseFloat(e.detail.value) || 0;
+    var p = Object.assign({}, this.data.product);
+    p.cost_price = e.detail.value;
+    if (costY > 0) {
+      var retail = Math.round(costY / 0.26 * 1.10);
+      var wholesale = Math.round(retail * 0.33);
+      var bulk = Math.round(retail * 0.28);
+      p.price = String(retail);
+      p.wholesale_price = String(wholesale);
+      p.bulk_price = String(bulk);
+    }
+    this.setData({ product: p });
+  },
 
   /* 保存：草稿 / 直接上架 */
   save: function (e) {
@@ -208,11 +223,15 @@ Page({
     if (!p.title) { t.showToast('请填写标题'); return; }
     var priceY = parseFloat(p.price) || 0;
     var wsY = parseFloat(p.wholesale_price) || 0;
+    var costY = parseFloat(p.cost_price) || 0;
+    var bkY = parseFloat(p.bulk_price) || 0;
     var payload = {
       title: p.title,
       category: p.category || '待分类',
       price: Math.round(priceY * 100),
       wholesale_price: wsY ? Math.round(wsY * 100) : null,
+      bulk_price: bkY ? Math.round(bkY * 100) : null,
+      cost_price: costY ? Math.round(costY * 100) : null,
       original_price: Math.round(priceY * 100),
       sizes: p.sizes || '',
       color: p.color || '',

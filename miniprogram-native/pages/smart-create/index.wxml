@@ -49,6 +49,16 @@
         <input class="sc-input" type="digit" value="{{product.wholesale_price}}" data-field="wholesale_price" bindinput="onField"/>
       </view>
     </view>
+    <view class="sc-row">
+      <view class="sc-field sc-half">
+        <text class="sc-label">成本价(元)</text>
+        <input class="sc-input" type="digit" value="{{product.cost_price}}" data-field="cost_price" bindinput="onCostPrice" placeholder="输入自动换算"/>
+      </view>
+      <view class="sc-field sc-half">
+        <text class="sc-label">5件起批(元)</text>
+        <input class="sc-input" type="digit" value="{{product.bulk_price}}" data-field="bulk_price" bindinput="onField"/>
+      </view>
+    </view>
 
     <!-- 套装拆分价（上下装/两件套/三件套） -->
     <view class="sc-set">
