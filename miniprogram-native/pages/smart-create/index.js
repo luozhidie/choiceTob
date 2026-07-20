@@ -57,9 +57,9 @@ Page({
         var retail = Math.round(costY / 0.26 * 1.10);
         var wholesale = Math.round(retail * 0.33);
         var bulk = Math.round(retail * 0.28);
-        if (!items[i].retail) items[i].retail = String(retail);
-        if (!items[i].wholesale) items[i].wholesale = String(wholesale);
-        if (!items[i].bulk) items[i].bulk = String(bulk);
+        items[i].retail = String(retail);
+        items[i].wholesale = String(wholesale);
+        items[i].bulk = String(bulk);
       }
     }
     this.setData({ setItems: items });

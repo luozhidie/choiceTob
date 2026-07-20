@@ -138,9 +138,9 @@ export default function AdminProductsPage() {
           const costY = Number(val) || 0;
           if (costY > 0) {
             const { retail, wholesale, bulk } = calcPricesFromCost(costY);
-            if (!s.retail) next.retail = String(retail);
-            if (!s.wholesale) next.wholesale = String(wholesale);
-            if (!s.bulk) next.bulk = String(bulk);
+            next.retail = String(retail);
+            next.wholesale = String(wholesale);
+            next.bulk = String(bulk);
           }
         }
         return next;
