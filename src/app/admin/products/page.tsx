@@ -131,7 +131,20 @@ export default function AdminProductsPage() {
     setSetItems((prev) => prev.filter((_, j) => j !== i));
   const updateSetItem = (i: number, field: "name" | "retail" | "wholesale" | "bulk" | "cost", val: string) =>
     setSetItems((prev) =>
-      prev.map((s, j) => (j === i ? { ...s, [field]: val } : s))
+      prev.map((s, j) => {
+        if (j !== i) return s;
+        const next = { ...s, [field]: val };
+        if (field === "cost") {
+          const costY = Number(val) || 0;
+          if (costY > 0) {
+            const { retail, wholesale, bulk } = calcPricesFromCost(costY);
+            if (!s.retail) next.retail = String(retail);
+            if (!s.wholesale) next.wholesale = String(wholesale);
+            if (!s.bulk) next.bulk = String(bulk);
+          }
+        }
+        return next;
+      })
     );
   const applySetTotal = (r: number, w: number, b: number, c: number) =>
     setForm((f) => ({
