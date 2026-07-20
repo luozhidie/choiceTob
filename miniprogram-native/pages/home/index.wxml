@@ -192,7 +192,7 @@
 
                 <view wx:if="{{item.type==='shelf'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goShelf" data-id="{{item.id}}">
                   <view class="shelf-card">
-                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="shelf-img"/>
                   <view wx:else class="shelf-bg">
                     <template is="prod-collage" data="{{images:fallbackImages}}"/>
                   </view>
@@ -212,7 +212,7 @@
 
                 <view wx:elif="{{item.type==='assortment'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goSeries" data-id="{{item.content.planId}}">
                   <view class="shelf-card">
-                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFit" class="shelf-img"/>
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="shelf-img"/>
                   <view wx:else class="shelf-bg">
                     <template is="prod-collage" data="{{images:fallbackImages}}"/>
                   </view>
