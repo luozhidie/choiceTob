@@ -112,6 +112,12 @@ Page({
     serviceText: '不支持退货',     // 服务说明
     serviceGuaranteeText: '不支持退货', // 服务保障
     specText: '',                // 参数摘要
+    // 套装拆分价明细
+    setItems: [],
+    setSumY: 0,
+    setSumW: 0,
+    setSumB: 0,
+    setSumC: 0,
     shopStats: {                 // 店铺数据（可后台覆盖）
       fans: '69019',
       score: '4.5',
@@ -222,13 +228,18 @@ Page({
         }
         /* 套装拆分价（上下装/两件套/三件套）：分→元展示 */
         var setItems = [];
-        var setSumY = 0;
+        var setSumY = 0, setSumW = 0, setSumB = 0, setSumC = 0;
         if (p.params && Array.isArray(p.params.set_items)) {
           p.params.set_items.forEach(function (it) {
             var retailY = it.retail != null ? Math.round(it.retail / 100) : 0;
             var wholesaleY = it.wholesale != null ? Math.round(it.wholesale / 100) : 0;
-            setItems.push({ name: it.name || '', retailY: retailY, wholesaleY: wholesaleY });
+            var bulkY = it.bulk != null ? Math.round(it.bulk / 100) : 0;
+            var costY = it.cost != null ? Math.round(it.cost / 100) : 0;
+            setItems.push({ name: it.name || '', retailY: retailY, wholesaleY: wholesaleY, bulkY: bulkY, costY: costY });
             setSumY += retailY;
+            setSumW += wholesaleY;
+            setSumB += bulkY;
+            setSumC += costY;
           });
         }
         var specText = specList.map(function (s) { return s.label + '：' + s.value; }).join(' | ');
@@ -331,6 +342,9 @@ Page({
           paramList: paramList,
           setItems: setItems,
           setSumY: setSumY,
+          setSumW: setSumW,
+          setSumB: setSumB,
+          setSumC: setSumC,
           priceValue: priceValue,
           bulkPriceValue: bulkPriceValue,
           sizeQuantities: sizeQuantities,

@@ -14,23 +14,27 @@ Page({
     seasonOptions: ['春', '夏', '秋', '冬', '四季'],
     categoryCustomMode: false,
     seasonCustomMode: false,
-    // 套装拆分价：部件名 + 零售价(元) + 批发价(元)，保存时换算成分并入 params.set_items
+    // 套装拆分价：部件名 + 零售价/批发价/批量价/成本价(元)，保存时换算成分并入 params.set_items
     setItems: [],
     setSumR: 0,
-    setSumW: 0
+    setSumW: 0,
+    setSumB: 0,
+    setSumC: 0
   },
 
   /* 套装拆分价 */
   recalcSet: function () {
-    var sumR = 0, sumW = 0;
+    var sumR = 0, sumW = 0, sumB = 0, sumC = 0;
     this.data.setItems.forEach(function (s) {
       sumR += parseFloat(s.retail) || 0;
       sumW += parseFloat(s.wholesale) || 0;
+      sumB += parseFloat(s.bulk) || 0;
+      sumC += parseFloat(s.cost) || 0;
     });
-    this.setData({ setSumR: sumR, setSumW: sumW });
+    this.setData({ setSumR: sumR, setSumW: sumW, setSumB: sumB, setSumC: sumC });
   },
   addSetItem: function () {
-    var items = this.data.setItems.concat([{ name: '', retail: '', wholesale: '' }]);
+    var items = this.data.setItems.concat([{ name: '', retail: '', wholesale: '', bulk: '', cost: '' }]);
     this.setData({ setItems: items });
     this.recalcSet();
   },
@@ -45,7 +49,7 @@ Page({
     var i = e.currentTarget.dataset.i;
     var f = e.currentTarget.dataset.f;
     var items = this.data.setItems.slice();
-    if (!items[i]) items[i] = { name: '', retail: '', wholesale: '' };
+    if (!items[i]) items[i] = { name: '', retail: '', wholesale: '', bulk: '', cost: '' };
     items[i][f] = e.detail.value;
     this.setData({ setItems: items });
     this.recalcSet();
@@ -54,6 +58,8 @@ Page({
     var p = Object.assign({}, this.data.product);
     if (this.data.setSumR) p.price = String(this.data.setSumR);
     if (this.data.setSumW) p.wholesale_price = String(this.data.setSumW);
+    if (this.data.setSumB) p.bulk_price = String(this.data.setSumB);
+    if (this.data.setSumC) p.cost_price = String(this.data.setSumC);
     this.setData({ product: p });
   },
 
@@ -170,7 +176,7 @@ Page({
           var p = res.data && res.data.product;
           if (p) {
             // 默认草稿就在当前，用户可改
-            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0 });
+            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0 });
             if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
             else t.showToast('识别完成，请核对');
           } else {
@@ -248,12 +254,14 @@ Page({
     if (p.season) paramsObj.season = p.season;
     // 套装拆分价：换算成分(cent)
     var setArr = t.data.setItems
-      .filter(function (s) { return s.name || s.retail || s.wholesale; })
+      .filter(function (s) { return s.name || s.retail || s.wholesale || s.bulk || s.cost; })
       .map(function (s) {
         return {
           name: s.name || '',
           retail: s.retail ? Math.round(parseFloat(s.retail) * 100) : 0,
-          wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0
+          wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0,
+          bulk: s.bulk ? Math.round(parseFloat(s.bulk) * 100) : 0,
+          cost: s.cost ? Math.round(parseFloat(s.cost) * 100) : 0
         };
       });
     if (setArr.length) paramsObj.set_items = setArr;

@@ -70,10 +70,12 @@
         <input class="sc-set-name" placeholder="部件名 如 上衣" value="{{it.name}}" data-i="{{index}}" data-f="name" bindinput="onSetItem"/>
         <input class="sc-set-num" type="digit" placeholder="零售" value="{{it.retail}}" data-i="{{index}}" data-f="retail" bindinput="onSetItem"/>
         <input class="sc-set-num" type="digit" placeholder="批发" value="{{it.wholesale}}" data-i="{{index}}" data-f="wholesale" bindinput="onSetItem"/>
+        <input class="sc-set-num" type="digit" placeholder="批量" value="{{it.bulk}}" data-i="{{index}}" data-f="bulk" bindinput="onSetItem"/>
+        <input class="sc-set-num" type="digit" placeholder="成本" value="{{it.cost}}" data-i="{{index}}" data-f="cost" bindinput="onSetItem"/>
         <text class="sc-set-del" catchtap="removeSetItem" data-i="{{index}}">×</text>
       </view>
       <view class="sc-set-sum" wx:if="{{setItems.length}}">
-        <text class="sc-set-sum-txt">拆分价合计：零售 ¥{{setSumR}} ／ 批发 ¥{{setSumW}}</text>
+        <text class="sc-set-sum-txt">合计：零售 ¥{{setSumR}} ／ 批发 ¥{{setSumW}} ／ 批量 ¥{{setSumB}} ／ 成本 ¥{{setSumC}}</text>
         <text class="sc-set-apply" bindtap="applySetTotal">填入总价</text>
       </view>
     </view>

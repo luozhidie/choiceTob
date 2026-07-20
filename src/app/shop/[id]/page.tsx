@@ -610,6 +610,10 @@ export default function ProductDetailPage() {
             {/* 套装拆分价明细（上下装 / 两件套 / 三件套） */}
             {Array.isArray(product.params?.set_items) && product.params!.set_items.length > 0 && (() => {
               const items: any[] = product.params!.set_items;
+              const sumR = items.reduce((a: number, b: any) => a + (b.retail || 0), 0);
+              const sumW = items.reduce((a: number, b: any) => a + (b.wholesale || 0), 0);
+              const sumB = items.reduce((a: number, b: any) => a + (b.bulk || 0), 0);
+              const sumC = items.reduce((a: number, b: any) => a + (b.cost || 0), 0);
               return (
                 <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl">
                   <div className="text-xs font-semibold text-amber-800 mb-2">套装包含（拆分价）</div>
@@ -619,8 +623,12 @@ export default function ProductDetailPage() {
                         <span className="text-gray-700">{it.name || `部件${i + 1}`}</span>
                         <span className="text-gray-900 font-medium">
                           {it.retail != null ? formatPrice(it.retail) : "—"}
-                          {it.wholesale != null && canViewWholesale ? (
-                            <span className="text-xs text-gray-400 ml-2 line-through">{formatPrice(it.wholesale)}</span>
+                          {canViewWholesale ? (
+                            <span className="text-xs text-gray-400 ml-2 line-through">
+                              {it.wholesale != null ? formatPrice(it.wholesale) : "—"}
+                              {it.bulk != null ? ` ／ ${formatPrice(it.bulk)}` : ""}
+                              {it.cost != null ? ` ／ 成本 ${formatPrice(it.cost)}` : ""}
+                            </span>
                           ) : null}
                         </span>
                       </div>
@@ -628,10 +636,16 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-200 text-sm">
                     <span className="text-gray-600">合计（零售）</span>
-                    <span className="text-base font-bold text-gray-900">
-                      {formatPrice(items.reduce((a: number, b: any) => a + (b.retail || 0), 0))}
-                    </span>
+                    <span className="text-base font-bold text-gray-900">{formatPrice(sumR)}</span>
                   </div>
+                  {canViewWholesale ? (
+                    <div className="flex items-center justify-between text-sm mt-1">
+                      <span className="text-gray-500">合计（批发 ／ 批量 ／ 成本）</span>
+                      <span className="font-medium text-gray-700">
+                        {formatPrice(sumW)} ／ {formatPrice(sumB)} ／ {formatPrice(sumC)}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               );
             })()}
