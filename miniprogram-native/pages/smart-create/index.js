@@ -48,9 +48,20 @@ Page({
   onSetItem: function (e) {
     var i = e.currentTarget.dataset.i;
     var f = e.currentTarget.dataset.f;
-    var items = this.data.setItems.slice();
+    var items = this.data.setItems.map(function(s){ return Object.assign({}, s); });
     if (!items[i]) items[i] = { name: '', retail: '', wholesale: '', bulk: '', cost: '' };
     items[i][f] = e.detail.value;
+    if (f === 'cost') {
+      var costY = parseFloat(e.detail.value) || 0;
+      if (costY > 0) {
+        var retail = Math.round(costY / 0.26 * 1.10);
+        var wholesale = Math.round(retail * 0.33);
+        var bulk = Math.round(retail * 0.28);
+        if (!items[i].retail) items[i].retail = String(retail);
+        if (!items[i].wholesale) items[i].wholesale = String(wholesale);
+        if (!items[i].bulk) items[i].bulk = String(bulk);
+      }
+    }
     this.setData({ setItems: items });
     this.recalcSet();
   },
