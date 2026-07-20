@@ -86,8 +86,11 @@
 
   <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
   <template name="blk">
+    <!-- 统一外壳：套用后台 block.style.bgColor，与网站 renderBlock 的 <section backgroundColor> 保持一致
+         （季节色彩/限时采购等绿色板块即由此 bgColor 驱动，之前小程序多数板块未套用所以不显绿） -->
+    <view class="blk-wrap" style="background:{{item.style.bgColor||'#ffffff'}};">
     <!-- featured_banner -->
-    <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="background:{{item.style.bgColor||'#faf8f6'}};padding:{{item.style.padding||20}}rpx 24rpx;">
+    <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
         <image wx:if="{{item.content.mainImage}}" src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
         <view wx:else class="fb-main-fallback">
@@ -324,6 +327,7 @@
           </view>
         </view>
       </view>
+    </view>
     </view>
 
   </template>
