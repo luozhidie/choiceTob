@@ -11,7 +11,7 @@ page {
   --accent-2: #4a3a4b;
   --warm: #ff7a3d;           /* 暖橙（辅助 CTA，如首页底部爆款区） */
   /* 中性色 */
-  --bg: #faf8f6;             /* 页面底色 */
+  --bg: #00BE5A;             /* 页面底色：首页顶部绿色，全站统一 */
   --surface: #ffffff;        /* 卡片底 */
   --line: #f0ece8;           /* 分割线 */
   --text: #1a1a2e;           /* 主文字 */
