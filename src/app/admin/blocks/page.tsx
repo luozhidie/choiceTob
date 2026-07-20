@@ -334,6 +334,8 @@ export default function BlocksAdminPage() {
   const [productCategories, setProductCategories] = useState<string[]>([]);
   // 已发布组货方案，用于「当季系列」模块选择方案
   const [assortmentPlans, setAssortmentPlans] = useState<any[]>([]);
+  // 已发布货架块，用于「特价货架」模块选择点击跳转的货架
+  const [shelfBlocks, setShelfBlocks] = useState<any[]>([]);
 
   // 表单状态
   const [form, setForm] = useState({
@@ -417,6 +419,18 @@ export default function BlocksAdminPage() {
             new Set(json.data.map((p: any) => p.category).filter(Boolean))
           ) as string[];
           setProductCategories(cats);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // 加载已发布货架块，用于「特价货架」模块选择点击跳转的货架
+  useEffect(() => {
+    fetch("/api/public/blocks")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setShelfBlocks(json.data.filter((b: any) => b.type === "shelf"));
         }
       })
       .catch(() => {});
@@ -1723,6 +1737,27 @@ export default function BlocksAdminPage() {
                         <ImeInput type="text" value={((form.content as any)?.subheadline as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), subheadline: val } as any })} placeholder="副标题，如：季末·特价捡漏" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                         <ImeInput type="text" value={((form.content as any)?.descriptor as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), descriptor: val } as any })} placeholder="底部描述，如：全国批发市场 · 优质大牌" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                         <ImeInput type="text" value={((form.content as any)?.link as string) || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), link: val } as any })} placeholder="横幅点击跳转链接（可选）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">点击横幅跳转货架</label>
+                          <select
+                            value={((form.content as any)?.shelfId as string) || ""}
+                            onChange={(e) =>
+                              setForm({
+                                ...form,
+                                content: { ...(form.content as object || {}), shelfId: e.target.value } as any,
+                              })
+                            }
+                            className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none bg-white"
+                          >
+                            <option value="">不绑定（点击默认进买手选品）</option>
+                            {shelfBlocks.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.title || b.content?.title || "货架"}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-[10px] text-gray-400 mt-1">选一个货架块，用户点「限时采购」横幅即进入该货架</p>
+                        </div>
                       </div>
                     )}
 

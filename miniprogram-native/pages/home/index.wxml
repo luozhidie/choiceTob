@@ -235,7 +235,7 @@
                     <text class="spec-title">{{item.section_title}}</text>
                     <text wx:if="{{item.section_subtitle}}" class="spec-sub">{{item.section_subtitle}}</text>
                   </view>
-                  <view class="spec-banner" bindtap="goBlockLink" data-link="{{specMap[item.id].banner.link||'#'}}">
+                  <view class="spec-banner" bindtap="goShelf" data-id="{{specMap[item.id].banner.shelfId}}">
                     <image wx:if="{{specMap[item.id].banner.image}}" src="{{specMap[item.id].banner.image}}" mode="aspectFill" class="spec-banner-img"/>
                     <view wx:else class="spec-banner-bg">
                       <template is="prod-collage" data="{{images:fallbackImages}}"/>

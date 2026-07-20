@@ -156,7 +156,8 @@ Page({
               headline:ct.headline||'SALE',
               subheadline:ct.subheadline||'季末·特价捡漏',
               descriptor:ct.descriptor||'全国批发市场 · 优质大牌',
-              link:ct.link||'#'
+              link:ct.link||'#',
+              shelfId:ct.shelfId||''
             };
             t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner}});
             t.loadSpecial(b.id,'special');
@@ -227,6 +228,7 @@ Page({
   goShelf:function(e){
     var id=e.currentTarget.dataset.id;
     if(id)wx.navigateTo({url:'/pages/shelf/index?id='+id});
+    else wx.switchTab({url:'/pages/buyer/index'});
   },
 
   /* ====== 菜单 ====== */
