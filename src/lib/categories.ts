@@ -140,6 +140,17 @@ export const CATEGORIES: CategoryDef[] = [
       { key: "maternity", label: "母婴/家居服" },
     ],
   },
+  // 小程序预设扁平品类兜底：key/value 直接用中文 label，便于同步显示
+  { key: "套装", label: "套装", subcategories: [] },
+  { key: "上装", label: "上装", subcategories: [] },
+  { key: "下装", label: "下装", subcategories: [] },
+  { key: "连衣裙", label: "连衣裙", subcategories: [] },
+  { key: "外套", label: "外套", subcategories: [] },
+  { key: "鞋靴", label: "鞋靴", subcategories: [] },
+  { key: "箱包", label: "箱包", subcategories: [] },
+  { key: "配饰", label: "配饰", subcategories: [] },
+  { key: "珠宝首饰", label: "珠宝首饰", subcategories: [] },
+  { key: "其他", label: "其他", subcategories: [] },
   {
     key: "accessory",
     label: "配饰（传统）",

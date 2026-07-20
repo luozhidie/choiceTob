@@ -1441,6 +1441,12 @@ export default function AdminProductsPage() {
                           {c.label}
                         </option>
                       ))}
+                    {/* 兜底：小程序自定义品类（如「套装」）若不在预设/动态品类中，仍显示并允许保存 */}
+                    {form.category &&
+                      !CATEGORIES.some((c) => c.key === form.category) &&
+                      !dbCategories.some((c) => c.label === form.category) && (
+                        <option value={form.category}>{form.category}</option>
+                      )}
                   </select>
                 </div>
                 <div>

@@ -10,7 +10,7 @@ Page({
     saving: false,
     toastText: '',
     toastType: '',
-    categoryOptions: ['上装', '下装', '连衣裙', '外套', '鞋靴', '箱包', '配饰', '珠宝首饰', '其他'],
+    categoryOptions: ['上装', '下装', '连衣裙', '外套', '套装', '鞋靴', '箱包', '配饰', '珠宝首饰', '其他'],
     seasonOptions: ['春', '夏', '秋', '冬', '四季'],
     categoryCustomMode: false,
     seasonCustomMode: false,
@@ -257,7 +257,7 @@ Page({
       cover_image: (t.data.uploadedUrls[0]) || (p.images && p.images[0]) || null,
       images: t.data.uploadedUrls.length ? t.data.uploadedUrls : (p.images || []),
       is_published: publish,
-      stock: 0,
+      stock: 100,
       tags: Array.isArray(p.tags) ? p.tags : []
     };
     // 季节、套装拆分价等存入 params JSONB（products 表没有 season 列，不能作为顶层字段）
