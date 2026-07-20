@@ -128,7 +128,7 @@ Page({
           if (p) {
             // 默认草稿就在当前，用户可改
             t.setData({ product: p, uploadedUrls: urls });
-            if (res.data.source === 'mock') t.showToast('AI 未配置，已生成空草稿');
+            if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
             else t.showToast('识别完成，请核对');
           } else {
             t.showToast((res.data && res.data.error) || '识别失败');

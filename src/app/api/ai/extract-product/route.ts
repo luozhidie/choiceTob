@@ -8,7 +8,7 @@ const supabase = createClient(
 );
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 25;
 
 function parseMiniToken(token: string): { uid: string; exp?: number } | null {
   try {
@@ -62,15 +62,48 @@ const SYSTEM = `你是服装批发行业的商品录入助手。用户会发来�
   "tags": ["标签1","标签2"]
 }`;
 
-function mockResult(images: string[], note?: string): any {
+function parseNote(note?: string) {
+  if (!note) return null;
+  const lines = note.split("\n").map((l) => l.trim()).filter(Boolean);
+  const prices: number[] = [];
+  const sizeMatch = note.match(/[SsMmLlXx]{1,5}|均码/);
+  const numberMatches = note.match(/\d{2,4}/g);
+  if (numberMatches) {
+    for (const n of numberMatches) {
+      const v = parseInt(n, 10);
+      if (v >= 10 && v <= 99999) prices.push(v);
+    }
+  }
+  const firstLine = lines[0] || "";
+  const materialMatch = firstLine.match(/(羊毛|棉|涤纶|真丝|麻|混纺|雪纺|针织|牛仔|皮革|聚酯纤维|锦纶|氨纶|黏胶|莫代尔|呢|绒)/);
+  const colorMatch = firstLine.match(/(黑|白|灰|红|蓝|绿|黄|粉|紫|杏|卡其|驼|藏青|军绿|米|橙|棕|咖|酒红|天蓝|湖蓝|浅|深)\S{0,2}/);
   return {
-    title: note ? "导入商品（待核对）" : "新款商品（待核对）",
-    category: "其他",
-    price: 0,
-    wholesale_price: 0,
+    title: firstLine.slice(0, 30) || "导入商品（待核对）",
+    prices: prices.slice(0, 2),
+    sizes: sizeMatch ? sizeMatch[0].toUpperCase() : "",
+    material: materialMatch ? materialMatch[0] : "",
+    color: colorMatch ? colorMatch[0] : "",
+  };
+}
+
+function mockResult(images: string[], note?: string): any {
+  const parsed = parseNote(note) || {
+    title: "新款商品（待核对）",
+    prices: [],
     sizes: "",
-    color: "",
     material: "",
+    color: "",
+  };
+  const price = parsed.prices[0] || 0;
+  const wholesalePrice = parsed.prices[1] || (parsed.prices.length > 1 ? parsed.prices[1] : 0);
+  return {
+    title: parsed.title,
+    category: "其他",
+    price,
+    wholesale_price: wholesalePrice,
+    sizes: parsed.sizes,
+    color: parsed.color,
+    material: parsed.material,
     season: "四季",
     description: note ? note.slice(0, 20) : "AI 服务未配置，已生成草稿待你填写",
     tags: ["待核对"],
@@ -117,7 +150,7 @@ export async function POST(request: NextRequest) {
       for (const model of orModels) {
         try {
           const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 55000);
+          const timer = setTimeout(() => controller.abort(), 15000);
           const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -163,7 +196,7 @@ export async function POST(request: NextRequest) {
               (note ? `供应商备注：${note}` : ""),
           },
         ];
-        for (const url of images.slice(0, 5)) {
+        for (const url of images.slice(0, 3)) {
           content.push({ type: "image_url", image_url: { url } });
         }
         const controller = new AbortController();
