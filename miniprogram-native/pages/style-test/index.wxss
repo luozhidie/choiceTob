@@ -1,4 +1,4 @@
-page{background:#f8f6f4;padding-bottom:calc(40rpx + env(safe-area-inset-bottom));}
+page{background: var(--bg);padding-bottom:calc(40rpx + env(safe-area-inset-bottom));}
 
 /* 头 */
 .hd{text-align:center;padding:36rpx 24rpx 28rpx;}

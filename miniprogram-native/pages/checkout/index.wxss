@@ -1,4 +1,4 @@
-page{background:#f5f3f0;}
+page{background: var(--bg);}
 
 /* 地址 */
 .addr-sec{background:#fff;padding:24rpx 24rpx;display:flex;align-items:center;margin-bottom:12rpx;border-radius:0 0 16rpx 16rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}

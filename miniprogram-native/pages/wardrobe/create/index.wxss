@@ -1,4 +1,4 @@
-.page{display:flex;flex-direction:column;height:100vh;background:#f5f3f0;}
+.page{display:flex;flex-direction:column;height:100vh;background: var(--bg);}
 
 /* 顶部 */
 .header{height:88rpx;display:flex;align-items:center;justify-content:space-between;padding:0 24rpx;background:#fff;flex-shrink:0;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}

@@ -1,4 +1,4 @@
-.page{background:#f5f3f0;min-height:100vh;padding-bottom:calc(180rpx + env(safe-area-inset-bottom));box-sizing:border-box;}
+.page{background: var(--bg);min-height:100vh;padding-bottom:calc(180rpx + env(safe-area-inset-bottom));box-sizing:border-box;}
 
 /* Hero */
 .hero{position:relative;height:520rpx;background:linear-gradient(135deg,#2d1b2e,#4a2a3e);display:flex;align-items:flex-end;overflow:hidden;padding:0 40rpx 48rpx;box-sizing:border-box;}

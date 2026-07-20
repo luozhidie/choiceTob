@@ -1,5 +1,5 @@
 /* ===== 购物车页 ===== */
-page { background: #f5f2ef; }
+page { background: var(--bg); }
 
 /* 空状态 */
 .empty-state { text-align: center; padding: 160rpx 0; }

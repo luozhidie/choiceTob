@@ -1,4 +1,4 @@
-.page{min-height:100vh;background:#f5f3f0;padding:24rpx;box-sizing:border-box;padding-bottom:160rpx;}
+.page{min-height:100vh;background: var(--bg);padding:24rpx;box-sizing:border-box;padding-bottom:160rpx;}
 .card{background:#fff;border-radius:20rpx;padding:28rpx;margin-bottom:20rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
 .section-title{font-size:30rpx;color:#333;display:flex;align-items:center;justify-content:space-between;margin-bottom:20rpx;}
 .section-title.red{color:#d44949;}

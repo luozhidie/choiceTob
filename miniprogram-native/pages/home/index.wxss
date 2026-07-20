@@ -1,4 +1,4 @@
-page { background: #faf8f6; color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; }
+page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; }
 
 /* 商品照片墙：横幅无图时自动兜底 */
 .pc-bg{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(135deg,#8a6d5b,#b08968,#d9c2a8);overflow:hidden;}

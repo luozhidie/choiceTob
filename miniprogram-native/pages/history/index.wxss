@@ -1,4 +1,4 @@
-page{background:#f5f3f0;min-height:100vh;}
+page{background: var(--bg);min-height:100vh;}
 .hd{padding:30rpx 24rpx 16rpx;}
 .ht{font-size:38rpx;font-weight:bold;color:#1a1a2e;display:block;margin-bottom:6rpx;}
 .hs{font-size:24rpx;color:#999;}

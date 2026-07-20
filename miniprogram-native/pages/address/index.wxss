@@ -1,4 +1,4 @@
-.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;}
+.page{padding:24rpx;background: var(--bg);min-height:100vh;box-sizing:border-box;}
 .empty{padding:80rpx 40rpx;text-align:center;color:#999;font-size:26rpx;}
 .addr{background:#fff;border-radius:16rpx;padding:24rpx;margin-bottom:20rpx;}
 .addr-top{display:flex;align-items:center;gap:16rpx;margin-bottom:10rpx;}

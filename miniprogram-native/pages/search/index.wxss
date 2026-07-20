@@ -1,4 +1,4 @@
-page { background: #faf8f6; }
+page { background: var(--bg); }
 
 /* 搜索框 */
 .search-bar { display: flex; align-items: center; padding: 16rpx 24rpx; background: #fff; position: sticky; top: 0; z-index: 50; box-shadow: 0 2rpx 12rpx rgba(0,0,0,0.04); }

@@ -1,5 +1,5 @@
 /* ═══════ 认证店主 · 4步渐进式全必填表单 ═══════ */
-page{background:#f5f2ef;min-height:100vh;}
+page{background: var(--bg);min-height:100vh;}
 
 /* ── 导航 ── */
 .nav-bar{display:flex;align-items:center;justify-content:space-between;padding:16rpx 30rpx;background:#fff;border-bottom:1rpx solid #ede8e4;}

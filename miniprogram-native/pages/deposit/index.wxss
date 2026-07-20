@@ -1,4 +1,4 @@
-page{background:#faf8f6;}
+page{background: var(--bg);}
 
 /* 标题区 */
 .header{padding:36rpx 28rpx 20rpx;}

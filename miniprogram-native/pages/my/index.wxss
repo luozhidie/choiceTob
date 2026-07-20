@@ -1,4 +1,4 @@
-page{background:#f5f3f0;}
+page{background: var(--bg);}
 
 /* ====== 头部 ====== */
 .header{display:flex;align-items:center;justify-content:space-between;padding:28rpx 24rpx 16rpx;background:linear-gradient(180deg,#fff5f8 0%,#fce4ec 40%,#fff 100%);}

@@ -1,4 +1,4 @@
-page{background:#f5f3f0;}
+page{background: var(--bg);}
 
 /* Tabs */
 .tabs{display:flex;background:#fff;padding:0 8rpx;border-bottom:1rpx solid #f0ece8;position:sticky;top:0;z-index:10;}

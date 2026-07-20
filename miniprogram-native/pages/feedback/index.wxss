@@ -1,4 +1,4 @@
-.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;}
+.page{padding:24rpx;background: var(--bg);min-height:100vh;box-sizing:border-box;}
 .tip-card{background:#fff;border-radius:16rpx;padding:24rpx;margin-bottom:20rpx;}
 .tc-txt{font-size:26rpx;color:#666;line-height:1.5;}
 .form{background:#fff;border-radius:16rpx;padding:24rpx;}

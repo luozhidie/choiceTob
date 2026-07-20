@@ -1,4 +1,4 @@
-.page{padding:24rpx;background:#f5f3f0;min-height:100vh;box-sizing:border-box;padding-bottom:160rpx;}
+.page{padding:24rpx;background: var(--bg);min-height:100vh;box-sizing:border-box;padding-bottom:160rpx;}
 
 /* 枢纽头部 */
 .hub-head{margin-bottom:28rpx;}

@@ -1,5 +1,5 @@
 /* ===== 买手选品页 ===== */
-page{background:#faf8f6;}
+page{background: var(--bg);}
 
 /* 搜索栏 */
 .search-bar{display:flex;align-items:center;padding:16rpx 24rpx;background:#fff;border-bottom:1rpx solid #f0ece8;}

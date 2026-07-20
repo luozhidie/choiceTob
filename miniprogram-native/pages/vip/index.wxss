@@ -1,4 +1,4 @@
-page{background:#f5f3f0;}
+page{background: var(--bg);}
 
 /* Hero */
 .hero{background:linear-gradient(160deg,#2d1b2e 0%,#4a3a5a 40%,#6b3f70 100%);padding:44rpx 28rpx 36rpx;text-align:center;}

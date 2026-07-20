@@ -1,6 +1,6 @@
 page {
   padding: 20rpx;
-  background: #f5f3f0;
+  background: var(--bg);
   min-height: 100vh;
 }
 
