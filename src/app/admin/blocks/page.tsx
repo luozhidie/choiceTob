@@ -1726,7 +1726,7 @@ export default function BlocksAdminPage() {
 
                     {form.type === "special" && (
                       <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
-                        <p className="text-xs text-gray-500">商品按折扣自动从商品库拉取，无需手动挑选。顶部横幅参考「一手特价」大促风格。</p>
+                        <p className="text-xs text-gray-500">默认按折扣自动拉取；如不想同款重复进多个货架，可手动挑选商品（下方「手动挑选商品」）。</p>
                         <ImeInput type="text" value={form.title} onChange={(val) => setForm({ ...form, title: val })} placeholder="模块标题（后台用）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                         <BlockImageUpload
                           value={((form.content as any)?.banner_image as string) || ""}
@@ -1757,6 +1757,14 @@ export default function BlocksAdminPage() {
                             ))}
                           </select>
                           <p className="text-[10px] text-gray-400 mt-1">选一个货架块，用户点「限时采购」横幅即进入该货架</p>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">手动挑选商品（可选）</label>
+                          <ProductPicker
+                            value={((form.content as any)?.productIds as string) || ""}
+                            onChange={(val: string) => setForm({ ...form, content: { ...(form.content as object || {}), productIds: val } as any })}
+                          />
+                          <p className="text-[10px] text-gray-400 mt-1">勾选后只展示这些商品，避免自动拉取导致同款重复进多个货架；不填则按折扣自动</p>
                         </div>
                       </div>
                     )}

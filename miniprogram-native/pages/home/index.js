@@ -159,8 +159,13 @@ Page({
               link:ct.link||'#',
               shelfId:ct.shelfId||''
             };
-            t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner}});
-            t.loadSpecial(b.id,'special');
+            var pids=ct.productIds||'';
+            t.setData({['specMap.'+b.id]:{mode:'special',products:[],loading:true,banner:banner,productIds:pids}});
+            if(pids){
+              t.loadManualSpecial(b.id,pids,'special');
+            } else {
+              t.loadSpecial(b.id,'special');
+            }
           }
         });
       }
@@ -187,12 +192,36 @@ Page({
       }
     });
   },
+  /* 特价货架：手动挑选商品时，按 ids 加载指定商品（tab 仍可切换折扣类型筛选） */
+  loadManualSpecial:function(blockId,ids,mode){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/special-products?ids='+encodeURIComponent(ids)+'&mode='+(mode||'special'),
+      method:'GET',
+      success:function(r){
+        var l=[];
+        if(r.data&&r.data.success&&r.data.data)l=r.data.data;
+        else if(Array.isArray(r.data))l=r.data;
+        l.forEach(function(p){
+          p.image_url = safeImg(p.image_url);
+          p.cover_image = safeImg(p.cover_image);
+          if(p.images && Array.isArray(p.images)) p.images = p.images.filter(isValidImgUrl);
+        });
+        var prev=t.data.specMap[blockId]||{mode:mode,products:[],loading:true,banner:{}};
+        t.setData({['specMap.'+blockId]:{mode:mode,products:l,loading:false,banner:prev.banner||{},productIds:ids}});
+      }
+    });
+  },
   swSpecMode:function(e){
     var id=e.currentTarget.dataset.id;
     var m=e.currentTarget.dataset.m;
     var prev=this.data.specMap[id]||{mode:m,products:[],loading:true,banner:{}};
-    this.setData({['specMap.'+id]:{mode:m,products:prev.products,loading:true,banner:prev.banner||{}}});
-    this.loadSpecial(id,m);
+    this.setData({['specMap.'+id]:{mode:m,products:prev.products,loading:true,banner:prev.banner||{},productIds:prev.productIds||''}});
+    if(prev.productIds){
+      this.loadManualSpecial(id,prev.productIds,m);
+    } else {
+      this.loadSpecial(id,m);
+    }
   },
 
   /* ====== 模块点击跳转 ====== */
