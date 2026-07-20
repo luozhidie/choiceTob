@@ -37,7 +37,7 @@ Page({
 
   onNote: function (e) { this.setData({ note: e.detail.value }); },
 
-  /* 上传所有本地图到 Storage */
+  /* 上传所有本地图到 Storage（使用 base64 + wx.request 绕过 uploadFile 域名白名单限制） */
   uploadAll: function (cb) {
     var t = this;
     var token = wx.getStorageSync('token') || '';
@@ -47,49 +47,56 @@ Page({
     var idx = 0;
     var lastErr = '';
 
-    function uploadOne(path, done) {
-      wx.uploadFile({
-        url: 'https://colour-choice.art/api/upload',
+    function readAndUpload(path, done) {
+      wx.getFileSystemManager().readFile({
         filePath: path,
-        name: 'file',
-        header: token ? { 'Authorization': 'Bearer ' + token } : {},
+        encoding: 'base64',
         success: function (res) {
-          var err = '';
-          if (res.statusCode !== 200) {
-            err = 'HTTP' + res.statusCode + ': ' + (res.data || '').slice(0, 60);
-          } else {
-            try {
-              var j = JSON.parse(res.data);
-              if (j && j.success && j.url) { urls.push(j.url); }
-              else if (j && j.error) { err = j.error; }
-              else { err = '上传返回异常'; }
-            } catch (e) { err = '解析失败'; }
-          }
-          if (err) { lastErr = err; }
-          done();
+          var b64 = 'data:image/jpeg;base64,' + res.data;
+          wx.request({
+            url: 'https://colour-choice.art/api/upload-base64',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' },
+            data: { image: b64 },
+            success: function (r) {
+              if (r.statusCode === 200 && r.data && r.data.success && r.data.url) {
+                urls.push(r.data.url);
+              } else {
+                lastErr = (r.data && r.data.error) || ('HTTP' + r.statusCode);
+              }
+              done();
+            },
+            fail: function (res) {
+              lastErr = 'request失败: ' + (res && res.errMsg || '未知');
+              done();
+            }
+          });
         },
-        fail: function (res) {
-          lastErr = 'uploadFile失败: ' + (res && res.errMsg || '未知');
+        fail: function () {
+          lastErr = '读取文件失败';
           done();
         }
       });
     }
 
-    // 小程序临时图可能为 HEIC 或无扩展名，先压缩成 JPEG 再上传，提高成功率
-    function compressThenUpload(path, done) {
-      if (!wx.compressImage) { uploadOne(path, done); return; }
-      wx.compressImage({
-        src: path,
-        quality: 80,
-        success: function (res) { uploadOne(res.tempFilePath, done); },
-        fail: function () { uploadOne(path, done); }
-      });
+    function uploadOne(path, done) {
+      // 先压缩，避免 base64 过大
+      if (wx.compressImage) {
+        wx.compressImage({
+          src: path,
+          quality: 80,
+          success: function (res) { readAndUpload(res.tempFilePath, done); },
+          fail: function () { readAndUpload(path, done); }
+        });
+      } else {
+        readAndUpload(path, done);
+      }
     }
 
     function next() {
       if (idx >= queue.length) { cb(urls, lastErr); return; }
       var p = queue[idx++];
-      compressThenUpload(p, next);
+      uploadOne(p, next);
     }
 
     next();
