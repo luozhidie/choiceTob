@@ -21,6 +21,18 @@
 
 .sc-thumb{width:120rpx;height:120rpx;border-radius:10rpx;}
 
+/* 套装拆分价 */
+.sc-set{background:#fff7ed;border:2rpx solid #fed7aa;border-radius:14rpx;padding:16rpx;margin-bottom:16rpx;}
+.sc-set-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12rpx;}
+.sc-set-add{font-size:24rpx;color:#b45309;font-weight:bold;}
+.sc-set-item{display:flex;align-items:center;gap:10rpx;margin-bottom:12rpx;}
+.sc-set-name{flex:1;background:#fff;border-radius:10rpx;padding:14rpx 16rpx;font-size:24rpx;color:#333;}
+.sc-set-num{width:120rpx;background:#fff;border-radius:10rpx;padding:14rpx 10rpx;font-size:24rpx;color:#333;text-align:center;}
+.sc-set-del{width:40rpx;height:40rpx;line-height:40rpx;text-align:center;color:#bbb;font-size:32rpx;}
+.sc-set-sum{display:flex;align-items:center;justify-content:space-between;border-top:2rpx solid #fed7aa;padding-top:12rpx;margin-top:4rpx;}
+.sc-set-sum-txt{font-size:22rpx;color:#78350f;}
+.sc-set-apply{font-size:22rpx;color:#b45309;font-weight:bold;border:2rpx solid #fdba74;border-radius:999rpx;padding:6rpx 18rpx;}
+
 .sc-actions{display:flex;gap:16rpx;margin-top:20rpx;}
 .sc-actions .sc-btn{margin-bottom:0;}
 

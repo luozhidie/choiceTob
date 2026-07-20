@@ -220,6 +220,17 @@ Page({
             }
           }
         }
+        /* 套装拆分价（上下装/两件套/三件套）：分→元展示 */
+        var setItems = [];
+        var setSumY = 0;
+        if (p.params && Array.isArray(p.params.set_items)) {
+          p.params.set_items.forEach(function (it) {
+            var retailY = it.retail != null ? Math.round(it.retail / 100) : 0;
+            var wholesaleY = it.wholesale != null ? Math.round(it.wholesale / 100) : 0;
+            setItems.push({ name: it.name || '', retailY: retailY, wholesaleY: wholesaleY });
+            setSumY += retailY;
+          });
+        }
         var specText = specList.map(function (s) { return s.label + '：' + s.value; }).join(' | ');
         /* 商品详情图：从 detail HTML 中提取 <img> src */
         var detailImages = [];
@@ -318,6 +329,8 @@ Page({
           specList: specList,
           specText: specText,
           paramList: paramList,
+          setItems: setItems,
+          setSumY: setSumY,
           priceValue: priceValue,
           bulkPriceValue: bulkPriceValue,
           sizeQuantities: sizeQuantities,

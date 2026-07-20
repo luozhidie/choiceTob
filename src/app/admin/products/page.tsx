@@ -83,8 +83,8 @@ interface Product {
   care_instructions?: string | null;
   weight?: string | null;
   brand?: string | null;
-  // 详细参数（服装规格）JSONB
-  params?: { [key: string]: string | null } | null;
+  // 详细参数（服装规格）JSONB；set_items（套装拆分价数组）也存放在这里，无需新增列
+  params?: Record<string, any> | null;
   // 媒体字段
   video_url?: string | null;
   model_images?: string[] | null;
@@ -119,6 +119,26 @@ export default function AdminProductsPage() {
   const [batchCategory, setBatchCategory] = useState("");
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
+
+  // 套装拆分价（上下装/两件套/三件套）：部件名 + 零售价(元) + 批发价(元)
+  // 仅用于表单编辑，提交时换算成分(cent)并入 params.set_items，避免新增数据库列
+  const [setItems, setSetItems] = useState<
+    { name: string; retail: string; wholesale: string }[]
+  >([]);
+  const addSetItem = () =>
+    setSetItems((prev) => [...prev, { name: "", retail: "", wholesale: "" }]);
+  const removeSetItem = (i: number) =>
+    setSetItems((prev) => prev.filter((_, j) => j !== i));
+  const updateSetItem = (i: number, field: "name" | "retail" | "wholesale", val: string) =>
+    setSetItems((prev) =>
+      prev.map((s, j) => (j === i ? { ...s, [field]: val } : s))
+    );
+  const applySetTotal = (r: number, w: number) =>
+    setForm((f) => ({
+      ...f,
+      price: r ? String(r) : f.price,
+      wholesale_price: w ? String(w) : f.wholesale_price,
+    }));
 
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
@@ -336,6 +356,7 @@ export default function AdminProductsPage() {
       ship_text: "",
       ship_image: "",
     });
+    setSetItems([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -395,13 +416,21 @@ export default function AdminProductsPage() {
       care_instructions: form.care_instructions.trim() || null,
       weight: form.weight.trim() || null,
       brand: form.brand.trim() || null,
-      // 详细参数（服装规格）：清洗空值后写入 JSONB
+      // 详细参数（服装规格）：清洗空值后写入 JSONB；套装拆分价并入 set_items
       params: (() => {
-        const cleaned: Record<string, string> = {};
+        const cleaned: Record<string, any> = {};
         Object.keys(form.params || {}).forEach((k) => {
           const v = (form.params[k] || "").trim();
           if (v) cleaned[k] = v;
         });
+        const arr = setItems
+          .filter((s) => s.name.trim() || s.retail || s.wholesale)
+          .map((s) => ({
+            name: s.name.trim(),
+            retail: s.retail ? Math.round(Number(s.retail) * 100) : 0,
+            wholesale: s.wholesale ? Math.round(Number(s.wholesale) * 100) : 0,
+          }));
+        if (arr.length > 0) cleaned.set_items = arr;
         return Object.keys(cleaned).length > 0 ? cleaned : null;
       })(),
       // 媒体字段
@@ -547,6 +576,18 @@ export default function AdminProductsPage() {
       ship_text: product.ship_text || "",
       ship_image: product.ship_image || "",
     });
+    // 套装拆分价：数据库存的是分(cent)，回显为元
+    const loaded = (product.params?.set_items as any) || [];
+    setSetItems(
+      Array.isArray(loaded)
+        ? loaded.map((it: any) => ({
+            name: it?.name || "",
+            retail: it?.retail != null ? String(Math.round(it.retail / 100)) : "",
+            wholesale:
+              it?.wholesale != null ? String(Math.round(it.wholesale / 100)) : "",
+          }))
+        : []
+    );
     setShowForm(true);
   };
 
@@ -1185,6 +1226,92 @@ export default function AdminProductsPage() {
                     placeholder="原价"
                   />
                 </div>
+              </div>
+
+              {/* 套装拆分价（上下装 / 两件套 / 三件套） */}
+              <div className="mt-4 p-4 bg-amber-50/70 border border-amber-200 rounded-xl">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-sm font-semibold text-gray-800">
+                    套装拆分价（上下装 / 两件套 / 三件套）
+                  </label>
+                  <button
+                    type="button"
+                    onClick={addSetItem}
+                    className="text-xs px-2.5 py-1 bg-primary text-white rounded-lg hover:opacity-90"
+                  >
+                    + 添加部件
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">
+                  分别填写每个部件的名称、零售价、批发价（元）。下方自动合计，可一键填入上方总价。
+                </p>
+                {setItems.map((it, idx) => (
+                  <div key={idx} className="flex gap-2 items-center mb-2">
+                    <input
+                      type="text"
+                      value={it.name}
+                      onChange={(e) => updateSetItem(idx, "name", e.target.value)}
+                      className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="部件名，如 上衣 / 半裙"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={it.retail}
+                      onChange={(e) =>
+                        updateSetItem(idx, "retail", e.target.value.replace(/[^0-9.]/g, ""))
+                      }
+                      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="零售价"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={it.wholesale}
+                      onChange={(e) =>
+                        updateSetItem(idx, "wholesale", e.target.value.replace(/[^0-9.]/g, ""))
+                      }
+                      className="w-24 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="批发价"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSetItem(idx)}
+                      className="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500"
+                      title="删除部件"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                {setItems.length === 0 && (
+                  <p className="text-xs text-gray-400">暂无部件，点击「+ 添加部件」。</p>
+                )}
+                {setItems.length > 0 &&
+                  (() => {
+                    const sumR = setItems.reduce(
+                      (a, b) => a + (Number(b.retail) || 0),
+                      0
+                    );
+                    const sumW = setItems.reduce(
+                      (a, b) => a + (Number(b.wholesale) || 0),
+                      0
+                    );
+                    return (
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-xs text-gray-600">
+                          拆分价合计：零售 ¥{sumR} ／ 批发 ¥{sumW}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => applySetTotal(sumR, sumW)}
+                          className="text-xs px-2.5 py-1 border border-primary text-primary rounded-lg hover:bg-primary/5"
+                        >
+                          填入总价
+                        </button>
+                      </div>
+                    );
+                  })()}
               </div>
               {/* 实时毛利率（成本价 vs 批发/批量价） */}
               {(() => {

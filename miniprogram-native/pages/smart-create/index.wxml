@@ -41,6 +41,24 @@
         <input class="sc-input" type="digit" value="{{product.wholesale_price}}" data-field="wholesale_price" bindinput="onField"/>
       </view>
     </view>
+
+    <!-- 套装拆分价（上下装/两件套/三件套） -->
+    <view class="sc-set">
+      <view class="sc-set-head">
+        <text class="sc-label">套装拆分价（上下装/两件套/三件套）</text>
+        <text class="sc-set-add" bindtap="addSetItem">＋ 添加部件</text>
+      </view>
+      <view class="sc-set-item" wx:for="{{setItems}}" wx:key="index" wx:for-item="it">
+        <input class="sc-set-name" placeholder="部件名 如 上衣" value="{{it.name}}" data-i="{{index}}" data-f="name" bindinput="onSetItem"/>
+        <input class="sc-set-num" type="digit" placeholder="零售" value="{{it.retail}}" data-i="{{index}}" data-f="retail" bindinput="onSetItem"/>
+        <input class="sc-set-num" type="digit" placeholder="批发" value="{{it.wholesale}}" data-i="{{index}}" data-f="wholesale" bindinput="onSetItem"/>
+        <text class="sc-set-del" catchtap="removeSetItem" data-i="{{index}}">×</text>
+      </view>
+      <view class="sc-set-sum" wx:if="{{setItems.length}}">
+        <text class="sc-set-sum-txt">拆分价合计：零售 ¥{{setSumR}} ／ 批发 ¥{{setSumW}}</text>
+        <text class="sc-set-apply" bindtap="applySetTotal">填入总价</text>
+      </view>
+    </view>
     <view class="sc-row">
       <view class="sc-field sc-half">
         <text class="sc-label">尺码</text>

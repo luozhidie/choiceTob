@@ -56,6 +56,8 @@ interface Product {
   brand?: string | null;
   weight?: string | null;
   care_instructions?: string | null;
+  /* 详细参数 JSONB（含套装拆分价 set_items） */
+  params?: Record<string, any> | null;
 }
 
 export default function ProductDetailPage() {
@@ -147,6 +149,7 @@ export default function ProductDetailPage() {
             brand: p.brand || null,
             weight: p.weight || null,
             care_instructions: p.care_instructions || null,
+            params: p.params || null,
           });
           setLoading(false);
           return;
@@ -603,6 +606,35 @@ export default function ProductDetailPage() {
             {product.sales_count ? (
               <div className="text-xs text-gray-400 mt-1">今日已拼 {product.sales_count} 件</div>
             ) : null}
+
+            {/* 套装拆分价明细（上下装 / 两件套 / 三件套） */}
+            {Array.isArray(product.params?.set_items) && product.params!.set_items.length > 0 && (() => {
+              const items: any[] = product.params!.set_items;
+              return (
+                <div className="mt-3 p-3 bg-amber-50/70 border border-amber-200 rounded-xl">
+                  <div className="text-xs font-semibold text-amber-800 mb-2">套装包含（拆分价）</div>
+                  <div className="space-y-1">
+                    {items.map((it: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-700">{it.name || `部件${i + 1}`}</span>
+                        <span className="text-gray-900 font-medium">
+                          {it.retail != null ? formatPrice(it.retail) : "—"}
+                          {it.wholesale != null && canViewWholesale ? (
+                            <span className="text-xs text-gray-400 ml-2 line-through">{formatPrice(it.wholesale)}</span>
+                          ) : null}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-amber-200 text-sm">
+                    <span className="text-gray-600">合计（零售）</span>
+                    <span className="text-base font-bold text-gray-900">
+                      {formatPrice(items.reduce((a: number, b: any) => a + (b.retail || 0), 0))}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div
               className={`mt-2 flex items-center gap-2 p-[10px] rounded-lg border transition-all cursor-pointer ${canViewWholesale && product.wholesale_price ? "bg-green-50 border-green-200 hover:bg-green-100" : "bg-blue-50 border-blue-200 hover:border-blue-300"}`}

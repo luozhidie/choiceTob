@@ -180,6 +180,16 @@ page { background: #f5f3f0; }
 .sales-num { font-size: 36rpx; font-weight: 700; color: #333; line-height: 1; }
 .sales-label { font-size: 22rpx; color: #999; margin-top: 8rpx; }
 
+/* 套装拆分价明细 */
+.set-detail { background: #fff7ed; border-top: 1rpx solid #fed7aa; padding: 20rpx 24rpx; }
+.set-detail-title { font-size: 24rpx; font-weight: 700; color: #b45309; margin-bottom: 12rpx; }
+.set-detail-row { display: flex; align-items: center; justify-content: space-between; padding: 8rpx 0; }
+.set-detail-name { font-size: 26rpx; color: #444; }
+.set-detail-price { font-size: 26rpx; color: #2d1b2e; font-weight: 600; }
+.set-detail-ws { font-size: 22rpx; color: #999; font-weight: 400; text-decoration: line-through; margin-left: 8rpx; }
+.set-detail-sum { display: flex; align-items: center; justify-content: space-between; margin-top: 12rpx; padding-top: 12rpx; border-top: 1rpx solid #fed7aa; font-size: 24rpx; color: #78350f; }
+.set-detail-sum-amt { font-size: 30rpx; font-weight: 800; color: #2d1b2e; }
+
 .name-sec { background: #fff; padding: 24rpx; }
 .name-sec .name { font-size: 34rpx; font-weight: 700; color: #1a1a2e; line-height: 1.45; display: block; }
 .name-sec .desc { font-size: 25rpx; color: #888; margin-top: 10rpx; line-height: 1.5; display: block; }

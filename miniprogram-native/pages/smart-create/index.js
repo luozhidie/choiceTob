@@ -11,7 +11,48 @@ Page({
     toastText: '',
     toastType: '',
     categoryOptions: ['上装', '下装', '连衣裙', '外套', '鞋靴', '箱包', '配饰', '珠宝首饰', '其他'],
-    seasonOptions: ['春', '夏', '秋', '冬', '四季']
+    seasonOptions: ['春', '夏', '秋', '冬', '四季'],
+    // 套装拆分价：部件名 + 零售价(元) + 批发价(元)，保存时换算成分并入 params.set_items
+    setItems: [],
+    setSumR: 0,
+    setSumW: 0
+  },
+
+  /* 套装拆分价 */
+  recalcSet: function () {
+    var sumR = 0, sumW = 0;
+    this.data.setItems.forEach(function (s) {
+      sumR += parseFloat(s.retail) || 0;
+      sumW += parseFloat(s.wholesale) || 0;
+    });
+    this.setData({ setSumR: sumR, setSumW: sumW });
+  },
+  addSetItem: function () {
+    var items = this.data.setItems.concat([{ name: '', retail: '', wholesale: '' }]);
+    this.setData({ setItems: items });
+    this.recalcSet();
+  },
+  removeSetItem: function (e) {
+    var i = e.currentTarget.dataset.i;
+    var items = this.data.setItems.slice();
+    items.splice(i, 1);
+    this.setData({ setItems: items });
+    this.recalcSet();
+  },
+  onSetItem: function (e) {
+    var i = e.currentTarget.dataset.i;
+    var f = e.currentTarget.dataset.f;
+    var items = this.data.setItems.slice();
+    if (!items[i]) items[i] = { name: '', retail: '', wholesale: '' };
+    items[i][f] = e.detail.value;
+    this.setData({ setItems: items });
+    this.recalcSet();
+  },
+  applySetTotal: function () {
+    var p = Object.assign({}, this.data.product);
+    if (this.data.setSumR) p.price = String(this.data.setSumR);
+    if (this.data.setSumW) p.wholesale_price = String(this.data.setSumW);
+    this.setData({ product: p });
   },
 
   /* 选图（转发/相册里的供应商图） */
@@ -127,7 +168,7 @@ Page({
           var p = res.data && res.data.product;
           if (p) {
             // 默认草稿就在当前，用户可改
-            t.setData({ product: p, uploadedUrls: urls });
+            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0 });
             if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
             else t.showToast('识别完成，请核对');
           } else {
@@ -178,6 +219,17 @@ Page({
       stock: 0,
       tags: Array.isArray(p.tags) ? p.tags : []
     };
+    // 套装拆分价：换算成分(cent)后并入 params.set_items
+    var setArr = t.data.setItems
+      .filter(function (s) { return s.name || s.retail || s.wholesale; })
+      .map(function (s) {
+        return {
+          name: s.name || '',
+          retail: s.retail ? Math.round(parseFloat(s.retail) * 100) : 0,
+          wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0
+        };
+      });
+    if (setArr.length) payload.params = { set_items: setArr };
     t.setData({ saving: true });
     var token = wx.getStorageSync('token') || '';
     wx.request({

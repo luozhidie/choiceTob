@@ -77,6 +77,19 @@
       </view>
     </view>
 
+    <!-- 套装拆分价明细 -->
+    <view class="set-detail" wx:if="{{setItems.length}}">
+      <view class="set-detail-title">套装包含（拆分价）</view>
+      <view class="set-detail-row" wx:for="{{setItems}}" wx:key="index" wx:for-item="si">
+        <text class="set-detail-name">{{si.name}}</text>
+        <text class="set-detail-price">¥{{si.retailY}}<text class="set-detail-ws" wx:if="{{isPriceMember && si.wholesaleY}}"> ¥{{si.wholesaleY}}</text></text>
+      </view>
+      <view class="set-detail-sum">
+        <text>合计（零售）</text>
+        <text class="set-detail-sum-amt">¥{{setSumY}}</text>
+      </view>
+    </view>
+
     <!-- 商品名 -->
     <view class="name-sec">
       <text class="name">{{product.title || product.name || '商品名称'}}</text>
