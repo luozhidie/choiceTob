@@ -10,7 +10,7 @@ var MEMBER_MAP = {
   premium: { icon: '👑', label: '高阶VIP', desc: '商品享7折 + 8%返利' },
   wholesale_5w: { icon: '📦', label: '拿货会员·充5万', desc: '2.8折拿货 · 退换5%' },
   wholesale_10w: { icon: '📦', label: '拿货会员·充10万', desc: '2.8折拿货 · 退换10%' },
-  wholesale_30w: { icon: '📦', label: '拿货会员·充30万', desc: '2.8折拿货 · 退换20%' },
+  wholesale_30w: { icon: '📦', label: '拿货会员·充30万', desc: '2.6折拿货 · 退换20%' },
   price_trial: { icon: '👁️', label: '价格会员·体验', desc: '14天查看批发价' },
   price_1y: { icon: '👁️', label: '价格会员·年卡', desc: '查看批发价' },
   price_2y: { icon: '👁️', label: '价格会员·两年卡', desc: '查看批发价' },

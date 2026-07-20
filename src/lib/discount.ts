@@ -13,10 +13,10 @@
  *    - 高阶VIP: 7折 + 8%返利
  *
  * 3. 拿货会员：充5万/10万/30万
- *    功能：同色同款三件起批，2.8折拿货，退换服务
+ *    功能：同色同款三件起批，2.8折/2.6折拿货，退换服务
  *    - 充5万: 2.8折, 退换额度5%
  *    - 充10万: 2.8折, 退换额度10%
- *    - 充30万: 2.8折, 退换额度20%
+ *    - 充30万: 2.6折, 退换额度20%
  */
 
 export interface MemberTier {
@@ -155,9 +155,9 @@ export const MEMBER_TIERS: MemberTier[] = [
   {
     key: "wholesale_30w",
     label: "拿货会员·充30万",
-    subLabel: "2.8折·退换20%",
+    subLabel: "2.6折·退换20%",
     category: "wholesale",
-    discount: 0.28,         // 2.8折
+    discount: 0.26,         // 2.6折
     rebate: 0,
     minRecharge: 30000000,  // 充30万
     color: "text-green-600 bg-green-50 border-green-300",

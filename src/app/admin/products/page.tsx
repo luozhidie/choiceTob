@@ -1259,7 +1259,7 @@ export default function AdminProductsPage() {
               <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
                 <b>价格体系：</b>零售价🟰成本价÷2.6折×110%；一件起批🟰零售价×33%；5件起批🟰零售价×28%。
                 <br />
-                充值会员：5万／10万／30万会员价均为零售价×28%，退换比例分别为5%／10%／20%。
+                充值会员：5万／10万会员价🟰零售价×28%，退换比例分别为5%／10%；30万会员价🟰零售价×26%，退换20%。
               </div>
 
               {/* 套装拆分价（上下装 / 两件套 / 三件套） */}

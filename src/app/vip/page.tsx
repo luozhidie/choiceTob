@@ -143,14 +143,14 @@ const plans: Plan[] = [
     price: 30000000,      // 充值30万
     originalPrice: 0,
     priceLabel: "充值¥300,000",
-    discountLabel: "2.8折拿货",
+    discountLabel: "2.6折拿货",
     newCustomerLabel: "退换额度20%",
     membershipType: "pro",
     icon: Package,
     highlight: false,
     features: [
       "同色同款拿货三件起批，享受批发价",
-      "拿货折扣2.8折",
+      "拿货折扣2.6折",
       "退换额度20%",
       "开通拿货会员享拿货折扣和退换服务",
     ],
