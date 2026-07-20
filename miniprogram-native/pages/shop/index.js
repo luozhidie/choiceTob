@@ -102,6 +102,7 @@ Page({
     shelfTitle: '买手选品',    // 货架标题（兜底）
     // 弹窗与 SKU 数据
     showSkuPanel: false,         // 下单详情弹窗
+    skuMode: 'cart',             // 面板用途：cart=加购物车 / buy=立即购买并支付
     showCouponPanel: false,      // 优惠明细弹窗
     showSizeChart: false,        // 尺码图弹窗
     priceValue: 0,               // 1件起批价格（数值）
@@ -547,15 +548,15 @@ Page({
     wx.setStorageSync('favorites', favs);
   },
 
-  inc: function () { this.setData({ quantity: this.data.quantity + 1 }); },
-  dec: function () { var q = this.data.quantity - 1; if (q < 1) q = 1; this.setData({ quantity: q }); },
+  inc: function () { this.setData({ quantity: this.data.quantity + 1 }, this.computeSkuTotal); },
+  dec: function () { var q = this.data.quantity - 1; if (q < 1) q = 1; this.setData({ quantity: q }, this.computeSkuTotal); },
 
   addCart: function () {
     var t = this;
     var p = t.data.product;
     if (!p) return;
     if (t.data.sizeOptions.length > 0 || t.data.colorOptions.length > 0) {
-      t.openSkuPanel();
+      t.openSkuPanel('cart');
       return;
     }
     var cart = wx.getStorageSync('cart_v2') || [];
@@ -570,11 +571,34 @@ Page({
 
   buyNow: function () {
     var t = this;
-    var p = this.data.product;
+    var p = t.data.product;
     if (!p) return;
-    // 会员（含认证店主）按批发价下单
+    // 有尺码/颜色需要选择时，先弹出「下单详情」面板，选好规格后再支付
+    if (t.data.sizeOptions.length > 0 || t.data.colorOptions.length > 0) {
+      t.openSkuPanel('buy');
+      return;
+    }
+    // 无规格商品，直接按默认数量支付
+    t.payNowWithSpecs([{ size: '', color: '', qty: t.data.quantity || 1 }]);
+  },
+
+  // 按已选规格（[{size,color,qty}]）调起微信支付
+  payNowWithSpecs: function (specs) {
+    var t = this;
+    var p = t.data.product;
+    if (!p) return;
+    if (!specs || specs.length === 0) { wx.showToast({ title: '请选择规格', icon: 'none' }); return; }
+    // 会员（含认证店主）按批发价下单；单价以「分」为单位
     var wp = Number(p.wholesale_price) || 0;
     var unitCents = (t.data.isPriceMember && wp > 0) ? Math.round(wp / 100) * 100 : Number(p.price);
+    var totalQty = 0;
+    specs.forEach(function (sp) { totalQty += (sp.qty || 0); });
+    if (totalQty <= 0) { wx.showToast({ title: '请选择数量', icon: 'none' }); return; }
+    var totalFee = unitCents * totalQty;
+    // 规格摘要（颜色/尺码/数量），便于后续订单记录
+    var specStr = specs.map(function (sp) {
+      return (sp.color ? sp.color + ' ' : '') + (sp.size ? sp.size + ' x' + sp.qty : 'x' + sp.qty);
+    }).join('; ');
     app.getOpenid().then(function (openid) {
       wx.showLoading({ title: '调起支付...' });
       wx.request({
@@ -583,15 +607,16 @@ Page({
         data: {
           product_id: p.id,
           product_title: p.title || p.name,
-          total_fee: unitCents * t.data.quantity,
-          quantity: t.data.quantity,
+          total_fee: totalFee,
+          quantity: totalQty,
           platform: 'mini',
           openid: openid,
+          specs: specStr,
         },
         success: function (r) {
           wx.hideLoading();
           var d = r.data || {};
-          if (d.error) { wx.showModal({ title: '下单失败', content: d.error, showCancel: false }); return; }
+          if (d.error) { t.closeSkuPanel(); wx.showModal({ title: '下单失败', content: d.error, showCancel: false }); return; }
           var params = d.jsapi || d;
           wx.requestPayment({
             timeStamp: params.timeStamp,
@@ -599,11 +624,18 @@ Page({
             package: params.package,
             signType: params.signType || 'MD5',
             paySign: params.paySign,
-            success: function () { wx.showToast({ title: '支付成功', icon: 'success' }); setTimeout(function () { wx.navigateBack(); }, 1500); },
-            fail: function (err) { if (!(err && err.errMsg && err.errMsg.indexOf('cancel') > -1)) { wx.showToast({ title: '支付取消', icon: 'none' }); } }
+            success: function () {
+              t.closeSkuPanel();
+              wx.showToast({ title: '支付成功', icon: 'success' });
+              setTimeout(function () { wx.navigateBack(); }, 1500);
+            },
+            fail: function (err) {
+              t.closeSkuPanel();
+              if (!(err && err.errMsg && err.errMsg.indexOf('cancel') > -1)) { wx.showToast({ title: '支付取消', icon: 'none' }); }
+            }
           });
         },
-        fail: function () { wx.hideLoading(); wx.showToast({ title: '网络错误', icon: 'none' }); }
+        fail: function () { wx.hideLoading(); t.closeSkuPanel(); wx.showToast({ title: '网络错误', icon: 'none' }); }
       });
     }).catch(function () {
       wx.showToast({ title: '无法调起微信支付', icon: 'none' });
@@ -868,12 +900,12 @@ Page({
   stopCouponPanelProp: function () { },
 
   // ===== 下单详情 / SKU 弹窗 =====
-  openSkuPanel: function () {
+  openSkuPanel: function (mode) {
     var t = this;
     var sq = {};
     t.data.sizeOptions.forEach(function (s) { sq[s] = t.data.sizeQuantities[s] || 0; });
     var firstColor = t.data.selectedColor || t.data.colorOptions[0] || '';
-    t.setData({ showSkuPanel: true, skuColor: firstColor, sizeQuantities: sq }, t.computeSkuTotal);
+    t.setData({ showSkuPanel: true, skuMode: mode === 'buy' ? 'buy' : 'cart', skuColor: firstColor, sizeQuantities: sq }, t.computeSkuTotal);
   },
   closeSkuPanel: function () { this.setData({ showSkuPanel: false }); },
   stopSkuPanelProp: function () { },
@@ -896,30 +928,48 @@ Page({
     this.setData({ sizeQuantities: n }, this.computeSkuTotal);
   },
   computeSkuTotal: function () {
-    var sq = this.data.sizeQuantities;
-    var total = 0;
-    for (var k in sq) total += (sq[k] || 0);
+    var total;
+    if (this.data.sizeOptions.length > 0) {
+      var sq = this.data.sizeQuantities;
+      total = 0;
+      for (var k in sq) total += (sq[k] || 0);
+    } else {
+      total = this.data.quantity || 1;
+    }
     this.setData({ skuTotal: total });
   },
   confirmSkuPanel: function () {
     var t = this;
-    var sq = t.data.sizeQuantities;
-    var total = 0;
-    var sizes = [];
-    for (var s in sq) if (sq[s] > 0) { total += sq[s]; sizes.push(s); }
-    if (total === 0) { t.closeSkuPanel(); return; }
     var p = t.data.product;
     if (!p) { t.closeSkuPanel(); return; }
+    var specs = [];
+    if (t.data.sizeOptions.length > 0) {
+      // 按尺码分别选数量（颜色统一为当前选中）
+      var sq = t.data.sizeQuantities;
+      var total = 0;
+      for (var s in sq) if (sq[s] > 0) { total += sq[s]; specs.push({ size: s, color: t.data.skuColor, qty: sq[s] }); }
+      if (total === 0) { t.closeSkuPanel(); return; }
+    } else {
+      // 无尺码：用单一数量（颜色统一为当前选中）
+      var q = t.data.quantity || 1;
+      if (q <= 0) { t.closeSkuPanel(); return; }
+      specs.push({ size: '', color: t.data.skuColor, qty: q });
+    }
+    // 立即购买模式：构建带规格的订单并支付
+    if (t.data.skuMode === 'buy') {
+      t.payNowWithSpecs(specs);
+      return;
+    }
+    // 加入进货车模式
     var cart = wx.getStorageSync('cart_v2') || [];
-    sizes.forEach(function (sz) {
-      var q = sq[sz];
+    specs.forEach(function (sp) {
       var existingIdx = -1;
-      cart.forEach(function (i, ii) { if (i.id === p.id && i.size === sz && i.color === t.data.skuColor) existingIdx = ii; });
-      if (existingIdx >= 0) { cart[existingIdx].quantity = (cart[existingIdx].quantity || 0) + q; }
-      else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), wholesale_price: Number(p.wholesale_price) || 0, image: p.image_url || '', size: sz, color: t.data.skuColor, quantity: q }); }
+      cart.forEach(function (i, ii) { if (i.id === p.id && i.size === sp.size && i.color === sp.color) existingIdx = ii; });
+      if (existingIdx >= 0) { cart[existingIdx].quantity = (cart[existingIdx].quantity || 0) + sp.qty; }
+      else { cart.push({ id: p.id, title: p.title || p.name, price: Number(p.price), wholesale_price: Number(p.wholesale_price) || 0, image: p.image_url || '', size: sp.size, color: sp.color, quantity: sp.qty }); }
     });
     wx.setStorageSync('cart_v2', cart);
-    t.setData({ showSkuPanel: false, selectedSize: sizes[0], selectedColor: t.data.skuColor, quantity: total }, function () {
+    t.setData({ showSkuPanel: false, selectedSize: specs[0].size, selectedColor: t.data.skuColor, quantity: specs.reduce(function (a, b) { return a + b.qty; }, 0) }, function () {
       t.loadCartCount();
       wx.showToast({ title: '已加购物车', icon: 'success' });
     });

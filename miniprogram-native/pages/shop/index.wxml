@@ -328,6 +328,16 @@
           </view>
         </view>
 
+        <!-- 数量（无尺码时显示：颜色款/无规格款统一用数量） -->
+        <view class="sku-row" wx:if="{{sizeOptions.length===0}}">
+          <text class="sku-row-label">数量</text>
+          <view class="sku-qb">
+            <view class="sku-qbtn" bindtap="dec">-</view>
+            <text class="sku-qnum">{{quantity}}</text>
+            <view class="sku-qbtn" bindtap="inc">+</view>
+          </view>
+        </view>
+
         <!-- 参数（详细规格网格） -->
         <view class="sku-params" wx:if="{{paramList.length>0}}">
           <text class="sku-row-label">参数</text>
@@ -346,7 +356,7 @@
         </view>
       </view>
       <view class="sku-bar">
-        <view class="sku-confirm {{skuTotal>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">确定({{skuTotal}})</view>
+        <view class="sku-confirm {{skuTotal>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">{{skuMode==='buy' ? '确认并支付('+skuTotal+')' : '确定('+skuTotal+')'}}</view>
       </view>
     </view>
   </view>
