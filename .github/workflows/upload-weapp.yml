@@ -91,27 +91,8 @@ jobs:
           echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
           node upload-native.js
 
-      - name: Set Experience Version (auto 设为体验版)
-        env:
-          WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
-          WECHAT_APPSECRET: ${{ secrets.WECHAT_APPSECRET }}
+      - name: Experience Version 提示（自研小程序需手动设为体验版）
         run: |
-          set -e
-          if [ -z "$WECHAT_APPSECRET" ]; then
-            echo "⚠️ WECHAT_APPSECRET 未配置，跳过自动设为体验版。"
-            echo "   请在 GitHub 仓库 Settings → Secrets and variables → Actions 添加名为 WECHAT_APPSECRET 的密钥（值=小程序 AppSecret）。"
-            exit 0
-          fi
-          echo "获取 access_token ..."
-          TOKEN=$(curl -s "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=$WECHAT_APPID&secret=$WECHAT_APPSECRET" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('access_token',''))")
-          if [ -z "$TOKEN" ]; then
-            echo "❌ 获取 access_token 失败（检查 WECHAT_APPID / WECHAT_APPSECRET 是否正确）"
-            exit 0
-          fi
-          VER="${{ github.run_number }}"
-          echo "调用 set_experience_version，version=$VER ..."
-          RESP=$(curl -s -X POST "https://api.weixin.qq.com/wxa/set_experience_version?access_token=$TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"experience_version\":\"$VER\"}")
-          echo "微信返回: $RESP"
-          echo "=== 设为体验版尝试完成 ==="
+          echo "ℹ️ 自研小程序：微信未提供开放接口直接『设为体验版』（已实测 set_experience_version 等端点均返回 40066 invalid url）。"
+          echo "   本次上传已生成「开发版」。请到 微信公众平台 → 版本管理 → 开发版本 → 最新上传（native v${{ github.run_number }}）→ 点「设为体验版」。"
+          echo "   手机重扫体验版二维码即可看到本次更新。如需 CI 全自动，需改用微信开发者工具上传，或迁移到第三方平台代部署。"
