@@ -25,6 +25,7 @@ Page({
     /* 动态模块 */
     blocks:[],          // 轮播图下方模块（排除 hero_top）
     heroTopBlocks:[],   // 轮播图上方模块（position==='hero_top'）
+    topBgColor:'#fcefe9', // 头部/分类标签背景：与首个内容板块 bgColor 统一
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
@@ -131,6 +132,14 @@ Page({
           heroTopBlocks:heroTopBlocks,
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
+
+        /* 头部/分类标签背景统一：与首个内容板块的 bgColor 保持一致（让上半部分可随后台配色同步） */
+        var topBgColor = '#fcefe9';
+        var firstBlock = heroTopBlocks[0] || restBlocks[0];
+        if (firstBlock && firstBlock.style && firstBlock.style.bgColor) {
+          topBgColor = firstBlock.style.bgColor;
+        }
+        t.setData({ topBgColor: topBgColor });
 
         /* 有分类导航时更新 categories 列表 */
         if(catNavs.length>1){

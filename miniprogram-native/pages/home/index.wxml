@@ -1,6 +1,6 @@
 <view class="page">
   <!-- ========== 粘性头部 ========== -->
-  <view class="sticky-header">
+  <view class="sticky-header" style="background:{{topBgColor}};">
     <!-- 顶部：小标题 -->
     <view class="header-top">
       <text class="ht-small">数据趋动·智选未来</text>
@@ -38,7 +38,7 @@
   </view>
 
   <!-- ========== 分类标签（轮播图下方，滚动后粘性固定在搜索框下方） ========== -->
-  <view class="cat-sticky">
+  <view class="cat-sticky" style="background:{{topBgColor}};">
     <scroll-view scroll-x show-scrollbar="{{false}}" class="header-cat-scroll">
       <view class="tg-row">
         <view wx:for="{{categories}}" wx:key="*this"
