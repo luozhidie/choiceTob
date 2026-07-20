@@ -33,12 +33,16 @@ page {
   --sh-2: 0 6rpx 22rpx rgba(0,0,0,.06);
   --sh-3: 0 8rpx 30rpx rgba(45,27,46,.12);
 
-  background: var(--bg);
+  background: transparent !important;       /* 页面底色改为由 app.js 动态注入（= 后台「首页第一个板块」bgColor），故此处透明，让窗口底色透出；!important 中和各页写死的 page{background:var(--bg)} */
   color: var(--text);
   font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;
   font-size: 28rpx;
   line-height: 1.5;
 }
+
+/* 各页根容器原本写死 background:var(--bg)，此处统一置透明并加 !important，
+   让 app.js 注入的窗口底色（后台可改的全局绿）透出，实现全站底色后台自调 */
+.page { background: transparent !important; }
 
 /* ===== 共享：卡片 ===== */
 .card {

@@ -53,7 +53,8 @@
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#2d1b2e",
     "navigationBarTitleText": "骆芷蝶智选",
-    "navigationBarTextStyle": "white"
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#00BE5A"
   },
   "tabBar": {
     "color": "#999999",
