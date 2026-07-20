@@ -92,7 +92,7 @@
     <!-- featured_banner -->
     <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="padding:{{item.style.padding||20}}rpx 24rpx;">
       <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
-        <image wx:if="{{item.content.mainImage}}" src="{{item.content.mainImage}}" mode="widthFix" class="fb-main-img"/>
+        <image wx:if="{{item.content.mainImage}}" src="{{item.content.mainImage}}" mode="aspectFill" class="fb-main-img"/>
         <view wx:else class="fb-main-fallback">
           <template is="prod-collage" data="{{images:fallbackImages}}"/>
           <view class="fb-ov"><text class="fb-tap">{{item.content.title||'精选好物'}}</text></view>
