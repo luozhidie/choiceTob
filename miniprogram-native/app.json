@@ -63,7 +63,7 @@
     "list": [
       {
         "pagePath": "pages/home/index",
-        "text": "首页",
+        "text": "专场",
         "iconPath": "assets/tabbar/home.png",
         "selectedIconPath": "assets/tabbar/home-active.png"
       },
