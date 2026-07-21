@@ -13,11 +13,17 @@ export async function POST(request: NextRequest) {
   );
   const { data: rows, error } = await supabase.from("products").select("id,price,original_price,params");
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  const dump = (rows || []).map((r: any) => ({
-    price: r.price,
-    original_price: r.original_price,
-    params_keys: r.params ? Object.keys(r.params) : null,
-    set_items: r.params && r.params.set_items ? r.params.set_items : null,
-  }));
-  return NextResponse.json({ dump });
+  const log: any[] = [];
+  let done = 0;
+  for (const r of (rows || [])) {
+    const items = (r.params && Array.isArray(r.params.set_items)) ? r.params.set_items : [];
+    let retailSum = 0;
+    items.forEach((it: any) => { retailSum += Number(it.retail) || 0; });
+    const target = retailSum > 0 ? retailSum : r.price; // 原价 = 部件零售总和（无套装则等于零售价）
+    if (target !== r.original_price) {
+      const { error: e2 } = await supabase.from("products").update({ original_price: target }).eq("id", r.id);
+      if (!e2) { done++; log.push({ price: r.price, original_price_new: target }); }
+    }
+  }
+  return NextResponse.json({ checked: (rows || []).length, done, log });
 }
