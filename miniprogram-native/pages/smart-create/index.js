@@ -27,7 +27,9 @@ Page({
     uploadedDetailUrls: [],
     videoPath: '',          // 本地视频临时路径
     videoSize: 0,
-    uploadedVideoUrl: ''
+    uploadedVideoUrl: '',
+    // 成本价自动换算快照（避免覆盖手填价格，同时支持连续输入更新）
+    lastAutoCalc: null
   },
 
   /* 套装拆分价 */
@@ -285,8 +287,16 @@ Page({
           t.setData({ extracting: false });
           var p = res.data && res.data.product;
           if (p) {
-            // 默认草稿就在当前，用户可改
-            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0 });
+            // 默认草稿就在当前，用户可改；用成本价初始化自动换算快照
+            var costY = parseFloat(p && p.cost_price) || 0;
+            var snap = null;
+            if (costY > 0) {
+              var r = Math.round(costY / 0.26 * 1.10);
+              var w = Math.round(r * 0.33);
+              var b = Math.round(r * 0.28);
+              snap = { costY: costY, price: String(r), original_price: String(r), wholesale_price: String(w), bulk_price: String(b) };
+            }
+            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0, lastAutoCalc: snap });
             if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
             else t.showToast('识别完成，请核对');
           } else {
@@ -314,21 +324,32 @@ Page({
   onCategoryCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.category = e.detail.value; this.setData({ product: p }); },
   toggleSeasonCustom: function () { this.setData({ seasonCustomMode: !this.data.seasonCustomMode }); },
   onSeasonCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.season = e.detail.value; this.setData({ product: p }); },
-  /* 成本价输入自动换算价格体系（只填充空字段，不覆盖手填） */
+  /* 成本价输入自动换算价格体系（覆盖仍等于快照值的字段，保护手填） */
   onCostPrice: function (e) {
+    var t = this;
     var costY = parseFloat(e.detail.value) || 0;
-    var p = Object.assign({}, this.data.product);
+    var p = Object.assign({}, t.data.product || {});
     p.cost_price = e.detail.value;
     if (costY > 0) {
       var retail = Math.round(costY / 0.26 * 1.10);
       var wholesale = Math.round(retail * 0.33);
       var bulk = Math.round(retail * 0.28);
-      if (!p.price) p.price = String(retail);
-      if (!p.original_price) p.original_price = String(retail);
-      if (!p.wholesale_price) p.wholesale_price = String(wholesale);
-      if (!p.bulk_price) p.bulk_price = String(bulk);
+      var snap = t.data.lastAutoCalc;
+      function shouldUpdate(v, k) {
+        if (!snap) return true;
+        return v === '' || v === snap[k];
+      }
+      if (shouldUpdate(p.price, 'price')) p.price = String(retail);
+      if (shouldUpdate(p.original_price, 'original_price')) p.original_price = String(retail);
+      if (shouldUpdate(p.wholesale_price, 'wholesale_price')) p.wholesale_price = String(wholesale);
+      if (shouldUpdate(p.bulk_price, 'bulk_price')) p.bulk_price = String(bulk);
+      t.setData({
+        product: p,
+        lastAutoCalc: { costY: costY, price: String(retail), original_price: String(retail), wholesale_price: String(wholesale), bulk_price: String(bulk) }
+      });
+    } else {
+      t.setData({ product: p, lastAutoCalc: null });
     }
-    this.setData({ product: p });
   },
 
   /* 保存：草稿 / 直接上架 */
