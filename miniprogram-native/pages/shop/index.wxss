@@ -328,6 +328,7 @@ page { background: var(--bg); }
 .sku-chips { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .sku-chip { font-size: 26rpx; color: #333; background: #f5f5f5; padding: 12rpx 28rpx; border-radius: 30rpx; border: 1rpx solid transparent; }
 .sku-chip-on { color: #2d1b2e; background: #fff0f4; border-color: #2d1b2e; }
+.sku-chip-sub { font-size: 22rpx; color: #999; margin-left: 4rpx; }
 
 .sku-size-link { font-size: 24rpx; color: #2d1b2e; }
 .sku-size-list { display: flex; flex-direction: column; gap: 20rpx; }
@@ -340,15 +341,6 @@ page { background: var(--bg); }
 .sku-bar { padding: 24rpx; border-top: 1rpx solid #f5f2ef; }
 .sku-confirm { background: #f5c2d4; color: #fff; font-size: 30rpx; font-weight: 700; text-align: center; padding: 24rpx 0; border-radius: 40rpx; }
 .sku-confirm-active { background: #2d1b2e; }
-
-/* 套装拆分价（仅下单详情面板内展示，精简为批发/批量两列） */
-.sku-set { padding: 24rpx 0; border-bottom: 1rpx solid #f5f2ef; background: #fff7ed; }
-.sku-set-title { font-size: 28rpx; font-weight: 700; color: #b45309; }
-.sku-set-item { display: flex; align-items: center; justify-content: space-between; padding: 8rpx 0; }
-.sku-set-name { font-size: 26rpx; color: #444; }
-.sku-set-price { font-size: 26rpx; color: #2d1b2e; font-weight: 600; }
-.sku-set-sum { display: flex; align-items: center; justify-content: space-between; margin-top: 12rpx; padding-top: 12rpx; border-top: 1rpx solid #fed7aa; font-size: 24rpx; color: #78350f; }
-.sku-set-sum-amt { font-size: 30rpx; font-weight: 800; color: #2d1b2e; }
 
 /* ==================== 尺码图弹窗 ==================== */
 .sizechart-panel { background: #fff; border-radius: 32rpx 32rpx 0 0; max-height: 80vh; display: flex; flex-direction: column; }

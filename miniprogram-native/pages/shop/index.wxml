@@ -129,12 +129,11 @@
     </view>
 
     <!-- 参数 -->
-    <view class="info-row" wx:if="{{specList.length>0}}" bindtap="openSkuPanel">
+    <view class="info-row" wx:if="{{specList.length>0}}">
       <text class="info-label">参数</text>
       <view class="info-content">
         <text class="info-text spec-ellipsis">{{specText}}</text>
       </view>
-      <text class="info-arrow">›</text>
     </view>
 
     <!-- 服务 -->
@@ -269,27 +268,29 @@
           <image class="sku-img" src="{{images[0]||product.image_url||''}}" mode="aspectFill"/>
           <view class="sku-price-col">
             <view class="sku-price-row">
-              <text class="sku-price">¥{{priceValue}}</text>
-              <text class="sku-price-bulk" wx:if="{{isPriceMember}}">¥{{bulkPriceValue}}</text>
+              <text class="sku-price">¥{{skuPriceValue}}</text>
+              <text class="sku-price-bulk" wx:if="{{isPriceMember && skuBulkValue>0}}">¥{{skuBulkValue}}</text>
             </view>
             <view class="sku-price-label-row">
-              <text class="sku-price-label">{{isPriceMember ? '1件起批' : '零售价'}}</text>
-              <text class="sku-price-bulk-label" wx:if="{{isPriceMember}}">≥5件</text>
+              <text class="sku-price-label">{{isPriceMember ? '批发价' : '零售价'}}</text>
+              <text class="sku-price-bulk-label" wx:if="{{isPriceMember && skuBulkValue>0}}">≥5件</text>
             </view>
           </view>
         </view>
 
-        <!-- 服务保障 -->
-        <view class="sku-row">
-          <text class="sku-row-label">服务保障</text>
-          <text class="sku-row-val">{{serviceGuaranteeText}}</text>
+        <!-- 款式（套装子项，可分开拿，价格随选择变化） -->
+        <view class="sku-row" wx:if="{{setItems.length>0}}">
+          <text class="sku-row-label">款式</text>
+          <view class="sku-chips">
+            <text class="sku-chip {{selectedSetItem===item.name?'sku-chip-on':''}}" wx:for="{{setItems}}" wx:key="name" data-v="{{item.name}}" bindtap="selectSetItem">{{item.name}}<text class="sku-chip-sub"> ¥{{item.wholesaleY}}</text></text>
+          </view>
         </view>
 
         <!-- 颜色 -->
-        <view class="sku-row" wx:if="{{colorOptions.length>0}}">
+        <view class="sku-row" wx:if="{{colorOptions.length>0 && setItems.length===0}}">
           <text class="sku-row-label">颜色</text>
           <view class="sku-chips">
-            <text class="sku-chip {{skuColor===item?'sku-chip-on':''}}" wx:for="{{colorOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSkuColor">{{item}}</text>
+            <text class="sku-chip {{selectedColor===item?'sku-chip-on':''}}" wx:for="{{colorOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectColor">{{item}}</text>
           </view>
         </view>
 
@@ -299,20 +300,13 @@
             <text class="sku-row-label">尺码</text>
             <text class="sku-size-link" bindtap="showSizeChart">查看尺码 ›</text>
           </view>
-          <view class="sku-size-list">
-            <view class="sku-size-item" wx:for="{{sizeOptions}}" wx:key="*this">
-              <text class="sku-size-name">{{item}}</text>
-              <view class="sku-qb">
-                <view class="sku-qbtn" data-s="{{item}}" bindtap="decSkuSize">-</view>
-                <text class="sku-qnum">{{sizeQuantities[item]||0}}</text>
-                <view class="sku-qbtn" data-s="{{item}}" bindtap="incSkuSize">+</view>
-              </view>
-            </view>
+          <view class="sku-chips">
+            <text class="sku-chip {{selectedSize===item?'sku-chip-on':''}}" wx:for="{{sizeOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSize">{{item}}</text>
           </view>
         </view>
 
-        <!-- 数量（无尺码时显示：颜色款/无规格款统一用数量） -->
-        <view class="sku-row" wx:if="{{sizeOptions.length===0}}">
+        <!-- 数量 -->
+        <view class="sku-row">
           <text class="sku-row-label">数量</text>
           <view class="sku-qb">
             <view class="sku-qbtn" bindtap="dec">-</view>
@@ -320,39 +314,9 @@
             <view class="sku-qbtn" bindtap="inc">+</view>
           </view>
         </view>
-
-        <!-- 参数（详细规格网格） -->
-        <view class="sku-params" wx:if="{{paramList.length>0}}">
-          <text class="sku-row-label">参数</text>
-          <view class="sku-params-grid">
-            <view class="sku-param-item" wx:for="{{paramList}}" wx:key="label">
-              <text class="sku-param-label">{{item.label}}</text>
-              <text class="sku-param-value">{{item.value}}</text>
-            </view>
-          </view>
-        </view>
-
-        <!-- 套装拆分价（仅购买选规格时展示，精简为批发/批量两列） -->
-        <view class="sku-set" wx:if="{{setItems.length>0}}">
-          <text class="sku-set-title">套装包含（拆分价）</text>
-          <view class="sku-set-item" wx:for="{{setItems}}" wx:key="name">
-            <text class="sku-set-name">{{item.name}}</text>
-            <text class="sku-set-price">批¥{{item.wholesaleY}} · 量¥{{item.bulkY}}</text>
-          </view>
-          <view class="sku-set-sum">
-            <text>合计</text>
-            <text class="sku-set-sum-amt">批¥{{setSumW}} · 量¥{{setSumB}}</text>
-          </view>
-        </view>
-
-        <!-- 服务 -->
-        <view class="sku-row">
-          <text class="sku-row-label">服务</text>
-          <text class="sku-row-val">{{serviceText}}</text>
-        </view>
       </view>
       <view class="sku-bar">
-        <view class="sku-confirm {{skuTotal>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">{{skuMode==='buy' ? '确认并支付('+skuTotal+')' : '确定('+skuTotal+')'}}</view>
+        <view class="sku-confirm {{quantity>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">{{skuMode==='buy' ? '确认并支付' : '确定'}}</view>
       </view>
     </view>
   </view>
