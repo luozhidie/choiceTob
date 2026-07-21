@@ -1,70 +1,109 @@
 <view class="page" style="{{pageBgStyle}}">
-  <!-- 搜索栏 -->
+  <!-- 搜索栏（始终显示） -->
   <view class="search-bar">
     <text class="si">🔍</text>
-    <input class="sinput" placeholder="搜索商品..." value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" bindconfirm="doSearch" />
+    <input class="sinput" placeholder="搜索商品或品牌..." value="{{keyword}}" bindinput="onSearchInput" confirm-type="search" bindconfirm="doSearch" />
     <text class="sclr" wx:if="{{keyword}}" bindtap="clearSearch">✕</text>
   </view>
 
-  <!-- Tab行：列表/推荐 + 分类 -->
-  <view class="tab-row">
-    <view class="vtabs">
-      <text class="vtab {{viewMode==='list'?'vtab-on':''}}" bindtap="switchViewMode">列表</text>
-      <text class="vtab {{viewMode==='grid'?'vtab-on':''}}" bindtap="switchViewMode">推荐</text>
-    </view>
-    <text class="gicon" bindtap="switchViewMode">⊞</text>
-  </view>
-
-  <!-- 排序 -->
-  <view class="sort-bar">
-    <text class="st {{sortType==='default'?'st-on':''}}" bindtap="setSort" data-sort="default">综合</text>
-    <text class="st {{sortType==='sales'?'st-on':''}}" bindtap="setSort" data-sort="sales">销量</text>
-    <text class="st {{sortType==='price_asc'||sortType==='price_desc'?'st-on':''}}" bindtap="setSort" data-sort="price">价格{{sortType==='price_desc'?'↓':(sortType==='price_asc'?'↑':'')}}</text>
-    <text class="st {{sortType==='newest'?'st-on':''}}" bindtap="setSort" data-sort="newest">上新</text>
-  </view>
-
-  <!-- 认证店主入口（未认证时显示） -->
-  <view class="cert-banner" wx:if="{{!isPriceMember}}" bindtap="goCertify">
-    <text class="cb-icon">🛡️</text>
-    <view class="cb-body">
-      <text class="cb-title">认证店主，免费看批发价</text>
-      <text class="cb-desc">通过行业知识答题即可解锁</text>
-    </view>
-    <text class="cb-btn">去认证 →</text>
-  </view>
-
-  <!-- 商品数 -->
-  <view class="count-bar"><text>共{{products.length}}件</text></view>
-
-  <!-- 加载骨架 -->
-  <view class="grid" wx:if="{{loading && products.length===0}}">
-    <view wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" class="sk"><view class="ski"></view><view class="skl1"></view><view class="skl2"></view></view>
-  </view>
-
-  <!-- 非加载状态 -->
-  <block wx:else>
-    <!-- 空 -->
-    <view class="empty" wx:if="{{!loading && products.length===0}}">
-      <text class="ei">📦</text><text class="et">该分类暂无商品</text>
-      <view class="eb" bindtap="goHome">去首页逛逛 →</view>
-    </view>
-
-    <!-- 商品列表 -->
-    <view class="grid" wx:else>
-      <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
-        <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
-        <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
-        <text class="cn">{{item.name||item.title||'商品'}}</text>
-        <text class="cpri">{{item.priceText}}</text>
-        <text class="cwpri" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
-        <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
+  <!-- ========== 分类视图 ========== -->
+  <view class="cat-page" wx:if="{{viewMode==='category'}}">
+    <!-- 左侧主分类 -->
+    <scroll-view class="cat-sidebar" scroll-y>
+      <view wx:for="{{mainCategories}}" wx:key="id"
+        class="cat-side-item {{activeMainId===item.id?'active':''}}"
+        bindtap="selectMainCat" data-id="{{item.id}}">
+        <text>{{item.name}}</text>
       </view>
+    </scroll-view>
+
+    <!-- 右侧分类内容 -->
+    <scroll-view class="cat-content" scroll-y scroll-into-view="{{activeMainId}}" scroll-with-animation>
+      <block wx:for="{{mainCategories}}" wx:key="id" wx:for-item="main">
+        <view id="{{main.id}}" class="cat-section">
+          <view class="cat-section-title">{{categoryTree[main.id].title}}</view>
+
+          <!-- 热门市场：大卡片 -->
+          <view wx:if="{{categoryTree[main.id].type==='market'}}">
+            <view wx:for="{{categoryTree[main.id].items}}" wx:key="name" wx:for-item="it"
+              class="market-card" style="{{it.ps}}" bindtap="enterCategory" data-name="{{it.name}}">
+              <view class="market-body">
+                <text class="market-title">{{it.name}}</text>
+                <text class="market-desc">{{it.desc}}</text>
+              </view>
+            </view>
+          </view>
+
+          <!-- 普通：小图宫格 -->
+          <view wx:else class="cat-grid">
+            <view wx:for="{{categoryTree[main.id].items}}" wx:key="name" wx:for-item="it"
+              class="cat-tile" bindtap="enterCategory" data-name="{{it.name}}">
+              <view class="cat-tile-img">
+                <view class="cat-ph" style="{{it.ps}}"><text>{{it.name}}</text></view>
+              </view>
+              <text class="cat-tile-name">{{it.name}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      <view class="cat-bottom"></view>
+    </scroll-view>
+  </view>
+
+  <!-- ========== 商品列表视图 ========== -->
+  <scroll-view class="list-scroll" scroll-y wx:else bindscrolltolower="onListScrollLower">
+    <view class="list-header">
+      <text class="back-btn" bindtap="backToCategory">‹ 分类</text>
+      <text class="list-title">{{activeTab}}</text>
+      <text class="list-spacer"></text>
     </view>
-  </block>
 
-  <!-- 底部 -->
-  <view class="more" wx:if="{{hasMore&&products.length>0}}"><text>上拉加载更多</text></view>
-  <view class="nomore" wx:if="{{!hasMore&&products.length>0}}"><text>— 已展示全部 —</text></view>
+    <!-- 排序 -->
+    <view class="sort-bar">
+      <text class="st {{sortType==='default'?'st-on':''}}" bindtap="setSort" data-sort="default">综合</text>
+      <text class="st {{sortType==='sales'?'st-on':''}}" bindtap="setSort" data-sort="sales">销量</text>
+      <text class="st {{sortType==='price_asc'||sortType==='price_desc'?'st-on':''}}" bindtap="setSort" data-sort="price">价格{{sortType==='price_desc'?'↓':(sortType==='price_asc'?'↑':'')}}</text>
+      <text class="st {{sortType==='newest'?'st-on':''}}" bindtap="setSort" data-sort="newest">上新</text>
+    </view>
 
-  <view class="sb"></view>
+    <!-- 认证店主入口 -->
+    <view class="cert-banner" wx:if="{{!isPriceMember}}" bindtap="goCertify">
+      <text class="cb-icon">🛡️</text>
+      <view class="cb-body">
+        <text class="cb-title">认证店主，免费看批发价</text>
+        <text class="cb-desc">通过行业知识答题即可解锁</text>
+      </view>
+      <text class="cb-btn">去认证 →</text>
+    </view>
+
+    <!-- 商品数 -->
+    <view class="count-bar"><text>共{{products.length}}件</text></view>
+
+    <!-- 加载骨架 -->
+    <view class="grid" wx:if="{{loading && products.length===0}}">
+      <view wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this" class="sk"><view class="ski"></view><view class="skl1"></view><view class="skl2"></view></view>
+    </view>
+
+    <block wx:else>
+      <view class="empty" wx:if="{{!loading && products.length===0}}">
+        <text class="ei">📦</text><text class="et">该分类暂无商品</text>
+        <view class="eb" bindtap="backToCategory">返回分类 →</view>
+      </view>
+
+      <view class="grid" wx:else>
+        <view wx:for="{{products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
+          <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
+          <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
+          <text class="cn">{{item.name||item.title||'商品'}}</text>
+          <text class="cpri">{{item.priceText}}</text>
+          <text class="cwpri" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
+          <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
+        </view>
+      </view>
+    </block>
+
+    <view class="more" wx:if="{{hasMore&&products.length>0}}"><text>上拉加载更多</text></view>
+    <view class="nomore" wx:if="{{!hasMore&&products.length>0}}"><text>— 已展示全部 —</text></view>
+    <view class="sb"></view>
+  </scroll-view>
 </view>
