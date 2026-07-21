@@ -11,26 +11,19 @@ export async function POST(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
-  // 原价 = 套装各部件零售价总和（分）；零售价保持实际售价不变
-  const { data: rows, error } = await supabase
+  const { count } = await supabase.from("products").select("*", { count: "exact", head: true });
+  const { data: rows } = await supabase
     .from("products")
-    .select("id,title,price,original_price,params")
-    .not("price", "is", null);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-
-  const log: any[] = [];
-  let done = 0;
-  for (const r of (rows || [])) {
-    const items = (r.params && Array.isArray(r.params.set_items)) ? r.params.set_items : [];
-    let retailSum = 0;
-    items.forEach((it: any) => { retailSum += Number(it.retail) || 0; });
-    if (retailSum > 0 && retailSum !== r.original_price) {
-      const { error: e2 } = await supabase
-        .from("products")
-        .update({ original_price: retailSum })
-        .eq("id", r.id);
-      if (!e2) { done++; log.push({ title: r.title, price: r.price, original_price: retailSum, setRetailSum: retailSum }); }
-    }
-  }
-  return NextResponse.json({ checked: (rows || []).length, done, log });
+    .select("id,title,price,original_price,params");
+  const withSet = (rows || []).filter((r: any) => r.params && Array.isArray(r.params.set_items) && r.params.set_items.length > 0);
+  return NextResponse.json({
+    total_products: count,
+    products: (rows || []).map((r: any) => ({
+      title: r.title,
+      price: r.price,
+      original_price: r.original_price,
+      has_set_items: !!(r.params && Array.isArray(r.params.set_items) && r.params.set_items.length),
+    })),
+    withSetCount: withSet.length,
+  });
 }
