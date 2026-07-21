@@ -248,6 +248,10 @@ export default function ProductDetailPage() {
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
 
+  // 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和）
+  const effectivePrice = (p: any) =>
+    p && (p.price || 0) > 0 ? p.price : (p?.original_price || 0);
+
   // 商品标签：自定义 tags + 自动（会员 / 货源 / 今日新款）
   const tagColor = (t: string) => {
     if (t === "会员") return "bg-red-50 text-red-500";
@@ -274,7 +278,7 @@ export default function ProductDetailPage() {
         </div>
         <div className="p-3">
           <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-          <p className="text-sm text-accent font-bold mt-1">{formatPrice(p.price)}</p>
+          <p className="text-sm text-accent font-bold mt-1">{formatPrice(effectivePrice(p))}</p>
         </div>
       </div>
     </Link>
@@ -379,7 +383,7 @@ export default function ProductDetailPage() {
       try {
         await navigator.share({
           title: product.title,
-          text: `骆芷蝶智选推荐：${product.title} ¥${product.price}`,
+          text: `骆芷蝶智选推荐：${product.title} ¥${effectivePrice(product)}`,
           url: shareUrl,
         });
       } catch { /* 用户取消分享 */ }
@@ -587,12 +591,12 @@ export default function ProductDetailPage() {
           <div className="mb-2">
             <div className="flex items-end gap-2">
               <span className="text-3xl font-bold text-gray-900">
-                {formatPrice(product.price)}
+                {formatPrice(effectivePrice(product))}
               </span>
-              {product.original_price && product.original_price > product.price && (
+              {product.original_price && product.original_price > effectivePrice(product) && (
                 <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
               )}
-              <span className="text-sm text-gray-400 mb-1">零售价</span>
+              <span className="text-sm text-gray-400 mb-1">{effectivePrice(product) === product.price ? "零售价" : "促销价"}</span>
             </div>
 
             {product.wholesale_price && (
@@ -751,8 +755,8 @@ export default function ProductDetailPage() {
                   id: product.id,
                   title: product.title,
                   image: product.cover_image,
-                  price: product.price,
-                  originalPrice: null,
+                  price: effectivePrice(product),
+                  originalPrice: product.original_price || null,
                   source: product.source || "buyer",
                 });
                 alert("已加入购物车！");
@@ -986,7 +990,7 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="p-3">
                       <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-                      <p className="text-sm text-accent font-bold mt-1">{formatPrice(p.price)}</p>
+                      <p className="text-sm text-accent font-bold mt-1">{formatPrice(effectivePrice(p))}</p>
                     </div>
                   </div>
                 </Link>
@@ -1072,7 +1076,7 @@ export default function ProductDetailPage() {
                     <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">
                       {product.title}
                     </h4>
-                    <p className="text-red-500 font-bold mt-1.5">{formatPrice(product.price)}</p>
+                    <p className="text-red-500 font-bold mt-1.5">{formatPrice(effectivePrice(product))}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       骆芷蝶智选 · 不自用不分享
                     </p>

@@ -96,6 +96,11 @@ interface Product {
   ship_image?: string | null;       // 发货解释图片 URL
 }
 
+// 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和）
+function effectivePrice(p: { price?: number | null; original_price?: number | null }) {
+  return (p && (p.price || 0) > 0 ? (p.price as number) : (p?.original_price || 0)) || 0;
+}
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -1093,10 +1098,10 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="font-medium text-accent">
-                        {formatPrice(product.price)}
+                        {formatPrice(effectivePrice(product))}
                       </div>
                       {product.original_price &&
-                        product.original_price > product.price && (
+                        product.original_price > effectivePrice(product) && (
                           <div className="text-xs text-gray-400 line-through">
                             {formatPrice(product.original_price)}
                           </div>
@@ -1273,6 +1278,8 @@ export default function AdminProductsPage() {
                 <b>价格体系：</b>零售价🟰成本价÷2.6折×110%；一件起批🟰零售价×33%；5件起批🟰零售价×28%。
                 <br />
                 充值会员：5万／10万会员价🟰零售价×28%，退换比例分别为5%／10%；30万会员价🟰零售价×26%，退换20%。
+                <br />
+                <b>原价 / 零售价：</b>原价＝各部件价格之和（划线参考价）；零售价＝促销价（实际售价）。有零售价时按零售价卖，<b>零售价留空则按原价售卖</b>。
               </div>
 
               {/* 套装拆分价（上下装 / 两件套 / 三件套） */}

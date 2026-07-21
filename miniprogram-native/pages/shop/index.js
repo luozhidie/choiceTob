@@ -170,8 +170,8 @@ Page({
         if (p.image_url) images.push(p.image_url);
         if (p.images && Array.isArray(p.images)) images = images.concat(p.images);
         if (images.length === 0) images = [''];
-        /* 零售价 */
-        var price = Number(p.price) || 0;
+        /* 零售价（实际售价：有零售价为主，留空则回退到原价） */
+        var price = (Number(p.price) > 0 ? Number(p.price) : (Number(p.original_price) || 0)) || 0;
         if (price >= 100) price = Math.round(price / 100);
         var ori = p.original_price ? Number(p.original_price) : 0;
         if (ori >= 100) ori = Math.round(ori / 100);
@@ -955,7 +955,9 @@ Page({
     }
     var wp = Number(p.wholesale_price) || 0;
     if (t.data.isPriceMember && wp > 0) return Math.round(wp / 100) * 100;
-    return Number(p.price);
+    // 零售价为空时回退到原价（价格总和）作为实际售价
+    var rp = Number(p.price) || 0;
+    return rp > 0 ? rp : (Number(p.original_price) || 0);
   },
   // 面板价格随所选款式变化，并计算底部总价
   updateSkuPrice: function () {

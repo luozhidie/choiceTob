@@ -225,9 +225,9 @@ export function HotProductsSection() {
                       {(isMember || !product.is_members_only) ? (
                         <div className="mt-3 flex items-baseline gap-2">
                           <span className="text-xl font-bold text-accent">
-                            ¥{(product.price / 100).toLocaleString()}
+                            ¥{((product.price > 0 ? product.price : (product.original_price || 0)) / 100).toLocaleString()}
                           </span>
-                          {product.original_price && product.original_price > product.price && (
+                          {product.original_price && product.original_price > (product.price > 0 ? product.price : (product.original_price || 0)) && (
                             <span className="text-sm text-gray-400 line-through">
                               ¥{(product.original_price / 100).toLocaleString()}
                             </span>
@@ -358,9 +358,9 @@ export function HotProductsSection() {
               {(isMember || !selectedProduct.is_members_only) ? (
                 <div className="mt-4 flex items-baseline gap-3">
                   <span className="text-3xl font-bold text-accent">
-                    ¥{(selectedProduct.price / 100).toLocaleString()}
+                    ¥{((selectedProduct.price > 0 ? selectedProduct.price : (selectedProduct.original_price || 0)) / 100).toLocaleString()}
                   </span>
-                  {selectedProduct.original_price && selectedProduct.original_price > selectedProduct.price && (
+                  {selectedProduct.original_price && selectedProduct.original_price > (selectedProduct.price > 0 ? selectedProduct.price : (selectedProduct.original_price || 0)) && (
                     <span className="text-lg text-gray-400 line-through">
                       ¥{(selectedProduct.original_price / 100).toLocaleString()}
                     </span>

@@ -174,10 +174,10 @@ function CheckoutContent() {
     return product.original_price || 0;
   }, [product]);
 
-  /* 实付价格：统一使用 product.price（与首页、详情页一致） */
+  /* 实付价格：有零售价以零售价为主，未设零售价则回退到原价（与首页、详情页一致） */
   const actualPrice = useMemo(() => {
     if (!product) return 0;
-    return product.price || 0;
+    return (product.price || 0) > 0 ? product.price : (product.original_price || 0);
   }, [product]);
 
   /* 兼容旧变量名（retailPrice = 实际支付价格） */
@@ -407,7 +407,7 @@ function CheckoutContent() {
                       {displayOriginalPrice && displayOriginalPrice > retailPrice && (
                         <span className="text-sm text-gray-400 line-through mb-1">原价 {formatPrice(displayOriginalPrice)}</span>
                       )}
-                      <span className="text-sm text-gray-400 mb-1">零售价</span>
+                      <span className="text-sm text-gray-400 mb-1">{retailPrice === product.price ? "零售价" : "促销价"}</span>
                     </div>
                     {/* 批发价区域 */}
                     <div
