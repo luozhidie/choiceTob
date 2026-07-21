@@ -5,8 +5,8 @@ import { createClient } from "@supabase/supabase-js";
 export const dynamic = "force-dynamic";
 
 const TEMP_TOKEN = "tmp_write_bg_2026";
-const BUCKET = "site-assets";
-const FILE_PATH = "config/page-backgrounds.json";
+const BUCKET = "app-config";
+const FILE_PATH = "page-backgrounds.json";
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +16,11 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
+    await supabase.storage.createBucket(BUCKET, {
+      public: true,
+      allowedMimeTypes: ["application/json", "text/plain"],
+      fileSizeLimit: 1024 * 1024,
+    }).catch(() => {});
     const test = {
       home: { color: "#123456", image: "https://colour-choice.art/x.png" },
       buyer: { color: "#abcdef" },

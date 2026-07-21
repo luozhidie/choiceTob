@@ -13,8 +13,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const BUCKET = "site-assets";
-const FILE_PATH = "config/page-backgrounds.json";
+const BUCKET = "app-config";
+const FILE_PATH = "page-backgrounds.json";
 
 const PAGES = ["home", "buyer", "cart", "my"] as const;
 type PageKey = (typeof PAGES)[number];
@@ -39,6 +39,17 @@ function sanitize(input: any): Config {
     }
   }
   return out;
+}
+
+// 确保配置桶存在（服务端建桶，无需 DDL；已存在则忽略报错）
+async function ensureBucket() {
+  const { error } = await supabase.storage.createBucket(BUCKET, {
+    public: true,
+    allowedMimeTypes: ["application/json", "text/plain"],
+    fileSizeLimit: 1024 * 1024,
+  });
+  // 桶已存在时 error 非空但可忽略
+  return;
 }
 
 async function authAdmin(req: NextRequest) {
@@ -75,6 +86,7 @@ export async function PUT(req: NextRequest) {
   try {
     const body = await req.json();
     const clean = sanitize(body);
+    await ensureBucket();
     const { error } = await supabase.storage
       .from(BUCKET)
       .upload(FILE_PATH, JSON.stringify(clean, null, 2), {

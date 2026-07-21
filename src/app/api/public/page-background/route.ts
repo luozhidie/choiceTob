@@ -11,8 +11,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-const BUCKET = "site-assets";
-const FILE_PATH = "config/page-backgrounds.json";
+const BUCKET = "app-config";
+const FILE_PATH = "page-backgrounds.json";
 
 const PAGES = ["home", "buyer", "cart", "my"] as const;
 type PageKey = (typeof PAGES)[number];
