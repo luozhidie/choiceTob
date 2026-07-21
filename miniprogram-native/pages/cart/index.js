@@ -5,11 +5,35 @@ Page({
     allChecked: false,
     selectedCount: 0,
     totalCount: 0,
-    totalPrice: '¥0.00'
+    totalPrice: '¥0.00',
+    pageBgColor: '',
+    pageBgImage: '',
+    pageBgStyle: 'background:#faf8f6;'
   },
 
   onShow: function() {
     this.loadCart();
+    this.loadPageBg();
+  },
+
+  /* 后台「页面背景」配置：购物车页 */
+  loadPageBg: function() {
+    var t = this;
+    wx.request({
+      url: 'https://colour-choice.art/api/public/page-background',
+      method: 'GET',
+      success: function(r) {
+        var d = r.data;
+        if (!d || !d.success || !d.data) return;
+        var c = d.data.cart || {};
+        var color = c.color || '#faf8f6';
+        var img = c.image || '';
+        var style = img
+          ? ('background:' + color + ';background-image:url(\'' + img + '\');background-size:cover;background-position:center;')
+          : ('background:' + color + ';');
+        t.setData({ pageBgColor: color, pageBgImage: img, pageBgStyle: style });
+      }
+    });
   },
 
   loadCart: function() {

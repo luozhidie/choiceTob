@@ -1,6 +1,8 @@
 <view class="page">
   <!-- ====== 头部：头像+用户信息+操作图标 ====== -->
-  <view class="header">
+  <view class="header" style="{{myHeaderStyle}}">
+    <image wx:if="{{myHeaderImage}}" src="{{myHeaderImage}}" mode="aspectFill" class="hdr-bg"/>
+    <view wx:if="{{myHeaderImage}}" class="hdr-mask"/>
     <view class="header-left" bindtap="{{isLoggedIn?'goSettings':'goLogin'}}">
       <image class="avatar" src="{{avatarUrl||'/assets/avatar-ph.png'}}" mode="aspectFill"/>
       <view class="user-meta">

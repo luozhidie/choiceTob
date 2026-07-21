@@ -10,6 +10,7 @@ const menuGroups = [
   { label: "概览", items: [
     { label: "数据概览", href: "/admin/dashboard" },
     { label: "站点图片", href: "/admin/site-assets" },
+    { label: "页面背景", href: "/admin/page-background" },
   ]},
 
   // ─── 店铺管理 ───

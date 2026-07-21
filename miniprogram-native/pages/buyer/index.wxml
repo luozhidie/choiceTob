@@ -1,4 +1,4 @@
-<view class="page">
+<view class="page" style="{{pageBgStyle}}">
   <!-- 搜索栏 -->
   <view class="search-bar">
     <text class="si">🔍</text>

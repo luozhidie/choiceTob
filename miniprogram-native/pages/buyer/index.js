@@ -9,11 +9,35 @@ Page({
     hasMore:true,
     page:1,
     isPriceMember:false,  // 价格会员状态
+    pageBgColor:'',        // 后台「页面背景」设置的选品页底色
+    pageBgImage:'',
+    pageBgStyle:'background:#faf8f6;',
   },
 
   onLoad:function(){
     this.refreshAuth();
     this.load();
+    this.loadPageBg();
+  },
+
+  /* 后台「页面背景」配置：选品页 */
+  loadPageBg:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/page-background',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data)return;
+        var b=d.data.buyer||{};
+        var color=b.color||'#faf8f6';
+        var img=b.image||'';
+        var style= img
+          ? ('background:'+color+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
+          : ('background:'+color+';');
+        t.setData({ pageBgColor:color, pageBgImage:img, pageBgStyle:style });
+      }
+    });
   },
 
   onShow:function(){

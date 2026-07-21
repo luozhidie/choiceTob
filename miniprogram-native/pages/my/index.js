@@ -71,11 +71,38 @@ Page({
     /* ===== 常量（模板用）===== */
     certBenefits:CERT_BENEFITS,
     tierCardBenefits:TIER_CARD_BENEFITS,
-    tiers:TIERS
+    tiers:TIERS,
+
+    /* ===== 后台「页面背景」设置：我的页头部 ===== */
+    myHeaderColor:'',
+    myHeaderImage:'',
+    myHeaderStyle:''
   },
 
   onShow:function(){
     this.initAll();
+    this.loadPageBg();
+  },
+
+  /* 后台「页面背景」配置：我的页头部 */
+  loadPageBg:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/page-background',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data)return;
+        var m=d.data.my||{};
+        var color=m.color||'';
+        var img=m.image||'';
+        // 图片优先；其次颜色；都为空则沿用 wxss 默认粉色渐变
+        var style= img
+          ? ('background:'+(color||'#fff5f8')+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
+          : (color ? ('background:'+color+';') : '');
+        t.setData({ myHeaderColor:color, myHeaderImage:img, myHeaderStyle:style });
+      }
+    });
   },
 
   initAll:function(){

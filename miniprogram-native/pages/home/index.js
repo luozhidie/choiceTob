@@ -26,6 +26,9 @@ Page({
     blocks:[],          // 轮播图下方模块（排除 hero_top）
     heroTopBlocks:[],   // 轮播图上方模块（position==='hero_top'）
     topBgColor:'#fcefe9', // 头部/分类标签背景：与首个内容板块 bgColor 统一
+    homeBgColor:'',        // 后台「页面背景」设置的首页背景色（优先于 topBgColor）
+    homeBgImage:'',        // 后台「页面背景」设置的首页背景图
+    headerStyle:'background:#fcefe9;', // 头部最终样式（颜色或图片）
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
@@ -51,6 +54,7 @@ Page({
     this.loadP();
     this.loadCategories();  // 从后台读取分类标签
     this.loadBlocks();
+    this.loadPageBg();      // 后台「页面背景」配置
     this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
@@ -140,6 +144,7 @@ Page({
           topBgColor = firstBlock.style.bgColor;
         }
         t.setData({ topBgColor: topBgColor });
+        t.updateHeaderStyle();
 
         /* 有分类导航时更新 categories 列表 */
         if(catNavs.length>1){
@@ -171,6 +176,35 @@ Page({
         });
       }
     });
+  },
+
+  /* ====== 后台「页面背景」配置：首页头部 ====== */
+  loadPageBg:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/page-background',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data)return;
+        var home=d.data.home||{};
+        t.setData({
+          homeBgColor: home.color||'',
+          homeBgImage: home.image||''
+        });
+        t.updateHeaderStyle();
+      }
+    });
+  },
+  /* 头部最终背景样式：图片优先，否则用颜色（后台设置优先于首个区块 bgColor） */
+  updateHeaderStyle:function(){
+    var t=this;
+    var color=t.data.homeBgColor||t.data.topBgColor||'#fcefe9';
+    var img=t.data.homeBgImage;
+    var style= img
+      ? ('background:'+color+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
+      : ('background:'+color+';');
+    t.setData({ headerStyle: style });
   },
 
   /* ====== 特价货架：按模式加载折扣商品 ====== */
