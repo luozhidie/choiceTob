@@ -69,7 +69,7 @@
       },
       {
         "pagePath": "pages/buyer/index",
-        "text": "选品",
+        "text": "分类",
         "iconPath": "assets/tabbar/stock.png",
         "selectedIconPath": "assets/tabbar/stock-active.png"
       },
