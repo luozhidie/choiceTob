@@ -160,10 +160,6 @@
       </view>
     </view>
 
-    <view class="sc-imgs" wx:if="{{uploadedUrls.length}}">
-      <image wx:for="{{uploadedUrls}}" wx:key="*this" wx:for-item="u" src="{{u}}" mode="aspectFill" class="sc-thumb"/>
-    </view>
-
     <view class="sc-actions">
       <button class="sc-btn sc-btn-ghost" loading="{{saving}}" bindtap="save" data-publish="0">存草稿</button>
       <button class="sc-btn sc-btn-primary" loading="{{saving}}" bindtap="save" data-publish="1">直接上架</button>
