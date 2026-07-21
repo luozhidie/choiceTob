@@ -338,8 +338,11 @@ page { background: var(--bg); }
 .sku-qbtn { width: 56rpx; height: 56rpx; display: flex; align-items: center; justify-content: center; font-size: 28rpx; color: #333; }
 .sku-qnum { width: 72rpx; text-align: center; font-size: 28rpx; color: #333; border-left: 1rpx solid #e5e5e5; border-right: 1rpx solid #e5e5e5; }
 
-.sku-bar { padding: 24rpx; border-top: 1rpx solid #f5f2ef; }
-.sku-confirm { background: #f5c2d4; color: #fff; font-size: 30rpx; font-weight: 700; text-align: center; padding: 24rpx 0; border-radius: 40rpx; }
+.sku-bar { padding: 24rpx; border-top: 1rpx solid #f5f2ef; display: flex; align-items: center; justify-content: space-between; gap: 20rpx; }
+.sku-total { display: flex; align-items: baseline; font-size: 24rpx; color: #999; flex-shrink: 0; }
+.sku-total-num { font-size: 38rpx; font-weight: 700; color: #2d1b2e; margin-left: 4rpx; }
+.sku-total-sub { font-size: 22rpx; color: #999; margin-left: 6rpx; }
+.sku-confirm { flex: 1; background: #f5c2d4; color: #fff; font-size: 30rpx; font-weight: 700; text-align: center; padding: 24rpx 0; border-radius: 40rpx; }
 .sku-confirm-active { background: #2d1b2e; }
 
 /* ==================== 尺码图弹窗 ==================== */

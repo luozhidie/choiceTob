@@ -294,19 +294,26 @@
           </view>
         </view>
 
-        <!-- 尺码 -->
+        <!-- 尺码：阿里巴巴式，每码独立数量 -->
         <view class="sku-row" wx:if="{{sizeOptions.length>0}}">
           <view class="sku-row-head">
             <text class="sku-row-label">尺码</text>
             <text class="sku-size-link" bindtap="showSizeChart">查看尺码 ›</text>
           </view>
-          <view class="sku-chips">
-            <text class="sku-chip {{selectedSize===item?'sku-chip-on':''}}" wx:for="{{sizeOptions}}" wx:key="*this" data-v="{{item}}" bindtap="selectSize">{{item}}</text>
+          <view class="sku-size-list">
+            <view class="sku-size-item" wx:for="{{sizeOptions}}" wx:key="*this">
+              <text class="sku-size-name">{{item}}</text>
+              <view class="sku-qb">
+                <view class="sku-qbtn" data-s="{{item}}" bindtap="decSkuSize">-</view>
+                <text class="sku-qnum">{{sizeQuantities[item]||0}}</text>
+                <view class="sku-qbtn" data-s="{{item}}" bindtap="incSkuSize">+</view>
+              </view>
+            </view>
           </view>
         </view>
 
-        <!-- 数量 -->
-        <view class="sku-row">
+        <!-- 数量（无尺码商品，单一数量） -->
+        <view class="sku-row" wx:if="{{sizeOptions.length===0}}">
           <text class="sku-row-label">数量</text>
           <view class="sku-qb">
             <view class="sku-qbtn" bindtap="dec">-</view>
@@ -316,7 +323,8 @@
         </view>
       </view>
       <view class="sku-bar">
-        <view class="sku-confirm {{quantity>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">{{skuMode==='buy' ? '确认并支付' : '确定'}}</view>
+        <view class="sku-total">合计 <text class="sku-total-num">¥{{skuTotalPrice}}</text><text class="sku-total-sub" wx:if="{{skuTotal>0}}">（{{skuTotal}}件）</text></view>
+        <view class="sku-confirm {{skuTotal>0?'sku-confirm-active':''}}" bindtap="confirmSkuPanel">{{skuMode==='buy' ? '确认并支付' : '确定'}}</view>
       </view>
     </view>
   </view>
