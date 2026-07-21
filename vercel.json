@@ -6,7 +6,8 @@
   "crons": [
     { "path": "/api/finance/signal/run", "schedule": "30 8 * * 1-5" },
     { "path": "/api/ssq/sync", "schedule": "0 14 * * 0,2,4" },
-    { "path": "/api/lottery/dailypick", "schedule": "0 15 * * *" }
+    { "path": "/api/lottery/dailypick", "schedule": "0 15 * * *" },
+    { "path": "/api/admin/products/auto-unpublish", "schedule": "0 4 * * *" }
   ],
   "headers": [
     {

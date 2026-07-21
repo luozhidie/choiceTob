@@ -20,6 +20,10 @@
 .sc-custom-toggle{font-size:22rpx;color:#b45309;font-weight:600;}
 .sc-input{background:#f6f4f5;border-radius:12rpx;padding:18rpx 20rpx;font-size:26rpx;color:#333;}
 .sc-picker{color:#333;}
+.sc-sub{font-size:20rpx;color:#9ca3af;font-weight:400;margin-left:8rpx;}
+.sc-season-row{display:flex;flex-wrap:wrap;gap:12rpx;margin-top:14rpx;align-items:center;}
+.sc-season-tag{font-size:22rpx;color:#b45309;background:#fff7ed;border:2rpx solid #fed7aa;border-radius:999rpx;padding:8rpx 18rpx;}
+.sc-season-clear{font-size:22rpx;color:#6b7280;background:#f3f4f6;border-radius:999rpx;padding:8rpx 18rpx;}
 
 .sc-thumb{width:120rpx;height:120rpx;border-radius:10rpx;}
 

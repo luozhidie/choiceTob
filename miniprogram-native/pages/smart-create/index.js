@@ -29,7 +29,9 @@ Page({
     videoSize: 0,
     uploadedVideoUrl: '',
     // 成本价自动换算快照（避免覆盖手填价格，同时支持连续输入更新）
-    lastAutoCalc: null
+    lastAutoCalc: null,
+    // 定时下架日期（季节性货品），格式 YYYY-MM-DD，留空=不下架
+    unpublishAt: ''
   },
 
   /* 套装拆分价 */
@@ -352,6 +354,25 @@ Page({
     }
   },
 
+  /* 定时下架日期：日期选择器 */
+  pickUnpublish: function (e) {
+    this.setData({ unpublishAt: e.detail.value });
+  },
+  /* 定时下架：季节预设（取下一个尚未到来的该日期，当天 23:59 下架） */
+  setSeasonUnpublish: function (e) {
+    var m = parseInt(e.currentTarget.dataset.m, 10);
+    var d = parseInt(e.currentTarget.dataset.d, 10);
+    var now = new Date();
+    var year = now.getFullYear();
+    var cand = new Date(year, m - 1, d, 23, 59, 0, 0);
+    if (cand.getTime() < now.getTime()) year += 1;
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    this.setData({ unpublishAt: year + '-' + pad(m) + '-' + pad(d) });
+  },
+  clearUnpublish: function () {
+    this.setData({ unpublishAt: '' });
+  },
+
   /* 保存：草稿 / 直接上架 */
   save: function (e) {
     var t = this;
@@ -386,6 +407,11 @@ Page({
           ? detailUrls.map(function (u) { return '<img src="' + u + '" style="width:100%;display:block;margin-bottom:8px;"/>'; }).join('')
           : (p.detail || ''),
         is_published: publish,
+        // 定时下架：本地日期 YYYY-MM-DD（当天 23:59）→ ISO(UTC) 存入 timestamptz
+        unpublish_at: t.unpublishAt ? (function () {
+          var dt = new Date(t.unpublishAt + 'T23:59:00');
+          return isNaN(dt.getTime()) ? null : dt.toISOString();
+        })() : null,
         stock: 100,
         tags: Array.isArray(p.tags) ? p.tags : []
       };

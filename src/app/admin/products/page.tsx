@@ -94,11 +94,48 @@ interface Product {
   ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期）
   ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消）
   ship_image?: string | null;       // 发货解释图片 URL
+  // 定时下架时间（季节性货品）：到达该时间且仍上架则自动下架
+  unpublish_at?: string | null;
 }
 
 // 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和）
 function effectivePrice(p: { price?: number | null; original_price?: number | null }) {
   return (p && (p.price || 0) > 0 ? (p.price as number) : (p?.original_price || 0)) || 0;
+}
+
+// timestamptz(ISO) → 本地 datetime-local 输入值 YYYY-MM-DDTHH:mm
+function toLocalInputValue(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+// 本地 datetime-local 值 → ISO(UTC) 存入 timestamptz
+function fromLocalInputValue(v: string): string | null {
+  if (!v) return null;
+  const d = new Date(v); // 按本地时间解析
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString();
+}
+
+const pad2 = (n: number) => String(n).padStart(2, "0");
+// 季节下架预设：返回「当天 23:59」的本地 datetime-local 值（取下一个尚未到来的该日期）
+function seasonUnpublishValue(month: number, day: number): string {
+  const now = new Date();
+  let year = now.getFullYear();
+  const candidate = new Date(year, month - 1, day, 23, 59, 0, 0);
+  if (candidate.getTime() < now.getTime()) year += 1;
+  const d = new Date(year, month - 1, day, 23, 59, 0, 0);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+}
+// 展示用：YYYY-MM-DD HH:mm
+function formatUnpublish(iso?: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return "";
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
 
 export default function AdminProductsPage() {
@@ -258,6 +295,7 @@ export default function AdminProductsPage() {
     ship_est_days: 7,
     ship_text: "",
     ship_image: "",
+    unpublish_at: "",
   });
 
   const supabase = createClient();
@@ -419,6 +457,7 @@ export default function AdminProductsPage() {
       ship_est_days: 7,
       ship_text: "",
       ship_image: "",
+      unpublish_at: "",
     });
     setSetItems([]);
     autoCalcSnapshot.current = null;
@@ -509,6 +548,8 @@ export default function AdminProductsPage() {
       ship_est_days: form.ship_est_days ? Number(form.ship_est_days) : null,
       ship_text: form.ship_text.trim() || null,
       ship_image: form.ship_image.trim() || null,
+      // 定时下架时间：本地 datetime-local → ISO(UTC)
+      unpublish_at: fromLocalInputValue(form.unpublish_at),
     };
 
     try {
@@ -656,6 +697,8 @@ export default function AdminProductsPage() {
       ship_est_days: product.ship_est_days ?? 7,
       ship_text: product.ship_text || "",
       ship_image: product.ship_image || "",
+      // 定时下架时间：ISO → 本地 datetime-local
+      unpublish_at: toLocalInputValue(product.unpublish_at),
     });
     // 套装拆分价：数据库存的是分(cent)，回显为元
     const loaded = (product.params?.set_items as any) || [];
@@ -1174,6 +1217,12 @@ export default function AdminProductsPage() {
                       >
                         {product.is_published ? "已发布" : "草稿"}
                       </button>
+                      {product.unpublish_at && (
+                        <div className="text-[10px] text-amber-500 mt-1 leading-tight">
+                          {product.is_published ? "定时下架 " : "曾设定下架 "}
+                          {formatUnpublish(product.unpublish_at)}
+                        </div>
+                      )}
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex items-center justify-end gap-1.5">
@@ -2239,6 +2288,51 @@ export default function AdminProductsPage() {
                 >
                   立即发布
                 </label>
+              </div>
+
+              {/* 定时下架时间（季节性货品） */}
+              <div className="pt-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  定时下架时间
+                  <span className="text-gray-400 font-normal ml-1">（留空=不下架，常用于春夏秋冬季节性货品）</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  value={form.unpublish_at}
+                  onChange={(e) =>
+                    setForm({ ...form, unpublish_at: e.target.value })
+                  }
+                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                />
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-xs text-gray-400 self-center mr-1">季节预设：</span>
+                  {[
+                    { label: "春·4/30", m: 4, d: 30 },
+                    { label: "夏·8/31", m: 8, d: 31 },
+                    { label: "秋·10/31", m: 10, d: 31 },
+                    { label: "冬·1/31", m: 1, d: 31 },
+                  ].map((s) => (
+                    <button
+                      key={s.label}
+                      type="button"
+                      onClick={() =>
+                        setForm({ ...form, unpublish_at: seasonUnpublishValue(s.m, s.d) })
+                      }
+                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20"
+                    >
+                      {s.label}
+                    </button>
+                  ))}
+                  {form.unpublish_at && (
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, unpublish_at: "" })}
+                      className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    >
+                      清除
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <button

@@ -120,6 +120,21 @@
       <input class="sc-input" value="{{product.description}}" data-field="description" bindinput="onField" placeholder="一句话卖点"/>
     </view>
 
+    <!-- 定时下架（季节性货品） -->
+    <view class="sc-field">
+      <text class="sc-label">定时下架时间<text class="sc-sub">（留空=不下架，常用于春夏秋冬季货）</text></text>
+      <picker mode="date" value="{{unpublishAt}}" bindchange="pickUnpublish">
+        <view class="sc-input sc-picker">{{unpublishAt || '选择下架日期'}}</view>
+      </picker>
+      <view class="sc-season-row">
+        <text class="sc-season-tag" bindtap="setSeasonUnpublish" data-m="4" data-d="30">春·4/30</text>
+        <text class="sc-season-tag" bindtap="setSeasonUnpublish" data-m="8" data-d="31">夏·8/31</text>
+        <text class="sc-season-tag" bindtap="setSeasonUnpublish" data-m="10" data-d="31">秋·10/31</text>
+        <text class="sc-season-tag" bindtap="setSeasonUnpublish" data-m="1" data-d="31">冬·1/31</text>
+        <text class="sc-season-clear" wx:if="{{unpublishAt}}" bindtap="clearUnpublish">清除</text>
+      </view>
+    </view>
+
     <!-- 模特图 -->
     <view class="sc-media">
       <view class="sc-label-row">
