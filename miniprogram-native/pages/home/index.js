@@ -29,6 +29,7 @@ Page({
     homeBgColor:'',        // 后台「页面背景」设置的首页背景色（优先于 topBgColor）
     homeBgImage:'',        // 后台「页面背景」设置的首页背景图
     headerStyle:'background:#fcefe9;', // 头部最终样式（颜色或图片）
+    pageStyle:'',                        // 整页背景（含下半截）：后台设置后注入，否则回落默认 var(--bg)
     catNavItems:[],     // 分类导航预解析数据
     quadItems:{},       // 四宫格预解析
     circleItems:{},     // 圆形卡片行预解析
@@ -196,15 +197,21 @@ Page({
       }
     });
   },
-  /* 头部最终背景样式：图片优先，否则用颜色（后台设置优先于首个区块 bgColor） */
+  /* 头部 + 整页最终背景样式：图片优先，否则用颜色（后台设置优先于首个区块 bgColor） */
   updateHeaderStyle:function(){
     var t=this;
+    var hasSetting = !!(t.data.homeBgColor || t.data.homeBgImage); // 仅当后台有设置时才覆盖整页背景
     var color=t.data.homeBgColor||t.data.topBgColor||'#fcefe9';
     var img=t.data.homeBgImage;
-    var style= img
+    var headerStyle= img
       ? ('background:'+color+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
       : ('background:'+color+';');
-    t.setData({ headerStyle: style });
+    var pageStyle = hasSetting
+      ? (img
+          ? ('background:'+color+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
+          : ('background:'+color+';'))
+      : '';
+    t.setData({ headerStyle: headerStyle, pageStyle: pageStyle });
   },
 
   /* ====== 特价货架：按模式加载折扣商品 ====== */
