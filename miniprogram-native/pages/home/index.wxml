@@ -335,7 +335,7 @@
   </template>
 
   <!-- ========== 商品区 ========== -->
-  <view class="sec">
+  <view class="sec" wx:if="{{showProductSec}}">
     <view class="sh">
       <text class="stt">{{ac==='全部'?'穿搭':ac}} · 精选</text>
       <text class="stc">({{products.length}}件)</text>

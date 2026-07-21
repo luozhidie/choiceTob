@@ -35,6 +35,7 @@ Page({
     circleItems:{},     // 圆形卡片行预解析
     fallbackImages:[],  // 商品图兜底：无图横幅自动拼照片墙
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
+    showProductSec:false, // 首页「穿搭·精选」商品区是否展示（当前隐藏，做成专场页）
     specTabs:['特价甄选','首次降价','3折以下','反季特价'],
     specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
   },
