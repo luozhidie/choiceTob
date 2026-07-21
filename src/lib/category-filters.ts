@@ -65,7 +65,9 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
       { key: "bulk_price", label: "批量采购价", type: "toggle" },
       {
@@ -108,7 +110,9 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
       { key: "bulk_price", label: "批量采购价", type: "toggle" },
       { key: "sizes", label: "鞋码", type: "popup", options: ["35", "36", "37", "38", "39", "40", "41", "均码"] },
@@ -137,7 +141,9 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
       { key: "bulk_price", label: "批量采购价", type: "toggle" },
       { key: "fabrics", label: "材质", type: "popup", options: ["925银", "合金", "铜", "钛钢", "珍珠", "天然石", "水晶", "亚克力", "树脂", "布艺", "皮革", "木质"] },
@@ -163,7 +169,9 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
       { key: "bulk_price", label: "批量采购价", type: "toggle" },
       { key: "sizes", label: "尺码", type: "popup", options: ["S", "M", "L", "XL", "XXL", "70A", "70B", "75A", "75B", "80A", "80B", "85B", "均码"] },

@@ -99,7 +99,9 @@ function buildTree(){
 var DEFAULT_FILTER_CONFIG = {
   sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'批发价'}],
   quickFilters:[
+    {key:'subscribed_stall',label:'订阅的档口',type:'toggle'},
     {key:'is_special',label:'特价',type:'toggle'},
+    {key:'in_stock',label:'现货',type:'toggle'},
     {key:'source_brand',label:'源头厂牌',type:'toggle'},
     {key:'bulk_price',label:'批量采购价',type:'toggle'},
     {key:'sizes',label:'尺码',type:'popup',options:['M','L','S','XL','XS','均码']},
