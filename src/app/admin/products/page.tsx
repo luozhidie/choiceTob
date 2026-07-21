@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import {
@@ -125,7 +125,16 @@ export default function AdminProductsPage() {
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
 
-  // 套装拆分价（上下装/两件套/三件套）：部件名 + 零售价/批发价/批量价/成本价(元)
+  // 成本价自动换算快照：只覆盖仍等于上次自动换算值的字段，保护用户手填价格
+  const autoCalcSnapshot = useRef<{
+    costY: number;
+    price: string;
+    original_price: string;
+    wholesale_price: string;
+    bulk_price: string;
+  } | null>(null);
+
+  // 套装拆分价（上下装/两件套/三件套）：部件名 + 零售价/批发价/批量价/成本价(元）
   // 仅用于表单编辑，提交时换算成分(cent)并入 params.set_items，避免新增数据库列
   const [setItems, setSetItems] = useState<
     { name: string; retail: string; wholesale: string; bulk: string; cost: string }[]
@@ -336,7 +345,7 @@ export default function AdminProductsPage() {
     setForm((f) => ({ ...f, category: val, subcategory: "" }));
   };
 
-  // 价格体系：成本价 → 零售价/批发价/批量价
+  // 价格体系：成本价 → 零售价/批发价/批量价/原价
   const calcPricesFromCost = (costY: number) => {
     const retail = Math.round(costY / 0.26 * 1.10);
     const wholesale = Math.round(retail * 0.33);
@@ -347,16 +356,26 @@ export default function AdminProductsPage() {
     const costY = parseFloat(val) || 0;
     if (costY > 0) {
       const { retail, wholesale, bulk } = calcPricesFromCost(costY);
-      setForm((f) => ({
-        ...f,
+      const snap = autoCalcSnapshot.current;
+      const next: typeof form = {
+        ...form,
         cost_price: val,
+        price: !snap || form.price === snap.price || form.price === "" ? String(retail) : form.price,
+        original_price: !snap || form.original_price === snap.original_price || form.original_price === "" ? String(retail) : form.original_price,
+        wholesale_price: !snap || form.wholesale_price === snap.wholesale_price || form.wholesale_price === "" ? String(wholesale) : form.wholesale_price,
+        bulk_price: !snap || form.bulk_price === snap.bulk_price || form.bulk_price === "" ? String(bulk) : form.bulk_price,
+      };
+      autoCalcSnapshot.current = {
+        costY,
         price: String(retail),
         original_price: String(retail),
         wholesale_price: String(wholesale),
         bulk_price: String(bulk),
-      }));
+      };
+      setForm(next);
     } else {
       setForm((f) => ({ ...f, cost_price: val }));
+      autoCalcSnapshot.current = null;
     }
   };
 
@@ -402,6 +421,7 @@ export default function AdminProductsPage() {
       ship_image: "",
     });
     setSetItems([]);
+    autoCalcSnapshot.current = null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -569,6 +589,20 @@ export default function AdminProductsPage() {
 
   const openEdit = (product: Product) => {
     setEditingProduct(product);
+    // 根据当前商品成本价初始化自动换算快照，便于后续判断是否为手填价格
+    const loadedCostY = product.cost_price ? product.cost_price / 100 : 0;
+    if (loadedCostY > 0) {
+      const { retail, wholesale, bulk } = calcPricesFromCost(loadedCostY);
+      autoCalcSnapshot.current = {
+        costY: loadedCostY,
+        price: String(retail),
+        original_price: String(retail),
+        wholesale_price: String(wholesale),
+        bulk_price: String(bulk),
+      };
+    } else {
+      autoCalcSnapshot.current = null;
+    }
     setForm({
       title: product.title,
       description: product.description || "",

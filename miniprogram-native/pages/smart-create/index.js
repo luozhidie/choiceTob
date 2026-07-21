@@ -314,7 +314,7 @@ Page({
   onCategoryCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.category = e.detail.value; this.setData({ product: p }); },
   toggleSeasonCustom: function () { this.setData({ seasonCustomMode: !this.data.seasonCustomMode }); },
   onSeasonCustomInput: function (e) { var p = Object.assign({}, this.data.product); p.season = e.detail.value; this.setData({ product: p }); },
-  /* 成本价输入自动换算价格体系 */
+  /* 成本价输入自动换算价格体系（只填充空字段，不覆盖手填） */
   onCostPrice: function (e) {
     var costY = parseFloat(e.detail.value) || 0;
     var p = Object.assign({}, this.data.product);
@@ -323,10 +323,10 @@ Page({
       var retail = Math.round(costY / 0.26 * 1.10);
       var wholesale = Math.round(retail * 0.33);
       var bulk = Math.round(retail * 0.28);
-      p.price = String(retail);
-      p.original_price = String(retail);
-      p.wholesale_price = String(wholesale);
-      p.bulk_price = String(bulk);
+      if (!p.price) p.price = String(retail);
+      if (!p.original_price) p.original_price = String(retail);
+      if (!p.wholesale_price) p.wholesale_price = String(wholesale);
+      if (!p.bulk_price) p.bulk_price = String(bulk);
     }
     this.setData({ product: p });
   },
