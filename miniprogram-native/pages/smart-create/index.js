@@ -407,11 +407,6 @@ Page({
           ? detailUrls.map(function (u) { return '<img src="' + u + '" style="width:100%;display:block;margin-bottom:8px;"/>'; }).join('')
           : (p.detail || ''),
         is_published: publish,
-        // 定时下架：本地日期 YYYY-MM-DD（当天 23:59）→ ISO(UTC) 存入 timestamptz
-        unpublish_at: t.unpublishAt ? (function () {
-          var dt = new Date(t.unpublishAt + 'T23:59:00');
-          return isNaN(dt.getTime()) ? null : dt.toISOString();
-        })() : null,
         stock: 100,
         tags: Array.isArray(p.tags) ? p.tags : []
       };
@@ -431,6 +426,11 @@ Page({
           };
         });
       if (setArr.length) paramsObj.set_items = setArr;
+      // 定时下架时间（季节性货品）：存于 params，本地日期 23:59 → ISO(UTC)
+      if (t.unpublishAt) {
+        var udt = new Date(t.unpublishAt + 'T23:59:00');
+        if (!isNaN(udt.getTime())) paramsObj.unpublish_at = udt.toISOString();
+      }
       if (Object.keys(paramsObj).length) payload.params = paramsObj;
       var token = wx.getStorageSync('token') || '';
       wx.request({

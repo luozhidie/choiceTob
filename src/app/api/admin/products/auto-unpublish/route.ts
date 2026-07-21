@@ -13,12 +13,13 @@ export async function GET(req: NextRequest) {
   try {
     const supabase = createServiceRoleClient();
     const nowIso = new Date().toISOString();
+    // unpublish_at 存于 params JSONB（与 season/set_items 一致），按 ISO 字符串比较
     const { count, error } = await supabase
       .from("products")
       .update({ is_published: false })
       .eq("is_published", true)
-      .not("unpublish_at", "is", null)
-      .lte("unpublish_at", nowIso);
+      .not("params", "is", null)
+      .lte("params->>unpublish_at", nowIso);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });

@@ -94,8 +94,6 @@ interface Product {
   ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期）
   ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消）
   ship_image?: string | null;       // 发货解释图片 URL
-  // 定时下架时间（季节性货品）：到达该时间且仍上架则自动下架
-  unpublish_at?: string | null;
 }
 
 // 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和）
@@ -537,6 +535,9 @@ export default function AdminProductsPage() {
             cost: s.cost ? Math.round(Number(s.cost) * 100) : 0,
           }));
         if (arr.length > 0) cleaned.set_items = arr;
+        // 定时下架时间（季节性货品）：存于 params，本地 datetime-local → ISO(UTC)；清空则置 null 以便取消定时
+        if (form.unpublish_at) cleaned.unpublish_at = fromLocalInputValue(form.unpublish_at);
+        else cleaned.unpublish_at = null;
         return Object.keys(cleaned).length > 0 ? cleaned : null;
       })(),
       // 媒体字段
@@ -548,8 +549,6 @@ export default function AdminProductsPage() {
       ship_est_days: form.ship_est_days ? Number(form.ship_est_days) : null,
       ship_text: form.ship_text.trim() || null,
       ship_image: form.ship_image.trim() || null,
-      // 定时下架时间：本地 datetime-local → ISO(UTC)
-      unpublish_at: fromLocalInputValue(form.unpublish_at),
     };
 
     try {
@@ -697,8 +696,8 @@ export default function AdminProductsPage() {
       ship_est_days: product.ship_est_days ?? 7,
       ship_text: product.ship_text || "",
       ship_image: product.ship_image || "",
-      // 定时下架时间：ISO → 本地 datetime-local
-      unpublish_at: toLocalInputValue(product.unpublish_at),
+      // 定时下架时间：从 params 读取，ISO → 本地 datetime-local
+      unpublish_at: toLocalInputValue(product.params?.unpublish_at),
     });
     // 套装拆分价：数据库存的是分(cent)，回显为元
     const loaded = (product.params?.set_items as any) || [];
@@ -1217,10 +1216,10 @@ export default function AdminProductsPage() {
                       >
                         {product.is_published ? "已发布" : "草稿"}
                       </button>
-                      {product.unpublish_at && (
+                      {product.params?.unpublish_at && (
                         <div className="text-[10px] text-amber-500 mt-1 leading-tight">
                           {product.is_published ? "定时下架 " : "曾设定下架 "}
-                          {formatUnpublish(product.unpublish_at)}
+                          {formatUnpublish(product.params.unpublish_at)}
                         </div>
                       )}
                     </td>
