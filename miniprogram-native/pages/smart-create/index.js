@@ -75,7 +75,10 @@ Page({
   },
   applySetTotal: function () {
     var p = Object.assign({}, this.data.product);
-    if (this.data.setSumR) p.price = String(this.data.setSumR);
+    if (this.data.setSumR) {
+      p.price = String(this.data.setSumR);
+      p.original_price = String(this.data.setSumR);
+    }
     if (this.data.setSumW) p.wholesale_price = String(this.data.setSumW);
     if (this.data.setSumB) p.bulk_price = String(this.data.setSumB);
     if (this.data.setSumC) p.cost_price = String(this.data.setSumC);
@@ -321,6 +324,7 @@ Page({
       var wholesale = Math.round(retail * 0.33);
       var bulk = Math.round(retail * 0.28);
       p.price = String(retail);
+      p.original_price = String(retail);
       p.wholesale_price = String(wholesale);
       p.bulk_price = String(bulk);
     }
@@ -348,7 +352,7 @@ Page({
         wholesale_price: wsY ? Math.round(wsY * 100) : null,
         bulk_price: bkY ? Math.round(bkY * 100) : null,
         cost_price: costY ? Math.round(costY * 100) : null,
-        original_price: Math.round(priceY * 100),
+        original_price: (p.original_price ? Math.round(parseFloat(p.original_price) * 100) : null) || Math.round(priceY * 100),
         sizes: p.sizes || '',
         color: p.color || '',
         material: p.material || '',

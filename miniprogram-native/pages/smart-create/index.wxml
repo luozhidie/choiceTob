@@ -45,15 +45,21 @@
         <input class="sc-input" type="digit" value="{{product.price}}" data-field="price" bindinput="onField"/>
       </view>
       <view class="sc-field sc-half">
-        <text class="sc-label">批发价(元)</text>
-        <input class="sc-input" type="digit" value="{{product.wholesale_price}}" data-field="wholesale_price" bindinput="onField"/>
+        <text class="sc-label">原价(划线参考)</text>
+        <input class="sc-input" type="digit" value="{{product.original_price}}" data-field="original_price" bindinput="onField" placeholder="留空=同零售价"/>
       </view>
     </view>
     <view class="sc-row">
       <view class="sc-field sc-half">
+        <text class="sc-label">批发价(元)</text>
+        <input class="sc-input" type="digit" value="{{product.wholesale_price}}" data-field="wholesale_price" bindinput="onField"/>
+      </view>
+      <view class="sc-field sc-half">
         <text class="sc-label">成本价(元)</text>
         <input class="sc-input" type="digit" value="{{product.cost_price}}" data-field="cost_price" bindinput="onCostPrice" placeholder="输入自动换算"/>
       </view>
+    </view>
+    <view class="sc-row">
       <view class="sc-field sc-half">
         <text class="sc-label">5件起批(元)</text>
         <input class="sc-input" type="digit" value="{{product.bulk_price}}" data-field="bulk_price" bindinput="onField"/>

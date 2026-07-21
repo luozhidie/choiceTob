@@ -155,6 +155,7 @@ export default function AdminProductsPage() {
     setForm((f) => ({
       ...f,
       price: r ? String(r) : f.price,
+      original_price: r ? String(r) : f.original_price,
       wholesale_price: w ? String(w) : f.wholesale_price,
       bulk_price: b ? String(b) : f.bulk_price,
       cost_price: c ? String(c) : f.cost_price,
@@ -350,6 +351,7 @@ export default function AdminProductsPage() {
         ...f,
         cost_price: val,
         price: String(retail),
+        original_price: String(retail),
         wholesale_price: String(wholesale),
         bulk_price: String(bulk),
       }));
