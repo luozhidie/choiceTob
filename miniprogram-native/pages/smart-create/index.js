@@ -19,7 +19,15 @@ Page({
     setSumR: 0,
     setSumW: 0,
     setSumB: 0,
-    setSumC: 0
+    setSumC: 0,
+    // 模特图 / 详情图 / 视频
+    modelImages: [],        // 本地模特图（tempFilePath）
+    uploadedModelUrls: [],  // 已上传 URL（保留，便于回填）
+    detailImages: [],       // 本地详情图
+    uploadedDetailUrls: [],
+    videoPath: '',          // 本地视频临时路径
+    videoSize: 0,
+    uploadedVideoUrl: ''
   },
 
   /* 套装拆分价 */
@@ -95,15 +103,71 @@ Page({
     this.setData({ images: images });
   },
 
+  /* 模特图（最多6张） */
+  chooseModelImages: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 6 - t.data.modelImages.length,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: function (r) {
+        var paths = r.tempFiles.map(function (f) { return f.tempFilePath; });
+        t.setData({ modelImages: t.data.modelImages.concat(paths).slice(0, 6) });
+      }
+    });
+  },
+  removeModelImage: function (e) {
+    var i = e.currentTarget.dataset.i;
+    var arr = this.data.modelImages.slice();
+    arr.splice(i, 1);
+    this.setData({ modelImages: arr });
+  },
+  /* 详情图（最多15张，保存时拼成详情页 HTML） */
+  chooseDetailImages: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 15 - t.data.detailImages.length,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: function (r) {
+        var paths = r.tempFiles.map(function (f) { return f.tempFilePath; });
+        t.setData({ detailImages: t.data.detailImages.concat(paths).slice(0, 15) });
+      }
+    });
+  },
+  removeDetailImage: function (e) {
+    var i = e.currentTarget.dataset.i;
+    var arr = this.data.detailImages.slice();
+    arr.splice(i, 1);
+    this.setData({ detailImages: arr });
+  },
+  /* 展示视频（短视频） */
+  chooseVideo: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['video'],
+      sourceType: ['album', 'camera'],
+      maxDuration: 30,
+      success: function (r) {
+        var f = r.tempFiles[0];
+        t.setData({ videoPath: f.tempFilePath, videoSize: f.size || 0 });
+      }
+    });
+  },
+  removeVideo: function () {
+    this.setData({ videoPath: '', videoSize: 0, uploadedVideoUrl: '' });
+  },
+
   onNote: function (e) { this.setData({ note: e.detail.value }); },
 
-  /* 上传所有本地图到 Storage（使用 base64 + wx.request 绕过 uploadFile 域名白名单限制） */
-  uploadAll: function (cb) {
+  /* 上传图片列表到 Storage（base64 + wx.request 绕过 uploadFile 域名白名单限制） */
+  uploadImages: function (paths, cb) {
     var t = this;
     var token = wx.getStorageSync('token') || '';
     var urls = [];
-    var queue = t.data.images.slice();
-    if (queue.length === 0) { cb([]); return; }
+    var queue = (paths || []).slice();
+    if (queue.length === 0) { cb([], ''); return; }
     var idx = 0;
     var lastErr = '';
 
@@ -160,6 +224,38 @@ Page({
     }
 
     next();
+  },
+
+  /* 上传单个视频（base64 + wx.request） */
+  uploadVideo: function (path, cb) {
+    var token = wx.getStorageSync('token') || '';
+    wx.getFileSystemManager().readFile({
+      filePath: path,
+      encoding: 'base64',
+      success: function (res) {
+        wx.request({
+          url: 'https://colour-choice.art/api/upload-video',
+          method: 'POST',
+          header: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' },
+          data: { video: 'data:video/mp4;base64,' + res.data },
+          success: function (r) {
+            if (r.statusCode === 200 && r.data && r.data.success && r.data.url) cb(r.data.url, '');
+            else cb('', (r.data && r.data.error) || ('HTTP' + r.statusCode));
+          },
+          fail: function (res) {
+            cb('', 'request失败: ' + (res && res.errMsg || '未知'));
+          }
+        });
+      },
+      fail: function () {
+        cb('', '读取视频失败');
+      }
+    });
+  },
+
+  /* 上传所有本地商品图（兼容旧调用 uploadAll） */
+  uploadAll: function (cb) {
+    this.uploadImages(this.data.images, cb);
   },
 
   /* AI 识别 */
@@ -238,65 +334,101 @@ Page({
     var p = t.data.product;
     if (!p) { t.showToast('请先 AI 识别'); return; }
     if (!p.title) { t.showToast('请填写标题'); return; }
-    var priceY = parseFloat(p.price) || 0;
-    var wsY = parseFloat(p.wholesale_price) || 0;
-    var costY = parseFloat(p.cost_price) || 0;
-    var bkY = parseFloat(p.bulk_price) || 0;
-    var payload = {
-      title: p.title,
-      category: p.category || '待分类',
-      price: Math.round(priceY * 100),
-      wholesale_price: wsY ? Math.round(wsY * 100) : null,
-      bulk_price: bkY ? Math.round(bkY * 100) : null,
-      cost_price: costY ? Math.round(costY * 100) : null,
-      original_price: Math.round(priceY * 100),
-      sizes: p.sizes || '',
-      color: p.color || '',
-      material: p.material || '',
-      description: p.description || '',
-      cover_image: (t.data.uploadedUrls[0]) || (p.images && p.images[0]) || null,
-      images: t.data.uploadedUrls.length ? t.data.uploadedUrls : (p.images || []),
-      is_published: publish,
-      stock: 100,
-      tags: Array.isArray(p.tags) ? p.tags : []
-    };
-    // 季节、套装拆分价等存入 params JSONB（products 表没有 season 列，不能作为顶层字段）
-    var paramsObj = {};
-    if (p.season) paramsObj.season = p.season;
-    // 套装拆分价：换算成分(cent)
-    var setArr = t.data.setItems
-      .filter(function (s) { return s.name || s.retail || s.wholesale || s.bulk || s.cost; })
-      .map(function (s) {
-        return {
-          name: s.name || '',
-          retail: s.retail ? Math.round(parseFloat(s.retail) * 100) : 0,
-          wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0,
-          bulk: s.bulk ? Math.round(parseFloat(s.bulk) * 100) : 0,
-          cost: s.cost ? Math.round(parseFloat(s.cost) * 100) : 0
-        };
-      });
-    if (setArr.length) paramsObj.set_items = setArr;
-    if (Object.keys(paramsObj).length) payload.params = paramsObj;
     t.setData({ saving: true });
-    var token = wx.getStorageSync('token') || '';
-    wx.request({
-      url: 'https://colour-choice.art/api/admin/products/create',
-      method: 'POST',
-      header: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' },
-      data: payload,
-      success: function (res) {
-        t.setData({ saving: false });
-        if (res.data && res.data.success) {
-          t.showToast(publish ? '已上架' : '已存草稿');
-          setTimeout(function () { wx.navigateBack(); }, 1200);
-        } else {
-          t.showToast((res.data && res.data.error) || '保存失败');
+
+    function finalize(modelUrls, detailUrls, videoUrl) {
+      var priceY = parseFloat(p.price) || 0;
+      var wsY = parseFloat(p.wholesale_price) || 0;
+      var costY = parseFloat(p.cost_price) || 0;
+      var bkY = parseFloat(p.bulk_price) || 0;
+      var payload = {
+        title: p.title,
+        category: p.category || '待分类',
+        price: Math.round(priceY * 100),
+        wholesale_price: wsY ? Math.round(wsY * 100) : null,
+        bulk_price: bkY ? Math.round(bkY * 100) : null,
+        cost_price: costY ? Math.round(costY * 100) : null,
+        original_price: Math.round(priceY * 100),
+        sizes: p.sizes || '',
+        color: p.color || '',
+        material: p.material || '',
+        description: p.description || '',
+        cover_image: (t.data.uploadedUrls[0]) || (p.images && p.images[0]) || null,
+        images: t.data.uploadedUrls.length ? t.data.uploadedUrls : (p.images || []),
+        model_images: modelUrls && modelUrls.length ? modelUrls : (p.model_images || []),
+        video_url: videoUrl || (p.video_url || ''),
+        detail: (detailUrls && detailUrls.length)
+          ? detailUrls.map(function (u) { return '<img src="' + u + '" style="width:100%;display:block;margin-bottom:8px;"/>'; }).join('')
+          : (p.detail || ''),
+        is_published: publish,
+        stock: 100,
+        tags: Array.isArray(p.tags) ? p.tags : []
+      };
+      // 季节、套装拆分价等存入 params JSONB（products 表没有 season 列，不能作为顶层字段）
+      var paramsObj = {};
+      if (p.season) paramsObj.season = p.season;
+      // 套装拆分价：换算成分(cent)
+      var setArr = t.data.setItems
+        .filter(function (s) { return s.name || s.retail || s.wholesale || s.bulk || s.cost; })
+        .map(function (s) {
+          return {
+            name: s.name || '',
+            retail: s.retail ? Math.round(parseFloat(s.retail) * 100) : 0,
+            wholesale: s.wholesale ? Math.round(parseFloat(s.wholesale) * 100) : 0,
+            bulk: s.bulk ? Math.round(parseFloat(s.bulk) * 100) : 0,
+            cost: s.cost ? Math.round(parseFloat(s.cost) * 100) : 0
+          };
+        });
+      if (setArr.length) paramsObj.set_items = setArr;
+      if (Object.keys(paramsObj).length) payload.params = paramsObj;
+      var token = wx.getStorageSync('token') || '';
+      wx.request({
+        url: 'https://colour-choice.art/api/admin/products/create',
+        method: 'POST',
+        header: { 'Content-Type': 'application/json', 'Authorization': token ? 'Bearer ' + token : '' },
+        data: payload,
+        success: function (res) {
+          t.setData({ saving: false });
+          if (res.data && res.data.success) {
+            t.showToast(publish ? '已上架' : '已存草稿');
+            setTimeout(function () { wx.navigateBack(); }, 1200);
+          } else {
+            t.showToast((res.data && res.data.error) || '保存失败');
+          }
+        },
+        fail: function () {
+          t.setData({ saving: false });
+          t.showToast('网络错误');
         }
-      },
-      fail: function () {
+      });
+    }
+
+    // 依次上传：模特图 → 详情图 → 视频，再 finalize 写入商品
+    t.uploadImages(t.data.modelImages, function (modelUrls, errM) {
+      if (t.data.modelImages.length && (!modelUrls || modelUrls.length === 0)) {
         t.setData({ saving: false });
-        t.showToast('网络错误');
+        t.showToast(errM || '模特图上传失败');
+        return;
       }
+      t.uploadImages(t.data.detailImages, function (detailUrls, errD) {
+        if (t.data.detailImages.length && (!detailUrls || detailUrls.length === 0)) {
+          t.setData({ saving: false });
+          t.showToast(errD || '详情图上传失败');
+          return;
+        }
+        if (!t.data.videoPath) {
+          finalize(modelUrls, detailUrls, t.data.uploadedVideoUrl || '');
+          return;
+        }
+        t.uploadVideo(t.data.videoPath, function (videoUrl, errV) {
+          if (!videoUrl) {
+            t.setData({ saving: false });
+            t.showToast(errV || '视频上传失败');
+            return;
+          }
+          finalize(modelUrls, detailUrls, videoUrl);
+        });
+      });
     });
   },
 
@@ -308,5 +440,11 @@ Page({
 
   previewImg: function (e) {
     wx.previewImage({ current: e.currentTarget.dataset.src, urls: this.data.images });
+  },
+  previewModel: function (e) {
+    wx.previewImage({ current: e.currentTarget.dataset.src, urls: this.data.modelImages });
+  },
+  previewDetail: function (e) {
+    wx.previewImage({ current: e.currentTarget.dataset.src, urls: this.data.detailImages });
   }
 });

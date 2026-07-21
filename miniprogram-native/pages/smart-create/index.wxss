@@ -40,4 +40,10 @@
 
 .sc-tip{font-size:22rpx;color:#999;text-align:center;line-height:1.6;margin-top:10rpx;}
 
+/* 模特图 / 详情图 / 视频 */
+.sc-media{margin-bottom:16rpx;}
+.sc-video-box{position:relative;width:100%;border-radius:12rpx;overflow:hidden;background:#000;}
+.sc-video{width:100%;height:420rpx;}
+.sc-video-box .sc-img-del{top:8rpx;right:8rpx;}
+
 .sc-toast{position:fixed;left:50%;top:40%;transform:translateX(-50%);background:rgba(0,0,0,0.8);color:#fff;font-size:26rpx;padding:20rpx 36rpx;border-radius:12rpx;z-index:999;}

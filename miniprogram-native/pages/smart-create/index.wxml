@@ -114,6 +114,46 @@
       <input class="sc-input" value="{{product.description}}" data-field="description" bindinput="onField" placeholder="一句话卖点"/>
     </view>
 
+    <!-- 模特图 -->
+    <view class="sc-media">
+      <view class="sc-label-row">
+        <text class="sc-label">模特图（最多6张）</text>
+        <text class="sc-custom-toggle" bindtap="chooseModelImages" wx:if="{{modelImages.length<6}}">＋ 选图</text>
+      </view>
+      <view class="sc-imgs">
+        <view class="sc-img" wx:for="{{modelImages}}" wx:key="*this" wx:for-item="src">
+          <image src="{{src}}" mode="aspectFill" data-src="{{src}}" bindtap="previewModel"/>
+          <view class="sc-img-del" catchtap="removeModelImage" data-i="{{index}}">×</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 详情图 -->
+    <view class="sc-media">
+      <view class="sc-label-row">
+        <text class="sc-label">详情图（最多15张，自动拼成详情页）</text>
+        <text class="sc-custom-toggle" bindtap="chooseDetailImages" wx:if="{{detailImages.length<15}}">＋ 选图</text>
+      </view>
+      <view class="sc-imgs">
+        <view class="sc-img" wx:for="{{detailImages}}" wx:key="*this" wx:for-item="src">
+          <image src="{{src}}" mode="aspectFill" data-src="{{src}}" bindtap="previewDetail"/>
+          <view class="sc-img-del" catchtap="removeDetailImage" data-i="{{index}}">×</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 展示视频 -->
+    <view class="sc-media">
+      <view class="sc-label-row">
+        <text class="sc-label">展示视频（短视频，≤20MB）</text>
+        <text class="sc-custom-toggle" bindtap="chooseVideo" wx:if="{{!videoPath}}">＋ 选视频</text>
+      </view>
+      <view class="sc-video-box" wx:if="{{videoPath}}">
+        <video src="{{videoPath}}" class="sc-video" controls/>
+        <view class="sc-img-del" catchtap="removeVideo">×</view>
+      </view>
+    </view>
+
     <view class="sc-imgs" wx:if="{{uploadedUrls.length}}">
       <image wx:for="{{uploadedUrls}}" wx:key="*this" wx:for-item="u" src="{{u}}" mode="aspectFill" class="sc-thumb"/>
     </view>
