@@ -95,6 +95,20 @@ function buildTree(){
   return tree;
 }
 
+/* 默认分类筛选配置（用于商品列表视图） */
+var DEFAULT_FILTER_CONFIG = {
+  sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'批发价'}],
+  quickFilters:[
+    {key:'is_special',label:'特价',type:'toggle'},
+    {key:'source_brand',label:'源头厂牌',type:'toggle'},
+    {key:'bulk_price',label:'批量采购价',type:'toggle'},
+    {key:'sizes',label:'尺码',type:'popup',options:['M','L','S','XL','XS','均码']},
+    {key:'fabrics',label:'面料',type:'popup',options:['棉','麻','丝','毛','化纤','混纺','牛仔']}
+  ],
+  subCategories:[],
+  filterPanel:{sections:[]}
+};
+
 Page({
   data:{
     keyword:'',
@@ -102,7 +116,7 @@ Page({
     activeMainId:'recommend',// 当前左侧选中主分类
     mainCategories:MAIN_CATEGORIES,
     categoryTree:{},
-    /* 商品列表视图（沿用原逻辑） */
+    /* 商品列表视图 */
     activeTab:'全部',
     sortType:'default',
     products:[],
@@ -113,15 +127,24 @@ Page({
     pageBgColor:'',
     pageBgImage:'',
     pageBgStyle:'background:#faf8f6;',
+    /* 筛选项 */
+    filterConfig:DEFAULT_FILTER_CONFIG,
+    filterOpen:false,        // 全部筛选抽屉
+    quickPopup:null,         // 当前弹出的 quickFilter key
+    quickPopupLabel:'',
+    quickPopupOptions:[],
+    selectedFilters:{},      // {key:[value,...]}
+    minPrice:'',
+    maxPrice:'',
   },
 
   onLoad:function(){
-    this.refreshAuth();
-    this.setData({ categoryTree: buildTree() });
-    this.loadPageBg();
-    /* 若带 category 参数进入，直接进入商品列表 */
-    var opt=this.options||{};
-    if(opt.category){ this.enterCategory(opt.category); }
+    var t=this;
+    t.refreshAuth();
+    t.setData({ categoryTree: buildTree() });
+    t.loadPageBg();
+    var opt=t.options||{};
+    if(opt.category){ t.enterCategory(opt.category); }
   },
 
   /* 后台「页面背景」配置：选品页 */
@@ -160,21 +183,62 @@ Page({
   },
   enterCategory:function(name){
     if(typeof name !== 'string'){ name = name.currentTarget.dataset.name; }
-    this.setData({ activeTab:name, viewMode:'list', page:1, hasMore:true, products:[] });
-    this.load();
+    var t=this;
+    t.setData({ activeTab:name, viewMode:'list', page:1, hasMore:true, products:[], selectedFilters:{}, minPrice:'', maxPrice:'' });
+    t.loadFilterConfig(name);
+    t.load();
   },
-  backToCategory:function(){ this.setData({ viewMode:'category' }); },
+  backToCategory:function(){ this.setData({ viewMode:'category', filterOpen:false, quickPopup:null }); },
 
-  /* ===== 商品列表数据（沿用原逻辑） ===== */
+  /* 加载某品类的筛选项配置 */
+  loadFilterConfig:function(category){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/category-filters?category='+encodeURIComponent(category),
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data)return;
+        var cfg=d.data;
+        /* 合并默认值，防止缺字段 */
+        t.setData({
+          filterConfig:{
+            sorts:cfg.sorts||DEFAULT_FILTER_CONFIG.sorts,
+            quickFilters:cfg.quickFilters||DEFAULT_FILTER_CONFIG.quickFilters,
+            subCategories:cfg.subCategories||[],
+            filterPanel:cfg.filterPanel||{sections:[]}
+          }
+        });
+      },
+      fail:function(){
+        t.setData({ filterConfig:DEFAULT_FILTER_CONFIG });
+      }
+    });
+  },
+
+  /* ===== 商品列表数据 ===== */
   buildUrl:function(){
     var url='https://colour-choice.art/api/public/products?limit=20';
     var t=this;
     if(t.data.keyword)url+='&keyword='+encodeURIComponent(t.data.keyword);
     if(t.data.activeTab!=='全部')url+='&category='+encodeURIComponent(t.data.activeTab);
-    if(t.data.sortType==='sales')url+='&sort=sales';
-    else if(t.data.sortType==='price_asc')url+='&sort=price_asc';
-    else if(t.data.sortType==='price_desc')url+'&sort=price_desc';
-    else if(t.data.sortType==='newest')url+='&sort=newest';
+    if(t.data.sortType!=='default' && t.data.sortType!=='price_desc')url+='&sort='+encodeURIComponent(t.data.sortType);
+    if(t.data.sortType==='price_desc')url+='&sort=price_desc';
+    if(t.data.page>1) url+='&offset='+((t.data.page-1)*20);
+
+    /* params 过滤 */
+    var sf=t.data.selectedFilters;
+    for(var k in sf){
+      var vals=sf[k];
+      if(vals && vals.length){
+        url+='&f['+encodeURIComponent(k)+']='+encodeURIComponent(vals.join(','));
+      }
+    }
+    /* 价格区间 */
+    var min=t.data.minPrice, max=t.data.maxPrice;
+    if(min||max){
+      url+='&priceMin='+encodeURIComponent(min||'0')+'&priceMax='+encodeURIComponent(max||'999999');
+    }
     return url;
   },
 
@@ -199,9 +263,9 @@ Page({
   loadMore:function(){
     var t=this;
     if(!t.data.hasMore||t.data.loading)return;
-    t.setData({loading:true});
+    t.setData({loading:true,page:t.data.page+1});
     wx.request({
-      url:this.buildUrl()+'&offset='+(t.data.page*20),
+      url:this.buildUrl(),
       method:'GET',
       success:function(r){
         var list=[];
@@ -233,17 +297,94 @@ Page({
   doSearch:function(){this.setData({page:1,hasMore:true});this.load();},
   clearSearch:function(){this.setData({keyword:''});this.setData({page:1,hasMore:true});this.load();},
 
-  switchViewMode:function(){this.setData({viewMode:this.data.viewMode==='list'?'grid':'list'});},
-
+  /* 排序 */
   setSort:function(e){
     var s=e.currentTarget.dataset.sort;
-    if(s==='price'&&this.data.sortType==='price_asc')s='price_desc';
-    else if(s==='price')s='price_asc';
+    if(s==='price'){
+      if(this.data.sortType==='price_asc')s='price_desc';
+      else s='price_asc';
+    }
     this.setData({sortType:s,page:1,hasMore:true});
     this.load();
   },
 
-  onListScrollLower:function(){ this.setData({page:this.data.page+1}); this.loadMore(); },
+  onListScrollLower:function(){ this.loadMore(); },
+
+  /* ===== 筛选抽屉 ===== */
+  openFilter:function(){ this.setData({filterOpen:true}); },
+  closeFilter:function(){ this.setData({filterOpen:false}); },
+
+  /* 全部筛选抽屉里的选项切换 */
+  toggleFilter:function(e){
+    var key=e.currentTarget.dataset.key;
+    var val=e.currentTarget.dataset.value;
+    var multiple=e.currentTarget.dataset.multiple;
+    var t=this;
+    var sf=JSON.parse(JSON.stringify(t.data.selectedFilters));
+    var arr=sf[key]||[];
+    if(multiple){
+      var idx=arr.indexOf(val);
+      if(idx>=0) arr.splice(idx,1); else arr.push(val);
+    } else {
+      arr=arr.indexOf(val)>=0?[]:[val];
+    }
+    if(arr.length) sf[key]=arr; else delete sf[key];
+    t.setData({selectedFilters:sf});
+  },
+
+  onPriceInput:function(e){
+    var t=e.currentTarget.dataset.type;
+    var v=e.detail.value;
+    if(t==='min') this.setData({minPrice:v}); else this.setData({maxPrice:v});
+  },
+
+  resetFilter:function(){ this.setData({selectedFilters:{},minPrice:'',maxPrice:''}); },
+  confirmFilter:function(){ this.setData({filterOpen:false,page:1,hasMore:true}); this.load(); },
+
+  /* ===== quickFilters（第二行） ===== */
+  toggleQuick:function(e){
+    var key=e.currentTarget.dataset.key;
+    var type=e.currentTarget.dataset.type;
+    if(type==='popup'){
+      var t=this;
+      if(t.data.quickPopup===key){ t.setData({quickPopup:null}); return; }
+      var qf=t.data.filterConfig.quickFilters.find(function(x){return x.key===key;});
+      t.setData({
+        quickPopup:key,
+        quickPopupLabel:qf?qf.label:key,
+        quickPopupOptions:qf&&qf.options?qf.options:[]
+      });
+      return;
+    }
+    var t=this;
+    var sf=JSON.parse(JSON.stringify(t.data.selectedFilters));
+    var arr=sf[key]||[];
+    arr=arr.indexOf('1')>=0?[]:['1'];
+    if(arr.length) sf[key]=arr; else delete sf[key];
+    t.setData({selectedFilters:sf,page:1,hasMore:true});
+    t.load();
+  },
+  closeQuickPopup:function(){ this.setData({quickPopup:null}); },
+  selectQuickPopup:function(e){
+    var key=e.currentTarget.dataset.key;
+    var val=e.currentTarget.dataset.value;
+    var t=this;
+    var sf=JSON.parse(JSON.stringify(t.data.selectedFilters));
+    var arr=sf[key]||[];
+    var idx=arr.indexOf(val);
+    if(idx>=0) arr.splice(idx,1); else arr.push(val);
+    if(arr.length) sf[key]=arr; else delete sf[key];
+    t.setData({selectedFilters:sf});
+  },
+  confirmQuickPopup:function(){ this.setData({quickPopup:null,page:1,hasMore:true}); this.load(); },
+
+  /* 第三行品类标签 */
+  switchSubCategory:function(e){
+    var name=e.currentTarget.dataset.name;
+    this.setData({activeTab:name,page:1,hasMore:true,selectedFilters:{},minPrice:'',maxPrice:''});
+    this.loadFilterConfig(name);
+    this.load();
+  },
 
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
   goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},

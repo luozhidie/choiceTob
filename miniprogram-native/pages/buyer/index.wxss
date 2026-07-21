@@ -10,27 +10,19 @@ page{background: var(--bg);}
 
 /* ========== 分类视图 ========== */
 .cat-page{flex:1;display:flex;overflow:hidden;}
-
-/* 左侧主分类导航 */
 .cat-sidebar{width:176rpx;background:#f6f4f1;height:100%;}
 .cat-side-item{padding:30rpx 16rpx;font-size:26rpx;color:#666;text-align:center;position:relative;line-height:1.3;}
 .cat-side-item.active{background:#fff;color:#2d1b2e;font-weight:700;}
 .cat-side-item.active::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:6rpx;height:36rpx;background:#ff4081;border-radius:0 4rpx 4rpx 0;}
-
-/* 右侧分类内容 */
 .cat-content{flex:1;height:100%;background:#fff;padding:8rpx 20rpx 0;}
 .cat-section{margin-bottom:36rpx;}
 .cat-section-title{font-size:28rpx;font-weight:700;color:#333;margin:16rpx 4rpx 22rpx;}
-
-/* 小图宫格 */
 .cat-grid{display:flex;flex-wrap:wrap;}
 .cat-tile{width:33.33%;display:flex;flex-direction:column;align-items:center;margin-bottom:26rpx;}
 .cat-tile-img{width:140rpx;height:140rpx;border-radius:16rpx;overflow:hidden;background:#f3f1ee;box-shadow:0 2rpx 8rpx rgba(0,0,0,.04);}
 .cat-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:0 8rpx;box-sizing:border-box;}
 .cat-ph text{font-size:23rpx;color:#fff;font-weight:600;text-align:center;line-height:1.25;}
 .cat-tile-name{font-size:23rpx;color:#555;margin-top:10rpx;text-align:center;}
-
-/* 热门市场：大卡片 */
 .market-card{height:168rpx;border-radius:18rpx;overflow:hidden;position:relative;margin-bottom:18rpx;display:flex;align-items:flex-end;}
 .market-body{position:relative;z-index:2;padding:22rpx 24rpx;}
 .market-title{display:block;font-size:32rpx;font-weight:800;color:#fff;text-shadow:0 2rpx 6rpx rgba(0,0,0,.25);}
@@ -44,10 +36,22 @@ page{background: var(--bg);}
 .list-title{flex:1;text-align:center;font-size:30rpx;font-weight:700;color:#333;}
 .list-spacer{width:90rpx;}
 
-/* 排序 */
+/* 第一行：排序 */
 .sort-bar{display:flex;align-items:center;padding:14rpx 24rpx;background:#fff;border-bottom:1rpx solid #f0ece8;}
 .st{font-size:25rpx;color:#888;padding:8rpx 18rpx;}
-.st-on{color:#2d1b2e;font-weight:700;}
+.st-on{color:#ff4081;font-weight:700;}
+.filter-trigger{margin-left:auto;}
+
+/* 第二行：快捷筛选 */
+.quick-bar{display:flex;align-items:center;padding:12rpx 24rpx;background:#fff;border-bottom:1rpx solid #f0ece8;white-space:nowrap;}
+.quick-item{display:inline-flex;align-items:center;padding:10rpx 18rpx;margin-right:14rpx;background:#f5f2ef;border-radius:28rpx;font-size:23rpx;color:#555;}
+.quick-item.quick-on{background:#ff4081;color:#fff;}
+.quick-item.quick-active{background:#2d1b2e;color:#fff;}
+
+/* 第三行：品类小标签 */
+.subcat-scroll{white-space:nowrap;background:#fff;padding:12rpx 24rpx;border-bottom:1rpx solid #f0ece8;}
+.subcat-row{display:inline-flex;gap:14rpx;}
+.subcat-chip{display:inline-flex;flex-direction:column;align-items:center;font-size:22rpx;color:#555;background:#f8f7f4;border-radius:12rpx;padding:10rpx 18rpx;}
 
 /* 商品数 */
 .count-bar{padding:10rpx 28rpx;font-size:23rpx;color:#999;}
@@ -81,3 +85,30 @@ page{background: var(--bg);}
 .cb-title{display:block;font-size:26rpx;font-weight:bold;color:#c44d26;}
 .cb-desc{display:block;font-size:22rpx;color:#b87a58;margin-top:2rpx;}
 .cb-btn{font-size:24rpx;font-weight:bold;color:#e85d5d;shrink:0;}
+
+/* ========== 筛选抽屉/弹窗 ========== */
+.filter-mask,.popup-mask{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0);z-index:200;opacity:0;visibility:hidden;transition:all .25s;}
+.filter-mask.show,.popup-mask.show{background:rgba(0,0,0,.45);opacity:1;visibility:visible;}
+.filter-panel,.popup-panel{position:fixed;left:0;right:0;bottom:0;background:#fff;z-index:201;border-radius:24rpx 24rpx 0 0;transform:translateY(100%);transition:transform .3s;max-height:80vh;display:flex;flex-direction:column;}
+.filter-panel.in,.popup-panel.in{transform:translateY(0);}
+.popup-panel{left:40rpx;right:40rpx;border-radius:24rpx;bottom:20vh;max-height:60vh;}
+
+.filter-head,.popup-head{display:flex;align-items:center;justify-content:space-between;padding:24rpx 28rpx;border-bottom:1rpx solid #f0ece8;}
+.filter-title,.popup-title{font-size:30rpx;font-weight:700;color:#333;}
+.filter-close,.popup-close{font-size:28rpx;color:#999;padding:8rpx;}
+.filter-body,.popup-body{flex:1;padding:20rpx 28rpx;overflow:auto;}
+.filter-foot-space{height:120rpx;}
+.filter-foot{position:absolute;left:0;right:0;bottom:0;display:flex;padding:16rpx 28rpx 28rpx;background:#fff;border-top:1rpx solid #f0ece8;}
+.filter-reset{flex:1;text-align:center;padding:20rpx 0;background:#2d1b2e;color:#fff;font-size:28rpx;border-radius:36rpx 0 0 36rpx;}
+.filter-confirm{flex:1;text-align:center;padding:20rpx 0;background:#ff4081;color:#fff;font-size:28rpx;border-radius:0 36rpx 36rpx 0;}
+
+.filter-sec{margin-bottom:28rpx;}
+.filter-sec-title{font-size:27rpx;font-weight:700;color:#333;margin-bottom:16rpx;}
+.filter-mode{font-size:21rpx;color:#bbb;font-weight:400;margin-left:8rpx;}
+.filter-tags{display:flex;flex-wrap:wrap;gap:14rpx;}
+.filter-tag{padding:12rpx 22rpx;background:#f5f2ef;border-radius:28rpx;font-size:23rpx;color:#555;}
+.filter-tag.tag-on{background:#ff4081;color:#fff;}
+
+.price-row{display:flex;align-items:center;gap:16rpx;}
+.price-input{flex:1;height:64rpx;background:#f5f2ef;border-radius:12rpx;padding:0 16rpx;font-size:24rpx;text-align:center;}
+.price-line{color:#999;font-size:28rpx;}

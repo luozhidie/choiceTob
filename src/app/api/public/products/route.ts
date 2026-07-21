@@ -1,4 +1,4 @@
-// 公开 API：获取商品（前台首页/版块使用）
+// 公开 API：获取商品（前台首页/版块/分类结果页使用）
 // 优先用 service_role_key 绕过 RLS
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
@@ -31,7 +31,6 @@ function formatProducts(data: any[]) {
     created_at: p.created_at || null,
     sizes: p.sizes || null,
     color: p.color || null,
-    // 发货信息
     ship_from: p.ship_from || null,
     ship_est_days: p.ship_est_days ?? null,
     ship_text: p.ship_text || null,
@@ -39,33 +38,34 @@ function formatProducts(data: any[]) {
   }));
 }
 
-async function queryWithClient(supabase: ReturnType<typeof createClient>, request: NextRequest) {
+function applySort(query: any, sort: string) {
+  if (sort === "sales") return query.order("sales", { ascending: false });
+  if (sort === "price_asc") return query.order("price", { ascending: true });
+  if (sort === "price_desc") return query.order("price", { ascending: false });
+  if (sort === "newest") return query.order("created_at", { ascending: false });
+  return query.order("created_at", { ascending: false });
+}
+
+async function queryWithClient(supabase: any, request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") || "";
+  const keyword = searchParams.get("keyword") || "";
+  const sort = searchParams.get("sort") || "default";
   const limit = parseInt(searchParams.get("limit") || "20");
+  const offset = parseInt(searchParams.get("offset") || "0");
+  const priceMin = searchParams.get("priceMin") || "";
+  const priceMax = searchParams.get("priceMax") || "";
   const idsParam = searchParams.get("ids") || "";
   const singleId = searchParams.get("id") || "";
 
   // 按 ID 单条查询（给商品详情页用）
   if (singleId) {
-    // 并行查两个表，提升速度
     const [pResult, bpResult] = await Promise.all([
       supabase.from("products").select("*").eq("id", singleId).maybeSingle(),
       supabase.from("buyer_products").select("*").eq("id", singleId).maybeSingle(),
     ]);
-
-    if (pResult.data) {
-      console.log(`[products API] 找到商品 in products: id=${singleId}`);
-      return { success: true, data: [pResult.data], error: null };
-    }
-
-    if (bpResult.data) {
-      console.log(`[products API] 找到商品 in buyer_products: id=${singleId}`);
-      return { success: true, data: [bpResult.data], error: null };
-    }
-
-    // 两个表都没找到：记录日志，返回空数组
-    console.log(`[products API] 商品不存在: id=${singleId}, pError=${pResult.error?.message}, bpError=${bpResult.error?.message}`);
+    if (pResult.data) return { success: true, data: [pResult.data], error: null };
+    if (bpResult.data) return { success: true, data: [bpResult.data], error: null };
     return { success: true, data: [], error: null };
   }
 
@@ -73,45 +73,52 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
   if (idsParam) {
     const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
     if (ids.length > 0) {
-      const { data, error } = await supabase
-        .from("products")
-        .select("*")
-        .in("id", ids)
-        .limit(ids.length);
+      const { data, error } = await supabase.from("products").select("*").in("id", ids).limit(ids.length);
       if (error) return { error };
       return { success: true, data: formatProducts(data || []), error: null };
     }
   }
 
   // 分类/全部查询
-  let query = supabase
-    .from("products")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  let query = supabase.from("products").select("*");
 
   if (category) query = query.eq("category", category);
+  if (keyword) query = query.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+  if (priceMin) query = query.gte("price", parseFloat(priceMin) * 100);
+  if (priceMax) query = query.lte("price", parseFloat(priceMax) * 100);
+
+  // params 过滤：f[key]=value 或 f[key]=value1,value2
+  const filters: Record<string, string[]> = {};
+  searchParams.forEach((value, key) => {
+    if (key.startsWith("f[") && key.endsWith("]")) {
+      const paramKey = key.slice(2, -1);
+      filters[paramKey] = value.split(",").map(v => v.trim()).filter(Boolean);
+    }
+  });
+  for (const [k, vals] of Object.entries(filters)) {
+    if (vals.length === 1) {
+      query = query.eq(`params->>${k}`, vals[0]);
+    } else if (vals.length > 1) {
+      query = query.or(vals.map(v => `params->>${k}.eq.${v}`).join(","));
+    }
+  }
+
+  query = applySort(query, sort);
+  query = query.range(offset, offset + limit - 1);
 
   let { data, error } = await query;
 
   if ((!data || data.length === 0) && !error) {
-    let fallbackQuery = supabase
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(limit);
+    let fallbackQuery = supabase.from("products").select("*");
     if (category) fallbackQuery = fallbackQuery.eq("category", category);
+    if (keyword) fallbackQuery = fallbackQuery.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+    if (priceMin) fallbackQuery = fallbackQuery.gte("price", parseFloat(priceMin) * 100);
+    if (priceMax) fallbackQuery = fallbackQuery.lte("price", parseFloat(priceMax) * 100);
+    fallbackQuery = applySort(fallbackQuery, sort);
+    fallbackQuery = fallbackQuery.range(offset, offset + limit - 1);
     const fb = await fallbackQuery;
     data = fb.data;
     error = fb.error;
-  }
-
-  if ((!data || data.length === 0) && error?.code === "42703") {
-    let rawQuery = supabase.from("products").select("*").limit(limit);
-    if (category) rawQuery = rawQuery.eq("category", category);
-    const rw = await rawQuery;
-    data = rw.data;
-    error = rw.error;
   }
 
   return { success: true, data: formatProducts(data || []), error };
@@ -120,7 +127,6 @@ async function queryWithClient(supabase: ReturnType<typeof createClient>, reques
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
-  // 方式1: service_role_key（必须从环境变量读取，不能硬编码）
   if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -137,7 +143,6 @@ export async function GET(request: NextRequest) {
     console.warn("[products API] 警告: SUPABASE_SERVICE_ROLE_KEY 未设置，使用 anon key（可能被 RLS 限制）");
   }
 
-  // 方式2: 降级到 publishable key（可以硬编码，因为是公开的）
   const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_PUBLISHABLE;
   try {
     const supabase = createClient(supabaseUrl, publishableKey);

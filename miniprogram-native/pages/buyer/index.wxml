@@ -8,7 +8,6 @@
 
   <!-- ========== 分类视图 ========== -->
   <view class="cat-page" wx:if="{{viewMode==='category'}}">
-    <!-- 左侧主分类 -->
     <scroll-view class="cat-sidebar" scroll-y>
       <view wx:for="{{mainCategories}}" wx:key="id"
         class="cat-side-item {{activeMainId===item.id?'active':''}}"
@@ -17,13 +16,11 @@
       </view>
     </scroll-view>
 
-    <!-- 右侧分类内容 -->
     <scroll-view class="cat-content" scroll-y scroll-into-view="{{activeMainId}}" scroll-with-animation>
       <block wx:for="{{mainCategories}}" wx:key="id" wx:for-item="main">
         <view id="{{main.id}}" class="cat-section">
           <view class="cat-section-title">{{categoryTree[main.id].title}}</view>
 
-          <!-- 热门市场：大卡片 -->
           <view wx:if="{{categoryTree[main.id].type==='market'}}">
             <view wx:for="{{categoryTree[main.id].items}}" wx:key="name" wx:for-item="it"
               class="market-card" style="{{it.ps}}" bindtap="enterCategory" data-name="{{it.name}}">
@@ -34,7 +31,6 @@
             </view>
           </view>
 
-          <!-- 普通：小图宫格 -->
           <view wx:else class="cat-grid">
             <view wx:for="{{categoryTree[main.id].items}}" wx:key="name" wx:for-item="it"
               class="cat-tile" bindtap="enterCategory" data-name="{{it.name}}">
@@ -52,19 +48,42 @@
 
   <!-- ========== 商品列表视图 ========== -->
   <scroll-view class="list-scroll" scroll-y wx:else bindscrolltolower="onListScrollLower">
+    <!-- 返回 + 标题 -->
     <view class="list-header">
       <text class="back-btn" bindtap="backToCategory">‹ 分类</text>
       <text class="list-title">{{activeTab}}</text>
       <text class="list-spacer"></text>
     </view>
 
-    <!-- 排序 -->
+    <!-- 第一行：排序 -->
     <view class="sort-bar">
-      <text class="st {{sortType==='default'?'st-on':''}}" bindtap="setSort" data-sort="default">综合</text>
-      <text class="st {{sortType==='sales'?'st-on':''}}" bindtap="setSort" data-sort="sales">销量</text>
-      <text class="st {{sortType==='price_asc'||sortType==='price_desc'?'st-on':''}}" bindtap="setSort" data-sort="price">价格{{sortType==='price_desc'?'↓':(sortType==='price_asc'?'↑':'')}}</text>
-      <text class="st {{sortType==='newest'?'st-on':''}}" bindtap="setSort" data-sort="newest">上新</text>
+      <block wx:for="{{filterConfig.sorts}}" wx:key="key">
+        <text class="st {{sortType===item.key?'st-on':''}}" bindtap="setSort" data-sort="{{item.key}}">
+          {{item.label}}{{sortType==='price_asc'&&item.key==='price_asc'?'↑':''}}{{sortType==='price_desc'&&item.key==='price_asc'?'↓':''}}
+        </text>
+      </block>
+      <text class="st {{filterOpen?'st-on':''}} filter-trigger" bindtap="openFilter">筛选 ▽</text>
     </view>
+
+    <!-- 第二行：快捷筛选 -->
+    <view class="quick-bar">
+      <block wx:for="{{filterConfig.quickFilters}}" wx:key="key">
+        <view class="quick-item {{selectedFilters[item.key]&&selectedFilters[item.key].length?'quick-on':''}} {{quickPopup===item.key?'quick-active':''}}"
+          bindtap="toggleQuick" data-key="{{item.key}}" data-type="{{item.type}}">
+          <text wx:if="{{item.type==='toggle'&&selectedFilters[item.key]&&selectedFilters[item.key].length}}">✓ </text>
+          <text>{{item.label}}</text>
+          <text wx:if="{{item.type==='popup'}}"> ▼</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 第三行：品类货品面料分类 -->
+    <scroll-view wx:if="{{filterConfig.subCategories.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <view wx:for="{{filterConfig.subCategories}}" wx:key="*this" class="subcat-chip"
+          bindtap="switchSubCategory" data-name="{{item}}">{{item}}</view>
+      </view>
+    </scroll-view>
 
     <!-- 认证店主入口 -->
     <view class="cert-banner" wx:if="{{!isPriceMember}}" bindtap="goCertify">
@@ -106,4 +125,59 @@
     <view class="nomore" wx:if="{{!hasMore&&products.length>0}}"><text>— 已展示全部 —</text></view>
     <view class="sb"></view>
   </scroll-view>
+
+  <!-- ========== 全部筛选抽屉 ========== -->
+  <view class="filter-mask {{filterOpen?'show':''}}" bindtap="closeFilter" wx:if="{{filterOpen}}"></view>
+  <view class="filter-panel {{filterOpen?'in':''}}" wx:if="{{filterOpen}}">
+    <view class="filter-head">
+      <text class="filter-title">全部筛选</text>
+      <text class="filter-close" bindtap="closeFilter">✕</text>
+    </view>
+    <scroll-view class="filter-body" scroll-y>
+      <block wx:for="{{filterConfig.filterPanel.sections}}" wx:key="key">
+        <view class="filter-sec">
+          <view class="filter-sec-title">{{item.title}}<text wx:if="{{item.type!=='price'}}" class="filter-mode">({{item.multiple?'多选':'单选'}})</text></view>
+          <view wx:if="{{item.type==='price'}}" class="price-row">
+            <input class="price-input" type="digit" placeholder="最低价格" value="{{minPrice}}" data-type="min" bindinput="onPriceInput"/>
+            <text class="price-line">-</text>
+            <input class="price-input" type="digit" placeholder="最高价格" value="{{maxPrice}}" data-type="max" bindinput="onPriceInput"/>
+          </view>
+          <view wx:else class="filter-tags">
+            <view wx:for="{{item.options}}" wx:key="*this" wx:for-item="opt"
+              class="filter-tag {{selectedFilters[item.key]&&selectedFilters[item.key].indexOf(opt)>=0?'tag-on':''}}"
+              bindtap="toggleFilter" data-key="{{item.key}}" data-value="{{opt}}" data-multiple="{{item.multiple}}">
+              {{opt}}
+            </view>
+          </view>
+        </view>
+      </block>
+      <view class="filter-foot-space"></view>
+    </scroll-view>
+    <view class="filter-foot">
+      <view class="filter-reset" bindtap="resetFilter">重置</view>
+      <view class="filter-confirm" bindtap="confirmFilter">确定</view>
+    </view>
+  </view>
+
+  <!-- ========== quickFilter 弹窗（尺码/面料等） ========== -->
+  <view class="popup-mask {{quickPopup?'show':''}}" bindtap="closeQuickPopup" wx:if="{{quickPopup}}"></view>
+  <view class="popup-panel {{quickPopup?'in':''}}" wx:if="{{quickPopup}}">
+    <view class="popup-head">
+      <text class="popup-title">{{quickPopupLabel}}</text>
+      <text class="popup-close" bindtap="closeQuickPopup">✕</text>
+    </view>
+    <scroll-view class="popup-body" scroll-y>
+      <view class="filter-tags">
+        <view wx:for="{{quickPopupOptions}}" wx:key="*this"
+          class="filter-tag {{selectedFilters[quickPopup]&&selectedFilters[quickPopup].indexOf(item)>=0?'tag-on':''}}"
+          bindtap="selectQuickPopup" data-key="{{quickPopup}}" data-value="{{item}}">
+          {{item}}
+        </view>
+      </view>
+    </scroll-view>
+    <view class="filter-foot">
+      <view class="filter-reset" bindtap="closeQuickPopup">取消</view>
+      <view class="filter-confirm" bindtap="confirmQuickPopup">完成</view>
+    </view>
+  </view>
 </view>

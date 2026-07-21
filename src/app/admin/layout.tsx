@@ -17,6 +17,7 @@ const menuGroups = [
   { label: "店铺管理", items: [
     { label: "店铺列表", href: "/admin/stores" },
     { label: "品类管理", href: "/admin/categories" },
+    { label: "分类筛选项", href: "/admin/category-filters" },
     { label: "首页行业标签", href: "/admin/home-categories" },
     { label: "店铺买手决策", href: "/admin/buyer-features" },
     { label: "店铺内容", href: "/admin/store-content" },
