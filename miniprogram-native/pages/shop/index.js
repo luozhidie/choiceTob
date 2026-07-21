@@ -596,8 +596,8 @@ Page({
     var totalQty = 0;
     specs.forEach(function (sp) { totalQty += (sp.qty || 0); });
     if (totalQty <= 0) { wx.showToast({ title: '请选择数量', icon: 'none' }); return; }
-    // 取当前所选单价（分）：套装子项取子项批发价，普通商品取会员批发价/零售价
-    var unitCents = t.getUnitCents();
+    // 取当前所选单价（分）：套装子项取子项批发价/批量价，普通商品取会员批发价/批量价/零售价
+    var unitCents = t.getUnitCents(totalQty);
     var totalFee = unitCents * totalQty;
     // 规格摘要（款式/颜色/尺码/数量），便于后续订单记录
     var specStr = specs.map(function (sp) {
@@ -942,19 +942,27 @@ Page({
     n[s] = n[s] - 1;
     this.setData({ sizeQuantities: n }, this.computeSkuTotal);
   },
-  // 当前所选商品单价（分）
-  getUnitCents: function () {
+  // 当前所选商品单价（分）；qty 为总数量，>=5 件时优先取批量价
+  getUnitCents: function (qty) {
     var t = this;
     var p = t.data.product;
+    var totalQty = (qty != null ? qty : t.data.skuTotal) || 0;
     if (!p) return 0;
     if (t.data.setItems.length > 0 && t.data.selectedSetItem) {
       var raw = (p.params && Array.isArray(p.params.set_items)) ? p.params.set_items : [];
       for (var i = 0; i < raw.length; i++) {
-        if (raw[i].name === t.data.selectedSetItem) return Number(raw[i].wholesale) || 0;
+        if (raw[i].name === t.data.selectedSetItem) {
+          if (t.data.isPriceMember && totalQty >= 5 && Number(raw[i].bulk) > 0) return Number(raw[i].bulk);
+          return Number(raw[i].wholesale) || 0;
+        }
       }
     }
     var wp = Number(p.wholesale_price) || 0;
-    if (t.data.isPriceMember && wp > 0) return Math.round(wp / 100) * 100;
+    var bp = Number(p.bulk_price) || 0;
+    if (t.data.isPriceMember) {
+      if (totalQty >= 5 && bp > 0) return bp;
+      if (wp > 0) return Math.round(wp / 100) * 100;
+    }
     // 零售价为空时回退到原价（价格总和）作为实际售价
     var rp = Number(p.price) || 0;
     return rp > 0 ? rp : (Number(p.original_price) || 0);
@@ -989,7 +997,7 @@ Page({
     } else {
       totalQty = t.data.quantity || 1;
     }
-    var unitCents = t.getUnitCents();
+    var unitCents = t.getUnitCents(totalQty);
     t.setData({ skuTotal: totalQty, skuTotalPrice: Math.round(unitCents * totalQty / 100) });
   },
   confirmSkuPanel: function () {
@@ -1019,7 +1027,9 @@ Page({
     var cart = wx.getStorageSync('cart_v2') || [];
     var title = p.title || p.name;
     if (t.data.selectedSetItem) title = title + ' ' + t.data.selectedSetItem;
-    var unitCents = t.getUnitCents();
+    var totalCartQty = 0;
+    specs.forEach(function (sp) { totalCartQty += (sp.qty || 0); });
+    var unitCents = t.getUnitCents(totalCartQty);
     specs.forEach(function (sp) {
       var key = p.id + '|' + sp.size + '|' + sp.color + '|' + sp.setId;
       var existingIdx = -1;
