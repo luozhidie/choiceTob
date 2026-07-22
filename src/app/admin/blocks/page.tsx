@@ -37,7 +37,7 @@ interface Block {
   id: string;
   title: string;
   type: "products" | "promotion" | "custom" | "group_buy" | "flash_sale" | "recommendation" | "featured_banner"
-    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf" | "assortment" | "special";
+    | "card_single" | "card_quad" | "circle_row" | "banner_large" | "banner_small" | "category_nav" | "shelf" | "assortment" | "special" | "launch_campaign";
   content?: Record<string, any>;
   style?: {
     bgColor?: string;
@@ -71,6 +71,7 @@ const BLOCK_TYPES = [
   { value: "pre_sale", label: "预售模块", icon: Clock, description: "预售倒计时+商品，支持定金/尾款模式" },
   { value: "shelf", label: "货架入口", icon: ShoppingBag, description: "首页大卡片，点击进入独立商品列表" },
   { value: "assortment", label: "当季系列", icon: Sparkles, description: "大图+3小图，跳转组货方案" },
+  { value: "launch_campaign", label: "上新企划", icon: Sparkles, description: "秋款大上新活动页：手账 hero + 倒计时满减 + 直播 + 6 品牌矩阵 + 趋势网格 + 今日新款" },
 ];
 
 // 商品分类 slug → 中文标签（下拉展示用，value 仍为库内 slug）
@@ -1777,7 +1778,205 @@ export default function BlocksAdminPage() {
                       </div>
                     )}
 
-                  {/* 样式设置 */}
+                    {form.type === "launch_campaign" && (
+                      <div className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                        <p className="text-xs text-gray-500">秋款大上新活动页：手账 hero + 促销条 + 倒计时满减 + 直播 + 6 品牌矩阵 + 趋势 + 今日新款。修改后记得保存。</p>
+                        {/* 基本信息 */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <ImeInput type="text" value={(form.content as any)?.dateText || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), dateText: val } as any })} placeholder="日期徽章（如 7月23日 WED）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          <ImeInput type="text" value={(form.content as any)?.topTag || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), topTag: val } as any })} placeholder="顶部小标签（如 华南 · 骆芷蝶智选）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        </div>
+                        <ImeInput type="text" value={(form.content as any)?.title || form.title || ""} onChange={(val) => setForm({ ...form, title: val, content: { ...(form.content as object || {}), title: val } as any })} placeholder="大标题（如 骆芷蝶·智选｜秋款大上新企划）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        <ImeInput type="text" value={(form.content as any)?.subtitle || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), subtitle: val } as any })} placeholder="副标题（如 全国市场秋上新）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+
+                        {/* Hero 图组 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Hero 模特图（3 张，可选）</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[0, 1, 2].map((i) => (
+                              <BlockImageUpload key={i} value={((form.content as any)?.heroImages || [])[i] || ""} onChange={(url: string) => {
+                                const arr = [...((form.content as any)?.heroImages || ["", "", ""])];
+                                arr[i] = url;
+                                setForm({ ...form, content: { ...(form.content as object || {}), heroImages: arr } as any });
+                              }} />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 促销条 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">促销条（3 项，如 上新100+ / 满减省¥320 / 现货速发）</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {[0, 1, 2].map((i) => (
+                              <ImeInput key={i} type="text" value={((form.content as any)?.promoStrip?.items || [])[i] || ""} onChange={(val) => {
+                                const arr = [...((form.content as any)?.promoStrip?.items || ["", "", ""])];
+                                arr[i] = val;
+                                setForm({ ...form, content: { ...(form.content as object || {}), promoStrip: { items: arr } } as any });
+                              }} className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* 满减区 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">满减档位（6 行：金额 / 门槛）</label>
+                          <div className="grid grid-cols-3 gap-1 mb-2">
+                            <ImeInput type="text" value={(form.content as any)?.couponSection?.title || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), title: val } } as any })} placeholder="区块标题（如 #大牌满减）" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            <ImeInput type="text" value={(form.content as any)?.couponSection?.subtitle || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), subtitle: val } } as any })} placeholder="时间说明" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            <ImeInput type="text" value={(form.content as any)?.couponSection?.endTime || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), endTime: val } } as any })} placeholder="截止 ISO 时间" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          </div>
+                          {((form.content as any)?.couponSection?.tiers || []).map((t: any, i: number) => (
+                            <div key={i} className="flex items-center gap-1 mb-1">
+                              <input type="number" value={t.amount || 0} onChange={(e) => {
+                                const arr = [...((form.content as any)?.couponSection?.tiers || [])];
+                                arr[i] = { ...arr[i], amount: parseInt(e.target.value) || 0 };
+                                setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), tiers: arr } } as any });
+                              }} className="w-16 px-2 py-1 border border-gray-200 rounded text-xs" placeholder="¥" />
+                              <span className="text-xs text-gray-400">满</span>
+                              <input type="number" value={t.threshold || 0} onChange={(e) => {
+                                const arr = [...((form.content as any)?.couponSection?.tiers || [])];
+                                arr[i] = { ...arr[i], threshold: parseInt(e.target.value) || 0 };
+                                setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), tiers: arr } } as any });
+                              }} className="w-20 px-2 py-1 border border-gray-200 rounded text-xs" placeholder="门槛" />
+                              <button type="button" onClick={() => {
+                                const arr = [...((form.content as any)?.couponSection?.tiers || [])];
+                                arr.splice(i, 1);
+                                setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), tiers: arr } } as any });
+                              }} className="text-red-400 text-xs px-1">删</button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => {
+                            const arr = [...((form.content as any)?.couponSection?.tiers || []), { amount: 0, threshold: 0 }];
+                            setForm({ ...form, content: { ...(form.content as object || {}), couponSection: { ...((form.content as any)?.couponSection || {}), tiers: arr } } as any });
+                          }} className="text-primary text-xs mt-1">+ 添加档位</button>
+                        </div>
+
+                        {/* 直播区 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">直播场次</label>
+                          <div className="grid grid-cols-2 gap-1 mb-2">
+                            <ImeInput type="text" value={(form.content as any)?.liveSection?.title || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), title: val } } as any })} placeholder="直播区标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                            <ImeInput type="text" value={(form.content as any)?.liveSection?.subtitle || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), subtitle: val } } as any })} placeholder="副标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                          </div>
+                          {((form.content as any)?.liveSection?.streams || []).map((s: any, i: number) => (
+                            <div key={i} className="flex items-center gap-1 mb-1 p-1 bg-white rounded">
+                              <ImeInput type="text" value={s.brand || ""} onChange={(val) => {
+                                const arr = [...((form.content as any)?.liveSection?.streams || [])];
+                                arr[i] = { ...arr[i], brand: val };
+                                setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), streams: arr } } as any });
+                              }} placeholder="品牌" className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs" />
+                              <ImeInput type="text" value={s.time || ""} onChange={(val) => {
+                                const arr = [...((form.content as any)?.liveSection?.streams || [])];
+                                arr[i] = { ...arr[i], time: val };
+                                setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), streams: arr } } as any });
+                              }} placeholder="时间" className="w-28 px-2 py-1 border border-gray-200 rounded text-xs" />
+                              <BlockImageUpload value={s.avatar || ""} onChange={(url: string) => {
+                                const arr = [...((form.content as any)?.liveSection?.streams || [])];
+                                arr[i] = { ...arr[i], avatar: url };
+                                setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), streams: arr } } as any });
+                              }} />
+                              <button type="button" onClick={() => {
+                                const arr = [...((form.content as any)?.liveSection?.streams || [])];
+                                arr.splice(i, 1);
+                                setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), streams: arr } } as any });
+                              }} className="text-red-400 text-xs px-1">删</button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => {
+                            const arr = [...((form.content as any)?.liveSection?.streams || []), { brand: "", time: "", avatar: "" }];
+                            setForm({ ...form, content: { ...(form.content as object || {}), liveSection: { ...((form.content as any)?.liveSection || {}), streams: arr } } as any });
+                          }} className="text-primary text-xs mt-1">+ 添加直播</button>
+                        </div>
+
+                        {/* 6 品牌矩阵 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">秋款抢先看 · 品牌矩阵（6 品牌）</label>
+                          <ImeInput type="text" value={(form.content as any)?.brandSection?.title || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), title: val } } as any })} placeholder="区块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none mb-2" />
+                          {((form.content as any)?.brandSection?.brands || []).map((b: any, i: number) => (
+                            <div key={i} className="p-2 bg-white rounded mb-1">
+                              <div className="grid grid-cols-3 gap-1 mb-1">
+                                <ImeInput type="text" value={b.name || ""} onChange={(val) => {
+                                  const arr = [...((form.content as any)?.brandSection?.brands || [])];
+                                  arr[i] = { ...arr[i], name: val };
+                                  setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                                }} placeholder="品牌名" className="px-2 py-1 border border-gray-200 rounded text-xs" />
+                                <ImeInput type="text" value={b.slogan || ""} onChange={(val) => {
+                                  const arr = [...((form.content as any)?.brandSection?.brands || [])];
+                                  arr[i] = { ...arr[i], slogan: val };
+                                  setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                                }} placeholder="标语" className="px-2 py-1 border border-gray-200 rounded text-xs" />
+                                <ImeInput type="text" value={b.highlight || ""} onChange={(val) => {
+                                  const arr = [...((form.content as any)?.brandSection?.brands || [])];
+                                  arr[i] = { ...arr[i], highlight: val };
+                                  setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                                }} placeholder="副标（可选）" className="px-2 py-1 border border-gray-200 rounded text-xs" />
+                              </div>
+                              <div className="grid grid-cols-4 gap-1">
+                                {[0, 1, 2, 3].map((j) => (
+                                  <BlockImageUpload key={j} value={(b.images || [])[j] || ""} onChange={(url: string) => {
+                                    const arr = [...((form.content as any)?.brandSection?.brands || [])];
+                                    const imgs = [...(arr[i].images || ["", "", "", ""])];
+                                    imgs[j] = url;
+                                    arr[i] = { ...arr[i], images: imgs };
+                                    setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                                  }} />
+                                ))}
+                              </div>
+                              <button type="button" onClick={() => {
+                                const arr = [...((form.content as any)?.brandSection?.brands || [])];
+                                arr.splice(i, 1);
+                                setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                              }} className="text-red-400 text-xs mt-1">删除此品牌</button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => {
+                            const arr = [...((form.content as any)?.brandSection?.brands || []), { name: "", slogan: "", highlight: "", images: ["", "", "", ""] }];
+                            setForm({ ...form, content: { ...(form.content as object || {}), brandSection: { ...((form.content as any)?.brandSection || {}), brands: arr } } as any });
+                          }} className="text-primary text-xs mt-1">+ 添加品牌</button>
+                        </div>
+
+                        {/* 趋势网格 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">趋势好货 · 3 列网格（6 品牌）</label>
+                          <ImeInput type="text" value={(form.content as any)?.trendSection?.title || ""} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), title: val } } as any })} placeholder="区块标题" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none mb-2" />
+                          {((form.content as any)?.trendSection?.brands || []).map((b: any, i: number) => (
+                            <div key={i} className="flex items-center gap-1 mb-1 p-1 bg-white rounded">
+                              <ImeInput type="text" value={b.name || ""} onChange={(val) => {
+                                const arr = [...((form.content as any)?.trendSection?.brands || [])];
+                                arr[i] = { ...arr[i], name: val };
+                                setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), brands: arr } } as any });
+                              }} placeholder="品牌名" className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs" />
+                              <ImeInput type="text" value={b.slogan || ""} onChange={(val) => {
+                                const arr = [...((form.content as any)?.trendSection?.brands || [])];
+                                arr[i] = { ...arr[i], slogan: val };
+                                setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), brands: arr } } as any });
+                              }} placeholder="标语" className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs" />
+                              <BlockImageUpload value={b.image || ""} onChange={(url: string) => {
+                                const arr = [...((form.content as any)?.trendSection?.brands || [])];
+                                arr[i] = { ...arr[i], image: url };
+                                setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), brands: arr } } as any });
+                              }} />
+                              <button type="button" onClick={() => {
+                                const arr = [...((form.content as any)?.trendSection?.brands || [])];
+                                arr.splice(i, 1);
+                                setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), brands: arr } } as any });
+                              }} className="text-red-400 text-xs px-1">删</button>
+                            </div>
+                          ))}
+                          <button type="button" onClick={() => {
+                            const arr = [...((form.content as any)?.trendSection?.brands || []), { name: "", slogan: "", image: "" }];
+                            setForm({ ...form, content: { ...(form.content as object || {}), trendSection: { ...((form.content as any)?.trendSection || {}), brands: arr } } as any });
+                          }} className="text-primary text-xs mt-1">+ 添加品牌</button>
+                        </div>
+
+                        {/* 今日新款 */}
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">今日新款 · Tab / 分类（用英文逗号分隔）</label>
+                          <ImeInput type="text" value={((form.content as any)?.newSection?.tabs || []).join(",")} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), newSection: { ...((form.content as any)?.newSection || {}), tabs: val.split(",").map((s: string) => s.trim()).filter(Boolean) } } as any })} placeholder="现货速发,看订阅档口,销量,批发价,筛选" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none mb-1" />
+                          <ImeInput type="text" value={((form.content as any)?.newSection?.categories || []).join(",")} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), newSection: { ...((form.content as any)?.newSection || {}), categories: val.split(",").map((s: string) => s.trim()).filter(Boolean) } } as any })} placeholder="衬衫,长袖T,针织衫,套装,牛仔褂,短外套,休闲裤" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
+                        </div>
+                      </div>
+                    )}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       样式配置

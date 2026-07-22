@@ -10,6 +10,22 @@ function safeImg(url){
   return isValidImgUrl(url) ? url : '';
 }
 
+/* 上新企划倒计时：把 endTime ISO 字符串转成 { d, h, m, s }，过期返回全 00 */
+function calcLaunchCountdown(endTime){
+  var zero={d:'00',h:'00',m:'00',s:'00'};
+  if(!endTime)return zero;
+  var end=new Date(endTime).getTime();
+  if(isNaN(end))return zero;
+  var diff=Math.floor((end-Date.now())/1000);
+  if(diff<=0)return zero;
+  var d=Math.floor(diff/86400);
+  var h=Math.floor((diff%86400)/3600);
+  var m=Math.floor((diff%3600)/60);
+  var s=diff%60;
+  function pad(n){return n<10?('0'+n):(''+n);}
+  return {d:pad(d),h:pad(h),m:pad(m),s:pad(s)};
+}
+
 Page({
   data:{
     banners:[],
@@ -38,6 +54,9 @@ Page({
     showProductSec:false, // 首页「穿搭·精选」商品区是否展示（当前隐藏，做成专场页）
     specTabs:['特价甄选','首次降价','3折以下','反季特价'],
     specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
+    /* 上新企划 launch_campaign */
+    launchCountdowns:{},// 倒计时 { blockId: { d, h, m, s } }
+    lcNewTab:'now',     // 今日新款当前 Tab
   },
 
   onLoad:function(){
@@ -60,6 +79,7 @@ Page({
     this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
+  onUnload:function(){this.stopLaunchCountdowns();},
   onSwiper:function(e){this.setData({curB:e.detail.current});},
 
   /* ====== 从后台加载首页行业标签 ====== */
@@ -138,6 +158,7 @@ Page({
           heroTopBlocks:heroTopBlocks,
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
+        t.startLaunchCountdowns(all);
 
         /* 头部/分类标签背景统一：与首个内容板块的 bgColor 保持一致（让上半部分可随后台配色同步） */
         var topBgColor = '#fcefe9';
@@ -213,6 +234,61 @@ Page({
           : ('background:'+color+';'))
       : '';
     t.setData({ headerStyle: headerStyle, pageStyle: pageStyle });
+  },
+
+  /* ====== 上新企划 倒计时 ====== */
+  startLaunchCountdowns:function(blocks){
+    var t=this;
+    this.stopLaunchCountdowns();
+    var has=false;
+    var map={};
+    for(var i=0;i<blocks.length;i++){
+      var b=blocks[i];
+      if(b.type==='launch_campaign' && b.content && b.content.couponSection && b.content.couponSection.endTime){
+        map[b.id]=calcLaunchCountdown(b.content.couponSection.endTime);
+        has=true;
+      }
+    }
+    if(!has)return;
+    t.setData({launchCountdowns:map});
+    this._lcTimer=setInterval(function(){
+      var cur=t.data.launchCountdowns||{};
+      var keys=Object.keys(cur);
+      if(keys.length===0)return;
+      var next={};
+      for(var j=0;j<keys.length;j++){
+        var b=blocks.filter(function(x){return x.id===keys[j];})[0];
+        if(b && b.content && b.content.couponSection){
+          next[keys[j]]=calcLaunchCountdown(b.content.couponSection.endTime);
+        }
+      }
+      t.setData({launchCountdowns:next});
+    },1000);
+  },
+  stopLaunchCountdowns:function(){
+    if(this._lcTimer){clearInterval(this._lcTimer);this._lcTimer=null;}
+  },
+  goLaunchCoupon:function(e){
+    var tier=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.tier)||{};
+    wx.showToast({title:'满'+tier.threshold+'减¥'+tier.amount+' 活动详情',icon:'none'});
+  },
+  goLaunchLive:function(e){
+    var s=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.stream)||{};
+    wx.showToast({title:(s.brand||'直播')+' '+s.time,icon:'none'});
+  },
+  goLaunchBrand:function(e){
+    var b=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.brand)||{};
+    if(b.link){wx.navigateTo({url:b.link});return;}
+    wx.switchTab({url:'/pages/buyer/index'});
+  },
+  goLaunchProduct:function(e){
+    var p=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.product)||{};
+    if(p.link){wx.navigateTo({url:p.link});return;}
+    wx.switchTab({url:'/pages/buyer/index'});
+  },
+  swLcNewTab:function(e){
+    var t=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.t)||'now';
+    this.setData({lcNewTab:t});
   },
 
   /* ====== 特价货架：按模式加载折扣商品 ====== */
