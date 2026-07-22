@@ -54,6 +54,10 @@ export async function GET(request: NextRequest) {
   const filtered = filterByPage(list, page);
   return NextResponse.json({
     success: true,
+    page,
+    list_len: Array.isArray(list) ? list.length : "NOT_ARRAY",
+    list_type: typeof list,
+    filtered_len: Array.isArray(filtered) ? filtered.length : "NOT_ARRAY",
     data: Array.isArray(filtered) ? filtered : [],
   });
 }
