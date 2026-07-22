@@ -1,4 +1,4 @@
-<view class="popup-mask" wx:if="{{visible}}" bindtap="onMaskTap" catchtouchmove="true">
+<view class="popup-mask" wx:if="{{visible && cfg}}" bindtap="onMaskTap" catchtouchmove="true">
   <view class="popup-card" style="background:{{cfg.bg_color}};color:{{cfg.text_color}};" catchtap="noop">
     <view class="popup-close" bindtap="onClose" aria-label="关闭">
       <text class="popup-close-icon">×</text>
