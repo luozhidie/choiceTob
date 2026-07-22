@@ -31,18 +31,22 @@ async function getConfig(): Promise<ReturnType<typeof sanitize>> {
   const now = Date.now();
   if (cache && now - cacheAt < CACHE_TTL_MS) return cache;
   let result: ReturnType<typeof sanitize> = sanitize(DEFAULT_POPUPS);
+  let fromDefault = true;
   const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
   if (!error && data) {
     try {
       const parsed = JSON.parse(await data.text());
       const sanitized = sanitize(parsed);
-      if (sanitized.length > 0) result = sanitized;
+      if (sanitized.length > 0) {
+        result = sanitized;
+        fromDefault = false;
+      }
     } catch {
       /* 解析失败则回退默认 */
     }
   }
   // 种子化：当 Storage 中没有任何有效弹窗配置时，写入默认（含启用示例），保证首次可见
-  if (result === sanitize(DEFAULT_POPUPS)) {
+  if (fromDefault) {
     try {
       await supabase.storage
         .from(BUCKET)
