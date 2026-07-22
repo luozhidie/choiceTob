@@ -28,7 +28,7 @@
 
   <!-- ========== 轮播图上方模块（position==='hero_top'）========== -->
   <block wx:for="{{heroTopBlocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchProducts:launchProducts, launchProductsView:launchProductsView}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchMediaLen:launchMediaLen, launchProducts:launchProducts, launchProductsView:launchProductsView, launchProductsCount:launchProductsCount, lcNewTab:lcNewTab, lcNewCat:lcNewCat}}"/>
   </block>
 
   <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
@@ -83,7 +83,7 @@
 
   <!-- ========== 动态模块区（轮播图下方/商品上方，已排除 hero_top）========== -->
   <block wx:for="{{blocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchProducts:launchProducts, launchProductsView:launchProductsView}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchMediaLen:launchMediaLen, launchProducts:launchProducts, launchProductsView:launchProductsView, launchProductsCount:launchProductsCount, lcNewTab:lcNewTab, lcNewCat:lcNewCat}}"/>
   </block>
 
   <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
