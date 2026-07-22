@@ -298,7 +298,7 @@
                     </view>
                     <view class="lc-hero-photos">
                       <view wx:for="{{item.content.heroImages||[]}}" wx:key="*this" wx:for-item="himg" class="lc-hero-photo">
-                        <image wx:if="{{himg || launchMediaPool[index % launchMediaPool.length]}}" src="{{himg || launchMediaPool[index % launchMediaPool.length]}}" mode="aspectFill" class="lc-hero-img"/>
+                        <image wx:if="{{himg || launchMediaPool[index % launchMediaLen]}}" src="{{himg || launchMediaPool[index % launchMediaLen]}}" mode="aspectFill" class="lc-hero-img"/>
                         <view wx:else class="lc-hero-ph lc-hero-ph-{{index%3}}"></view>
                       </view>
                     </view>
@@ -346,7 +346,7 @@
                     <view class="lc-live-row">
                       <view class="lc-live-card" wx:for="{{item.content.liveSection.streams||[]}}" wx:key="*this" wx:for-item="s" bindtap="goLaunchLive" data-stream="{{s}}">
                         <view class="lc-live-avatar">
-                          <image wx:if="{{s.avatar || launchMediaPool[(index+5) % launchMediaPool.length]}}" src="{{s.avatar || launchMediaPool[(index+5) % launchMediaPool.length]}}" mode="aspectFill" class="lc-live-avatar-img"/>
+                          <image wx:if="{{s.avatar || launchMediaPool[(index+5) % launchMediaLen]}}" src="{{s.avatar || launchMediaPool[(index+5) % launchMediaLen]}}" mode="aspectFill" class="lc-live-avatar-img"/>
                           <view wx:else class="lc-live-avatar-ph"></view>
                           <view class="lc-live-dot"></view>
                         </view>
@@ -370,7 +370,7 @@
                           <view class="lc-brand-imgs">
                             <block wx:for="{{b.images||[]}}" wx:key="*this" wx:for-item="im" wx:for-index="ii">
                               <view class="lc-brand-img-cell">
-                                <image wx:if="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaPool.length]}}" src="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaPool.length]}}" mode="aspectFill" class="lc-brand-img"/>
+                                <image wx:if="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaLen]}}" src="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaLen]}}" mode="aspectFill" class="lc-brand-img"/>
                                 <view wx:else class="lc-brand-ph"></view>
                               </view>
                             </block>
@@ -394,7 +394,7 @@
                     <view class="lc-trend-grid">
                       <view class="lc-trend-cell" wx:for="{{item.content.trendSection.brands||[]}}" wx:key="name" wx:for-item="tb" bindtap="goLaunchBrand" data-brand="{{tb}}">
                         <view class="lc-trend-photo">
-                          <image wx:if="{{tb.image || launchMediaPool[(index+30) % launchMediaPool.length]}}" src="{{tb.image || launchMediaPool[(index+30) % launchMediaPool.length]}}" mode="aspectFill" class="lc-trend-img"/>
+                          <image wx:if="{{tb.image || launchMediaPool[(index+30) % launchMediaLen]}}" src="{{tb.image || launchMediaPool[(index+30) % launchMediaLen]}}" mode="aspectFill" class="lc-trend-img"/>
                           <view wx:else class="lc-trend-ph"></view>
                         </view>
                         <view class="lc-trend-info">
@@ -419,7 +419,7 @@
                         <text wx:for="{{item.content.newSection.categories||[]}}" wx:key="*this" wx:for-item="c" class="lc-new-cat {{lcNewCat===c?'on':''}}" bindtap="swLcNewCat" data-c="{{c}}">{{c}}</text>
                       </view>
                     </scroll-view>
-                    <view class="lc-new-grid" wx:if="{{(launchProductsView[item.id]||[]).length>0}}">
+                    <view class="lc-new-grid" wx:if="{{launchProductsCount[item.id]>0}}">
                       <view class="lc-new-card" wx:for="{{launchProductsView[item.id]}}" wx:key="id" wx:for-item="p" bindtap="goLaunchProduct" data-product="{{p}}">
                         <view class="lc-new-img-wrap">
                           <image wx:if="{{p.image}}" src="{{p.image}}" mode="aspectFill" class="lc-new-img"/>

@@ -59,8 +59,10 @@ Page({
     lcNewTab:'now',     // 今日新款当前 Tab
     lcNewCat:'',        // 今日新款当前选中分类（视觉高亮）
     launchMediaPool:[], // 真实商品图兜底池（hero/品牌/趋势空图时填充）
+    launchMediaLen:0,   // launchMediaPool.length 预存（避免 WXML 中 .length 解析报错）
     launchProducts:{},  // 今日新款真实商品 { blockId: [...] }
     launchProductsView:{}, // 经 Tab 筛选后的展示列表 { blockId: [...] }
+    launchProductsCount:{}, // 各 block 展示数量 { blockId: number }（避免 WXML 中 .length 解析报错）
   },
 
   onLoad:function(){
@@ -254,7 +256,7 @@ Page({
         if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
         else if(Array.isArray(r.data))l=r.data;
         var pool=l.map(function(p){return safeImg(p.image_url||p.cover_image||(p.images&&p.images[0]));}).filter(function(u){return !!u;});
-        t.setData({launchMediaPool:pool});
+        t.setData({launchMediaPool:pool, launchMediaLen:pool.length});
       }
     });
   },
@@ -293,13 +295,15 @@ Page({
     var t=this;
     var src=t.data.launchProducts||{};
     var view={};
+    var count={};
     var tab=t.data.lcNewTab||'now';
     Object.keys(src).forEach(function(id){
       var list=src[id]||[];
       if(tab==='price'){ list=list.slice().sort(function(a,b){return (b.price||0)-(a.price||0);}); }
       view[id]=list;
+      count[id]=list.length;
     });
-    t.setData({launchProductsView:view});
+    t.setData({launchProductsView:view, launchProductsCount:count});
   },
 
   /* ====== 上新企划 倒计时 ====== */
