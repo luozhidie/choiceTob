@@ -56,6 +56,13 @@ export function sanitize(input: any): Config {
   return Object.keys(out).length > 0 ? out : DEFAULT_CATEGORY_CONFIG;
 }
 
+const WOMEN_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "XXXL", "均码"];
+const WOMEN_FABRICS = [
+  "棉", "麻", "丝", "毛", "化纤", "混纺", "牛仔", "聚酯纤维", "锦纶", "氨纶",
+  "腈纶", "粘胶", "莫代尔", "莱赛尔", "天丝", "亚麻", "真丝", "羊毛", "羊绒",
+  "皮革", "PU", "PVC", "针织", "梭织", "灯芯绒", "麂皮绒", "摇粒绒", "呢料"
+];
+
 export const DEFAULT_CATEGORY_CONFIG: Config = {
   休闲裤: {
     sorts: [
@@ -188,6 +195,73 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
         { title: "季节", key: "season", multiple: true, options: ["春", "夏", "秋", "冬"] },
         { title: "杯型", key: "杯型", options: ["薄杯", "厚杯", "无钢圈", "有钢圈", "三角杯", "全罩杯"] },
         { title: "面料", key: "面料", multiple: true, options: ["棉", "莫代尔", "冰丝", "蕾丝", "真丝", "网纱", "锦纶", "氨纶", "竹纤维"] },
+      ],
+    },
+  },
+  女装: {
+    sorts: [
+      { key: "default", label: "综合" },
+      { key: "sales", label: "销量" },
+      { key: "newest", label: "上新" },
+      { key: "price_asc", label: "批发价" },
+    ],
+    quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
+      { key: "source_brand", label: "源头厂牌", type: "toggle" },
+      { key: "bulk_price", label: "批量采购价", type: "toggle" },
+      { key: "sizes", label: "尺码", type: "popup", options: WOMEN_SIZES },
+      { key: "fabrics", label: "面料", type: "popup", options: WOMEN_FABRICS },
+    ],
+    subCategories: ["上装", "下装", "裙装", "套装", "外套", "裤装", "内搭"],
+    filterPanel: {
+      sections: [
+        { title: "近期上新", key: "recent", options: ["今日上新", "近3日上新", "近7日上新"] },
+        { title: "热卖活动", key: "hot_activity", options: ["7日爆款", "档口爆款", "今日特价", "限量补贴"] },
+        { title: "服务", key: "service", options: ["24H发货", "慢必赔", "批量采购价", "搭配推荐", "实拍视频", "秒杀", "满减", "红包"] },
+        { title: "价格区间", key: "price_range", type: "price" },
+        { title: "色系", key: "color_family", multiple: true, options: ["花色系", "其他", "白色系", "黑色系", "灰色系", "红色系", "橙色系", "黄色系", "绿色系", "蓝色系", "紫色系", "棕色系", "金属色系", "拼色"] },
+        { title: "季节", key: "season", multiple: true, options: ["春", "夏", "秋", "冬"] },
+        { title: "版型", key: "版型", options: ["修身", "宽松", "直筒", "A字", "Oversize", "H型", "茧型"] },
+        { title: "袖长", key: "袖长", options: ["无袖", "短袖", "五分袖", "七分袖", "长袖"] },
+        { title: "领型", key: "领型", options: ["圆领", "V领", "翻领", "高领", "立领", "方领", "一字领"] },
+        { title: "图案", key: "图案", multiple: true, options: ["卡通", "条纹", "纯色", "字母", "动物纹", "波点", "拼色", "格纹", "佩斯利纹", "植物", "扎染", "图案", "线条", "碎花", "爱心", "标语", "星空", "花朵", "民族风图案"] },
+        { title: "工艺", key: "工艺", multiple: true, options: ["无", "烫钻", "钉珠/片", "印花", "口袋", "印染", "毛边", "提花", "水洗", "打揽", "撞色线迹", "木耳边", "抽褶", "磨损破洞", "绗缝", "打结", "系带", "蕾丝拼接", "粗针(粗线)", "细针(细线)", "贴花/章", "镂空", "绣花", "压褶", "亮丝", "拼接/补丁", "编织/织带", "花边", "抽绳", "假两件"] },
+      ],
+    },
+  },
+  羽绒服: {
+    sorts: [
+      { key: "default", label: "综合" },
+      { key: "sales", label: "销量" },
+      { key: "newest", label: "上新" },
+      { key: "price_asc", label: "批发价" },
+    ],
+    quickFilters: [
+      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "is_special", label: "特价", type: "toggle" },
+      { key: "in_stock", label: "现货", type: "toggle" },
+      { key: "source_brand", label: "源头厂牌", type: "toggle" },
+      { key: "bulk_price", label: "批量采购价", type: "toggle" },
+      { key: "sizes", label: "尺码", type: "popup", options: WOMEN_SIZES },
+      { key: "fabrics", label: "面料", type: "popup", options: ["白鸭绒", "灰鸭绒", "白鹅绒", "灰鹅绒", "聚酯纤维", "锦纶", "棉", "羊毛", "呢料", "混纺"] },
+    ],
+    subCategories: ["轻薄", "内胆", "短款", "衬衫式", "小香风", "户外", "长款", "面包服"],
+    filterPanel: {
+      sections: [
+        { title: "近期上新", key: "recent", options: ["今日上新", "近3日上新", "近7日上新"] },
+        { title: "热卖活动", key: "hot_activity", options: ["7日爆款", "档口爆款", "今日特价", "限量补贴"] },
+        { title: "服务", key: "service", options: ["24H发货", "慢必赔", "批量采购价", "搭配推荐", "实拍视频", "秒杀", "满减", "红包"] },
+        { title: "价格区间", key: "price_range", type: "price" },
+        { title: "色系", key: "color_family", multiple: true, options: ["花色系", "其他", "白色系", "黑色系", "灰色系", "红色系", "橙色系", "黄色系", "绿色系", "蓝色系", "紫色系", "棕色系", "金属色系", "拼色"] },
+        { title: "季节", key: "season", multiple: true, options: ["春", "夏", "秋", "冬"] },
+        { title: "填充物", key: "填充物", options: ["白鸭绒", "灰鸭绒", "白鹅绒", "灰鹅绒", "棉", "聚酯纤维"] },
+        { title: "含绒量", key: "含绒量", options: ["90%及以上", "80%-89%", "70%-79%", "50%-69%", "50%以下"] },
+        { title: "衣长", key: "衣长", options: ["超短款", "短款", "常规款", "中长款", "长款", "超长款"] },
+        { title: "版型", key: "版型", options: ["修身", "宽松", "直筒", "茧型", "Oversize"] },
+        { title: "领型", key: "领型", options: ["连帽", "立领", "翻领", "圆领", "V领"] },
+        { title: "工艺", key: "工艺", multiple: true, options: ["无", "烫钻", "钉珠/片", "印花", "口袋", "印染", "毛边", "提花", "水洗", "打揽", "撞色线迹", "木耳边", "抽褶", "磨损破洞", "绗缝", "打结", "系带", "蕾丝拼接", "粗针(粗线)", "细针(细线)", "贴花/章", "镂空", "绣花", "压褶", "亮丝", "拼接/补丁", "编织/织带", "花边", "抽绳", "假两件"] },
       ],
     },
   },

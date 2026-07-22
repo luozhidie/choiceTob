@@ -47,6 +47,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category") || "";
   const config = await getConfig();
-  const cfg = config[category] || config["休闲裤"] || DEFAULT_CATEGORY_CONFIG["休闲裤"];
+  const cfg = config[category] || config["女装"] || config["休闲裤"] || DEFAULT_CATEGORY_CONFIG["休闲裤"];
   return NextResponse.json({ success: true, data: cfg });
 }
