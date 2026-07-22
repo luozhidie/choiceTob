@@ -65,8 +65,8 @@
       <text class="st {{filterOpen?'st-on':''}} filter-trigger" bindtap="openFilter">筛选 ▽</text>
     </view>
 
-    <!-- 第二行：快捷筛选 -->
-    <view class="quick-bar">
+    <!-- 第二行：快捷筛选（横向滚动） -->
+    <scroll-view class="quick-bar" scroll-x show-scrollbar="{{false}}">
       <block wx:for="{{filterConfig.quickFilters}}" wx:key="key">
         <view class="quick-item {{selectedFilters[item.key]&&selectedFilters[item.key].length?'quick-on':''}} {{quickPopup===item.key?'quick-active':''}}"
           bindtap="toggleQuick" data-key="{{item.key}}" data-type="{{item.type}}">
@@ -75,7 +75,7 @@
           <text wx:if="{{item.type==='popup'}}"> ▼</text>
         </view>
       </block>
-    </view>
+    </scroll-view>
 
     <!-- 第三行：品类货品面料分类 -->
     <scroll-view wx:if="{{filterConfig.subCategories.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
@@ -166,7 +166,7 @@
       <text class="popup-title">{{quickPopupLabel}}</text>
       <text class="popup-close" bindtap="closeQuickPopup">✕</text>
     </view>
-    <scroll-view class="popup-body" scroll-y>
+    <view class="popup-body">
       <view class="filter-tags">
         <view wx:for="{{quickPopupOptions}}" wx:key="*this"
           class="filter-tag {{selectedFilters[quickPopup]&&selectedFilters[quickPopup].indexOf(item)>=0?'tag-on':''}}"
@@ -174,7 +174,7 @@
           {{item}}
         </view>
       </view>
-    </scroll-view>
+    </view>
     <view class="filter-foot">
       <view class="filter-reset" bindtap="closeQuickPopup">取消</view>
       <view class="filter-confirm" bindtap="confirmQuickPopup">完成</view>

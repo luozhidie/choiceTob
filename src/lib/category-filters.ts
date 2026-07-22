@@ -81,7 +81,20 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
         key: "sizes",
         label: "尺码",
         type: "popup",
-        options: ["M", "L", "S", "XL", "XS", "5即XXL", "1即S", "2即M", "3即L", "4即XL", "6即XXXL", "均码"],
+        options: [
+          "XS", "S", "M", "L", "XL", "XXL", "XXXL", "XXXXL", "均码", "F", "F(均码)",
+          "26", "27", "28", "29", "30", "31",
+          "1码", "2码", "3码", "4码", "5码", "6码",
+          "1即S", "2即M", "3即L", "4即XL", "5即XXL", "6即XXXL",
+          "2XL", "f",
+          "3即XL码", "1即M码", "2即L码", "6即4XL码", "4即2XL码", "5即3XL码",
+          "36即S码", "38即M码", "40即L码", "42即XL码",
+          "10即XL", "12即XXL",
+          "4即S码", "6即M码", "8即L码",
+          "1码即SM", "2码即LXL",
+          "F1即S", "F2即M", "F3即L", "5即2XL码", "6即3XL码",
+          "3XL", "4XL"
+        ],
       },
       {
         key: "fabrics",
