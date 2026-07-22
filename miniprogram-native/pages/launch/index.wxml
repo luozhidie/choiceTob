@@ -1,0 +1,160 @@
+<view class="page-launch" style="background:{{c.bgColor||'#f7f1e6'}};">
+  <!-- 1. 手账 hero -->
+  <view class="lc-hero">
+    <view class="lc-hero-tape lc-tape-tl"></view>
+    <view class="lc-hero-tape lc-tape-tr"></view>
+    <view class="lc-date-badge">
+      <text class="lc-date-t">{{c.dateText||'7月23日 WED'}}</text>
+    </view>
+    <view class="lc-hero-tag">
+      <text>{{c.topTag||'华南 · 骆芷蝶智选'}}</text>
+    </view>
+    <view class="lc-hero-title">
+      <text>{{c.title||'骆芷蝶·智选｜秋款大上新企划'}}</text>
+    </view>
+    <view class="lc-hero-sub">
+      <text>{{c.subtitle||'全国市场秋上新'}}</text>
+    </view>
+    <view class="lc-hero-photos">
+      <view wx:for="{{c.heroImages||[]}}" wx:key="*this" wx:for-item="himg" class="lc-hero-photo">
+        <image wx:if="{{himg || launchMediaPool[index % launchMediaLen]}}" src="{{himg || launchMediaPool[index % launchMediaLen]}}" mode="aspectFill" class="lc-hero-img"/>
+        <view wx:else class="lc-hero-ph lc-hero-ph-{{index%3}}"></view>
+      </view>
+    </view>
+    <view class="lc-stamp lc-stamp-1">NEW</view>
+    <view class="lc-stamp lc-stamp-2">秋</view>
+  </view>
+
+  <!-- 2. 促销条 -->
+  <view class="lc-promo">
+    <view class="lc-promo-cell" wx:for="{{c.promoStrip.items||[]}}" wx:key="*this" wx:for-item="p">
+      <text>{{p}}</text>
+    </view>
+  </view>
+
+  <!-- 3. #大牌满减# 倒计时 + 6 档 -->
+  <view class="lc-coupon">
+    <view class="lc-sec-head">
+      <text class="lc-sec-title">{{c.couponSection.title||'#大牌满减'}}</text>
+      <text class="lc-sec-sub">{{c.couponSection.subtitle||'仅限今日'}}</text>
+    </view>
+    <view class="lc-countdown">
+      <text class="lc-cd-num">{{countdown.d}}</text>
+      <text class="lc-cd-unit">天</text>
+      <text class="lc-cd-num">{{countdown.h}}</text>
+      <text class="lc-cd-unit">时</text>
+      <text class="lc-cd-num">{{countdown.m}}</text>
+      <text class="lc-cd-unit">分</text>
+      <text class="lc-cd-num">{{countdown.s}}</text>
+      <text class="lc-cd-unit">秒</text>
+    </view>
+    <view class="lc-tier-grid">
+      <view class="lc-tier" wx:for="{{c.couponSection.tiers||[]}}" wx:key="*this" wx:for-item="t" bindtap="goLaunchCoupon" data-tier="{{t}}">
+        <view class="lc-tier-amt"><text class="lc-tier-cny">¥</text><text class="lc-tier-num">{{t.amount}}</text></view>
+        <view class="lc-tier-thr"><text>满{{t.threshold}}可用</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 4. LIVE 直播 -->
+  <view class="lc-live">
+    <view class="lc-sec-head">
+      <text class="lc-sec-title lc-live-title">{{c.liveSection.title||'LIVE · 秋款首发'}}</text>
+      <text class="lc-sec-sub">{{c.liveSection.subtitle||'直播跑现券'}}</text>
+    </view>
+    <view class="lc-live-row">
+      <view class="lc-live-card" wx:for="{{c.liveSection.streams||[]}}" wx:key="*this" wx:for-item="s" bindtap="goLaunchLive" data-stream="{{s}}">
+        <view class="lc-live-avatar">
+          <image wx:if="{{s.avatar || launchMediaPool[(index+5) % launchMediaLen]}}" src="{{s.avatar || launchMediaPool[(index+5) % launchMediaLen]}}" mode="aspectFill" class="lc-live-avatar-img"/>
+          <view wx:else class="lc-live-avatar-ph"></view>
+          <view class="lc-live-dot"></view>
+        </view>
+        <view class="lc-live-info">
+          <text class="lc-live-brand">{{s.brand}}</text>
+          <text class="lc-live-time">{{s.time}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 5. 秋款抢先看 · 6 品牌矩阵 -->
+  <view class="lc-brands">
+    <view class="lc-sec-head lc-brands-head">
+      <text class="lc-sec-title">{{c.brandSection.title||'秋款抢先看 · 好货一杆拿'}}</text>
+      <view class="lc-up-btn"><text>↑</text></view>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="lc-brand-scroll">
+      <view class="lc-brand-row">
+        <view class="lc-brand" wx:for="{{c.brandSection.brands||[]}}" wx:key="name" wx:for-item="b" wx:for-index="bi" bindtap="goLaunchBrand" data-brand="{{b}}">
+          <view class="lc-brand-imgs">
+            <block wx:for="{{b.images||[]}}" wx:key="*this" wx:for-item="im" wx:for-index="ii">
+              <view class="lc-brand-img-cell">
+                <image wx:if="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaLen]}}" src="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaLen]}}" mode="aspectFill" class="lc-brand-img"/>
+                <view wx:else class="lc-brand-ph"></view>
+              </view>
+            </block>
+          </view>
+          <view class="lc-brand-info">
+            <text class="lc-brand-name">{{b.name}}</text>
+            <text class="lc-brand-slogan">{{b.slogan}}</text>
+            <text wx:if="{{b.highlight}}" class="lc-brand-hl">{{b.highlight}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 6. 趋势好货 · 3 列网格 -->
+  <view class="lc-trend">
+    <view class="lc-sec-head">
+      <text class="lc-sec-title">{{c.trendSection.title||'趋势好货'}}</text>
+      <view class="lc-up-btn"><text>↑</text></view>
+    </view>
+    <view class="lc-trend-grid">
+      <view class="lc-trend-cell" wx:for="{{c.trendSection.brands||[]}}" wx:key="name" wx:for-item="tb" bindtap="goLaunchBrand" data-brand="{{tb}}">
+        <view class="lc-trend-photo">
+          <image wx:if="{{tb.image || launchMediaPool[(index+30) % launchMediaLen]}}" src="{{tb.image || launchMediaPool[(index+30) % launchMediaLen]}}" mode="aspectFill" class="lc-trend-img"/>
+          <view wx:else class="lc-trend-ph"></view>
+        </view>
+        <view class="lc-trend-info">
+          <text class="lc-trend-name">{{tb.name}}</text>
+          <text class="lc-trend-slogan">{{tb.slogan}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 7. 今日新款 -->
+  <view class="lc-new">
+    <view class="lc-new-tabs">
+      <text class="lc-new-tab {{lcNewTab==='now'?'on':''}}" bindtap="swLcNewTab" data-t="now">今日新款</text>
+      <text class="lc-new-tab" bindtap="swLcNewTab" data-t="all">看订阅档口</text>
+      <text class="lc-new-tab" bindtap="swLcNewTab" data-t="price">销量</text>
+      <text class="lc-new-tab" bindtap="swLcNewTab" data-t="filter">批发价</text>
+      <text class="lc-new-tab lc-new-filter" bindtap="swLcNewTab" data-t="筛">筛选 ▾</text>
+    </view>
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="lc-new-cats">
+      <view class="lc-new-cat-row">
+        <text wx:for="{{c.newSection.categories||[]}}" wx:key="*this" wx:for-item="cat" class="lc-new-cat {{lcNewCat===cat?'on':''}}" bindtap="swLcNewCat" data-c="{{cat}}">{{cat}}</text>
+      </view>
+    </scroll-view>
+    <view class="lc-new-grid" wx:if="{{launchProductsView.length>0}}">
+      <view class="lc-new-card" wx:for="{{launchProductsView}}" wx:key="id" wx:for-item="p" bindtap="goLaunchProduct" data-product="{{p}}">
+        <view class="lc-new-img-wrap">
+          <image wx:if="{{p.image}}" src="{{p.image}}" mode="aspectFill" class="lc-new-img"/>
+          <view wx:else class="lc-new-ph">暂无图</view>
+          <view wx:if="{{p.badge}}" class="lc-new-badge {{p.badge==='热卖'?'lc-new-badge-r':''}}">{{p.badge}}</view>
+        </view>
+        <view class="lc-new-info">
+          <text class="lc-new-title">{{p.title}}</text>
+          <text class="lc-new-price">¥{{p.price}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:else class="lc-new-empty">
+      <text>商品将陆续上新 · 稍后回来看看 ↺</text>
+    </view>
+  </view>
+
+  <view class="lt-back" bindtap="goBack">← 返回专场</view>
+</view>
