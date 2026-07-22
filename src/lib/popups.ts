@@ -55,7 +55,6 @@ export const DEFAULT_POPUPS: PopupConfig[] = [
     button_color: DEFAULT_BTN,
     text_color: DEFAULT_TEXT,
   },
-];
   {
     id: "demo_cart_topup",
     page: "cart",
