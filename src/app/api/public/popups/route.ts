@@ -21,6 +21,8 @@ const supabase = createClient(
 const BUCKET = "app-config";
 const FILE_PATH = "popups.json";
 
+// 注意：返回结构仅含 success + data（data 为数组，无启用弹窗时为空数组）
+
 let cache: ReturnType<typeof sanitize> | null = null;
 let cacheAt = 0;
 const CACHE_TTL_MS = 30_000;
