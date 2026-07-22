@@ -20,7 +20,7 @@ import {
   LogIn, UserPlus, Smartphone,
   ShieldCheck,
   Award, Gift, BarChart3, Lock, BadgeCheck,
-  X, TrendingUp, Star,
+  X, TrendingUp, Star, Sparkles,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -655,6 +655,62 @@ export default function MyPage() {
                 </Link>
               </div>
             </div>
+
+            {/* ===== 时尚买手服务（仅管理员可见） ===== */}
+            {profile?.is_admin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <ShoppingBag className="w-5 h-5 text-[#C9A24B]" /> 时尚买手服务
+                </h2>
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { s: "buyer_group", icon: "🛒", label: "买手组货" },
+                    { s: "plan", icon: "📋", label: "商品企划" },
+                    { s: "display", icon: "🪟", label: "陈列搭配" },
+                    { s: "marketing", icon: "📣", label: "营销策划" },
+                    { s: "sales", icon: "💡", label: "销售服务" },
+                    { s: "brand", icon: "⭐", label: "品牌管理" },
+                    { s: "design", icon: "✏️", label: "服装设计" },
+                  ].map((it) => (
+                    <Link
+                      key={it.s}
+                      href={`/admin/fashion-stylist?service=${it.s}`}
+                      className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">
+                        {it.icon}
+                      </div>
+                      <span className="text-xs text-gray-600 text-center">{it.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ===== AI搭配 / AI企划（仅管理员可见） ===== */}
+            {profile?.is_admin && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#C9A24B]" /> AI搭配 / AI企划
+                </h2>
+                <div className="grid grid-cols-4 gap-3">
+                  <Link
+                    href="/admin/fashion-stylist?service=outfit"
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">👗</div>
+                    <span className="text-xs text-gray-600">AI搭配</span>
+                  </Link>
+                  <Link
+                    href="/admin/fashion-stylist?service=plan"
+                    className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-gray-50 transition"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#faf8f6] text-[#2d1b2e] flex items-center justify-center text-lg">📋</div>
+                    <span className="text-xs text-gray-600">商品企划</span>
+                  </Link>
+                </div>
+              </div>
+            )}
 
             {/* 常用功能 */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">

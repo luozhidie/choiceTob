@@ -47,7 +47,8 @@
     "pages/stall/index/index",
     "pages/stall/detail/index",
     "pages/stall/subscribed/index",
-    "pages/assortment/detail/index"
+    "pages/assortment/detail/index",
+    "pages/fashion-stylist/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

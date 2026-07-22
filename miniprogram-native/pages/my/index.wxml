@@ -224,6 +224,60 @@
     </view>
   </view>
 
+  <!-- ========== 时尚买手服务（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
+    <view class="sec-header">
+      <text class="sec-title">时尚买手服务</text>
+    </view>
+    <view class="service-grid">
+      <view class="sg-item" bindtap="goFashionStylist" data-service="buyer_group">
+        <view class="sg-icon"><text>🛒</text></view>
+        <text class="sg-label">买手组货</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="plan">
+        <view class="sg-icon"><text>📋</text></view>
+        <text class="sg-label">商品企划</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="display">
+        <view class="sg-icon"><text>🪟</text></view>
+        <text class="sg-label">陈列搭配</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="marketing">
+        <view class="sg-icon"><text>📣</text></view>
+        <text class="sg-label">营销策划</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="sales">
+        <view class="sg-icon"><text>💡</text></view>
+        <text class="sg-label">销售服务</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="brand">
+        <view class="sg-icon"><text>⭐</text></view>
+        <text class="sg-label">品牌管理</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="design">
+        <view class="sg-icon"><text>✏️</text></view>
+        <text class="sg-label">服装设计</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== AI搭配 / AI企划（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
+    <view class="sec-header">
+      <text class="sec-title">AI搭配 / AI企划</text>
+    </view>
+    <view class="service-grid">
+      <view class="sg-item" bindtap="goFashionStylist" data-service="outfit">
+        <view class="sg-icon"><text>👗</text></view>
+        <text class="sg-label">AI搭配</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="plan">
+        <view class="sg-icon"><text>📋</text></view>
+        <text class="sg-label">商品企划</text>
+      </view>
+    </view>
+  </view>
+
   <!-- ========== 我的服务（保留原功能入口） ========== -->
   <view class="section">
     <text class="sec-title">我的服务</text>

@@ -1,0 +1,63 @@
+<view class="page">
+  <!-- 顶栏 -->
+  <view class="topbar">
+    <text class="back" bindtap="goBack">‹ 返回</text>
+    <text class="title">时尚AI助手</text>
+  </view>
+
+  <!-- 服务选择（横向滚动） -->
+  <scroll-view scroll-x class="svc-scroll" enhanced show-scrollbar="{{false}}">
+    <view class="svc-row">
+      <view
+        wx:for="{{services}}"
+        wx:key="key"
+        class="svc-item {{service===item.key?'active':''}}"
+        bindtap="selectService"
+        data-key="{{item.key}}"
+      >
+        <text class="svc-icon">{{item.icon}}</text>
+        <text class="svc-label">{{item.label}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="current">当前服务：<text class="cur-name">{{serviceLabel}}</text></view>
+
+  <!-- 输入区 -->
+  <view class="input-box">
+    <textarea
+      class="ta"
+      placeholder="描述你的需求，例如：为25-35岁职场女性做秋季通勤胶囊衣橱，预算2000元，偏好极简风"
+      value="{{input}}"
+      bindinput="onInput"
+      maxlength="1000"
+      auto-height
+    />
+    <button class="btn-submit {{loading?'loading':''}}" loading="{{loading}}" bindtap="submit">
+      {{loading ? '生成中...' : '生成方案'}}
+    </button>
+  </view>
+
+  <!-- 结果 -->
+  <view wx:if="{{result}}" class="result-box">
+    <view class="result-head">
+      <text class="result-title">生成结果</text>
+      <text class="copy" bindtap="copyResult">复制</text>
+    </view>
+    <view class="result-content"><text>{{result}}</text></view>
+  </view>
+
+  <!-- 历史 -->
+  <view wx:if="{{history.length > 0}}" class="history-box">
+    <text class="history-title">历史记录</text>
+    <view wx:for="{{history}}" wx:key="id" class="history-item">
+      <view class="hi-top">
+        <text class="hi-svc">{{item.service}}</text>
+        <text class="hi-time">{{item.created_at}}</text>
+      </view>
+      <text class="hi-input">{{item.input_json.input}}</text>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>
