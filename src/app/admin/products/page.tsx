@@ -25,6 +25,18 @@ import {
   getSubcategories,
   getCategoryPath,
 } from "@/lib/categories";
+import FilterMultiSelect from "./FilterMultiSelect";
+
+// 把 params.fabrics / params.sizes 解析成数组（兼容 wrap 字符串 "/棉/麻/" 或纯文本 "棉,麻" 或数组）
+function parseWrapParam(v: any): string[] {
+  if (Array.isArray(v)) return v.filter(Boolean).map(String);
+  if (typeof v === "string" && v.trim()) {
+    const s = v.trim().replace(/^\/+|\/+$/g, "");
+    if (!s) return [];
+    return s.split(/[/\s,，、]+/).map((x: string) => x.trim()).filter(Boolean);
+  }
+  return [];
+}
 
 // 秋冬上架主题（写入 tags 带「主题·」前缀，无需改表结构）
 const AW_THEMES = ["美拉德风", "新中式", "老钱风·静奢", "通勤极简", "新年战袍", "圣诞派对"];
@@ -275,8 +287,8 @@ export default function AdminProductsPage() {
     // 上架主题
     theme: "",
     // 商品参数
-    material: "",
-    sizes: "",
+    fabrics: [] as string[],
+    sizesSel: [] as string[],
     color: "",
     origin: "",
     care_instructions: "",
@@ -297,6 +309,49 @@ export default function AdminProductsPage() {
   });
 
   const supabase = createClient();
+
+  // 按当前主分类从公开接口拉取「尺码 / 面料」可选项
+  const [sizesOptions, setSizesOptions] = useState<string[]>([]);
+  const [fabricsOptions, setFabricsOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!form.category) {
+      setSizesOptions([]);
+      setFabricsOptions([]);
+      return;
+    }
+    let cancelled = false;
+    fetch(
+      `/api/public/category-filters?category=${encodeURIComponent(form.category)}`
+    )
+      .then((r) => r.json())
+      .then((res) => {
+        if (cancelled) return;
+        const cfg = res?.data || {};
+        const qf: any[] = cfg.quickFilters || [];
+        const sizesQ = qf.find((q) => q.key === "sizes");
+        const fabricsQ = qf.find((q) => q.key === "fabrics");
+        setSizesOptions(
+          Array.isArray(sizesQ?.options)
+            ? sizesQ.options.map(String)
+            : []
+        );
+        setFabricsOptions(
+          Array.isArray(fabricsQ?.options)
+            ? fabricsQ.options.map(String)
+            : []
+        );
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSizesOptions([]);
+          setFabricsOptions([]);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.category]);
 
   // 表单中当前主分类的子分类列表
   const formSubcategories = useMemo(
@@ -439,8 +494,8 @@ export default function AdminProductsPage() {
       color_hex: "",
       color_season_code: "",
       style_conclusion: "",
-      material: "",
-      sizes: "",
+      fabrics: [],
+      sizesSel: [],
       color: "",
       origin: "",
       weight: "",
@@ -511,8 +566,8 @@ export default function AdminProductsPage() {
       color_season_code: form.color_season_code.trim() || null,
       style_conclusion: form.style_conclusion.trim() || null,
       // 商品参数
-      material: form.material.trim() || null,
-      sizes: form.sizes.trim() || null,
+      material: form.fabrics.length > 0 ? form.fabrics.join("/") : null,
+      sizes: form.sizesSel.length > 0 ? form.sizesSel.join("/") : null,
       color: form.color.trim() || null,
       origin: form.origin.trim() || null,
       care_instructions: form.care_instructions.trim() || null,
@@ -538,6 +593,9 @@ export default function AdminProductsPage() {
         // 定时下架时间（季节性货品）：存于 params，本地 datetime-local → ISO(UTC)；清空则置 null 以便取消定时
         if (form.unpublish_at) cleaned.unpublish_at = fromLocalInputValue(form.unpublish_at);
         else cleaned.unpublish_at = null;
+        // 尺码 / 面料：以「/值/」wrap 形式存入 params，供前台精确分词匹配（ilike %/值/%）
+        if (form.sizesSel.length > 0) cleaned.sizes = "/" + form.sizesSel.join("/") + "/";
+        if (form.fabrics.length > 0) cleaned.fabrics = "/" + form.fabrics.join("/") + "/";
         return Object.keys(cleaned).length > 0 ? cleaned : null;
       })(),
       // 媒体字段
@@ -674,8 +732,14 @@ export default function AdminProductsPage() {
       color_hex: product.color_hex || "",
       color_season_code: product.color_season_code || "",
       style_conclusion: product.style_conclusion || "",
-      material: product.material || "",
-      sizes: product.sizes || "",
+      fabrics:
+        parseWrapParam(product.params?.fabrics).length > 0
+          ? parseWrapParam(product.params?.fabrics)
+          : parseWrapParam(product.material),
+      sizesSel:
+        parseWrapParam(product.params?.sizes).length > 0
+          ? parseWrapParam(product.params?.sizes)
+          : parseWrapParam(product.sizes),
       color: product.color || "",
       origin: product.origin || "",
       weight: product.weight || "",
@@ -2068,28 +2132,36 @@ export default function AdminProductsPage() {
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-primary mb-3">商品参数</h4>
 
-                {/* 材质 */}
+                {/* 面料（可拉开多选 + 自定义） */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">材质</label>
-                  <input
-                    type="text"
-                    value={form.material}
-                    onChange={(e) => setForm({ ...form, material: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="如：真丝、棉麻、聚酯纤维"
+                  <label className="block text-xs font-medium text-gray-600 mb-1">面料</label>
+                  <FilterMultiSelect
+                    value={form.fabrics}
+                    onChange={(vals) => setForm({ ...form, fabrics: vals })}
+                    options={fabricsOptions}
+                    placeholder={
+                      fabricsOptions.length > 0
+                        ? "点击从品类面料中选择，或输入自定义"
+                        : "先选择上方「主分类」再选面料，或直接输入自定义"
+                    }
                   />
+                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新面料后回车即自定义。前台「面料」筛选将按此匹配。</p>
                 </div>
 
-                {/* 尺码 */}
+                {/* 尺码（可拉开多选 + 自定义） */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">尺码</label>
-                  <input
-                    type="text"
-                    value={form.sizes}
-                    onChange={(e) => setForm({ ...form, sizes: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="如：S/M/L/XL 或 均码"
+                  <FilterMultiSelect
+                    value={form.sizesSel}
+                    onChange={(vals) => setForm({ ...form, sizesSel: vals })}
+                    options={sizesOptions}
+                    placeholder={
+                      sizesOptions.length > 0
+                        ? "点击从品类尺码中选择，或输入自定义"
+                        : "先选择上方「主分类」再选尺码，或直接输入自定义"
+                    }
                   />
+                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新尺码后回车即自定义。前台「尺码」筛选将按此匹配。</p>
                 </div>
 
                 {/* 颜色 */}

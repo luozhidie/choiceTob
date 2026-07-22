@@ -96,10 +96,20 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     }
   });
   for (const [k, vals] of Object.entries(filters)) {
-    if (vals.length === 1) {
+    // 尺码 / 面料：商品以「/值/」wrap 形式存储，使用 ilike 分词匹配，避免 XS 误命中 S
+    if (k === "sizes" || k === "fabrics") {
+      const safe = vals.map((v) => v.replace(/\//g, "").trim()).filter(Boolean);
+      if (safe.length === 1) {
+        query = query.ilike(`params->>${k}`, `%/${safe[0]}/%`);
+      } else if (safe.length > 1) {
+        query = query.or(
+          safe.map((v) => `params->>${k}.ilike.%/${v}/%`).join(",")
+        );
+      }
+    } else if (vals.length === 1) {
       query = query.eq(`params->>${k}`, vals[0]);
     } else if (vals.length > 1) {
-      query = query.or(vals.map(v => `params->>${k}.eq.${v}`).join(","));
+      query = query.or(vals.map((v) => `params->>${k}.eq.${v}`).join(","));
     }
   }
 
