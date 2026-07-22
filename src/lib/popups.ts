@@ -29,6 +29,7 @@ export type PopupConfig = {
   text_color: string; // 主文字色
 };
 
+const DEFAULT_HERO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iODAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3YTI2MzAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1OTFhMjIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjMwMCIgeT0iMzkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI0OCIgZmlsbD0iI2ZmZjdlMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U0FNUExFPC90ZXh0Pjx0ZXh0IHg9IjMwMCIgeT0iNDQyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZmlsbD0iI2Q0YjM1YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+cmVwbGFjZSBpbiBhZG1pbjwvdGV4dD48L3N2Zz4=";
 const DEFAULT_BG = "#6e1f25"; // 默认深酒红
 const DEFAULT_BTN = "#d4b35a"; // 默认金黄
 const DEFAULT_TEXT = "#fff7e0"; // 默认奶白
@@ -37,9 +38,9 @@ export const DEFAULT_POPUPS: PopupConfig[] = [
   {
     id: "demo_buyer_first_order",
     page: "buyer",
-    is_active: false, // 默认关闭，后台启用
+    is_active: true, // 预置启用示例，扫码即可见；后台可改/关
     sort_order: 0,
-    hero_image: "",
+    hero_image: DEFAULT_HERO,
     brand_label: "品 牌 围 栏",
     brand_label_color: "#d4b35a",
     top_title: "新客首单4大福利 拿货赚钱快人一步",

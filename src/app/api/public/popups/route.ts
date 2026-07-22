@@ -30,23 +30,36 @@ const CACHE_TTL_MS = 30_000;
 async function getConfig(): Promise<ReturnType<typeof sanitize>> {
   const now = Date.now();
   if (cache && now - cacheAt < CACHE_TTL_MS) return cache;
+  let result: ReturnType<typeof sanitize> = sanitize(DEFAULT_POPUPS);
   const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
-  if (error || !data) {
-    cacheAt = now;
-    cache = sanitize(DEFAULT_POPUPS);
-    return cache;
+  if (!error && data) {
+    try {
+      const parsed = JSON.parse(await data.text());
+      const sanitized = sanitize(parsed);
+      if (sanitized.length > 0) result = sanitized;
+    } catch {
+      /* 解析失败则回退默认 */
+    }
   }
-  try {
-    const text = await data.text();
-    const parsed = JSON.parse(text);
-    cacheAt = now;
-    cache = sanitize(parsed);
-    return Array.isArray(cache) ? cache : sanitize(DEFAULT_POPUPS);
-  } catch {
-    cacheAt = now;
-    cache = sanitize(DEFAULT_POPUPS);
-    return cache;
+  // 种子化：当 Storage 中没有任何有效弹窗配置时，写入默认（含启用示例），保证首次可见
+  if (result === sanitize(DEFAULT_POPUPS)) {
+    try {
+      await supabase.storage
+        .from(BUCKET)
+        .upload(
+          FILE_PATH,
+          new Blob([JSON.stringify(DEFAULT_POPUPS, null, 2)], {
+            type: "application/json",
+          }),
+          { upsert: true, contentType: "application/json" }
+        );
+    } catch {
+      /* 写入失败不影响返回 */
+    }
   }
+  cache = result;
+  cacheAt = now;
+  return result;
 }
 
 export async function GET(request: NextRequest) {
