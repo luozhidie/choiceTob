@@ -25,7 +25,7 @@ let cache: ReturnType<typeof sanitize> | null = null;
 let cacheAt = 0;
 const CACHE_TTL_MS = 30_000;
 
-async function getConfig() {
+async function getConfig(): Promise<ReturnType<typeof sanitize>> {
   const now = Date.now();
   if (cache && now - cacheAt < CACHE_TTL_MS) return cache;
   const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
@@ -39,7 +39,7 @@ async function getConfig() {
     const parsed = JSON.parse(text);
     cacheAt = now;
     cache = sanitize(parsed);
-    return cache;
+    return Array.isArray(cache) ? cache : sanitize(DEFAULT_POPUPS);
   } catch {
     cacheAt = now;
     cache = sanitize(DEFAULT_POPUPS);
@@ -54,6 +54,6 @@ export async function GET(request: NextRequest) {
   const filtered = filterByPage(list, page);
   return NextResponse.json({
     success: true,
-    data: filtered,
+    data: Array.isArray(filtered) ? filtered : [],
   });
 }
