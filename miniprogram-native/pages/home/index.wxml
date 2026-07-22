@@ -28,7 +28,7 @@
 
   <!-- ========== 轮播图上方模块（position==='hero_top'）========== -->
   <block wx:for="{{heroTopBlocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchProducts:launchProducts, launchProductsView:launchProductsView}}"/>
   </block>
 
   <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
@@ -83,7 +83,7 @@
 
   <!-- ========== 动态模块区（轮播图下方/商品上方，已排除 hero_top）========== -->
   <block wx:for="{{blocks}}" wx:key="id">
-    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages, launchMediaPool:launchMediaPool, launchProducts:launchProducts, launchProductsView:launchProductsView}}"/>
   </block>
 
   <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
@@ -298,7 +298,7 @@
                     </view>
                     <view class="lc-hero-photos">
                       <view wx:for="{{item.content.heroImages||[]}}" wx:key="*this" wx:for-item="himg" class="lc-hero-photo">
-                        <image wx:if="{{himg}}" src="{{himg}}" mode="aspectFill" class="lc-hero-img"/>
+                        <image wx:if="{{himg || launchMediaPool[index % launchMediaPool.length]}}" src="{{himg || launchMediaPool[index % launchMediaPool.length]}}" mode="aspectFill" class="lc-hero-img"/>
                         <view wx:else class="lc-hero-ph lc-hero-ph-{{index%3}}"></view>
                       </view>
                     </view>
@@ -346,7 +346,7 @@
                     <view class="lc-live-row">
                       <view class="lc-live-card" wx:for="{{item.content.liveSection.streams||[]}}" wx:key="*this" wx:for-item="s" bindtap="goLaunchLive" data-stream="{{s}}">
                         <view class="lc-live-avatar">
-                          <image wx:if="{{s.avatar}}" src="{{s.avatar}}" mode="aspectFill" class="lc-live-avatar-img"/>
+                          <image wx:if="{{s.avatar || launchMediaPool[(index+5) % launchMediaPool.length]}}" src="{{s.avatar || launchMediaPool[(index+5) % launchMediaPool.length]}}" mode="aspectFill" class="lc-live-avatar-img"/>
                           <view wx:else class="lc-live-avatar-ph"></view>
                           <view class="lc-live-dot"></view>
                         </view>
@@ -366,11 +366,11 @@
                     </view>
                     <scroll-view scroll-x show-scrollbar="{{false}}" class="lc-brand-scroll">
                       <view class="lc-brand-row">
-                        <view class="lc-brand" wx:for="{{item.content.brandSection.brands||[]}}" wx:key="name" wx:for-item="b" bindtap="goLaunchBrand" data-brand="{{b}}">
+                        <view class="lc-brand" wx:for="{{item.content.brandSection.brands||[]}}" wx:key="name" wx:for-item="b" wx:for-index="bi" bindtap="goLaunchBrand" data-brand="{{b}}">
                           <view class="lc-brand-imgs">
-                            <block wx:for="{{b.images||[]}}" wx:key="*this" wx:for-item="im">
+                            <block wx:for="{{b.images||[]}}" wx:key="*this" wx:for-item="im" wx:for-index="ii">
                               <view class="lc-brand-img-cell">
-                                <image wx:if="{{im}}" src="{{im}}" mode="aspectFill" class="lc-brand-img"/>
+                                <image wx:if="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaPool.length]}}" src="{{im || launchMediaPool[(bi*4+ii+10) % launchMediaPool.length]}}" mode="aspectFill" class="lc-brand-img"/>
                                 <view wx:else class="lc-brand-ph"></view>
                               </view>
                             </block>
@@ -394,7 +394,7 @@
                     <view class="lc-trend-grid">
                       <view class="lc-trend-cell" wx:for="{{item.content.trendSection.brands||[]}}" wx:key="name" wx:for-item="tb" bindtap="goLaunchBrand" data-brand="{{tb}}">
                         <view class="lc-trend-photo">
-                          <image wx:if="{{tb.image}}" src="{{tb.image}}" mode="aspectFill" class="lc-trend-img"/>
+                          <image wx:if="{{tb.image || launchMediaPool[(index+30) % launchMediaPool.length]}}" src="{{tb.image || launchMediaPool[(index+30) % launchMediaPool.length]}}" mode="aspectFill" class="lc-trend-img"/>
                           <view wx:else class="lc-trend-ph"></view>
                         </view>
                         <view class="lc-trend-info">
@@ -416,15 +416,15 @@
                     </view>
                     <scroll-view scroll-x show-scrollbar="{{false}}" class="lc-new-cats">
                       <view class="lc-new-cat-row">
-                        <text wx:for="{{item.content.newSection.categories||[]}}" wx:key="*this" wx:for-item="c" class="lc-new-cat">{{c}}</text>
+                        <text wx:for="{{item.content.newSection.categories||[]}}" wx:key="*this" wx:for-item="c" class="lc-new-cat {{lcNewCat===c?'on':''}}" bindtap="swLcNewCat" data-c="{{c}}">{{c}}</text>
                       </view>
                     </scroll-view>
-                    <view class="lc-new-grid" wx:if="{{(item.content.newSection.products||[]).length>0}}">
-                      <view class="lc-new-card" wx:for="{{item.content.newSection.products}}" wx:key="*this" wx:for-item="p" bindtap="goLaunchProduct" data-product="{{p}}">
+                    <view class="lc-new-grid" wx:if="{{(launchProductsView[item.id]||[]).length>0}}">
+                      <view class="lc-new-card" wx:for="{{launchProductsView[item.id]}}" wx:key="id" wx:for-item="p" bindtap="goLaunchProduct" data-product="{{p}}">
                         <view class="lc-new-img-wrap">
                           <image wx:if="{{p.image}}" src="{{p.image}}" mode="aspectFill" class="lc-new-img"/>
                           <view wx:else class="lc-new-ph">暂无图</view>
-                          <view wx:if="{{p.badge}}" class="lc-new-badge {{p.badge==='新人福利'?'lc-new-badge-r':''}}">{{p.badge}}</view>
+                          <view wx:if="{{p.badge}}" class="lc-new-badge {{p.badge==='热卖'?'lc-new-badge-r':''}}">{{p.badge}}</view>
                         </view>
                         <view class="lc-new-info">
                           <text class="lc-new-title">{{p.title}}</text>

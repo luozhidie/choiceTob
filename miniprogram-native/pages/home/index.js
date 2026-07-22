@@ -57,6 +57,10 @@ Page({
     /* 上新企划 launch_campaign */
     launchCountdowns:{},// 倒计时 { blockId: { d, h, m, s } }
     lcNewTab:'now',     // 今日新款当前 Tab
+    lcNewCat:'',        // 今日新款当前选中分类（视觉高亮）
+    launchMediaPool:[], // 真实商品图兜底池（hero/品牌/趋势空图时填充）
+    launchProducts:{},  // 今日新款真实商品 { blockId: [...] }
+    launchProductsView:{}, // 经 Tab 筛选后的展示列表 { blockId: [...] }
   },
 
   onLoad:function(){
@@ -76,6 +80,7 @@ Page({
     this.loadCategories();  // 从后台读取分类标签
     this.loadBlocks();
     this.loadPageBg();      // 后台「页面背景」配置
+    this.loadLaunchMedia(); // 上新企划真实商品图兜底池
     this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
@@ -159,6 +164,7 @@ Page({
           catNavItems:catNavs,quadItems:quadData,circleItems:circleData
         });
         t.startLaunchCountdowns(all);
+        t.loadLaunchNew(all); // 今日新款：拉取真实商品填充
 
         /* 头部/分类标签背景统一：与首个内容板块的 bgColor 保持一致（让上半部分可随后台配色同步） */
         var topBgColor = '#fcefe9';
@@ -236,6 +242,66 @@ Page({
     t.setData({ headerStyle: headerStyle, pageStyle: pageStyle });
   },
 
+  /* ====== 上新企划：真实素材/商品加载 ====== */
+  /* 拉取真实商品图，作为 hero/品牌/趋势 空图位的兜底，让活动页不再是一堆空块 */
+  loadLaunchMedia:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/products?limit=40',
+      method:'GET',
+      success:function(r){
+        var l=[];
+        if(r.data&&r.data.success&&r.data.data)l=r.data.data||[];
+        else if(Array.isArray(r.data))l=r.data;
+        var pool=l.map(function(p){return safeImg(p.image_url||p.cover_image||(p.images&&p.images[0]));}).filter(function(u){return !!u;});
+        t.setData({launchMediaPool:pool});
+      }
+    });
+  },
+  /* 今日新款：拉取真实商品（按 blockId 存盘），分类标签仅作展示 */
+  loadLaunchNew:function(blocks){
+    var t=this;
+    blocks.forEach(function(b){
+      if(b.type!=='launch_campaign')return;
+      var url='https://colour-choice.art/api/public/products?limit=24';
+      wx.request({url:url,method:'GET',
+        success:function(r){
+          var l=[]; if(r.data&&r.data.success&&r.data.data)l=r.data.data||[]; else if(Array.isArray(r.data))l=r.data;
+          var list=l.map(function(p){
+            var price=Number(p.price)||0; if(price>=100)price=Math.round(price/100);
+            return {
+              id:p.id,
+              image:safeImg(p.image_url||p.cover_image||(p.images&&p.images[0])),
+              title:(p.name||p.title||'商品'),
+              price:price,
+              badge:(p.is_new?'新品':(p.is_hot?'热卖':'')),
+              link:'/pages/shop/index?id='+p.id
+            };
+          });
+          t.setData({['launchProducts.'+b.id]:list});
+          t.applyLaunchView();
+        },
+        fail:function(){
+          t.setData({['launchProducts.'+b.id]:[]});
+          t.applyLaunchView();
+        }
+      });
+    });
+  },
+  /* 根据当前 Tab 计算展示列表（今日新款/销量 排序） */
+  applyLaunchView:function(){
+    var t=this;
+    var src=t.data.launchProducts||{};
+    var view={};
+    var tab=t.data.lcNewTab||'now';
+    Object.keys(src).forEach(function(id){
+      var list=src[id]||[];
+      if(tab==='price'){ list=list.slice().sort(function(a,b){return (b.price||0)-(a.price||0);}); }
+      view[id]=list;
+    });
+    t.setData({launchProductsView:view});
+  },
+
   /* ====== 上新企划 倒计时 ====== */
   startLaunchCountdowns:function(blocks){
     var t=this;
@@ -289,6 +355,11 @@ Page({
   swLcNewTab:function(e){
     var t=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.t)||'now';
     this.setData({lcNewTab:t});
+    this.applyLaunchView();
+  },
+  swLcNewCat:function(e){
+    var c=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.c)||'';
+    this.setData({lcNewCat:c});
   },
 
   /* ====== 特价货架：按模式加载折扣商品 ====== */
