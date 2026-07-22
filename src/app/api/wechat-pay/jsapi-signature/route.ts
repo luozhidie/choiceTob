@@ -4,8 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { WECHAT_MINI_APPID } from "@/lib/wechat-pay";
 
-// 小程序 appsecret（从环境变量读取，带 fallback）
-const MINI_SECRET = process.env.WECHAT_MINI_SECRET || "8f7e3c2a1b9d0f6e4c5b8a1d3e6f9c2b";
+// 小程序 appsecret（必须从环境变量读取；缺失即报错，禁止硬编码占位以免静默走错值）
+const MINI_SECRET = process.env.WECHAT_MINI_SECRET || "";
 
 /**
  * POST /api/wechat-pay/jsapi-signature
@@ -28,6 +28,11 @@ export async function POST(request: NextRequest) {
 
     if (!code) {
       return NextResponse.json({ error: "缺少 code 参数" }, { status: 400 });
+    }
+
+    if (!MINI_SECRET) {
+      console.error("[jsapi-signature] 缺少 WECHAT_MINI_SECRET 环境变量");
+      return NextResponse.json({ error: "服务器配置错误，请联系管理员" }, { status: 500 });
     }
 
     // 调用微信接口用 code 换 openid
