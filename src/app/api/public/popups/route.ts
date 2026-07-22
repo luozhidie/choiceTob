@@ -31,7 +31,7 @@ async function getConfig(): Promise<ReturnType<typeof sanitize>> {
   const now = Date.now();
   if (cache && now - cacheAt < CACHE_TTL_MS) return cache;
   let result: ReturnType<typeof sanitize> = sanitize(DEFAULT_POPUPS);
-  let fromDefault = true;
+  let storageValid = false;
   const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
   if (!error && data) {
     try {
@@ -39,20 +39,31 @@ async function getConfig(): Promise<ReturnType<typeof sanitize>> {
       const sanitized = sanitize(parsed);
       if (sanitized.length > 0) {
         result = sanitized;
-        fromDefault = false;
+        storageValid = true;
       }
     } catch {
       /* 解析失败则回退默认 */
     }
   }
-  // 种子化：当 Storage 中没有任何有效弹窗配置时，写入默认（含启用示例），保证首次可见
-  if (fromDefault) {
+  // 补齐缺失的默认示例弹窗（按 id）；不删除用户已有配置
+  // 规则：Storage 为空/无效 → 写全量；Storage 含示例但缺几个 → 补齐；用户已主动删光示例 → 尊重意图不补
+  const demoIds = new Set(DEFAULT_POPUPS.map((p) => p.id));
+  const hasDemo = result.some((p) => demoIds.has(p.id));
+  const have = new Set(result.map((p) => p.id));
+  const missing = DEFAULT_POPUPS.filter((p) => !have.has(p.id));
+  let needWrite = false;
+  if (!storageValid) needWrite = true;
+  else if (hasDemo && missing.length > 0) {
+    result = [...result, ...missing];
+    needWrite = true;
+  }
+  if (needWrite) {
     try {
       await supabase.storage
         .from(BUCKET)
         .upload(
           FILE_PATH,
-          new Blob([JSON.stringify(DEFAULT_POPUPS, null, 2)], {
+          new Blob([JSON.stringify(result, null, 2)], {
             type: "application/json",
           }),
           { upsert: true, contentType: "application/json" }

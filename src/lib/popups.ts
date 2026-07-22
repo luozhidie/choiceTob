@@ -30,6 +30,8 @@ export type PopupConfig = {
 };
 
 const DEFAULT_HERO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iODAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM3YTI2MzAiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1OTFhMjIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjMwMCIgeT0iMzkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI0OCIgZmlsbD0iI2ZmZjdlMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U0FNUExFPC90ZXh0Pjx0ZXh0IHg9IjMwMCIgeT0iNDQyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNiIgZmlsbD0iI2Q0YjM1YSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+cmVwbGFjZSBpbiBhZG1pbjwvdGV4dD48L3N2Zz4=";
+const DEFAULT_HERO_CART = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iODAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNiNTY1MWQiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM4YTRiMTUiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjMwMCIgeT0iMzkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI0NiIgZmlsbD0iI2ZmZjdlMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U0FNUExFPC90ZXh0Pjx0ZXh0IHg9IjMwMCIgeT0iNDQyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Y2FydCBwYWdlPC90ZXh0Pjwvc3ZnPg==";
+const DEFAULT_HERO_MY = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iODAwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciIHgxPSIwIiB5MT0iMCIgeDI9IjAiIHkyPSIxIj48c3RvcCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiM4YTRiNmUiLz48c3RvcCBvZmZzZXQ9IjEiIHN0b3AtY29sb3I9IiM1YTJhNGEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iNjAwIiBoZWlnaHQ9IjgwMCIgZmlsbD0idXJsKCNnKSIvPjx0ZXh0IHg9IjMwMCIgeT0iMzkyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSI0NiIgZmlsbD0iI2ZmZjdlMCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+U0FNUExFPC90ZXh0Pjx0ZXh0IHg9IjMwMCIgeT0iNDQyIiBmb250LWZhbWlseT0ic2Fucy1zZXJpZiIgZm9udC1zaXplPSIyNCIgZmlsbD0iI2ZmZmZmZiIgdGV4dC1hbmNob3I9Im1pZGRsZSI+bXkgcGFnZTwvdGV4dD48L3N2Zz4=";
 const DEFAULT_BG = "#6e1f25"; // 默认深酒红
 const DEFAULT_BTN = "#d4b35a"; // 默认金黄
 const DEFAULT_TEXT = "#fff7e0"; // 默认奶白
@@ -49,6 +51,43 @@ export const DEFAULT_POPUPS: PopupConfig[] = [
     brands: ["T.G", "KAPOK", "SMX", "元照", "Have·U", "THE WANG岛屿"],
     button_text: "上新100+ 满减省¥320",
     button_link: "/pages/buyer/index?from=popup_first_order",
+    bg_color: DEFAULT_BG,
+    button_color: DEFAULT_BTN,
+    text_color: DEFAULT_TEXT,
+  },
+];
+  {
+    id: "demo_cart_topup",
+    page: "cart",
+    is_active: true,
+    sort_order: 1,
+    hero_image: DEFAULT_HERO_CART,
+    brand_label: "品 牌 围 栏",
+    brand_label_color: DEFAULT_BTN,
+    top_title: "进货车满减 凑单更划算",
+    subtitle_1: "满299 包邮",
+    subtitle_2: "限时凑单礼",
+    brands: [],
+    button_text: "去凑单 立省¥50",
+    button_link: "/pages/cart/index",
+    bg_color: DEFAULT_BG,
+    button_color: DEFAULT_BTN,
+    text_color: DEFAULT_TEXT,
+  },
+  {
+    id: "demo_my_certify",
+    page: "my",
+    is_active: true,
+    sort_order: 2,
+    hero_image: DEFAULT_HERO_MY,
+    brand_label: "品 牌 围 栏",
+    brand_label_color: DEFAULT_BTN,
+    top_title: "认证拿货价 一件也是批发价",
+    subtitle_1: "新客专享",
+    subtitle_2: "认证即解锁",
+    brands: [],
+    button_text: "立即认证",
+    button_link: "/pages/certify/index",
     bg_color: DEFAULT_BG,
     button_color: DEFAULT_BTN,
     text_color: DEFAULT_TEXT,
