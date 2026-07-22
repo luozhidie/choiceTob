@@ -1,43 +1,59 @@
-// 公开 API：获取首页弹窗（已发布 + 在有效期内）
+// ============================================================
+// 公开接口：读取某页面的启用弹窗
+// GET /api/public/popups?page=buyer|category|cart|my
+// 数据来自 app-config 桶 popups.json
+// ============================================================
+
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  DEFAULT_POPUPS,
+  sanitize,
+  filterByPage,
+  type PopupPage,
+} from "@/lib/popups";
 
-export const dynamic = 'force-dynamic';
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
+const BUCKET = "app-config";
+const FILE_PATH = "popups.json";
 
-function getServiceRoleClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  if (!url || !key) throw new Error("缺少 Supabase 配置");
-  return createClient(url, key, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+let cache: ReturnType<typeof sanitize> | null = null;
+let cacheAt = 0;
+const CACHE_TTL_MS = 30_000;
+
+async function getConfig() {
+  const now = Date.now();
+  if (cache && now - cacheAt < CACHE_TTL_MS) return cache;
+  const { data, error } = await supabase.storage.from(BUCKET).download(FILE_PATH);
+  if (error || !data) {
+    cacheAt = now;
+    cache = sanitize(DEFAULT_POPUPS);
+    return cache;
+  }
+  try {
+    const text = await data.text();
+    const parsed = JSON.parse(text);
+    cacheAt = now;
+    cache = sanitize(parsed);
+    return cache;
+  } catch {
+    cacheAt = now;
+    cache = sanitize(DEFAULT_POPUPS);
+    return cache;
+  }
 }
 
-export async function GET(_request: NextRequest) {
-  try {
-    const supabase = getServiceRoleClient();
-    const now = new Date().toISOString();
-
-    const { data, error } = await supabase
-      .from("popups")
-      .select("id, title, keywords, image_url, link_url, show_on_home")
-      .eq("is_published", true)
-      .eq("show_on_home", true)
-      .or(`start_at.is.null,start_at.lte.${now}`)
-      .or(`end_at.is.null,end_at.gte.${now}`)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (error) {
-      if (error.code === "42P01") return NextResponse.json({ success: true, data: null });
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, data });
-  } catch (err: any) {
-    console.error("[弹窗API]", err);
-    return NextResponse.json({ success: true, data: null });
-  }
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const page = (searchParams.get("page") || "buyer") as PopupPage;
+  const list = await getConfig();
+  const filtered = filterByPage(list, page);
+  return NextResponse.json({
+    success: true,
+    data: filtered,
+  });
 }

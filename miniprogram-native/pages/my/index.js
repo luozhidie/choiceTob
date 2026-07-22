@@ -76,12 +76,58 @@ Page({
     /* ===== 后台「页面背景」设置：我的页头部 ===== */
     myHeaderColor:'',
     myHeaderImage:'',
-    myHeaderStyle:''
+    myHeaderStyle:'',
+
+    /* 营销弹窗 */
+    popupCfg:null,
+    popupVisible:false
   },
 
   onShow:function(){
     this.initAll();
     this.loadPageBg();
+    this.loadPopup();
+  },
+
+  /* 营销弹窗：首次进入自动弹，关闭后不再弹 */
+  loadPopup:function(){
+    var t=this;
+    if(t.data.popupVisible)return;
+    wx.request({
+      url:'https://colour-choice.art/api/public/popups?page=my',
+      method:'GET',
+      success:function(r){
+        var list=[];
+        if(r.data&&r.data.success&&Array.isArray(r.data.data))list=r.data.data;
+        if(!list.length)return;
+        var seen=wx.getStorageSync('popup_seen_ids')||{};
+        var pending=null;
+        for(var i=0;i<list.length;i++){
+          if(!seen[list[i].id]){ pending=list[i]; break; }
+        }
+        if(pending) t.setData({ popupCfg:pending, popupVisible:true });
+      }
+    });
+  },
+  onPopupClose:function(){
+    var t=this;
+    var cfg=t.data.popupCfg;
+    if(cfg&&cfg.id){
+      var seen=wx.getStorageSync('popup_seen_ids')||{};
+      seen[cfg.id]=Date.now();
+      wx.setStorageSync('popup_seen_ids', seen);
+    }
+    t.setData({ popupVisible:false });
+  },
+  onPopupButtonTap:function(e){
+    var t=this;
+    var link=(e&&e.detail&&e.detail.link)||'';
+    t.onPopupClose();
+    if(!link)return;
+    var tabPages=['pages/home/index','pages/buyer/index','pages/cart/index','pages/my/index'];
+    var isTab=tabPages.some(function(p){ return link.indexOf(p)!==-1; });
+    if(isTab) wx.switchTab({ url:'/'+link.replace(/^\//,'') });
+    else wx.navigateTo({ url:'/'+link.replace(/^\//,''), fail:function(){ wx.switchTab({ url:'/pages/buyer/index' }); } });
   },
 
   /* 后台「页面背景」配置：我的页头部 */

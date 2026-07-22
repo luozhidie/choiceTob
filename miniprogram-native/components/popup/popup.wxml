@@ -1,0 +1,29 @@
+<view class="popup-mask" wx:if="{{visible}}" bindtap="onMaskTap" catchtouchmove="true">
+  <view class="popup-card" style="background:{{cfg.bg_color}};color:{{cfg.text_color}};" catchtap="noop">
+    <view class="popup-close" bindtap="onClose" aria-label="关闭">
+      <text class="popup-close-icon">×</text>
+    </view>
+
+    <view class="popup-top-title" wx:if="{{cfg.top_title}}">{{cfg.top_title}}</view>
+
+    <view class="popup-hero" style="background-image:{{cfg.hero_image?'url('+cfg.hero_image+')':'none'}};">
+      <view wx:if="{{!cfg.hero_image}}" class="popup-hero-placeholder">暂无主图</view>
+      <view wx:if="{{cfg.brand_label}}" class="popup-brand-label" style="color:{{cfg.brand_label_color}};">{{cfg.brand_label}}</view>
+      <view class="popup-hero-bottom">
+        <view wx:if="{{cfg.subtitle_1}}" class="popup-sub1">{{cfg.subtitle_1}}</view>
+        <view wx:if="{{cfg.subtitle_2}}" class="popup-sub2">{{cfg.subtitle_2}}</view>
+      </view>
+    </view>
+
+    <view wx:if="{{cfg.brands.length>0}}" class="popup-brands">
+      <block wx:for="{{cfg.brands}}" wx:key="*this">
+        <text class="popup-brand">{{item}}</text>
+        <text wx:if="{{index<cfg.brands.length-1}}" class="popup-brand-sep">·</text>
+      </block>
+    </view>
+
+    <view wx:if="{{cfg.button_text}}" class="popup-btn-wrap">
+      <view class="popup-btn" style="background:{{cfg.button_color}};color:{{cfg.bg_color}};" bindtap="onButtonTap">{{cfg.button_text}}</view>
+    </view>
+  </view>
+</view>

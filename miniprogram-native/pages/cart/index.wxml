@@ -72,3 +72,6 @@
 
   <view class="safe-bottom"></view>
 </view>
+
+<!-- 营销弹窗 -->
+<popup cfg="{{popupCfg}}" visible="{{popupVisible}}" bind:close="onPopupClose" bind:buttonTap="onPopupButtonTap" />

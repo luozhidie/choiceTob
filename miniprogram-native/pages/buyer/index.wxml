@@ -181,3 +181,6 @@
     </view>
   </view>
 </view>
+
+<!-- 营销弹窗：首次进入自动弹出，关闭后不再弹 -->
+<popup cfg="{{popupCfg}}" visible="{{popupVisible}}" bind:close="onPopupClose" bind:buttonTap="onPopupButtonTap" />

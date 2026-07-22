@@ -138,6 +138,9 @@ Page({
     selectedFilters:{},      // {key:[value,...]}
     minPrice:'',
     maxPrice:'',
+    /* 营销弹窗 */
+    popupCfg:null,
+    popupVisible:false,
   },
 
   onLoad:function(){
@@ -145,6 +148,7 @@ Page({
     t.refreshAuth();
     t.setData({ categoryTree: buildTree() });
     t.loadPageBg();
+    t.loadPopup();
     var opt=t.options||{};
     if(opt.category){ t.enterCategory(opt.category); }
   },
@@ -401,5 +405,48 @@ Page({
     else cart.push({id:p.id,name:p.name||p.title,price:p.price,wholesale_price:Number(p.wholesale_price)||0,image:p.image_url||p.cover_image,quantity:1});
     wx.setStorageSync('cart_v2',cart);
     wx.showToast({title:'已加购',icon:'success',duration:800});
+  },
+
+  /* ===== 营销弹窗：首次进入自动弹，关闭后不再弹 ===== */
+  loadPopup:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/popups?page=buyer',
+      method:'GET',
+      success:function(r){
+        var list=[];
+        if(r.data&&r.data.success&&Array.isArray(r.data.data))list=r.data.data;
+        if(!list.length)return;
+        var seen=wx.getStorageSync('popup_seen_ids')||{};
+        var pending=null;
+        for(var i=0;i<list.length;i++){
+          if(!seen[list[i].id]){ pending=list[i]; break; }
+        }
+        if(pending){
+          t.setData({ popupCfg:pending, popupVisible:true });
+        }
+      }
+    });
+  },
+  onPopupClose:function(e){
+    var t=this;
+    var cfg=t.data.popupCfg;
+    if(cfg && cfg.id){
+      var seen=wx.getStorageSync('popup_seen_ids')||{};
+      seen[cfg.id]=Date.now();
+      wx.setStorageSync('popup_seen_ids', seen);
+    }
+    t.setData({ popupVisible:false });
+  },
+  onPopupButtonTap:function(e){
+    var t=this;
+    var link=(e && e.detail && e.detail.link) || '';
+    t.onPopupClose();
+    if(!link)return;
+    /* 内部路径：/pages/xxx → 走 navigateTo；tabBar 页面走 switchTab */
+    var tabPages=['pages/home/index','pages/buyer/index','pages/cart/index','pages/my/index'];
+    var isTab=tabPages.some(function(p){ return link.indexOf(p)!==-1; });
+    if(isTab){ wx.switchTab({ url:'/'+link.replace(/^\//,'') }); }
+    else { wx.navigateTo({ url:'/'+link.replace(/^\//,''), fail:function(){ wx.switchTab({ url:'/pages/buyer/index' }); } }); }
   },
 });
