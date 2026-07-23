@@ -152,6 +152,7 @@ function ProductTab({
   const [seasons, setSeasons] = useState<string[]>([]);
   const [styles, setStyles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [toast, setToast] = useState<string>("");
   const [filterGender, setFilterGender] = useState<"all" | "women" | "men">("all");
 
@@ -205,6 +206,28 @@ function ProductTab({
       setToast("保存失败：" + (e.message || ""));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const suggest = async () => {
+    if (!selected) return;
+    setSuggesting(true);
+    try {
+      const res = await fetch("/api/admin/cmb/suggest-tags", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: selected.id }),
+      });
+      const json = await res.json();
+      if (json.error) throw new Error(json.error);
+      setSeasons(json.color_season_codes || []);
+      setStyles(json.style_tag_codes || []);
+      setToast(json.reason ? `AI 建议：${json.reason}` : "已应用 AI 建议");
+    } catch (e: any) {
+      setToast("AI 建议失败：" + (e.message || ""));
+    } finally {
+      setSuggesting(false);
     }
   };
 
@@ -276,13 +299,22 @@ function ProductTab({
               styles={styles}
               onStylesChange={setStyles}
             />
-            <button
-              onClick={save}
-              disabled={saving}
-              className="w-full py-2 bg-primary text-white rounded text-sm disabled:opacity-50"
-            >
-              {saving ? "保存中…" : "保存打标"}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={suggest}
+                disabled={suggesting}
+                className="flex-1 py-2 border border-primary text-primary rounded text-sm disabled:opacity-50"
+              >
+                {suggesting ? "AI 思考中…" : "AI 智能建议"}
+              </button>
+              <button
+                onClick={save}
+                disabled={saving}
+                className="flex-1 py-2 bg-primary text-white rounded text-sm disabled:opacity-50"
+              >
+                {saving ? "保存中…" : "保存打标"}
+              </button>
+            </div>
             {toast && <div className="text-xs text-center text-gray-500">{toast}</div>}
           </div>
         )}
