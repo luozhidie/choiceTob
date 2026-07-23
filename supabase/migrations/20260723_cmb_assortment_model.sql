@@ -195,9 +195,9 @@ RETURNS TABLE (
 ) AS $$
   SELECT
     p.id,
-    p.name,
     p.title,
-    p.image_url,
+    p.title,
+    p.cover_image,
     (
       (CASE WHEN EXISTS (SELECT 1 FROM unnest(p.color_season_codes) AS x WHERE x = ANY(p_seasons)) THEN 2 ELSE 0 END)
       + (CASE WHEN EXISTS (SELECT 1 FROM unnest(p.style_tag_codes) AS y WHERE y = ANY(p_styles)) THEN 1 ELSE 0 END)
