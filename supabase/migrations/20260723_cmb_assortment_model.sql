@@ -199,14 +199,14 @@ RETURNS TABLE (
     p.title,
     p.image_url,
     (
-      (CASE WHEN p.color_season_codes && p_seasons THEN 2 ELSE 0 END)
-      + (CASE WHEN p.style_tag_codes && p_styles THEN 1 ELSE 0 END)
+      (CASE WHEN EXISTS (SELECT 1 FROM unnest(p.color_season_codes) AS x WHERE x = ANY(p_seasons)) THEN 2 ELSE 0 END)
+      + (CASE WHEN EXISTS (SELECT 1 FROM unnest(p.style_tag_codes) AS y WHERE y = ANY(p_styles)) THEN 1 ELSE 0 END)
     ) AS match_score
   FROM products p
   WHERE p.is_published = true
     AND (
-      p.color_season_codes && p_seasons
-      OR p.style_tag_codes && p_styles
+      EXISTS (SELECT 1 FROM unnest(p.color_season_codes) AS x WHERE x = ANY(p_seasons))
+      OR EXISTS (SELECT 1 FROM unnest(p.style_tag_codes) AS y WHERE y = ANY(p_styles))
     )
   ORDER BY match_score DESC, p.created_at DESC
   LIMIT 60;
