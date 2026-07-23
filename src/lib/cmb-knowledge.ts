@@ -121,6 +121,11 @@ export const STYLE_LOGIC: Record<string, string> = {
   fashion_m_romantic: "时尚偏浪漫（男）。时尚加浪漫阴柔。",
 };
 
+/** 判定方法论（用户定义的判定轴，喂给大模型作为判定框架） */
+export const JUDGE_METHOD = `【判定方法（务必按此执行）】
+1) 色彩季型怎么判：看商品整体颜色的「明度（深/浅）+ 艳度（净/浊）+ 冷暖（暖/冷）」三轴整体呈现的色相特征，对照各季型属性（浅/深/暖/冷/亮/柔/净…），不要只看色相名称。三轴综合后才定季型，可多选（1-4 个）。
+2) 人物穿衣风格怎么判：看衣服「面料（软硬、垂感、肌理）+ 剪裁（曲线/直线、量感大小、版型）+ 图案（有无、大小、曲直）」这三者整体呈现的特点，判定曲线型/直线型、版型大小、以及偏风格方向（曲偏直/曲偏曲/直偏曲/直偏直）。`;
+
 /** 把知识库编译成喂给大模型的文本块 */
 export function cmbKnowledgeText(seasons: { code: string; name_zh: string }[], styles: { code: string; name_zh: string }[]): string {
   const seasonLines = seasons
@@ -137,5 +142,5 @@ export function cmbKnowledgeText(seasons: { code: string; name_zh: string }[], s
     })
     .join("\n");
 
-  return `【色彩季型判定知识库（12）】\n${seasonLines}\n\n【穿衣风格判定知识库】\n${styleLines}`;
+  return `${JUDGE_METHOD}\n\n【色彩季型判定知识库（12）】\n${seasonLines}\n\n【穿衣风格判定知识库】\n${styleLines}`;
 }
