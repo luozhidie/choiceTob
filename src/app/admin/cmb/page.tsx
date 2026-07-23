@@ -223,7 +223,8 @@ function ProductTab({
       if (json.error) throw new Error(json.error);
       setSeasons(json.color_season_codes || []);
       setStyles(json.style_tag_codes || []);
-      setToast(json.reason ? `AI 建议：${json.reason}` : "已应用 AI 建议");
+      const modeLabel = json.mode === "vision" ? "（看图）" : "（仅文字）";
+      setToast(json.reason ? `AI 建议${modeLabel}：${json.reason}` : `已应用 AI 建议${modeLabel}`);
     } catch (e: any) {
       setToast("AI 建议失败：" + (e.message || ""));
     } finally {
