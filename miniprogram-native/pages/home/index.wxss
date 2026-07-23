@@ -76,7 +76,7 @@ page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMa
 .tg-on{color:#fff;background:#2d1b2e;font-weight:700;}
 
 /* ========== 轮播图（在头部下方，不叠加） ========== */
-.hero-banner{position:relative;width:100%;height:360rpx;overflow:hidden;background:#1a1225;}
+.hero-banner{position:relative;width:100%;height:calc(100vh - 120rpx);overflow:hidden;background:#1a1225;}
 .hero-banner .sw{width:100%;height:100%;}
 .hero-banner .si{width:100%;height:100%;background:linear-gradient(135deg,#2d1b2e,#4a3a4b);}
 .hero-banner .ph{width:100%;height:100%;background:#1a1225;}
