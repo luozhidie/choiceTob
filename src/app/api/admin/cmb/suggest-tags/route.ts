@@ -80,8 +80,8 @@ export async function POST(request: NextRequest) {
         .select("title,description,category,color,material,sizes,tags,price,cover_image,images")
         .eq("id", productId)
         .single(),
-      supabase.from("color_seasons").select("code,name_zh").order("sort_order", { ascending: true }),
-      supabase.from("style_tags").select("code,name_zh,gender,is_main,parent_code,direction").order("sort_order", { ascending: true }),
+      supabase.from("color_seasons").select("code,name_zh,meta").order("sort_order", { ascending: true }),
+      supabase.from("style_tags").select("code,name_zh,gender,is_main,parent_code,direction,type,frame").order("sort_order", { ascending: true }),
     ]);
 
     if (!product) {
@@ -89,8 +89,19 @@ export async function POST(request: NextRequest) {
     }
 
     const knowledge = cmbKnowledgeText(
-      (seasons || []) as any,
-      (styles || []) as any
+      ((seasons || []) as any[]).map((s) => ({
+        code: s.code,
+        name_zh: s.name_zh,
+        attributes: s.meta?.attributes || [],
+      })),
+      ((styles || []) as any[]).map((s) => ({
+        code: s.code,
+        name_zh: s.name_zh,
+        gender: s.gender,
+        type: s.type,
+        frame: s.frame,
+        direction: s.direction,
+      }))
     );
 
     const validSeasons = new Set((seasons || []).map((s: any) => s.code));
