@@ -23,18 +23,18 @@ export async function updateSession(request: NextRequest) {
   // admin 区：独立 cookie 校验（保持原逻辑）
   if (isAdmin) {
     if (pathname === "/admin/login") {
-      return NextResponse.next({ request });
+      return NextResponse.next();
     }
     const adminCookie = request.cookies.get("admin_logged_in");
     if (adminCookie?.value !== "true") {
       return NextResponse.redirect(new URL("/admin/login", request.url));
     }
-    return NextResponse.next({ request });
+    return NextResponse.next();
   }
 
   // 接口 / 图片代理 / 占位页 / 验证文件：始终放行
   if (isApi || isImgProxy || isComingSoon || isRootTxt) {
-    return NextResponse.next({ request });
+    return NextResponse.next();
   }
 
   // 内测锁：电脑端网站前端默认仅管理员可见
@@ -46,5 +46,5 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  return NextResponse.next({ request });
+  return NextResponse.next();
 }

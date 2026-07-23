@@ -1,7 +1,7 @@
 import { updateSession } from "@/lib/supabase/middleware";
 import type { NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // 记录 root.txt 访问日志（淘宝验证用）
   if (request.nextUrl.pathname === "/root.txt") {
     console.log("[ROOT.TXT ACCESS] ==================================");
