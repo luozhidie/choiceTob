@@ -3,6 +3,7 @@ import { Geist_Mono, Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import LayoutChrome from "@/components/LayoutChrome";
 import { AuthProvider } from "@/lib/auth-context";
 import { CartProvider } from "@/lib/cart-context";
 
@@ -47,9 +48,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
           <CartProvider>
-            <Navbar />
-            <main className="flex-1 pt-16">{children}</main>
-            <Footer />
+            <LayoutChrome>{children}</LayoutChrome>
           </CartProvider>
         </AuthProvider>
       </body>
