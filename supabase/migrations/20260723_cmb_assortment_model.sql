@@ -3,60 +3,67 @@
 -- 设计核心：
 --   A 层 买手市场层（大方向）：assortment_plans 已有 season/品类架构/价格带/波段，
 --       本迁移补「市场判断叙述」+「目标色彩季型/风格」，把买手的买货方向用色彩季型维度框住。
---   B 层 个人层（精细化到人）：本系统 12 色彩季型 + 个人风格标签，作为商品与组货包的维度字段。
+--   B 层 个人层（精细化到人）：12 色彩季型 + 个人风格标签，作为商品与组货包的维度字段。
 --   融合：用户风格测试 → 季型+风格 → 组货方案按 target 匹配、商品按标签筛 → 测→诊断→组货→转化。
--- 色彩季型采用本系统叫法（浅暖/浅冷/深暖/深冷/净暖/净冷/静暖/静冷/暖亮/暖油/油暖/油冷），不含其他体系术语。
--- 幂等：可重复执行（DROP+CARATE / ADD COLUMN IF NOT EXISTS）。
+-- 色彩季型采用本系统叫法（浅暖型/浅冷型/深暖型/深冷型/净暖型/净冷型/柔暖型/柔冷型/暖亮型/暖柔型/冷亮型/冷柔型）。
+-- 幂等：可重复执行（DROP+CREATE / ADD COLUMN IF NOT EXISTS）。
 -- 请在 Supabase SQL Editor 执行（接在既有迁移之后）。
 -- ============================================================
 
 -- ============================================================
 -- 1) 12 色彩季型（本系统叫法）
+--    meta 字段灵活存放该季型的三个属性（如 浅/亮/暖），不硬拆列
 -- ============================================================
 DROP TABLE IF EXISTS color_seasons;
 CREATE TABLE color_seasons (
   code TEXT PRIMARY KEY,
   name_zh TEXT NOT NULL,
-  undertone TEXT,          -- 暖 / 冷
-  depth TEXT,              -- 浅 / 深 / 净 / 静 / 亮 / 油
+  meta JSONB,
   sort_order INTEGER DEFAULT 0
 );
 
-INSERT INTO color_seasons (code, name_zh, undertone, depth, sort_order) VALUES
-('light-warm','浅暖型','暖','浅',1),
-('light-cool','浅冷型','冷','浅',2),
-('deep-warm','深暖型','暖','深',3),
-('deep-cool','深冷型','冷','深',4),
-('clear-warm','净暖型','暖','净',5),
-('clear-cool','净冷型','冷','净',6),
-('soft-warm','静暖型','暖','静',7),
-('soft-cool','静冷型','冷','静',8),
-('warm-bright','暖亮型','暖','亮',9),
-('warm-oil','暖油型','暖','油',10),
-('oil-warm','油暖型','暖','油',11),
-('oil-cool','油冷型','冷','油',12);
+INSERT INTO color_seasons (code, name_zh, meta, sort_order) VALUES
+('light-warm','浅暖型','{"attributes":["浅","亮","暖"]}',1),
+('light-cool','浅冷型','{"attributes":["浅","柔","冷"]}',2),
+('deep-warm','深暖型','{"attributes":["深","柔","暖"]}',3),
+('deep-cool','深冷型','{"attributes":["深","冷","净"]}',4),
+('clear-warm','净暖型','{"attributes":["亮","浅","暖"]}',5),
+('clear-cool','净冷型','{"attributes":["亮","深","冷"]}',6),
+('soft-warm','柔暖型','{"attributes":["柔","深","暖"]}',7),
+('soft-cool','柔冷型','{"attributes":["柔","浅","冷"]}',8),
+('warm-bright','暖亮型','{"attributes":["暖","浅","亮"]}',9),
+('warm-soft','暖柔型','{"attributes":["暖","柔","深"]}',10),
+('cool-bright','冷亮型','{"attributes":["冷","深","亮"]}',11),
+('cool-soft','冷柔型','{"attributes":["冷","浅","柔"]}',12);
 
 -- ============================================================
 -- 2) 个人穿衣风格标签
+--    gender: women / men / unisex
+--    TODO: 请用本系统的「女士八大风格」+「男士五大风格」替换下方 INSERT
 -- ============================================================
 DROP TABLE IF EXISTS style_tags;
 CREATE TABLE style_tags (
   code TEXT PRIMARY KEY,
   name_zh TEXT NOT NULL,
+  gender TEXT,
   sort_order INTEGER DEFAULT 0
 );
 
-INSERT INTO style_tags (code, name_zh, sort_order) VALUES
-('minimal','简约极简',1),
-('french','法式优雅',2),
-('office','通勤职场',3),
-('retro','复古',4),
-('street','街头潮酷',5),
-('sporty','运动休闲',6),
-('romantic','浪漫女人味',7),
-('natural','自然森系',8),
-('dramatic','戏剧个性',9),
-('guofeng','国风新中式',10);
+-- 临时占位：女士 8 大 + 男士 5 大风格名字确认后，替换为准确名称
+INSERT INTO style_tags (code, name_zh, gender, sort_order) VALUES
+('women-1','女士风格1-待替换','women',1),
+('women-2','女士风格2-待替换','women',2),
+('women-3','女士风格3-待替换','women',3),
+('women-4','女士风格4-待替换','women',4),
+('women-5','女士风格5-待替换','women',5),
+('women-6','女士风格6-待替换','women',6),
+('women-7','女士风格7-待替换','women',7),
+('women-8','女士风格8-待替换','women',8),
+('men-1','男士风格1-待替换','men',9),
+('men-2','男士风格2-待替换','men',10),
+('men-3','男士风格3-待替换','men',11),
+('men-4','男士风格4-待替换','men',12),
+('men-5','男士风格5-待替换','men',13);
 
 -- ============================================================
 -- 3) 商品打色彩季型/风格标签（B 层落到 SKU）
@@ -81,7 +88,6 @@ CREATE INDEX IF NOT EXISTS idx_assortment_target_styles ON assortment_plans USIN
 
 -- ============================================================
 -- 5) 融合推荐函数：买手大方向(组货) × 个人色彩季型/风格
---    给定用户的色彩季型 + 风格，返回匹配度最高的商品（精细化到人）
 --    色彩季型匹配权重 2，风格匹配权重 1
 -- ============================================================
 CREATE OR REPLACE FUNCTION recommend_products_by_season(p_seasons TEXT[], p_styles TEXT[])
