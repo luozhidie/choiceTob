@@ -66,6 +66,7 @@ const menuGroups = [
     { label: "买手中心", href: "/admin/buyer-center" },
     { label: "买手步骤", href: "/admin/buyer-steps" },
     { label: "货盘规划", href: "/admin/product-evaluation" },
+    { label: "CMB打标管理", href: "/admin/cmb" },
   ]},
 
   // ─── 采购&供应链 ───
