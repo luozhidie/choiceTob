@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
         type: s.type,
         frame: s.frame,
         direction: s.direction,
+        parent_code: s.parent_code,
       }))
     );
 
@@ -120,7 +121,7 @@ ${knowledge}
 - 价格（分）：${product.price ?? "无"}
 - 描述：${product.description || "无"}
 
-请结合商品图片（看廓形/比例/领型/垂感/细节）与上方知识库，给出判断。
+请结合商品图片（看面料质感、剪裁线条、图案三者整体呈现）与上方知识库，给出判断。
 规则：
 1. 色彩季型选 1-4 个最匹配的码（以图片实际颜色为主，标题颜色为辅）。
 2. 穿衣风格：通常选 1 个主风格 + 0-3 个偏风格；通用款可男女都选。以图片廓形判断曲线/直线与版型。
