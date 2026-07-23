@@ -27,6 +27,20 @@ const nextConfig: NextConfig = {
     WECHAT_MP_APPID: "wxe0ffec0a398de8b7",
     WECHAT_NOTIFY_URL: "https://colour-choice.art/api/wechat-pay/notify",
   },
+  // 微信小程序图片代理：把 Supabase 存储域名转发到本站已白名单的 colour-choice.art 域名，
+  // 避免小程序需在微信公众平台单独为 Supabase 域名配置 downloadFile 合法域名。
+  async rewrites() {
+    return [
+      {
+        source: "/simg/:path*",
+        destination: "https://fxeknwkmytzedkhplozn.supabase.co/:path*",
+      },
+      {
+        source: "/sapimg/:path*",
+        destination: "https://lzdchoice.supabase.co/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

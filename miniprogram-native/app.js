@@ -7,6 +7,50 @@ App({
   },
 
   onLaunch: function() {
+    // ===== 图片域名代理：把 Supabase 存储图片改写到本站已白名单的 colour-choice.art 域名 =====
+    // 微信小程序要求图片域名（downloadFile 合法域名）单独配置；本站域名 colour-choice.art 已配置，
+    // 故将所有 Supabase 图片 URL 改写为 https://colour-choice.art/simg/... 由 Next.js 转发，
+    // 这样小程序无需再为 Supabase 域名配置白名单。一处拦截覆盖全部页面的接口返回。
+    (function() {
+      function proxyUrl(u) {
+        if (typeof u !== 'string') return u;
+        u = u.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
+        u = u.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
+        return u;
+      }
+      function walk(o) {
+        if (o == null || typeof o !== 'object') {
+          return typeof o === 'string' ? proxyUrl(o) : o;
+        }
+        if (Array.isArray(o)) {
+          for (var i = 0; i < o.length; i++) o[i] = walk(o[i]);
+          return o;
+        }
+        for (var k in o) {
+          if (Object.prototype.hasOwnProperty.call(o, k)) o[k] = walk(o[k]);
+        }
+        return o;
+      }
+      var origRequest = wx.request.bind(wx);
+      wx.request = function(opts) {
+        if (opts && typeof opts.success === 'function') {
+          var us = opts.success;
+          opts.success = function(res) {
+            try { if (res && res.data) res.data = walk(res.data); } catch (e) {}
+            return us(res);
+          };
+        }
+        return origRequest(opts);
+      };
+      if (wx.downloadFile) {
+        var origDownload = wx.downloadFile.bind(wx);
+        wx.downloadFile = function(opts) {
+          if (opts && opts.url) opts.url = proxyUrl(opts.url);
+          return origDownload(opts);
+        };
+      }
+    })();
+
     // 检查本地VIP状态
     var vipStatus = wx.getStorageSync('vip_status');
     if (vipStatus === 'active') {
