@@ -40,6 +40,38 @@ const TABS = [
 
 type TabKey = (typeof TABS)[number]["key"];
 
+function GenderFilter({
+  value,
+  onChange,
+}: {
+  value: "all" | "women" | "men";
+  onChange: (v: "all" | "women" | "men") => void;
+}) {
+  const opts: { key: "all" | "women" | "men"; label: string }[] = [
+    { key: "all", label: "全部" },
+    { key: "women", label: "女士" },
+    { key: "men", label: "男士" },
+  ];
+  return (
+    <div className="flex gap-2">
+      {opts.map((o) => (
+        <button
+          key={o.key}
+          type="button"
+          onClick={() => onChange(o.key)}
+          className={`px-3 py-1 text-xs rounded border ${
+            value === o.key
+              ? "bg-[#2d1b2e] text-white border-[#2d1b2e]"
+              : "bg-white text-gray-600 border-gray-300"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 async function adminUpdate(table: string, id: string, data: Record<string, unknown>) {
   const res = await fetch("/api/admin/products/update", {
     method: "POST",
@@ -121,6 +153,7 @@ function ProductTab({
   const [styles, setStyles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string>("");
+  const [filterGender, setFilterGender] = useState<"all" | "women" | "men">("all");
 
   const load = async (term = "") => {
     setLoading(true);
@@ -233,9 +266,11 @@ function ProductTab({
         ) : (
           <div className="border rounded p-4 space-y-4">
             <div className="text-sm font-semibold truncate">{selected.title}</div>
+            <GenderFilter value={filterGender} onChange={setFilterGender} />
             <CmbTagger
               seasonsList={seasonsList}
               stylesList={stylesList}
+              gender={filterGender}
               seasons={seasons}
               onSeasonsChange={setSeasons}
               styles={styles}
@@ -271,6 +306,7 @@ function AssortmentTab({
   const [styles, setStyles] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
+  const [filterGender, setFilterGender] = useState<"all" | "women" | "men">("all");
 
   const load = async () => {
     setLoading(true);
@@ -366,9 +402,11 @@ function AssortmentTab({
             <p className="text-xs text-gray-500">
               设定该组货方案想覆盖的色彩季型与穿衣风格（买手大方向框到个人层）。
             </p>
+            <GenderFilter value={filterGender} onChange={setFilterGender} />
             <CmbTagger
               seasonsList={seasonsList}
               stylesList={stylesList}
+              gender={filterGender}
               seasons={seasons}
               onSeasonsChange={setSeasons}
               styles={styles}
