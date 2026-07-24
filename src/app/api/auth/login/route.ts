@@ -40,9 +40,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: msg }, { status: 401 });
     }
 
-    // 登录成功！用 service_role 查 profiles 表获取会员信息
+    // 登录成功！用 service_role 查 profiles 表获取会员信息 + 角色
     let membershipType = null;
     let membershipExpiresAt = null;
+    let userRole = null;
     try {
       const serviceClient = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,16 +51,24 @@ export async function POST(req: NextRequest) {
       );
       const { data: profile } = await serviceClient
         .from("profiles")
-        .select("membership_type, membership_expires_at")
+        .select("membership_type, membership_expires_at, role")
         .eq("id", data.user!.id)
         .maybeSingle();
       if (profile) {
         membershipType = profile.membership_type;
         membershipExpiresAt = profile.membership_expires_at;
+        userRole = profile.role;
       }
     } catch (e) {
       console.error("[Auth Login] 查会员信息失败:", e);
     }
+
+    // 管理员判定：profiles.role=admin 或邮箱在 ADMIN_EMAILS 列表中
+    const adminEmails = (process.env.ADMIN_EMAILS || "")
+      .split(",")
+      .map((e) => e.trim())
+      .filter(Boolean);
+    const isAdmin = userRole === "admin" || adminEmails.includes(email);
 
     // 判断是否为价格会员（用于小程序端批发价显示）
     const isPriceMember = !!(
@@ -86,6 +95,7 @@ export async function POST(req: NextRequest) {
       membership_type: membershipType,
       membership_expires_at: membershipExpiresAt,
       is_price_member: isPriceMember,
+      is_admin: isAdmin,
     });
   } catch (err: any) {
     console.error("[Auth Login API Error]", err);

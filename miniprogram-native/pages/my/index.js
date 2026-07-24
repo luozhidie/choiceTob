@@ -157,6 +157,8 @@ Page({
     var isCert=!!wx.getStorageSync('is_certified_store_owner');
     var certStyle=wx.getStorageSync('certified_style')||'';
     var token=wx.getStorageSync('token')||'';
+    var isAdmin=!!wx.getStorageSync('is_admin');
+    t.setData({isAdmin:isAdmin});
 
     if(ui&&ui.nickName){
       /* 已登录 */

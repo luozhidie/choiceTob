@@ -13,7 +13,13 @@ Page({
     followed: [],
     shareConsultant: null
   },
+  onLoad: function () {
+    var app = getApp();
+    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
+  },
   onShow: function () {
+    var app = getApp();
+    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
     this.loadDates();
     this.loadFollowed();
     this.loadAll();

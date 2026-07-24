@@ -4,6 +4,7 @@ App({
     isVip: false,
     isPriceMember: false,       // 价格会员（可查看批发价）
     isCertifiedStoreOwner: false, // 认证店主
+    isAdmin: false,             // 管理员预览模式（控制灰度功能是否可见）
   },
 
   onLaunch: function() {
@@ -66,6 +67,30 @@ App({
     if (isCertified === true) {
       this.globalData.isCertifiedStoreOwner = true;
     }
+    // 恢复管理员状态
+    var isAdmin = wx.getStorageSync('is_admin');
+    if (isAdmin === true) {
+      this.globalData.isAdmin = true;
+    }
+  },
+
+  // 同步管理员状态（登录后调用）
+  setAdminStatus: function(isAdmin) {
+    this.globalData.isAdmin = !!isAdmin;
+    wx.setStorageSync('is_admin', !!isAdmin);
+  },
+
+  // 检查是否拥有管理员预览权限（页面 onLoad 调用）
+  checkAdminAccess: function() {
+    var isAdmin = this.globalData.isAdmin || wx.getStorageSync('is_admin');
+    if (!isAdmin) {
+      wx.showToast({ title: '功能暂未开放', icon: 'none' });
+      setTimeout(function() {
+        wx.switchTab({ url: '/pages/home/index' });
+      }, 1200);
+      return false;
+    }
+    return true;
   },
 
   // 获取微信openid（带缓存）

@@ -59,8 +59,10 @@ Page({
   onLoad:function(){
     var app = getApp();
     var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
+    var isAdmin = !!(app && app.globalData && app.globalData.isAdmin) || !!wx.getStorageSync('is_admin');
     this.setData({
-      isPriceMember: isPriceMember
+      isPriceMember: isPriceMember,
+      isAdmin: isAdmin
     });
     // 读取真实版本号（CI 上传时设置的 version，与体验版版本号一致）
     try {
@@ -73,6 +75,12 @@ Page({
     this.loadCategories();  // 从后台读取分类标签
     this.loadBlocks();
     this.loadPageBg();      // 后台「页面背景」配置
+    this.chkLogin();
+  },
+  onShow:function(){
+    // 登录/退出后回到首页，同步管理员状态
+    var isAdmin = !!wx.getStorageSync('is_admin');
+    this.setData({ isAdmin: isAdmin });
     this.chkLogin();
   },
   onPullDownRefresh:function(){var t=this;t.loadP(function(){t.loadB();t.loadBlocks();wx.stopPullDownRefresh();});},
@@ -339,8 +347,9 @@ Page({
   chkLogin:function(){
     var t=this;
     var info=wx.getStorageSync('user_info');
-    if(info&&info.nickName)t.setData({li:true,un:info.nickName||'已登录'});
-    else t.setData({li:false,un:''});
+    var isAdmin=!!wx.getStorageSync('is_admin');
+    if(info&&info.nickName)t.setData({li:true,un:info.nickName||'已登录',isAdmin:isAdmin});
+    else t.setData({li:false,un:'',isAdmin:isAdmin});
   },
   doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
   goLoginPage:function(){wx.navigateTo({url:'/pages/login/index'});},

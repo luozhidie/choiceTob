@@ -4,6 +4,8 @@ Page({
     blocks: []
   },
   onLoad: function () {
+    var app = getApp();
+    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
     wx.setNavigationBarTitle({ title: '形象诊断' });
     this.loadConfig();
   },

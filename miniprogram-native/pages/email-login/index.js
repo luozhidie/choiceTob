@@ -41,6 +41,7 @@ Page({
         wx.setStorageSync('user_info',{id: d.user && d.user.id, nickName:e.split('@')[0],avatarUrl:''});
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
+        var app=getApp();if(app&&app.setAdminStatus){app.setAdminStatus(!!d.is_admin);}
         wx.showToast({title:'登录成功',icon:'success'});
         setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1000);
       },

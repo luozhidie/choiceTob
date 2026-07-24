@@ -10,7 +10,10 @@ Page({
     articles:[],
   },
 
-  onLoad:function(){this.load();},
+  onLoad:function(){
+    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
+    this.load();
+  },
   onPullDownRefresh:function(){var t=this;t.load(function(){wx.stopPullDownRefresh();});},
 
   swTab:function(e){

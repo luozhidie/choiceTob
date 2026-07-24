@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
         // 用户信息
         userId: userId,
         role: profile?.role || "user",
-        isAdmin: true, // 当前项目为自营系统，已全量开放管理员入口
+        isAdmin: !!(profile?.role === "admin" || profile?.is_admin === true),
         membershipType: profile?.membership_type || "none",
         membershipExpiresAt: profile?.membership_expires_at || null,
         totalPurchaseAmount: profile?.total_purchase_amount || 0,

@@ -121,6 +121,7 @@ Page({
         if(app&&app.globalData){
           app.globalData.isPriceMember=isPriceMember;
           app.globalData.isCertifiedStoreOwner=!!u.store_owner_certified;
+          if(app.setAdminStatus){app.setAdminStatus(!!d.is_admin);}
         }
 
         wx.showToast({title:'登录成功 ✓',icon:'success'});

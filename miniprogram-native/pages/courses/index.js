@@ -9,7 +9,11 @@ Page({
     campTitle: 'AI赋能·服装精英销售特训营'
   },
 
-  onLoad: function () { this.loadCourses(); this.loadTools(); },
+  onLoad: function () {
+    var app = getApp();
+    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
+    this.loadCourses(); this.loadTools();
+  },
 
   swTab: function (e) { this.setData({ activeTab: e.currentTarget.dataset.t }); },
 

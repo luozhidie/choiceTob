@@ -184,8 +184,8 @@
     </view>
   </view>
 
-  <!-- ========== VIP形象服务 ========== -->
-  <view class="section">
+  <!-- ========== VIP形象服务（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
     <view class="sec-header">
       <text class="sec-title">VIP形象服务</text>
     </view>

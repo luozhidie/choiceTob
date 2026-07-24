@@ -179,9 +179,12 @@ export async function POST(req: NextRequest) {
       exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7天有效
     })).toString("base64url");
 
+    const isAdmin = userProfile.role === "admin";
+
     return NextResponse.json({
       success: true,
       token,
+      is_admin: isAdmin,
       user: {
         id: userId,
         phone_number: userProfile.phone || phoneNumber || "",
