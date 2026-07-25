@@ -16,6 +16,7 @@ import {
   X,
   Upload,
   Loader2,
+  Heart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -76,6 +77,7 @@ interface Product {
   subcategory: string | null;
   tags: string[] | null;
   is_published: boolean;
+  wishlist_mode?: boolean;
   stock: number;
   detail: string | null;
   created_at: string;
@@ -171,6 +173,9 @@ export default function AdminProductsPage() {
   const [batchCategory, setBatchCategory] = useState("");
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
+  // 心愿单：心愿数（按商品） + 只看心愿单筛选
+  const [wishCounts, setWishCounts] = useState<Record<string, number>>({});
+  const [filterWishlistOnly, setFilterWishlistOnly] = useState(false);
 
   // 成本价自动换算快照：只覆盖仍等于上次自动换算值的字段，保护用户手填价格
   const autoCalcSnapshot = useRef<{
@@ -275,6 +280,7 @@ export default function AdminProductsPage() {
     stock: "0",
     tags: "",
     is_published: false,
+    wishlist_mode: false,
     detail: "",
     // 属性编码体系
     sku: "",
@@ -389,6 +395,18 @@ export default function AdminProductsPage() {
       setProducts([]);
     }
     setLoading(false);
+    fetchWishCounts();
+  };
+
+  // 拉取各商品心愿数（后台 service_role 聚合）
+  const fetchWishCounts = async () => {
+    try {
+      const res = await fetch("/api/wishlist/counts", { credentials: "include" });
+      const json = await res.json();
+      if (json.success && json.counts) setWishCounts(json.counts);
+    } catch {
+      /* 忽略：心愿数加载失败不影响主列表 */
+    }
   };
 
   useEffect(() => {
@@ -486,6 +504,7 @@ export default function AdminProductsPage() {
       stock: "0",
       tags: "",
       is_published: false,
+      wishlist_mode: false,
       detail: "",
       sku: "",
       fabric_code: [],
@@ -556,6 +575,7 @@ export default function AdminProductsPage() {
         return cleaned.length > 0 ? cleaned : null;
       })(),
       is_published: form.is_published,
+      wishlist_mode: form.wishlist_mode,
       detail: form.detail.trim() || null,
       // 属性编码体系
       sku: form.sku.trim() || null,
@@ -724,6 +744,7 @@ export default function AdminProductsPage() {
       stock: product.stock.toString(),
       tags: product.tags?.join(", ") || "",
       is_published: product.is_published,
+      wishlist_mode: !!product.wishlist_mode,
       detail: product.detail || "",
       sku: product.sku || "",
       fabric_code: product.fabric_code || [],
@@ -894,6 +915,7 @@ export default function AdminProductsPage() {
   };
 
   const filteredProducts = products.filter((p) => {
+    if (filterWishlistOnly && !p.wishlist_mode) return false;
     if (!searchTerm) return true;
     return (
       p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -980,6 +1002,17 @@ export default function AdminProductsPage() {
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
+          <button
+            onClick={() => setFilterWishlistOnly((v) => !v)}
+            className={`px-4 py-2.5 rounded-xl border text-sm font-medium flex items-center gap-2 transition-colors ${
+              filterWishlistOnly
+                ? "border-amber-400 text-amber-600 bg-amber-50"
+                : "border-gray-200 text-gray-600 hover:bg-gray-50"
+            }`}
+          >
+            <Heart className="w-4 h-4" />
+            只看心愿单
+          </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={`px-4 py-2.5 rounded-xl border text-sm font-medium flex items-center gap-2 transition-colors ${
@@ -1175,6 +1208,7 @@ export default function AdminProductsPage() {
                   <th className="px-5 py-3 font-medium">价格</th>
                   <th className="px-5 py-3 font-medium">批发价</th>
                   <th className="px-5 py-3 font-medium">库存</th>
+                  <th className="px-5 py-3 font-medium">心愿数</th>
                   <th className="px-5 py-3 font-medium">状态</th>
                   <th className="px-5 py-3 font-medium text-right">操作</th>
                 </tr>
@@ -1268,6 +1302,18 @@ export default function AdminProductsPage() {
                           ? `库存 ${product.stock}`
                           : "缺货"}
                       </span>
+                    </td>
+                    <td className="px-5 py-3.5">
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-sm font-semibold ${wishCounts[product.id] ? "text-amber-600" : "text-gray-400"}`}>
+                          {wishCounts[product.id] || 0}
+                        </span>
+                        {product.wishlist_mode && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 w-fit">
+                            心愿款
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-5 py-3.5">
                       <button
@@ -2358,6 +2404,24 @@ export default function AdminProductsPage() {
                   className="text-sm text-gray-700"
                 >
                   立即发布
+                </label>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="wishlist_mode"
+                  checked={form.wishlist_mode}
+                  onChange={(e) =>
+                    setForm({ ...form, wishlist_mode: e.target.checked })
+                  }
+                  className="w-4 h-4 text-accent rounded focus:ring-accent"
+                />
+                <label
+                  htmlFor="wishlist_mode"
+                  className="text-sm text-gray-700"
+                >
+                  心愿单模式（无价格·收集需求，用户在商品页可「加入心愿单」）
                 </label>
               </div>
 

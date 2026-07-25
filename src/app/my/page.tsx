@@ -6,6 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   User,
+  Heart,
   ShoppingBag,
   Package,
   MapPin,
@@ -722,6 +723,14 @@ export default function MyPage() {
                     <span className="text-gray-700">继续选购</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-primary transition-colors" />
+                </Link>
+
+                <Link href="/wishlist" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <Heart className="w-5 h-5 text-amber-500" />
+                    <span className="text-gray-700">我的心愿单</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-amber-500 transition-colors" />
                 </Link>
 
                 <Link href="/members" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">

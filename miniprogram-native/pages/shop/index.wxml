@@ -53,8 +53,8 @@
 
   <!-- 商品区：标题 / 会员 / 优惠 / 发货 / 选择 / 参数 / 服务 -->
   <view id="section-product">
-    <!-- 价格卡（标题上方） -->
-    <view class="price-card">
+    <!-- 价格卡（标题上方）；心愿单模式无价格，隐藏 -->
+    <view class="price-card" wx:if="{{!wishlistMode}}">
       <view class="price-card-main">
         <view class="price-item">
           <view class="price-amt">¥{{priceValue}}</view>
@@ -81,6 +81,12 @@
     <view class="name-sec">
       <text class="name">{{product.title || product.name || '商品名称'}}</text>
       <text class="desc" wx:if="{{product.description}}">{{product.description}}</text>
+    </view>
+
+    <!-- 心愿单模式提示 -->
+    <view class="wish-banner" wx:if="{{wishlistMode}}">
+      <text class="wish-banner-ic">♡</text>
+      <text class="wish-banner-txt">价格待定 · 喜欢可加入心愿单，集齐一定量即开价</text>
     </view>
 
     <!-- 会员 -->
@@ -119,8 +125,8 @@
       <text class="info-arrow">›</text>
     </view>
 
-    <!-- 选择 -->
-    <view class="info-row" bindtap="openSkuPanel">
+    <!-- 选择（心愿单模式无规格，隐藏） -->
+    <view class="info-row" bindtap="openSkuPanel" wx:if="{{!wishlistMode}}">
       <text class="info-label">选择</text>
       <view class="info-content">
         <text class="info-text">尺码、颜色</text>
@@ -223,8 +229,13 @@
       </view>
     </view>
     <view class="bar-right">
-      <view class="btn-cart" bindtap="addCart">加入进货车</view>
-      <view class="btn-buy" bindtap="buyNow">立即购买</view>
+      <block wx:if="{{wishlistMode}}">
+        <view class="btn-wish {{isWished?'wished':''}}" bindtap="toggleWish">{{isWished?'✓ 已加入心愿单':'♡ 加入心愿单'}}</view>
+      </block>
+      <block wx:else>
+        <view class="btn-cart" bindtap="addCart">加入进货车</view>
+        <view class="btn-buy" bindtap="buyNow">立即购买</view>
+      </block>
     </view>
   </view>
 

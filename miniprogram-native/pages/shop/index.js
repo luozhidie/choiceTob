@@ -35,6 +35,9 @@ Page({
   data: {
     productId: '',
     product: null,
+    wishlistMode: false,      // 心愿单模式（无价格的需求收集商品）
+    isWished: false,          // 当前用户是否已加入心愿单
+    wishLoading: false,
     images: [],
     videoUrl: '',
     modelImages: [],
@@ -147,6 +150,7 @@ Page({
     this.loadProduct(opt.id);
     this.loadCartCount();
     this.loadFav(opt.id);
+    this.loadWish(opt.id);
     this.loadMembership();
     this.loadCoupons();
     this.loadClaimed();
@@ -325,6 +329,7 @@ Page({
 
         t.setData({
           product: p,
+          wishlistMode: !!p.wishlist_mode,
           images: images,
           videoUrl: videoUrl,
           modelImages: modelImages,
@@ -550,6 +555,50 @@ Page({
     if (idx >= 0) { favs.splice(idx, 1); this.setData({ isFav: false }); wx.showToast({ title: '已取消收藏', icon: 'none' }); }
     else { favs.push(id); this.setData({ isFav: true }); wx.showToast({ title: '已收藏', icon: 'success' }); }
     wx.setStorageSync('favorites', favs);
+  },
+
+  // ===== 心愿单（服务端，按用户聚合） =====
+  loadWish: function (id) {
+    var token = wx.getStorageSync('token') || '';
+    var t = this;
+    if (!token) { this.setData({ isWished: false }); return; }
+    wx.request({
+      url: 'https://colour-choice.art/api/wishlist?product_id=' + id,
+      method: 'GET',
+      header: { 'Authorization': 'Bearer ' + token },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.success) t.setData({ isWished: !!d.wished });
+      }
+    });
+  },
+
+  toggleWish: function () {
+    var id = this.data.productId;
+    if (!id) return;
+    var token = wx.getStorageSync('token') || '';
+    if (!token) { wx.navigateTo({ url: '/pages/login/index' }); return; }
+    var t = this;
+    var action = t.data.isWished ? 'remove' : 'add';
+    wx.showLoading({ title: '处理中...' });
+    wx.request({
+      url: 'https://colour-choice.art/api/wishlist',
+      method: 'POST',
+      header: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      data: { product_id: id, action: action },
+      success: function (r) {
+        wx.hideLoading();
+        var d = r.data || {};
+        if (r.statusCode === 401 || d.code === 'unauthorized') { wx.navigateTo({ url: '/pages/login/index' }); return; }
+        if (d.success) {
+          t.setData({ isWished: d.wished });
+          wx.showToast({ title: d.wished ? '已加入心愿单' : '已移出心愿单', icon: 'none' });
+        } else {
+          wx.showToast({ title: d.error || '操作失败', icon: 'none' });
+        }
+      },
+      fail: function () { wx.hideLoading(); wx.showToast({ title: '网络错误', icon: 'none' }); }
+    });
   },
 
   inc: function () { this.setData({ quantity: this.data.quantity + 1 }, this.computeSkuTotal); },

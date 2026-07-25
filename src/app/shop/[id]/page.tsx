@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Layers, Star,
   Clock, ShoppingCart, Share2, Copy, Check,
   Image as ImageIcon, MessageCircle,
-  Lock, BookOpen, Lightbulb, Tag, Shirt,
+  Lock, BookOpen, Lightbulb, Tag, Shirt, Heart,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -40,6 +40,8 @@ interface Product {
   stock: number;
   supplier_name?: string | null;
   source?: "platform" | "buyer" | "supplier_submit" | null;
+  /* 心愿单模式：无价格的需求收集商品，用户可加入心愿单 */
+  wishlist_mode?: boolean;
   /* 预售字段 */
   is_preorder?: boolean;
   preorder_days?: number | null;
@@ -82,6 +84,10 @@ export default function ProductDetailPage() {
   const [couponTemplates, setCouponTemplates] = useState<CouponTemplate[]>([]);
   const [claimedIds, setClaimedIds] = useState<string[]>([]);
   const { addItem } = useCart();
+
+  // 心愿单状态
+  const [wished, setWished] = useState(false);
+  const [wishLoading, setWishLoading] = useState(false);
 
   // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
   const [shopRecLatest, setShopRecLatest] = useState<Product[]>([]);
@@ -137,6 +143,7 @@ export default function ProductDetailPage() {
             is_published: p.is_published ?? true,
             stock: p.stock || 0,
             source: "platform",
+            wishlist_mode: p.wishlist_mode ?? false,
             is_preorder: false,
             preorder_days: null,
             detail: p.detail || null,
@@ -169,6 +176,45 @@ export default function ProductDetailPage() {
     fetchProduct();
     return () => { cancelled = true; };
   }, [productId]);
+
+  // 已登录用户：读取本商品是否已加入心愿单
+  useEffect(() => {
+    if (!product?.id || !authUser) { setWished(false); return; }
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const token = session?.access_token;
+      if (!token) return;
+      fetch(`/api/wishlist?product_id=${product.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => r.json())
+        .then((j) => { if (j.success) setWished(!!j.wished); })
+        .catch(() => {});
+    });
+  }, [product?.id, authUser]);
+
+  // 加入 / 取消心愿单
+  const toggleWish = async () => {
+    const supabase = createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    const token = session?.access_token;
+    if (!token) { router.push(`/login?redirect=/shop/${product!.id}`); return; }
+    setWishLoading(true);
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ product_id: product!.id, action: wished ? "remove" : "add" }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setWished(j.wished);
+      } else if (res.status === 401) {
+        router.push(`/login?redirect=/shop/${product!.id}`);
+      }
+    } catch { /* 忽略 */ }
+    finally { setWishLoading(false); }
+  };
 
   // 获取同供应商商品
   useEffect(() => {
@@ -742,48 +788,72 @@ export default function ProductDetailPage() {
             </div>
           )}
 
-          {/* 加入购物车 / 立即下单 按钮 */}
-          <div className="flex gap-3">
-            <button
-              onClick={() => {
-                if (!product) return;
-                if (!user) {
-                  router.push(`/login?redirect=/shop/${product.id}`);
-                  return;
-                }
-                addItem({
-                  id: product.id,
-                  title: product.title,
-                  image: product.cover_image,
-                  price: effectivePrice(product),
-                  originalPrice: product.original_price || null,
-                  source: product.source || "buyer",
-                });
-                alert("已加入购物车！");
-              }}
-              className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
-            >
-              <ShoppingCart className="w-5 h-5" /> 加入购物车
-            </button>
-            <button
-              onClick={() => {
-                if (!user) {
-                  router.push(`/login?redirect=/shop/${product.id}`);
-                  return;
-                }
-                if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
-                router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
-              }}
-              disabled={product.stock === 0}
-              className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white disabled:opacity-50"
-              style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
-            >
-              {product.is_preorder ? (<><Clock className="w-5 h-5" />立即预定</>) : (<><ShoppingBag className="w-5 h-5" />立即下单</>)}
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-center text-muted-foreground">
-            {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
-          </p>
+          {/* 心愿单模式 / 普通下单 按钮 */}
+          {product.wishlist_mode ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <Heart className="w-4 h-4 text-amber-500 shrink-0" />
+                <span className="text-sm text-amber-800">价格待定 · 喜欢可加入心愿单，集齐一定量即开价</span>
+              </div>
+              <button
+                onClick={toggleWish}
+                disabled={wishLoading}
+                className={`w-full py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-60 ${wished ? "bg-gray-400" : "bg-amber-500 hover:bg-amber-600"}`}
+              >
+                {wished ? (<><Check className="w-5 h-5" /> 已加入心愿单</>) : (<><Heart className="w-5 h-5" /> 加入心愿单</>)}
+              </button>
+              <button
+                onClick={() => router.push("/wishlist")}
+                className="w-full py-2.5 text-sm font-medium text-amber-700 hover:text-amber-800 flex items-center justify-center gap-1.5"
+              >
+                查看我的心愿单 ›
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    if (!product) return;
+                    if (!user) {
+                      router.push(`/login?redirect=/shop/${product.id}`);
+                      return;
+                    }
+                    addItem({
+                      id: product.id,
+                      title: product.title,
+                      image: product.cover_image,
+                      price: effectivePrice(product),
+                      originalPrice: product.original_price || null,
+                      source: product.source || "buyer",
+                    });
+                    alert("已加入购物车！");
+                  }}
+                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 border-2 border-accent text-accent hover:bg-accent/5"
+                >
+                  <ShoppingCart className="w-5 h-5" /> 加入购物车
+                </button>
+                <button
+                  onClick={() => {
+                    if (!user) {
+                      router.push(`/login?redirect=/shop/${product.id}`);
+                      return;
+                    }
+                    if (quantity >= 3 && !showWholesalePrompt) { setShowWholesalePrompt(true); return; }
+                    router.push(`/checkout?id=${product.id}&source=${product.source || "buyer"}&qty=${quantity}`);
+                  }}
+                  disabled={product.stock === 0}
+                  className="flex-1 py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white disabled:opacity-50"
+                  style={{ backgroundColor: product.is_preorder ? '#F59E0B' : 'var(--color-accent, #C8553D)' }}
+                >
+                  {product.is_preorder ? (<><Clock className="w-5 h-5" />立即预定</>) : (<><ShoppingBag className="w-5 h-5" />立即下单</>)}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-center text-muted-foreground">
+                {product.is_preorder ? "预售商品，按订单顺序发货" : "支持会员折扣 · 多种支付方式"}
+              </p>
+            </>
+          )}
 
           <button
             onClick={() => setShareOpen(true)}

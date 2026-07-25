@@ -277,6 +277,7 @@ Page({
   goMarkets:function(){wx.navigateTo({url:'/pages/stall/markets/index'});},
   goSubscribedStalls:function(){wx.navigateTo({url:'/pages/stall/subscribed/index'});},
   goFavorites:function(){wx.navigateTo({url:'/pages/favorites/index'});},
+  goWishlist:function(){wx.navigateTo({url:'/pages/wishlist/index'});},
   goHistory:function(){wx.navigateTo({url:'/pages/history/index'});},
   goCart:function(){wx.switchTab({url:'/pages/cart/index'});},
   goOrders:function(e){var s=e?e.currentTarget.dataset.status:'all';wx.navigateTo({url:'/pages/orders/index?status='+s});},

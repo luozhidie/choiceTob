@@ -157,6 +157,14 @@ page { background: var(--bg); }
 .btn-tryon { flex: 1; background: #7b61ff; color: #fff; text-align: center; padding: 22rpx 0; border-radius: 14rpx; font-size: 27rpx; font-weight: 700; }
 .btn-tryon:active { opacity: .85; }
 
+/* 心愿单模式 */
+.wish-banner { display: flex; align-items: center; gap: 12rpx; margin: 8rpx 24rpx 0; padding: 20rpx 22rpx; background: #fff7ed; border: 1rpx solid #fed7aa; border-radius: 16rpx; }
+.wish-banner-ic { color: #f59e0b; font-size: 34rpx; line-height: 1; }
+.wish-banner-txt { flex: 1; font-size: 24rpx; color: #b45309; line-height: 1.45; }
+.btn-wish { flex: 1; background: linear-gradient(135deg, #f59e0b, #f97316); color: #fff; text-align: center; padding: 22rpx 0; border-radius: 14rpx; font-size: 28rpx; font-weight: 700; }
+.btn-wish.wished { background: #9ca3af; }
+.btn-wish:active { opacity: .9; }
+
 /* 试穿结果弹层 */
 .tryon-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,.78); display: flex; align-items: center; justify-content: center; z-index: 200; }
 .tryon-panel { width: 86%; background: #fff; border-radius: 16rpx; padding: 24rpx; box-sizing: border-box; }

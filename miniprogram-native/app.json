@@ -36,6 +36,7 @@
     "pages/login/index",
     "pages/checkout/index",
     "pages/favorites/index",
+    "pages/wishlist/index",
     "pages/coupons/index",
     "pages/red-packets/index",
     "pages/import/index",
