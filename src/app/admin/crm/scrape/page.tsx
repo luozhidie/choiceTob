@@ -267,12 +267,19 @@ export default function CrmScrapePage() {
         status: "active" as const,
       }));
 
-      const { error } = await supabase.from("crm_stores").insert(records);
-      if (error) {
-        console.error("导入失败:", error);
-        alert("导入失败：" + error.message);
+      const res = await fetch("/api/admin/crm/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "stores", records }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error || !data.ok) {
+        console.error("导入失败:", data);
+        const msg = data.error || data.message || (data.errors && data.errors[0]) || "未知错误";
+        alert("导入失败：" + msg);
       } else {
-        setImportResult({ success: newRecords.length, failed: 0, dups: dupCount });
+        setImportResult({ success: data.success, failed: data.failed, dups: dupCount });
         setParsedResults(prev => prev.filter(r => !r.selected || existingNames.has(r.name)));
       }
     } catch (e: any) {

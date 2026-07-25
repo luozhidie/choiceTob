@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import {
   Upload, Download, FileText, Loader2, CheckCircle2,
   X, AlertCircle, Table,
@@ -20,8 +19,6 @@ export default function CrmImportPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importType, setImportType] = useState<"stores" | "contacts">("stores");
-  const router = useRouter();
-  const supabase = createClient();
 
   const downloadTemplate = (type: "stores" | "contacts") => {
     let csv = "";
@@ -85,43 +82,23 @@ export default function CrmImportPage() {
 
       if (records.length === 0) { alert("未解析到有效数据"); setImporting(false); return; }
 
-      if (importType === "stores") {
-        const { error } = await supabase.from("crm_stores").insert(records);
-        if (error) { errors.push(`批量插入失败：${error.message}`); }
-        setImportResult({ total: records.length, success: error ? 0 : records.length, failed: error ? records.length : 0, errors });
+      const res = await fetch("/api/admin/crm/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: importType, records }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        errors.push(data.error || data.message || "导入失败");
+        setImportResult({ total: records.length, success: 0, failed: records.length, errors });
       } else {
-        // 联系人需要匹配门店
-        const { data: storeData } = await supabase.from("crm_stores").select("id, name").is("deleted_at", null);
-        const storeMap: Record<string, string> = {};
-        (storeData || []).forEach(s => { storeMap[s.name] = s.id; });
-
-        const contactRecords: any[] = [];
-        for (const r of records) {
-          const storeId = storeMap[r.store_name];
-          if (!storeId) { errors.push(`${r.name}：未找到门店"${r.store_name}"`); continue; }
-          contactRecords.push({
-            store_id: storeId,
-            name: r.name,
-            phone: r.phone,
-            position: r.position,
-            wechat_id: r.wechat_id,
-            is_decision_maker: r.is_decision_maker,
-            remark: r.remark,
-          });
-        }
-
-        if (contactRecords.length > 0) {
-          const { error } = await supabase.from("crm_contacts").insert(contactRecords);
-          if (error) { errors.push(`批量插入失败：${error.message}`); }
-          setImportResult({
-            total: records.length,
-            success: error ? 0 : contactRecords.length,
-            failed: records.length - contactRecords.length + (error ? contactRecords.length : 0),
-            errors,
-          });
-        } else {
-          setImportResult({ total: records.length, success: 0, failed: records.length, errors });
-        }
+        setImportResult({
+          total: records.length,
+          success: data.success,
+          failed: data.failed,
+          errors: [...errors, ...data.errors],
+        });
       }
     } catch (err: any) {
       setImportResult({ total: 0, success: 0, failed: 0, errors: [err.message || "未知错误"] });
