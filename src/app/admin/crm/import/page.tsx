@@ -85,6 +85,7 @@ export default function CrmImportPage() {
       const res = await fetch("/api/admin/crm/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ type: importType, records }),
       });
       const data = await res.json();

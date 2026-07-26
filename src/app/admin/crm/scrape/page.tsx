@@ -157,6 +157,7 @@ export default function CrmScrapePage() {
       const res = await fetch("/api/crm/scrape", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ keyword, city, industry, page: currentPage }),
       });
       const data = await res.json();
@@ -279,6 +280,7 @@ export default function CrmScrapePage() {
       const res = await fetch("/api/admin/crm/import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ type: "stores", records }),
       });
       const data = await res.json();
