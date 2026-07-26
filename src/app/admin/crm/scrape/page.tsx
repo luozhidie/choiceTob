@@ -162,14 +162,23 @@ export default function CrmScrapePage() {
       const data = await res.json();
 
       if (!res.ok || data.error) {
-        setSearchError(data.error || data.message || "搜索失败");
+        setSearchError(
+          data.error ||
+          (Array.isArray(data.errors) && data.errors.length > 0 ? data.errors.join("；") : null) ||
+          data.message ||
+          "搜索失败"
+        );
         setSearching(false);
         return;
       }
 
       if (!data.results || data.results.length === 0) {
         if (currentPage === 1) {
-          setSearchError(data.message || "未找到结果，请尝试更换关键词或城市");
+          setSearchError(
+            (Array.isArray(data.errors) && data.errors.length > 0 ? data.errors.join("；") : null) ||
+            data.message ||
+            "未找到结果，请尝试更换关键词或城市"
+          );
         } else {
           setHasMore(false);
         }

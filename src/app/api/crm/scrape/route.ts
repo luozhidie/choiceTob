@@ -13,51 +13,64 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "请提供搜索关键词或行业" }, { status: 400 });
     }
 
-    // 构建搜索关键词
-    const searchTerm = industry
-      ? `${industry}${city || ''}`
-      : `${keyword}${city ? ' ' + city : ''}`;
+    // 构建搜索关键词：行业 + 关键词 + 城市，同时保留可读性
+    const parts = [
+      industry && industry !== keyword ? industry : "",
+      keyword || "",
+      city || "",
+    ].filter(Boolean);
+    const searchTerm = parts.join(" ");
 
-    // 使用高德地图 POI 搜索 API（公开数据）
     // 兼容两种环境变量命名：NEXT_PUBLIC_ 前缀（前端）和普通命名（服务端）
     const amapKey = process.env.NEXT_PUBLIC_AMAP_API_KEY || process.env.AMAP_API_KEY;
+    const baiduKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK || process.env.BAIDU_MAP_AK;
     const results: any[] = [];
+    const errors: string[] = [];
 
     if (amapKey) {
-      // 高德地图 POI 搜索
-      const amapUrl = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(searchTerm)}&city=${encodeURIComponent(city || '')}&offset=25&page=${page}&key=${amapKey}&output=json`;
-      const amapRes = await fetch(amapUrl, { next: { revalidate: 0 } });
-      const amapData = await amapRes.json();
+      try {
+        const amapUrl = `https://restapi.amap.com/v3/place/text?keywords=${encodeURIComponent(searchTerm)}&city=${encodeURIComponent(city || '')}&offset=25&page=${page}&key=${amapKey}&output=json`;
+        const amapRes = await fetch(amapUrl, { cache: "no-store" });
+        const amapData = await amapRes.json().catch(() => ({}));
 
-      if (amapData.pois) {
-        for (const poi of amapData.pois) {
-          results.push({
-            name: poi.name || '',
-            address: poi.address || poi.pname + poi.cityname + poi.adname + poi.address || '',
-            phone: poi.tel || '',
-            industry: normalizeIndustry(industry) || guessIndustry(poi.type || '', poi.name || ''),
-            city: poi.cityname || city || '',
-            district: poi.adname || '',
-            business_hours: poi.business_area || '',
-            source: 'scrape',
-            source_detail: '高德地图',
-            lat: poi.location ? poi.location.split(',')[1] : '',
-            lng: poi.location ? poi.location.split(',')[0] : '',
-          });
+        if (amapData?.status === "0" || amapData?.info !== "OK") {
+          errors.push(`高德地图：${amapData?.info || amapData?.infocode || "请求失败"}`);
         }
+
+        if (Array.isArray(amapData?.pois)) {
+          for (const poi of amapData.pois) {
+            results.push({
+              name: poi.name || '',
+              address: poi.address || `${poi.pname || ''}${poi.cityname || ''}${poi.adname || ''}${poi.address || ''}` || '',
+              phone: poi.tel || '',
+              industry: normalizeIndustry(industry) || guessIndustry(poi.type || '', poi.name || ''),
+              city: poi.cityname || city || '',
+              district: poi.adname || '',
+              business_hours: poi.business_area || '',
+              source: 'scrape',
+              source_detail: '高德地图',
+              lat: poi.location ? poi.location.split(',')[1] : '',
+              lng: poi.location ? poi.location.split(',')[0] : '',
+            });
+          }
+        }
+      } catch (e: any) {
+        console.error('Amap API error:', e);
+        errors.push(`高德地图请求异常：${e.message || "未知错误"}`);
       }
     }
 
-    // 补充：百度地图 POI 搜索（总是调用，与高德合并结果）
-    // 兼容两种环境变量命名
-    const baiduKey = process.env.NEXT_PUBLIC_BAIDU_MAP_AK || process.env.BAIDU_MAP_AK;
     if (baiduKey) {
       try {
         const baiduUrl = `https://api.map.baidu.com/place/v2/search?query=${encodeURIComponent(searchTerm)}&region=${encodeURIComponent(city || '全国')}&output=json&page_size=20&page_num=${page - 1}&ak=${baiduKey}`;
-        const baiduRes = await fetch(baiduUrl, { next: { revalidate: 0 } });
-        const baiduData = await baiduRes.json();
+        const baiduRes = await fetch(baiduUrl, { cache: "no-store" });
+        const baiduData = await baiduRes.json().catch(() => ({}));
 
-        if (baiduData.results) {
+        if (baiduData?.status !== 0 && baiduData?.message) {
+          errors.push(`百度地图：${baiduData.message}`);
+        }
+
+        if (Array.isArray(baiduData?.results)) {
           for (const poi of baiduData.results) {
             // 去重
             const nameExists = results.some(r => r.name === poi.name);
@@ -78,9 +91,9 @@ export async function POST(request: NextRequest) {
             }
           }
         }
-      } catch (e) {
-        // 百度地图API调用失败，不影响整体
+      } catch (e: any) {
         console.error('Baidu map API error:', e);
+        errors.push(`百度地图请求异常：${e.message || "未知错误"}`);
       }
     }
 
@@ -95,8 +108,9 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      results: results.filter(r => r.name), // 过滤掉无名记录
+      results: results.filter(r => r.name),
       total: results.length,
+      errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {
     console.error("Scrape API error:", error);
