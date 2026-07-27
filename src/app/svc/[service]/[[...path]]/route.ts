@@ -7,6 +7,7 @@ const ORIGINS: Record<string, string> = {
   collectible: "https://web3-collectible-luozhidies-projects.vercel.app",
   trace: "https://chain-trace-smoky.vercel.app",
   tryon: "https://embodied-ai-eight.vercel.app",
+  lookstudio: "https://luozhidie-lookstudio.vercel.app",
 };
 
 export const dynamic = "force-dynamic";
