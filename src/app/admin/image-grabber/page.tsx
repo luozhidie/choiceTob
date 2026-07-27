@@ -241,7 +241,7 @@ export default function ImageGrabberPage() {
       });
       const json = await res.json();
       setImportResults(json.results || []);
-      const okCount = json.success ?? (json.results || []).filter((r: any) => r.status === "success").length;
+      const okCount = json.successCount ?? (json.results || []).filter((r: any) => r.status === "success").length;
       if (okCount > 0) showToast("success", `✅ 自动导入成功 ${okCount} 个商品到「待分类」`);
     } catch (err: any) {
       showToast("error", err.message || "自动导入失败");
@@ -670,7 +670,7 @@ export default function ImageGrabberPage() {
       const json = await res.json();
       setImportResults(json.results || []);
 
-      const okCount = json.success ?? (json.results || []).filter((r: any) => r.status === "success").length;
+      const okCount = json.successCount ?? (json.results || []).filter((r: any) => r.status === "success").length;
       const skipCount = json.skipped ?? (json.results || []).filter((r: any) => r.status === "skipped").length;
       const errCount = (json.results || []).filter((r: any) => r.status === "error").length;
       if (okCount > 0) showToast("success", `成功导入 ${okCount} 个商品到「待分类」`);

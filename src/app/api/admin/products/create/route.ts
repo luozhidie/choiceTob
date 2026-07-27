@@ -415,8 +415,8 @@ export async function POST(request: NextRequest) {
       const skippedCount = results.filter(r => r.status === "skipped").length;
       return NextResponse.json({
         success: successCount > 0,
+        successCount,
         total: urls.length,
-        success: successCount,
         skipped: skippedCount,
         results,
       });
