@@ -537,8 +537,12 @@ export default function AdminProductsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.price) {
-      alert("请填写商品标题和价格");
+    if (!form.title.trim()) {
+      alert("请填写商品标题");
+      return;
+    }
+    if (!form.wishlist_mode && !form.price) {
+      alert("普通商品请填写价格，心愿收集商品可留空");
       return;
     }
     const payload = {
@@ -546,7 +550,7 @@ export default function AdminProductsPage() {
       description: form.description.trim() || null,
       cover_image: form.cover_image.trim() || null,
       images: form.images.length > 0 ? form.images : null,
-      price: parseInt(form.price) * 100,
+      price: form.wishlist_mode && !form.price ? 0 : parseInt(form.price) * 100,
       original_price: form.original_price
         ? parseInt(form.original_price) * 100
         : null,

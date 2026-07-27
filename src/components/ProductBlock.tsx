@@ -142,7 +142,7 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
                 )}
               </div>
               <h4 className="font-medium text-gray-900 group-hover:text-rose-500 transition-colors leading-snug text-[13px] line-clamp-2">{product.name || product.title || "商品"}</h4>
-              <p className="text-red-500 font-bold mt-1 text-[15px]">{formatPrice(product.price)}</p>
+              <p className="text-red-500 font-bold mt-1 text-[15px]">{product.wishlist_mode ? "价格待定 · 心愿收集" : formatPrice(product.price)}</p>
             </Link>
           ))}
         </div>

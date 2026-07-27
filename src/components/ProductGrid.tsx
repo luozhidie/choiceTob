@@ -305,7 +305,7 @@ export default function ProductGrid({
                 {product.title || product.name || "商品"}
               </h4>
               <p className="text-red-500 font-bold mt-1 text-[15px]">
-                {formatPrice(product.price)}
+                {product.wishlist_mode ? "价格待定 · 心愿收集" : formatPrice(product.price)}
               </p>
             </Link>
           ))}

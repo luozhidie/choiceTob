@@ -323,7 +323,7 @@ export default function ProductDetailPage() {
         </div>
         <div className="p-3">
           <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-          <p className="text-sm text-accent font-bold mt-1">{formatPrice(effectivePrice(p))}</p>
+          <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(p))}</p>
         </div>
       </div>
     </Link>
@@ -636,12 +636,12 @@ export default function ProductDetailPage() {
           <div className="mb-2">
             <div className="flex items-end gap-2">
               <span className="text-3xl font-bold text-gray-900">
-                {formatPrice(effectivePrice(product))}
+                {product.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(product))}
               </span>
               {product.original_price && product.original_price > effectivePrice(product) && (
                 <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
               )}
-              <span className="text-sm text-gray-400 mb-1">{effectivePrice(product) === product.price ? "零售价" : "促销价"}</span>
+              <span className="text-sm text-gray-400 mb-1">{product.wishlist_mode ? "心愿收集款" : (effectivePrice(product) === product.price ? "零售价" : "促销价")}</span>
             </div>
 
             {product.wholesale_price && (
@@ -1059,7 +1059,7 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="p-3">
                       <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-                      <p className="text-sm text-accent font-bold mt-1">{formatPrice(effectivePrice(p))}</p>
+                      <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(p))}</p>
                     </div>
                   </div>
                 </Link>
@@ -1145,7 +1145,7 @@ export default function ProductDetailPage() {
                     <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">
                       {product.title}
                     </h4>
-                    <p className="text-red-500 font-bold mt-1.5">{formatPrice(effectivePrice(product))}</p>
+                    <p className="text-red-500 font-bold mt-1.5">{product.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(product))}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       骆芷蝶智选 · 不自用不分享
                     </p>

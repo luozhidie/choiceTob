@@ -424,8 +424,14 @@ export async function POST(request: NextRequest) {
 
     // ===== 普通创建模式 =====
     const payload = await request.json();
-    if (!payload.title || !payload.price) {
-      return NextResponse.json({ error: "缺少必填字段：标题和价格" }, { status: 400 });
+    if (!payload.title) {
+      return NextResponse.json({ error: "缺少必填字段：标题" }, { status: 400 });
+    }
+    // 心愿收集模式允许无价格，入库自动记为 0
+    if (payload.wishlist_mode) {
+      if (!payload.price) payload.price = 0;
+    } else if (!payload.price) {
+      return NextResponse.json({ error: "普通商品缺少价格" }, { status: 400 });
     }
 
     const { data, error } = await supabase
