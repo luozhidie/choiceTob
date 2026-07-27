@@ -10,8 +10,9 @@
  *     （见 attribute_color_seasons / attribute_fabrics / attribute_patterns / attribute_cuts），
  *     本文件已编译进 SEASON_LOGIC / STYLE_LOGIC，code 与 color_seasons / style_tags 表一致。
  *   · 男士 5 主 + 20 偏：dramatic_m / natural_m / classic_m / romantic_m / fashion_m 五个主风格穿搭逻辑已由用户提供并编译（见本文件）；
- *     20 个偏风格（dramatic_m_* / natural_m_* / classic_m_* / romantic_m_* / fashion_m_*）仍留「（穿搭逻辑待补充）」，
- *     未提供自有逻辑时会自动继承母风格逻辑并标注「待细化」，待用户按本体系专业表述继续补充。
+ *     20 个偏风格（fashion_m_zz_classic 等，命名 <主风格>_<方向 zz/zq/qz/qq>_<目标风格>）已依据用户提供的「男士 5 风格两两相同点/不同点矩阵」
+ *     推导编译：偏风格 = 主风格逻辑 + 用「不同点」弱化主特征（方向判定：男士多为直线型故直偏直 zz / 直偏曲 zq，仅浪漫型为曲线型故曲偏直 qz）。
+ *   · 女士版型分类（曲线/直线 + 小/大版型）、女士穿错衣表现矩阵（8 主 × 7）、女士/男士两两风格对比矩阵另见本文件 STYLE_FRAME_CLASS / STYLE_MISMATCH_WOMEN / STYLE_PAIRS_*。
  *
  * 修改方式：直接给 SEASON_LOGIC[code] / STYLE_LOGIC[code] 赋值即可，其它代码不动。
  */
@@ -109,6 +110,135 @@ export const STYLE_LOGIC: Record<string, string> = {
   "classic_m": "男士古典型整体严谨、正统、稳重、保守、上品高档；面料取高档精良、不花哨、表面肌理平整的丝/软缎/羊绒/纯棉纯毛精纺呢，回避麻、灯芯绒；剪裁走合体直线、对称工整，西装宜英式三粒扣做工精细三件套（回避双排扣/枪驳头/发光面料，穿中山装很有风度），衬衣方领、精细纯棉纯毛、单色或细密小格子、质地较厚，领带单色或图案细小规矩，休闲装翻领T恤/鸡心领毛衣/休闲西装、裤子要有垂感裤线（回避半领圆领汗衫、大短裤），风衣大衣中长款（小腿中部）直筒型，鞋三接头/两接头/镂空/细皮条编织系带/盖帽（回避靴子）；饰品丝绸软缎羊绒高档围巾不宜过多装饰、皮带宽窄适中方正做工精良回避明线，晚装深色西装+白衬衫+小图案领带+小手帕，眼镜大小适中造型中庸（不太适合墨镜），正圆薄身传统手表，标准精良皮质公文包，礼帽，标准传统男士发型（回避长发板寸等极端）；图案最好素色无图案；回避前卫时髦、古怪、随意、夸张。",
   "romantic_m": "男士浪漫型整体高级、帅气、华丽、有情调、优雅；面料取真丝、羊绒等精细高级面料，回避粗糙；剪裁走曲线、柔软膨松、华丽精致，西装宜意大利式双排扣、面料柔软高级突出华丽感，衬衣质地细密高级有华丽感、牧师领很适合、浅深皆可、单色很适合（回避格子、宜配袖扣），领带单色/曲线图案（回避几何）、对比鲜明条纹、色彩图案都要有时尚感、宜带链或领带夹，休闲装柔软膨松感毛衣/燕领衬衫/领口用丝巾/有垂感裤子，风衣大衣不要太拘紧、华丽柔软精细，鞋光泽感很好的皮鞋/漆皮鞋、休闲鞋平跟薄皮软质或磨砂皮鞋，饰品精美袖扣/真丝羊绒围巾，晚装标准男士晚礼服（缎子贴面领口+宽腰带）；眼镜精致纤细略呈曲线，略长发型（回避板寸等生硬），宽沿礼帽，圆或椭圆薄金属带手表（回避皮表带），精加工皮质包外形不要过锋利；图案选花朵等柔和图案；回避不修饰、破烂、古板、过于生硬。",
   "fashion_m": "男士时尚型整体年轻有特点、有个性、时尚、别致、灵动；面料几乎任何面料都可以，宜用闪光面料，回避古板；剪裁走直线、锋利有棱角、紧跟当年流行、不规则变化，西装小领/扣子多（四粒以上）/襟口贴边/暗扣/有装饰口袋/配马夹（闪光缎子或与西装不同料），衬衣加马夹不穿外套、瘦腿西裤（吸引力在领至头部，回避下装繁琐），衬衣大尖领/立领、细格细条/单色无图案/图案分明/带袖扣（领子袖子要有变化），领带几何/抽象/小动物/卡通图案或单色发光面料，休闲装洒脱新潮可采用闪光面料，风衣大衣短款不要过于庄重，鞋造型独特圆头/方头/尖头/靴子符合当季流行，饰品造型独特手镯/戒指/项链，晚装光泽感闪光金属感面料可加手链项链丝巾；眼镜扁长方形小眼镜，平头/光头/扎小辫/挑染发型，棒球帽/民族帽/小礼帽，丝质围巾可丝巾包头，造型独特手表（正式方型长方型、休闲大表盘），方形/金属皮箱/单肩背包；图案有个性的、以直线感觉为主；回避古板、过于夸张气派。",
+  // ===== 男士时尚型 偏风格（时尚为直线小版型，向古典型/自然型/戏剧型均为直偏直 zz，向浪漫型为直偏曲 zq）=====
+  "fashion_m_zz_classic": "男士时尚型为底，加入古典的大方保守、传统中庸、工整高档精良，收掉过分前卫个性小气，版型更合体规矩、对称工整，回避怪异夸张；保留时尚的精细个性与变化感，但更端庄经典。",
+  "fashion_m_zz_natural": "男士时尚型为底，加入自然的轻松随意、率性硬朗、潇洒飘逸，收掉过分刻意小气古灵精怪，版型更宽松舒适，回避过分紧绷花哨；保留时尚的个性精细，但更大气自然。",
+  "fashion_m_zq_romantic": "男士时尚型直线锋利为底，加入浪漫的曲线柔和、优雅华丽、精美高贵，收掉过于硬挺前卫男孩气，版型稍柔软收身、可华丽装饰，回避粗犷刚硬；保留时尚的个性新潮，但更风情优雅。",
+  "fashion_m_zz_dramatic": "男士时尚型为底，加入戏剧的大气、大男人气派、正式隆重，收掉男孩气小气，版型更大方夸张、强对比，回避小家子气；保留时尚的个性锋利与变化，但更大气出彩。",
+  // ===== 男士古典型 偏风格（古典为直线大版型，向时尚/自然/戏剧均为直偏直 zz，向浪漫为直偏曲 zq）=====
+  "classic_m_zz_fashion": "男士古典型为底，加入时尚的小气个性、新潮变化、创意前卫，收掉过于保守刻板中庸，版型可不规则有变化、带装饰，回避守旧；保留古典的精良高档与工整，但更时尚有型。",
+  "classic_m_zz_natural": "男士古典型为底，加入自然的轻松外放、随意不拘小节、纯朴舒适，收掉内敛刻板一丝不苟，版型更宽松，回避过分严谨用心；保留古典的精良大方，但更随性洒脱。",
+  "classic_m_zq_romantic": "男士古典型直线工整为底，加入浪漫的曲线优雅、华美柔和、精美高贵，收掉刻板不招摇，版型更柔软华丽、可曲线装饰，回避方正刚硬；保留古典的精良高级，但更风情。",
+  "classic_m_zz_dramatic": "男士古典型为底，加入戏剧的外放张扬、气派隆重、刻意表现，收掉内敛含蓄中庸，版型更大方夸张、强对比，回避小气拘谨；保留古典的精良正式，但更有气场。",
+  // ===== 男士自然型 偏风格（自然为直线大版型，向时尚/古典/戏剧均为直偏直 zz，向浪漫为直偏曲 zq）=====
+  "natural_m_zz_fashion": "男士自然型为底，加入时尚的小气个性、古灵精怪、精细硬挺，收掉过于随意纯朴粗犷，版型更利落有变化，回避过分飘逸；保留自然的潇洒硬朗，但更时尚有型。",
+  "natural_m_zz_classic": "男士自然型为底，加入古典的内敛含蓄、刻板工整、都市化精良，收掉过于外放随意不拘小节，版型更合体规矩，回避漫不经心；保留自然的大气潇洒，但更端庄精致。",
+  "natural_m_zq_romantic": "男士自然型直线硬朗为底，加入浪漫的曲线精致、细腻柔和、阴柔华美，收掉粗犷男子气重，版型稍柔软华丽，回避过分硬挺；保留自然的大气潇洒，但更风情优雅。",
+  "natural_m_zz_dramatic": "男士自然型为底，加入戏剧的刻意正式、隆重气派、做作表现，收掉随意休闲纯朴，版型更大方夸张、强对比，回避小家子气；保留自然的大气阳刚，但更出彩有气场。",
+  // ===== 男士浪漫型 偏风格（浪漫为曲线大版型，向时尚/古典/自然/戏剧均为曲偏直 qz）=====
+  "romantic_m_qz_fashion": "男士浪漫型曲线柔和为底，加入时尚的直线锋利、个性前卫、先锋，收掉过于柔和阴柔精致，版型更利落有棱角、可不规则，回避过分娇柔；保留浪漫的华丽优雅，但更个性新潮。",
+  "romantic_m_qz_classic": "男士浪漫型曲线柔和为底，加入古典的直线工整、刻板精良、不招摇，收掉过分华美刻意，版型更合体规矩、对称，回避张扬；保留浪漫的优雅精致，但更端庄高级。",
+  "romantic_m_qz_natural": "男士浪漫型曲线柔和为底，加入自然的直线硬朗、潇洒粗犷、男子气重，收掉过分细腻阴柔，版型更宽松硬挺，回避娇柔；保留浪漫的华美优雅，但更大气洒脱。",
+  "romantic_m_qz_dramatic": "男士浪漫型曲线柔和为底，加入戏剧的直线阳刚、大气粗硬、隆重气派，收掉精细阴柔，版型更大方夸张、强对比，回避小家子气；保留浪漫的华美优雅，但更有气场。",
+  // ===== 男士戏剧型 偏风格（戏剧为直线大版型，向时尚/古典/自然均为直偏直 zz，向浪漫为直偏曲 zq）=====
+  "dramatic_m_zz_fashion": "男士戏剧型为底，加入时尚的小气男孩气、个性锋利、前卫，收掉过分大气隆重做作，版型更利落小气、有变化，回避大男人气派；保留戏剧的夸张强对比，但更时尚有型。",
+  "dramatic_m_zz_classic": "男士戏剧型为底，加入古典的内敛含蓄、工整精良、恰到好处，收掉外放张扬刻意做作，版型更合体规矩、对称，回避过分炫耀；保留戏剧的大气气派，但更端庄高级。",
+  "dramatic_m_zz_natural": "男士戏剧型为底，加入自然的随意休闲、轻松纯朴、不拘小节，收掉刻意正式隆重做作，版型更宽松，回避过分气派；保留戏剧的大气阳刚，但更随性洒脱。",
+  "dramatic_m_zq_romantic": "男士戏剧型直线阳刚为底，加入浪漫的曲线柔和、精美华丽、阴柔高贵，收掉粗硬刻意，版型稍柔软收身、可华丽装饰，回避过分刚硬；保留戏剧的大气气派，但更风情优雅。",
+};
+
+// ===== 女士版型分类（曲线/直线 + 小/大版型）=====
+// 来源：女性风格分两大类——曲线型（少女/优雅/浪漫）与直线型（少年/时尚/自然/古典/戏剧）；
+// 其中少女/少年/时尚/优雅为小版型，浪漫/自然/古典/戏剧为大版型。
+export const STYLE_FRAME_CLASS: Record<string, { line: "曲线" | "直线"; frame: "小版型" | "大版型" }> = {
+  girl: { line: "曲线", frame: "小版型" },
+  elegant: { line: "曲线", frame: "小版型" },
+  romantic: { line: "曲线", frame: "大版型" },
+  boyish: { line: "直线", frame: "小版型" },
+  fashion: { line: "直线", frame: "小版型" },
+  natural: { line: "直线", frame: "大版型" },
+  classic: { line: "直线", frame: "大版型" },
+  dramatic: { line: "直线", frame: "大版型" },
+};
+
+// ===== 女士「穿错衣」表现矩阵：某主风格的人穿成另一风格时的违和表现（8 主 × 7 = 56）=====
+// key = `${主风格}_${穿错成的风格}`；value = 违和表现描述。供 AI 判定「为什么这套不对」时引用。
+export const STYLE_MISMATCH_WOMEN: Record<string, string> = {
+  // 一、少女型穿错
+  "girl_elegant": "略显老气，不过总体说来还好",
+  "girl_romantic": "显老气，像小孩穿大人衣服",
+  "girl_boyish": "生硬、粗糙",
+  "girl_fashion": "生硬、不和谐",
+  "girl_classic": "显老",
+  "girl_natural": "撑不起来，拖沓",
+  "girl_dramatic": "人被衣服淹没了",
+  // 二、优雅型穿错
+  "elegant_girl": "孩子气、小气，像穿了小时的衣服，但不太过分",
+  "elegant_romantic": "显老，显得打扮过头了",
+  "elegant_boyish": "生硬、没气质",
+  "elegant_fashion": "硬",
+  "elegant_classic": "显老、生硬，气质还好",
+  "elegant_natural": "拖沓",
+  "elegant_dramatic": "不和谐、太过了",
+  // 三、浪漫型穿错
+  "romantic_girl": "小气、与年龄不太相称",
+  "romantic_elegant": "小气、拘紧、显老",
+  "romantic_boyish": "硬，有架起来的感觉，不过有些人表现出的气质还好",
+  "romantic_fashion": "刻意跟潮流的感觉，不值钱",
+  "romantic_classic": "显老、古板",
+  "romantic_natural": "邋遢、土气、显老",
+  "romantic_dramatic": "硬，做作",
+  // 四、少年型穿错
+  "boyish_girl": "太孩子气了，显圆",
+  "boyish_elegant": "显老",
+  "boyish_romantic": "显老、显土",
+  "boyish_fashion": "很多时候还好，但帅气优势没发挥出来",
+  "boyish_classic": "显老",
+  "boyish_natural": "太大了",
+  "boyish_dramatic": "做作",
+  // 五、时尚型穿错
+  "fashion_girl": "扮可爱",
+  "fashion_elegant": "显圆",
+  "fashion_romantic": "显老",
+  "fashion_boyish": "衣服显小",
+  "fashion_classic": "显老",
+  "fashion_natural": "邋遢",
+  "fashion_dramatic": "穿过头了",
+  // 六、古典型穿错
+  "classic_girl": "小气、大人穿小",
+  "classic_elegant": "显胖、显圆",
+  "classic_romantic": "显土气、显老",
+  "classic_boyish": "显老",
+  "classic_fashion": "不显气质、还可能会俗气",
+  "classic_natural": "邋遢、显老",
+  "classic_dramatic": "打扮过了，做作",
+  // 七、自然型穿错
+  "natural_girl": "太小孩气了，会被人以为穿着儿时的衣服",
+  "natural_elegant": "小气、做作、古怪",
+  "natural_romantic": "显老、显俗",
+  "natural_boyish": "小气了些",
+  "natural_fashion": "俗气、土气",
+  "natural_classic": "老",
+  "natural_dramatic": "有些过头、太刻意了",
+  // 八、戏剧型穿错
+  "dramatic_girl": "滑稽",
+  "dramatic_elegant": "小气",
+  "dramatic_romantic": "显圆",
+  "dramatic_boyish": "小气",
+  "dramatic_fashion": "小气",
+  "dramatic_classic": "显老",
+  "dramatic_natural": "邋遢、不显气质",
+};
+
+// ===== 女士两两风格对比（相同点 + 不同点），key 中两风格先后对应 a/b =====
+export const STYLE_PAIRS_WOMEN: Record<string, { same: string; a: string; b: string }> = {
+  "classic_dramatic": { same: "都是直线型，精心修饰，有气质，大方", a: "古典内敛、严谨、不着痕迹", b: "戏剧外放、张扬、刻意做作" },
+  "natural_dramatic": { same: "都是直线型，大方", a: "自然轻松、随意、朴素", b: "戏剧做作、刻意、豪华" },
+};
+
+// ===== 男士两两风格对比（相同点 + 不同点），用作男士 20 偏风格推导的权威来源 =====
+// key 中两风格先后对应 a/b；男士五风格：fashion_m 时尚 / classic_m 古典 / natural_m 自然 / romantic_m 浪漫 / dramatic_m 戏剧。
+export const STYLE_PAIRS_MEN: Record<string, { same: string; a: string; b: string }> = {
+  "fashion_classic": { same: "有细致的成份", a: "时尚更小气些，有个性、有变化、有创意、新潮、前卫", b: "古典大方、保守、传统、中庸、刻板、高档精良" },
+  "fashion_natural": { same: "轻松、随意、率性、线条硬朗", a: "时尚小气、古灵精怪、年轻、精细、硬挺", b: "自然大气、潇洒、阳刚、成熟、粗犷、飘逸" },
+  "fashion_romantic": { same: "细致", a: "时尚小气、个性、率性、前卫、先锋", b: "浪漫大方、优雅、柔和、精美、华丽、高贵" },
+  "fashion_dramatic": { same: "有个性、变化，线条锋利、变化多", a: "时尚小气、男孩气、个性", b: "戏剧大气、大男人、气派" },
+  "classic_natural": { same: "大方", a: "古典内敛、含蓄、刻板、一丝不苟、都市化", b: "自然更大气、外放、随意、不拘小节、纯朴、舒适" },
+  "classic_romantic": { same: "中庸、精细、高级、正式", a: "古典刻板、不招摇", b: "浪漫优雅、华美、柔和，有点刻意的感觉" },
+  "classic_dramatic": { same: "大方、正式", a: "古典内敛含蓄，恰到好处，似乎不经意间透出什么", b: "戏剧外放张扬，炫耀、做作、刻意表现" },
+  "romantic_natural": { same: "优雅", a: "浪漫精致、细腻、柔和、阴柔气重", b: "自然潇洒、大气、不拘谨，粗犷，男子气重" },
+  "romantic_dramatic": { same: "华美", a: "浪漫柔和、精美", b: "戏剧阳刚、更大气、粗硬" },
+  "natural_dramatic": { same: "大气、阳刚、男人味重", a: "自然随意、休闲、轻松、纯朴", b: "戏剧刻意、正式、隆重、做作" },
 };
 
 /** 判定方法论（用户定义的判定轴，喂给大模型作为判定框架） */
@@ -127,6 +257,40 @@ type StyleIn = {
   parent_code?: string | null;
 };
 
+const WOMEN_ORDER = ["girl", "elegant", "romantic", "boyish", "fashion", "classic", "natural", "dramatic"];
+const WOMEN_STYLE_NAMES: Record<string, string> = {
+  girl: "少女型", elegant: "优雅型", romantic: "浪漫型", boyish: "少年型",
+  fashion: "时尚型", classic: "古典型", natural: "自然型", dramatic: "戏剧型",
+};
+const MEN_STYLE_NAMES: Record<string, string> = {
+  fashion_m: "时尚型", classic_m: "古典型", natural_m: "自然型", romantic_m: "浪漫型", dramatic_m: "戏剧型",
+};
+function styleName(code: string): string {
+  return WOMEN_STYLE_NAMES[code] || MEN_STYLE_NAMES[code] || code;
+}
+
+/** 渲染女士「穿错衣」表现矩阵（56 条） */
+function styleMismatchText(): string {
+  const lines: string[] = [];
+  for (const main of WOMEN_ORDER) {
+    for (const worn of WOMEN_ORDER) {
+      if (worn === main) continue;
+      const desc = STYLE_MISMATCH_WOMEN[`${main}_${worn}`];
+      if (desc) lines.push(`- ${WOMEN_STYLE_NAMES[main]} 穿错成 ${WOMEN_STYLE_NAMES[worn]}：${desc}`);
+    }
+  }
+  return lines.join("\n");
+}
+
+/** 渲染两两风格对比矩阵（相同点 + 不同点） */
+function stylePairsText(title: string, pairs: Record<string, { same: string; a: string; b: string }>): string {
+  const lines = Object.entries(pairs).map(([k, v]) => {
+    const [x, y] = k.split("_");
+    return `- ${styleName(x)} ↔ ${styleName(y)}｜相同点：${v.same}；不同点：${styleName(x)}（${v.a}）／ ${styleName(y)}（${v.b}）`;
+  });
+  return `【${title}】\n${lines.join("\n")}`;
+}
+
 /** 把知识库编译成喂给大模型的文本块（结构信息取自用户定义的表，不混入外行词） */
 export function cmbKnowledgeText(seasons: SeasonIn[], styles: StyleIn[]): string {
   const seasonLines = seasons
@@ -139,7 +303,8 @@ export function cmbKnowledgeText(seasons: SeasonIn[], styles: StyleIn[]): string
 
   const styleLines = styles
     .map((s) => {
-      const struct = [s.type, s.frame, s.direction].filter(Boolean).join("/");
+      const frame = s.frame || STYLE_FRAME_CLASS[s.code]?.frame || null;
+      const struct = [s.type, frame, s.direction].filter(Boolean).join("/");
       // 偏风格未提供自有逻辑时，继承母风格逻辑并标注待细化
       let logic = STYLE_LOGIC[s.code];
       if (!logic && s.parent_code) {
@@ -156,5 +321,5 @@ export function cmbKnowledgeText(seasons: SeasonIn[], styles: StyleIn[]): string
     })
     .join("\n");
 
-  return `${JUDGE_METHOD}\n\n【色彩季型判定知识库（12）】\n${seasonLines}\n\n【穿衣风格判定知识库】\n${styleLines}`;
+  return `${JUDGE_METHOD}\n\n【色彩季型判定知识库（12）】\n${seasonLines}\n\n【穿衣风格判定知识库】\n${styleLines}\n\n【女士穿错衣表现矩阵（判定「为什么这套不对」的参照）】\n${styleMismatchText()}\n\n${stylePairsText("女士两两风格对比", STYLE_PAIRS_WOMEN)}\n\n${stylePairsText("男士两两风格对比", STYLE_PAIRS_MEN)}`;
 }
