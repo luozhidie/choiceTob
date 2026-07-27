@@ -2,14 +2,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isValidImage } from "@/components/ProductCollage";
-
-// 价格格式化
-function formatPrice(price: number | null | undefined): string {
-  if (!price) return "0";
-  const p = Number(price);
-  const yuan = p >= 100 ? Math.round(p / 100) : p;
-  return "¥" + (yuan % 1 === 0 ? yuan.toFixed(0) : yuan.toFixed(2));
-}
+import { formatPrice } from "@/lib/discount";
 
 interface ProductBlockProps {
   block: any;

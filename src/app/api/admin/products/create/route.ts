@@ -1,6 +1,7 @@
 // 后端创建商品API（增加?action=import 支持多平台商品一键导入）
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { generateTagSuggestions } from "@/lib/cmb-tag";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -8,6 +9,27 @@ const supabase = createClient(
 );
 
 export const dynamic = 'force-dynamic';
+
+/**
+ * 导入商品成功后自动 AI 打标（色彩季型 + 穿衣风格）并落库。
+ * 容错：AI 不可用 / 返回异常 / 超时都不影响商品本身已创建成功。
+ */
+async function autoTagProduct(productId: string): Promise<void> {
+  try {
+    const sug = await generateTagSuggestions(supabase, productId);
+    if (sug && !("error" in sug) && (sug.color_season_codes.length || sug.style_tag_codes.length)) {
+      await supabase
+        .from("products")
+        .update({
+          color_season_codes: sug.color_season_codes,
+          style_tag_codes: sug.style_tag_codes,
+        })
+        .eq("id", productId);
+    }
+  } catch (err) {
+    console.error("[auto-tag]", err);
+  }
+}
 
 /**
  * 解析小程序自定义 token（base64url JSON，如 {uid,openid,exp}）
@@ -207,16 +229,20 @@ export async function POST(request: NextRequest) {
             if (d2) { data = d2; createError = null; }
             else { results.push({ url: raw.slice(0, 80), status: "error", message: e2?.message || "创建失败" }); continue; }
           }
-          if (data) results.push({
-            url: raw.slice(0, 80),
-            status: "success",
-            productId: data.id,
-            title: data.title,
-            price: (data.price / 100).toString(),
-            imageCount: uploadedImages.length,
-            duplicate: checkDuplicate(title),
-            specs,
-          });
+          if (data) {
+            results.push({
+              url: raw.slice(0, 80),
+              status: "success",
+              productId: data.id,
+              title: data.title,
+              price: (data.price / 100).toString(),
+              imageCount: uploadedImages.length,
+              duplicate: checkDuplicate(title),
+              specs,
+            });
+            // 上传即打标：AI 自动判定色彩季型 + 穿衣风格并落库（容错）
+            await autoTagProduct(data.id);
+          }
         } catch (err: any) {
           results.push({ url: raw.slice(0, 80), status: "error", message: err.message || "JSON 解析失败" });
         }
@@ -377,6 +403,8 @@ export async function POST(request: NextRequest) {
               specs: uniqueSpecs,
               duplicate: checkDuplicate(title),
             });
+            // 上传即打标：AI 自动判定色彩季型 + 穿衣风格并落库（容错）
+            await autoTagProduct(data.id);
           }
         } catch (err: any) {
           results.push({ url: u, status: "error", message: err.message || "处理异常" });

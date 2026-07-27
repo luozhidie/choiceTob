@@ -198,8 +198,13 @@ export function calcDiscount(
   };
 }
 
-export function formatPrice(price: number): string {
-  return `¥${(price / 100).toFixed(0)}`;
+/**
+ * 价格格式化（全站唯一实现）：数据库价格单位为「分」，统一 ÷100 转「元」。
+ * 兼容 null / undefined / 0，避免各页面各写一套导致显示不一致。
+ */
+export function formatPrice(price: number | null | undefined): string {
+  const p = Number(price || 0);
+  return `¥${(p / 100).toFixed(0)}`;
 }
 
 export function formatDiscountRate(rate: number): string {

@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Search, Package, SlidersHorizontal, X } from "lucide-react";
+import { formatPrice } from "@/lib/discount";
 
 interface ProductGridProps {
   products: any[];
@@ -19,13 +20,6 @@ interface ProductGridProps {
 
 const SORT_TABS = ["综合", "销量", "上新", "批发价", "筛选"] as const;
 type SortTab = typeof SORT_TABS[number];
-
-function formatPrice(price: number | null | undefined): string {
-  if (!price) return "0";
-  const p = Number(price);
-  const yuan = p >= 100 ? Math.round(p / 100) : p;
-  return "¥" + (yuan % 1 === 0 ? yuan.toString() : yuan.toFixed(2));
-}
 
 export default function ProductGrid({
   products,

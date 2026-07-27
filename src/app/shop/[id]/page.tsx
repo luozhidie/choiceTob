@@ -17,6 +17,7 @@ import {
   SUBCATEGORY_MAP,
 } from "@/lib/categories";
 import { useCart } from "@/lib/cart-context";
+import { formatPrice } from "@/lib/discount";
 import { useAuth } from "@/lib/auth-context";
 import MembershipCard from "@/components/product/MembershipCard";
 import CouponClaim, { CouponTemplate } from "@/components/product/CouponClaim";
@@ -291,8 +292,6 @@ export default function ProductDetailPage() {
       })
       .catch(() => {});
   }, [authUser]);
-
-  const formatPrice = (price: number) => `¥${(price / 100).toFixed(0)}`;
 
   // 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和）
   const effectivePrice = (p: any) =>
