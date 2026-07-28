@@ -21,7 +21,7 @@ import {
   LogIn, UserPlus, Smartphone,
   ShieldCheck,
   Award, Gift, BarChart3, Lock, BadgeCheck,
-  X, TrendingUp, Star, Sparkles,
+  X, TrendingUp, Star, Sparkles, Settings, FileText, ScrollText, Info,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -104,7 +104,7 @@ export default function MyPage() {
         data: { user: u },
       } = await supabase.auth.getUser();
       if (!u) {
-        router.push("/login?redirect=/my");
+        setUser(null);
         return;
       }
       setUser(u);
@@ -165,6 +165,18 @@ export default function MyPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 via-accent/5 to-white">
+        {/* 顶部操作栏 */}
+        <div className="fixed top-0 left-0 right-0 z-50">
+          <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-end">
+            <Link
+              href="/settings"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/60 backdrop-blur-sm hover:bg-white/80 active:bg-white transition-colors"
+            >
+              <Settings className="w-5 h-5 text-gray-700" />
+            </Link>
+          </div>
+        </div>
+
         <div className="max-w-md mx-auto px-4 pt-20 pb-24">
           {/* 头像区域 */}
           <div className="text-center mb-8">
@@ -244,7 +256,11 @@ export default function MyPage() {
 
           {/* 底部提示 */}
           <p className="text-center text-xs text-gray-400 mt-6">
-            登录即表示同意《用户协议》和《隐私政策》
+            登录即表示同意
+            <Link href="/terms" className="text-primary hover:underline">《平台服务协议》</Link>
+            <Link href="/privacy" className="text-primary hover:underline">《隐私政策》</Link>
+            及
+            <Link href="/rules" className="text-primary hover:underline">《平台规则》</Link>
           </p>
         </div>
         <TabBar />
@@ -256,8 +272,17 @@ export default function MyPage() {
     <div className="min-h-screen bg-gray-50">
       {/* 头部 */}
       <div className="bg-gradient-to-br from-primary to-accent text-white py-12 px-4">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto relative">
           <div className="flex items-center gap-6">
+            {/* 设置入口 */}
+            <Link
+              href="/settings"
+              className="absolute top-0 right-0 w-10 h-10 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30 active:bg-white/40 transition-colors"
+              aria-label="设置"
+            >
+              <Settings className="w-5 h-5 text-white" />
+            </Link>
+
             {/* 头像 */}
             <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-3xl font-bold backdrop-blur-sm border-2 border-white/30">
               {profile?.nickname?.[0] || user.email?.[0]?.toUpperCase() || "U"}
@@ -747,6 +772,44 @@ export default function MyPage() {
                     <span className="text-gray-700">联系客服</span>
                   </div>
                   <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-red-500 transition-colors" />
+                </Link>
+              </div>
+            </div>
+
+            {/* 协议与规则 */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mt-6">
+              <h2 className="font-bold text-gray-900 mb-4">协议与规则</h2>
+              <div className="space-y-3">
+                <Link href="/privacy" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <Lock className="w-5 h-5 text-indigo-500" />
+                    <span className="text-gray-700">隐私政策</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" />
+                </Link>
+
+                <Link href="/terms" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-blue-500" />
+                    <span className="text-gray-700">平台服务协议</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors" />
+                </Link>
+
+                <Link href="/rules" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <ScrollText className="w-5 h-5 text-amber-500" />
+                    <span className="text-gray-700">平台规则</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-amber-500 transition-colors" />
+                </Link>
+
+                <Link href="/about" className="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <Info className="w-5 h-5 text-green-500" />
+                    <span className="text-gray-700">关于我们</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-green-500 transition-colors" />
                 </Link>
               </div>
             </div>
