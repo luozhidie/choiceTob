@@ -1,0 +1,56 @@
+<view class="page">
+  <!-- 品牌 -->
+  <view class="brand">
+    <view class="logo">骆</view>
+    <view class="b-name">骆芷蝶智选</view>
+    <view class="b-sub">泉州鲤城服装批发个体户 · 源头好货智选平台</view>
+    <view class="b-ver">版本：{{version}}</view>
+  </view>
+
+  <!-- 平台介绍 -->
+  <view class="card intro">
+    <view class="intro-p">骆芷蝶智选是一家专注于服装批发供应链的数字化选品平台，扎根福建泉州服装产业带，致力于为广大实体店主、买手、电商卖家提供高品质、高性价比的女装货源与专业搭配服务。</view>
+    <view class="intro-p">平台融合色彩季型理论与个人风格诊断，通过 AI 搭配、商品企划、心愿单聚合等创新工具，帮助用户精准选品、降低库存风险、提升终端销售转化。</view>
+  </view>
+
+  <!-- 核心优势 -->
+  <view class="card">
+    <view class="card-title">核心优势</view>
+    <view class="adv-grid">
+      <view class="adv-item" wx:for="{{advantages}}" wx:key="title">
+        <view class="adv-icon">{{item.icon}}</view>
+        <view class="adv-name">{{item.title}}</view>
+        <view class="adv-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 营业执照信息公示 -->
+  <view class="card">
+    <view class="card-title">营业执照信息公示</view>
+    <view class="lic-item" wx:for="{{license}}" wx:key="label">
+      <view class="lic-label">{{item.label}}</view>
+      <view class="lic-value">{{item.value}}</view>
+    </view>
+    <view class="lic-tip">注：详细营业执照信息可于国家企业信用信息公示系统查询，或联系客服索取电子副本。</view>
+  </view>
+
+  <!-- 联系方式 -->
+  <view class="card">
+    <view class="card-title">联系我们</view>
+    <view class="contact-row" bindtap="callPhone">
+      <text class="c-label">电话</text>
+      <text class="c-value">13925997776</text>
+    </view>
+    <view class="contact-row" bindtap="copyEmail">
+      <text class="c-label">邮箱</text>
+      <text class="c-value">luozhidie@live.cn</text>
+    </view>
+    <view class="contact-row">
+      <text class="c-label">地址</text>
+      <text class="c-value">福建省泉州市鲤城区</text>
+    </view>
+  </view>
+
+  <view class="footer">骆芷蝶智选 © 2026 版权所有\ncolour-choice.art</view>
+</view>

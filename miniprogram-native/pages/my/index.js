@@ -284,6 +284,7 @@ Page({
   goCoupons:function(){wx.navigateTo({url:'/pages/coupons/index'});},
   goRedPackets:function(){wx.navigateTo({url:'/pages/red-packets/index'});},
   goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
+  goSettings:function(){wx.navigateTo({url:'/pages/settings/index'});},
   goPromo:function(){wx.switchTab({url:'/pages/home/index'});},
   goImport:function(){wx.navigateTo({url:'/pages/import/index'});},
   goAlbumGrab:function(){wx.navigateTo({url:'/pages/album-grab/index'});},

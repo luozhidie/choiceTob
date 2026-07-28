@@ -1,0 +1,27 @@
+<view class="page">
+  <view class="topbar">
+    <view class="nav-title">设置</view>
+  </view>
+
+  <block wx:for="{{groups}}" wx:key="title" wx:for-item="group">
+    <view class="group-title">{{group.title}}</view>
+    <view class="card">
+      <view
+        class="row"
+        wx:for="{{group.items}}"
+        wx:for-item="item"
+        wx:key="key"
+        bindtap="goItem"
+        data-url="{{item.url}}"
+      >
+        <text class="row-label">{{item.label}}</text>
+        <text class="row-arrow">›</text>
+      </view>
+    </view>
+  </block>
+
+  <view wx:if="{{isLoggedIn}}" class="logout-btn" bindtap="logout">退出登录</view>
+  <view wx:else class="login-btn" bindtap="goLogin">登录 / 注册</view>
+
+  <view class="agree">登录即表示同意《平台服务协议》和《隐私政策》</view>
+</view>

@@ -1,5 +1,5 @@
 {
-    "pages": [
+  "pages": [
     "pages/home/index",
     "pages/launch/index",
     "pages/shelf/index",
@@ -51,7 +51,12 @@
     "pages/stall/subscribed/index",
     "pages/assortment/detail/index",
     "pages/fashion-stylist/index",
-    "pages/look-studio/index"
+    "pages/look-studio/index",
+    "pages/settings/index",
+    "pages/privacy/index",
+    "pages/terms/index",
+    "pages/rules/index",
+    "pages/about/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
