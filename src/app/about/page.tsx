@@ -26,14 +26,14 @@ export default function AboutPage() {
             骆
           </div>
           <h2 className="text-xl font-bold text-gray-900">骆芷蝶智选</h2>
-          <p className="text-sm text-gray-500 mt-1">泉州鲤城服装批发个体户 · 源头好货智选平台</p>
+          <p className="text-sm text-gray-500 mt-1">女装供应链数字化选品平台</p>
           <p className="text-xs text-gray-400 mt-1">版本：1.0.0</p>
         </div>
 
         {/* 平台介绍 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4 text-sm text-gray-700 leading-relaxed">
           <p>
-            骆芷蝶智选是一家专注于服装批发供应链的数字化选品平台，扎根福建泉州服装产业带，致力于为广大实体店主、买手、电商卖家提供高品质、高性价比的女装货源与专业搭配服务。
+            骆芷蝶智选是一家专注于女装批发供应链的数字化选品平台，整合全国优质服装产业带资源，为全球实体店主、买手、电商卖家提供高品质、高性价比的女装货源与专业搭配服务。
           </p>
           <p>
             平台融合色彩季型理论与个人风格诊断，通过 AI 搭配、商品企划、心愿单聚合等创新工具，帮助用户精准选品、降低库存风险、提升终端销售转化。
@@ -45,7 +45,7 @@ export default function AboutPage() {
           <h3 className="text-base font-bold text-gray-900 mb-4">核心优势</h3>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: Store, title: "产业带直供", desc: "泉州源头工厂直采" },
+              { icon: Store, title: "产业带直供", desc: "全国源头工厂直采" },
               { icon: Sparkles, title: "智能选品", desc: "AI 搭配与企划辅助" },
               { icon: Users, title: "认证店主", desc: "批发价一键解锁" },
               { icon: Award, title: "会员权益", desc: "折扣 + 退换额度" },
@@ -61,34 +61,18 @@ export default function AboutPage() {
           </div>
         </div>
 
-        {/* 营业执照信息公示 */}
+        {/* 业务范围 */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-          <h3 className="text-base font-bold text-gray-900 mb-4">营业执照信息公示</h3>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-start gap-3">
-              <Store className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-gray-500">经营者</p>
-                <p className="text-gray-900 font-medium">骆芷蝶</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <MapPin className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-gray-500">经营场所</p>
-                <p className="text-gray-900 font-medium">福建省泉州市鲤城区</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Award className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
-              <div>
-                <p className="text-gray-500">经营范围</p>
-                <p className="text-gray-900 font-medium">服装批发、互联网销售、个人形象设计咨询等</p>
-              </div>
-            </div>
+          <h3 className="text-base font-bold text-gray-900 mb-4">业务范围</h3>
+          <div className="space-y-3 text-sm text-gray-700">
+            <p>· 女装批发与供应链整合</p>
+            <p>· 互联网平台技术服务</p>
+            <p>· 个人形象设计与穿搭咨询</p>
+            <p>· 服装买手选品与商品企划</p>
+            <p>· 会员增值服务与认证店主体系</p>
           </div>
           <p className="text-xs text-gray-400 mt-4">
-            注：详细营业执照信息可于国家企业信用信息公示系统查询，或联系客服索取电子副本。
+            注：主体公司注册信息完善中，相关资质将在取得后及时公示。
           </p>
         </div>
 
@@ -109,7 +93,7 @@ export default function AboutPage() {
             <div className="flex items-center gap-3">
               <MapPin className="w-4 h-4 text-gray-400" />
               <span className="text-gray-500 w-16">地址</span>
-              <span className="text-gray-900">福建省泉州市鲤城区</span>
+              <span className="text-gray-900">中国</span>
             </div>
           </div>
         </div>

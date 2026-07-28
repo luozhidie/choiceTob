@@ -13,11 +13,8 @@
 .adv-icon{font-size:44rpx;}
 .adv-name{font-size:26rpx;font-weight:600;color:#222;margin-top:10rpx;}
 .adv-desc{font-size:22rpx;color:#999;margin-top:4rpx;}
-.lic-item{display:flex;padding:16rpx 0;border-bottom:1rpx solid #f0f0f0;}
-.lic-item:last-of-type{border-bottom:none;}
-.lic-label{width:140rpx;font-size:26rpx;color:#999;flex-shrink:0;}
-.lic-value{flex:1;font-size:26rpx;color:#333;font-weight:500;}
-.lic-tip{font-size:22rpx;color:#aaa;margin-top:16rpx;line-height:1.6;}
+.scope-item{font-size:27rpx;color:#444;line-height:1.8;padding:8rpx 0;}
+.scope-tip{font-size:22rpx;color:#aaa;margin-top:16rpx;line-height:1.6;}
 .contact-row{display:flex;align-items:center;padding:20rpx 0;border-bottom:1rpx solid #f0f0f0;}
 .contact-row:last-child{border-bottom:none;}
 .c-label{width:100rpx;font-size:26rpx;color:#999;}

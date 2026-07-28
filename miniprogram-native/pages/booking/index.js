@@ -7,7 +7,7 @@ Page({
     consultants: [],
     dates: [],
     activeDate: 'all',
-    settings: { location: '泉州·鲤城服装批发市场', price_per_hour: 200, service_fee: 0, currency: '¥' },
+    settings: { location: '全国 · 线下陪购（地点协商）', price_per_hour: 200, service_fee: 0, currency: '¥' },
     plans: [],
     loading: true,
     followed: [],

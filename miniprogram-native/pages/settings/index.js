@@ -28,8 +28,18 @@ Page({
   },
 
   goItem: function (e) {
+    var key = e.currentTarget.dataset.key;
     var url = e.currentTarget.dataset.url;
-    wx.navigateTo({ url: url });
+
+    if (key === 'profile') {
+      // 「我的」是 tabBar 页，必须用 switchTab
+      wx.switchTab({ url: '/pages/my/index' });
+    } else if (key === 'security') {
+      // 暂无独立页面，避免 navigateTo 到 tabBar 失败
+      wx.showToast({ title: '功能开发中', icon: 'none' });
+    } else if (url) {
+      wx.navigateTo({ url: url });
+    }
   },
 
   goLogin: function () {

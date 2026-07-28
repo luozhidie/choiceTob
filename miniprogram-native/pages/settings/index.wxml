@@ -12,6 +12,7 @@
         wx:for-item="item"
         wx:key="key"
         bindtap="goItem"
+        data-key="{{item.key}}"
         data-url="{{item.url}}"
       >
         <text class="row-label">{{item.label}}</text>

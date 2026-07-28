@@ -20,7 +20,7 @@ export async function GET() {
       .maybeSingle();
     if (error) return NextResponse.json({ success: false, data: null, error: error.message }, { status: 500 });
     return NextResponse.json({ success: true, data: data || {
-      id: 1, location: "泉州·鲤城服装批发市场", price_per_hour: 200, service_fee: 0, currency: "¥"
+      id: 1, location: "全国 · 线下陪购（地点协商）", price_per_hour: 200, service_fee: 0, currency: "¥"
     } });
   } catch (e: any) {
     return NextResponse.json({ success: false, data: null, error: e.message }, { status: 500 });

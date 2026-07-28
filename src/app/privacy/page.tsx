@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       updateDate="2026年7月28日"
       footer={
         <>
-          <p>骆芷蝶智选 · 泉州鲤城服装批发</p>
+          <p>骆芷蝶智选 · 女装供应链数字化选品平台</p>
           <p>客服微信：luozhidie666</p>
         </>
       }
