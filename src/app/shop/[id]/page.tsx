@@ -95,6 +95,9 @@ export default function ProductDetailPage() {
   const [shopRecHot, setShopRecHot] = useState<Product[]>([]);
   const [shopRecNewbie, setShopRecNewbie] = useState<Product[]>([]);
 
+  // 店铺可编辑内容（拿货指南 / 拿货技巧 / 面料洗护，后台 store-content 可编辑）
+  const [storeContent, setStoreContent] = useState<any>(null);
+
   // 检查用户登录状态 + 是否价格会员
   useEffect(() => {
     const supabase = createClient();
