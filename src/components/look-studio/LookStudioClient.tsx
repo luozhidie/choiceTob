@@ -194,7 +194,7 @@ export default function LookStudioClient({ data }: Props) {
               {[...mainWomen, ...mainMen].map((m) => (
                 <span key={m.code} onClick={() => setMyStyle(m.code)}
                   style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, cursor: "pointer", border: "1px solid #ddd", background: myStyle === m.code ? "#222" : "#fff", color: myStyle === m.code ? "#fff" : "#555" }}>
-                  {m.name_zh}
+                  {m.gender === "women" ? "女" : "男"}·{m.name_zh}
                 </span>
               ))}
             </div>

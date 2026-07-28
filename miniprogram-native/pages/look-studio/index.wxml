@@ -20,7 +20,7 @@
         </scroll-view>
         <text class="lab">穿衣风格（主风格）</text>
         <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-          <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.name_zh}}</text>
+          <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.gender==='women'?'女':'男'}}·{{item.name_zh}}</text>
         </scroll-view>
       </view>
     </view>
