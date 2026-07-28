@@ -1405,14 +1405,14 @@ export default function AdminProductsPage() {
                   <input
                     type="text"
                     inputMode="numeric"
-                    pattern="[0-9]*"
-                    required
+                    pattern={form.wishlist_mode ? undefined : "[0-9]*"}
+                    required={!form.wishlist_mode}
                     value={form.price}
                     onChange={(e) =>
                       setForm({ ...form, price: e.target.value.replace(/[^0-9]/g, "") })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="如 99"
+                    placeholder={form.wishlist_mode ? "心愿收集款可留空" : "如 99"}
                   />
                 </div>
                 <div>
