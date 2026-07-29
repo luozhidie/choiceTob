@@ -58,11 +58,21 @@ export async function GET(request: NextRequest) {
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, title, cover_image, price, wishlist_mode, is_published")
+    .select("id, title, cover_image, price, wholesale_price, bulk_price, wishlist_mode, is_published")
     .in("id", ids);
 
   const byId: Record<string, any> = {};
   (products || []).forEach((p: any) => { byId[p.id] = p; });
+
+  // 批量拉取心愿数（service_role 直查 product_wish_counts 视图，沉默降级）
+  const wishCounts: Record<string, number> = {};
+  try {
+    const { data: wc } = await supabase
+      .from("product_wish_counts")
+      .select("product_id, wish_count")
+      .in("product_id", ids);
+    (wc || []).forEach((r: any) => { wishCounts[r.product_id] = Number(r.wish_count) || 0; });
+  } catch (e) { /* 视图不存在或被 RLS 限制时静默降级 */ }
 
   const items = (wishes || []).map((w: any) => {
     const p = byId[w.product_id] || {};
@@ -71,8 +81,11 @@ export async function GET(request: NextRequest) {
       title: p.title || "商品",
       cover_image: p.cover_image || null,
       price: p.price || 0,
+      wholesale_price: p.wholesale_price || null,
+      bulk_price: p.bulk_price || null,
       wishlist_mode: !!p.wishlist_mode,
       is_published: p.is_published ?? true,
+      wish_count: wishCounts[w.product_id] || 0,
       created_at: w.created_at,
     };
   });
