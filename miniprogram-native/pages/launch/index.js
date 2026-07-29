@@ -41,6 +41,7 @@ Page({
     ],
     styleChips:[],
     lcStyleSel:'',
+    lcSubscribed:[],
     lcNewTab:'now',
     lcNewCat:''
   },
@@ -66,6 +67,7 @@ Page({
           endTime:(c.couponSection&&c.couponSection.endTime)||''
         });
         t.buildTabs(c);
+        t.loadSubscribed();
         t.startCountdown();
         t.loadMedia();
         t.loadNew();
@@ -172,10 +174,15 @@ Page({
     var t=this;
     var list=t.data.launchProducts||[];
     var tab=t.data.lcNewTab||'now';
-    // 看订阅风格：按风格筛选
+    // 看订阅风格：按风格筛选（含「我的订阅」）
     if(tab==='all'){
       var sel=t.data.lcStyleSel||'';
-      if(sel){ list=list.filter(function(p){return (p.style_type||'')===sel;}); }
+      if(sel==='__sub__'){
+        var sub=t.data.lcSubscribed||[];
+        list=list.filter(function(p){return sub.indexOf(p.style_type||'')>=0;});
+      } else if(sel){
+        list=list.filter(function(p){return (p.style_type||'')===sel;});
+      }
     }
     list=list.slice();
     if(tab==='price'){
@@ -200,9 +207,20 @@ Page({
       var s=p.style_type||'';
       if(s) map[s]=true;
     });
-    var chips=Object.keys(map).map(function(s){return {key:s,label:s};});
-    chips.unshift({key:'',label:'全部风格'});
+    var sub=t.data.lcSubscribed||[];
+    var chips=Object.keys(map).map(function(s){return {key:s,label:s,subscribed:sub.indexOf(s)>=0};});
+    chips.unshift({key:'',label:'全部风格',subscribed:false});
+    if(sub.length){
+      chips.unshift({key:'__sub__',label:'★我的订阅',subscribed:true});
+    }
     t.setData({styleChips:chips});
+  },
+  loadSubscribed:function(){
+    var t=this;
+    try{
+      var sub=wx.getStorageSync('lzd_lc_sub')||[];
+      if(Array.isArray(sub)) t.setData({lcSubscribed:sub});
+    }catch(e){}
   },
   swLcNewTab:function(e){
     var tab=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.t)||'now';
@@ -212,8 +230,18 @@ Page({
   },
   swLcStyle:function(e){
     var key=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.s)||'';
-    this.setData({lcStyleSel:key});
-    this.applyView();
+    var t=this;
+    if(key && key!=='__sub__'){
+      var sub=t.data.lcSubscribed||[];
+      if(sub.indexOf(key)<0){
+        sub=sub.concat([key]);
+        t.setData({lcSubscribed:sub});
+        try{ wx.setStorageSync('lzd_lc_sub', sub); }catch(err){}
+        t.buildStyleChips();
+      }
+    }
+    t.setData({lcStyleSel:key});
+    t.applyView();
   },
   openFilterSheet:function(){
     var t=this;
@@ -238,7 +266,10 @@ Page({
     t.setData({launchProductsView:list, lcNewTab:'筛'});
   },
   goSubtitle:function(){
-    wx.navigateTo({url:'/pages/search/index?keyword='+encodeURIComponent('秋上新')});
+    var t=this;
+    t.setData({lcNewTab:'now', lcStyleSel:''});
+    t.applyView();
+    wx.pageScrollTo({selector:'.lc-new', duration:300});
   },
   swLcNewCat:function(e){
     var c=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.c)||'';

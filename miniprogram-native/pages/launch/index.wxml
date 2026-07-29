@@ -130,7 +130,7 @@
       <text class="lc-new-tab {{lcNewTab===item.key?'on':''}}" wx:for="{{launchTabs}}" wx:key="key" wx:for-item="item" bindtap="swLcNewTab" data-t="{{item.key}}">{{item.label}}</text>
     </view>
     <scroll-view wx:if="{{lcNewTab==='all'}}" scroll-x show-scrollbar="{{false}}" class="lc-style-chips">
-      <text wx:for="{{styleChips}}" wx:key="key" wx:for-item="chip" class="lc-style-chip {{lcStyleSel===chip.key?'on':''}}" bindtap="swLcStyle" data-s="{{chip.key}}">{{chip.label}}</text>
+      <text wx:for="{{styleChips}}" wx:key="key" wx:for-item="chip" class="lc-style-chip {{lcStyleSel===chip.key?'on':''}} {{chip.subscribed?'sub':''}}" bindtap="swLcStyle" data-s="{{chip.key}}">{{chip.subscribed&&chip.key!=='__sub__'?'★':''}}{{chip.label}}</text>
     </scroll-view>
     <scroll-view scroll-x show-scrollbar="{{false}}" class="lc-new-cats">
       <view class="lc-new-cat-row">
