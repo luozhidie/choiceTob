@@ -8,12 +8,15 @@ Page({
     isPriceMember: false,
   },
 
-  onLoad: function () {
+  onLoad: function (options) {
     var app = getApp();
     var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
     this.setData({ isPriceMember: isPriceMember });
     var h = wx.getStorageSync('search_history') || [];
     this.setData({ history: h });
+    if (options && options.keyword) {
+      this.doSearch(options.keyword);
+    }
   },
 
   onInput: function (e) {

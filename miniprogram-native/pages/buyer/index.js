@@ -310,7 +310,7 @@ Page({
           p.priceHint='已公开';
         } else {
           p.priceText=maskPrice(n);
-          p.priceHint=Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+          p.priceHint='集单中·'+Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
         }
         p.wholesalePriceText='';
       } else if(isPriceMember && wp>0){

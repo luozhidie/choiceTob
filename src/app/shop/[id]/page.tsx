@@ -827,14 +827,14 @@ export default function ProductDetailPage() {
               <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
                 <Heart className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="text-sm text-amber-800 leading-relaxed">
-                  <p className="font-semibold mb-0.5">心愿收集款 · 先集需求后开价</p>
+                  <p className="font-semibold mb-0.5">心愿收集款 · 倒计时集单量</p>
                   <p>
                     {wishView!.hasRealPrice
-                      ? `现价打码预览 ${wishView!.text}，仅露个位「${wishView!.unitsHint}」，${wishView!.revealed ? "价格已公开" : `${daysUntil(wishView!.revealAt)} 天后公开真实拿货价`}。`
-                      : "喜欢就加入心愿单，集齐一定量即去跟档口开价。"}
+                      ? `现价打码预览 ${wishView!.text}，仅露个位「${wishView!.unitsHint}」；倒计时 ${daysUntil(wishView!.revealAt)} 天内持续收集心愿单量，到点公开真实拿货价。`
+                      : "喜欢就加入心愿单，集齐一定单量即去跟档口开价。"}
                   </p>
                   {typeof product.wish_count === "number" && product.wish_count > 0 && (
-                    <p className="mt-1 text-amber-900">已有 <b className="font-bold">{product.wish_count}</b> 人想要，越早上车越容易成团开价。</p>
+                    <p className="mt-1 text-amber-900">已有 <b className="font-bold">{product.wish_count}</b> 人加心愿 · 单量越集越接近开价。</p>
                   )}
                 </div>
               </div>

@@ -104,9 +104,9 @@
     <view class="wish-banner" wx:if="{{wishlistMode}}">
       <text class="wish-banner-ic">♡</text>
       <view class="wish-banner-body">
-        <text class="wish-banner-txt">心愿收集款 · 先集需求后开价</text>
-        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」，{{wishRevealed ? '价格已公开' : wishRevealText + '天后公开真实拿货价'}}。</text>
-        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 人想要，越早上车越易成团开价。</text>
+        <text class="wish-banner-txt">心愿收集款 · 倒计时集单量</text>
+        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；倒计时 {{wishRevealText}} 天持续集心愿单量，到点公开真实拿货价。</text>
+        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 人加心愿 · 单量越集越接近开价。</text>
         <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐一定量即去跟档口开价。</text>
       </view>
     </view>

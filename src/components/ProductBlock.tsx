@@ -152,7 +152,7 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
                           {v.text}
                           {!v.revealed && (
                             <span className="text-[11px] font-normal text-gray-400 ml-1">
-                              {daysUntil(v.revealAt)}天后公开
+                              集单中·{daysUntil(v.revealAt)}天后公开
                             </span>
                           )}
                         </>

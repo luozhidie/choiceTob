@@ -114,7 +114,7 @@ Page({
               var s=String(price);
               var mask=new Array(Math.max(0,s.length-1)+1).join('?');
               priceText='\u00A5'+mask+s.slice(-1);
-              priceHint=Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+              priceHint='集单中·'+Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
             }
           }
           return {
@@ -156,7 +156,9 @@ Page({
   },
   goLaunchLive:function(e){
     var s=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.stream)||{};
-    wx.showToast({title:(s.brand||'直播')+' '+s.time,icon:'none'});
+    if(s.link){ wx.navigateTo({url:s.link}); return; }
+    if(s.brand){ wx.navigateTo({url:'/pages/search/index?keyword='+encodeURIComponent(s.brand)}); return; }
+    wx.showToast({title:(s.brand||'直播')+' '+(s.time||'即将开始'),icon:'none'});
   },
   goLaunchBrand:function(e){
     var b=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.brand)||{};
