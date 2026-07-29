@@ -168,6 +168,7 @@ Page({
   goLaunchBrand:function(e){
     var b=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.brand)||{};
     if(b.link){ wx.navigateTo({url:b.link}); return; }
+    if(b.name){ wx.navigateTo({url:'/pages/search/index?keyword='+encodeURIComponent(b.name)}); return; }
     wx.showToast({title:'更多好货陆续上新 · 先看今日新款',icon:'none'});
   },
   goLaunchProduct:function(e){
