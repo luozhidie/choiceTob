@@ -286,7 +286,6 @@ Page({
 
   applyPrice:function(list){
     var isPriceMember=this.data.isPriceMember;
-    var REVEAL_DAYS=7;
     function maskPrice(yuan){
       if(yuan<=0)return '';
       var s=String(yuan);
@@ -294,23 +293,26 @@ Page({
       var mask=new Array(Math.max(0,s.length-1)+1).join('?');
       return '\u00A5'+mask+units;
     }
-    function getRevealAt(p){
-      if(p.price_reveal_at){var t=new Date(p.price_reveal_at).getTime();if(!isNaN(t))return t;}
-      var base=p.created_at?new Date(p.created_at).getTime():Date.now();
-      return base+REVEAL_DAYS*86400*1000;
-    }
     list.forEach(function(p){
       var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
       var wp=Number(p.wholesale_price)||0;if(wp>=100)wp=Math.round(wp/100);
-      // 心愿单（需求聚合）模式：真实价先打码，倒计时结束后公开
-      if(p.wishlist_mode && n>0){
-        var revealAt=getRevealAt(p);
-        if(Date.now()>=revealAt){
-          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
-          p.priceHint='已公开';
+      // 心愿收集（盲盒）模式：按手数解锁档位
+      if(p.wishlist_mode){
+        var hands=Number(p.wish_count)||0;
+        var bp=Number(p.bulk_price)||0;if(bp>=100)bp=Math.round(bp/100);
+        var W_HANDS=1,B_HANDS=5;
+        if(hands>=B_HANDS){
+          var bShown=bp>0?bp:(wp>0?wp:n);
+          p.priceText='\u00A5'+(bShown%1===0?bShown:bShown.toFixed(2));
+          p.priceHint='已开批量价';
+        } else if(hands>=W_HANDS){
+          var wShown=wp>0?wp:n;
+          p.priceText='\u00A5'+(wShown%1===0?wShown:wShown.toFixed(2));
+          p.priceHint='已开拿货价';
         } else {
-          p.priceText=maskPrice(n);
-          p.priceHint='集单中·'+Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+          var teaser=wp>0?wp:n;
+          if(teaser>0){ p.priceText=maskPrice(teaser); p.priceHint='再集'+(W_HANDS-hands)+'手开拿货价'; }
+          else { p.priceText='价格待定'; p.priceHint='盲盒集单'; }
         }
         p.wholesalePriceText='';
       } else if(isPriceMember && wp>0){

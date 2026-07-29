@@ -31,9 +31,8 @@ var WHOLESALE_TIPS = [
   { title: '质量把控', desc: '到货先抽检车工/走线/印花；首单小批量测款，数据好再追大货。' },
 ];
 
-// 心愿单（需求聚合）模式价格信息：真实价先打码，倒计时结束后公开
+// 心愿收集（盲盒）模式价格信息：按手数解锁档位
 function wishPriceInfo(p, now) {
-  var REVEAL_DAYS = 7;
   function maskPrice(yuan) {
     if (yuan <= 0) return '';
     var s = String(yuan);
@@ -41,28 +40,48 @@ function wishPriceInfo(p, now) {
     var mask = new Array(Math.max(0, s.length - 1) + 1).join('?');
     return '¥' + mask + units;
   }
-  function getRevealAt(pp) {
-    if (pp.price_reveal_at) {
-      var t = new Date(pp.price_reveal_at).getTime();
-      if (!isNaN(t)) return t;
-    }
-    var base = pp.created_at ? new Date(pp.created_at).getTime() : now;
-    return base + REVEAL_DAYS * 86400 * 1000;
-  }
+  var W_HANDS = 1, B_HANDS = 5;
   var yuan = Math.round(Number(p.price || 0) / 100);
-  var hasReal = yuan > 0;
-  var revealAt = getRevealAt(p);
-  var revealed = now >= revealAt;
-  if (p.wishlist_mode && hasReal) {
+  var wholesale = Math.round(Number(p.wholesale_price || 0) / 100);
+  var bulk = Math.round(Number(p.bulk_price || 0) / 100);
+  var teaser = wholesale > 0 ? wholesale : yuan;
+  var hands = Math.max(0, Math.floor(Number(p.wish_count) || 0));
+  if (p.wishlist_mode) {
+    var tier = 'blind', shown = 0, priceText = '', tierLabel = '盲盒·集单中', progressText = '';
+    if (hands >= B_HANDS) {
+      tier = 'bulk';
+      shown = bulk > 0 ? bulk : (wholesale > 0 ? wholesale : yuan);
+      priceText = shown > 0 ? ('¥' + shown) : '价格待定';
+      tierLabel = '已开批量价';
+      progressText = '已达批量价 · 继续集单店主再让利';
+    } else if (hands >= W_HANDS) {
+      tier = 'wholesale';
+      shown = wholesale > 0 ? wholesale : yuan;
+      priceText = shown > 0 ? ('¥' + shown) : '价格待定';
+      tierLabel = '已开拿货价';
+      progressText = '再集 ' + (B_HANDS - hands) + ' 手开批量价';
+    } else {
+      tier = 'blind';
+      shown = teaser;
+      if (teaser > 0) {
+        priceText = maskPrice(teaser);
+        progressText = '再集 ' + (W_HANDS - hands) + ' 手开拿货价';
+      } else {
+        priceText = '价格待定·盲盒集单';
+        progressText = '集齐 ' + W_HANDS + ' 手店主去拿货开价';
+      }
+    }
     return {
-      wishHasPrice: true,
-      wishUnitsHint: String(yuan % 10),
-      wishPriceText: revealed ? ('¥' + yuan) : maskPrice(yuan),
-      wishRevealed: revealed,
-      wishRevealText: revealed ? '' : String(Math.ceil((revealAt - now) / 86400000)),
+      wishHasPrice: teaser > 0,
+      wishUnitsHint: String(shown % 10),
+      wishPriceText: priceText,
+      wishRevealed: tier !== 'blind',
+      wishTier: tier,
+      wishTierLabel: tierLabel,
+      wishProgressText: progressText,
     };
   }
-  return { wishHasPrice: false, wishUnitsHint: '', wishPriceText: '', wishRevealed: false, wishRevealText: '' };
+  return { wishHasPrice: false, wishUnitsHint: '', wishPriceText: '', wishRevealed: false, wishTier: '', wishTierLabel: '', wishProgressText: '' };
 }
 
 Page({
@@ -414,14 +433,11 @@ Page({
     });
   },
 
-  // 心愿单价格公开倒计时：每秒刷新打码价与「X天后公开」
+  // 心愿收集（盲盒）模式：档位由手数（wish_count）决定，仅在加入心愿单时变化，
+  // 无需每秒轮询倒计时，故此处仅清空可能存在的旧定时器。
   startWishTimer: function (p) {
     var t = this;
     if (t._wishTimer) { clearInterval(t._wishTimer); t._wishTimer = null; }
-    if (!p || !p.wishlist_mode) return;
-    t._wishTimer = setInterval(function () {
-      t.setData(wishPriceInfo(p, Date.now()));
-    }, 1000);
   },
 
   loadReviews: function (id) {
@@ -639,7 +655,13 @@ Page({
         var d = r.data || {};
         if (r.statusCode === 401 || d.code === 'unauthorized') { wx.navigateTo({ url: '/pages/login/index' }); return; }
         if (d.success) {
-          t.setData({ isWished: d.wished });
+          var p = t.data.product || {};
+          var newCount = Math.max(0, (t.data.wishCount || 0) + (d.wished ? 1 : -1));
+          t.setData({
+            isWished: d.wished,
+            wishCount: newCount,
+            ...wishPriceInfo(Object.assign({}, p, { wish_count: newCount }), Date.now())
+          });
           wx.showToast({ title: d.wished ? '已加入心愿单' : '已移出心愿单', icon: 'none' });
         } else {
           wx.showToast({ title: d.error || '操作失败', icon: 'none' });

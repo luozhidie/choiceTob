@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { isValidImage } from "@/components/ProductCollage";
 import { formatPrice } from "@/lib/discount";
-import { getWishPriceView, daysUntil } from "@/lib/wishlistPrice";
+import { getWishPriceView } from "@/lib/wishlistPrice";
 
 interface ProductBlockProps {
   block: any;
@@ -147,17 +147,22 @@ export default function ProductBlock({ block, bg, textColor, pad, radius, conten
                 {product.wishlist_mode
                   ? (() => {
                       const v = getWishPriceView(product);
-                      return v.hasRealPrice ? (
+                      return v.hasPrice ? (
                         <>
                           {v.text}
-                          {!v.revealed && (
+                          {v.tier === "blind" && (
                             <span className="text-[11px] font-normal text-gray-400 ml-1">
-                              集单中·{daysUntil(v.revealAt)}天后公开
+                              {v.progressText}
+                            </span>
+                          )}
+                          {v.tier !== "blind" && (
+                            <span className="text-[11px] font-normal text-green-500 ml-1">
+                              {v.tierLabel}
                             </span>
                           )}
                         </>
                       ) : (
-                        "价格待定 · 心愿收集"
+                        "价格待定 · 盲盒集单"
                       );
                     })()
                   : formatPrice(product.price)}

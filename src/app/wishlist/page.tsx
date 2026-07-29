@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   Heart, ShoppingBag, Trash2, Loader2, ArrowRight, LogIn,
 } from "lucide-react";
-import { getWishPriceView, daysUntil } from "@/lib/wishlistPrice";
+import { getWishPriceView } from "@/lib/wishlistPrice";
 
 interface WishItem {
   id: string;
@@ -151,9 +151,9 @@ export default function WishlistPage() {
                     const v = getWishPriceView(it);
                     return (
                       <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
-                        {v.hasRealPrice
-                          ? (v.revealed ? `已公开 ${v.text}` : `${v.text} · ${daysUntil(v.revealAt)}天后公开`)
-                          : "价格待定 · 心愿收集"}
+                        {v.hasPrice
+                          ? (v.tier === "blind" ? `${v.text} · ${v.progressText}` : `${v.tierLabel} ${v.text}`)
+                          : "价格待定 · 盲盒集单"}
                       </span>
                     );
                   })()}

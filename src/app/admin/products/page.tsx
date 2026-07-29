@@ -1412,7 +1412,7 @@ export default function AdminProductsPage() {
                       setForm({ ...form, price: e.target.value.replace(/[^0-9]/g, "") })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder={form.wishlist_mode ? "心愿收集款请填真实拿货价（前台先打码展示）" : "如 99"}
+                    placeholder={form.wishlist_mode ? "心愿收集款·盲盒：拿货价填下方「拿货价」栏（集齐1手开），批量价填「批量价」栏（集齐5手开），本栏可留空" : "如 99"}
                   />
                 </div>
                 <div>

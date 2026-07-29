@@ -77,19 +77,17 @@
       </view>
     </view>
 
-    <!-- 心愿单模式：打码价格卡（有真实价时展示，倒计时公开） -->
-    <view class="price-card wish-price-card" wx:if="{{wishlistMode && wishHasPrice}}">
+    <!-- 心愿收集（盲盒）模式：打码价格卡 / 已解锁档位 -->
+    <view class="price-card wish-price-card" wx:if="{{wishlistMode}}">
       <view class="price-card-main">
         <view class="price-item">
           <view class="price-amt">{{wishPriceText}}</view>
-          <text class="price-label">打码预览·个位「{{wishUnitsHint}}」</text>
+          <text class="price-label" wx:if="{{wishTier==='blind' && wishHasPrice}}">打码预览·个位「{{wishUnitsHint}}」</text>
+          <text class="price-label" wx:else>{{wishTierLabel}}</text>
         </view>
-        <view class="price-sales" wx:if="{{!wishRevealed}}">
-          <text class="sales-num">{{wishRevealText}}</text>
-          <text class="sales-label">后公开真实拿货价</text>
-        </view>
-        <view class="price-sales" wx:else>
-          <text class="sales-num">已公开</text>
+        <view class="price-sales">
+          <text class="sales-num">{{wishTierLabel}}</text>
+          <text class="sales-label">{{wishProgressText}}</text>
         </view>
       </view>
     </view>
@@ -104,10 +102,10 @@
     <view class="wish-banner" wx:if="{{wishlistMode}}">
       <text class="wish-banner-ic">♡</text>
       <view class="wish-banner-body">
-        <text class="wish-banner-txt">心愿收集款 · 倒计时集单量</text>
-        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；倒计时 {{wishRevealText}} 天持续集心愿单量，到点公开真实拿货价。</text>
-        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 人加心愿 · 单量越集越接近开价。</text>
-        <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐一定量即去跟档口开价。</text>
+        <text class="wish-banner-txt">心愿收集款 · 盲盒集单</text>
+        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；集齐 1 手开拿货价，集齐 5 手开批量价，单量越多价越低。</text>
+        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 手心愿 · 单量越集越接近开价。</text>
+        <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐手数即去跟档口拿货开价。</text>
       </view>
     </view>
 

@@ -104,17 +104,22 @@ Page({
           var price=Number(p.price)||0; if(price>=100) price=Math.round(price/100);
           var priceText='\u00A5'+price;
           var priceHint='';
-          // 心愿单（需求聚合）模式：真实价先打码
-          if(p.wishlist_mode && price>0){
-            var revealAt;
-            if(p.price_reveal_at){var rt=new Date(p.price_reveal_at).getTime();if(!isNaN(rt))revealAt=rt;}
-            if(!revealAt){var base=p.created_at?new Date(p.created_at).getTime():Date.now();revealAt=base+7*86400*1000;}
-            if(Date.now()>=revealAt){ priceText='\u00A5'+price; priceHint='已公开'; }
-            else {
-              var s=String(price);
-              var mask=new Array(Math.max(0,s.length-1)+1).join('?');
-              priceText='\u00A5'+mask+s.slice(-1);
-              priceHint='集单中·'+Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+          // 心愿收集（盲盒）模式：按手数解锁档位
+          if(p.wishlist_mode){
+            var lhands=Number(p.wish_count)||0;
+            var lwp=Number(p.wholesale_price)||0;if(lwp>=100)lwp=Math.round(lwp/100);
+            var lbp=Number(p.bulk_price)||0;if(lbp>=100)lbp=Math.round(lbp/100);
+            var W_HANDS=1,B_HANDS=5;
+            if(lhands>=B_HANDS){
+              var lb=lbp>0?lbp:(lwp>0?lwp:price);
+              priceText='\u00A5'+(lb%1===0?lb:lb.toFixed(2)); priceHint='已开批量价';
+            } else if(lhands>=W_HANDS){
+              var lw=lwp>0?lwp:price;
+              priceText='\u00A5'+(lw%1===0?lw:lw.toFixed(2)); priceHint='已开拿货价';
+            } else {
+              var lteaser=lwp>0?lwp:price;
+              if(lteaser>0){ var ls=String(lteaser); var lmask=new Array(Math.max(0,ls.length-1)+1).join('?'); priceText='\u00A5'+lmask+ls.slice(-1); priceHint='再集'+(W_HANDS-lhands)+'手开拿货价'; }
+              else { priceText='价格待定'; priceHint='盲盒集单'; }
             }
           }
           return {
