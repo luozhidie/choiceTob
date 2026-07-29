@@ -27,6 +27,12 @@ import {
   getCategoryPath,
 } from "@/lib/categories";
 import FilterMultiSelect from "./FilterMultiSelect";
+import { getStyleCombos } from "@/lib/styles";
+
+// 风格组合：女士 8×8=64，男士 5×5=25，共 89。供商品「风格标签」下拉与上新页「看订阅风格」筛选对齐
+const STYLE_COMBOS = getStyleCombos();
+const STYLE_COMBOS_F = STYLE_COMBOS.filter((c) => c.gender === "女士");
+const STYLE_COMBOS_M = STYLE_COMBOS.filter((c) => c.gender === "男士");
 
 // 鎶? params.fabrics / params.sizes 瑙ｆ瀽鎴愭暟缁勶紙鍏煎 wrap 瀛楃涓? "/妫?/楹?/" 鎴栫函鏂囨湰 "妫?,楹?" 鎴栨暟缁勶級
 function parseWrapParam(v: any): string[] {
@@ -2147,16 +2153,30 @@ export default function AdminProductsPage() {
                 {/* 椋庢牸缁撹锛堟墜鍔ㄥ～锛屽悗闈㈡帴AI鑷姩璇嗗埆锛? */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">椋庢牸缁撹锛堝彲鐣欑┖锛屾彁浜ゅ悗AI鑷姩璇嗗埆锛?</label>
-                  {/* 风格标签：自由填写，如 静奢风 / 极简风 / 古典型 / 戏剧型，供上新页「看订阅风格」筛选 */}
+                  {/* 风格标签：固定 89 个组合（女士64 + 男士25），供上新页「看订阅风格」筛选 */}
                   <div className="mb-3">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">风格标签（自由填写，如 静奢风 / 极简风 / 古典型 / 戏剧型）</label>
-                    <input
-                      type="text"
+                    <label className="block text-xs font-medium text-gray-600 mb-1">风格标签（女士64 + 男士25 共89个组合，供「看订阅风格」筛选）</label>
+                    <select
                       value={form.style_type}
                       onChange={(e) => setForm({ ...form, style_type: e.target.value })}
                       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="如 静奢风 / 极简风 / 古典型 / 戏剧型"
-                    />
+                    >
+                      <option value="">不指定风格</option>
+                      <optgroup label="女士八大风格（64）">
+                        {STYLE_COMBOS_F.map((c) => (
+                          <option key={c.main + c.lean} value={c.combo}>
+                            {c.combo}{c.common === "罕见" ? "（罕见）" : ""}
+                          </option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="男士五大风格（25）">
+                        {STYLE_COMBOS_M.map((c) => (
+                          <option key={c.main + c.lean} value={c.combo}>
+                            {c.combo}
+                          </option>
+                        ))}
+                      </optgroup>
+                    </select>
                   </div>
 
                   <select
