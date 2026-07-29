@@ -28,6 +28,7 @@ function formatProducts(data: any[], wishMap: Record<string, number> = {}) {
     is_published: p.is_published ?? true,
     stock: p.stock ?? 0,
     sales: p.sales || 0,
+    style_type: p.style_type || null,
     created_at: p.created_at || null,
     sizes: p.sizes || null,
     color: p.color || null,

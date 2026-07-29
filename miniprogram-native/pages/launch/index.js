@@ -32,6 +32,15 @@ Page({
     launchMediaLen:0,
     launchProducts:[],
     launchProductsView:[],
+    launchTabs:[
+      {key:'now',label:'今日新款'},
+      {key:'all',label:'看订阅风格'},
+      {key:'price',label:'销量'},
+      {key:'filter',label:'批发价'},
+      {key:'筛',label:'筛选'}
+    ],
+    styleChips:[],
+    lcStyleSel:'',
     lcNewTab:'now',
     lcNewCat:''
   },
@@ -56,6 +65,7 @@ Page({
           c:c,
           endTime:(c.couponSection&&c.couponSection.endTime)||''
         });
+        t.buildTabs(c);
         t.startCountdown();
         t.loadMedia();
         t.loadNew();
@@ -76,6 +86,23 @@ Page({
   },
   stopCountdown:function(){
     if(this._lcTimer){ clearInterval(this._lcTimer); this._lcTimer=null; }
+  },
+  buildTabs:function(c){
+    var t=this;
+    var defs=[
+      {key:'now',label:'今日新款'},
+      {key:'all',label:'看订阅风格'},
+      {key:'price',label:'销量'},
+      {key:'filter',label:'批发价'},
+      {key:'筛',label:'筛选'}
+    ];
+    var raw=(c&&c.newSection&&c.newSection.tabs)||[];
+    if(raw&&raw.length){
+      var tabs=defs.map(function(d,i){
+        return {key:d.key, label:(raw[i]&&raw[i].trim())?raw[i].trim():d.label};
+      });
+      t.setData({launchTabs:tabs});
+    }
   },
   loadMedia:function(){
     var t=this;
@@ -129,11 +156,14 @@ Page({
             price:price,
             priceText:priceText,
             priceHint:priceHint,
+            sales:Number(p.sales)||0,
+            style_type:p.style_type||'',
             badge:(p.is_new?'新品':(p.is_hot?'热卖':'')),
             link:'/pages/shop/index?id='+p.id
           };
         });
         t.setData({launchProducts:list});
+        t.buildStyleChips();
         t.applyView();
       }
     });
@@ -141,15 +171,74 @@ Page({
   applyView:function(){
     var t=this;
     var list=t.data.launchProducts||[];
-    if(t.data.lcNewTab==='price'){
-      list=list.slice().sort(function(a,b){return (b.price||0)-(a.price||0);});
+    var tab=t.data.lcNewTab||'now';
+    // 看订阅风格：按风格筛选
+    if(tab==='all'){
+      var sel=t.data.lcStyleSel||'';
+      if(sel){ list=list.filter(function(p){return (p.style_type||'')===sel;}); }
+    }
+    list=list.slice();
+    if(tab==='price'){
+      // 销量：按销量降序
+      list.sort(function(a,b){return (b.sales||0)-(a.sales||0);});
+    } else if(tab==='filter'){
+      // 批发价：按拿货价升序（拿货价为空排末尾）
+      list.sort(function(a,b){
+        var wa=Number(a.wholesale_price)||0, wb=Number(b.wholesale_price)||0;
+        if(wa===0&&wb===0) return 0;
+        if(wa===0) return 1;
+        if(wb===0) return -1;
+        return wa-wb;
+      });
     }
     t.setData({launchProductsView:list});
   },
+  buildStyleChips:function(){
+    var t=this;
+    var map={};
+    (t.data.launchProducts||[]).forEach(function(p){
+      var s=p.style_type||'';
+      if(s) map[s]=true;
+    });
+    var chips=Object.keys(map).map(function(s){return {key:s,label:s};});
+    chips.unshift({key:'',label:'全部风格'});
+    t.setData({styleChips:chips});
+  },
   swLcNewTab:function(e){
     var tab=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.t)||'now';
-    this.setData({lcNewTab:tab});
+    if(tab==='筛'){ this.openFilterSheet(); return; }
+    this.setData({lcNewTab:tab, lcStyleSel:''});
     this.applyView();
+  },
+  swLcStyle:function(e){
+    var key=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.s)||'';
+    this.setData({lcStyleSel:key});
+    this.applyView();
+  },
+  openFilterSheet:function(){
+    var t=this;
+    wx.showActionSheet({
+      itemList:['新品优先','销量优先','批发价 低→高','批发价 高→低'],
+      success:function(res){
+        var map=['newest','price','filter_asc','filter_desc'];
+        t.applyFilterMode(map[res.tapIndex]);
+      }
+    });
+  },
+  applyFilterMode:function(mode){
+    var t=this;
+    var list=(t.data.launchProducts||[]).slice();
+    if(mode==='price'){
+      list.sort(function(a,b){return (b.sales||0)-(a.sales||0);});
+    } else if(mode==='filter_asc'){
+      list.sort(function(a,b){var wa=Number(a.wholesale_price)||0,wb=Number(b.wholesale_price)||0; if(wa===0&&wb===0)return 0; if(wa===0)return 1; if(wb===0)return -1; return wa-wb;});
+    } else if(mode==='filter_desc'){
+      list.sort(function(a,b){var wa=Number(a.wholesale_price)||0,wb=Number(b.wholesale_price)||0; if(wa===0&&wb===0)return 0; if(wa===0)return 1; if(wb===0)return -1; return wb-wa;});
+    }
+    t.setData({launchProductsView:list, lcNewTab:'筛'});
+  },
+  goSubtitle:function(){
+    wx.navigateTo({url:'/pages/search/index?keyword='+encodeURIComponent('秋上新')});
   },
   swLcNewCat:function(e){
     var c=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.c)||'';

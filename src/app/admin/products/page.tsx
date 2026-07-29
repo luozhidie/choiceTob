@@ -88,6 +88,7 @@ interface Product {
   color_hex?: string | null;
   color_season_code?: string | null;
   style_conclusion?: string | null;
+  style_type?: string | null;
   sku?: string | null;
   // 鍟嗗搧鍙傛暟
   material?: string | null;
@@ -290,6 +291,7 @@ export default function AdminProductsPage() {
     color_hex: "",
     color_season_code: "",
     style_conclusion: "",
+    style_type: "",
     // 涓婃灦涓婚
     theme: "",
     // 鍟嗗搧鍙傛暟
@@ -589,6 +591,7 @@ export default function AdminProductsPage() {
       color_hex: form.color_hex.trim() || null,
       color_season_code: form.color_season_code.trim() || null,
       style_conclusion: form.style_conclusion.trim() || null,
+      style_type: form.style_type.trim() || null,
       // 鍟嗗搧鍙傛暟
       material: form.fabrics.length > 0 ? form.fabrics.join("/") : null,
       sizes: form.sizesSel.length > 0 ? form.sizesSel.join("/") : null,
@@ -757,6 +760,7 @@ export default function AdminProductsPage() {
       color_hex: product.color_hex || "",
       color_season_code: product.color_season_code || "",
       style_conclusion: product.style_conclusion || "",
+      style_type: product.style_type || "",
       fabrics:
         parseWrapParam(product.params?.fabrics).length > 0
           ? parseWrapParam(product.params?.fabrics)
@@ -2143,6 +2147,18 @@ export default function AdminProductsPage() {
                 {/* 椋庢牸缁撹锛堟墜鍔ㄥ～锛屽悗闈㈡帴AI鑷姩璇嗗埆锛? */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">椋庢牸缁撹锛堝彲鐣欑┖锛屾彁浜ゅ悗AI鑷姩璇嗗埆锛?</label>
+                  {/* 风格标签：自由填写，如 静奢风 / 极简风 / 古典型 / 戏剧型，供上新页「看订阅风格」筛选 */}
+                  <div className="mb-3">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">风格标签（自由填写，如 静奢风 / 极简风 / 古典型 / 戏剧型）</label>
+                    <input
+                      type="text"
+                      value={form.style_type}
+                      onChange={(e) => setForm({ ...form, style_type: e.target.value })}
+                      className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      placeholder="如 静奢风 / 极简风 / 古典型 / 戏剧型"
+                    />
+                  </div>
+
                   <select
                     value={form.style_conclusion}
                     onChange={(e) => setForm({ ...form, style_conclusion: e.target.value })}
