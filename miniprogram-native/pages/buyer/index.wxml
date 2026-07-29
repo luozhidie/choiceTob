@@ -114,7 +114,10 @@
           <image src="{{item.image_url||item.cover_image||''}}" mode="aspectFill" class="ci" lazy-load/>
           <view wx:if="{{!item.image_url&&!item.cover_image}}" class="cp"><text>暂无图</text></view>
           <text class="cn">{{item.name||item.title||'商品'}}</text>
-          <text class="cpri">{{item.priceText}}</text>
+          <view class="cpri-row">
+            <text class="cpri">{{item.priceText}}</text>
+            <text class="cpri-hint" wx:if="{{item.priceHint}}">{{item.priceHint}}</text>
+          </view>
           <text class="cwpri" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
           <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
         </view>

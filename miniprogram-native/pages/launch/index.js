@@ -102,11 +102,28 @@ Page({
         else if(Array.isArray(r.data)) l=r.data;
         var list=l.map(function(p){
           var price=Number(p.price)||0; if(price>=100) price=Math.round(price/100);
+          var priceText='\u00A5'+price;
+          var priceHint='';
+          // 心愿单（需求聚合）模式：真实价先打码
+          if(p.wishlist_mode && price>0){
+            var revealAt;
+            if(p.price_reveal_at){var rt=new Date(p.price_reveal_at).getTime();if(!isNaN(rt))revealAt=rt;}
+            if(!revealAt){var base=p.created_at?new Date(p.created_at).getTime():Date.now();revealAt=base+7*86400*1000;}
+            if(Date.now()>=revealAt){ priceText='\u00A5'+price; priceHint='已公开'; }
+            else {
+              var s=String(price);
+              var mask=new Array(Math.max(0,s.length-1)+1).join('?');
+              priceText='\u00A5'+mask+s.slice(-1);
+              priceHint=Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+            }
+          }
           return {
             id:p.id,
             image:safeImg(p.image_url||p.cover_image||(p.images&&p.images[0])),
             title:(p.name||p.title||'商品'),
             price:price,
+            priceText:priceText,
+            priceHint:priceHint,
             badge:(p.is_new?'新品':(p.is_hot?'热卖':'')),
             link:'/pages/shop/index?id='+p.id
           };
@@ -144,7 +161,7 @@ Page({
   goLaunchBrand:function(e){
     var b=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.brand)||{};
     if(b.link){ wx.navigateTo({url:b.link}); return; }
-    wx.switchTab({url:'/pages/buyer/index'});
+    wx.showToast({title:'更多好货陆续上新 · 先看今日新款',icon:'none'});
   },
   goLaunchProduct:function(e){
     var p=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.product)||{};

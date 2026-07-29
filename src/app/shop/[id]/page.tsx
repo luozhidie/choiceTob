@@ -18,6 +18,7 @@ import {
 } from "@/lib/categories";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/discount";
+import { getWishPriceView, formatCountdownShort, daysUntil } from "@/lib/wishlistPrice";
 import { useAuth } from "@/lib/auth-context";
 import MembershipCard from "@/components/product/MembershipCard";
 import CouponClaim, { CouponTemplate } from "@/components/product/CouponClaim";
@@ -43,6 +44,8 @@ interface Product {
   source?: "platform" | "buyer" | "supplier_submit" | null;
   /* 心愿单模式：无价格的需求收集商品，用户可加入心愿单 */
   wishlist_mode?: boolean;
+  /* 心愿单商品当前心愿数（公开 API 聚合返回） */
+  wish_count?: number;
   /* 预售字段 */
   is_preorder?: boolean;
   preorder_days?: number | null;
@@ -97,6 +100,14 @@ export default function ProductDetailPage() {
 
   // 店铺可编辑内容（拿货指南 / 拿货技巧 / 面料洗护，后台 store-content 可编辑）
   const [storeContent, setStoreContent] = useState<any>(null);
+
+  // 心愿单价格公开倒计时（仅在心愿单模式且有真实价时走时）
+  const [now, setNow] = useState<number>(Date.now());
+  useEffect(() => {
+    if (!product?.wishlist_mode) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [product?.wishlist_mode]);
 
   // 检查用户登录状态 + 是否价格会员
   useEffect(() => {
@@ -300,6 +311,11 @@ export default function ProductDetailPage() {
   const effectivePrice = (p: any) =>
     p && (p.price || 0) > 0 ? p.price : (p?.original_price || 0);
 
+  // 心愿单价格视图（打码价 + 公开倒计时），随 now 实时刷新
+  const wishView = product ? getWishPriceView(product, now) : null;
+  const wishPriceLabel = (p: any) => getWishPriceView(p, now).text;
+  const wishRevealed = (p: any) => getWishPriceView(p, now).revealed;
+
   // 商品标签：自定义 tags + 自动（会员 / 货源 / 今日新款）
   const tagColor = (t: string) => {
     if (t === "会员") return "bg-red-50 text-red-500";
@@ -326,7 +342,7 @@ export default function ProductDetailPage() {
         </div>
         <div className="p-3">
           <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-          <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(p))}</p>
+          <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? getWishPriceView(p, now).text : formatPrice(effectivePrice(p))}</p>
         </div>
       </div>
     </Link>
@@ -639,13 +655,28 @@ export default function ProductDetailPage() {
           <div className="mb-2">
             <div className="flex items-end gap-2">
               <span className="text-3xl font-bold text-gray-900">
-                {product.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(product))}
+                {product.wishlist_mode ? wishView!.text : formatPrice(effectivePrice(product))}
               </span>
-              {product.original_price && product.original_price > effectivePrice(product) && (
+              {!product.wishlist_mode && product.original_price && product.original_price > effectivePrice(product) && (
                 <span className="text-lg text-gray-400 line-through mb-1">原价 {formatPrice(product.original_price)}</span>
               )}
-              <span className="text-sm text-gray-400 mb-1">{product.wishlist_mode ? "心愿收集款" : (effectivePrice(product) === product.price ? "零售价" : "促销价")}</span>
+              <span className="text-sm text-gray-400 mb-1">
+                {product.wishlist_mode
+                  ? (wishView!.revealed ? "已公开价" : "心愿收集款·打码预览")
+                  : (effectivePrice(product) === product.price ? "零售价" : "促销价")}
+              </span>
             </div>
+
+            {/* 心愿单模式：公开倒计时 + 引导 */}
+            {product.wishlist_mode && wishView!.hasRealPrice && !wishView!.revealed && (
+              <div className="flex items-center gap-1.5 mt-1.5 text-sm text-amber-700">
+                <Clock className="w-4 h-4" />
+                <span>价格公开倒计时 <b className="font-bold tabular-nums">{formatCountdownShort(wishView!.revealAt, now)}</b></span>
+              </div>
+            )}
+            {product.wishlist_mode && !wishView!.hasRealPrice && (
+              <div className="text-xs text-gray-400 mt-1">价格待定 · 先加入心愿单锁定心仪款</div>
+            )}
 
             {product.wholesale_price && (
               <div className="flex items-center gap-2 mt-1.5 text-sm">
@@ -793,16 +824,26 @@ export default function ProductDetailPage() {
           {/* 心愿单模式 / 普通下单 按钮 */}
           {product.wishlist_mode ? (
             <div className="space-y-3">
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                <Heart className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="text-sm text-amber-800">价格待定 · 喜欢可加入心愿单，集齐一定量即开价</span>
+              <div className="flex items-start gap-2 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <Heart className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800 leading-relaxed">
+                  <p className="font-semibold mb-0.5">心愿收集款 · 先集需求后开价</p>
+                  <p>
+                    {wishView!.hasRealPrice
+                      ? `现价打码预览 ${wishView!.text}，仅露个位「${wishView!.unitsHint}」，${wishView!.revealed ? "价格已公开" : `${daysUntil(wishView!.revealAt)} 天后公开真实拿货价`}。`
+                      : "喜欢就加入心愿单，集齐一定量即去跟档口开价。"}
+                  </p>
+                  {typeof product.wish_count === "number" && product.wish_count > 0 && (
+                    <p className="mt-1 text-amber-900">已有 <b className="font-bold">{product.wish_count}</b> 人想要，越早上车越容易成团开价。</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={toggleWish}
                 disabled={wishLoading}
                 className={`w-full py-3.5 rounded-xl text-base font-bold flex items-center justify-center gap-2 text-white transition-colors disabled:opacity-60 ${wished ? "bg-gray-400" : "bg-amber-500 hover:bg-amber-600"}`}
               >
-                {wished ? (<><Check className="w-5 h-5" /> 已加入心愿单</>) : (<><Heart className="w-5 h-5" /> 加入心愿单</>)}
+                {wished ? (<><Check className="w-5 h-5" /> 已加入心愿单</>) : (<><Heart className="w-5 h-5" /> 加入心愿单 · 锁定心仪款</>)}
               </button>
               <button
                 onClick={() => router.push("/wishlist")}
@@ -1062,7 +1103,7 @@ export default function ProductDetailPage() {
                     </div>
                     <div className="p-3">
                       <h4 className="text-sm font-medium text-primary line-clamp-2">{p.title}</h4>
-                      <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(p))}</p>
+                      <p className="text-sm text-accent font-bold mt-1">{p.wishlist_mode ? getWishPriceView(p, now).text : formatPrice(effectivePrice(p))}</p>
                     </div>
                   </div>
                 </Link>
@@ -1148,7 +1189,7 @@ export default function ProductDetailPage() {
                     <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 leading-snug">
                       {product.title}
                     </h4>
-                    <p className="text-red-500 font-bold mt-1.5">{product.wishlist_mode ? "价格待定·心愿收集" : formatPrice(effectivePrice(product))}</p>
+                    <p className="text-red-500 font-bold mt-1.5">{product.wishlist_mode ? getWishPriceView(product, now).text : formatPrice(effectivePrice(product))}</p>
                     <p className="text-xs text-gray-400 mt-1">
                       骆芷蝶智选 · 不自用不分享
                     </p>

@@ -147,7 +147,10 @@
         </view>
         <view class="lc-new-info">
           <text class="lc-new-title">{{p.title}}</text>
-          <text class="lc-new-price">¥{{p.price}}</text>
+          <view class="lc-new-price-row">
+            <text class="lc-new-price">{{p.priceText}}</text>
+            <text class="lc-new-price-hint" wx:if="{{p.priceHint}}">{{p.priceHint}}</text>
+          </view>
         </view>
       </view>
     </view>

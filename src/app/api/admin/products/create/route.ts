@@ -427,9 +427,12 @@ export async function POST(request: NextRequest) {
     if (!payload.title) {
       return NextResponse.json({ error: "缺少必填字段：标题" }, { status: 400 });
     }
-    // 心愿收集模式允许无价格，入库自动记为 0
+    // 心愿收集模式：供货商填的真实拿货价入库（单位分），前台先打码展示 + 倒计时公开；
+    // 若确实留空则记为 0（历史遗留无价款，前台维持「价格待定·心愿收集」）。
     if (payload.wishlist_mode) {
-      if (!payload.price) payload.price = 0;
+      if (payload.price === undefined || payload.price === null || payload.price === "") {
+        payload.price = 0;
+      }
     } else if (!payload.price) {
       return NextResponse.json({ error: "普通商品缺少价格" }, { status: 400 });
     }

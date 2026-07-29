@@ -31,6 +31,40 @@ var WHOLESALE_TIPS = [
   { title: '质量把控', desc: '到货先抽检车工/走线/印花；首单小批量测款，数据好再追大货。' },
 ];
 
+// 心愿单（需求聚合）模式价格信息：真实价先打码，倒计时结束后公开
+function wishPriceInfo(p, now) {
+  var REVEAL_DAYS = 7;
+  function maskPrice(yuan) {
+    if (yuan <= 0) return '';
+    var s = String(yuan);
+    var units = s.slice(-1);
+    var mask = new Array(Math.max(0, s.length - 1) + 1).join('?');
+    return '¥' + mask + units;
+  }
+  function getRevealAt(pp) {
+    if (pp.price_reveal_at) {
+      var t = new Date(pp.price_reveal_at).getTime();
+      if (!isNaN(t)) return t;
+    }
+    var base = pp.created_at ? new Date(pp.created_at).getTime() : now;
+    return base + REVEAL_DAYS * 86400 * 1000;
+  }
+  var yuan = Math.round(Number(p.price || 0) / 100);
+  var hasReal = yuan > 0;
+  var revealAt = getRevealAt(p);
+  var revealed = now >= revealAt;
+  if (p.wishlist_mode && hasReal) {
+    return {
+      wishHasPrice: true,
+      wishUnitsHint: String(yuan % 10),
+      wishPriceText: revealed ? ('¥' + yuan) : maskPrice(yuan),
+      wishRevealed: revealed,
+      wishRevealText: revealed ? '' : String(Math.ceil((revealAt - now) / 86400000)),
+    };
+  }
+  return { wishHasPrice: false, wishUnitsHint: '', wishPriceText: '', wishRevealed: false, wishRevealText: '' };
+}
+
 Page({
   data: {
     productId: '',
@@ -366,14 +400,28 @@ Page({
           shipImage: shipImage,
           shipSummary: shipSummary,
           hasProductShip: hasProductShip,
+          wishCount: Number(p.wish_count) || 0,
+          wishlistMode: !!p.wishlist_mode,
+          ...wishPriceInfo(p, Date.now()),
         }, function () {
           setTimeout(function () { t.measureSectionTops(); }, 500);
         });
+        t.startWishTimer(p);
         t.loadReviews(id);
         t.loadRec(p.category, id);
         t.loadShopRecs(p.category, id);
       }
     });
+  },
+
+  // 心愿单价格公开倒计时：每秒刷新打码价与「X天后公开」
+  startWishTimer: function (p) {
+    var t = this;
+    if (t._wishTimer) { clearInterval(t._wishTimer); t._wishTimer = null; }
+    if (!p || !p.wishlist_mode) return;
+    t._wishTimer = setInterval(function () {
+      t.setData(wishPriceInfo(p, Date.now()));
+    }, 1000);
   },
 
   loadReviews: function (id) {
@@ -1109,5 +1157,12 @@ Page({
       path: '/pages/shop/index?id=' + this.data.productId,
       imageUrl: p.image_url || ''
     };
+  },
+
+  onUnload: function () {
+    if (this._wishTimer) { clearInterval(this._wishTimer); this._wishTimer = null; }
+  },
+  onHide: function () {
+    if (this._wishTimer) { clearInterval(this._wishTimer); this._wishTimer = null; }
   },
 });

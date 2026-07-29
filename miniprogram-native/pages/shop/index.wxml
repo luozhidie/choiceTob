@@ -77,6 +77,23 @@
       </view>
     </view>
 
+    <!-- 心愿单模式：打码价格卡（有真实价时展示，倒计时公开） -->
+    <view class="price-card wish-price-card" wx:if="{{wishlistMode && wishHasPrice}}">
+      <view class="price-card-main">
+        <view class="price-item">
+          <view class="price-amt">{{wishPriceText}}</view>
+          <text class="price-label">打码预览·个位「{{wishUnitsHint}}」</text>
+        </view>
+        <view class="price-sales" wx:if="{{!wishRevealed}}">
+          <text class="sales-num">{{wishRevealText}}</text>
+          <text class="sales-label">后公开真实拿货价</text>
+        </view>
+        <view class="price-sales" wx:else>
+          <text class="sales-num">已公开</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 商品名 -->
     <view class="name-sec">
       <text class="name">{{product.title || product.name || '商品名称'}}</text>
@@ -86,7 +103,12 @@
     <!-- 心愿单模式提示 -->
     <view class="wish-banner" wx:if="{{wishlistMode}}">
       <text class="wish-banner-ic">♡</text>
-      <text class="wish-banner-txt">价格待定 · 喜欢可加入心愿单，集齐一定量即开价</text>
+      <view class="wish-banner-body">
+        <text class="wish-banner-txt">心愿收集款 · 先集需求后开价</text>
+        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」，{{wishRevealed ? '价格已公开' : wishRevealText + '天后公开真实拿货价'}}。</text>
+        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 人想要，越早上车越易成团开价。</text>
+        <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐一定量即去跟档口开价。</text>
+      </view>
     </view>
 
     <!-- 会员 -->
@@ -230,7 +252,7 @@
     </view>
     <view class="bar-right">
       <block wx:if="{{wishlistMode}}">
-        <view class="btn-wish {{isWished?'wished':''}}" bindtap="toggleWish">{{isWished?'✓ 已加入心愿单':'♡ 加入心愿单'}}</view>
+        <view class="btn-wish {{isWished?'wished':''}}" bindtap="toggleWish">{{isWished?'✓ 已加入心愿单':'♡ 加入心愿单 · 锁定心仪款'}}</view>
       </block>
       <block wx:else>
         <view class="btn-cart" bindtap="addCart">加入进货车</view>

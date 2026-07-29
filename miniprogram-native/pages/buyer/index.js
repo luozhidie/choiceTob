@@ -286,10 +286,34 @@ Page({
 
   applyPrice:function(list){
     var isPriceMember=this.data.isPriceMember;
+    var REVEAL_DAYS=7;
+    function maskPrice(yuan){
+      if(yuan<=0)return '';
+      var s=String(yuan);
+      var units=s.slice(-1);
+      var mask=new Array(Math.max(0,s.length-1)+1).join('?');
+      return '\u00A5'+mask+units;
+    }
+    function getRevealAt(p){
+      if(p.price_reveal_at){var t=new Date(p.price_reveal_at).getTime();if(!isNaN(t))return t;}
+      var base=p.created_at?new Date(p.created_at).getTime():Date.now();
+      return base+REVEAL_DAYS*86400*1000;
+    }
     list.forEach(function(p){
       var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
       var wp=Number(p.wholesale_price)||0;if(wp>=100)wp=Math.round(wp/100);
-      if(isPriceMember && wp>0){
+      // 心愿单（需求聚合）模式：真实价先打码，倒计时结束后公开
+      if(p.wishlist_mode && n>0){
+        var revealAt=getRevealAt(p);
+        if(Date.now()>=revealAt){
+          p.priceText='\u00A5'+(n%1===0?n:n.toFixed(2));
+          p.priceHint='已公开';
+        } else {
+          p.priceText=maskPrice(n);
+          p.priceHint=Math.ceil((revealAt-Date.now())/86400000)+'天后公开';
+        }
+        p.wholesalePriceText='';
+      } else if(isPriceMember && wp>0){
         p.priceText='\u00A5'+(wp%1===0?wp:wp.toFixed(2));
         p.wholesalePriceText='';
       } else {

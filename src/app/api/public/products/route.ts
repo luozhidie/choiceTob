@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // 正确的 publishable key（公开安全，作为环境变量缺失时的兜底）
 const FALLBACK_PUBLISHABLE = "sb_publishable_gQlwSK2XDm52k-z5iDhemg_yUJeBSCW";
 
-function formatProducts(data: any[]) {
+function formatProducts(data: any[], wishMap: Record<string, number> = {}) {
   return data.map((p: any) => ({
     id: p.id,
     name: p.name || p.title || "商品",
@@ -35,7 +35,28 @@ function formatProducts(data: any[]) {
     ship_est_days: p.ship_est_days ?? null,
     ship_text: p.ship_text || null,
     ship_image: p.ship_image || null,
+    // 心愿单（需求聚合）模式标记与心愿数，供前台「打码价 + 倒计时」使用
+    wishlist_mode: p.wishlist_mode ?? false,
+    wish_count: wishMap[p.id] || 0,
   }));
+}
+
+/** 批量拉取商品心愿数（service_role 可直查 product_wish_counts 视图） */
+async function fetchWishCounts(supabase: any, ids: string[]): Promise<Record<string, number>> {
+  const map: Record<string, number> = {};
+  if (!ids || ids.length === 0) return map;
+  try {
+    const { data } = await supabase
+      .from("product_wish_counts")
+      .select("product_id, wish_count")
+      .in("product_id", ids);
+    (data || []).forEach((r: any) => {
+      map[r.product_id] = Number(r.wish_count) || 0;
+    });
+  } catch (e) {
+    // 视图不存在或被 RLS 限制时静默降级，不影响主流程
+  }
+  return map;
 }
 
 function applySort(query: any, sort: string) {
@@ -58,14 +79,19 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   const idsParam = searchParams.get("ids") || "";
   const singleId = searchParams.get("id") || "";
 
-  // 按 ID 单条查询（给商品详情页用）
+  // 按 ID 单条查询（给商品详情页用）——保留 select(*) 全字段，仅补充心愿数
   if (singleId) {
     const [pResult, bpResult] = await Promise.all([
       supabase.from("products").select("*").eq("id", singleId).maybeSingle(),
       supabase.from("buyer_products").select("*").eq("id", singleId).maybeSingle(),
     ]);
-    if (pResult.data) return { success: true, data: [pResult.data], error: null };
-    if (bpResult.data) return { success: true, data: [bpResult.data], error: null };
+    const raw: any = pResult.data || bpResult.data;
+    if (raw) {
+      const wishMap = await fetchWishCounts(supabase, [raw.id]);
+      raw.wish_count = wishMap[raw.id] || 0;
+      raw.wishlist_mode = raw.wishlist_mode ?? false;
+      return { success: true, data: [raw], error: null };
+    }
     return { success: true, data: [], error: null };
   }
 
@@ -75,7 +101,8 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     if (ids.length > 0) {
       const { data, error } = await supabase.from("products").select("*").in("id", ids).limit(ids.length);
       if (error) return { error };
-      return { success: true, data: formatProducts(data || []), error: null };
+      const wishMap = await fetchWishCounts(supabase, (data || []).map((p: any) => p.id));
+      return { success: true, data: formatProducts(data || [], wishMap), error: null };
     }
   }
 
@@ -131,7 +158,8 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     error = fb.error;
   }
 
-  return { success: true, data: formatProducts(data || []), error };
+  const wishMap = await fetchWishCounts(supabase, (data || []).map((p: any) => p.id));
+  return { success: true, data: formatProducts(data || [], wishMap), error };
 }
 
 export async function GET(request: NextRequest) {

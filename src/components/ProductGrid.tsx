@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Search, Package, SlidersHorizontal, X } from "lucide-react";
 import { formatPrice } from "@/lib/discount";
+import { getWishPriceView, daysUntil } from "@/lib/wishlistPrice";
 
 interface ProductGridProps {
   products: any[];
@@ -305,7 +306,23 @@ export default function ProductGrid({
                 {product.title || product.name || "商品"}
               </h4>
               <p className="text-red-500 font-bold mt-1 text-[15px]">
-                {product.wishlist_mode ? "价格待定 · 心愿收集" : formatPrice(product.price)}
+                {product.wishlist_mode
+                  ? (() => {
+                      const v = getWishPriceView(product);
+                      return v.hasRealPrice ? (
+                        <>
+                          {v.text}
+                          {!v.revealed && (
+                            <span className="text-[11px] font-normal text-gray-400 ml-1">
+                              {daysUntil(v.revealAt)}天后公开
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        "价格待定 · 心愿收集"
+                      );
+                    })()
+                  : formatPrice(product.price)}
               </p>
             </Link>
           ))}
