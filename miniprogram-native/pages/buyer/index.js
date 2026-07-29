@@ -296,22 +296,22 @@ Page({
     list.forEach(function(p){
       var n=Number(p.price)||0;if(n>=100)n=Math.round(n/100);
       var wp=Number(p.wholesale_price)||0;if(wp>=100)wp=Math.round(wp/100);
-      // 心愿收集（盲盒）模式：按手数解锁档位
+      // 心愿收集（盲盒）模式：1 手=5 件，按件数解锁档位
       if(p.wishlist_mode){
         var hands=Number(p.wish_count)||0;
         var bp=Number(p.bulk_price)||0;if(bp>=100)bp=Math.round(bp/100);
-        var W_HANDS=1,B_HANDS=5;
-        if(hands>=B_HANDS){
+        var W_PIECES=5,B_PIECES=25;
+        if(hands>=B_PIECES){
           var bShown=bp>0?bp:(wp>0?wp:n);
           p.priceText='\u00A5'+(bShown%1===0?bShown:bShown.toFixed(2));
           p.priceHint='已开批量价';
-        } else if(hands>=W_HANDS){
+        } else if(hands>=W_PIECES){
           var wShown=wp>0?wp:n;
           p.priceText='\u00A5'+(wShown%1===0?wShown:wShown.toFixed(2));
           p.priceHint='已开拿货价';
         } else {
           var teaser=wp>0?wp:n;
-          if(teaser>0){ p.priceText=maskPrice(teaser); p.priceHint='再集'+(W_HANDS-hands)+'手开拿货价'; }
+          if(teaser>0){ p.priceText=maskPrice(teaser); p.priceHint='再集'+(W_PIECES-hands)+'件开拿货价'; }
           else { p.priceText='价格待定'; p.priceHint='盲盒集单'; }
         }
         p.wholesalePriceText='';

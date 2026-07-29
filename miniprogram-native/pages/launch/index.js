@@ -104,21 +104,21 @@ Page({
           var price=Number(p.price)||0; if(price>=100) price=Math.round(price/100);
           var priceText='\u00A5'+price;
           var priceHint='';
-          // 心愿收集（盲盒）模式：按手数解锁档位
+          // 心愿收集（盲盒）模式：1 手=5 件，按件数解锁档位
           if(p.wishlist_mode){
             var lhands=Number(p.wish_count)||0;
             var lwp=Number(p.wholesale_price)||0;if(lwp>=100)lwp=Math.round(lwp/100);
             var lbp=Number(p.bulk_price)||0;if(lbp>=100)lbp=Math.round(lbp/100);
-            var W_HANDS=1,B_HANDS=5;
-            if(lhands>=B_HANDS){
+            var W_PIECES=5,B_PIECES=25;
+            if(lhands>=B_PIECES){
               var lb=lbp>0?lbp:(lwp>0?lwp:price);
               priceText='\u00A5'+(lb%1===0?lb:lb.toFixed(2)); priceHint='已开批量价';
-            } else if(lhands>=W_HANDS){
+            } else if(lhands>=W_PIECES){
               var lw=lwp>0?lwp:price;
               priceText='\u00A5'+(lw%1===0?lw:lw.toFixed(2)); priceHint='已开拿货价';
             } else {
               var lteaser=lwp>0?lwp:price;
-              if(lteaser>0){ var ls=String(lteaser); var lmask=new Array(Math.max(0,ls.length-1)+1).join('?'); priceText='\u00A5'+lmask+ls.slice(-1); priceHint='再集'+(W_HANDS-lhands)+'手开拿货价'; }
+              if(lteaser>0){ var ls=String(lteaser); var lmask=new Array(Math.max(0,ls.length-1)+1).join('?'); priceText='\u00A5'+lmask+ls.slice(-1); priceHint='再集'+(W_PIECES-lhands)+'件开拿货价'; }
               else { priceText='价格待定'; priceHint='盲盒集单'; }
             }
           }

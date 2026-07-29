@@ -18,7 +18,7 @@ import {
 } from "@/lib/categories";
 import { useCart } from "@/lib/cart-context";
 import { formatPrice } from "@/lib/discount";
-import { getWishPriceView, BLINDBOX_WHOLESALE_HANDS, BLINDBOX_BULK_HANDS } from "@/lib/wishlistPrice";
+import { getWishPriceView, BLINDBOX_WHOLESALE_HANDS, BLINDBOX_BULK_HANDS, BLINDBOX_WHOLESALE_PIECES, BLINDBOX_BULK_PIECES } from "@/lib/wishlistPrice";
 import { useAuth } from "@/lib/auth-context";
 import MembershipCard from "@/components/product/MembershipCard";
 import CouponClaim, { CouponTemplate } from "@/components/product/CouponClaim";
@@ -677,7 +677,7 @@ export default function ProductDetailPage() {
               </div>
             )}
             {product.wishlist_mode && !wishView!.hasPrice && (
-              <div className="text-xs text-gray-400 mt-1">价格待定 · 先加入心愿单，集齐 {BLINDBOX_WHOLESALE_HANDS} 手店主去拿货开价</div>
+              <div className="text-xs text-gray-400 mt-1">价格待定 · 先加入心愿单，集齐 {BLINDBOX_WHOLESALE_HANDS} 手（{BLINDBOX_WHOLESALE_PIECES} 件）店主去拿货开价</div>
             )}
 
             {product.wholesale_price && (
@@ -832,11 +832,11 @@ export default function ProductDetailPage() {
                   <p className="font-semibold mb-0.5">心愿收集款 · 盲盒集单</p>
                   <p>
                     {wishView!.hasPrice
-                      ? `现价打码预览 ${wishView!.text}，仅露个位「${wishView!.unitsHint}」；集齐 ${BLINDBOX_WHOLESALE_HANDS} 手开拿货价，集齐 ${BLINDBOX_BULK_HANDS} 手开批量价，单量越多价越低。`
+                      ? `现价打码预览 ${wishView!.text}，仅露个位「${wishView!.unitsHint}」；集齐 ${BLINDBOX_WHOLESALE_HANDS} 手（${BLINDBOX_WHOLESALE_PIECES} 件）开拿货价，集齐 ${BLINDBOX_BULK_HANDS} 手（${BLINDBOX_BULK_PIECES} 件）开批量价，单量越多价越低。`
                       : "喜欢就加入心愿单，集齐手数即去跟档口拿货开价。"}
                   </p>
                   {typeof product.wish_count === "number" && product.wish_count > 0 && (
-                    <p className="mt-1 text-amber-900">已有 <b className="font-bold">{product.wish_count}</b> 手心愿 · 单量越集越接近开价。</p>
+                    <p className="mt-1 text-amber-900">已有 <b className="font-bold">{product.wish_count}</b> 件心愿 · 单量越集越接近开价。</p>
                   )}
                 </div>
               </div>

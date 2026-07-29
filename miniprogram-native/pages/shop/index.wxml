@@ -103,8 +103,8 @@
       <text class="wish-banner-ic">♡</text>
       <view class="wish-banner-body">
         <text class="wish-banner-txt">心愿收集款 · 盲盒集单</text>
-        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；集齐 1 手开拿货价，集齐 5 手开批量价，单量越多价越低。</text>
-        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 手心愿 · 单量越集越接近开价。</text>
+        <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；集齐 1 手（5 件）开拿货价，集齐 5 手（25 件）开批量价，单量越多价越低。</text>
+        <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 件心愿 · 单量越集越接近开价。</text>
         <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐手数即去跟档口拿货开价。</text>
       </view>
     </view>

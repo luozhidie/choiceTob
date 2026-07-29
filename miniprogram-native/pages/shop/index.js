@@ -40,7 +40,8 @@ function wishPriceInfo(p, now) {
     var mask = new Array(Math.max(0, s.length - 1) + 1).join('?');
     return '¥' + mask + units;
   }
-  var W_HANDS = 1, B_HANDS = 5;
+  // 服装行话：1 手 = 5 件，按件数解锁档位
+  var W_PIECES = 5, B_PIECES = 25;
   var yuan = Math.round(Number(p.price || 0) / 100);
   var wholesale = Math.round(Number(p.wholesale_price || 0) / 100);
   var bulk = Math.round(Number(p.bulk_price || 0) / 100);
@@ -48,27 +49,27 @@ function wishPriceInfo(p, now) {
   var hands = Math.max(0, Math.floor(Number(p.wish_count) || 0));
   if (p.wishlist_mode) {
     var tier = 'blind', shown = 0, priceText = '', tierLabel = '盲盒·集单中', progressText = '';
-    if (hands >= B_HANDS) {
+    if (hands >= B_PIECES) {
       tier = 'bulk';
       shown = bulk > 0 ? bulk : (wholesale > 0 ? wholesale : yuan);
       priceText = shown > 0 ? ('¥' + shown) : '价格待定';
       tierLabel = '已开批量价';
       progressText = '已达批量价 · 继续集单店主再让利';
-    } else if (hands >= W_HANDS) {
+    } else if (hands >= W_PIECES) {
       tier = 'wholesale';
       shown = wholesale > 0 ? wholesale : yuan;
       priceText = shown > 0 ? ('¥' + shown) : '价格待定';
       tierLabel = '已开拿货价';
-      progressText = '再集 ' + (B_HANDS - hands) + ' 手开批量价';
+      progressText = '再集 ' + (B_PIECES - hands) + ' 件开批量价';
     } else {
       tier = 'blind';
       shown = teaser;
       if (teaser > 0) {
         priceText = maskPrice(teaser);
-        progressText = '再集 ' + (W_HANDS - hands) + ' 手开拿货价';
+        progressText = '再集 ' + (W_PIECES - hands) + ' 件开拿货价';
       } else {
         priceText = '价格待定·盲盒集单';
-        progressText = '集齐 ' + W_HANDS + ' 手店主去拿货开价';
+        progressText = '集齐 ' + W_PIECES + ' 件店主去拿货开价';
       }
     }
     return {

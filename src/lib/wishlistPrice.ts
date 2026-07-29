@@ -2,26 +2,33 @@
  * 心愿收集款 · 盲盒模式价格展示工具
  *
  * 设计：供货商把「还不知道拿货价 / 想先试探需求」的款标记为心愿收集（wishlist_mode）。
- *       用户加入心愿单即记为 1 手（hand）。手数越多，解锁的价格档位越高：
- *         - 0 手        → 盲盒态：打码预览「¥??9」（仅露个位，按拿货价打码），集单中
- *         - 集齐 1 手   → 开「拿货价」(wholesale_price)，店主可去拿货
- *         - 集齐 5 手   → 开「批量价」(bulk_price)，店主可批量拿
- *         - 5 手以上    → 已达批量价；单量越爆，店主酌情再让利（手动调价）
+ *       用户加入心愿单即记为 1 件（wish_count 按件累计）。件数越多，解锁的价格档位越高：
+ *         - 0 件        → 盲盒态：打码预览「¥??9」（仅露个位，按拿货价打码），集单中
+ *         - 集齐 1 手（5 件）   → 开「拿货价」(wholesale_price)，店主可去拿货
+ *         - 集齐 5 手（25 件）  → 开「批量价」(bulk_price)，店主可批量拿
+ *         - 25 件以上  → 已达批量价；单量越爆，店主酌情再让利（手动调价）
  *
- * 注：1 手 = 1 个用户加入心愿单（wish_count）。若后续定义「1 手 = N 件」，
- *     只需把下方阈值乘以 N（常量集中在文件顶部，便于后台统一调整）。
+ * 服装行话：1 手 = 5 件（PIECES_PER_HAND）。解锁阈值以「手」为语义单位，
+ * 内部乘以每手件数换算成 wish_count（件）进行比较。若行话改成 1 手 = N 件，
+ * 只需改 PIECES_PER_HAND 一处即可。
  *
  * 展示规则：
- *   - wishlist_mode 且有真实价，0 手     → 打码 "¥??9" + 集单进度
- *   - wishlist_mode 且有真实价，≥1 手    → 真实拿货价 "¥128"
- *   - wishlist_mode 且有真实价，≥5 手    → 真实批量价 "¥120"
+ *   - wishlist_mode 且有真实价，0 件     → 打码 "¥??9" + 集单进度（再集 X 件开拿货价）
+ *   - wishlist_mode 且有真实价，≥5 件    → 真实拿货价 "¥128"
+ *   - wishlist_mode 且有真实价，≥25 件   → 真实批量价 "¥120"
  *   - wishlist_mode 但无任何价（店主尚未拿货）→ 维持 "价格待定·盲盒集单"
  */
 
+/** 服装行话：1 手 = 多少件 */
+export const PIECES_PER_HAND = 5;
 /** 集齐多少手开「拿货价」 */
 export const BLINDBOX_WHOLESALE_HANDS = 1;
 /** 集齐多少手开「批量价」 */
 export const BLINDBOX_BULK_HANDS = 5;
+
+/** 解锁阈值（件）= 手数 × 每手件数 */
+export const BLINDBOX_WHOLESALE_PIECES = BLINDBOX_WHOLESALE_HANDS * PIECES_PER_HAND; // 5
+export const BLINDBOX_BULK_PIECES = BLINDBOX_BULK_HANDS * PIECES_PER_HAND; // 25
 
 function yuanOf(fen: number | null | undefined): number {
   return Math.round(Number(fen || 0) / 100);
@@ -48,9 +55,9 @@ export interface WishPriceView {
   text: string; // 主展示文本（¥??9 或 ¥128 或 价格待定·盲盒集单）
   unitsHint: string; // 个位提示字符，如 "9"
   revealed: boolean; // 是否已解锁真实价（tier !== blind）
-  hands: number; // 当前手数（= wish_count）
+  hands: number; // 当前件数（= wish_count）
   tierLabel: string; // 档位标签：盲盒·集单中 / 已开拿货价 / 已开批量价
-  progressText: string; // 进度文案：再集 X 手开拿货价 / 再集 X 手开批量价 / 已达批量价…
+  progressText: string; // 进度文案：再集 X 件开拿货价 / 再集 X 件开批量价 / 已达批量价…
   statusText: string; // 综合状态文案
 }
 
@@ -59,7 +66,7 @@ export interface WishPriceView {
  * @param p 商品对象（需含 wishlist_mode / wish_count，可选 wholesale_price / bulk_price / price）
  */
 export function getWishPriceView(p: any): WishPriceView {
-  const hands = Math.max(0, Math.floor(Number(p?.wish_count) || 0));
+  const pieces = Math.max(0, Math.floor(Number(p?.wish_count) || 0)); // 件数（wish_count）
   const wholesale = yuanOf(p?.wholesale_price); // 拿货价（元）
   const bulk = yuanOf(p?.bulk_price); // 批量价（元）
   const retail = yuanOf(p?.price); // 零售价（元）
@@ -74,12 +81,12 @@ export function getWishPriceView(p: any): WishPriceView {
   let text = "";
   let masked = true;
 
-  if (hands >= BLINDBOX_BULK_HANDS) {
+  if (pieces >= BLINDBOX_BULK_PIECES) {
     tier = "bulk";
     shown = bulk > 0 ? bulk : wholesale > 0 ? wholesale : retail;
     text = shown > 0 ? `¥${shown}` : "价格待定·盲盒集单";
     masked = false;
-  } else if (hands >= BLINDBOX_WHOLESALE_HANDS) {
+  } else if (pieces >= BLINDBOX_WHOLESALE_PIECES) {
     tier = "wholesale";
     shown = wholesale > 0 ? wholesale : retail;
     text = shown > 0 ? `¥${shown}` : "价格待定·盲盒集单";
@@ -87,7 +94,7 @@ export function getWishPriceView(p: any): WishPriceView {
   } else {
     tier = "blind";
     shown = teaser;
-      if (hasPrice) {
+    if (hasPrice) {
       text = formatMaskedPrice(teaserFen);
       masked = true;
     } else {
@@ -108,13 +115,13 @@ export function getWishPriceView(p: any): WishPriceView {
   let progressText = "";
   let statusText = "";
   if (tier === "blind") {
-    const need = BLINDBOX_WHOLESALE_HANDS - hands;
-    progressText = need > 0 ? `再集 ${need} 手开拿货价` : `集齐开拿货价`;
-    statusText = `集齐 ${BLINDBOX_WHOLESALE_HANDS} 手 · 店主去拿货开价`;
+    const need = BLINDBOX_WHOLESALE_PIECES - pieces;
+    progressText = need > 0 ? `再集 ${need} 件开拿货价` : `集齐开拿货价`;
+    statusText = `集齐 ${BLINDBOX_WHOLESALE_HANDS} 手（${BLINDBOX_WHOLESALE_PIECES} 件）· 店主去拿货开价`;
   } else if (tier === "wholesale") {
-    const need = BLINDBOX_BULK_HANDS - hands;
-    progressText = need > 0 ? `再集 ${need} 手开批量价` : `集齐开批量价`;
-    statusText = `已开拿货价 · 集齐 ${BLINDBOX_BULK_HANDS} 手开批量价`;
+    const need = BLINDBOX_BULK_PIECES - pieces;
+    progressText = need > 0 ? `再集 ${need} 件开批量价` : `集齐开批量价`;
+    statusText = `已开拿货价 · 集齐 ${BLINDBOX_BULK_HANDS} 手（${BLINDBOX_BULK_PIECES} 件）开批量价`;
   } else {
     progressText = `已达批量价 · 继续集单店主再让利`;
     statusText = `已开批量价 · 单量越爆价越优`;
@@ -128,7 +135,7 @@ export function getWishPriceView(p: any): WishPriceView {
     text,
     unitsHint,
     revealed: tier !== "blind",
-    hands,
+    hands: pieces,
     tierLabel,
     progressText,
     statusText,
