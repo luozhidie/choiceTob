@@ -19,50 +19,85 @@
     images: [],
   };
 
-      // ── 1. 标题（优先匹配商品标题而非公司名）──
-      // 新版1688：标题在详情主区域，公司名在左上角
-      const titleCandidates = [
-        document.querySelector("[class*='detail-title']"),
-        document.querySelector("[class*='offer-title']"),
-        document.querySelector(".d-title"),
-        // 从页面文本中找最长的合理标题（排除公司名/店铺名）
-        ...Array.from(document.querySelectorAll("h1, [class*='title']")).filter(el => {
-          const t = el.innerText.trim();
-          return t.length > 5 && t.length < 120 && !t.includes("有限公司") && !t.includes("旗舰店") && !t.includes("店铺");
-        }),
-        document.querySelector("[itemprop='name']"),
-        document.querySelector("h1"),
-      ];
-      for (const el of titleCandidates) {
-        if (el) {
-          const t = el.innerText.trim();
-          if (t && t.length > 4 && !t.includes("有限公司")) { result.title = t; break; }
-        }
-      }
+  // ── 1. 标题（优先匹配商品标题而非公司名/评价区标题）──
+  // 新版1688：标题在详情主区域，公司名在左上角；移动版标题常在 h1 或特定 class
+  const badTitleRe = /用户评价|用户评论|评论\s*[·\d]|已售|加购|收藏|分享|图文详情|商品详情|店铺|有限公司|旗舰店|更多|推荐|供应商|厂家|源头工厂/;
+  const titleCandidates = [
+    document.querySelector("meta[property='og:title']"),
+    document.querySelector("meta[name='og:title']"),
+    document.querySelector("[itemprop='name']"),
+    document.querySelector("[class*='detail-title']"),
+    document.querySelector("[class*='offer-title']"),
+    document.querySelector(".d-title"),
+    ...Array.from(document.querySelectorAll("h1")).filter(el => {
+      const t = el.innerText.trim();
+      return t.length > 8 && t.length < 120 && !badTitleRe.test(t);
+    }),
+    ...Array.from(document.querySelectorAll("[class*='title']")).filter(el => {
+      const t = el.innerText.trim();
+      return t.length > 8 && t.length < 120 && !badTitleRe.test(t);
+    }),
+    document.querySelector("h1"),
+  ];
+  for (const el of titleCandidates) {
+    if (!el) continue;
+    let t = el.innerText ? el.innerText.trim() : (el.getAttribute("content") || "").trim();
+    if (t && t.length > 8 && t.length < 120 && !badTitleRe.test(t) && !t.includes("有限公司")) {
+      result.title = t; break;
+    }
+  }
+  // 兜底：document.title 去掉站点后缀
+  if (!result.title && document.title && document.title.length > 8) {
+    let dt = document.title.split(/[-_｜|]/)[0].trim();
+    if (dt.length > 8 && dt.length < 120 && !badTitleRe.test(dt)) result.title = dt;
+  }
 
-  // ── 2. 价格（新版1688有多种价格展示格式）──
+  // ── 2. 价格（新版1688有多种价格展示格式，移动版价格可能分散在兄弟节点）──
   try {
-    // 策略1：找包含¥符号且紧跟数字的元素
+    const priceBadRe = /运费|邮费|优惠|券|满减|减|到手价|约|低至|起|万|亿/;
+    // 策略1：优先找带 ¥ 的节点，并看父级文本
     const allEls = document.querySelectorAll("[class*='price'], [class*='Price'], [itemprop='price'], .cost-price, .discount-price, [class*='amount']");
+    let fallbackPrice = "";
     for (const el of allEls) {
       const t = (el.innerText || "").trim();
-      if (/¥\s*\d+/.test(t) || /^\d+(\.\d{1,2})?$/.test(t)) {
-        const m = t.match(/(\d+(?:\.\d{1,2})?)/);
-        if (m && parseFloat(m[1]) > 0) { result.price = m[1]; break; }
+      if (!t) continue;
+      const parentText = (el.parentElement && el.parentElement.innerText || t).trim();
+      if (priceBadRe.test(parentText)) continue;
+      if (/¥\s*\d+/.test(t) || /^\d+(\.\d{1,2})?$/.test(t) || /¥\s*\d+/.test(parentText)) {
+        const m = (parentText.match(/¥\s*(\d{1,6}(?:\.\d{1,2})?)/) || t.match(/(\d{1,6}(?:\.\d{1,2})?)/));
+        if (m && parseFloat(m[1]) > 0 && parseFloat(m[1]) < 100000) {
+          if (!fallbackPrice) fallbackPrice = m[1];
+          const cls = (el.className || "").toString();
+          if (cls.includes("price") || cls.includes("Price") || cls.includes("amount")) { result.price = m[1]; break; }
+        }
       }
     }
-    // 策略2：页面全局搜 ¥数字 模式
+    if (!result.price && fallbackPrice) result.price = fallbackPrice;
+
+    // 策略2：页面全局搜 ¥数字，排除运费/优惠等上下文
     if (!result.price) {
       const body = document.body.innerText;
-      const priceMatch = body.match(/(?:热销款|新人价|促销价|活动价)?[^\n]*?¥[\s]*(\d+(?:\.\d{1,2})?)/);
-      if (priceMatch) result.price = priceMatch[1];
+      const priceMatches = [...body.matchAll(/¥\s*(\d{1,6}(?:\.\d{1,2})?)/g)];
+      for (const m of priceMatches) {
+        const idx = m.index || 0;
+        const context = body.slice(Math.max(0, idx - 30), idx + 30);
+        if (!priceBadRe.test(context)) { result.price = m[1]; break; }
+      }
     }
+
+    // 策略3：找「起批价」「批发价」等关键词后的数字
+    if (!result.price) {
+      const body = document.body.innerText;
+      const m = body.match(/(?:批发价|起批价|拿货价|单价|价格)[^\d]{0,10}(\d{1,6}(?:\.\d{1,2})?)/);
+      if (m) result.price = m[1];
+    }
+
     // 原价
     if (!result.originalPrice) {
-      const origEl = document.querySelector(".original-price, [class*='origin'], del, [class*='market']");
+      const origEl = document.querySelector(".original-price, [class*='origin'], del, [class*='market'], [class*='original']");
       if (origEl) {
         const m = origEl.innerText.replace(/[^\d.]/g, "").match(/\d+(?:\.\d{1,2})?/);
-        if (m) result.originalPrice = m[0];
+        if (m && m[0] !== result.price) result.originalPrice = m[0];
       }
     }
   } catch (e) {}
@@ -120,21 +155,22 @@
 
   // ── 5. SKU 选项 ──
   try {
+    const skuBadRe = /千人加购|万人加购|现货秒发|立即购买|加入进货单|收藏|分享|已选|选择|请选择/;
     document.querySelectorAll(
       ".obj-sku li, .sku-item, [class*='sku'] [class*='value'], " +
-      "[class*='sku-item'] span, .object-main .sku-list .sku-line"
+      "[class*='sku-item'] span, .object-main .sku-list .sku-line, [class*='prop'] li"
     ).forEach(el => {
-      const parent = el.closest("[class*='sku'], [class*='line']");
-      const label = parent ? (parent.querySelector("[class*='title'], [class*='label'], dt")?.innerText || "") : "";
-      const value = el.innerText.trim() || el.getAttribute("data-value") || "";
-      if (value && value.length < 30) {
-        const attrName = label || "规格";
-        if (!result.skuOptions[attrName]) result.skuOptions[attrName] = [];
-        if (!result.skuOptions[attrName].includes(value)) result.skuOptions[attrName].push(value);
-      }
+      const parent = el.closest("[class*='sku'], [class*='line'], [class*='prop']");
+      const label = parent ? (parent.querySelector("[class*='title'], [class*='label'], dt, [class*='name']")?.innerText || "").replace(/[:：\s]/g, "") : "";
+      let value = el.innerText.trim() || el.getAttribute("data-value") || "";
+      value = value.replace(/\s+/g, " ").trim();
+      if (!value || value.length > 30 || skuBadRe.test(value)) return;
+      const attrName = /颜色|色彩|colour|color|尺码|尺寸|size|规格|款号|款式/i.test(label) ? label : "规格";
+      if (!result.skuOptions[attrName]) result.skuOptions[attrName] = [];
+      if (!result.skuOptions[attrName].includes(value)) result.skuOptions[attrName].push(value);
     });
     for (const [k, vals] of Object.entries(result.skuOptions)) {
-      if (Array.isArray(vals)) result.specs.push(k + ": " + vals.join(", "));
+      if (Array.isArray(vals) && vals.length) result.specs.push(k + ": " + vals.join(", "));
     }
   } catch (e) {}
 
