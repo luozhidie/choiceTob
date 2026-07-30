@@ -589,7 +589,7 @@ export default function AdminProductsPage() {
       is_published: form.is_published,
       wishlist_mode: form.wishlist_mode,
       detail: form.detail.trim() || null,
-      // 属性编码体绯
+      // 属性编码体系
       sku: form.sku.trim() || null,
       fabric_code: form.fabric_code.length > 0 ? form.fabric_code : null,
       cut_code: form.cut_code.length > 0 ? form.cut_code : null,

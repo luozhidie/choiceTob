@@ -93,6 +93,7 @@ export default function CrmStoresPage() {
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [batchDeleting, setBatchDeleting] = useState(false);
+  const [deleteAllLoading, setDeleteAllLoading] = useState(false);
   const [exportFormat, setExportFormat] = useState<"vcf" | "xlsx" | "txt">("vcf");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showWechatModal, setShowWechatModal] = useState(false);
@@ -269,6 +270,30 @@ export default function CrmStoresPage() {
       fetchStores();
     }
     setBatchDeleting(false);
+  };
+
+  // 一键清空全部门店（走后端 service_role 绕过 RLS）
+  const handleDeleteAll = async () => {
+    if (!confirm(`确定要清空全部 ${total} 家门店吗？此操作不可恢复！`)) return;
+    setDeleteAllLoading(true);
+    try {
+      const res = await fetch("/api/admin/crm/stores/delete-all", {
+        method: "POST",
+        credentials: "include",
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        alert("清空失败：" + (json.error || "未知错误"));
+      } else {
+        setSelectedIds(new Set());
+        setPage(1);
+        await fetchStores();
+        alert(`已清空 ${json.count || total} 家门店`);
+      }
+    } catch (err: any) {
+      alert("清空失败：" + err.message);
+    }
+    setDeleteAllLoading(false);
   };
 
   // 选择框处理
@@ -482,6 +507,12 @@ export default function CrmStoresPage() {
               批量删除 ({selectedIds.size})
             </button>
           )}
+          <button onClick={handleDeleteAll} disabled={deleteAllLoading || total === 0}
+            className="btn-danger flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 border-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            title="清空当前所有门店（软删除）">
+            {deleteAllLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            清空全部 ({total})
+          </button>
           {/* 导出通讯录（带格式选择） */}
           <div className="relative">
             <div className="flex">
