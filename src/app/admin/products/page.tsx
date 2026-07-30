@@ -29,12 +29,12 @@ import {
 import FilterMultiSelect from "./FilterMultiSelect";
 import { getStyleCombos } from "@/lib/styles";
 
-// �����ϣ�Ůʿ 8��8=64����ʿ 5��5=25���� 89������Ʒ������ǩ������������ҳ�������ķ��ɸѡ����
+// �?�???�ϣ�Ůʿ 8��8=64��??ʿ 5��5=25���� 89����??Ʒ���?�?�?ǩ��??��??????ҳ������?ķ?�?��ɸѡ�???
 const STYLE_COMBOS = getStyleCombos();
 const STYLE_COMBOS_F = STYLE_COMBOS.filter((c) => c.gender === "Ůʿ");
-const STYLE_COMBOS_M = STYLE_COMBOS.filter((c) => c.gender === "��ʿ");
+const STYLE_COMBOS_M = STYLE_COMBOS.filter((c) => c.gender === "??ʿ");
 
-// �? params.fabrics / params.sizes 解析成数组（兼容 wrap 字符�? "/�?/�?/" 或纯文本 "�?,�?" 或数组）
+// ?�? params.fabrics / params.sizes 解析成数组（兼容 wrap 字符?�? "/?�?/?�?/" 或纯文本 "?�?,?�?" 或数组）
 function parseWrapParam(v: any): string[] {
   if (Array.isArray(v)) return v.filter(Boolean).map(String);
   if (typeof v === "string" && v.trim()) {
@@ -45,27 +45,27 @@ function parseWrapParam(v: any): string[] {
   return [];
 }
 
-// 秋冬上架主题（写�? tags 带「主题·」前缀，无需改表结构�?
-const AW_THEMES = ["美拉德风", "新中�?", "老钱风·静�?", "通勤极简", "新年战袍", "圣诞派对"];
+// 秋冬上架主题（写?�? tags 带「主题·」前缀，无需改表结构?�?
+const AW_THEMES = ["美拉德风", "新中?�?", "老钱风·静?�?", "通勤极简", "新年战袍", "圣诞派对"];
 
-// 商品详细参数（服装规格）——对标同行一�?/1688 的参数表，存�? products.params JSONB
+// 商品详细参数（服装规格）——对标同行一?�?/1688 的参数表，存?�? products.params JSONB
 const PARAM_FIELDS: { key: string; label: string; placeholder: string }[] = [
-  { key: "fabric", label: "面料", placeholder: "如：真丝、棉麻、聚酯纤�?" },
-  { key: "accessories", label: "配件", placeholder: "如：金属扣、拉�?" },
-  { key: "lining", label: "里布", placeholder: "如：雪纺里、无�?" },
-  { key: "thickness", label: "厚度", placeholder: "如：常规、加�?" },
-  { key: "season", label: "季节", placeholder: "如：春秋、夏�?" },
+  { key: "fabric", label: "面料", placeholder: "如：真丝、棉麻、聚酯纤?�?" },
+  { key: "accessories", label: "配件", placeholder: "如：金属扣、拉?�?" },
+  { key: "lining", label: "里布", placeholder: "如：雪纺里、无?�?" },
+  { key: "thickness", label: "厚度", placeholder: "如：常规、加?�?" },
+  { key: "season", label: "季节", placeholder: "如：春秋、夏?�?" },
   { key: "skirt_type", label: "裙型", placeholder: "如：A字裙、直筒裙" },
-  { key: "silhouette", label: "廓形", placeholder: "如：X型、H�?" },
-  { key: "collar", label: "领型", placeholder: "如：圆领、V�?" },
-  { key: "skirt_length", label: "裙长", placeholder: "如：短裙、及�?" },
-  { key: "scene", label: "穿着场景", placeholder: "如：通勤、度�?" },
-  { key: "fit", label: "版型", placeholder: "如：宽松、修�?" },
-  { key: "placket", label: "门襟", placeholder: "如：单排扣、拉�?" },
+  { key: "silhouette", label: "廓形", placeholder: "如：X型、H?�?" },
+  { key: "collar", label: "领型", placeholder: "如：圆领、V?�?" },
+  { key: "skirt_length", label: "裙长", placeholder: "如：短裙、及?�?" },
+  { key: "scene", label: "穿着场景", placeholder: "如：通勤、度?�?" },
+  { key: "fit", label: "版型", placeholder: "如：宽松、修?�?" },
+  { key: "placket", label: "门襟", placeholder: "如：单排扣、拉?�?" },
   { key: "sleeve_type", label: "袖型", placeholder: "如：泡泡袖、落肩袖" },
   { key: "sleeve_length", label: "袖长", placeholder: "如：短袖、七分袖" },
-  { key: "craft", label: "工艺", placeholder: "如：压褶、刺�?" },
-  { key: "pattern", label: "图案", placeholder: "如：纯色、碎�?" },
+  { key: "craft", label: "工艺", placeholder: "如：压褶、刺?�?" },
+  { key: "pattern", label: "图案", placeholder: "如：纯色、碎?�?" },
 ];
 
 interface Product {
@@ -87,7 +87,7 @@ interface Product {
   stock: number;
   detail: string | null;
   created_at: string;
-  // 属性编码体系扩展字�?
+  // 属性编码体系扩展字?�?
   fabric_code?: string[] | null;
   cut_code?: string[] | null;
   pattern_code?: string[] | null;
@@ -104,7 +104,7 @@ interface Product {
   care_instructions?: string | null;
   weight?: string | null;
   brand?: string | null;
-  // 详细参数（服装规格）JSONB；set_items（套装拆分价数组）也存放在这里，无需新增�?
+  // 详细参数（服装规格）JSONB；set_items（套装拆分价数组）也存放在这里，无需新增?�?
   params?: Record<string, any> | null;
   // 媒体字段
   video_url?: string | null;
@@ -112,17 +112,17 @@ interface Product {
   size_chart_image?: string | null;
   // 发货信息
   ship_from?: string | null;        // 发货地（自由文本，可含备选）
-  ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期�?
-  ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消�?
+  ship_est_days?: number | null;    // 预计发货天数（展示时系统自动往后推日期?�?
+  ship_text?: string | null;        // 发货说明/备注（如面料短缺、未发可取消?�?
   ship_image?: string | null;       // 发货解释图片 URL
 }
 
-// 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和�?
+// 实际销售价：有零售价以零售价为主；未设零售价则回退到原价（价格总和?�?
 function effectivePrice(p: { price?: number | null; original_price?: number | null }) {
   return (p && (p.price || 0) > 0 ? (p.price as number) : (p?.original_price || 0)) || 0;
 }
 
-// timestamptz(ISO) �? 本地 datetime-local 输入�? YYYY-MM-DDTHH:mm
+// timestamptz(ISO) ?�? 本地 datetime-local 输入?�? YYYY-MM-DDTHH:mm
 function toLocalInputValue(iso?: string | null): string {
   if (!iso) return "";
   const d = new Date(iso);
@@ -131,16 +131,16 @@ function toLocalInputValue(iso?: string | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-// 本地 datetime-local �? �? ISO(UTC) 存入 timestamptz
+// 本地 datetime-local ?�? ?�? ISO(UTC) 存入 timestamptz
 function fromLocalInputValue(v: string): string | null {
   if (!v) return null;
-  const d = new Date(v); // 按本地时间解�?
+  const d = new Date(v); // 按本地时间解?�?
   if (isNaN(d.getTime())) return null;
   return d.toISOString();
 }
 
 const pad2 = (n: number) => String(n).padStart(2, "0");
-// 季节下架预设：返回「当�? 23:59」的本地 datetime-local 值（取下一个尚未到来的该日期）
+// 季节下架预设：返回「当?�? 23:59」的本地 datetime-local 值（取下一个尚未到来的该日期）
 function seasonUnpublishValue(month: number, day: number): string {
   const now = new Date();
   let year = now.getFullYear();
@@ -180,11 +180,11 @@ export default function AdminProductsPage() {
   const [batchCategory, setBatchCategory] = useState("");
   const [batchSubcategory, setBatchSubcategory] = useState("");
   const [batchApplying, setBatchApplying] = useState(false);
-  // 心愿单：心愿数（按商品） + 只看心愿单筛�?
+  // 心愿单：心愿数（按商品） + 只看心愿单筛?�?
   const [wishCounts, setWishCounts] = useState<Record<string, number>>({});
   const [filterWishlistOnly, setFilterWishlistOnly] = useState(false);
 
-  // 成本价自动换算快照：只覆盖仍等于上次自动换算值的字段，保护用户手填价�?
+  // 成本价自动换算快照：只覆盖仍等于上次自动换算值的字段，保护用户手填价?�?
   const autoCalcSnapshot = useRef<{
     costY: number;
     price: string;
@@ -193,8 +193,8 @@ export default function AdminProductsPage() {
     bulk_price: string;
   } | null>(null);
 
-  // 套装拆分价（上下�?/两件�?/三件套）：部件名 + 零售�?/批发�?/批量�?/成本�?(元）
-  // 仅用于表单编辑，提交时换算成�?(cent)并入 params.set_items，避免新增数据库�?
+  // 套装拆分价（上下?�?/两件?�?/三件套）：部件名 + 零售?�?/批发?�?/批量?�?/成本?�?(元）
+  // 仅用于表单编辑，提交时换算成?�?(cent)并入 params.set_items，避免新增数据库?�?
   const [setItems, setSetItems] = useState<
     { name: string; retail: string; wholesale: string; bulk: string; cost: string }[]
   >([]);
@@ -261,7 +261,7 @@ export default function AdminProductsPage() {
             : p
         )
       );
-      setToast({ type: "success", message: `已将 ${selectedIds.length} 个商品归入�?${CATEGORY_MAP[batchCategory] || batchCategory}」` });
+      setToast({ type: "success", message: `已将 ${selectedIds.length} 个商品归入?�?${CATEGORY_MAP[batchCategory] || batchCategory}」` });
       setSelectedIds([]);
       setBatchCategory("");
       setBatchSubcategory("");
@@ -289,7 +289,7 @@ export default function AdminProductsPage() {
     is_published: false,
     wishlist_mode: false,
     detail: "",
-    // 属性编码体�?
+    // 属性编码体?�?
     sku: "",
     fabric_code: [] as string[],
     cut_code: [] as string[],
@@ -324,7 +324,7 @@ export default function AdminProductsPage() {
 
   const supabase = createClient();
 
-  // 按当前主分类从公开接口拉取「尺�? / 面料」可选项
+  // 按当前主分类从公开接口拉取「尺?�? / 面料」可选项
   const [sizesOptions, setSizesOptions] = useState<string[]>([]);
   const [fabricsOptions, setFabricsOptions] = useState<string[]>([]);
 
@@ -373,7 +373,7 @@ export default function AdminProductsPage() {
     [form.category]
   );
 
-  // 筛选中当前主分类的子分类列�?
+  // 筛选中当前主分类的子分类列?�?
   const filterSubcategories = useMemo(
     () => (filterCategory ? getSubcategories(filterCategory) : []),
     [filterCategory]
@@ -406,7 +406,7 @@ export default function AdminProductsPage() {
     fetchWishCounts();
   };
 
-  // 拉取各商品心愿数（后�? service_role 聚合�?
+  // 拉取各商品心愿数（后?�? service_role 聚合?�?
   const fetchWishCounts = async () => {
     try {
       const res = await fetch("/api/wishlist/counts", { credentials: "include" });
@@ -432,7 +432,7 @@ export default function AdminProductsPage() {
     }
   }, []);
 
-  // 加载动态品类（categories 表），含方案发布写入�? AI 品类，使商品分类与进度看板对�?
+  // 加载动态品类（categories 表），含方案发布写入?�? AI 品类，使商品分类与进度看板对?�?
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -444,7 +444,7 @@ export default function AdminProductsPage() {
           .order("sort_order", { ascending: true });
         if (alive && data) setDbCategories(data as { code: string; label: string }[]);
       } catch {
-        /* 忽略：动态品类加载失败时仅回退到静态分�? */
+        /* 忽略：动态品类加载失败时仅回退到静态分?�? */
       }
     })();
     return () => {
@@ -457,12 +457,12 @@ export default function AdminProductsPage() {
     setFilterSubcategory("");
   }, [filterCategory]);
 
-  // 表单切换主分类时重置子分�?
+  // 表单切换主分类时重置子分?�?
   const handleFormCategoryChange = (val: string) => {
     setForm((f) => ({ ...f, category: val, subcategory: "" }));
   };
 
-  // 价格体系：成本价 �? 零售�?/批发�?/批量�?/原价
+  // 价格体系：成本价 ?�? 零售?�?/批发?�?/批量?�?/原价
   const calcPricesFromCost = (costY: number) => {
     const retail = Math.round(costY / 0.26 * 1.10);
     const wholesale = Math.round(retail * 0.33);
@@ -546,7 +546,7 @@ export default function AdminProductsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim()) {
-      alert("请填写商品标�?");
+      alert("请填写商品标?�?");
       return;
     }
     if (!form.wishlist_mode && !form.price) {
@@ -581,7 +581,7 @@ export default function AdminProductsPage() {
               .map((t) => t.trim())
               .filter(Boolean)
           : [];
-        // 去除旧的「主题·」标签，避免编辑时重复累�?
+        // 去除旧的「主题·」标签，避免编辑时重复累?�?
         const cleaned = base.filter((t) => !t.startsWith("主题·"));
         if (form.theme) cleaned.push("主题·" + form.theme);
         return cleaned.length > 0 ? cleaned : null;
@@ -589,7 +589,7 @@ export default function AdminProductsPage() {
       is_published: form.is_published,
       wishlist_mode: form.wishlist_mode,
       detail: form.detail.trim() || null,
-      // 属性编码体�?
+      // 属性编码体?�?
       sku: form.sku.trim() || null,
       fabric_code: form.fabric_code.length > 0 ? form.fabric_code : null,
       cut_code: form.cut_code.length > 0 ? form.cut_code : null,
@@ -623,10 +623,10 @@ export default function AdminProductsPage() {
             cost: s.cost ? Math.round(Number(s.cost) * 100) : 0,
           }));
         if (arr.length > 0) cleaned.set_items = arr;
-        // 定时下架时间（季节性货品）：存�? params，本�? datetime-local �? ISO(UTC)；清空则�? null 以便取消定时
+        // 定时下架时间（季节性货品）：存?�? params，本?�? datetime-local ?�? ISO(UTC)；清空则?�? null 以便取消定时
         if (form.unpublish_at) cleaned.unpublish_at = fromLocalInputValue(form.unpublish_at);
         else cleaned.unpublish_at = null;
-        // 尺码 / 面料：以�?/�?/」wrap 形式存入 params，供前台精确分词匹配（ilike %/�?/%�?
+        // 尺码 / 面料：以?�?/?�?/」wrap 形式存入 params，供前台精确分词匹配（ilike %/?�?/%?�?
         if (form.sizesSel.length > 0) cleaned.sizes = "/" + form.sizesSel.join("/") + "/";
         if (form.fabrics.length > 0) cleaned.fabrics = "/" + form.fabrics.join("/") + "/";
         return Object.keys(cleaned).length > 0 ? cleaned : null;
@@ -644,7 +644,7 @@ export default function AdminProductsPage() {
 
     try {
       if (editingProduct) {
-        // 编辑：走 update API（service_role 绕过 RLS�?
+        // 编辑：走 update API（service_role 绕过 RLS?�?
         const res = await fetch("/api/admin/products/update", {
           method: "POST",
           credentials: "include",
@@ -653,9 +653,9 @@ export default function AdminProductsPage() {
         });
         const json = await res.json();
         if (json.error) throw new Error(json.error);
-        showToast("success", "商品已更�?");
+        showToast("success", "商品已更?�?");
       } else {
-        // 创建：走 create API（service_role 绕过 RLS�?
+        // 创建：走 create API（service_role 绕过 RLS?�?
         const res = await fetch("/api/admin/products/create", {
           method: "POST",
           credentials: "include",
@@ -664,7 +664,7 @@ export default function AdminProductsPage() {
         });
         const json = await res.json();
         if (json.error) throw new Error(json.error);
-        showToast("success", "商品已创�?");
+        showToast("success", "商品已创?�?");
       }
       setShowForm(false);
       setEditingProduct(null);
@@ -677,7 +677,7 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("确定删除此商品？")) return;
-    // 改用后端API删除（绕过RLS�?
+    // 改用后端API删除（绕过RLS?�?
     try {
       const res = await fetch("/api/admin/products/delete", {
         method: "POST",
@@ -687,18 +687,18 @@ export default function AdminProductsPage() {
       });
       const json = await res.json();
       if (json.error) {
-        showToast("error", `删除失败�?${json.error}`);
+        showToast("error", `删除失败?�?${json.error}`);
       } else {
-        showToast("success", "已删�?");
+        showToast("success", "已删?�?");
         fetchProducts();
       }
     } catch (err: any) {
-      showToast("error", `删除失败�?${err.message}`);
+      showToast("error", `删除失败?�?${err.message}`);
     }
   };
 
   const handleTogglePublish = async (product: Product) => {
-    // 改用后端API更新（绕过RLS�?
+    // 改用后端API更新（绕过RLS?�?
     try {
       const res = await fetch("/api/admin/products/update", {
         method: "POST",
@@ -708,13 +708,13 @@ export default function AdminProductsPage() {
       });
       const json = await res.json();
       if (json.error) {
-        showToast("error", `操作失败�?${json.error}`);
+        showToast("error", `操作失败?�?${json.error}`);
       } else {
-        showToast("success", product.is_published ? "已下�?" : "已发�?");
+        showToast("success", product.is_published ? "已下?�?" : "已发?�?");
         fetchProducts();
       }
     } catch (err: any) {
-      showToast("error", `操作失败�?${err.message}`);
+      showToast("error", `操作失败?�?${err.message}`);
     }
   };
 
@@ -795,10 +795,10 @@ export default function AdminProductsPage() {
       ship_est_days: product.ship_est_days ?? 7,
       ship_text: product.ship_text || "",
       ship_image: product.ship_image || "",
-      // 定时下架时间：从 params 读取，ISO �? 本地 datetime-local
+      // 定时下架时间：从 params 读取，ISO ?�? 本地 datetime-local
       unpublish_at: toLocalInputValue(product.params?.unpublish_at),
     });
-    // 套装拆分价：数据库存的是�?(cent)，回显为�?
+    // 套装拆分价：数据库存的是?�?(cent)，回显为?�?
     const loaded = (product.params?.set_items as any) || [];
     setSetItems(
       Array.isArray(loaded)
@@ -815,18 +815,18 @@ export default function AdminProductsPage() {
     setShowForm(true);
   };
 
-  // 批量图片上传（调�? image-grabber API，走 service_role 绕过 RLS�?
+  // 批量图片上传（调?�? image-grabber API，走 service_role 绕过 RLS?�?
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     setUploading(true);
-    showToast("success", `正在上传 ${files.length} 张图�?...`);
+    showToast("success", `正在上传 ${files.length} 张图?�?...`);
 
     let successCount = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      if (file.size > 5 * 1024 * 1024) continue; // 跳过超过5MB�?
+      if (file.size > 5 * 1024 * 1024) continue; // 跳过超过5MB?�?
 
       try {
         const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -859,13 +859,13 @@ export default function AdminProductsPage() {
     if (successCount > 0) {
       showToast("success", `成功上传 ${successCount}/${files.length} 张图片`);
     } else {
-      showToast("error", "所有图片上传失�?");
+      showToast("error", "所有图片上传失?�?");
     }
     setUploading(false);
     e.target.value = "";
   };
 
-  // 商品详情里上传图片：在光标位置插�? <img> 标签（支持多选一次多张）
+  // 商品详情里上传图片：在光标位置插?�? <img> 标签（支持多选一次多张）
   const handleDetailImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -901,7 +901,7 @@ export default function AdminProductsPage() {
         const json = await res.json();
         if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
 
-        inserted += `\n<div style="margin:16px 0;">\n  <img src="${json.storedUrl}" style="width:100%;border-radius:8px;" alt="商品详情�?" />\n</div>\n`;
+        inserted += `\n<div style="margin:16px 0;">\n  <img src="${json.storedUrl}" style="width:100%;border-radius:8px;" alt="商品详情?�?" />\n</div>\n`;
       }
 
       if (inserted) {
@@ -913,11 +913,11 @@ export default function AdminProductsPage() {
       }
       showToast(
         "success",
-        `已插�? ${valid.length} 张详情图${oversized ? `�?${oversized} 张超�?5MB已跳过` : ""}`
+        `已插?�? ${valid.length} 张详情图${oversized ? `?�?${oversized} 张超?�?5MB已跳过` : ""}`
       );
     } catch (err: any) {
       console.error("详情图片上传失败:", err);
-      showToast("error", "详情图片上传失败�?" + err.message);
+      showToast("error", "详情图片上传失败?�?" + err.message);
     } finally {
       setUploadingDetail(false);
       e.target.value = "";
@@ -940,7 +940,7 @@ export default function AdminProductsPage() {
     );
   });
 
-  // 批量选择辅助（依�? filteredProducts，必须在其之后定义）
+  // 批量选择辅助（依?�? filteredProducts，必须在其之后定义）
   const allVisibleIds = filteredProducts.map((p) => p.id);
   const allSelected = allVisibleIds.length > 0 && allVisibleIds.every((id) => selectedIds.includes(id));
   const toggleSelectAll = () => {
@@ -949,7 +949,7 @@ export default function AdminProductsPage() {
 
   const formatPrice = (price: number) => `¥${(price / 100).toFixed(2)}`;
 
-  // �? detail HTML 中提取详情图�? URL，用于管理端预览
+  // ?�? detail HTML 中提取详情图?�? URL，用于管理端预览
   const detailImageUrls = useMemo(() => {
     const html = form.detail || "";
     const matches = html.match(/<img[^>]+src=["']([^"']+)["']/g);
@@ -982,14 +982,14 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">商品管理</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            管理店铺商品，支持上下架和品类划�?
+            管理店铺商品，支持上下架和品类划?�?
           </p>
         </div>
         <button
           onClick={() => {
             setEditingProduct(null);
             resetForm();
-            // 若从组货看板�? ?category= 过来，保持该品类预填，方便连续上传同一品类
+            // 若从组货看板?�? ?category= 过来，保持该品类预填，方便连续上传同一品类
             if (typeof window !== "undefined") {
               const q = new URLSearchParams(window.location.search).get("category");
               if (q) setForm((f) => ({ ...f, category: q }));
@@ -1012,7 +1012,7 @@ export default function AdminProductsPage() {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索商品标题、描述、标�?..."
+              placeholder="搜索商品标题、描述、标?�?..."
               className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
@@ -1025,7 +1025,7 @@ export default function AdminProductsPage() {
             }`}
           >
             <Heart className="w-4 h-4" />
-            只看心愿�?
+            只看心愿?�?
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -1036,7 +1036,7 @@ export default function AdminProductsPage() {
             }`}
           >
             <Filter className="w-4 h-4" />
-            筛�?
+            筛?�?
             <ChevronDown
               className={`w-3.5 h-3.5 transition-transform ${
                 showFilters ? "rotate-180" : ""
@@ -1068,7 +1068,7 @@ export default function AdminProductsPage() {
                 onChange={(e) => setFilterSubcategory(e.target.value)}
                 className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="">全部子分�?</option>
+                <option value="">全部子分?�?</option>
                 {filterSubcategories.map((sub) => (
                   <option key={sub.key} value={sub.key}>
                     {sub.label}
@@ -1084,7 +1084,7 @@ export default function AdminProductsPage() {
                 }}
                 className="px-3 py-2.5 text-xs text-gray-500 hover:text-red-500 flex items-center gap-1"
               >
-                <X className="w-3 h-3" /> 清除筛�?
+                <X className="w-3 h-3" /> 清除筛?�?
               </button>
             )}
           </motion.div>
@@ -1100,7 +1100,7 @@ export default function AdminProductsPage() {
             color: "bg-primary/10 text-primary",
           },
           {
-            label: "已发�?",
+            label: "已发?�?",
             value: products.filter((p) => p.is_published).length,
             color: "bg-green-50 text-green-600",
           },
@@ -1146,11 +1146,11 @@ export default function AdminProductsPage() {
         })}
       </div>
 
-      {/* 批量操作�? */}
+      {/* 批量操作?�? */}
       {selectedIds.length > 0 && (
         <div className="max-w-7xl mx-auto mb-4 p-4 bg-primary/5 border border-primary/20 rounded-2xl flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-primary">
-            已�? {selectedIds.length} 个商�?
+            已?�? {selectedIds.length} 个商?�?
           </span>
           <select
             value={batchCategory}
@@ -1196,13 +1196,13 @@ export default function AdminProductsPage() {
         {loading ? (
           <div className="p-12 text-center text-muted-foreground">
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-            <p className="mt-3 text-sm">加载�?...</p>
+            <p className="mt-3 text-sm">加载?�?...</p>
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="p-12 text-center text-muted-foreground text-sm">
             {searchTerm || filterCategory
-              ? "没有匹配的商�?"
-              : "暂无商品，点击上方按钮创�?"}
+              ? "没有匹配的商?�?"
+              : "暂无商品，点击上方按钮创?�?"}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -1220,10 +1220,10 @@ export default function AdminProductsPage() {
                   <th className="px-5 py-3 font-medium">商品</th>
                   <th className="px-5 py-3 font-medium">品类</th>
                   <th className="px-5 py-3 font-medium">价格</th>
-                  <th className="px-5 py-3 font-medium">批发�?</th>
+                  <th className="px-5 py-3 font-medium">批发?�?</th>
                   <th className="px-5 py-3 font-medium">库存</th>
-                  <th className="px-5 py-3 font-medium">心愿�?</th>
-                  <th className="px-5 py-3 font-medium">状�?</th>
+                  <th className="px-5 py-3 font-medium">心愿?�?</th>
+                  <th className="px-5 py-3 font-medium">状?�?</th>
                   <th className="px-5 py-3 font-medium text-right">操作</th>
                 </tr>
               </thead>
@@ -1275,7 +1275,7 @@ export default function AdminProductsPage() {
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-xs">
-                            �?
+                            ?�?
                           </span>
                         )}
                         {product.subcategory && (
@@ -1303,7 +1303,7 @@ export default function AdminProductsPage() {
                           {formatPrice(product.wholesale_price)}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-sm">�?</span>
+                        <span className="text-gray-300 text-sm">?�?</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
@@ -1324,7 +1324,7 @@ export default function AdminProductsPage() {
                         </span>
                         {product.wishlist_mode && (
                           <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 w-fit">
-                            心愿�?
+                            心愿?�?
                           </span>
                         )}
                       </div>
@@ -1338,11 +1338,11 @@ export default function AdminProductsPage() {
                             : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                         }`}
                       >
-                        {product.is_published ? "已发�?" : "草稿"}
+                        {product.is_published ? "已发?�?" : "草稿"}
                       </button>
                       {product.params?.unpublish_at && (
                         <div className="text-[10px] text-amber-500 mt-1 leading-tight">
-                          {product.is_published ? "定时下架 " : "曾设定下�? "}
+                          {product.is_published ? "定时下架 " : "曾设定下?�? "}
                           {formatUnpublish(product.params.unpublish_at)}
                         </div>
                       )}
@@ -1422,7 +1422,7 @@ export default function AdminProductsPage() {
                       setForm({ ...form, price: e.target.value.replace(/[^0-9]/g, "") })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder={form.wishlist_mode ? "��Ը�ռ��ä�У��û������·����û��ۡ���������1�ֿ�����������������ۡ���������5�ֿ���������������" : "�� 99"}
+                    placeholder={form.wishlist_mode ? "??Ը?ռ��ä�У�?û��????·���?û��ۡ�������??1?ֿ�����?����???����ۡ�������??5?ֿ����������?�?�?" : "?? 99"}
                   />
                 </div>
                 <div>
@@ -1450,7 +1450,7 @@ export default function AdminProductsPage() {
                       setForm({ ...form, bulk_price: e.target.value })
                     }
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="�?5件批发价，空则按批发�?95%估算"
+                    placeholder="?�?5件批发价，空则按批发?�?95%估算"
                   />
                 </div>
                 <div>
@@ -1467,7 +1467,7 @@ export default function AdminProductsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    原价（元�?
+                    原价（元?�?
                   </label>
                   <input
                     type="number"
@@ -1483,18 +1483,18 @@ export default function AdminProductsPage() {
 
               {/* 价格体系说明 */}
               <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
-                <b>价格体系�?</b>零售价🟰成本价÷2.6折�?110%；一件起批🟰零售价×33%�?5件起批🟰零售价×28%�?
+                <b>价格体系?�?</b>零售价🟰成本价÷2.6折??110%；一件起批🟰零售价×33%?�?5件起批🟰零售价×28%?�?
                 <br />
-                充值会员：5万／10万会员价🟰零售价�?28%，退换比例分别为5%�?10%�?30万会员价🟰零售价�?26%，退�?20%�?
+                充值会员：5万／10万会员价🟰零售价??28%，退换比例分别为5%?�?10%?�?30万会员价🟰零售价??26%，退?�?20%?�?
                 <br />
-                <b>原价 / 零售价：</b>原价＝各部件价格之和（划线参考价）；零售价＝促销价（实际售价）。有零售价时按零售价卖，<b>零售价留空则按原价售�?</b>�?
+                <b>原价 / 零售价：</b>原价＝各部件价格之和（划线参考价）；零售价＝促销价（实际售价）。有零售价时按零售价卖，<b>零售价留空则按原价售?�?</b>?�?
               </div>
 
-              {/* 套装拆分价（上下�? / 两件�? / 三件套） */}
+              {/* 套装拆分价（上下?�? / 两件?�? / 三件套） */}
               <div className="mt-4 p-4 bg-amber-50/70 border border-amber-200 rounded-xl">
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-sm font-semibold text-gray-800">
-                    套装拆分价（上下�? / 两件�? / 三件套）
+                    套装拆分价（上下?�? / 两件?�? / 三件套）
                   </label>
                   <button
                     type="button"
@@ -1505,14 +1505,14 @@ export default function AdminProductsPage() {
                   </button>
                 </div>
                 <p className="text-xs text-gray-500 mb-3">
-                  分别填写每个部件的名称、零售价、批发价、批量价、成本价（元）。下方自动合计，可一键填入上方总价�?
+                  分别填写每个部件的名称、零售价、批发价、批量价、成本价（元）。下方自动合计，可一键填入上方总价?�?
                 </p>
                 <div className="flex gap-2 items-center mb-1 px-1">
-                  <span className="flex-1 text-[11px] text-gray-400">部件�?</span>
-                  <span className="w-20 text-[11px] text-gray-400 text-center">零售�?</span>
-                  <span className="w-20 text-[11px] text-gray-400 text-center">批发�?</span>
-                  <span className="w-20 text-[11px] text-gray-400 text-center">批量�?</span>
-                  <span className="w-20 text-[11px] text-gray-400 text-center">成本�?</span>
+                  <span className="flex-1 text-[11px] text-gray-400">部件?�?</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">零售?�?</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">批发?�?</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">批量?�?</span>
+                  <span className="w-20 text-[11px] text-gray-400 text-center">成本?�?</span>
                   <span className="shrink-0 w-7" />
                 </div>
                 {setItems.map((it, idx) => (
@@ -1522,7 +1522,7 @@ export default function AdminProductsPage() {
                       value={it.name}
                       onChange={(e) => updateSetItem(idx, "name", e.target.value)}
                       className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="部件名，�? 上衣 / 半裙"
+                      placeholder="部件名，?�? 上衣 / 半裙"
                     />
                     <input
                       type="text"
@@ -1570,12 +1570,12 @@ export default function AdminProductsPage() {
                       className="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500"
                       title="删除部件"
                     >
-                      �?
+                      ?�?
                     </button>
                   </div>
                 ))}
                 {setItems.length === 0 && (
-                  <p className="text-xs text-gray-400">暂无部件，点击�?+ 添加部件」�?</p>
+                  <p className="text-xs text-gray-400">暂无部件，点击?�?+ 添加部件」?�?</p>
                 )}
                 {setItems.length > 0 &&
                   (() => {
@@ -1598,7 +1598,7 @@ export default function AdminProductsPage() {
                     return (
                       <div className="mt-2 flex items-center justify-between">
                         <span className="text-xs text-gray-600">
-                          拆分价合计：零售 ¥{sumR} �? 批发 ¥{sumW} �? 批量 ¥{sumB} �? 成本 ¥{sumC}
+                          拆分价合计：零售 ¥{sumR} ?�? 批发 ¥{sumW} ?�? 批量 ¥{sumB} ?�? 成本 ¥{sumC}
                         </span>
                         <button
                           type="button"
@@ -1611,7 +1611,7 @@ export default function AdminProductsPage() {
                     );
                   })()}
               </div>
-              {/* 实时毛利率（成本�? vs 批发/批量价） */}
+              {/* 实时毛利率（成本?�? vs 批发/批量价） */}
               {(() => {
                 const costY = form.cost_price ? Number(form.cost_price) : 0;
                 const wsY = form.wholesale_price ? Number(form.wholesale_price) : 0;
@@ -1621,30 +1621,30 @@ export default function AdminProductsPage() {
                 const bkM = bkY > 0 ? Math.round(((bkY - costY) / costY) * 100) : null;
                 return (
                   <div className="mt-2 text-xs text-gray-500 flex gap-4">
-                    <span>批发毛利率：<b className={wsM != null && wsM < 0 ? "text-red-500" : "text-green-600"}>{wsM != null ? wsM + "%" : "�?"}</b></span>
-                    <span>批量毛利率：<b className={bkM != null && bkM < 0 ? "text-red-500" : "text-green-600"}>{bkM != null ? bkM + "%" : "�?"}</b></span>
+                    <span>批发毛利率：<b className={wsM != null && wsM < 0 ? "text-red-500" : "text-green-600"}>{wsM != null ? wsM + "%" : "?�?"}</b></span>
+                    <span>批量毛利率：<b className={bkM != null && bkM < 0 ? "text-red-500" : "text-green-600"}>{bkM != null ? bkM + "%" : "?�?"}</b></span>
                   </div>
                 );
               })()}
 
-              {/* 品类选择：主分类 + 子分类联�? */}
+              {/* 品类选择：主分类 + 子分类联?�? */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    主分�?
+                    主分?�?
                   </label>
                   <select
                     value={form.category}
                     onChange={(e) => handleFormCategoryChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    <option value="">未分�?</option>
+                    <option value="">未分?�?</option>
                     {CATEGORIES.map((cat) => (
                       <option key={cat.key} value={cat.key}>
                         {cat.label}
                       </option>
                     ))}
-                    {/* 动态品类（含方�? AI 品类），value 直接存中�? label 以便进度看板匹配 */}
+                    {/* 动态品类（含方?�? AI 品类），value 直接存中?�? label 以便进度看板匹配 */}
                     {dbCategories
                       .filter(
                         (c) =>
@@ -1656,7 +1656,7 @@ export default function AdminProductsPage() {
                           {c.label}
                         </option>
                       ))}
-                    {/* 兜底：小程序自定义品类（如「套装」）若不在预�?/动态品类中，仍显示并允许保�? */}
+                    {/* 兜底：小程序自定义品类（如「套装」）若不在预?�?/动态品类中，仍显示并允许保?�? */}
                     {form.category &&
                       !CATEGORIES.some((c) => c.key === form.category) &&
                       !dbCategories.some((c) => c.label === form.category) && (
@@ -1666,7 +1666,7 @@ export default function AdminProductsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    子分�?
+                    子分?�?
                   </label>
                   <select
                     value={form.subcategory}
@@ -1677,7 +1677,7 @@ export default function AdminProductsPage() {
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">
-                      {form.category ? "全部子分�?" : "先选主分类"}
+                      {form.category ? "全部子分?�?" : "先选主分类"}
                     </option>
                     {formSubcategories.map((sub) => (
                       <option key={sub.key} value={sub.key}>
@@ -1702,10 +1702,10 @@ export default function AdminProductsPage() {
                   placeholder="0"
                 />
               </div>
-              {/* 封面�? - 支持上传和URL */}
+              {/* 封面?�? - 支持上传和URL */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  封面�?
+                  封面?�?
                 </label>
                 <div className="flex gap-2 items-start">
                   <input
@@ -1744,7 +1744,7 @@ export default function AdminProductsPage() {
                         const json = await res.json();
                         if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
                         setForm(f => ({ ...f, cover_image: json.storedUrl }));
-                      } catch (err: any) { console.error(err); alert("上传失败�?" + err.message); }
+                      } catch (err: any) { console.error(err); alert("上传失败?�?" + err.message); }
                       setUploading(false);
                       e.target.value = "";
                     }} className="hidden" />
@@ -1757,10 +1757,10 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* 商品图片上传 - 支持批量多�? */}
+              {/* 商品图片上传 - 支持批量多?�? */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  商品图片 <span className="text-xs text-gray-400 font-normal">（支持多选，一次可上传多张�?</span>
+                  商品图片 <span className="text-xs text-gray-400 font-normal">（支持多选，一次可上传多张?�?</span>
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {form.images.map((img, idx) => (
@@ -1774,7 +1774,7 @@ export default function AdminProductsPage() {
                   ))}
                   <label className={`w-16 h-16 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors ${uploading ? "border-accent bg-accent/10" : "border-gray-300 hover:border-accent hover:bg-accent/5"}`}>
                     {uploading
-                      ? <><Loader2 className="w-4 h-4 animate-spin text-accent mb-0.5" /><span className="text-[9px] text-accent">上传�?</span></>
+                      ? <><Loader2 className="w-4 h-4 animate-spin text-accent mb-0.5" /><span className="text-[9px] text-accent">上传?�?</span></>
                       : <><Upload className="w-4 h-4 text-gray-400 mb-0.5" /><span className="text-[9px] text-gray-400">添加图片</span></>
                     }
                     <input type="file" accept="image/*" multiple onChange={handleImageUpload} disabled={uploading} className="hidden" />
@@ -1782,20 +1782,20 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
-              {/* 媒体素材：视�? / 模特�? / 尺码�? */}
+              {/* 媒体素材：视?�? / 模特?�? / 尺码?�? */}
               <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-primary mb-3">媒体素材（视�? / 模特�? / 尺码表）</h4>
+                <h4 className="text-sm font-semibold text-primary mb-3">媒体素材（视?�? / 模特?�? / 尺码表）</h4>
 
                 {/* 视频地址 */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">视频地址（URL�?</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">视频地址（URL?�?</label>
                   <div className="flex gap-2 items-start">
                     <input
                       type="text"
                       value={form.video_url}
                       onChange={(e) => setForm({ ...form, video_url: e.target.value })}
                       className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="https://...mp4 �? 腾讯视频/抖音外链"
+                      placeholder="https://...mp4 ?�? 腾讯视频/抖音外链"
                     />
                     <label className="shrink-0 w-10 h-10 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-colors">
                       {uploading ? <Loader2 className="w-4 h-4 animate-spin text-accent" /> : <Upload className="w-4 h-4 text-gray-400" />}
@@ -1805,14 +1805,14 @@ export default function AdminProductsPage() {
                         if (file.size > 50 * 1024 * 1024) { alert("视频不能超过50MB"); return; }
                         setUploading(true);
                         try {
-                          // 1. 从后端获�? Supabase 签名上传 URL
+                          // 1. 从后端获?�? Supabase 签名上传 URL
                           const signedRes = await fetch("/api/admin/storage/signed-upload", {
                             method: "POST", credentials: "include", headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ filename: file.name.replace(/[^a-zA-Z0-9._-]/g, "_"), mimeType: file.type || "video/mp4", bucket: "products" }),
                           });
                           const signedJson = await signedRes.json();
                           if (!signedRes.ok || signedJson.error) throw new Error(signedJson.error || "获取上传链接失败");
-                          // 2. 直接 PUT �? Supabase Storage，不经过 Vercel（避免请求体过大�?
+                          // 2. 直接 PUT ?�? Supabase Storage，不经过 Vercel（避免请求体过大?�?
                           const uploadRes = await fetch(signedJson.signedUrl, {
                             method: "PUT",
                             body: file,
@@ -1820,7 +1820,7 @@ export default function AdminProductsPage() {
                           });
                           if (!uploadRes.ok) throw new Error(`上传失败: ${uploadRes.status}`);
                           setForm(f => ({ ...f, video_url: signedJson.publicUrl }));
-                        } catch (err: any) { alert("上传失败�?" + err.message); }
+                        } catch (err: any) { alert("上传失败?�?" + err.message); }
                         setUploading(false); e.target.value = "";
                       }} className="hidden" />
                     </label>
@@ -1833,9 +1833,9 @@ export default function AdminProductsPage() {
                   <p className="text-xs text-gray-400 mt-1">支持直接上传本地视频（MP4/MOV/AVI，≤50MB）或粘贴外链</p>
                 </div>
 
-                {/* 尺码表图�? */}
+                {/* 尺码表图?�? */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码表图�?</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">尺码表图?�?</label>
                   <div className="flex gap-2 items-start">
                     <input
                       type="text"
@@ -1865,7 +1865,7 @@ export default function AdminProductsPage() {
                           const json = await res.json();
                           if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
                           setForm(f => ({ ...f, size_chart_image: json.storedUrl }));
-                        } catch (err: any) { alert("上传失败�?" + err.message); }
+                        } catch (err: any) { alert("上传失败?�?" + err.message); }
                         setUploading(false); e.target.value = "";
                       }} className="hidden" />
                     </label>
@@ -1877,7 +1877,7 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* 模特图（多张�? */}
+                {/* 模特图（多张?�? */}
                 <div className="mb-1">
                   <label className="block text-xs font-medium text-gray-600 mb-1">模特图（可多选）</label>
                   <div className="flex gap-2 flex-wrap">
@@ -1934,7 +1934,7 @@ export default function AdminProductsPage() {
                   }
                   rows={2}
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                  placeholder="简短描�?..."
+                  placeholder="简短描?�?..."
                 />
               </div>
 
@@ -1950,7 +1950,7 @@ export default function AdminProductsPage() {
                     ) : (
                       <Upload className="w-3 h-3" />
                     )}
-                    <span>{uploadingDetail ? "上传�?" : "插入图片"}</span>
+                    <span>{uploadingDetail ? "上传?�?" : "插入图片"}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -1972,7 +1972,7 @@ export default function AdminProductsPage() {
                 />
                 {detailImageUrls.length > 0 && (
                   <div className="mt-3">
-                    <p className="text-xs text-gray-500 mb-2">已插入详情图预览（实际效果以前台商品详情页为准）�?</p>
+                    <p className="text-xs text-gray-500 mb-2">已插入详情图预览（实际效果以前台商品详情页为准）?�?</p>
                     <div className="flex gap-2 flex-wrap">
                       {detailImageUrls.map((url, idx) => (
                         <div
@@ -1988,7 +1988,7 @@ export default function AdminProductsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  商品标签（逗号分隔，详情页原样展示�?
+                  商品标签（逗号分隔，详情页原样展示?�?
                 </label>
                 <input
                   type="text"
@@ -1999,13 +1999,13 @@ export default function AdminProductsPage() {
                   className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   placeholder="如：今日新款,沙河货源,清仓"
                 />
-                <p className="text-xs text-gray-400 mt-1">多个标签用逗号分隔；详情页会按你填的内容展示（会员标识由系统自动加�?</p>
+                <p className="text-xs text-gray-400 mt-1">多个标签用逗号分隔；详情页会按你填的内容展示（会员标识由系统自动加?�?</p>
               </div>
 
-              {/* === 属性编码体�? === */}
+              {/* === 属性编码体?�? === */}
               <div className="pt-4 border-t border-gray-200">
-                <h4 className="text-sm font-semibold text-primary mb-3">属性编码体�?</h4>
-                <p className="text-xs text-gray-400 mb-3">填写以下属性，系统将自动匹配色彩季型和风格结论，生成搭配方�?</p>
+                <h4 className="text-sm font-semibold text-primary mb-3">属性编码体?�?</h4>
+                <p className="text-xs text-gray-400 mb-3">填写以下属性，系统将自动匹配色彩季型和风格结论，生成搭配方?�?</p>
 
                 {/* SKU */}
                 <div className="mb-3">
@@ -2021,7 +2021,7 @@ export default function AdminProductsPage() {
 
                 {/* 颜色HEX */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">商品主色 HEX �?</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">商品主色 HEX ?�?</label>
                   <div className="flex gap-2 items-center">
                     <input
                       type="text"
@@ -2040,7 +2040,7 @@ export default function AdminProductsPage() {
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">面料编码（可多选）</label>
                   <div className="flex flex-wrap gap-2">
-                    {["F01-少女�?","F02-优雅�?","F03-浪漫�?","F04-少年�?","F05-时尚�?","F06-古典�?","F07-自然�?","F08-戏剧�?"].map((f) => {
+                    {["F01-少女?�?","F02-优雅?�?","F03-浪漫?�?","F04-少年?�?","F05-时尚?�?","F06-古典?�?","F07-自然?�?","F08-戏剧?�?"].map((f) => {
                       const [code, label] = f.split("-");
                       const checked = form.fabric_code.includes(code);
                       return (
@@ -2070,7 +2070,7 @@ export default function AdminProductsPage() {
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">剪裁编码（可多选）</label>
                   <div className="flex flex-wrap gap-2">
-                    {["B01-少女�?","B02-优雅�?","B03-浪漫�?","B04-少年�?","B05-时尚�?","B06-古典�?","B07-自然�?","B08-戏剧�?"].map((f) => {
+                    {["B01-少女?�?","B02-优雅?�?","B03-浪漫?�?","B04-少年?�?","B05-时尚?�?","B06-古典?�?","B07-自然?�?","B08-戏剧?�?"].map((f) => {
                       const [code, label] = f.split("-");
                       const checked = form.cut_code.includes(code);
                       return (
@@ -2100,7 +2100,7 @@ export default function AdminProductsPage() {
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">图案编码（可多选）</label>
                   <div className="flex flex-wrap gap-2">
-                    {["P01-少女�?","P02-优雅�?","P03-浪漫�?","P04-少年�?","P05-时尚�?","P06-古典�?","P07-自然�?","P08-戏剧�?"].map((f) => {
+                    {["P01-少女?�?","P02-优雅?�?","P03-浪漫?�?","P04-少年?�?","P05-时尚?�?","P06-古典?�?","P07-自然?�?","P08-戏剧?�?"].map((f) => {
                       const [code, label] = f.split("-");
                       const checked = form.pattern_code.includes(code);
                       return (
@@ -2126,9 +2126,9 @@ export default function AdminProductsPage() {
                   </div>
                 </div>
 
-                {/* 色彩季型编码（手动填，后面接AI自动识别�? */}
+                {/* 色彩季型编码（手动填，后面接AI自动识别?�? */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">色彩季型编码（可留空，提交后AI自动识别�?</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">色彩季型编码（可留空，提交后AI自动识别?�?</label>
                   <select
                     value={form.color_season_code}
                     onChange={(e) => setForm({ ...form, color_season_code: e.target.value })}
@@ -2143,33 +2143,33 @@ export default function AdminProductsPage() {
                     <option value="S06">S06-暖柔</option>
                     <option value="S07">S07-冷亮</option>
                     <option value="S08">S08-冷柔</option>
-                    <option value="S09">S09-净�?</option>
-                    <option value="S10">S10-净�?</option>
+                    <option value="S09">S09-净?�?</option>
+                    <option value="S10">S10-净?�?</option>
                     <option value="S11">S11-柔冷</option>
                     <option value="S12">S12-柔暖</option>
                   </select>
                 </div>
 
-                {/* 风格结论（手动填，后面接AI自动识别�? */}
+                {/* 风格结论（手动填，后面接AI自动识别?�? */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">风格结论（可留空，提交后AI自动识别�?</label>
-                  {/* ����ǩ���̶� 89 ����ϣ�Ůʿ64 + ��ʿ25����������ҳ�������ķ��ɸѡ */}
+                  <label className="block text-xs font-medium text-gray-600 mb-1">风格结论（可留空，提交后AI自动识别?�?</label>
+                  {/* �?�?�?ǩ���̶� 89 ��??�ϣ�Ůʿ64 + ??ʿ25������????ҳ������?ķ?�?��ɸѡ */}
                   <div className="mb-3">
-                    <label className="block text-xs font-medium text-gray-600 mb-1">����ǩ��Ůʿ64 + ��ʿ25 ��89����ϣ����������ķ��ɸѡ��</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">�?�?�?ǩ��Ůʿ64 + ??ʿ25 ��89��??�ϣ���������?ķ?�?��ɸѡ��</label>
                     <select
                       value={form.style_type}
                       onChange={(e) => setForm({ ...form, style_type: e.target.value })}
                       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     >
-                      <option value="">��ָ�����</option>
-                      <optgroup label="Ůʿ�˴���64��">
+                      <option value="">��ָ���?�?</option>
+                      <optgroup label="Ůʿ�˴?�?�?��64��">
                         {STYLE_COMBOS_F.map((c) => (
                           <option key={c.main + c.lean} value={c.combo}>
-                            {c.combo}{c.common === "����" ? "��������" : ""}
+                            {c.combo}{c.common === "����" ? "��������" : ""}
                           </option>
                         ))}
                       </optgroup>
-                      <optgroup label="��ʿ�����25��">
+                      <optgroup label="??ʿ??�?�?�?��25��">
                         {STYLE_COMBOS_M.map((c) => (
                           <option key={c.main + c.lean} value={c.combo}>
                             {c.combo}
@@ -2185,18 +2185,18 @@ export default function AdminProductsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">自动识别（推荐）</option>
-                    <option value="少女�?">少女�?</option>
-                    <option value="优雅�?">优雅�?</option>
-                    <option value="浪漫�?">浪漫�?</option>
-                    <option value="少年�?">少年�?</option>
-                    <option value="时尚�?">时尚�?</option>
-                    <option value="古典�?">古典�?</option>
-                    <option value="自然�?">自然�?</option>
-                    <option value="戏剧�?">戏剧�?</option>
+                    <option value="少女?�?">少女?�?</option>
+                    <option value="优雅?�?">优雅?�?</option>
+                    <option value="浪漫?�?">浪漫?�?</option>
+                    <option value="少年?�?">少年?�?</option>
+                    <option value="时尚?�?">时尚?�?</option>
+                    <option value="古典?�?">古典?�?</option>
+                    <option value="自然?�?">自然?�?</option>
+                    <option value="戏剧?�?">戏剧?�?</option>
                   </select>
                 </div>
 
-                {/* 上架主题（秋冬主题，写入 tags 带「主题·」前缀�? */}
+                {/* 上架主题（秋冬主题，写入 tags 带「主题·」前缀?�? */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">上架主题（秋冬）</label>
                   <select
@@ -2204,21 +2204,21 @@ export default function AdminProductsPage() {
                     onChange={(e) => setForm({ ...form, theme: e.target.value })}
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
-                    <option value="">不指�?</option>
+                    <option value="">不指?�?</option>
                     {AW_THEMES.map((t) => (
                       <option key={t} value={t}>
                         {t}
                       </option>
                     ))}
                   </select>
-                  <p className="text-[11px] text-gray-400 mt-1">选中的主题会以「主题·xxx」形式写入商品标签，可用于前台主题筛选与秋冬上架规划�?</p>
+                  <p className="text-[11px] text-gray-400 mt-1">选中的主题会以「主题·xxx」形式写入商品标签，可用于前台主题筛选与秋冬上架规划?�?</p>
                 </div>
               </div>
               {/* === 商品参数 === */}
               <div className="pt-4 border-t border-gray-200">
                 <h4 className="text-sm font-semibold text-primary mb-3">商品参数</h4>
 
-                {/* 面料（可拉开多�? + 自定义） */}
+                {/* 面料（可拉开多?�? + 自定义） */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">面料</label>
                   <FilterMultiSelect
@@ -2227,14 +2227,14 @@ export default function AdminProductsPage() {
                     options={fabricsOptions}
                     placeholder={
                       fabricsOptions.length > 0
-                        ? "点击从品类面料中选择，或输入自定�?"
+                        ? "点击从品类面料中选择，或输入自定?�?"
                         : "先选择上方「主分类」再选面料，或直接输入自定义"
                     }
                   />
-                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新面料后回车即自定义。前台「面料」筛选将按此匹配�?</p>
+                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新面料后回车即自定义。前台「面料」筛选将按此匹配?�?</p>
                 </div>
 
-                {/* 尺码（可拉开多�? + 自定义） */}
+                {/* 尺码（可拉开多?�? + 自定义） */}
                 <div className="mb-3">
                   <label className="block text-xs font-medium text-gray-600 mb-1">尺码</label>
                   <FilterMultiSelect
@@ -2243,11 +2243,11 @@ export default function AdminProductsPage() {
                     options={sizesOptions}
                     placeholder={
                       sizesOptions.length > 0
-                        ? "点击从品类尺码中选择，或输入自定�?"
+                        ? "点击从品类尺码中选择，或输入自定?�?"
                         : "先选择上方「主分类」再选尺码，或直接输入自定义"
                     }
                   />
-                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新尺码后回车即自定义。前台「尺码」筛选将按此匹配�?</p>
+                  <p className="text-[11px] text-gray-400 mt-1">多选；下拉可搜索，输入新尺码后回车即自定义。前台「尺码」筛选将按此匹配?�?</p>
                 </div>
 
                 {/* 颜色 */}
@@ -2270,13 +2270,13 @@ export default function AdminProductsPage() {
                     value={form.origin}
                     onChange={(e) => setForm({ ...form, origin: e.target.value })}
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    placeholder="如：杭州、广�?"
+                    placeholder="如：杭州、广?�?"
                   />
                 </div>
 
                 {/* 重量 */}
                 <div className="mb-3">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">重量（克�?</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">重量（克?�?</label>
                   <input
                     type="number"
                     value={form.weight}
@@ -2340,7 +2340,7 @@ export default function AdminProductsPage() {
               <div className="mt-6 pt-4 border-t border-gray-100">
                 <h4 className="text-sm font-semibold text-primary mb-3">发货信息</h4>
                 <div className="grid grid-cols-2 gap-3">
-                  {/* 发货�? */}
+                  {/* 发货?�? */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">发货地（可含备选）</label>
                     <input
@@ -2348,7 +2348,7 @@ export default function AdminProductsPage() {
                       value={form.ship_from}
                       onChange={(e) => setForm({ ...form, ship_from: e.target.value })}
                       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="如：广州（杭�?/深圳�?"
+                      placeholder="如：广州（杭?�?/深圳?�?"
                     />
                   </div>
                   {/* 预计发货天数 */}
@@ -2362,7 +2362,7 @@ export default function AdminProductsPage() {
                       className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                       placeholder="如：7"
                     />
-                    <p className="text-[11px] text-gray-400 mt-1">展示时自动往后推日期；预售约 7 �?</p>
+                    <p className="text-[11px] text-gray-400 mt-1">展示时自动往后推日期；预售约 7 ?�?</p>
                   </div>
                 </div>
                 {/* 发货说明 */}
@@ -2373,7 +2373,7 @@ export default function AdminProductsPage() {
                     onChange={(e) => setForm({ ...form, ship_text: e.target.value })}
                     rows={3}
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 resize-none"
-                    placeholder="如：受限于真实面料短缺等影响，可能存�?15%不准确，未发可取�?"
+                    placeholder="如：受限于真实面料短缺等影响，可能存?�?15%不准确，未发可取?�?"
                   />
                 </div>
                 {/* 发货解释图片 */}
@@ -2414,7 +2414,7 @@ export default function AdminProductsPage() {
                           const json = await res.json();
                           if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
                           setForm(f => ({ ...f, ship_image: json.storedUrl }));
-                        } catch (err: any) { console.error(err); alert("上传失败�?" + err.message); }
+                        } catch (err: any) { console.error(err); alert("上传失败?�?" + err.message); }
                         setUploading(false);
                         e.target.value = "";
                       }} className="hidden" />
@@ -2425,7 +2425,7 @@ export default function AdminProductsPage() {
                       </div>
                     )}
                   </div>
-                  <p className="text-[11px] text-gray-400 mt-1">小程序点击发货文案进入解释页时展示此�?</p>
+                  <p className="text-[11px] text-gray-400 mt-1">小程序点击发货文案进入解释页时展示此?�?</p>
                 </div>
               </div>
 
@@ -2469,7 +2469,7 @@ export default function AdminProductsPage() {
               <div className="pt-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
                   定时下架时间
-                  <span className="text-gray-400 font-normal ml-1">（留�?=不下架，常用于春夏秋冬季节性货品）</span>
+                  <span className="text-gray-400 font-normal ml-1">（留?�?=不下架，常用于春夏秋冬季节性货品）</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -2480,12 +2480,12 @@ export default function AdminProductsPage() {
                   className="w-full px-3 py-2 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
                 <div className="flex flex-wrap gap-2 mt-2">
-                  <span className="text-xs text-gray-400 self-center mr-1">季节预设�?</span>
+                  <span className="text-xs text-gray-400 self-center mr-1">季节预设?�?</span>
                   {[
-                    { label: "春�?4/30", m: 4, d: 30 },
-                    { label: "夏�?8/31", m: 8, d: 31 },
-                    { label: "秋�?10/31", m: 10, d: 31 },
-                    { label: "冬�?1/31", m: 1, d: 31 },
+                    { label: "春??4/30", m: 4, d: 30 },
+                    { label: "夏??8/31", m: 8, d: 31 },
+                    { label: "秋??10/31", m: 10, d: 31 },
+                    { label: "冬??1/31", m: 1, d: 31 },
                   ].map((s) => (
                     <button
                       key={s.label}
