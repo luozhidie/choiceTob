@@ -3,7 +3,7 @@ var app = getApp();
 Page({
   data: {
     inputText: '',
-    mode: 'url',         // url | batch | excel
+    mode: 'url',         // url | batch | image | excel
     urls: [],
     results: [],
     excelName: '',
@@ -80,12 +80,60 @@ Page({
     this.setData({ inputText: e.detail.value });
   },
 
+  // 统一的导入请求
+  doImport: function (urls, token, label) {
+    var that = this;
+    that.setData({ isProcessing: true, results: [], toastText: '正在导入 ' + label + '...' });
+
+    // 调用 Vercel API（走 products/create?action=import）
+    wx.request({
+      url: 'https://colour-choice.art/api/admin/products/create?action=import',
+      method: 'POST',
+      header: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? 'Bearer ' + token : '',
+      },
+      data: { urls: urls },
+      success: function (res) {
+        that.setData({ isProcessing: false });
+        var result = res.data || {};
+        var results = result.results || [];
+        that.setData({ results: results });
+        var okCount = result.success != null ? result.success : results.filter(function(r){return r.status==='success'}).length;
+        var skipCount = result.skipped != null ? result.skipped : results.filter(function(r){return r.status==='skipped'}).length;
+        var errCount = results.filter(function(r){return r.status==='error'}).length;
+        var msg = '成功 ' + okCount + ' 个';
+        if (skipCount > 0) msg += '，跳过 ' + skipCount + ' 个（动态站点）';
+        if (errCount > 0) msg += '，失败 ' + errCount + ' 个';
+        that.showToast(msg);
+      },
+      fail: function (err) {
+        that.setData({ isProcessing: false });
+        that.showToast('网络错误，请稍后重试');
+        console.error('[import]', err);
+      }
+    });
+  },
+
   // 开始导入
   startImport: function () {
     var that = this;
     var text = that.data.inputText.trim();
     if (!text) {
-      that.showToast('请输入商品链接');
+      that.showToast(that.data.mode === 'image' ? '请输入图片链接' : '请输入商品链接');
+      return;
+    }
+
+    var token = wx.getStorageSync('token') || '';
+
+    // 图片链接模式：直接按 JSON 数据导入，不经过网页抓取
+    if (that.data.mode === 'image') {
+      var imageUrls = text.split(/[\n\r]+/).map(function (l) { return l.trim(); }).filter(function (l) { return l.length > 0; });
+      if (imageUrls.length === 0) { that.showToast('没有有效的图片链接'); return; }
+      var bad = imageUrls.filter(function (u) { return !/^https?:\/\//i.test(u); });
+      if (bad.length > 0) { that.showToast('图片链接需以 http:// 或 https:// 开头'); return; }
+      var payload = { title: '导入商品_' + Date.now(), images: imageUrls };
+      that.doImport([JSON.stringify(payload)], token, imageUrls.length + ' 张图片');
       return;
     }
 
@@ -126,39 +174,7 @@ Page({
       return;
     }
 
-    var app = getApp();
-    var token = wx.getStorageSync('token') || '';
-
-    that.setData({ isProcessing: true, results: [], toastText: '正在导入 ' + urls.length + ' 个商品...' });
-
-    // 调用 Vercel API（走 products/create?action=import）
-    wx.request({
-      url: 'https://colour-choice.art/api/admin/products/create?action=import',
-      method: 'POST',
-      header: {
-        'Content-Type': 'application/json',
-        'Authorization': token ? 'Bearer ' + token : '',
-      },
-      data: { urls: urls },
-      success: function (res) {
-        that.setData({ isProcessing: false });
-        var result = res.data || {};
-        var results = result.results || [];
-        that.setData({ results: results });
-        var okCount = result.success != null ? result.success : results.filter(function(r){return r.status==='success'}).length;
-        var skipCount = result.skipped != null ? result.skipped : results.filter(function(r){return r.status==='skipped'}).length;
-        var errCount = results.filter(function(r){return r.status==='error'}).length;
-        var msg = '成功 ' + okCount + ' 个';
-        if (skipCount > 0) msg += '，跳过 ' + skipCount + ' 个（动态站点）';
-        if (errCount > 0) msg += '，失败 ' + errCount + ' 个';
-        that.showToast(msg);
-      },
-      fail: function (err) {
-        that.setData({ isProcessing: false });
-        that.showToast('网络错误，请稍后重试');
-        console.error('[import]', err);
-      }
-    });
+    that.doImport(urls, token, urls.length + ' 个商品');
   },
 
   // 显示提示

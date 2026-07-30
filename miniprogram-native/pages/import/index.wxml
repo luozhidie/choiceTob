@@ -12,6 +12,7 @@
   <view class="tabs">
     <view class="tab {{mode==='url'?'tab-on':''}}" data-mode="url" bindtap="switchMode">单链接</view>
     <view class="tab {{mode==='batch'?'tab-on':''}}" data-mode="batch" bindtap="switchMode">批量粘贴</view>
+    <view class="tab {{mode==='image'?'tab-on':''}}" data-mode="image" bindtap="switchMode">图片链接</view>
     <view class="tab {{mode==='excel'?'tab-on':''}}" data-mode="excel" bindtap="switchMode">Excel导入</view>
   </view>
 
@@ -25,11 +26,19 @@
       auto-height
       maxlength="-1"
     />
-    <input wx:else
+    <input wx:elif="{{mode=='url'}}"
       class="input-single"
       placeholder="粘贴商品链接..."
       value="{{inputText}}"
       bindinput="onInput"
+    />
+    <textarea wx:elif="{{mode=='image'}}"
+      class="input-box"
+      placeholder="粘贴图片链接，每行一个：\nhttps://img.alicdn.com/imgextra/i1/xxx/O1CN01xxx_!!xxx.jpg"
+      value="{{inputText}}"
+      bindinput="onInput"
+      auto-height
+      maxlength="-1"
     />
     <view class="btn-import" bindtap="startImport">
       <text wx:if="{{isProcessing}}">导入中...</text>
@@ -39,7 +48,10 @@
 
   <!-- 提示 -->
   <view class="tip" wx:if="{{mode=='url' || mode=='batch'}}">
-    <text class="tip-text">💡 链接自动导入仅支持服务端可渲染的普通商品页。\n💡 淘宝/天猫/1688/京东/抖音/拼多多/小红书等请用顶部「智能建商品」上传图片导入。</text>
+    <text class="tip-text">💡 链接自动导入仅支持服务端可渲染的普通商品页。\n💡 淘宝/天猫/1688/京东/抖音/拼多多/小红书等请用「图片链接」模式或顶部「智能建商品」。</text>
+  </view>
+  <view class="tip" wx:if="{{mode=='image'}}">
+    <text class="tip-text">💡 适用淘宝/1688/京东等：在商品页长按图片 → 复制图片链接 → 每行一个粘贴到这里。\n💡 服务端会下载图片并创建商品（待分类），再自动 AI 打标。</text>
   </view>
 
   <!-- Excel 导入区 -->
