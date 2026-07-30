@@ -22,6 +22,8 @@ Page({
             m.initial = (m.name || '档').charAt(0);
             return m;
           });
+          // 顶部增加「全部档口」入口，显示未绑定具体市场的发布档口
+          list.unshift({ id: '', name: '全部档口', initial: '全', location: '' });
           t.setData({ markets: list, loading: false });
         } else {
           t.setData({ markets: [], loading: false });
@@ -37,7 +39,10 @@ Page({
   goList: function (e) {
     var id = e.currentTarget.dataset.id;
     var name = e.currentTarget.dataset.name || '';
-    wx.navigateTo({ url: '/pages/stall/index/index?id=' + id + '&name=' + encodeURIComponent(name) });
+    var url = id
+      ? '/pages/stall/index/index?id=' + id + '&name=' + encodeURIComponent(name)
+      : '/pages/stall/index/index?name=' + encodeURIComponent(name || '全部档口');
+    wx.navigateTo({ url: url });
   },
 
   goSubscribed: function () {

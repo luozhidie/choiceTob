@@ -33,17 +33,13 @@ Page({
     var name = decodeURIComponent(opt.name || '');
     this.setData({
       marketId: id,
-      marketName: name,
+      marketName: name || (id ? '' : '全部档口'),
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
       subscribed: sub.localIds()
     });
-    if (id) {
-      this.loadMarket();
-      this.loadStalls();
-      this.syncSubscribe();
-    } else {
-      this.setData({ loading: false });
-    }
+    if (id) this.loadMarket();
+    this.loadStalls();
+    this.syncSubscribe();
   },
 
   onShow: function () {
@@ -91,8 +87,10 @@ Page({
   loadStalls: function () {
     var t = this;
     t.setData({ loading: true });
+    var url = 'https://colour-choice.art/api/public/stalls?limit=100';
+    if (t.data.marketId) url += '&market_id=' + encodeURIComponent(t.data.marketId);
     wx.request({
-      url: 'https://colour-choice.art/api/public/stalls?market_id=' + encodeURIComponent(t.data.marketId) + '&limit=100',
+      url: url,
       method: 'GET',
       success: function (r) {
         var d = r.data || {};
