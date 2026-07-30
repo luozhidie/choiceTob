@@ -110,6 +110,22 @@ Page({
       return;
     }
 
+    // 检测动态站点（淘宝/天猫/1688/京东/抖音/拼多多/小红书等）：服务端无法抓取，直接引导用智能建商品
+    var unsupportedRe = /(taobao\.com|tmall\.com|tb\.cn|1688\.com|jd\.com|pinduoduo\.com|yangkeduo\.com|pdd\.cn|xiaohongshu\.com|xhslink\.com|douyin\.com|iesdouyin\.com|weidian\.com|youzan\.com|koubei\.com)/i;
+    var unsupported = urls.filter(function (u) { return unsupportedRe.test(u); });
+    if (unsupported.length > 0) {
+      wx.showModal({
+        title: '该链接不支持自动导入',
+        content: '淘宝/天猫/1688/京东/抖音/拼多多/小红书等页面为动态加载，无法通过链接自动抓取。请使用「智能建商品」上传商品图片，AI 自动识别标题、价格、尺码、材质。',
+        confirmText: '去智能建商品',
+        cancelText: '取消',
+        success: function (r) {
+          if (r.confirm) wx.navigateTo({ url: '/pages/smart-create/index' });
+        }
+      });
+      return;
+    }
+
     var app = getApp();
     var token = wx.getStorageSync('token') || '';
 

@@ -38,8 +38,8 @@
   </view>
 
   <!-- 提示 -->
-  <view class="tip" wx:if="{{mode=='batch'}}">
-    <text class="tip-text">💡 支持平台：1688、淘宝、拼多多、京东、抖音、小红书、微店、微信小店\n💡 每行一个链接，可粘贴多个</text>
+  <view class="tip" wx:if="{{mode=='url' || mode=='batch'}}">
+    <text class="tip-text">💡 链接自动导入仅支持服务端可渲染的普通商品页。\n💡 淘宝/天猫/1688/京东/抖音/拼多多/小红书等请用顶部「智能建商品」上传图片导入。</text>
   </view>
 
   <!-- Excel 导入区 -->
