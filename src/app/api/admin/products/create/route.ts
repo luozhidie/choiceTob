@@ -139,6 +139,7 @@ export async function POST(request: NextRequest) {
         /1688\.com\/.+\/offer\//,
         /taobao\.com/i,
         /tmall\.com/i,
+        /tb\.cn/i,
         /item\.jd\.com/i,
         /youzan\.com/i,
         /weidian\.com/i,
