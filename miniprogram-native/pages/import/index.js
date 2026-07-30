@@ -101,9 +101,9 @@ Page({
       return;
     }
 
-    // 检测微信小程序内部链接：一键导入不支持，提示用「相册抓取」
+    // 检测微信小程序 / 非网页链接：一键导入不支持，提示用「相册抓取」
     var mpHit = urls.filter(function (u) {
-      return u.indexOf('#小程序://') >= 0 || u.indexOf('weixin.qq.com') >= 0;
+      return /#小程序[:/]|wxapurl:|weixin(\.qq)?\.com|wxde[0-9a-f]+/i.test(u);
     });
     if (mpHit.length > 0) {
       that.showToast('小程序链接无法自动抓取，请用「相册抓取」');

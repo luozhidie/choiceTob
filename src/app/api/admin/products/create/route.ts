@@ -145,6 +145,23 @@ export async function POST(request: NextRequest) {
         /#小程序\/|#微信小程序\//,
       ];
 
+      // URL 校验与协议补全（避免 "Failed to parse URL" 裸错）
+      const safeParseUrl = (raw: string): { url?: string; error?: string } => {
+        let s = (raw || "").trim().replace(/^["'“”‘’\s]+|["'“”‘’\s]+$/g, "");
+        if (!s) return { error: "链接为空" };
+        // 补全协议：缺 http/https 时自动补 https://
+        if (!/^https?:\/\//i.test(s)) s = "https://" + s;
+        try {
+          const u = new URL(s);
+          if (!u.hostname || u.hostname === "localhost") {
+            return { error: "链接格式不正确，请确认是完整的商品网址" };
+          }
+          return { url: u.href };
+        } catch {
+          return { error: "链接格式不正确，请确认是完整的商品网址（需以 http:// 或 https:// 开头）" };
+        }
+      };
+
       // ===== 分支 A：JSON 数据导入（1688/淘宝提取脚本结果） =====
       // 支持格式：单个 JSON 对象 {…} / JSON 数组 […] / 多对象拼接
       const jsonItems: string[] = [];
@@ -249,7 +266,14 @@ export async function POST(request: NextRequest) {
       }
 
       // ===== 分支 B：URL 网页抓取导入 =====
-      for (const u of urlOnlyItems.slice(0, 20)) {
+      for (const rawU of urlOnlyItems.slice(0, 20)) {
+        // 0. URL 校验与协议补全（避免 "Failed to parse URL"）
+        const parsed = safeParseUrl(rawU);
+        if (parsed.error) {
+          results.push({ url: rawU, status: "error", message: parsed.error });
+          continue;
+        }
+        const u = parsed.url!;
         try {
           // 0. 动态站点拦截
           if (dynamicSitePatterns.some(p => p.test(u))) {
@@ -336,7 +360,9 @@ export async function POST(request: NextRequest) {
           while ((m = imgRe.exec(html)) !== null) {
             let src = m[1];
             if (src.startsWith("//")) src = "https:" + src;
-            if (src.startsWith("/")) src = new URL(src, u).href;
+            if (src.startsWith("/")) {
+              try { src = new URL(src, u).href; } catch { continue; }
+            }
             if (src.startsWith("http") && !src.includes("icon") && !src.includes("logo") && !src.includes("avatar")) {
               images.push(src);
             }
