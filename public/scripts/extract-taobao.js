@@ -27,56 +27,85 @@
   // 安全取文本
   const textOf = (el) => (el ? (el.innerText || el.textContent || "").trim() : "");
 
-  // ── 1. 标题 ──
+  // ── 1. 标题（优先商品标题，排除评价/评论/公司名等干扰）──
+  const badTitleRe = /用户评价|用户评论|评论\s*[·\d]|已售|加购|收藏|分享|图文详情|商品详情|店铺|有限公司|旗舰店|更多|推荐|供应商|厂家|源头工厂|宝贝|淘宝网|天猫|天猫国际|登录|注册|客服|购物车/;
   try {
-    const titleSelectors = [
-      "h1[data-spm='1000993']",
-      ".tb-detail-hd h1",
-      ".itemInfo-wrap h1",
-      ".tm-clear .tb-detail-hd h1",
-      "[class*='ItemTitle--']",
-      "[class*='itemTitle--']",
-      "[class*='ItemTitle']",
-      "[class*='title--']",
-      "meta[property='og:title']",
-      "meta[name='og:title']",
-      "h1",
+    const titleCandidates = [
+      document.querySelector("meta[property='og:title']"),
+      document.querySelector("meta[name='og:title']"),
+      document.querySelector("[class*='ItemTitle']"),
+      document.querySelector("[class*='itemTitle']"),
+      ...Array.from(document.querySelectorAll("h1")).filter(el => {
+        const t = (el.innerText || "").trim();
+        return t.length > 6 && t.length < 120 && !badTitleRe.test(t);
+      }),
+      ...Array.from(document.querySelectorAll("[class*='title']")).filter(el => {
+        const t = (el.innerText || "").trim();
+        return t.length > 6 && t.length < 120 && !badTitleRe.test(t);
+      }),
     ];
-    for (const sel of titleSelectors) {
-      const el = document.querySelector(sel);
-      if (el) {
-        const t = sel.startsWith("meta") ? el.getAttribute("content") || "" : textOf(el);
-        if (t && t.length > 4 && t.length < 150) { result.title = t; break; }
+    for (const el of titleCandidates) {
+      if (!el) continue;
+      let t = "";
+      if (el.tagName && el.tagName.toLowerCase() === "meta") {
+        t = el.getAttribute("content") || "";
+      } else {
+        t = textOf(el);
       }
+      t = t.replace(/\s+/g, " ").trim();
+      if (t && t.length > 6 && t.length < 120 && !badTitleRe.test(t) && !t.includes("有限公司")) {
+        result.title = t; break;
+      }
+    }
+    // 兜底：document.title 去掉站点后缀
+    if (!result.title && document.title && document.title.length > 6) {
+      const dt = document.title.split(/[-_｜|]/)[0].trim();
+      if (dt.length > 6 && dt.length < 120 && !badTitleRe.test(dt)) result.title = dt;
     }
   } catch (e) {}
 
   // ── 2. 价格 ──
   try {
-    const priceSelectors = [
-      ".tb-rmb-num",
-      ".tm-price",
-      ".tm-promo-price .tm-price",
-      "[class*='Price--priceInt']",
-      "[class*='price-current']",
-      "[class*='notranslate']",
-      "meta[property='og:price:amount']",
-      "meta[property='product:price:amount']",
-      "meta[name='price']",
-    ];
-    for (const sel of priceSelectors) {
-      const el = document.querySelector(sel);
-      if (el) {
-        const t = sel.startsWith("meta") ? el.getAttribute("content") || "" : textOf(el);
-        const m = t.match(/(\d{1,6}(?:\.\d{1,2})?)/);
-        if (m && parseFloat(m[1]) > 0) { result.price = m[1]; break; }
-      }
+    const priceBadRe = /运费|邮费|优惠|券|满减|减|到手价|约|低至|起|万|亿|定金|尾款|预售价|立减/;
+    // 策略1：meta 优先（最准）
+    const metaPrice = document.querySelector("meta[property='og:price:amount']") ||
+      document.querySelector("meta[property='product:price:amount']") ||
+      document.querySelector("meta[name='price']");
+    if (metaPrice) {
+      const m = (metaPrice.getAttribute("content") || "").match(/(\d{1,6}(?:\.\d{1,2})?)/);
+      if (m && parseFloat(m[1]) > 0) result.price = m[1];
     }
-    // 兜底：页面全局搜 ¥数字
+    // 策略2：带 price 类节点 + 父级上下文过滤
+    if (!result.price) {
+      const allEls = document.querySelectorAll(
+        "[class*='price'], [class*='Price'], [class*='rmb'], .tb-rmb-num, .tm-price, [itemprop='price'], [class*='amount']"
+      );
+      let fallbackPrice = "";
+      for (const el of allEls) {
+        const t = (el.innerText || "").trim();
+        if (!t) continue;
+        const parentText = (el.parentElement && el.parentElement.innerText || t).trim();
+        if (priceBadRe.test(parentText) || priceBadRe.test(t)) continue;
+        if (/¥\s*\d+/.test(t) || /^\d+(\.\d{1,2})?$/.test(t) || /¥\s*\d+/.test(parentText)) {
+          const m = (parentText.match(/¥\s*(\d{1,6}(?:\.\d{1,2})?)/) || t.match(/(\d{1,6}(?:\.\d{1,2})?)/));
+          if (m && parseFloat(m[1]) > 0 && parseFloat(m[1]) < 100000) {
+            if (!fallbackPrice) fallbackPrice = m[1];
+            const cls = (el.className || "").toString();
+            if (cls.includes("price") || cls.includes("Price") || cls.includes("rmb") || cls.includes("amount")) { result.price = m[1]; break; }
+          }
+        }
+      }
+      if (!result.price && fallbackPrice) result.price = fallbackPrice;
+    }
+    // 策略3：全局 ¥ 数字，排除运费/优惠上下文
     if (!result.price) {
       const body = document.body.innerText;
-      const pm = body.match(/¥\s*(\d{1,6}(?:\.\d{1,2})?)/);
-      if (pm) result.price = pm[1];
+      const priceMatches = [...body.matchAll(/¥\s*(\d{1,6}(?:\.\d{1,2})?)/g)];
+      for (const m of priceMatches) {
+        const idx = m.index || 0;
+        const context = body.slice(Math.max(0, idx - 30), idx + 30);
+        if (!priceBadRe.test(context)) { result.price = m[1]; break; }
+      }
     }
     // 原价
     const origSelectors = [
@@ -90,8 +119,8 @@
     for (const sel of origSelectors) {
       const el = document.querySelector(sel);
       if (el) {
-        const m = textOf(el).match(/(\d{1,6}(?:\.\d{1,2})?)/);
-        if (m && m[1] !== result.price) { result.originalPrice = m[1]; break; }
+        const m = textOf(el).replace(/[^\d.]/g, "").match(/\d+(?:\.\d{1,2})?/);
+        if (m && m[0] && m[0] !== result.price) { result.originalPrice = m[0]; break; }
       }
     }
   } catch (e) {}
@@ -159,12 +188,34 @@
       "[class*='Attrs--attr']",
       "[class*='Props--prop']",
       ".props-list li",
+      "[class*='attribute'] tr",
     ];
+    const specSeen = new Set();
     for (const sel of specSelectors) {
       document.querySelectorAll(sel).forEach(el => {
-        const t = textOf(el).replace(/\s+/g, " ").trim();
-        if (t && (t.includes(":") || t.includes("："))) {
-          result.specs.push(t.replace(/\s+/g, ""));
+        const cells = el.querySelectorAll ? el.querySelectorAll("td, th") : [];
+        let t = "";
+        if (cells.length >= 2) {
+          const key = cells[0].innerText.trim().replace(/[:：\s]/g, "");
+          const val = cells[1].innerText.trim().replace(/\s+/g, " ");
+          if (key && val) t = key + ":" + val.replace(/\s+/g, "");
+        } else {
+          t = textOf(el).replace(/\s+/g, " ").trim();
+        }
+        t = t.replace(/\s+/g, "");
+        if (t && (t.includes(":") || t.includes("：")) && !specSeen.has(t)) {
+          specSeen.add(t);
+          result.specs.push(t);
+        }
+      });
+    }
+    // 兜底：详情区参数列表
+    if (result.specs.length === 0) {
+      document.querySelectorAll(".detail-attrs li, [class*='detail-attr'] li, .param-info li").forEach(el => {
+        const t = textOf(el).replace(/\s+/g, "");
+        if (t && (t.includes(":") || t.includes("：")) && !specSeen.has(t)) {
+          specSeen.add(t);
+          result.specs.push(t);
         }
       });
     }

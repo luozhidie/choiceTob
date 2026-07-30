@@ -92,7 +92,7 @@ export default function WishlistPage() {
           onClick={() => router.push("/login?redirect=/wishlist")}
           className="px-8 py-3 rounded-xl bg-primary text-white font-medium hover:opacity-90 transition"
         >
-          去登?�?
+          去登褰
         </button>
       </div>
     );
@@ -105,8 +105,8 @@ export default function WishlistPage() {
           <button onClick={() => router.back()} className="p-1.5 rounded-full hover:bg-gray-100">
             <ArrowRight className="w-5 h-5 text-gray-500 rotate-180" />
           </button>
-          <span className="font-bold text-primary">我的心愿?�?</span>
-          <span className="text-xs text-gray-400 ml-1">?�? {items.length} ?�?</span>
+          <span className="font-bold text-primary">我的心愿单</span>
+          <span className="text-xs text-gray-400 ml-1">共 {items.length} 件</span>
         </div>
       </div>
 
@@ -116,15 +116,15 @@ export default function WishlistPage() {
             <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center">
               <Heart className="w-7 h-7 text-amber-400" />
             </div>
-            <div className="text-gray-500">还没有加入任何心愿商?�?</div>
+            <div className="text-gray-500">还没有加入任何心愿商品</div>
             <p className="text-sm text-gray-400 max-w-xs">
-              遇到没有标价但喜欢的款，点「加入心愿单」，集齐一定量我们就会去开价上?�?
+              遇到没有标价但喜欢的款，点「加入心愿单」，集齐一定量我们就会去开价上架
             </p>
             <Link
               href="/buyer"
               className="mt-2 px-6 py-2.5 rounded-xl bg-primary text-white text-sm font-medium hover:opacity-90 transition"
             >
-              去逛?�? ?�?
+              去逛选 鈥
             </Link>
           </div>
         ) : (
@@ -152,14 +152,14 @@ export default function WishlistPage() {
                     return (
                       <span className="inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-600">
                         {v.hasPrice
-                          ? (v.tier === "blind" ? `${v.text} �� ${v.progressText}` : `${v.tierLabel} ${v.text}`)
-                          : "�۸?���� �� ä�м���"}
+                          ? (v.tier === "blind" ? `${v.text} · ${v.progressText}` : `${v.tierLabel} ${v.text}`)
+                          : "价格待定 · 盲盒集单"}
                       </span>
                     );
                   })()}
                   {!it.is_published && (
                     <span className="inline-block mt-1.5 ml-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
-                      已下?�?
+                      已下鏋
                     </span>
                   )}
                 </div>
@@ -167,7 +167,7 @@ export default function WishlistPage() {
                   onClick={() => removeWish(it.id)}
                   disabled={removing === it.id}
                   className="shrink-0 p-2.5 rounded-full text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-50"
-                  title="移出心愿?�?"
+                  title="移出心愿单"
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
