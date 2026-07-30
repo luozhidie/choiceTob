@@ -210,7 +210,7 @@ export default function ImageGrabberPage() {
     loadProducts();
   }, []);
 
-  // 自动导入：从 URL ?import=<base64> 读取 1688 书签直传的数据
+  // 自动导入：从 URL ?import=<base64> 读取书签脚本（1688/淘宝/天猫）直传的数据
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const importData = params.get("import");
@@ -219,7 +219,7 @@ export default function ImageGrabberPage() {
         const json = decodeURIComponent(escape(window.atob(importData)));
         setInputText(json);
         setMode("import");
-        showToast("success", "已接收 1688 商品数据，正在导入...");
+        showToast("success", "已接收商品数据，正在导入...");
         setTimeout(() => {
           handleImportAuto(json);
           window.history.replaceState({}, "", window.location.pathname);
