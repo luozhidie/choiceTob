@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
             results.push({
               name: poi.name || '',
               address: poi.address || `${poi.pname || ''}${poi.cityname || ''}${poi.adname || ''}${poi.address || ''}` || '',
-              phone: poi.tel || '',
+              phone: normalizePhone(poi.tel),
               industry: normalizeIndustry(industry) || guessIndustry(poi.type || '', poi.name || ''),
               city: poi.cityname || city || '',
               district: poi.adname || '',
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
               results.push({
                 name: poi.name || '',
                 address: poi.address || '',
-                phone: poi.telephone || poi.phone || '',
+                phone: normalizePhone(poi.telephone || poi.phone),
                 industry: normalizeIndustry(industry) || guessIndustry(poi.detail_info?.type || '', poi.name || ''),
                 city: city || '',
                 district: '',
@@ -116,6 +116,16 @@ export async function POST(request: NextRequest) {
     console.error("Scrape API error:", error);
     return NextResponse.json({ error: error.message || "采集失败" }, { status: 500 });
   }
+}
+
+// 归一化手机号/电话：数组取首个非空元素，空值统一为空字符串
+function normalizePhone(raw: any): string {
+  if (Array.isArray(raw)) {
+    const first = raw.find((x) => typeof x === "string" && x.trim());
+    return first ? first.trim() : "";
+  }
+  if (typeof raw === "string") return raw.trim();
+  return "";
 }
 
 // 归一化行业值，确保在数据库 CHECK 约束范围内

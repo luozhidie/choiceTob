@@ -52,10 +52,10 @@ function parseSearchResults(text: string, defaultIndustry: string): ParsedStore[
   let index = 0;
 
   const extractPhone = (s: string): string => {
-    const matches = s.match(/(?:电话[:：]|Tel[:：]|联系方式[:：]|手机[:：])?\s*([\d\s\-]{7,15})/);
-    if (matches) return matches[1].replace(/[\s\-]/g, "");
     const mobile = s.match(/1[3-9]\d{9}/);
     if (mobile) return mobile[0];
+    const matches = s.match(/(?:电话[:：]|Tel[:：]|联系方式[:：]|手机[:：])?\s*([\d\s\-]{7,15})/);
+    if (matches) return matches[1].replace(/[\s\-]/g, "");
     return "";
   };
 
@@ -188,18 +188,21 @@ export default function CrmScrapePage() {
       }
 
       // 转换为 ParsedStore 格式
-      const newResults: ParsedStore[] = data.results.map((poi: any, idx: number) => ({
-        id: poi.id || `poi_${idx}_${currentPage}`,
-        name: poi.name || "",
-        address: poi.address || "",
-        phone: poi.phone || "",
-        industry: poi.industry || (keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他"),
-        city: poi.city || city,
-        source_detail: poi.source_detail || "地图POI",
-        selected: true,
-        parsed: !!(poi.phone || ""),
-        rawLines: [poi.name, poi.address, poi.phone].filter(Boolean),
-      }));
+      const newResults: ParsedStore[] = data.results.map((poi: any, idx: number) => {
+        const phone = typeof poi.phone === "string" ? poi.phone.trim() : "";
+        return {
+          id: poi.id || `poi_${idx}_${currentPage}`,
+          name: poi.name || "",
+          address: poi.address || "",
+          phone,
+          industry: poi.industry || (keyword.includes("服装") ? "服装店" : keyword.includes("轮胎") ? "轮胎店" : keyword.includes("滋补") ? "滋补行" : "其他"),
+          city: poi.city || city,
+          source_detail: poi.source_detail || "地图POI",
+          selected: true,
+          parsed: !!phone,
+          rawLines: [poi.name, poi.address, phone].filter(Boolean),
+        };
+      });
 
       // 查询已存在的门店，过滤掉已采集过的
       const allNames = [...new Set(newResults.map(r => r.name))];
@@ -257,7 +260,7 @@ export default function CrmScrapePage() {
         .from("crm_stores")
         .select("name")
         .in("name", selectedNames);
-      const existingNames = new Set((existing || []).map(e => e.name));
+      const existingNames = new Set((existing || []).map((e: any) => e.name));
       const newRecords = selected.filter(r => !existingNames.has(r.name));
       const dupCount = selected.length - newRecords.length;
 
@@ -270,7 +273,7 @@ export default function CrmScrapePage() {
       const records = newRecords.map(r => ({
         name: r.name,
         address: r.address || "",
-        owner_phone: r.phone || "待补充",
+        owner_phone: (typeof r.phone === "string" && r.phone.trim()) ? r.phone.trim() : "待补充",
         industry: r.industry,
         source: mode === "api" ? "import" as const : "scrape" as const,
         source_detail: r.source_detail,
