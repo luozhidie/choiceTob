@@ -10,7 +10,7 @@ var MAIN_CATEGORIES = [
   { id:'recommend',   name:'为你推荐' },
   { id:'markets',     name:'热门市场' },
   { id:'topics',      name:'专题' },
-  { id:'styles',      name:'风格' },
+  { id:'styles',      name:'风情' },
   { id:'tops',        name:'上装' },
   { id:'bottoms',     name:'下装' },
   { id:'dresses',     name:'裙装' },
@@ -39,7 +39,7 @@ var CATEGORY_TREE = {
   topics: { title:'特色货品 为你推荐', items:[
     '大码女装','新中式','小香风','小个子','梨形'
   ]},
-  styles: { title:'风格', items:[
+  styles: { title:'风情', items:[
     '休闲简约','清新简约','通勤简约','小女人','基础百搭','淑女','法式复古','网红辣妹','街头潮流',
     '纯欲','大牌简约','美式复古','高街','田园浪漫','日系简约','学院','中性休闲','甜酷'
   ]},
