@@ -60,6 +60,27 @@ async function fetchWishCounts(supabase: any, ids: string[]): Promise<Record<str
   return map;
 }
 
+// 中文筛选 key ←→ 商品编辑页英文 params key 的别名映射。
+// 历史商品用英文 key 录入，新配置用中文 key，两套都要能筛到。
+const KEY_ALIAS: Record<string, string> = {
+  面料: "fabric",
+  季节: "season",
+  领型: "collar",
+  版型: "fit",
+  袖长: "sleeve_length",
+  袖型: "sleeve_type",
+  图案: "pattern",
+  工艺: "craft",
+  裙型: "skirt_type",
+  裙长: "skirt_length",
+  廓形: "silhouette",
+  门襟: "placket",
+  厚度: "thickness",
+  里布: "lining",
+  配件: "accessories",
+  穿着场景: "scene",
+};
+
 function applySort(query: any, sort: string) {
   if (sort === "sales") return query.order("sales", { ascending: false });
   if (sort === "price_asc") return query.order("price", { ascending: true });
@@ -106,26 +127,63 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     }
   });
 
+  // 快捷开关（toggle）：映射到真实业务字段，而不是去 params 里找不存在的键
+  function applyToggle(query: any, key: string) {
+    switch (key) {
+      case "in_stock":        // 现货：有库存
+        return query.gt("stock", 0);
+      case "bulk_price":      // 批量采购价：填了批量价
+        return query.gt("bulk_price", 0);
+      case "is_special":      // 特价：有划线原价
+        return query.gt("original_price", 0);
+      case "source_brand":    // 源头厂牌：商品参数里标记
+        return query.or("params->>source_brand.eq.1,params->>source_brand.eq.true");
+      case "subscribed_stall": // 订阅档口：前端按本地订阅列表过滤，后端放行
+        return query;
+      default:
+        return query;
+    }
+  }
+
+  // 近期上新：今日上新 / 近3日上新 / 近7日上新
+  function applyRecent(query: any, vals: string[]) {
+    const v = vals[0] || "";
+    const days = v.indexOf("今日") >= 0 ? 1 : v.indexOf("3") >= 0 ? 3 : v.indexOf("7") >= 0 ? 7 : 0;
+    if (!days) return query;
+    return query.gte("created_at", new Date(Date.now() - days * 86400000).toISOString());
+  }
+
+  const TOGGLE_KEYS = ["in_stock", "bulk_price", "is_special", "source_brand", "subscribed_stall"];
+
   function applyFilters(query: any) {
     if (keyword) query = query.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
     if (priceMin) query = query.gte("price", parseFloat(priceMin) * 100);
     if (priceMax) query = query.lte("price", parseFloat(priceMax) * 100);
+
     for (const [k, vals] of Object.entries(filters)) {
-      // 尺码 / 面料：商品以「/值/」wrap 形式存储，使用 ilike 分词匹配，避免 XS 误命中 S
-      if (k === "sizes" || k === "fabrics") {
-        const safe = vals.map((v) => v.replace(/\//g, "").trim()).filter(Boolean);
-        if (safe.length === 1) {
-          query = query.ilike(`params->>${k}`, `%/${safe[0]}/%`);
-        } else if (safe.length > 1) {
-          query = query.or(
-            safe.map((v) => `params->>${k}.ilike.%/${v}/%`).join(",")
-          );
-        }
-      } else if (vals.length === 1) {
-        query = query.eq(`params->>${k}`, vals[0]);
-      } else if (vals.length > 1) {
-        query = query.or(vals.map((v) => `params->>${k}.eq.${v}`).join(","));
-      }
+      if (!vals || vals.length === 0) continue;
+
+      // 1) 快捷开关
+      if (TOGGLE_KEYS.indexOf(k) >= 0) { query = applyToggle(query, k); continue; }
+      // 2) 近期上新
+      if (k === "recent") { query = applyRecent(query, vals); continue; }
+
+      // 3) 普通属性：单选存纯值「圆领」，多选存 wrap 值「/圆领/V领/」，两种都要命中；
+      //    同时兼容中文 key（面料）与英文 key（fabric）两套录入历史
+      const safe = vals.map((v) => v.replace(/[/,]/g, "").trim()).filter(Boolean);
+      if (safe.length === 0) continue;
+      const keys = [k];
+      const alias = KEY_ALIAS[k];
+      if (alias) keys.push(alias);
+
+      const conds: string[] = [];
+      keys.forEach((kk) => {
+        safe.forEach((v) => {
+          conds.push(`params->>${kk}.eq.${v}`);
+          conds.push(`params->>${kk}.ilike.%/${v}/%`);
+        });
+      });
+      query = query.or(conds.join(","));
     }
     return query;
   }

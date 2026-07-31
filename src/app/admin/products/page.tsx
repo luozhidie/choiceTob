@@ -327,11 +327,35 @@ export default function AdminProductsPage() {
   // 按当前主分类从公开接口拉取「尺码 / 面料」可选项
   const [sizesOptions, setSizesOptions] = useState<string[]>([]);
   const [fabricsOptions, setFabricsOptions] = useState<string[]>([]);
+  // 小程序「全部筛选」抽屉的分区（价格区间除外）——商品按这些分区打标，
+  // 打了标才能被前台筛出来，所以录入项与筛选项必须来自同一份配置
+  const [panelSections, setPanelSections] = useState<
+    { title: string; key: string; multiple?: boolean; options: string[] }[]
+  >([]);
+  // 商品在各筛选分区上选中的值：{ 领型: ["圆领"], 图案: ["条纹","纯色"] }
+  const [attrSel, setAttrSel] = useState<Record<string, string[]>>({});
+
+  const toggleAttr = (key: string, val: string, multiple?: boolean) => {
+    setAttrSel((prev) => {
+      const cur = prev[key] || [];
+      let next: string[];
+      if (multiple) {
+        next = cur.includes(val) ? cur.filter((v) => v !== val) : [...cur, val];
+      } else {
+        next = cur.includes(val) ? [] : [val];
+      }
+      const out = { ...prev };
+      if (next.length) out[key] = next;
+      else delete out[key];
+      return out;
+    });
+  };
 
   useEffect(() => {
     if (!form.category) {
       setSizesOptions([]);
       setFabricsOptions([]);
+      setPanelSections([]);
       return;
     }
     let cancelled = false;
@@ -355,11 +379,23 @@ export default function AdminProductsPage() {
             ? fabricsQ.options.map(String)
             : []
         );
+        const secs: any[] = cfg.filterPanel?.sections || [];
+        setPanelSections(
+          secs
+            .filter((s) => s && s.key && s.type !== "price" && Array.isArray(s.options) && s.options.length)
+            .map((s) => ({
+              title: String(s.title || s.key),
+              key: String(s.key),
+              multiple: !!s.multiple,
+              options: s.options.map((o: any) => (typeof o === "string" ? o : o?.value || o?.label || "")).filter(Boolean),
+            }))
+        );
       })
       .catch(() => {
         if (!cancelled) {
           setSizesOptions([]);
           setFabricsOptions([]);
+          setPanelSections([]);
         }
       });
     return () => {
@@ -521,6 +557,7 @@ export default function AdminProductsPage() {
       color_hex: "",
       color_season_code: "",
       style_conclusion: "",
+      style_type: "",
       fabrics: [],
       sizesSel: [],
       color: "",
@@ -540,6 +577,7 @@ export default function AdminProductsPage() {
       unpublish_at: "",
     });
     setSetItems([]);
+    setAttrSel({});
     autoCalcSnapshot.current = null;
   };
 
@@ -626,9 +664,16 @@ export default function AdminProductsPage() {
         // 定时下架时间（季节性货品）：存于 params，本地 datetime-local →? ISO(UTC)；清空则置为 null 以便取消定时
         if (form.unpublish_at) cleaned.unpublish_at = fromLocalInputValue(form.unpublish_at);
         else cleaned.unpublish_at = null;
-        // 尺码 / 面料：以。/转/」wrap 形式存入 params，供前台精确分词匹配（ilike %/转/%，
+        // 尺码 / 面料：以「/值/」wrap 形式存入 params，供前台精确分词匹配（ilike %/值/%）
         if (form.sizesSel.length > 0) cleaned.sizes = "/" + form.sizesSel.join("/") + "/";
         if (form.fabrics.length > 0) cleaned.fabrics = "/" + form.fabrics.join("/") + "/";
+        // 筛选属性（色系/季节/版型/领型…）：单选存纯值，多选存 wrap 值，
+        // key 与「分类筛选项管理」里配置的 key 完全一致，保证前台能筛到
+        panelSections.forEach((sec) => {
+          const vals = attrSel[sec.key] || [];
+          if (!vals.length) { cleaned[sec.key] = null; return; }
+          cleaned[sec.key] = sec.multiple ? "/" + vals.join("/") + "/" : vals[0];
+        });
         return Object.keys(cleaned).length > 0 ? cleaned : null;
       })(),
       // 媒体字段
@@ -798,6 +843,19 @@ export default function AdminProductsPage() {
       // 定时下架时间：从 params 读取，ISO →? 本地 datetime-local
       unpublish_at: toLocalInputValue(product.params?.unpublish_at),
     });
+    // 筛选属性回显：单选纯值 / 多选 wrap 值，都还原成数组
+    setAttrSel((() => {
+      const base = (product.params && typeof product.params === "object" ? product.params : {}) as Record<string, any>;
+      const out: Record<string, string[]> = {};
+      Object.keys(base).forEach((k) => {
+        if (["sizes", "fabrics", "set_items", "unpublish_at"].includes(k)) return;
+        const v = base[k];
+        if (typeof v !== "string" || !v.trim()) return;
+        const arr = v.indexOf("/") === 0 ? parseWrapParam(v) : [v.trim()];
+        if (arr.length) out[k] = arr;
+      });
+      return out;
+    })());
     // 套装拆分价：数据库存的是分(cent)，回显为元
     const loaded = (product.params?.set_items as any) || [];
     setSetItems(
@@ -2308,6 +2366,78 @@ export default function AdminProductsPage() {
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="如：ZARA、优衣库"
                   />
+                </div>
+
+                {/* 筛选属性：直接对应小程序「全部筛选」抽屉，打了标才能被筛出来 */}
+                <div className="mt-4 pt-3 border-t border-gray-100">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="text-xs font-semibold text-primary">
+                        筛选属性
+                        {panelSections.length > 0 && (
+                          <span className="ml-1.5 font-normal text-gray-400">
+                            已选 {Object.keys(attrSel).filter((k) => (attrSel[k] || []).length).length}/{panelSections.length} 项
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">
+                        小程序买家按这些条件筛货，不打标就筛不到这件商品
+                      </p>
+                    </div>
+                    {Object.keys(attrSel).length > 0 && (
+                      <button type="button" onClick={() => setAttrSel({})} className="text-[11px] text-gray-400 hover:text-red-500 shrink-0">
+                        全部清空
+                      </button>
+                    )}
+                  </div>
+
+                  {!form.category ? (
+                    <div className="px-3 py-4 bg-amber-50 border border-amber-100 rounded-lg text-xs text-amber-700">
+                      请先在上面选择「品类」，这里会自动列出该品类的筛选条件
+                    </div>
+                  ) : panelSections.length === 0 ? (
+                    <div className="px-3 py-4 bg-gray-50 border border-gray-100 rounded-lg text-xs text-gray-500">
+                      「{form.category}」还没配置筛选条件。去
+                      <a href="/admin/category-filters" target="_blank" className="text-primary underline mx-1">分类筛选项管理</a>
+                      配置后，这里会自动出现对应的选项。
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {panelSections.map((sec) => {
+                        const sel = attrSel[sec.key] || [];
+                        return (
+                          <div key={sec.key}>
+                            <div className="flex items-center gap-1.5 mb-1.5">
+                              <span className="text-[11px] font-medium text-gray-600">{sec.title}</span>
+                              <span className="text-[10px] text-gray-300">{sec.multiple ? "多选" : "单选"}</span>
+                              {sel.length > 0 && (
+                                <span className="text-[10px] text-primary">已选 {sel.length}</span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {sec.options.map((opt) => {
+                                const on = sel.includes(opt);
+                                return (
+                                  <button
+                                    key={opt}
+                                    type="button"
+                                    onClick={() => toggleAttr(sec.key, opt, sec.multiple)}
+                                    className={`px-2.5 py-1 rounded-lg text-xs transition ${
+                                      on
+                                        ? "bg-primary text-white font-medium"
+                                        : "bg-gray-50 text-gray-600 border border-gray-200 hover:border-primary/40"
+                                    }`}
+                                  >
+                                    {opt}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* 详细参数（服装规格） */}
