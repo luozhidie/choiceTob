@@ -31,18 +31,28 @@ export function MagazineSubscribeModal({ isOpen, onClose }: MagazineSubscribeMod
     try {
       const planName = selectedPlan === "monthly" ? "月费会员" : "订阅一年享优惠价格";
       const planPrice = selectedPlan === "monthly" ? 13800 : 138000;
-      await supabase.from("leads").insert([{
-        name: formData.name.trim(),
-        phone: formData.phone.trim(),
-        wechat: formData.wechat.trim() || null,
-        source: "magazine_subscription",
-        interest: planName,
-        notes: `价格: ¥${planPrice / 100}/${selectedPlan === "monthly" ? "月" : "年"}`,
-      }]);
+      const res = await fetch("/api/public/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          wechat: formData.wechat.trim() || null,
+          source: "magazine_subscription",
+          interest: planName,
+          notes: `价格: ¥${planPrice / 100}/${selectedPlan === "monthly" ? "月" : "年"}`,
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        console.error("提交失败:", json.error);
+        alert("提交失败，请稍后重试或直接添加微信 luozhidie666");
+        return;
+      }
       setSubmitted(true);
     } catch (err) {
       console.error("提交失败:", err);
-      setSubmitted(true);
+      alert("网络异常，提交失败，请稍后重试或直接添加微信 luozhidie666");
     } finally {
       setSaving(false);
     }

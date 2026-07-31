@@ -22,19 +22,35 @@ interface Lead {
   phone: string;
   wechat: string;
   company: string;
-  source: "paywall" | "contact" | "style_test" | "supplier";
-  interested_service: string;
+  source: string;
+  interest: string;
   status: "new" | "contacted" | "qualified" | "converted" | "lost";
   notes: string;
   created_at: string;
 }
 
 const SOURCE_MAP: Record<string, string> = {
+  // 站内表单实际写入的来源值
+  contact_form: "联系表单",
+  paywall_purchase: "付费墙",
+  magazine_subscription: "杂志订阅",
+  female_style_test: "风格测试(女)",
+  male_style_test: "风格测试(男)",
+  // 兼容历史简写
   paywall: "付费墙",
   contact: "联系表单",
   style_test: "风格测试",
   supplier: "供应商",
 };
+
+const SOURCE_OPTIONS = [
+  { value: "contact_form", label: "联系表单" },
+  { value: "paywall_purchase", label: "付费墙" },
+  { value: "magazine_subscription", label: "杂志订阅" },
+  { value: "female_style_test", label: "风格测试(女)" },
+  { value: "male_style_test", label: "风格测试(男)" },
+  { value: "supplier", label: "供应商" },
+];
 
 const STATUS_MAP: Record<string, string> = {
   new: "新线索",
@@ -67,8 +83,8 @@ const emptyForm = {
   phone: "",
   wechat: "",
   company: "",
-  source: "contact" as Lead["source"],
-  interested_service: "",
+  source: "contact_form" as Lead["source"],
+  interest: "",
   status: "new" as Lead["status"],
   notes: "",
 };
@@ -161,7 +177,7 @@ const fetchLeads = async () => {
       wechat: lead.wechat || "",
       company: lead.company || "",
       source: lead.source,
-      interested_service: lead.interested_service || "",
+      interest: lead.interest || "",
       status: lead.status,
       notes: lead.notes || "",
     });
@@ -240,10 +256,9 @@ const fetchLeads = async () => {
           className="px-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors text-sm"
         >
           <option value="">全部来源</option>
-          <option value="paywall">付费墙</option>
-          <option value="contact">联系表单</option>
-          <option value="style_test">风格测试</option>
-          <option value="supplier">供应商</option>
+          {SOURCE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
         </select>
         <select
           value={filterStatus}
@@ -299,7 +314,7 @@ const fetchLeads = async () => {
                       <td className="px-4 py-3 text-sm">{lead.wechat || "-"}</td>
                       <td className="px-4 py-3 text-sm">{lead.company || "-"}</td>
                       <td className="px-4 py-3 text-sm">{SOURCE_MAP[lead.source] || lead.source}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground max-w-[120px] truncate">{lead.interested_service || "-"}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground max-w-[120px] truncate">{lead.interest || "-"}</td>
                       <td className="px-4 py-3">
                         {STATUS_FLOW[lead.status]?.length > 0 ? (
                           <div className="flex items-center gap-1">
@@ -395,10 +410,9 @@ const fetchLeads = async () => {
                 <div>
                   <label className="block text-sm font-medium text-primary mb-2">来源</label>
                   <select value={formData.source} onChange={(e) => setFormData({ ...formData, source: e.target.value as Lead["source"] })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors">
-                    <option value="paywall">付费墙</option>
-                    <option value="contact">联系表单</option>
-                    <option value="style_test">风格测试</option>
-                    <option value="supplier">供应商</option>
+                    {SOURCE_OPTIONS.map((o) => (
+                      <option key={o.value} value={o.value}>{o.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
@@ -415,7 +429,7 @@ const fetchLeads = async () => {
 
               <div>
                 <label className="block text-sm font-medium text-primary mb-2">感兴趣的服务</label>
-                <input type="text" value={formData.interested_service} onChange={(e) => setFormData({ ...formData, interested_service: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：形象设计、衣橱整理" />
+                <input type="text" value={formData.interest} onChange={(e) => setFormData({ ...formData, interest: e.target.value })} className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-colors" placeholder="如：形象设计、衣橱整理" />
               </div>
 
               <div>

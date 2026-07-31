@@ -115,17 +115,27 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await supabase.from("leads").insert([
-        {
+      const res = await fetch("/api/public/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: form.name.trim() || null,
           phone: form.phone.trim() || null,
           source: "contact_form",
           interest: form.type || null,
           notes: `邮箱: ${form.email || "无"} | 留言: ${form.message || "无"}`,
-        },
-      ]);
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        console.error("保存失败:", json.error);
+        alert("提交失败，请稍后重试或直接添加微信 luozhidie666");
+        return;
+      }
     } catch (err) {
       console.error("保存失败:", err);
+      alert("网络异常，提交失败，请稍后重试或直接添加微信 luozhidie666");
+      return;
     }
     setSubmitted(true);
     setForm({ name: "", phone: "", email: "", type: "", message: "" });

@@ -118,22 +118,27 @@ export function PaywallModal({
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from("leads").insert([
-        {
+      const res = await fetch("/api/public/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: formData.name.trim(),
           phone: formData.phone.trim(),
           source: "paywall_purchase",
           interest: formData.service,
           notes: `邮箱: ${formData.email || "无"} | 套餐: ${selectedPackage.name} ¥${(selectedPackage.price / 100).toFixed(0)} | 补充: ${formData.message || "无"}`,
-        },
-      ]);
-      if (error) {
-        console.error("保存失败:", error);
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        console.error("保存失败:", json.error);
+        alert("提交失败，请稍后重试或直接添加微信 luozhidie666");
+        return;
       }
       setSubmitted(true);
     } catch (err) {
       console.error("提交错误:", err);
-      setSubmitted(true);
+      alert("网络异常，提交失败，请稍后重试或直接添加微信 luozhidie666");
     } finally {
       setSaving(false);
     }

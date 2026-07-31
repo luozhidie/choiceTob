@@ -150,15 +150,23 @@ export default function MaleStyleTestPage() {
     }
     setSavingLead(true);
     try {
-      await supabase.from("leads").insert([
-        {
+      const res = await fetch("/api/public/leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           name: leadForm.name.trim(),
           phone: leadForm.phone.trim(),
           wechat: leadForm.wechat.trim() || null,
           source: "male_style_test",
           interest: resultStyle?.name || "",
-        },
-      ]);
+        }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || !json.success) {
+        console.error("留资失败:", json.error);
+        alert("提交失败，请重试");
+        return;
+      }
 
       await supabase.rpc("upsert_customer_from_test", {
         p_name: leadForm.name.trim(),
