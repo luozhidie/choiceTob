@@ -114,3 +114,17 @@
 
 /* 返回条 */
 .lt-back{margin:32rpx 24rpx 0;text-align:center;color:#6e1f25;font-size:24rpx;padding:18rpx 0;background:#fff8ed;border-radius:12rpx;letter-spacing:2rpx;}
+
+/* ===== 筛选栏配色适配（酒红手账主题） ===== */
+.lc-new .fb-root{background:transparent;}
+.lc-new .fb-quick-bar{background:transparent;padding:14rpx 0 12rpx;border-bottom:2rpx solid #f7f1e6;}
+.lc-new .fb-quick-item{background:#f7f1e6;color:#6e1f25;}
+.lc-new .fb-quick-item.fb-quick-on{background:#6e1f25;color:#fff7e0;}
+.lc-new .fb-quick-item.fb-quick-active{background:#c9a24a;color:#fff;}
+.lc-new .fb-quick-entry{background:#6e1f25;color:#fff7e0;}
+.lc-new .fb-subcat-scroll{background:transparent;padding:12rpx 0;border-bottom:none;}
+.lc-new .fb-subcat-chip{background:#f7f1e6;color:#6e1f25;border-radius:18rpx;}
+.lc-new .fb-subcat-chip.fb-sub-on{background:#6e1f25;color:#fff7e0;font-weight:bold;}
+.fb-panel .fb-tag.fb-tag-on,.fb-popup .fb-tag.fb-tag-on{background:#6e1f25;color:#fff7e0;}
+.fb-confirm{background:#6e1f25;}
+.fb-reset{background:#c9a24a;}

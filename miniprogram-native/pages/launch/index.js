@@ -43,7 +43,11 @@ Page({
     lcStyleSel:'',
     lcSubscribed:[],
     lcNewTab:'now',
-    lcNewCat:''
+    lcNewCat:'',
+    /* 通用筛选栏 */
+    lcFilterCategory:'',
+    lcFilterQuery:'',
+    lcSubCategory:''
   },
   onLoad:function(q){
     var id=(q&&q.id)||'';
@@ -64,7 +68,8 @@ Page({
         t.setData({
           bid:b.id,
           c:c,
-          endTime:(c.couponSection&&c.couponSection.endTime)||''
+          endTime:(c.couponSection&&c.couponSection.endTime)||'',
+          lcFilterCategory:(c.newSection&&c.newSection.category)||''
         });
         t.buildTabs(c);
         t.loadSubscribed();
@@ -123,7 +128,7 @@ Page({
   loadNew:function(){
     var t=this;
     wx.request({
-      url:'https://colour-choice.art/api/public/products?limit=24',
+      url:'https://colour-choice.art/api/public/products?limit=24'+(t.data.lcFilterQuery||''),
       method:'GET',
       success:function(r){
         var l=[];
@@ -159,6 +164,8 @@ Page({
             priceText:priceText,
             priceHint:priceHint,
             sales:Number(p.sales)||0,
+            wholesale_price:Number(p.wholesale_price)||0,
+            sub_category:p.sub_category||p.subcategory||'',
             style_type:p.style_type||'',
             badge:(p.is_new?'新品':(p.is_hot?'热卖':'')),
             link:'/pages/shop/index?id='+p.id
@@ -183,6 +190,11 @@ Page({
       } else if(sel){
         list=list.filter(function(p){return (p.style_type||'')===sel;});
       }
+    }
+    // 筛选栏第三行：品类标签（本地过滤）
+    var lsub=t.data.lcSubCategory||'';
+    if(lsub){
+      list=list.filter(function(p){return (p.sub_category||'')===lsub;});
     }
     list=list.slice();
     if(tab==='price'){
@@ -228,6 +240,16 @@ Page({
     this.setData({lcNewTab:tab, lcStyleSel:''});
     this.applyView();
   },
+
+  /* 筛选栏回调：服务端参数变了重新拉数据，否则只做本地过滤 */
+  onFilterChange:function(e){
+    var d=e.detail||{};
+    var t=this;
+    var needReload=(d.query||'')!==t.data.lcFilterQuery;
+    t.setData({ lcFilterQuery:d.query||'', lcSubCategory:d.subCategory||'' });
+    if(needReload) t.loadNew();
+    else t.applyView();
+  },
   swLcStyle:function(e){
     var key=(e&&e.currentTarget&&e.currentTarget.dataset&&e.currentTarget.dataset.s)||'';
     var t=this;
@@ -245,6 +267,8 @@ Page({
   },
   openFilterSheet:function(){
     var t=this;
+    var fb=t.selectComponent('#lcFilter');
+    if(fb && fb.openFilter){ fb.openFilter(); return; }
     wx.showActionSheet({
       itemList:['新品优先','销量优先','批发价 低→高','批发价 高→低'],
       success:function(res){

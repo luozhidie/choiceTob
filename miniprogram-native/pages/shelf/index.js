@@ -6,12 +6,11 @@ Page({
     allProducts: [],
     loading: true,
     keyword: '',
-    activeSort: '综合',
     subCategory: '',
     subCategories: [],
-    showFilter: false,
-    minPrice: '',
-    maxPrice: '',
+    filterCategory: '',
+    filterQuery: '',
+    sortType: 'default',
     isPriceMember: false,
   },
 
@@ -53,7 +52,11 @@ Page({
           return;
         }
         var block = d.data;
-        t.setData({ block: block });
+        var content = block.content || {};
+        t.setData({
+          block: block,
+          filterCategory: content.category || ''
+        });
         t.loadProducts(block);
       },
       fail: function () {
@@ -65,17 +68,23 @@ Page({
 
   loadProducts: function (block) {
     var t = this;
-    var content = block.content || {};
-    var fetched = [];
+    block = block || t.data.block;
+    if (!block) return;
+    t._block = block;
 
+    var content = block.content || {};
     var productIds = content.productIds || '';
     var category = content.category || '';
     var tags = content.tags || '';
+    var extra = t.data.filterQuery || '';
+    var keepOrder = t.data.sortType === 'default';
 
     var ids = productIds.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
 
+    t.setData({ loading: true });
+
     var done = function (list) {
-      // 应用子分类 / 标签过滤（仅非指定商品时）
+      // 版块自带的子分类 / 标签约束（仅在未指定商品 ID 时生效）
       var tagList = (tags || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
       if (!productIds) {
         list = list.filter(function (p) {
@@ -103,149 +112,90 @@ Page({
           p.wholesalePriceText = wp > 0 ? '\u00A5???' : '';
         }
       });
-      // 提取子分类
+      // 提取子分类（首次加载时才刷新，避免筛选后标签消失）
       var subSet = {};
-      list.forEach(function (p) { if (p.subcategory) subSet[p.subcategory] = 1; });
-      t.setData({
-        allProducts: list,
-        products: list,
-        subCategories: Object.keys(subSet),
-        loading: false
+      list.forEach(function (p) {
+        var sc = p.subcategory || p.sub_category;
+        if (sc) subSet[sc] = 1;
       });
+      var subs = Object.keys(subSet);
+      var patch = { allProducts: list, loading: false };
+      if (subs.length && !t.data.subCategories.length) patch.subCategories = subs;
+      t.setData(patch, function () { t.applyLocal(); });
     };
 
     if (ids.length > 0) {
       wx.request({
-        url: 'https://colour-choice.art/api/public/products?ids=' + ids.join(',') + '&limit=' + ids.length,
+        url: 'https://colour-choice.art/api/public/products?ids=' + ids.join(',') + '&limit=' + ids.length + extra,
         method: 'GET',
         success: function (r) {
           var data = r.data || {};
+          var fetched = [];
           if (data.success && data.data) {
-            fetched = ids.map(function (id) {
-              return data.data.find(function (p) { return p.id === id; });
-            }).filter(Boolean);
+            if (keepOrder) {
+              fetched = ids.map(function (id) {
+                return data.data.find(function (p) { return p.id === id; });
+              }).filter(Boolean);
+            } else {
+              fetched = data.data;
+            }
           }
           done(fetched);
         },
         fail: function () { done([]); }
       });
-    } else if (category) {
-      wx.request({
-        url: 'https://colour-choice.art/api/public/products?limit=200&category=' + encodeURIComponent(category),
-        method: 'GET',
-        success: function (r) {
-          var data = r.data || {};
-          if (data.success && data.data) fetched = data.data;
-          done(fetched);
-        },
-        fail: function () { done([]); }
-      });
-    } else if (tags) {
-      wx.request({
-        url: 'https://colour-choice.art/api/public/products?limit=200',
-        method: 'GET',
-        success: function (r) {
-          var data = r.data || {};
-          if (data.success && data.data) fetched = data.data;
-          done(fetched);
-        },
-        fail: function () { done([]); }
-      });
-    } else {
-      wx.request({
-        url: 'https://colour-choice.art/api/public/products?limit=200',
-        method: 'GET',
-        success: function (r) {
-          var data = r.data || {};
-          if (data.success && data.data) fetched = data.data;
-          done(fetched);
-        },
-        fail: function () { done([]); }
-      });
+      return;
     }
+
+    var url = 'https://colour-choice.art/api/public/products?limit=200' + extra;
+    if (category) url += '&category=' + encodeURIComponent(category);
+    wx.request({
+      url: url,
+      method: 'GET',
+      success: function (r) {
+        var data = r.data || {};
+        done((data.success && data.data) ? data.data : []);
+      },
+      fail: function () { done([]); }
+    });
+  },
+
+  /* 筛选栏回调：服务端筛选参数变了就重新拉数据 */
+  onFilterChange: function (e) {
+    var d = e.detail || {};
+    var t = this;
+    var needReload = (d.query || '') !== t.data.filterQuery;
+    t.setData({
+      filterQuery: d.query || '',
+      sortType: d.sortType || 'default',
+      subCategory: d.subCategory || ''
+    });
+    if (needReload) t.loadProducts();
+    else t.applyLocal();
   },
 
   onKeywordChange: function (e) {
     this.setData({ keyword: e.detail.value });
-    this.applyFilter();
+    this.applyLocal();
   },
 
-  onSort: function (e) {
-    var tab = e.currentTarget.dataset.tab;
-    if (tab === '筛选') {
-      this.setData({ showFilter: !this.data.showFilter });
-    } else {
-      this.setData({ activeSort: tab, showFilter: false });
-    }
-    this.applyFilter();
-  },
-
-  onSubCategory: function (e) {
-    this.setData({ subCategory: e.currentTarget.dataset.sub });
-    this.applyFilter();
-  },
-
-  onMinPrice: function (e) {
-    this.setData({ minPrice: e.detail.value });
-    this.applyFilter();
-  },
-
-  onMaxPrice: function (e) {
-    this.setData({ maxPrice: e.detail.value });
-    this.applyFilter();
-  },
-
-  resetFilter: function () {
-    this.setData({ minPrice: '', maxPrice: '', subCategory: '', showFilter: false });
-    this.applyFilter();
-  },
-
-  applyFilter: function () {
+  /* 本地过滤：关键词 + 子分类 */
+  applyLocal: function () {
     var t = this;
-    var list = t.data.allProducts.slice();
-    var kw = t.data.keyword.trim().toLowerCase();
+    var list = (t.data.allProducts || []).slice();
+    var kw = (t.data.keyword || '').trim().toLowerCase();
     var sub = t.data.subCategory;
-    var min = t.data.minPrice ? Number(t.data.minPrice) : null;
-    var max = t.data.maxPrice ? Number(t.data.maxPrice) : null;
-    var sort = t.data.activeSort;
 
     if (kw) {
       list = list.filter(function (p) {
         var text = (p.title || p.name || '') + ' ' + (p.description || '');
         var tags = p.tags || [];
-        return text.toLowerCase().indexOf(kw) >= 0 || tags.some(function (tag) { return tag.toLowerCase().indexOf(kw) >= 0; });
+        return text.toLowerCase().indexOf(kw) >= 0 || tags.some(function (tag) { return String(tag).toLowerCase().indexOf(kw) >= 0; });
       });
     }
-
     if (sub) {
       list = list.filter(function (p) { return p.subcategory === sub || p.sub_category === sub; });
     }
-
-    if (min !== null || max !== null) {
-      list = list.filter(function (p) {
-        var price = p.price || 0;
-        if (min !== null && price < min) return false;
-        if (max !== null && price > max) return false;
-        return true;
-      });
-    }
-
-    if (sort === '销量') {
-      list.sort(function (a, b) { return (b.sales || 0) - (a.sales || 0); });
-    } else if (sort === '上新') {
-      list.sort(function (a, b) {
-        var at = a.created_at ? new Date(a.created_at).getTime() : 0;
-        var bt = b.created_at ? new Date(b.created_at).getTime() : 0;
-        return bt - at;
-      });
-    } else if (sort === '批发价') {
-      list.sort(function (a, b) {
-        var ap = a.wholesale_price || a.price || 0;
-        var bp = b.wholesale_price || b.price || 0;
-        return ap - bp;
-      });
-    }
-
     t.setData({ products: list });
   },
 });

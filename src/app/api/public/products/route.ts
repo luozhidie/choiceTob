@@ -78,6 +78,7 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   const priceMin = searchParams.get("priceMin") || "";
   const priceMax = searchParams.get("priceMax") || "";
   const idsParam = searchParams.get("ids") || "";
+  const tagsParam = searchParams.get("tags") || "";
   const singleId = searchParams.get("id") || "";
 
   // 按 ID 单条查询（给商品详情页用）——保留 select(*) 全字段，仅补充心愿数
@@ -96,11 +97,47 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     return { success: true, data: [], error: null };
   }
 
-  // 按ID批量查
+  // 解析通用 params 过滤
+  const filters: Record<string, string[]> = {};
+  searchParams.forEach((value, key) => {
+    if (key.startsWith("f[") && key.endsWith("]")) {
+      const paramKey = key.slice(2, -1);
+      filters[paramKey] = value.split(",").map(v => v.trim()).filter(Boolean);
+    }
+  });
+
+  function applyFilters(query: any) {
+    if (keyword) query = query.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
+    if (priceMin) query = query.gte("price", parseFloat(priceMin) * 100);
+    if (priceMax) query = query.lte("price", parseFloat(priceMax) * 100);
+    for (const [k, vals] of Object.entries(filters)) {
+      // 尺码 / 面料：商品以「/值/」wrap 形式存储，使用 ilike 分词匹配，避免 XS 误命中 S
+      if (k === "sizes" || k === "fabrics") {
+        const safe = vals.map((v) => v.replace(/\//g, "").trim()).filter(Boolean);
+        if (safe.length === 1) {
+          query = query.ilike(`params->>${k}`, `%/${safe[0]}/%`);
+        } else if (safe.length > 1) {
+          query = query.or(
+            safe.map((v) => `params->>${k}.ilike.%/${v}/%`).join(",")
+          );
+        }
+      } else if (vals.length === 1) {
+        query = query.eq(`params->>${k}`, vals[0]);
+      } else if (vals.length > 1) {
+        query = query.or(vals.map((v) => `params->>${k}.eq.${v}`).join(","));
+      }
+    }
+    return query;
+  }
+
+  // 按ID批量查（也支持附加筛选/排序）
   if (idsParam) {
     const ids = idsParam.split(",").map(s => s.trim()).filter(Boolean);
     if (ids.length > 0) {
-      const { data, error } = await supabase.from("products").select("*").in("id", ids).limit(ids.length);
+      let query = supabase.from("products").select("*").in("id", ids);
+      query = applyFilters(query);
+      query = applySort(query, sort);
+      const { data, error } = await query;
       if (error) return { error };
       const wishMap = await fetchWishCounts(supabase, (data || []).map((p: any) => p.id));
       return { success: true, data: formatProducts(data || [], wishMap), error: null };
@@ -111,35 +148,11 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   let query = supabase.from("products").select("*");
 
   if (category) query = query.eq("category", category);
-  if (keyword) query = query.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
-  if (priceMin) query = query.gte("price", parseFloat(priceMin) * 100);
-  if (priceMax) query = query.lte("price", parseFloat(priceMax) * 100);
-
-  // params 过滤：f[key]=value 或 f[key]=value1,value2
-  const filters: Record<string, string[]> = {};
-  searchParams.forEach((value, key) => {
-    if (key.startsWith("f[") && key.endsWith("]")) {
-      const paramKey = key.slice(2, -1);
-      filters[paramKey] = value.split(",").map(v => v.trim()).filter(Boolean);
-    }
-  });
-  for (const [k, vals] of Object.entries(filters)) {
-    // 尺码 / 面料：商品以「/值/」wrap 形式存储，使用 ilike 分词匹配，避免 XS 误命中 S
-    if (k === "sizes" || k === "fabrics") {
-      const safe = vals.map((v) => v.replace(/\//g, "").trim()).filter(Boolean);
-      if (safe.length === 1) {
-        query = query.ilike(`params->>${k}`, `%/${safe[0]}/%`);
-      } else if (safe.length > 1) {
-        query = query.or(
-          safe.map((v) => `params->>${k}.ilike.%/${v}/%`).join(",")
-        );
-      }
-    } else if (vals.length === 1) {
-      query = query.eq(`params->>${k}`, vals[0]);
-    } else if (vals.length > 1) {
-      query = query.or(vals.map((v) => `params->>${k}.eq.${v}`).join(","));
-    }
+  if (tagsParam) {
+    const tags = tagsParam.split(",").map(s => s.trim()).filter(Boolean);
+    if (tags.length > 0) query = query.overlaps("tags", tags);
   }
+  query = applyFilters(query);
 
   query = applySort(query, sort);
   query = query.range(offset, offset + limit - 1);

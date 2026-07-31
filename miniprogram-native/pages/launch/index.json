@@ -3,5 +3,7 @@
   "navigationBarBackgroundColor": "#6e1f25",
   "navigationBarTextStyle": "white",
   "backgroundColor": "#f7f1e6",
-  "usingComponents": {}
+  "usingComponents": {
+    "filter-bar": "/components/filter-bar/filter-bar"
+  }
 }
