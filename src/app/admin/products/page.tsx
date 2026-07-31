@@ -28,6 +28,12 @@ import {
 } from "@/lib/categories";
 import FilterMultiSelect from "./FilterMultiSelect";
 import { getStyleCombos } from "@/lib/styles";
+import {
+  type CategoryTreeConfig,
+  getLevelValues,
+  getStyleValues,
+  getSubcategoryValues,
+} from "@/lib/category-tree";
 
 // 风格组合：女性 8×8=64，男性 5×5=25，共 89。供商品「风格标签」下拉与上新页「看订阅风格」筛选对齐
 const STYLE_COMBOS = getStyleCombos();
@@ -335,6 +341,43 @@ export default function AdminProductsPage() {
   // 商品在各筛选分区上选中的值：{ 领型: ["圆领"], 图案: ["条纹","纯色"] }
   const [attrSel, setAttrSel] = useState<Record<string, string[]>>({});
 
+  // 分类树（市场→风情→风格→品类→明细），驱动后台级联归类与前端导航
+  const [treeConfig, setTreeConfig] = useState<CategoryTreeConfig | null>(null);
+  // 级联当前选值：市场 / 风情 / 风格(含性别) / 品类(=form.category) / 明细(=form.subcategory)
+  const [cascade, setCascade] = useState<{
+    market: string;
+    vibe: string;
+    styleGender: "女" | "男" | "";
+    style: string;
+  }>({ market: "", vibe: "", styleGender: "", style: "" });
+
+  useEffect(() => {
+    fetch("/api/public/category-tree")
+      .then((r) => r.json())
+      .then((j) => { if (j.success && j.data) setTreeConfig(j.data); })
+      .catch(() => {});
+  }, []);
+
+  // 品类下拉项：分类树品类值 + 动态品类(方案 AI 写入) + 当前已选(兜底)
+  const categoryOptions = useMemo(() => {
+    const treeCats = treeConfig ? getLevelValues(treeConfig, "category") : [];
+    const dyn = (dbCategories || [])
+      .map((c) => c.label)
+      .filter((l): l is string => !!l);
+    const set = new Set<string>([...treeCats, ...dyn]);
+    if (form.category && !set.has(form.category)) set.add(form.category);
+    return Array.from(set);
+  }, [treeConfig, dbCategories, form.category]);
+
+  // 明细下拉项：优先取分类树按品类的值，回退到历史 getSubcategories
+  const subOptions = useMemo(() => {
+    if (form.category && treeConfig) {
+      const t = getSubcategoryValues(treeConfig, form.category);
+      if (t.length) return t;
+    }
+    return formSubcategories.map((s) => (typeof s === "string" ? s : s.label));
+  }, [form.category, treeConfig, formSubcategories]);
+
   const toggleAttr = (key: string, val: string, multiple?: boolean) => {
     setAttrSel((prev) => {
       const cur = prev[key] || [];
@@ -578,6 +621,7 @@ export default function AdminProductsPage() {
     });
     setSetItems([]);
     setAttrSel({});
+    setCascade({ market: "", vibe: "", styleGender: "", style: "" });
     autoCalcSnapshot.current = null;
   };
 
@@ -635,7 +679,7 @@ export default function AdminProductsPage() {
       color_hex: form.color_hex.trim() || null,
       color_season_code: form.color_season_code.trim() || null,
       style_conclusion: form.style_conclusion.trim() || null,
-      style_type: form.style_type.trim() || null,
+      style_type: (cascade.style || form.style_type).trim() || null,
       // 商品参数
       material: form.fabrics.length > 0 ? form.fabrics.join("/") : null,
       sizes: form.sizesSel.length > 0 ? form.sizesSel.join("/") : null,
@@ -674,6 +718,10 @@ export default function AdminProductsPage() {
           if (!vals.length) { cleaned[sec.key] = null; return; }
           cleaned[sec.key] = sec.multiple ? "/" + vals.join("/") + "/" : vals[0];
         });
+        // 分类层级（市场/风情/风格）：写入 params，复用已有 params->>k 过滤与前端检索
+        if (cascade.market) cleaned.market = cascade.market;
+        if (cascade.vibe) cleaned.vibe = cascade.vibe;
+        if (cascade.style) cleaned.style = cascade.style;
         return Object.keys(cleaned).length > 0 ? cleaned : null;
       })(),
       // 媒体字段
@@ -843,6 +891,18 @@ export default function AdminProductsPage() {
       // 定时下架时间：从 params 读取，ISO →? 本地 datetime-local
       unpublish_at: toLocalInputValue(product.params?.unpublish_at),
     });
+    // 分类层级回显：从 params.market/vibe/style 与 style_type 还原级联
+    {
+      const bp = (product.params && typeof product.params === "object" ? product.params : {}) as Record<string, any>;
+      const st = typeof bp.style === "string" && bp.style.trim() ? bp.style : (product.style_type || "");
+      const gender = cascade.styleGender || (st && treeConfig && getStyleValues(treeConfig, "男").includes(st) ? "男" : "女");
+      setCascade({
+        market: typeof bp.market === "string" ? bp.market : "",
+        vibe: typeof bp.vibe === "string" ? bp.vibe : "",
+        styleGender: gender as "女" | "男" | "",
+        style: st,
+      });
+    }
     // 筛选属性回显：单选纯值 / 多选 wrap 值，都还原成数组
     setAttrSel((() => {
       const base = (product.params && typeof product.params === "object" ? product.params : {}) as Record<string, any>;
@@ -1685,65 +1745,117 @@ export default function AdminProductsPage() {
                 );
               })()}
 
-              {/* 品类选择：主分类 + 子分类联动 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    主分类
-                  </label>
-                  <select
-                    value={form.category}
-                    onChange={(e) => handleFormCategoryChange(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  >
-                    <option value="">未分类</option>
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat.key} value={cat.key}>
-                        {cat.label}
-                      </option>
-                    ))}
-                    {/* 动态品类（含方妗 AI 品类），value 直接存中新 label 以便进度看板匹配 */}
-                    {dbCategories
-                      .filter(
-                        (c) =>
-                          !!c.label &&
-                          !CATEGORIES.some((cat) => cat.label === c.label)
-                      )
-                      .map((c) => (
-                        <option key={"db-" + c.code} value={c.label}>
-                          {c.label}
-                        </option>
+              {/* 分类层级：市场 → 风情 → 风格 → 品类 → 明细，逐级归类，快且清晰 */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-800">商品分类</span>
+                  <span className="text-[11px] text-gray-400">从大到小逐级选：市场 → 风情 → 风格 → 品类 → 明细</span>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {/* 市场 */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">市场</label>
+                    <select
+                      value={cascade.market}
+                      onChange={(e) => setCascade((c) => ({ ...c, market: e.target.value }))}
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">不限</option>
+                      {(treeConfig ? getLevelValues(treeConfig, "market") : []).map((v) => (
+                        <option key={v} value={v}>{v}</option>
                       ))}
-                    {/* 兜底：小程序自定义品类（如「套装」）若不在预设/动态品类中，仍显示并允许保瀛 */}
-                    {form.category &&
-                      !CATEGORIES.some((c) => c.key === form.category) &&
-                      !dbCategories.some((c) => c.label === form.category) && (
-                        <option value={form.category}>{form.category}</option>
-                      )}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    子分类
-                  </label>
-                  <select
-                    value={form.subcategory}
-                    onChange={(e) =>
-                      setForm({ ...form, subcategory: e.target.value })
-                    }
-                    disabled={!form.category || formSubcategories.length === 0}
-                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">
-                      {form.category ? "全部子分类" : "先选主分类"}
-                    </option>
-                    {formSubcategories.map((sub) => (
-                      <option key={sub.key} value={sub.key}>
-                        {sub.label}
+                    </select>
+                  </div>
+                  {/* 风情 */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">风情</label>
+                    <select
+                      value={cascade.vibe}
+                      onChange={(e) => setCascade((c) => ({ ...c, vibe: e.target.value }))}
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">不限</option>
+                      {(treeConfig ? getLevelValues(treeConfig, "vibe") : []).map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* 风格：性别 + 风格 */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">风格（女士/男士）</label>
+                    <div className="flex gap-1">
+                      <select
+                        value={cascade.styleGender}
+                        onChange={(e) =>
+                          setCascade((c) => ({
+                            ...c,
+                            styleGender: e.target.value as "女" | "男" | "",
+                            style: "",
+                          }))
+                        }
+                        className="w-16 px-2 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">性别</option>
+                        <option value="女">女</option>
+                        <option value="男">男</option>
+                      </select>
+                      <select
+                        value={cascade.style}
+                        onChange={(e) => setCascade((c) => ({ ...c, style: e.target.value }))}
+                        className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      >
+                        <option value="">风格</option>
+                        {(cascade.styleGender && treeConfig
+                          ? getStyleValues(treeConfig, cascade.styleGender)
+                          : treeConfig
+                            ? getLevelValues(treeConfig, "style")
+                            : []
+                        ).map((v) => (
+                          <option key={v} value={v}>{v}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                  {/* 品类 */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">品类</label>
+                    <select
+                      value={form.category}
+                      onChange={(e) => handleFormCategoryChange(e.target.value)}
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    >
+                      <option value="">未分类</option>
+                      {categoryOptions.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
+                  {/* 明细 */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">明细</label>
+                    <select
+                      value={form.subcategory}
+                      onChange={(e) => setForm({ ...form, subcategory: e.target.value })}
+                      disabled={!form.category || subOptions.length === 0}
+                      className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">
+                        {form.category ? "全部明细" : "先选品类"}
                       </option>
-                    ))}
-                  </select>
+                      {subOptions.map((v) => (
+                        <option key={v} value={v}>{v}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+                {(cascade.market || cascade.vibe || cascade.style || form.category || form.subcategory) && (
+                  <div className="text-[11px] text-gray-400">
+                    已选路径：
+                    {[cascade.market, cascade.vibe, cascade.style, form.category, form.subcategory]
+                      .filter(Boolean)
+                      .join(" / ") || "—"}
+                  </div>
+                )}
               </div>
 
               <div>

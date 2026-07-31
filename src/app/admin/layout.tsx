@@ -56,6 +56,7 @@ const menuGroups = [
     { label: "生成企划报告", href: "/admin/report" },
     { label: "商品管理", href: "/admin/products" },
     { label: "商品筛选条件", href: "/admin/category-filters" },
+    { label: "商品分类树", href: "/admin/category-tree" },
     { label: "测款管理", href: "/admin/testing" },
     { label: "轮播图管理", href: "/admin/banners" },
     { label: "爆款样衣", href: "/admin/hot-products" },

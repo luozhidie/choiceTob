@@ -101,6 +101,11 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   const idsParam = searchParams.get("ids") || "";
   const tagsParam = searchParams.get("tags") || "";
   const singleId = searchParams.get("id") || "";
+  // 分类层级顶层参数（市场/风情/风格），并入通用 params 过滤
+  const market = searchParams.get("market") || "";
+  const vibe = searchParams.get("vibe") || "";
+  const style = searchParams.get("style") || "";
+  const subcategory = searchParams.get("subcategory") || "";
 
   // 按 ID 单条查询（给商品详情页用）——保留 select(*) 全字段，仅补充心愿数
   if (singleId) {
@@ -126,6 +131,9 @@ async function queryWithClient(supabase: any, request: NextRequest) {
       filters[paramKey] = value.split(",").map(v => v.trim()).filter(Boolean);
     }
   });
+  if (market) filters.market = [market];
+  if (vibe) filters.vibe = [vibe];
+  if (style) filters.style = [style];
 
   // 快捷开关（toggle）：映射到真实业务字段，而不是去 params 里找不存在的键
   function applyToggle(query: any, key: string) {
@@ -205,7 +213,10 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   // 分类/全部查询
   let query = supabase.from("products").select("*");
 
+  // 默认隐藏未填库存(数量0)的未完成商品，避免买手端看到空白商品
+  if (!filters.in_stock) query = query.gt("stock", 0);
   if (category) query = query.eq("category", category);
+  if (subcategory) query = query.eq("subcategory", subcategory);
   if (tagsParam) {
     const tags = tagsParam.split(",").map(s => s.trim()).filter(Boolean);
     if (tags.length > 0) query = query.overlaps("tags", tags);
@@ -219,7 +230,12 @@ async function queryWithClient(supabase: any, request: NextRequest) {
 
   if ((!data || data.length === 0) && !error) {
     let fallbackQuery = supabase.from("products").select("*");
+    if (!filters.in_stock) fallbackQuery = fallbackQuery.gt("stock", 0);
     if (category) fallbackQuery = fallbackQuery.eq("category", category);
+    if (subcategory) fallbackQuery = fallbackQuery.eq("subcategory", subcategory);
+    if (market) fallbackQuery = fallbackQuery.eq("params->>market", market);
+    if (vibe) fallbackQuery = fallbackQuery.eq("params->>vibe", vibe);
+    if (style) fallbackQuery = fallbackQuery.eq("params->>style", style);
     if (keyword) fallbackQuery = fallbackQuery.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
     if (priceMin) fallbackQuery = fallbackQuery.gte("price", parseFloat(priceMin) * 100);
     if (priceMax) fallbackQuery = fallbackQuery.lte("price", parseFloat(priceMax) * 100);

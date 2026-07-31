@@ -114,13 +114,68 @@ function buildTree(){
   return tree;
 }
 
+/* 旧硬编码主分类 id(上装/下装…) → 新层级品类名 的兼容映射（兜底用，API 覆盖后走 cat_<品类>） */
+var CAT_MAP = {
+  tops:'上装', bottoms:'下装', dresses:'裙装', suits:'套装', shoes:'女鞋',
+  accessories:'饰品', bags:'女包', kids:'童装', mens:'男装', lingerie:'居家内衣', supplies:'店铺耗材'
+};
+
+/* 市场卡片描述（配置里只有市场名，描述静态维护，保留原精致文案） */
+var MARKET_DESC = {
+  '广州十三行':'一批市场，快时尚风向标\n中档原创品牌聚集地',
+  '广州沙河':'一批市场，极致性价比\n中低档品牌聚集地',
+  '杭州市场':'一批市场，中高端原创\n原创原产基地',
+  '濮院市场':'中国羊毛羊绒第一镇\n全球最大羊毛衫集散中心',
+  '深圳南油':'一批市场，高端标杆基地\n主营欧货大牌风'
+};
+/* 专题（静态精选，与后台配置可不一致时回退） */
+var TOPIC_ITEMS = ['大码女装','新中式','小香风','小个子','梨形'];
+
+/* 根据后台分类层级配置(市场→风情→风格→品类→明细)构建主分类导航 + 右侧分类树
+   统一使用 cat_<品类> 作为品类主分类 id；API 不可用时沿用上方硬编码 CATEGORY_TREE 兜底 */
+function buildFromConfig(cfg){
+  cfg = cfg || {};
+  var levels = cfg.levels || [];
+  function lv(key){ for(var i=0;i<levels.length;i++){ if(levels[i].key===key) return levels[i]; } return null; }
+  var marketLv=lv('market'), vibeLv=lv('vibe'), styleLv=lv('style'), catLv=lv('category'), subLv=lv('subcategory');
+  var marketVals=(marketLv&&marketLv.values)||[];
+  var vibeVals=(vibeLv&&vibeLv.values)||[];
+  var femaleStyles=(styleLv&&styleLv.genders&&styleLv.genders['女'])||[];
+  var maleStyles=(styleLv&&styleLv.genders&&styleLv.genders['男'])||[];
+  var catVals=(catLv&&catLv.values)||[];
+  var subMap=(subLv&&subLv.valuesByParent)||{};
+  var featured=(cfg.featured)||[];
+
+  var mainCategories=[
+    { id:'recommend', name:'为你推荐' },
+    { id:'markets', name:'热门市场' },
+    { id:'topics', name:'专题' },
+    { id:'styles', name:'风情' },
+    { id:'women_styles', name:'女士风格' },
+    { id:'men_styles', name:'男士风格' }
+  ];
+  var categoryTree={};
+  categoryTree.recommend={ title:'热门分类推荐', items: featured.map(function(v){ return { name:v, ps:placeholderStyle(v) }; }) };
+  categoryTree.markets={ title:'热门市场', type:'market', items: marketVals.map(function(v){ return { name:v, desc:MARKET_DESC[v]||'', ps:placeholderStyle(v) }; }) };
+  categoryTree.topics={ title:'特色货品 为你推荐', items: TOPIC_ITEMS.map(function(v){ return { name:v, ps:placeholderStyle(v) }; }) };
+  categoryTree.styles={ title:'风情', items: vibeVals.map(function(v){ return { name:v, ps:placeholderStyle(v) }; }) };
+  categoryTree.women_styles={ title:'女士风格', items: femaleStyles.map(function(v){ return { name:v, ps:placeholderStyle(v) }; }) };
+  categoryTree.men_styles={ title:'男士风格', items: maleStyles.map(function(v){ return { name:v, ps:placeholderStyle(v) }; }) };
+  catVals.forEach(function(c){
+    var subs=subMap[c]||[];
+    var items=[{ name:'全部'+c, ps:placeholderStyle('全部'+c) }].concat(subs.map(function(s){ return { name:s, ps:placeholderStyle(s) }; }));
+    categoryTree['cat_'+c]={ title:c, items:items };
+    mainCategories.push({ id:'cat_'+c, name:c });
+  });
+  return { mainCategories:mainCategories, categoryTree:categoryTree };
+}
+
 /* 默认分类筛选配置（用于商品列表视图） */
 var DEFAULT_FILTER_CONFIG = {
   sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'批发价'}],
   quickFilters:[
     {key:'subscribed_stall',label:'订阅的档口',type:'toggle'},
     {key:'is_special',label:'特价',type:'toggle'},
-    {key:'in_stock',label:'现货',type:'toggle'},
     {key:'source_brand',label:'源头厂牌',type:'toggle'},
     {key:'bulk_price',label:'批量采购价',type:'toggle'},
     {key:'sizes',label:'尺码',type:'popup',options:['M','L','S','XL','XS','均码']},
@@ -137,6 +192,8 @@ Page({
     activeMainId:'recommend',// 当前左侧选中主分类
     mainCategories:MAIN_CATEGORIES,
     categoryTree:{},
+    activeFilters:{ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' },
+    treeConfig:null,
     /* 商品列表视图 */
     activeTab:'全部',
     sortType:'default',
@@ -165,11 +222,18 @@ Page({
   onLoad:function(){
     var t=this;
     t.refreshAuth();
-    t.setData({ categoryTree: buildTree() });
+    var built=buildTree();
+    t.setData({
+      mainCategories: MAIN_CATEGORIES,
+      categoryTree: built,
+      activeFilters:{ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' },
+      treeConfig:null
+    });
     t.loadPageBg();
     t.loadPopup();
+    t.loadCategoryTree();
     var opt=t.options||{};
-    if(opt.category){ t.enterCategory(opt.category); }
+    if(opt.category){ t.enterCategoryByName(opt.category); }
   },
 
   /* 后台「页面背景」配置：选品页 */
@@ -206,47 +270,134 @@ Page({
   selectMainCat:function(e){
     this.setData({ activeMainId: e.currentTarget.dataset.id });
   },
-  enterCategory:function(name){
-    if(typeof name !== 'string'){ name = name.currentTarget.dataset.name; }
+
+  /* 根据主分类 id + 节点名推断层级与查询值（兼容旧 mains 与新 cat_<品类> 两套 id） */
+  _makeItem:function(name, mainId){
+    var item={ name:name, value:name };
+    if(mainId==='markets'){ item.level='market'; }
+    else if(mainId==='styles'){ item.level='vibe'; }
+    else if(mainId==='women_styles'||mainId==='men_styles'){ item.level='style'; item.gender=(mainId==='women_styles'?'女':'男'); }
+    else if(mainId==='topics'){ item.level='topic'; }
+    else if(mainId==='recommend'){ item.level='featured'; }
+    else if(mainId && mainId.indexOf('cat_')===0){ var cat=mainId.slice(4); if(name==='全部'+cat){ item.level='category'; } else { item.level='subcategory'; item.parentCategory=cat; } }
+    else if(CAT_MAP[mainId]){ var c=CAT_MAP[mainId]; if(name===c){ item.level='category'; } else { item.level='subcategory'; item.parentCategory=c; } }
+    else { item.level='keyword'; }
+    return item;
+  },
+
+  /* 把层级节点转成查询条件（市场/风情/风格/品类/明细 各司其职），深层自动清除 */
+  _enterItem:function(item){
     var t=this;
-    t.setData({ activeTab:name, viewMode:'list', page:1, hasMore:true, products:[], selectedFilters:{}, minPrice:'', maxPrice:'' });
-    t.loadFilterConfig(name);
+    var af={ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' };
+    if(item.level==='market') af.market=item.value;
+    else if(item.level==='vibe') af.vibe=item.value;
+    else if(item.level==='style') af.style=item.value;
+    else if(item.level==='category') af.category=item.value;
+    else if(item.level==='subcategory'){ af.category=item.parentCategory; af.subcategory=item.value; }
+    else if(item.level==='featured'){
+      var pc=t.findParentCategory(item.value);
+      if(pc){ af.category=pc; af.subcategory=item.value; } else { af.keyword=item.value; }
+    }
+    else if(item.level==='topic'||item.level==='keyword'){ af.keyword=item.value; }
+    t.setData({ activeTab:item.name, viewMode:'list', page:1, hasMore:true, products:[], selectedFilters:{}, minPrice:'', maxPrice:'', keyword:'', activeFilters:af });
+    t.loadFilterConfig(af.category);
     t.load();
   },
-  backToCategory:function(){ this.setData({ viewMode:'category', filterOpen:false, quickPopup:null }); },
+
+  enterCategory:function(e){
+    if(!(e && e.currentTarget && e.currentTarget.dataset)) return;
+    var name=e.currentTarget.dataset.name;
+    if(typeof name!=='string') return;
+    this._enterItem(this._makeItem(name, this.data.activeMainId));
+  },
+
+  /* 深链：按名称定位主分类后进入 */
+  enterCategoryByName:function(name){
+    var t=this;
+    var tree=t.data.categoryTree||{};
+    for(var mid in tree){
+      var items=tree[mid].items||[];
+      for(var i=0;i<items.length;i++){
+        if(items[i].name===name){ t.setData({ activeMainId: mid }); t._enterItem(t._makeItem(name, mid)); return; }
+      }
+    }
+  },
+
+  backToCategory:function(){
+    this.setData({ viewMode:'category', filterOpen:false, quickPopup:null, activeFilters:{ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' } });
+  },
+
+  /* 拉取后台分类层级配置，覆盖默认导航（市场→风情→风格→品类→明细） */
+  loadCategoryTree:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/category-tree',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data) return;
+        var built=buildFromConfig(d.data);
+        t.setData({ mainCategories: built.mainCategories, categoryTree: built.categoryTree, treeConfig: d.data });
+      }
+    });
+  },
+
+  /* 取子类映射（明细按品类分组） */
+  getSubMap:function(){
+    var cfg=this.data.treeConfig||{};
+    var levels=cfg.levels||[];
+    for(var i=0;i<levels.length;i++){ if(levels[i].key==='subcategory') return levels[i].valuesByParent||{}; }
+    return {};
+  },
+  getSubCategories:function(cat){
+    var m=this.getSubMap();
+    return (cat && m[cat]) ? m[cat] : [];
+  },
+  findParentCategory:function(name){
+    var m=this.getSubMap();
+    for(var k in m){ if(m[k].indexOf(name)>=0) return k; }
+    return '';
+  },
 
   /* 加载某品类的筛选项配置 */
   loadFilterConfig:function(category){
     var t=this;
     wx.request({
-      url:'https://colour-choice.art/api/public/category-filters?category='+encodeURIComponent(category),
+      url:'https://colour-choice.art/api/public/category-filters?category='+encodeURIComponent(category||''),
       method:'GET',
       success:function(r){
         var d=r.data;
-        if(!d||!d.success||!d.data)return;
+        if(!d||!d.success||!d.data){ t._applySubCats(category); return; }
         var cfg=d.data;
-        /* 合并默认值，防止缺字段 */
         t.setData({
           filterConfig:{
             sorts:cfg.sorts||DEFAULT_FILTER_CONFIG.sorts,
             quickFilters:cfg.quickFilters||DEFAULT_FILTER_CONFIG.quickFilters,
-            subCategories:cfg.subCategories||[],
+            subCategories:t.getSubCategories(category),
             filterPanel:cfg.filterPanel||{sections:[]}
           }
         });
       },
-      fail:function(){
-        t.setData({ filterConfig:DEFAULT_FILTER_CONFIG });
-      }
+      fail:function(){ t._applySubCats(category); }
     });
+  },
+  _applySubCats:function(category){
+    var t=this;
+    t.setData({ filterConfig: Object.assign({}, DEFAULT_FILTER_CONFIG, { subCategories: t.getSubCategories(category) }) });
   },
 
   /* ===== 商品列表数据 ===== */
   buildUrl:function(){
     var url='https://colour-choice.art/api/public/products?limit=20';
     var t=this;
+    var af=t.data.activeFilters||{};
     if(t.data.keyword)url+='&keyword='+encodeURIComponent(t.data.keyword);
-    if(t.data.activeTab!=='全部')url+='&category='+encodeURIComponent(t.data.activeTab);
+    if(af.market)url+='&market='+encodeURIComponent(af.market);
+    if(af.vibe)url+='&vibe='+encodeURIComponent(af.vibe);
+    if(af.style)url+='&style='+encodeURIComponent(af.style);
+    if(af.category)url+='&category='+encodeURIComponent(af.category);
+    if(af.subcategory)url+='&subcategory='+encodeURIComponent(af.subcategory);
+    if(af.keyword && !t.data.keyword)url+='&keyword='+encodeURIComponent(af.keyword);
     if(t.data.sortType!=='default' && t.data.sortType!=='price_desc')url+='&sort='+encodeURIComponent(t.data.sortType);
     if(t.data.sortType==='price_desc')url+='&sort=price_desc';
     if(t.data.page>1) url+='&offset='+((t.data.page-1)*20);
@@ -429,12 +580,14 @@ Page({
   },
   confirmQuickPopup:function(){ this.setData({quickPopup:null,page:1,hasMore:true}); this.load(); },
 
-  /* 第三行品类标签 */
+  /* 第三行品类标签（明细）：在当前品类下细化 subcategory */
   switchSubCategory:function(e){
     var name=e.currentTarget.dataset.name;
-    this.setData({activeTab:name,page:1,hasMore:true,selectedFilters:{},minPrice:'',maxPrice:''});
-    this.loadFilterConfig(name);
-    this.load();
+    var t=this;
+    var af=JSON.parse(JSON.stringify(t.data.activeFilters||{}));
+    af.subcategory=name;
+    t.setData({ activeTab:name, activeFilters:af, page:1, hasMore:true, selectedFilters:{}, minPrice:'', maxPrice:'' });
+    t.load();
   },
 
   goShop:function(e){var id=e.currentTarget.dataset.id;if(id)wx.navigateTo({url:'/pages/shop/index?id='+id});},
