@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Copy, Search, Loader2, AlertCircle, CheckCircle2, Network, List } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Search, Loader2, AlertCircle, CheckCircle2, Network, List, GitBranch } from "lucide-react";
 
 const DOMAINS = ["服装", "金融", "股票", "艺术", "其他"];
 const CATEGORIES = ["选品判断", "搭配方案", "客户画像", "销售方法", "行业经验", "其他"];
@@ -58,7 +58,7 @@ export default function TokensPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [filters, setFilters] = useState({ domain: "", category: "", layer: "", status: "" });
-  const [view, setView] = useState<"list" | "chain">("list");
+  const [view, setView] = useState<"list" | "chain" | "relation">("list");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -260,11 +260,18 @@ export default function TokensPage() {
     finally { setSaving(false); }
   };
 
-  // 组合编排示例：一条「选品判断」词源调用一条「客户画像」词源，演示可组合工作流
+  // 组合编排示例（扇出链路）：选品判断 → 调用「客户画像」+「销售方法」，演示可组合工作流
   const seedComposition = async () => {
     setSaving(true);
     try {
-      // 1) 先建被调用的子词源（客户画像）
+      // 去重：已存在则跳过
+      const chk = await fetch("/api/admin/tokens", { credentials: "include" });
+      const chkData = await chk.json();
+      if (chk.ok && chkData.ok && (chkData.data || []).some((t: Token) => t.title === "连衣裙选品判断（含客户画像+销售方法）")) {
+        setToast("组合链路示例已存在"); setTimeout(() => setToast(null), 2000); setSaving(false); return;
+      }
+
+      // 1) 客户画像（被调用的子词源）
       const profile = buildToken({
         domain: "服装", category: "客户画像", layer: "应用",
         title: "女装25-35职场女性画像",
@@ -278,20 +285,34 @@ export default function TokensPage() {
       if (!r1.ok || !d1.ok) { alert("组合示例失败：" + (d1.error || "创建子词源异常")); return; }
       const profileId = d1.data.id;
 
-      // 2) 再建主词源（选品判断），depends_on 指向客户画像
+      // 2) 销售方法（被调用的子词源）
+      const sales = buildToken({
+        domain: "服装", category: "销售方法", layer: "应用",
+        title: "连衣裙朋友圈成交话术",
+        summary: "把成交话术封装成可调用销售方法，供选品判断组合调用产出文案",
+        fields: { 结构: ["痛点开场", "上身效果", "限时促单"], 风格: "口语化/真实" },
+        prompt: "你是销售，基于客户画像与选品结论，生成朋友圈成交话术：\n- 痛点开场\n- 上身效果\n- 限时促单\n输出：话术文案。",
+        tags: ["服装", "销售"], metric: "转化率",
+      });
+      const r2 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(sales) });
+      const d2 = await r2.json();
+      if (!r2.ok || !d2.ok) { alert("组合示例失败：" + (d2.error || "创建销售方法异常")); return; }
+      const salesId = d2.data.id;
+
+      // 3) 选品判断（主词元，扇出调用上面两条子词元）
       const judge = buildToken({
         domain: "服装", category: "选品判断", layer: "模型",
-        title: "连衣裙选品判断（含客户画像）",
-        summary: "先过客户画像关，再判爆款信号，最后定推荐/观望/放弃——演示词源组合编排",
-        fields: { 品类: "女装/连衣裙", 价格带: "99-299", 爆款信号: ["小红书搜索量周环比>30%", "退货率<15%"], 风险点: ["尺码偏窄", "面料易皱"], depends_on: [profileId] },
-        prompt: "你是资深服装买手。先调用「女装25-35职场女性画像」判断客群匹配度；匹配度低直接放弃，匹配度高再结合爆款信号给结论。\n输出：推荐/观望/放弃 + 理由。",
+        title: "连衣裙选品判断（含客户画像+销售方法）",
+        summary: "先过客户画像关，再判爆款信号，最后调销售方法产出话术——演示词源组合编排",
+        fields: { 品类: "女装/连衣裙", 价格带: "99-299", 爆款信号: ["小红书搜索量周环比>30%", "退货率<15%"], 风险点: ["尺码偏窄", "面料易皱"], depends_on: [profileId, salesId] },
+        prompt: "你是资深服装买手。先调用「女装25-35职场女性画像」判断客群匹配度，匹配度低直接放弃；匹配度高再结合爆款信号给推荐/观望/放弃结论；最后调用「连衣裙朋友圈成交话术」产出成交话术。\n输出：结论 + 理由 + 话术。",
         tags: ["女装", "连衣裙", "组合"], metric: "推荐命中率",
       });
-      const r2 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(judge) });
-      const d2 = await r2.json();
-      if (!r2.ok || !d2.ok) { alert("组合示例失败：" + (d2.error || "创建主词源异常")); return; }
+      const r3 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(judge) });
+      const d3 = await r3.json();
+      if (!r3.ok || !d3.ok) { alert("组合示例失败：" + (d3.error || "创建主词源异常")); return; }
 
-      setToast("已插入组合示例（选品判断 → 调用客户画像）");
+      setToast("已插入组合链路示例（选品判断 → 客户画像 + 销售方法）");
       setTimeout(() => setToast(null), 2000);
       load(); loadAll();
     } catch (e: any) { alert("插入异常：" + (e.message || "")); }
@@ -300,6 +321,40 @@ export default function TokensPage() {
 
   const statusLabel = (s: string) => (s === "published" ? "已发布" : "草稿");
   const layerBadge = (layer?: string) => (layer ? <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{layer}</span> : null);
+
+  // 关系谱：基于全量词源，以 fields.depends_on 为边绘制「谁组合调用谁」的树
+  const byIdAll = new Map<string, Token>((allTokens || []).map((t) => [t.id, t]));
+  const relationDepended = new Set<string>();
+  (allTokens || []).forEach((t) => ((t.fields?.depends_on as string[]) || []).forEach((id: string) => relationDepended.add(id)));
+  const relationRoots = (allTokens || []).filter((t) => !relationDepended.has(t.id));
+  const renderRelationNode = (t: Token, depth: number, visited: Set<string>) => {
+    if (visited.has(t.id)) {
+      return (
+        <div key={t.id} style={{ marginLeft: depth * 22 }} className="my-1">
+          <div className="inline-flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2 text-xs text-red-600">⚠ 检测到循环依赖：{t.title}</div>
+        </div>
+      );
+    }
+    const nextVisited = new Set(visited); nextVisited.add(t.id);
+    const deps = ((t.fields?.depends_on as string[]) || []).filter(Boolean);
+    return (
+      <div key={t.id} style={{ marginLeft: depth * 22 }} className="my-1">
+        <div className="flex items-center gap-2 bg-white border border-gray-100 rounded-lg px-3 py-2">
+          {depth > 0 && <span className="text-purple-400 font-bold">↳</span>}
+          <span className="font-medium text-primary flex-1 truncate">{t.title}</span>
+          <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{t.domain}</span>
+          <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t.category}</span>
+          <span className={`px-1.5 py-0.5 rounded text-xs ${t.status === "published" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>{t.status === "published" ? "已发布" : "草稿"}</span>
+        </div>
+        {depth < 6 && deps.map((id) => {
+          const c = byIdAll.get(id);
+          return c ? renderRelationNode(c, depth + 1, nextVisited) : (
+            <div key={id} style={{ marginLeft: (depth + 1) * 22 }} className="my-1 inline-flex items-center gap-2 bg-gray-50 border border-gray-100 rounded-lg px-3 py-1.5 text-xs text-gray-400">⚠ 依赖的词元已删除（{String(id).slice(0, 8)}…）</div>
+          );
+        })}
+      </div>
+    );
+  };
 
   // 产业链视图：按 layer 分组
   const chainTokens = filters.domain ? tokens.filter((t) => t.domain === filters.domain) : tokens;
@@ -358,6 +413,7 @@ export default function TokensPage() {
         <div className="ml-auto flex items-center gap-1 bg-gray-100 rounded-lg p-1">
           <button onClick={() => setView("list")} className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-1 ${view === "list" ? "bg-white shadow text-primary" : "text-gray-500"}`}><List className="w-3.5 h-3.5" /> 列表</button>
           <button onClick={() => setView("chain")} className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-1 ${view === "chain" ? "bg-white shadow text-primary" : "text-gray-500"}`}><Network className="w-3.5 h-3.5" /> 产业链</button>
+          <button onClick={() => setView("relation")} className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-1 ${view === "relation" ? "bg-white shadow text-primary" : "text-gray-500"}`}><GitBranch className="w-3.5 h-3.5" /> 关系谱</button>
         </div>
       </div>
 
@@ -399,6 +455,15 @@ export default function TokensPage() {
             </div>
           ))}
         </div>
+      ) : view === "relation" ? (
+        <div className="space-y-3">
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">关系谱：箭头「↳」表示「组合调用」。顶层为不被任何词元依赖的根词源；缩进项为其调用的子词源（可跨行业）。检测到环会标红。</div>
+          {relationRoots.length === 0 ? (
+            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">还没有调用关系，给某条词元设置「组合调用其它词源」后这里会显示链路。</div>
+          ) : (
+            relationRoots.map((root) => renderRelationNode(root, 0, new Set()))
+          )}
+        </div>
       ) : (
         <div className="space-y-3">
           {tokens.map((t) => (
@@ -411,9 +476,14 @@ export default function TokensPage() {
                   {layerBadge(t.fields?.layer)}
                   <span className={`px-1.5 py-0.5 rounded text-xs ${t.status === "published" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>{statusLabel(t.status)}</span>
                   <span className="text-xs text-gray-400">调用 {t.usage_count} 次</span>
-                  {Array.isArray(t.fields?.depends_on) && t.fields.depends_on.length > 0 && (
-                    <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs flex items-center gap-1"><Network className="w-3 h-3" /> 调用 {t.fields.depends_on.length} 条词源</span>
-                  )}
+                  {Array.isArray(t.fields?.depends_on) && t.fields.depends_on.length > 0 && (() => {
+                    const names = (t.fields.depends_on as string[]).map((id) => byIdAll.get(id)?.title).filter(Boolean) as string[];
+                    const shown = names.slice(0, 2).join("、");
+                    const more = names.length > 2 ? ` 等${names.length}条` : "";
+                    return (
+                      <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs flex items-center gap-1"><Network className="w-3 h-3" /> 调用：{shown}{more}</span>
+                    );
+                  })()}
                 </div>
                 {t.summary && <p className="text-sm text-muted-foreground mt-1">{t.summary}</p>}
                 {t.metric && <p className="text-xs text-gray-400 mt-1">计量：{t.metric}</p>}
