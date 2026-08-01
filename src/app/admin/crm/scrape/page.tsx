@@ -273,10 +273,10 @@ export default function CrmScrapePage() {
 
     try {
       const newRecords = selected;
-      const dupCount = 0;
+      const importedIds = new Set(newRecords.map(r => r.id));
 
       if (newRecords.length === 0) {
-        setImportResult({ success: 0, failed: 0, dups: dupCount });
+        setImportResult({ success: 0, failed: 0, dups: 0 });
         setImporting(false);
         return;
       }
@@ -304,8 +304,8 @@ export default function CrmScrapePage() {
         const msg = data.error || data.message || (data.errors && data.errors[0]) || "未知错误";
         alert("导入失败：" + msg);
       } else {
-        setImportResult({ success: data.success, failed: data.failed, dups: dupCount });
-        setParsedResults(prev => prev.filter(r => !r.selected || existingNames.has(r.name)));
+        setImportResult({ success: data.success, failed: data.failed, dups: 0 });
+        setParsedResults(prev => prev.filter(r => !importedIds.has(r.id)));
       }
     } catch (e: any) {
       console.error("导入异常:", e);
