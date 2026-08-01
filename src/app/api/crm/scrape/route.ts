@@ -107,8 +107,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 无手机号/电话的门店对潜客跟进没有意义，后端直接过滤
-    const validResults = results.filter(r => r.name && r.phone);
+    // 只要手机号、不要固话：normalizePhone 已把固话归空，这里再校验一次手机号格式
+    const validResults = results.filter(r => r.name && /^1[3-9]\d{9}$/.test(r.phone));
     return NextResponse.json({
       results: validResults,
       total: validResults.length,
@@ -121,14 +121,18 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 归一化手机号/电话：数组取首个非空元素，空值统一为空字符串
+// 归一化手机号/电话：只保留手机号（1开头11位），固话一律丢弃
 function normalizePhone(raw: any): string {
+  let s = "";
   if (Array.isArray(raw)) {
     const first = raw.find((x) => typeof x === "string" && x.trim());
-    return first ? first.trim() : "";
+    s = first ? first.trim() : "";
+  } else if (typeof raw === "string") {
+    s = raw.trim();
   }
-  if (typeof raw === "string") return raw.trim();
-  return "";
+  // 优先抽取手机号，没有则返回空（固话/座机会被过滤丢弃）
+  const mobile = s.match(/1[3-9]\d{9}/);
+  return mobile ? mobile[0] : "";
 }
 
 // 归一化行业值，确保在数据库 CHECK 约束范围内

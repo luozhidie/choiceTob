@@ -24,6 +24,11 @@ interface ParsedStore {
 
 const INDUSTRY_OPTIONS = ["服装店", "轮胎店", "滋补行", "其他"];
 
+// 是否为手机号（1开头11位），固话不要
+function isMobile(phone: string): boolean {
+  return /^1[3-9]\d{9}$/.test((phone || "").trim());
+}
+
 // ======== 合并去重（按店名+地址）========
 function mergeAndDedup(results: ParsedStore[]): ParsedStore[] {
   const seen = new Map<string, ParsedStore>();
@@ -53,10 +58,7 @@ function parseSearchResults(text: string, defaultIndustry: string): ParsedStore[
 
   const extractPhone = (s: string): string => {
     const mobile = s.match(/1[3-9]\d{9}/);
-    if (mobile) return mobile[0];
-    const matches = s.match(/(?:电话[:：]|Tel[:：]|联系方式[:：]|手机[:：])?\s*([\d\s\-]{7,15})/);
-    if (matches) return matches[1].replace(/[\s\-]/g, "");
-    return "";
+    return mobile ? mobile[0] : "";
   };
 
   const isNewRecord = (line: string): boolean => {
@@ -199,7 +201,7 @@ export default function CrmScrapePage() {
           city: poi.city || city,
           source_detail: poi.source_detail || "地图POI",
           selected: true,
-          parsed: !!phone,
+          parsed: isMobile(phone),
           rawLines: [poi.name, poi.address, phone].filter(Boolean),
         };
       });
@@ -274,7 +276,7 @@ export default function CrmScrapePage() {
       const records = newRecords.map(r => ({
         name: r.name,
         address: r.address || "",
-        owner_phone: (typeof r.phone === "string" && r.phone.trim()) ? r.phone.trim() : "待补充",
+        owner_phone: isMobile(r.phone) ? r.phone.trim() : "待补充",
         industry: r.industry,
         source: mode === "api" ? "import" as const : "scrape" as const,
         source_detail: r.source_detail,
@@ -332,7 +334,7 @@ export default function CrmScrapePage() {
     if (!editingStore) return;
     setParsedResults(prev => prev.map(r =>
       r.id === editingStore.id
-        ? { ...r, name: editForm.name, phone: editForm.phone, address: editForm.address, industry: editForm.industry, parsed: !!editForm.phone }
+        ? { ...r, name: editForm.name, phone: editForm.phone, address: editForm.address, industry: editForm.industry, parsed: isMobile(editForm.phone) }
         : r
     ));
     setEditingStore(null);
@@ -448,12 +450,12 @@ export default function CrmScrapePage() {
                   onChange={toggleSelectAll} className="w-4 h-4 accent-accent" />
                 <span>全选（{displayResults.length}条）</span>
               </label>
-              <span className="text-xs text-green-600">有电话 {validCount}</span>
-              {invalidCount > 0 && <span className="text-xs text-red-500">无电话 {invalidCount}</span>}
+              <span className="text-xs text-green-600">有手机号 {validCount}</span>
+              {invalidCount > 0 && <span className="text-xs text-red-500">无手机号 {invalidCount}</span>}
               <label className="flex items-center gap-1.5 cursor-pointer text-xs ml-2">
                 <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)}
                   className="w-3.5 h-3.5 accent-accent" />
-                <span className="text-gray-600">{showOnlyValid ? "已隐藏无电话" : "显示无电话"}</span>
+                <span className="text-gray-600">{showOnlyValid ? "已隐藏无手机号" : "显示无手机号"}</span>
               </label>
             </div>
             <button onClick={handleImport} disabled={importing || validCount === 0}
