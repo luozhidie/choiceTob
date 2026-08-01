@@ -19,6 +19,7 @@ interface ParsedStore {
   source_detail: string;
   selected: boolean;
   parsed: boolean;
+  existing?: boolean;
   rawLines: string[];
 }
 
@@ -37,12 +38,16 @@ function mergeAndDedup(results: ParsedStore[]): ParsedStore[] {
     if (!seen.has(key)) {
       seen.set(key, r);
     }
-    // 如果已存在，优先保留有电话的
+    // 如果已存在，优先保留有电话的；已导入标记取并集
     else {
       const existing = seen.get(key)!;
-      if (!existing.parsed && r.parsed) {
-        seen.set(key, r);
-      }
+      const merged: ParsedStore = {
+        ...existing,
+        parsed: existing.parsed || r.parsed,
+        existing: existing.existing || r.existing,
+        selected: existing.selected || r.selected,
+      };
+      seen.set(key, merged);
     }
   }
   return Array.from(seen.values());
@@ -130,6 +135,7 @@ export default function CrmScrapePage() {
   const [industry, setIndustry] = useState("服装店");
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
+  const [hint, setHint] = useState<string | null>(null);
   const [pasteText, setPasteText] = useState("");
   const [parsedResults, setParsedResults] = useState<ParsedStore[]>([]);
   const [importing, setImporting] = useState(false);
@@ -150,6 +156,7 @@ export default function CrmScrapePage() {
     const currentPage = targetPage || page;
     setSearching(true);
     setSearchError(null);
+    setHint(null);
     if (currentPage === 1) {
       setParsedResults([]);
     }
@@ -189,7 +196,7 @@ export default function CrmScrapePage() {
         return;
       }
 
-      // 转换为 ParsedStore 格式
+      // 转换为 ParsedStore 格式，并标记是否已导入
       const newResults: ParsedStore[] = data.results.map((poi: any, idx: number) => {
         const phone = typeof poi.phone === "string" ? poi.phone.trim() : "";
         return {
@@ -202,22 +209,28 @@ export default function CrmScrapePage() {
           source_detail: poi.source_detail || "地图POI",
           selected: true,
           parsed: isMobile(phone),
+          existing: false,
           rawLines: [poi.name, poi.address, phone].filter(Boolean),
         };
       });
 
-      // 查询已存在的门店，过滤掉已采集过的
+      // 查询已存在的门店，标记出来（不再整体隐藏，已导入的打标、不勾选）
       const allNames = [...new Set(newResults.map(r => r.name))];
       const { data: existing } = await supabase
         .from("crm_stores")
         .select("name")
         .in("name", allNames);
       const existingNames = new Set((existing || []).map((e: any) => e.name));
-      const filtered = newResults.filter(r => !existingNames.has(r.name));
-      const dupCount = newResults.length - filtered.length;
+      for (const r of newResults) {
+        if (existingNames.has(r.name)) {
+          r.existing = true;
+          r.selected = false; // 已导入的不自动勾选
+        }
+      }
+      const dupCount = newResults.filter(r => r.existing).length;
 
-      // 合并去重（按店名+地址）
-      const merged = mergeAndDedup(filtered);
+      // 合并去重（按店名+地址），保留已导入标记
+      const merged = mergeAndDedup(newResults);
       
       setParsedResults(prev => {
         const combined = [...prev, ...merged];
@@ -229,9 +242,11 @@ export default function CrmScrapePage() {
         return Array.from(seen.values());
       });
       
-      console.log(`第${currentPage}页：过滤已存在 ${dupCount} 条，新增 ${merged.length} 条`);
-      if (merged.length === 0 && currentPage === 1) {
-        setSearchError(`所有结果都已存在（${newResults.length} 条），无需重复采集`);
+      console.log(`第${currentPage}页：已导入 ${dupCount} 条，新增 ${merged.filter(r => !r.existing).length} 条`);
+      if (dupCount > 0 && merged.filter(r => !r.existing).length === 0) {
+        setHint(`这 ${dupCount} 家你之前都已导入过，没有新的。换个没搜过的城市试试（如南宁/柳州/广州/深圳/泉州）。`);
+      } else {
+        setHint(null);
       }
       
       setHasMore(data.results.length >= 20);
@@ -252,20 +267,13 @@ export default function CrmScrapePage() {
   };
 
   const handleImport = async () => {
-    const selected = parsedResults.filter(r => r.selected && r.parsed);
-    if (selected.length === 0) { alert("请至少选择一条有效数据"); return; }
+    const selected = parsedResults.filter(r => r.selected && r.parsed && !r.existing);
+    if (selected.length === 0) { alert("没有可导入的新数据（已导入的不会重复导入）"); return; }
     setImporting(true);
 
     try {
-      // 查询已存在的店名（避免重复导入）
-      const selectedNames = selected.map(r => r.name);
-      const { data: existing } = await supabase
-        .from("crm_stores")
-        .select("name")
-        .in("name", selectedNames);
-      const existingNames = new Set((existing || []).map((e: any) => e.name));
-      const newRecords = selected.filter(r => !existingNames.has(r.name));
-      const dupCount = selected.length - newRecords.length;
+      const newRecords = selected;
+      const dupCount = 0;
 
       if (newRecords.length === 0) {
         setImportResult({ success: 0, failed: 0, dups: dupCount });
@@ -342,8 +350,9 @@ export default function CrmScrapePage() {
 
   const selectedCount = parsedResults.filter(r => r.selected).length;
   const displayResults = showOnlyValid ? parsedResults.filter(r => r.parsed) : parsedResults;
-  const validCount = displayResults.filter(r => r.selected && r.parsed).length;
-  const invalidCount = displayResults.filter(r => r.selected && !r.parsed).length;
+  const validCount = parsedResults.filter(r => r.selected && r.parsed && !r.existing).length;
+  const invalidCount = parsedResults.filter(r => !r.parsed).length;
+  const existingCount = parsedResults.filter(r => r.existing).length;
 
   return (
     <div>
@@ -354,13 +363,13 @@ export default function CrmScrapePage() {
 
       {/* 模式切换 */}
       <div className="flex gap-3 mb-6">
-        <button onClick={() => { setMode("paste"); setParsedResults([]); setSearchError(null); setPage(1); setHasMore(true); }}
+        <button onClick={() => { setMode("paste"); setParsedResults([]); setSearchError(null); setHint(null); setPage(1); setHasMore(true); }}
           className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             mode === "paste" ? "bg-accent text-primary" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}>
           <Upload className="w-4 h-4 inline mr-2" />粘贴搜索结果
         </button>
-        <button onClick={() => { setMode("api"); setParsedResults([]); setSearchError(null); setPage(1); setHasMore(true); }}
+        <button onClick={() => { setMode("api"); setParsedResults([]); setSearchError(null); setHint(null); setPage(1); setHasMore(true); }}
           className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
             mode === "api" ? "bg-accent text-primary" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
           }`}>
@@ -431,6 +440,12 @@ export default function CrmScrapePage() {
             </div>
           )}
 
+          {hint && (
+            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-4">
+              <p className="text-sm text-amber-800">{hint}</p>
+            </div>
+          )}
+
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-4">
             <p className="text-sm text-blue-800">
               <strong>API自动采集</strong>：填写城市和关键词，点击搜索即可从高德/百度地图获取门店信息。
@@ -452,6 +467,7 @@ export default function CrmScrapePage() {
               </label>
               <span className="text-xs text-green-600">有手机号 {validCount}</span>
               {invalidCount > 0 && <span className="text-xs text-red-500">无手机号 {invalidCount}</span>}
+              {existingCount > 0 && <span className="text-xs text-gray-400">已导入 {existingCount}</span>}
               <label className="flex items-center gap-1.5 cursor-pointer text-xs ml-2">
                 <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)}
                   className="w-3.5 h-3.5 accent-accent" />
@@ -479,7 +495,8 @@ export default function CrmScrapePage() {
           <div className="space-y-2">
             {displayResults.map((r) => (
               <div key={r.id} className={`rounded-xl border p-4 flex items-center gap-4 transition-colors ${
-                r.parsed ? (r.selected ? "bg-accent/5 border-accent/20" : "bg-white border-gray-100") : "bg-red-50/50 border-red-100"
+                r.existing ? "bg-gray-50 border-gray-200 opacity-70"
+                  : r.parsed ? (r.selected ? "bg-accent/5 border-accent/20" : "bg-white border-gray-100") : "bg-red-50/50 border-red-100"
               }`}>
                 <input type="checkbox" checked={r.selected} onChange={() => toggleSelect(r.id)}
                   className="w-4 h-4 accent-accent flex-shrink-0" />
@@ -491,6 +508,7 @@ export default function CrmScrapePage() {
                     <span className="font-medium text-primary text-sm">{r.name}</span>
                     <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{r.industry}</span>
                     {!r.parsed && <span className="px-1.5 py-0.5 bg-red-50 text-red-600 rounded text-xs">缺少手机号</span>}
+                    {r.existing && <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">已导入</span>}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                     {r.address && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{r.address}</span>}
