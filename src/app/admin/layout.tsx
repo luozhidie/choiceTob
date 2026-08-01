@@ -146,6 +146,11 @@ const menuGroups = [
     { label: "批量导入", href: "/admin/crm/import" },
   ]},
 
+  // ─── 词元经济 ───
+  { label: "词元经济", items: [
+    { label: "选品判断词元", href: "/admin/tokens" },
+  ]},
+
   // ─── 项目&预算 ───
   { label: "项目&预算", items: [
     { label: "项目进度", href: "/admin/project-tracker" },
