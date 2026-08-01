@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Loader2, AlertCircle, Tag } from "lucide-react";
+import { Sparkles, Loader2, AlertCircle, Tag, Network } from "lucide-react";
 
 const DOMAINS = ["服装", "金融", "股票", "艺术", "其他"];
 
@@ -11,6 +11,7 @@ export default function TokenSelectPage() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [usedTokens, setUsedTokens] = useState<string[]>([]);
+  const [depTokens, setDepTokens] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const run = async () => {
@@ -19,6 +20,7 @@ export default function TokenSelectPage() {
     setError(null);
     setResult(null);
     setUsedTokens([]);
+    setDepTokens([]);
     try {
       const res = await fetch("/api/admin/tokens/select", {
         method: "POST",
@@ -32,6 +34,7 @@ export default function TokenSelectPage() {
       } else {
         setResult(data.result);
         setUsedTokens(data.usedTokens || []);
+        setDepTokens(data.depTokens || []);
       }
     } catch (e: any) {
       setError(e.message || "调用异常");
@@ -81,16 +84,26 @@ export default function TokenSelectPage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-primary">评估结论</h3>
             {usedTokens.length > 0 && (
-              <span className="text-xs text-gray-400">调用词源 {usedTokens.length} 条</span>
+              <span className="text-xs text-gray-400">主词源 {usedTokens.length} 条{depTokens.length > 0 ? ` · 组合调用子词源 ${depTokens.length} 条` : ""}</span>
             )}
           </div>
           <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{result}</div>
           {usedTokens.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> 本次依据的词源</p>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> 本次依据的主词源</p>
               <div className="flex flex-wrap gap-2">
                 {usedTokens.map((t, i) => (
                   <span key={i} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{t}</span>
+                ))}
+              </div>
+            </div>
+          )}
+          {depTokens.length > 0 && (
+            <div className="mt-3">
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Network className="w-3.5 h-3.5" /> 被组合调用的子词源（跨词元编排）</p>
+              <div className="flex flex-wrap gap-2">
+                {depTokens.map((t, i) => (
+                  <span key={i} className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t}</span>
                 ))}
               </div>
             </div>

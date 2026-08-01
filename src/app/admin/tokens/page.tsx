@@ -50,6 +50,7 @@ const EMPTY_FORM = {
   metric: "近30天推荐命中率",
   status: "draft",
   owner: "",
+  dependsOn: [] as string[],
 };
 
 export default function TokensPage() {
@@ -63,6 +64,7 @@ export default function TokensPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [allTokens, setAllTokens] = useState<Token[]>([]);
 
   const load = async () => {
     setLoading(true);
@@ -93,7 +95,16 @@ export default function TokensPage() {
     }
   };
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
+  // 加载全部词源（供依赖选择器使用，不受筛选影响）
+  const loadAll = async () => {
+    try {
+      const res = await fetch(`/api/admin/tokens`, { credentials: "include" });
+      const data = await res.json();
+      if (res.ok && data.ok) setAllTokens(data.data || []);
+    } catch { /* 忽略 */ }
+  };
+
+  useEffect(() => { load(); loadAll(); /* eslint-disable-next-line */ }, []);
 
   const openCreate = () => {
     setEditingId(null);
@@ -115,6 +126,7 @@ export default function TokensPage() {
       metric: t.metric || "",
       status: t.status || "draft",
       owner: t.owner || "",
+      dependsOn: Array.isArray(t.fields?.depends_on) ? t.fields.depends_on : [],
     });
     setShowForm(true);
   };
@@ -128,6 +140,9 @@ export default function TokensPage() {
       alert("结构化字段不是合法 JSON，请检查"); return;
     }
     parsedFields.layer = form.layer;
+    // 依赖组合：仅保留仍存在的词源 id
+    const validIds = new Set(allTokens.map((t) => t.id));
+    parsedFields.depends_on = (form.dependsOn || []).filter((id) => validIds.has(id));
     setSaving(true);
     try {
       const payload = {
@@ -245,6 +260,44 @@ export default function TokensPage() {
     finally { setSaving(false); }
   };
 
+  // 组合编排示例：一条「选品判断」词源调用一条「客户画像」词源，演示可组合工作流
+  const seedComposition = async () => {
+    setSaving(true);
+    try {
+      // 1) 先建被调用的子词源（客户画像）
+      const profile = buildToken({
+        domain: "服装", category: "客户画像", layer: "应用",
+        title: "女装25-35职场女性画像",
+        summary: "把目标客群特征封装成可调用画像，供选品判断组合调用",
+        fields: { 画像: ["25-35职场女性", "注重性价比", "通勤+约会双场景", "小红书重度用户"], 痛点: ["担心显胖", "怕廉价感"] },
+        prompt: "你是用户研究员，依据以下画像判断候选商品是否匹配目标客群：\n- 年龄/身份\n- 场景\n- 痛点\n输出：匹配度 高/中/低 + 依据。",
+        tags: ["服装", "客户画像"], metric: "画像命中率",
+      });
+      const r1 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(profile) });
+      const d1 = await r1.json();
+      if (!r1.ok || !d1.ok) { alert("组合示例失败：" + (d1.error || "创建子词源异常")); return; }
+      const profileId = d1.data.id;
+
+      // 2) 再建主词源（选品判断），depends_on 指向客户画像
+      const judge = buildToken({
+        domain: "服装", category: "选品判断", layer: "模型",
+        title: "连衣裙选品判断（含客户画像）",
+        summary: "先过客户画像关，再判爆款信号，最后定推荐/观望/放弃——演示词源组合编排",
+        fields: { 品类: "女装/连衣裙", 价格带: "99-299", 爆款信号: ["小红书搜索量周环比>30%", "退货率<15%"], 风险点: ["尺码偏窄", "面料易皱"], depends_on: [profileId] },
+        prompt: "你是资深服装买手。先调用「女装25-35职场女性画像」判断客群匹配度；匹配度低直接放弃，匹配度高再结合爆款信号给结论。\n输出：推荐/观望/放弃 + 理由。",
+        tags: ["女装", "连衣裙", "组合"], metric: "推荐命中率",
+      });
+      const r2 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(judge) });
+      const d2 = await r2.json();
+      if (!r2.ok || !d2.ok) { alert("组合示例失败：" + (d2.error || "创建主词源异常")); return; }
+
+      setToast("已插入组合示例（选品判断 → 调用客户画像）");
+      setTimeout(() => setToast(null), 2000);
+      load(); loadAll();
+    } catch (e: any) { alert("插入异常：" + (e.message || "")); }
+    finally { setSaving(false); }
+  };
+
   const statusLabel = (s: string) => (s === "published" ? "已发布" : "草稿");
   const layerBadge = (layer?: string) => (layer ? <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{layer}</span> : null);
 
@@ -268,6 +321,7 @@ export default function TokensPage() {
           <button onClick={openCreate} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> 新建词源</button>
           <button onClick={seedDemo} className="btn-secondary text-sm">插入示例</button>
           <button onClick={seedCrossIndustry} className="btn-secondary text-sm">插入各行业示例</button>
+          <button onClick={seedComposition} className="btn-secondary text-sm flex items-center gap-1"><Network className="w-3.5 h-3.5" /> 插入组合示例</button>
         </div>
       </div>
 
@@ -357,6 +411,9 @@ export default function TokensPage() {
                   {layerBadge(t.fields?.layer)}
                   <span className={`px-1.5 py-0.5 rounded text-xs ${t.status === "published" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>{statusLabel(t.status)}</span>
                   <span className="text-xs text-gray-400">调用 {t.usage_count} 次</span>
+                  {Array.isArray(t.fields?.depends_on) && t.fields.depends_on.length > 0 && (
+                    <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs flex items-center gap-1"><Network className="w-3 h-3" /> 调用 {t.fields.depends_on.length} 条词源</span>
+                  )}
                 </div>
                 {t.summary && <p className="text-sm text-muted-foreground mt-1">{t.summary}</p>}
                 {t.metric && <p className="text-xs text-gray-400 mt-1">计量：{t.metric}</p>}
@@ -448,6 +505,34 @@ export default function TokensPage() {
                   <label className="block text-sm font-medium mb-1">作者/来源</label>
                   <input value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })}
                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="骆芷蝶" />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1 flex items-center gap-1">
+                  <Network className="w-3.5 h-3.5" /> 组合调用其它词源（可选，可跨行业）
+                </label>
+                <p className="text-xs text-muted-foreground mb-2">选中的词源会被本条词源在 AI 选品时一并调用，形成可编排工作流。保存后生效。</p>
+                <div className="max-h-44 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
+                  {allTokens.filter((t) => t.id !== editingId).length === 0 && (
+                    <div className="text-xs text-gray-400 py-1">暂无可调用的其它词源，先新建几条。</div>
+                  )}
+                  {allTokens.filter((t) => t.id !== editingId).map((t) => {
+                    const checked = (form.dependsOn || []).includes(t.id);
+                    return (
+                      <label key={t.id} className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white cursor-pointer text-sm">
+                        <input type="checkbox" checked={checked} onChange={(e) => {
+                          const next = e.target.checked
+                            ? [...(form.dependsOn || []), t.id]
+                            : (form.dependsOn || []).filter((id) => id !== t.id);
+                          setForm({ ...form, dependsOn: next });
+                        }} className="accent-purple-600" />
+                        <span className="flex-1 truncate">{t.title}</span>
+                        <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t.domain}</span>
+                        <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{t.category}</span>
+                      </label>
+                    );
+                  })}
                 </div>
               </div>
             </div>
