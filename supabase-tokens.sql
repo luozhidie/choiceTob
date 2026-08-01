@@ -31,9 +31,9 @@ CREATE INDEX IF NOT EXISTS idx_selection_tokens_deleted  ON selection_tokens(del
 ALTER TABLE selection_tokens ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS selection_tokens_select ON selection_tokens;
 CREATE POLICY selection_tokens_select ON selection_tokens FOR SELECT USING (true);
-DROP POLICY IF EXISTS selection_tokens_insert ON selection_tokens FOR INSERT WITH CHECK (true);
-DROP POLICY IF EXISTS selection_tokens_update ON selection_tokens FOR UPDATE USING (true);
-DROP POLICY IF EXISTS selection_tokens_delete ON selection_tokens FOR DELETE USING (true);
+DROP POLICY IF EXISTS selection_tokens_insert ON selection_tokens;
+DROP POLICY IF EXISTS selection_tokens_update ON selection_tokens;
+DROP POLICY IF EXISTS selection_tokens_delete ON selection_tokens;
 
 -- updated_at 自动更新（函数已存在于 crm 建表脚本，CREATE OR REPLACE 幂等）
 CREATE OR REPLACE FUNCTION update_updated_at_column()
