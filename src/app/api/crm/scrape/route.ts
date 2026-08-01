@@ -107,9 +107,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // 无手机号/电话的门店对潜客跟进没有意义，后端直接过滤
+    const validResults = results.filter(r => r.name && r.phone);
     return NextResponse.json({
-      results: results.filter(r => r.name),
-      total: results.length,
+      results: validResults,
+      total: validResults.length,
+      dropped: results.length - validResults.length,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error: any) {

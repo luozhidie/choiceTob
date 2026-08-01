@@ -132,7 +132,7 @@ export default function CrmScrapePage() {
   const [parsedResults, setParsedResults] = useState<ParsedStore[]>([]);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: number; failed: number; dups: number } | null>(null);
-  const [showOnlyValid, setShowOnlyValid] = useState(false);
+  const [showOnlyValid, setShowOnlyValid] = useState(true);
   const [editingStore, setEditingStore] = useState<ParsedStore | null>(null);
   const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", industry: "服装店" });
   const [page, setPage] = useState(1);
@@ -244,7 +244,8 @@ export default function CrmScrapePage() {
   const handleParse = () => {
     if (!pasteText.trim()) return;
     const results = parseSearchResults(pasteText, industry);
-    setParsedResults(results);
+    // 粘贴结果也默认过滤无电话的，没手机号的门店对跟进无意义
+    setParsedResults(results.filter(r => r.parsed));
     setImportResult(null);
   };
 
@@ -447,15 +448,13 @@ export default function CrmScrapePage() {
                   onChange={toggleSelectAll} className="w-4 h-4 accent-accent" />
                 <span>全选（{displayResults.length}条）</span>
               </label>
-              <span className="text-xs text-green-600">有效 {validCount}</span>
-              {invalidCount > 0 && <span className="text-xs text-red-500">无效 {invalidCount}</span>}
-              {invalidCount > 0 && (
-                <label className="flex items-center gap-1.5 cursor-pointer text-xs ml-2">
-                  <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)}
-                    className="w-3.5 h-3.5 accent-accent" />
-                  <span className="text-gray-600">只看有电话</span>
-                </label>
-              )}
+              <span className="text-xs text-green-600">有电话 {validCount}</span>
+              {invalidCount > 0 && <span className="text-xs text-red-500">无电话 {invalidCount}</span>}
+              <label className="flex items-center gap-1.5 cursor-pointer text-xs ml-2">
+                <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-accent" />
+                <span className="text-gray-600">{showOnlyValid ? "已隐藏无电话" : "显示无电话"}</span>
+              </label>
             </div>
             <button onClick={handleImport} disabled={importing || validCount === 0}
               className="btn-primary flex items-center gap-2 text-sm">
