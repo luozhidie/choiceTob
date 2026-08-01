@@ -1,10 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, Copy, Search, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Copy, Search, Loader2, AlertCircle, CheckCircle2, Network, List } from "lucide-react";
 
 const DOMAINS = ["服装", "金融", "股票", "艺术", "其他"];
 const CATEGORIES = ["选品判断", "搭配方案", "客户画像", "销售方法", "行业经验", "其他"];
+const LAYERS = ["算力", "数据", "模型", "安全", "应用"];
+const LAYER_DESC: Record<string, string> = {
+  算力: "生产能力（买服务）",
+  数据: "原材料（你攒）",
+  模型: "加工能力（调成熟大模型）",
+  安全: "可信（合规存证）",
+  应用: "商业落地（你的主场）",
+};
 
 interface Token {
   id: string;
@@ -25,6 +33,7 @@ interface Token {
 const EMPTY_FORM = {
   domain: "服装",
   category: "选品判断",
+  layer: "数据",
   title: "",
   summary: "",
   fields: JSON.stringify({
@@ -47,7 +56,8 @@ export default function TokensPage() {
   const [tokens, setTokens] = useState<Token[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [filters, setFilters] = useState({ domain: "", category: "", status: "" });
+  const [filters, setFilters] = useState({ domain: "", category: "", layer: "", status: "" });
+  const [view, setView] = useState<"list" | "chain">("list");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -65,7 +75,6 @@ export default function TokensPage() {
       const res = await fetch(`/api/admin/tokens?${qs.toString()}`, { credentials: "include" });
       const data = await res.json();
       if (!res.ok || !data.ok) {
-        // 表可能尚未创建（42P01）
         if (String(data.error || "").includes("relation") || String(data.error || "").includes("does not exist")) {
           setLoadError("TABLE_MISSING");
         } else {
@@ -73,7 +82,9 @@ export default function TokensPage() {
         }
         setTokens([]);
       } else {
-        setTokens(data.data || []);
+        let list = data.data || [];
+        if (filters.layer) list = list.filter((t: Token) => (t.fields?.layer || "") === filters.layer);
+        setTokens(list);
       }
     } catch (e: any) {
       setLoadError(e.message || "加载失败");
@@ -90,59 +101,12 @@ export default function TokensPage() {
     setShowForm(true);
   };
 
-  const seedDemo = async () => {
-    setSaving(true);
-    try {
-      const demo = {
-        domain: "服装",
-        category: "选品判断",
-        title: "春秋女装连衣裙选品判断",
-        summary: "客群匹配 + 价格带可控毛利 + 命中爆款信号则推，否则观望/放弃",
-        fields: {
-          品类: "女装/连衣裙",
-          季节: "春秋",
-          客群: "25-35岁职场女性",
-          价格带: "99-299",
-          风格: "简韩/通勤",
-          爆款信号: ["小红书搜索量周环比>30%", "退货率<15%", "复购>2次"],
-          风险点: ["尺码偏窄", "面料易皱"],
-        },
-        prompt: "你是一名资深服装买手。根据以下判断逻辑筛选本周值得上的款：\n- 客群匹配度\n- 价格带在可控毛利内\n- 命中爆款信号则优先\n输出：推荐/观望/放弃 + 理由。",
-        tags: ["女装", "连衣裙", "爆款"],
-        metric: "近30天推荐命中率",
-        status: "published",
-        owner: "骆芷蝶",
-      };
-      const res = await fetch("/api/admin/tokens", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(demo),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        if (String(data.error || "").includes("relation") || String(data.error || "").includes("does not exist")) {
-          setLoadError("TABLE_MISSING");
-        } else {
-          alert("示例插入失败：" + (data.error || ""));
-        }
-      } else {
-        setToast("已插入示例词元");
-        setTimeout(() => setToast(null), 2000);
-        load();
-      }
-    } catch (e: any) {
-      alert("示例插入异常：" + (e.message || ""));
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const openEdit = (t: Token) => {
     setEditingId(t.id);
     setForm({
       domain: t.domain,
       category: t.category,
+      layer: t.fields?.layer || "数据",
       title: t.title,
       summary: t.summary || "",
       fields: typeof t.fields === "string" ? t.fields : JSON.stringify(t.fields || {}, null, 2),
@@ -163,6 +127,7 @@ export default function TokensPage() {
     } catch {
       alert("结构化字段不是合法 JSON，请检查"); return;
     }
+    parsedFields.layer = form.layer;
     setSaving(true);
     try {
       const payload = {
@@ -200,7 +165,7 @@ export default function TokensPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("确定删除该词元？")) return;
+    if (!confirm("确定删除该词源？")) return;
     try {
       const res = await fetch(`/api/admin/tokens?id=${id}`, { method: "DELETE", credentials: "include" });
       const data = await res.json();
@@ -218,19 +183,92 @@ export default function TokensPage() {
     });
   };
 
+  const buildToken = (o: any) => ({
+    domain: o.domain || "服装",
+    category: o.category || "行业经验",
+    title: o.title,
+    summary: o.summary || "",
+    fields: { ...(o.fields || {}), layer: o.layer || "数据" },
+    prompt: o.prompt || "",
+    tags: o.tags || [],
+    metric: o.metric || "",
+    status: o.status || "published",
+    owner: o.owner || "骆芷蝶",
+  });
+
+  const seedDemo = async () => {
+    setSaving(true);
+    try {
+      const demo = buildToken({
+        domain: "服装", category: "选品判断", layer: "数据",
+        title: "春秋女装连衣裙选品判断",
+        summary: "客群匹配 + 价格带可控毛利 + 命中爆款信号则推，否则观望/放弃",
+        fields: { 品类: "女装/连衣裙", 季节: "春秋", 客群: "25-35岁职场女性", 价格带: "99-299", 风格: "简韩/通勤", 爆款信号: ["小红书搜索量周环比>30%", "退货率<15%", "复购>2次"], 风险点: ["尺码偏窄", "面料易皱"] },
+        prompt: "你是一名资深服装买手。根据以下判断逻辑筛选本周值得上的款：\n- 客群匹配度\n- 价格带在可控毛利内\n- 命中爆款信号则优先\n输出：推荐/观望/放弃 + 理由。",
+        tags: ["女装", "连衣裙", "爆款"], metric: "近30天推荐命中率",
+      });
+      const res = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(demo) });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        if (String(data.error || "").includes("relation") || String(data.error || "").includes("does not exist")) setLoadError("TABLE_MISSING");
+        else alert("示例插入失败：" + (data.error || ""));
+      } else {
+        setToast("已插入示例词源"); setTimeout(() => setToast(null), 2000); load();
+      }
+    } catch (e: any) { alert("示例插入异常：" + (e.message || "")); }
+    finally { setSaving(false); }
+  };
+
+  // 各行业示例：把金融/股票/艺术也做一遍
+  const seedCrossIndustry = async () => {
+    setSaving(true);
+    try {
+      const demos = [
+        buildToken({ domain: "金融", category: "行业经验", layer: "数据", title: "信贷风控特征词源", summary: "把风控规则拆成可调用的特征单元", fields: { 维度: ["负债收入比", "查询频次", "历史逾期"], 阈值: "负债比<50%", 处置: "超阈值转人工" }, prompt: "你是风控专家，依据以下特征判断申请人的风险等级：\n- 负债收入比\n- 近6月查询频次\n- 历史逾期\n输出：低/中/高风险 + 依据。", tags: ["金融", "风控"], metric: "坏账率下降幅度" }),
+        buildToken({ domain: "金融", category: "客户画像", layer: "应用", title: "理财客户分层词源", summary: "按资产与风险偏好把客户分层匹配产品", fields: { 分层: ["保守", "稳健", "进取"], 匹配: "进取→权益类" }, prompt: "你是理财顾问，根据客户资产规模与风险偏好推荐配置：\n输出：客户分层 + 产品匹配建议。", tags: ["金融", "客户"], metric: "配置转化率" }),
+        buildToken({ domain: "股票", category: "行业经验", layer: "数据", title: "量价异常信号词源", summary: "把异动信号封装成可组合单元（基于 stock-monitor 数据）", fields: { 信号: ["放量突破", "缩量企稳", "背离"], 周期: "日线" }, prompt: "你是量化分析师，识别以下量价异常：\n- 放量突破平台\n- 缩量企稳\n- 量价背离\n输出：信号 + 强度。", tags: ["股票", "量价"], metric: "信号命中率" }),
+        buildToken({ domain: "股票", category: "选品判断", layer: "模型", title: "选股因子组合词源", summary: "把选股逻辑拆成可组合的因子单元", fields: { 因子: ["动量", "质量", "低波"], 权重: "动量0.4/质量0.4/低波0.2" }, prompt: "你是选股模型，按因子组合打分：\n- 动量\n- 质量\n- 低波\n输出：综合评分 + 排序。", tags: ["股票", "因子"], metric: "组合超额收益" }),
+        buildToken({ domain: "股票", category: "销售方法", layer: "应用", title: "复盘投教话术词源", summary: "把复盘方法封装成可调用投教话术", fields: { 结构: ["今日回顾", "关键决策", "教训"], 风格: "口语化" }, prompt: "你是投教主播，按结构生成复盘口播稿：\n- 今日回顾\n- 关键决策\n- 教训\n输出：口播文案。", tags: ["股票", "投教"], metric: "完播率" }),
+        buildToken({ domain: "艺术", category: "行业经验", layer: "数据", title: "艺术品估值特征词源", summary: "把估值逻辑拆成可调用特征", fields: { 维度: ["艺术家地位", "流通记录", "品相"], 权重: "流通记录>品相" }, prompt: "你是艺术顾问，依据特征评估作品价值区间：\n输出：估值区间 + 依据。", tags: ["艺术", "估值"], metric: "成交价偏差率" }),
+        buildToken({ domain: "艺术", category: "客户画像", layer: "应用", title: "策展匹配词源", summary: "把藏家画像与作品做匹配", fields: { 匹配: ["风格偏好", "预算", "收藏阶段"] }, prompt: "你是策展人，根据藏家画像推荐作品与展览主题：\n输出：匹配方案。", tags: ["艺术", "策展"], metric: "成交转化率" }),
+      ];
+      let okCount = 0;
+      for (const d of demos) {
+        const res = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(d) });
+        const data = await res.json();
+        if (res.ok && data.ok) okCount++;
+      }
+      setToast(`已插入 ${okCount} 条跨行业词源`);
+      setTimeout(() => setToast(null), 2000);
+      load();
+    } catch (e: any) { alert("插入异常：" + (e.message || "")); }
+    finally { setSaving(false); }
+  };
+
   const statusLabel = (s: string) => (s === "published" ? "已发布" : "草稿");
+  const layerBadge = (layer?: string) => (layer ? <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{layer}</span> : null);
+
+  // 产业链视图：按 layer 分组
+  const chainTokens = filters.domain ? tokens.filter((t) => t.domain === filters.domain) : tokens;
+  const byLayer: Record<string, Token[]> = {};
+  for (const l of LAYERS) byLayer[l] = [];
+  for (const t of chainTokens) {
+    const l = t.fields?.layer || "数据";
+    (byLayer[l] || (byLayer[l] = [])).push(t);
+  }
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-primary">选品判断词元</h1>
-          <p className="text-muted-foreground mt-1">把行业经验封装成可调用、可组合、可计量、可交易的词元资产（跨行业：服装/金融/股票/艺术）</p>
+          <h1 className="text-2xl font-bold text-primary">词源资产管理</h1>
+          <p className="text-muted-foreground mt-1">把各行业经验封装成可调用、可组合、可计量、可交易的词源（服装/金融/股票/艺术）</p>
         </div>
-        <button onClick={openCreate} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> 新建词元
-        </button>
-        <button onClick={seedDemo} className="btn-secondary text-sm">插入示例</button>
+        <div className="flex items-center gap-2">
+          <button onClick={openCreate} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> 新建词源</button>
+          <button onClick={seedDemo} className="btn-secondary text-sm">插入示例</button>
+          <button onClick={seedCrossIndustry} className="btn-secondary text-sm">插入各行业示例</button>
+        </div>
       </div>
 
       {toast && (
@@ -239,7 +277,7 @@ export default function TokensPage() {
         </div>
       )}
 
-      {/* 筛选 */}
+      {/* 筛选 + 视图切换 */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 flex flex-wrap gap-3 items-center">
         <select value={filters.domain} onChange={(e) => { setFilters({ ...filters, domain: e.target.value }); }}
           className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
@@ -251,32 +289,61 @@ export default function TokensPage() {
           <option value="">全部类型</option>
           {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
         </select>
+        <select value={filters.layer} onChange={(e) => { setFilters({ ...filters, layer: e.target.value }); }}
+          className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+          <option value="">全部环节</option>
+          {LAYERS.map((l) => <option key={l} value={l}>{l}</option>)}
+        </select>
         <select value={filters.status} onChange={(e) => { setFilters({ ...filters, status: e.target.value }); }}
           className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
           <option value="">全部状态</option>
           <option value="draft">草稿</option>
           <option value="published">已发布</option>
         </select>
-        <button onClick={load} className="btn-secondary text-sm flex items-center gap-2">
-          <Search className="w-4 h-4" /> 查询
-        </button>
+        <button onClick={load} className="btn-secondary text-sm flex items-center gap-2"><Search className="w-4 h-4" /> 查询</button>
+        <div className="ml-auto flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          <button onClick={() => setView("list")} className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-1 ${view === "list" ? "bg-white shadow text-primary" : "text-gray-500"}`}><List className="w-3.5 h-3.5" /> 列表</button>
+          <button onClick={() => setView("chain")} className={`px-3 py-1.5 rounded-md text-sm flex items-center gap-1 ${view === "chain" ? "bg-white shadow text-primary" : "text-gray-500"}`}><Network className="w-3.5 h-3.5" /> 产业链</button>
+        </div>
       </div>
 
-      {/* 列表 */}
       {loading ? (
         <div className="text-center py-12 text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin inline" /> 加载中…</div>
       ) : loadError === "TABLE_MISSING" ? (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-6">
           <div className="flex items-center gap-2 text-amber-800 font-medium mb-2"><AlertCircle className="w-5 h-5" /> 数据表尚未创建</div>
-          <p className="text-sm text-amber-700">
-            请到 Supabase Dashboard → SQL Editor 执行仓库里的 <code className="bg-white px-1 rounded">supabase-tokens.sql</code> 一次，刷新本页即可使用。
-          </p>
+          <p className="text-sm text-amber-700">请到 Supabase Dashboard → SQL Editor 执行仓库里的 <code className="bg-white px-1 rounded">supabase-tokens.sql</code> 一次，刷新本页即可使用。</p>
         </div>
       ) : loadError ? (
         <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-red-700 text-sm">{loadError}</div>
       ) : tokens.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">
-          还没有词元，点右上角「新建词元」开始封装你的第一条行业经验。
+          还没有词源，点「新建词源」或「插入示例 / 插入各行业示例」开始。
+        </div>
+      ) : view === "chain" ? (
+        <div className="space-y-4">
+          {!filters.domain && <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">提示：上方选一个行业（如服装/股票），产业链视图会按五主题分层展示该行业的词源。</div>}
+          {LAYERS.map((l) => (
+            <div key={l} className="bg-white rounded-xl border border-gray-100 p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="font-semibold text-primary">{l}</span>
+                <span className="text-xs text-muted-foreground">{LAYER_DESC[l]}</span>
+                <span className="text-xs text-gray-400 ml-auto">{byLayer[l]?.length || 0} 条</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {(byLayer[l] || []).map((t) => (
+                  <div key={t.id} className="flex items-center gap-2 border border-gray-100 rounded-lg px-3 py-2">
+                    <span className="text-sm text-primary flex-1 truncate">{t.title}</span>
+                    <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t.domain}</span>
+                    <button onClick={() => copyPrompt(t)} title="复制提示词" className="p-1 text-gray-400 hover:text-accent"><Copy className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => openEdit(t)} title="编辑" className="p-1 text-gray-400 hover:text-accent"><Pencil className="w-3.5 h-3.5" /></button>
+                    <button onClick={() => remove(t.id)} title="删除" className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                ))}
+                {(byLayer[l] || []).length === 0 && <div className="text-xs text-gray-400 py-1">（该环节暂无词源）</div>}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="space-y-3">
@@ -287,6 +354,7 @@ export default function TokensPage() {
                   <span className="font-medium text-primary">{t.title}</span>
                   <span className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs">{t.domain}</span>
                   <span className="px-1.5 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t.category}</span>
+                  {layerBadge(t.fields?.layer)}
                   <span className={`px-1.5 py-0.5 rounded text-xs ${t.status === "published" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>{statusLabel(t.status)}</span>
                   <span className="text-xs text-gray-400">调用 {t.usage_count} 次</span>
                 </div>
@@ -308,11 +376,11 @@ export default function TokensPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold text-primary">{editingId ? "编辑词元" : "新建词元"}</h3>
+              <h3 className="font-semibold text-primary">{editingId ? "编辑词源" : "新建词源"}</h3>
               <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
             </div>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">行业</label>
                   <select value={form.domain} onChange={(e) => setForm({ ...form, domain: e.target.value })}
@@ -327,6 +395,13 @@ export default function TokensPage() {
                     {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">产业链环节</label>
+                  <select value={form.layer} onChange={(e) => setForm({ ...form, layer: e.target.value })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                    {LAYERS.map((l) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">标题 *</label>
@@ -339,7 +414,7 @@ export default function TokensPage() {
                   className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="例如：客群匹配+价格带可控毛利+命中爆款信号则推" />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">结构化字段（JSON）</label>
+                <label className="block text-sm font-medium mb-1">结构化字段（JSON，可含 layer 等）</label>
                 <textarea value={form.fields} onChange={(e) => setForm({ ...form, fields: e.target.value })}
                   rows={6} className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-mono" />
               </div>
