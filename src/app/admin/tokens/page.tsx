@@ -51,6 +51,7 @@ const EMPTY_FORM = {
   status: "draft",
   owner: "",
   dependsOn: [] as string[],
+  trade: { status: "internal", price: 99, unit: "按次", note: "" },
 };
 
 export default function TokensPage() {
@@ -127,6 +128,10 @@ export default function TokensPage() {
       status: t.status || "draft",
       owner: t.owner || "",
       dependsOn: Array.isArray(t.fields?.depends_on) ? t.fields.depends_on : [],
+      trade: {
+        status: "internal", price: 99, unit: "按次", note: "",
+        ...(t.fields?.trade && typeof t.fields.trade === "object" ? t.fields.trade : {}),
+      },
     });
     setShowForm(true);
   };
@@ -143,6 +148,13 @@ export default function TokensPage() {
     // 依赖组合：仅保留仍存在的词源 id
     const validIds = new Set(allTokens.map((t) => t.id));
     parsedFields.depends_on = (form.dependsOn || []).filter((id) => validIds.has(id));
+    // 交易信息：价格转数字,缺省兜底
+    parsedFields.trade = {
+      status: ["internal", "quoted"].includes(form.trade?.status) ? form.trade.status : "internal",
+      price: Number(form.trade?.price) || 0,
+      unit: form.trade?.unit || "按次",
+      note: (form.trade?.note || "").trim(),
+    };
     setSaving(true);
     try {
       const payload = {
@@ -203,7 +215,17 @@ export default function TokensPage() {
     category: o.category || "行业经验",
     title: o.title,
     summary: o.summary || "",
-    fields: { ...(o.fields || {}), layer: o.layer || "数据" },
+    fields: {
+      ...(o.fields || {}),
+      layer: o.layer || "数据",
+      trade: {
+        status: "quoted",
+        price: 99,
+        unit: "按次",
+        note: "示例价格, 请按你的实际价值修改",
+        ...(o.fields?.trade && typeof o.fields.trade === "object" ? o.fields.trade : {}),
+      },
+    },
     prompt: o.prompt || "",
     tags: o.tags || [],
     metric: o.metric || "",
@@ -476,6 +498,9 @@ export default function TokensPage() {
                   {layerBadge(t.fields?.layer)}
                   <span className={`px-1.5 py-0.5 rounded text-xs ${t.status === "published" ? "bg-green-50 text-green-700" : "bg-gray-100 text-gray-500"}`}>{statusLabel(t.status)}</span>
                   <span className="text-xs text-gray-400">调用 {t.usage_count} 次</span>
+                  {t.fields?.trade?.status === "quoted" && (
+                    <span className="px-1.5 py-0.5 bg-orange-50 text-orange-700 rounded text-xs">¥{t.fields.trade.price}/{t.fields.trade.unit}</span>
+                  )}
                   {Array.isArray(t.fields?.depends_on) && t.fields.depends_on.length > 0 && (() => {
                     const names = (t.fields.depends_on as string[]).map((id) => byIdAll.get(id)?.title).filter(Boolean) as string[];
                     const shown = names.slice(0, 2).join("、");
@@ -604,6 +629,42 @@ export default function TokensPage() {
                     );
                   })}
                 </div>
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-4">
+              <label className="block text-sm font-medium mb-3 flex items-center gap-1">
+                <span>🛒</span> 交易信息（把这条词源摆上货架）
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">上架状态</label>
+                  <select value={form.trade?.status || "internal"} onChange={(e) => setForm({ ...form, trade: { ...(form.trade || {}), status: e.target.value as any } })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                    <option value="internal">仅内部使用</option>
+                    <option value="quoted">上架展示，可询价</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">价格（元）</label>
+                  <input type="number" min={0} value={form.trade?.price ?? 0} onChange={(e) => setForm({ ...form, trade: { ...(form.trade || {}), price: Number(e.target.value) } })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="99" />
+                </div>
+                <div>
+                  <label className="block text-xs text-muted-foreground mb-1">计价单位</label>
+                  <select value={form.trade?.unit || "按次"} onChange={(e) => setForm({ ...form, trade: { ...(form.trade || {}), unit: e.target.value } })}
+                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm">
+                    <option value="按次">按次</option>
+                    <option value="按月">按月</option>
+                    <option value="按套">按套</option>
+                    <option value="买断">买断</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mt-3">
+                <label className="block text-xs text-muted-foreground mb-1">交易说明（为什么值这个价）</label>
+                <input value={form.trade?.note || ""} onChange={(e) => setForm({ ...form, trade: { ...(form.trade || {}), note: e.target.value } })}
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="例如：接入本词源后，连衣裙选品命中率提升 30%" />
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 pt-5">

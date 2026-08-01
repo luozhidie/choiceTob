@@ -150,6 +150,7 @@ const menuGroups = [
   { label: "词元经济", items: [
     { label: "选品判断词元", href: "/admin/tokens" },
     { label: "AI选品判断", href: "/admin/tokens/select" },
+    { label: "词元市场", href: "/admin/tokens/market" },
   ]},
 
   // ─── 项目&预算 ───
