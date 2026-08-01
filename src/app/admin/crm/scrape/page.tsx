@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   Search, Loader2, Plus, CheckCircle2, ExternalLink,
@@ -136,6 +136,7 @@ export default function CrmScrapePage() {
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hint, setHint] = useState<string | null>(null);
+  const [importedCities, setImportedCities] = useState<{ city: string; count: number }[]>([]);
   const [pasteText, setPasteText] = useState("");
   const [parsedResults, setParsedResults] = useState<ParsedStore[]>([]);
   const [importing, setImporting] = useState(false);
@@ -146,6 +147,32 @@ export default function CrmScrapePage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const supabase = createClient();
+
+  // 加载已导入城市（城市记录）：库内 city 字段优先，老数据从地址正则提取“XX市”，再合并本机记录的搜索城市
+  const loadImportedCities = async () => {
+    try {
+      const { data } = await supabase
+        .from("crm_stores")
+        .select("city, address")
+        .is("deleted_at", null)
+        .limit(2000);
+      const counter: Record<string, number> = {};
+      const localRaw = typeof window !== "undefined" ? localStorage.getItem("crm_imported_cities") : null;
+      const localCities: string[] = localRaw ? JSON.parse(localRaw) : [];
+      for (const c of localCities) if (c) counter[c] = counter[c] || 0;
+      for (const r of (data || []) as any[]) {
+        const c = r.city || (r.address && (r.address.match(/(\S+市)/) || [])[1]) || null;
+        if (c) counter[c] = (counter[c] || 0) + 1;
+      }
+      setImportedCities(Object.entries(counter).map(([city, count]) => ({ city, count })));
+    } catch {
+      /* 忽略 */
+    }
+  };
+
+  useEffect(() => {
+    loadImportedCities();
+  }, []);
 
   // API 搜索（走后端路由，避免浏览器CORS）
   const handleApiSearch = async (targetPage?: number) => {
@@ -306,6 +333,15 @@ export default function CrmScrapePage() {
       } else {
         setImportResult({ success: data.success, failed: data.failed, dups: 0 });
         setParsedResults(prev => prev.filter(r => !importedIds.has(r.id)));
+        // 记录本次搜索城市，刷新城市记录
+        const cc = (city || "").trim();
+        if (cc) {
+          try {
+            const arr = JSON.parse(localStorage.getItem("crm_imported_cities") || "[]");
+            if (!arr.includes(cc)) { arr.push(cc); localStorage.setItem("crm_imported_cities", JSON.stringify(arr)); }
+          } catch { /* 忽略 */ }
+        }
+        loadImportedCities();
       }
     } catch (e: any) {
       console.error("导入异常:", e);
@@ -376,6 +412,24 @@ export default function CrmScrapePage() {
           <Globe className="w-4 h-4 inline mr-2" />API自动采集
         </button>
       </div>
+
+      {/* 城市记录：已导入过的城市一目了然 */}
+      {importedCities.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-sm font-medium text-primary">已导入城市（共 {importedCities.reduce((s, c) => s + c.count, 0)} 家）</p>
+            <span className="text-xs text-muted-foreground">灰色=本次搜索城市已导过</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {importedCities.map((c) => (
+              <span key={c.city}
+                className={`px-2.5 py-1 rounded-lg text-xs ${(city.trim().replace(/市$/, "")) === c.city.replace(/市$/, "") ? "bg-amber-100 text-amber-700 ring-1 ring-amber-200" : "bg-gray-100 text-gray-600"}`}>
+                {c.city} {c.count}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {mode === "paste" ? (
         <>
