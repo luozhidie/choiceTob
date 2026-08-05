@@ -1,7 +1,6 @@
 // 临时：微信支付测试链路（验证 Key 激活闭环，不暴露给客户，用完可删）
 // 复用与正式下单完全相同的 token_orders / token_api_keys 落库 + unifiedOrder + 回调激活路径。
-// 注：微信风控会拦截金额过小的交易（如 ¥0.01 → "该交易方式存在风险"），
-//     默认金额设为 ¥1（100 分），可通过 body.amount_fen 调整。
+// 默认 ¥0.01（1 分），可通过 body.amount_fen 调整。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
@@ -22,9 +21,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const buyerEmail = (body.email || "").trim();
-    const buyerName = (body.name || "").trim() || "词元测试¥1";
-    // 微信风控会拦 ¥0.01 这种极小金额，默认 100 分（¥1），可由 body.amount_fen 覆盖。
-    const amountFen = Math.max(1, Number(body.amount_fen) || 100);
+    const buyerName = (body.name || "").trim() || "词元测试¥0.01";
+    // 默认 ¥0.01（1 分），可由 body.amount_fen 覆盖。
+    const amountFen = Math.max(1, Number(body.amount_fen) || 1);
     const supabase = getServiceRoleClient();
     const apiKey = "tk_" + crypto.randomBytes(16).toString("hex");
     const outTradeNo = `WX${Date.now()}${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
