@@ -151,6 +151,15 @@ const menuGroups = [
     { label: "选品判断词元", href: "/admin/tokens" },
     { label: "AI选品判断", href: "/admin/tokens/select" },
     { label: "词元市场", href: "/admin/tokens/market" },
+    { label: "API 接入", href: "/admin/tokens/api-keys" },
+    { label: "API 帐单", href: "/admin/billing" },
+    { label: "词元内测支付", href: "/admin/tokens/beta" },
+  ]},
+
+  // ─── 平台 ───
+  { label: "平台", items: [
+    { label: "平台创作者", href: "/admin/platform/creators" },
+    { label: "平台结算", href: "/admin/platform/settlement" },
   ]},
 
   // ─── 项目&预算 ───
