@@ -1601,7 +1601,7 @@ export default function AdminProductsPage() {
 
               {/* 价格体系说明 */}
               <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
-                <b>价格体系，</b>零售价＝成本价×2.6折≈110%；一件起批＝零售价×33%，5件起批＝零售价×28%。
+                <b>价格体系，</b>零售价＝成本价÷2.6折×110%（≈成本价×4.2，即按拿货会员2.6折反推批发价再加10%利润）；一件起批＝零售价×33%，5件起批＝零售价×28%。
                 <br />
                 充值会员：5万／10万会员价＝零售价28%，退换比例分别为5%，10%，30万会员价＝零售价26%，退换20%。
                 <br />
