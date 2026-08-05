@@ -74,7 +74,23 @@ export async function POST(request: NextRequest) {
         await autoActivateMembership(supabase, memberOrder.user_id, memberOrder.plan_id, out_trade_no);
       }
     }
-    
+
+    // 3. 词元计费订单（token_orders）：微信支付成功后激活 API Key
+    const { data: tokenOrder } = await supabase
+      .from('token_orders')
+      .select('api_key, status')
+      .eq('out_trade_no', out_trade_no)
+      .single();
+    if (tokenOrder && tokenOrder.status !== 'paid') {
+      await supabase
+        .from('token_orders')
+        .update({ status: 'paid', updated_at: new Date().toISOString(), paid_at: new Date().toISOString() })
+        .eq('out_trade_no', out_trade_no);
+      if (tokenOrder.api_key) {
+        await supabase.from('token_api_keys').update({ status: 'active' }).eq('api_key', tokenOrder.api_key);
+      }
+    }
+
     return new NextResponse(buildXml({ return_code: 'SUCCESS', return_msg: 'OK' }), { headers: { 'Content-Type': 'application/xml' } });
   } catch (err: any) {
     console.error('[微信支付回调错误]', err);

@@ -47,7 +47,7 @@ export default function TokenSelectPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-primary">AI 选品判断</h1>
-        <p className="text-muted-foreground mt-1">AI 按你在该行业沉淀的「选品判断词源」评估候选商品，给出 推荐 / 观望 / 放弃</p>
+        <p className="text-muted-foreground mt-1">AI 按你在该行业沉淀的「选品判断词元」评估候选商品，给出 推荐 / 观望 / 放弃</p>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-100 p-6 space-y-4">
@@ -84,13 +84,13 @@ export default function TokenSelectPage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold text-primary">评估结论</h3>
             {usedTokens.length > 0 && (
-              <span className="text-xs text-gray-400">主词源 {usedTokens.length} 条{depTokens.length > 0 ? ` · 组合调用子词源 ${depTokens.length} 条` : ""}</span>
+              <span className="text-xs text-gray-400">主词元 {usedTokens.length} 条{depTokens.length > 0 ? ` · 组合调用子词元 ${depTokens.length} 条` : ""}</span>
             )}
           </div>
           <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{result}</div>
           {usedTokens.length > 0 && (
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> 本次依据的主词源</p>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> 本次依据的主词元</p>
               <div className="flex flex-wrap gap-2">
                 {usedTokens.map((t, i) => (
                   <span key={i} className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{t}</span>
@@ -100,7 +100,7 @@ export default function TokenSelectPage() {
           )}
           {depTokens.length > 0 && (
             <div className="mt-3">
-              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Network className="w-3.5 h-3.5" /> 被组合调用的子词源（跨词元编排）</p>
+              <p className="text-xs text-muted-foreground mb-2 flex items-center gap-1"><Network className="w-3.5 h-3.5" /> 被组合调用的子词元（跨词元编排）</p>
               <div className="flex flex-wrap gap-2">
                 {depTokens.map((t, i) => (
                   <span key={i} className="px-2 py-0.5 bg-purple-50 text-purple-700 rounded text-xs">{t}</span>

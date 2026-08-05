@@ -96,7 +96,7 @@ export default function TokensPage() {
     }
   };
 
-  // 加载全部词源（供依赖选择器使用，不受筛选影响）
+  // 加载全部词元（供依赖选择器使用，不受筛选影响）
   const loadAll = async () => {
     try {
       const res = await fetch(`/api/admin/tokens`, { credentials: "include" });
@@ -145,7 +145,7 @@ export default function TokensPage() {
       alert("结构化字段不是合法 JSON，请检查"); return;
     }
     parsedFields.layer = form.layer;
-    // 依赖组合：仅保留仍存在的词源 id
+    // 依赖组合：仅保留仍存在的词元 id
     const validIds = new Set(allTokens.map((t) => t.id));
     parsedFields.depends_on = (form.dependsOn || []).filter((id) => validIds.has(id));
     // 交易信息：价格转数字,缺省兜底
@@ -192,7 +192,7 @@ export default function TokensPage() {
   };
 
   const remove = async (id: string) => {
-    if (!confirm("确定删除该词源？")) return;
+    if (!confirm("确定删除该词元？")) return;
     try {
       const res = await fetch(`/api/admin/tokens?id=${id}`, { method: "DELETE", credentials: "include" });
       const data = await res.json();
@@ -250,7 +250,7 @@ export default function TokensPage() {
         if (String(data.error || "").includes("relation") || String(data.error || "").includes("does not exist")) setLoadError("TABLE_MISSING");
         else alert("示例插入失败：" + (data.error || ""));
       } else {
-        setToast("已插入示例词源"); setTimeout(() => setToast(null), 2000); load();
+        setToast("已插入示例词元"); setTimeout(() => setToast(null), 2000); load();
       }
     } catch (e: any) { alert("示例插入异常：" + (e.message || "")); }
     finally { setSaving(false); }
@@ -261,13 +261,13 @@ export default function TokensPage() {
     setSaving(true);
     try {
       const demos = [
-        buildToken({ domain: "金融", category: "行业经验", layer: "数据", title: "信贷风控特征词源", summary: "把风控规则拆成可调用的特征单元", fields: { 维度: ["负债收入比", "查询频次", "历史逾期"], 阈值: "负债比<50%", 处置: "超阈值转人工" }, prompt: "你是风控专家，依据以下特征判断申请人的风险等级：\n- 负债收入比\n- 近6月查询频次\n- 历史逾期\n输出：低/中/高风险 + 依据。", tags: ["金融", "风控"], metric: "坏账率下降幅度" }),
-        buildToken({ domain: "金融", category: "客户画像", layer: "应用", title: "理财客户分层词源", summary: "按资产与风险偏好把客户分层匹配产品", fields: { 分层: ["保守", "稳健", "进取"], 匹配: "进取→权益类" }, prompt: "你是理财顾问，根据客户资产规模与风险偏好推荐配置：\n输出：客户分层 + 产品匹配建议。", tags: ["金融", "客户"], metric: "配置转化率" }),
-        buildToken({ domain: "股票", category: "行业经验", layer: "数据", title: "量价异常信号词源", summary: "把异动信号封装成可组合单元（基于 stock-monitor 数据）", fields: { 信号: ["放量突破", "缩量企稳", "背离"], 周期: "日线" }, prompt: "你是量化分析师，识别以下量价异常：\n- 放量突破平台\n- 缩量企稳\n- 量价背离\n输出：信号 + 强度。", tags: ["股票", "量价"], metric: "信号命中率" }),
-        buildToken({ domain: "股票", category: "选品判断", layer: "模型", title: "选股因子组合词源", summary: "把选股逻辑拆成可组合的因子单元", fields: { 因子: ["动量", "质量", "低波"], 权重: "动量0.4/质量0.4/低波0.2" }, prompt: "你是选股模型，按因子组合打分：\n- 动量\n- 质量\n- 低波\n输出：综合评分 + 排序。", tags: ["股票", "因子"], metric: "组合超额收益" }),
-        buildToken({ domain: "股票", category: "销售方法", layer: "应用", title: "复盘投教话术词源", summary: "把复盘方法封装成可调用投教话术", fields: { 结构: ["今日回顾", "关键决策", "教训"], 风格: "口语化" }, prompt: "你是投教主播，按结构生成复盘口播稿：\n- 今日回顾\n- 关键决策\n- 教训\n输出：口播文案。", tags: ["股票", "投教"], metric: "完播率" }),
-        buildToken({ domain: "艺术", category: "行业经验", layer: "数据", title: "艺术品估值特征词源", summary: "把估值逻辑拆成可调用特征", fields: { 维度: ["艺术家地位", "流通记录", "品相"], 权重: "流通记录>品相" }, prompt: "你是艺术顾问，依据特征评估作品价值区间：\n输出：估值区间 + 依据。", tags: ["艺术", "估值"], metric: "成交价偏差率" }),
-        buildToken({ domain: "艺术", category: "客户画像", layer: "应用", title: "策展匹配词源", summary: "把藏家画像与作品做匹配", fields: { 匹配: ["风格偏好", "预算", "收藏阶段"] }, prompt: "你是策展人，根据藏家画像推荐作品与展览主题：\n输出：匹配方案。", tags: ["艺术", "策展"], metric: "成交转化率" }),
+        buildToken({ domain: "金融", category: "行业经验", layer: "数据", title: "信贷风控特征词元", summary: "把风控规则拆成可调用的特征单元", fields: { 维度: ["负债收入比", "查询频次", "历史逾期"], 阈值: "负债比<50%", 处置: "超阈值转人工" }, prompt: "你是风控专家，依据以下特征判断申请人的风险等级：\n- 负债收入比\n- 近6月查询频次\n- 历史逾期\n输出：低/中/高风险 + 依据。", tags: ["金融", "风控"], metric: "坏账率下降幅度" }),
+        buildToken({ domain: "金融", category: "客户画像", layer: "应用", title: "理财客户分层词元", summary: "按资产与风险偏好把客户分层匹配产品", fields: { 分层: ["保守", "稳健", "进取"], 匹配: "进取→权益类" }, prompt: "你是理财顾问，根据客户资产规模与风险偏好推荐配置：\n输出：客户分层 + 产品匹配建议。", tags: ["金融", "客户"], metric: "配置转化率" }),
+        buildToken({ domain: "股票", category: "行业经验", layer: "数据", title: "量价异常信号词元", summary: "把异动信号封装成可组合单元（基于 stock-monitor 数据）", fields: { 信号: ["放量突破", "缩量企稳", "背离"], 周期: "日线" }, prompt: "你是量化分析师，识别以下量价异常：\n- 放量突破平台\n- 缩量企稳\n- 量价背离\n输出：信号 + 强度。", tags: ["股票", "量价"], metric: "信号命中率" }),
+        buildToken({ domain: "股票", category: "选品判断", layer: "模型", title: "选股因子组合词元", summary: "把选股逻辑拆成可组合的因子单元", fields: { 因子: ["动量", "质量", "低波"], 权重: "动量0.4/质量0.4/低波0.2" }, prompt: "你是选股模型，按因子组合打分：\n- 动量\n- 质量\n- 低波\n输出：综合评分 + 排序。", tags: ["股票", "因子"], metric: "组合超额收益" }),
+        buildToken({ domain: "股票", category: "销售方法", layer: "应用", title: "复盘投教话术词元", summary: "把复盘方法封装成可调用投教话术", fields: { 结构: ["今日回顾", "关键决策", "教训"], 风格: "口语化" }, prompt: "你是投教主播，按结构生成复盘口播稿：\n- 今日回顾\n- 关键决策\n- 教训\n输出：口播文案。", tags: ["股票", "投教"], metric: "完播率" }),
+        buildToken({ domain: "艺术", category: "行业经验", layer: "数据", title: "艺术品估值特征词元", summary: "把估值逻辑拆成可调用特征", fields: { 维度: ["艺术家地位", "流通记录", "品相"], 权重: "流通记录>品相" }, prompt: "你是艺术顾问，依据特征评估作品价值区间：\n输出：估值区间 + 依据。", tags: ["艺术", "估值"], metric: "成交价偏差率" }),
+        buildToken({ domain: "艺术", category: "客户画像", layer: "应用", title: "策展匹配词元", summary: "把藏家画像与作品做匹配", fields: { 匹配: ["风格偏好", "预算", "收藏阶段"] }, prompt: "你是策展人，根据藏家画像推荐作品与展览主题：\n输出：匹配方案。", tags: ["艺术", "策展"], metric: "成交转化率" }),
       ];
       let okCount = 0;
       for (const d of demos) {
@@ -275,7 +275,7 @@ export default function TokensPage() {
         const data = await res.json();
         if (res.ok && data.ok) okCount++;
       }
-      setToast(`已插入 ${okCount} 条跨行业词源`);
+      setToast(`已插入 ${okCount} 条跨行业词元`);
       setTimeout(() => setToast(null), 2000);
       load();
     } catch (e: any) { alert("插入异常：" + (e.message || "")); }
@@ -293,7 +293,7 @@ export default function TokensPage() {
         setToast("组合链路示例已存在"); setTimeout(() => setToast(null), 2000); setSaving(false); return;
       }
 
-      // 1) 客户画像（被调用的子词源）
+      // 1) 客户画像（被调用的子词元）
       const profile = buildToken({
         domain: "服装", category: "客户画像", layer: "应用",
         title: "女装25-35职场女性画像",
@@ -304,10 +304,10 @@ export default function TokensPage() {
       });
       const r1 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(profile) });
       const d1 = await r1.json();
-      if (!r1.ok || !d1.ok) { alert("组合示例失败：" + (d1.error || "创建子词源异常")); return; }
+      if (!r1.ok || !d1.ok) { alert("组合示例失败：" + (d1.error || "创建子词元异常")); return; }
       const profileId = d1.data.id;
 
-      // 2) 销售方法（被调用的子词源）
+      // 2) 销售方法（被调用的子词元）
       const sales = buildToken({
         domain: "服装", category: "销售方法", layer: "应用",
         title: "连衣裙朋友圈成交话术",
@@ -325,14 +325,14 @@ export default function TokensPage() {
       const judge = buildToken({
         domain: "服装", category: "选品判断", layer: "模型",
         title: "连衣裙选品判断（含客户画像+销售方法）",
-        summary: "先过客户画像关，再判爆款信号，最后调销售方法产出话术——演示词源组合编排",
+        summary: "先过客户画像关，再判爆款信号，最后调销售方法产出话术——演示词元组合编排",
         fields: { 品类: "女装/连衣裙", 价格带: "99-299", 爆款信号: ["小红书搜索量周环比>30%", "退货率<15%"], 风险点: ["尺码偏窄", "面料易皱"], depends_on: [profileId, salesId] },
         prompt: "你是资深服装买手。先调用「女装25-35职场女性画像」判断客群匹配度，匹配度低直接放弃；匹配度高再结合爆款信号给推荐/观望/放弃结论；最后调用「连衣裙朋友圈成交话术」产出成交话术。\n输出：结论 + 理由 + 话术。",
         tags: ["女装", "连衣裙", "组合"], metric: "推荐命中率",
       });
       const r3 = await fetch("/api/admin/tokens", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(judge) });
       const d3 = await r3.json();
-      if (!r3.ok || !d3.ok) { alert("组合示例失败：" + (d3.error || "创建主词源异常")); return; }
+      if (!r3.ok || !d3.ok) { alert("组合示例失败：" + (d3.error || "创建主词元异常")); return; }
 
       setToast("已插入组合链路示例（选品判断 → 客户画像 + 销售方法）");
       setTimeout(() => setToast(null), 2000);
@@ -344,7 +344,7 @@ export default function TokensPage() {
   const statusLabel = (s: string) => (s === "published" ? "已发布" : "草稿");
   const layerBadge = (layer?: string) => (layer ? <span className="px-1.5 py-0.5 bg-amber-50 text-amber-700 rounded text-xs">{layer}</span> : null);
 
-  // 关系谱：基于全量词源，以 fields.depends_on 为边绘制「谁组合调用谁」的树
+  // 关系谱：基于全量词元，以 fields.depends_on 为边绘制「谁组合调用谁」的树
   const byIdAll = new Map<string, Token>((allTokens || []).map((t) => [t.id, t]));
   const relationDepended = new Set<string>();
   (allTokens || []).forEach((t) => ((t.fields?.depends_on as string[]) || []).forEach((id: string) => relationDepended.add(id)));
@@ -391,11 +391,11 @@ export default function TokensPage() {
     <div>
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-primary">词源资产管理</h1>
-          <p className="text-muted-foreground mt-1">把各行业经验封装成可调用、可组合、可计量、可交易的词源（服装/金融/股票/艺术）</p>
+          <h1 className="text-2xl font-bold text-primary">词元资产管理</h1>
+          <p className="text-muted-foreground mt-1">把各行业经验封装成可调用、可组合、可计量、可交易的词元（服装/金融/股票/艺术）</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={openCreate} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> 新建词源</button>
+          <button onClick={openCreate} className="btn-primary flex items-center gap-2"><Plus className="w-4 h-4" /> 新建词元</button>
           <button onClick={seedDemo} className="btn-secondary text-sm">插入示例</button>
           <button onClick={seedCrossIndustry} className="btn-secondary text-sm">插入各行业示例</button>
           <button onClick={seedComposition} className="btn-secondary text-sm flex items-center gap-1"><Network className="w-3.5 h-3.5" /> 插入组合示例</button>
@@ -450,11 +450,11 @@ export default function TokensPage() {
         <div className="bg-red-50 border border-red-100 rounded-xl p-6 text-red-700 text-sm">{loadError}</div>
       ) : tokens.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">
-          还没有词源，点「新建词源」或「插入示例 / 插入各行业示例」开始。
+          还没有词元，点「新建词元」或「插入示例 / 插入各行业示例」开始。
         </div>
       ) : view === "chain" ? (
         <div className="space-y-4">
-          {!filters.domain && <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">提示：上方选一个行业（如服装/股票），产业链视图会按五主题分层展示该行业的词源。</div>}
+          {!filters.domain && <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">提示：上方选一个行业（如服装/股票），产业链视图会按五主题分层展示该行业的词元。</div>}
           {LAYERS.map((l) => (
             <div key={l} className="bg-white rounded-xl border border-gray-100 p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -472,16 +472,16 @@ export default function TokensPage() {
                     <button onClick={() => remove(t.id)} title="删除" className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                   </div>
                 ))}
-                {(byLayer[l] || []).length === 0 && <div className="text-xs text-gray-400 py-1">（该环节暂无词源）</div>}
+                {(byLayer[l] || []).length === 0 && <div className="text-xs text-gray-400 py-1">（该环节暂无词元）</div>}
               </div>
             </div>
           ))}
         </div>
       ) : view === "relation" ? (
         <div className="space-y-3">
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">关系谱：箭头「↳」表示「组合调用」。顶层为不被任何词元依赖的根词源；缩进项为其调用的子词源（可跨行业）。检测到环会标红。</div>
+          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">关系谱：箭头「↳」表示「组合调用」。顶层为不被任何词元依赖的根词元；缩进项为其调用的子词元（可跨行业）。检测到环会标红。</div>
           {relationRoots.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">还没有调用关系，给某条词元设置「组合调用其它词源」后这里会显示链路。</div>
+            <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">还没有调用关系，给某条词元设置「组合调用其它词元」后这里会显示链路。</div>
           ) : (
             relationRoots.map((root) => renderRelationNode(root, 0, new Set()))
           )}
@@ -528,7 +528,7 @@ export default function TokensPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-semibold text-primary">{editingId ? "编辑词源" : "新建词源"}</h3>
+              <h3 className="font-semibold text-primary">{editingId ? "编辑词元" : "新建词元"}</h3>
               <button onClick={() => setShowForm(false)} className="p-2 hover:bg-gray-100 rounded-lg">✕</button>
             </div>
             <div className="space-y-4">
@@ -605,12 +605,12 @@ export default function TokensPage() {
 
               <div>
                 <label className="block text-sm font-medium mb-1 flex items-center gap-1">
-                  <Network className="w-3.5 h-3.5" /> 组合调用其它词源（可选，可跨行业）
+                  <Network className="w-3.5 h-3.5" /> 组合调用其它词元（可选，可跨行业）
                 </label>
-                <p className="text-xs text-muted-foreground mb-2">选中的词源会被本条词源在 AI 选品时一并调用，形成可编排工作流。保存后生效。</p>
+                <p className="text-xs text-muted-foreground mb-2">选中的词元会被本条词元在 AI 选品时一并调用，形成可编排工作流。保存后生效。</p>
                 <div className="max-h-44 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50 space-y-1">
                   {allTokens.filter((t) => t.id !== editingId).length === 0 && (
-                    <div className="text-xs text-gray-400 py-1">暂无可调用的其它词源，先新建几条。</div>
+                    <div className="text-xs text-gray-400 py-1">暂无可调用的其它词元，先新建几条。</div>
                   )}
                   {allTokens.filter((t) => t.id !== editingId).map((t) => {
                     const checked = (form.dependsOn || []).includes(t.id);
@@ -634,7 +634,7 @@ export default function TokensPage() {
 
             <div className="border-t border-gray-100 pt-4">
               <label className="block text-sm font-medium mb-3 flex items-center gap-1">
-                <span>🛒</span> 交易信息（把这条词源摆上货架）
+                <span>🛒</span> 交易信息（把这条词元摆上货架）
               </label>
               <div className="grid grid-cols-3 gap-3">
                 <div>
@@ -664,7 +664,7 @@ export default function TokensPage() {
               <div className="mt-3">
                 <label className="block text-xs text-muted-foreground mb-1">交易说明（为什么值这个价）</label>
                 <input value={form.trade?.note || ""} onChange={(e) => setForm({ ...form, trade: { ...(form.trade || {}), note: e.target.value } })}
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="例如：接入本词源后，连衣裙选品命中率提升 30%" />
+                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm" placeholder="例如：接入本词元后，连衣裙选品命中率提升 30%" />
               </div>
             </div>
             <div className="flex items-center justify-end gap-3 pt-5">

@@ -1,6 +1,7 @@
 // 公开：微信支付完成后凭订单号取回 API Key
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { orderQuery } from "@/lib/wechat-pay";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +26,28 @@ export async function GET(request: NextRequest) {
       .single();
     if (!data) return NextResponse.json({ ok: false, error: "订单不存在" }, { status: 404 });
 
-    const paid = data.status === "paid";
+    let paid = data.status === "paid";
+
+    // 兜底履约：DB 仍为 pending 时，直接向微信核实支付状态并激活，
+    // 防止 webhook 未达/延迟导致买家已付款却长期拿不到 key。
+    if (!paid) {
+      try {
+        const wx = await orderQuery(orderNo);
+        if (wx.trade_state === "SUCCESS") {
+          paid = true;
+          await supabase
+            .from("token_orders")
+            .update({ status: "paid", updated_at: new Date().toISOString() })
+            .eq("out_trade_no", orderNo);
+          if (data.api_key) {
+            await supabase.from("token_api_keys").update({ status: "active" }).eq("api_key", data.api_key);
+          }
+        }
+      } catch {
+        /* 微信查询失败则保持 pending，下次轮询再试 */
+      }
+    }
+
     return NextResponse.json({
       ok: true,
       paid,

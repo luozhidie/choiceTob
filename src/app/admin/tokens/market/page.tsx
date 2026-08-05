@@ -53,9 +53,12 @@ export default function TokenMarketPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-primary">词元市场</h1>
-        <p className="text-muted-foreground mt-1">把沉淀的词源摆上货架，按价值标价，有意向的客户可联系你购买/授权</p>
+      <div className="mb-6 flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-primary">词元市场</h1>
+          <p className="text-muted-foreground mt-1">把沉淀的词元摆上货架，按价值标价，有意向的客户可联系你购买/授权</p>
+        </div>
+        <a href="/tokens-market" target="_blank" className="btn-secondary text-sm">查看对外公开页 ↗</a>
       </div>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -74,7 +77,7 @@ export default function TokenMarketPage() {
         <div className="text-center py-12 text-muted-foreground"><Loader2 className="w-6 h-6 animate-spin inline" /> 加载中…</div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-100 p-12 text-center text-muted-foreground">
-          暂无上架词源。去「选品判断词元」页把词元的上架状态设为「上架展示，可询价」并填写价格。
+          暂无上架词元。去「选品判断词元」页把词元的上架状态设为「上架展示，可询价」并填写价格。
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -100,7 +103,7 @@ export default function TokenMarketPage() {
                 <span className="flex items-center gap-1"><Tag className="w-3.5 h-3.5" /> 计量：{t.metric || "—"}</span>
                 <span>已调用 {t.usage_count || 0} 次</span>
                 {Array.isArray(t.fields?.depends_on) && t.fields.depends_on.length > 0 && (
-                  <span>组合 {t.fields.depends_on.length} 条词源</span>
+                  <span>组合 {t.fields.depends_on.length} 条词元</span>
                 )}
               </div>
               <button onClick={copyContact} className="mt-4 w-full btn-primary flex items-center justify-center gap-2">
