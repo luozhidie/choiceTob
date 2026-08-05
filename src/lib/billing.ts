@@ -1,5 +1,7 @@
 // 词元 API 计费（Stripe 外币收款）公共配置
-import Stripe from "stripe";
+// 注意：stripe 为可选依赖。原项目被旧代码覆盖部署时 stripe 已从 package.json 移除，
+// 此处改为运行时惰性 require，避免顶部静态 import 在依赖缺失时导致 next build 失败。
+// 微信支付链路（unifiedOrder + qrcode）不依赖 stripe，不受影响。
 
 export interface BillingPackage {
   key: string;
@@ -27,11 +29,25 @@ export function getPackage(key: string): BillingPackage | undefined {
   return PACKAGES.find((p) => p.key === key);
 }
 
-let _stripe: Stripe | null = null;
+let _stripe: any = null;
+let _stripeInit = false;
+let _stripeInstanced = false;
+let _stripeInstance: any = null;
 let _stripeMissingWarned = false;
 
-// 返回 Stripe 实例；未配置密钥时返回 null（调用方需优雅降级提示去配置）
-export function getStripe(): Stripe | null {
+function loadStripeLib(): any {
+  try {
+    // 用变量名动态 require，绕开构建期对缺失模块的静态解析
+    const name = "stripe";
+    const mod = require(name);
+    return mod && mod.default ? mod.default : mod;
+  } catch {
+    return null;
+  }
+}
+
+// 返回 Stripe 实例；未配置密钥或依赖未安装时返回 null（调用方需优雅降级）
+export function getStripe(): any {
   const sk = process.env.STRIPE_SECRET_KEY;
   if (!sk) {
     if (!_stripeMissingWarned) {
@@ -40,11 +56,20 @@ export function getStripe(): Stripe | null {
     }
     return null;
   }
-  if (!_stripe) {
-    // 不传 apiVersion：使用 SDK 内置默认版本，避免版本类型不匹配
-    _stripe = new Stripe(sk);
+  if (!_stripeInit) {
+    _stripe = loadStripeLib();
+    _stripeInit = true;
+    if (!_stripe) {
+      console.warn("[billing] stripe 未安装，Stripe 外币收款不可用（微信支付不受影响）");
+    }
   }
-  return _stripe;
+  if (!_stripe) return null;
+  if (!_stripeInstanced) {
+    // 不传 apiVersion：使用 SDK 内置默认版本，避免版本类型不匹配
+    _stripeInstance = new _stripe(sk);
+    _stripeInstanced = true;
+  }
+  return _stripeInstance;
 }
 
 export const STRIPE_CONFIGURED = () => !!process.env.STRIPE_SECRET_KEY;
