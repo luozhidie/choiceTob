@@ -1,5 +1,7 @@
-// 临时：1 分钱微信支付测试链路（验证 Key 激活闭环，不暴露给客户，用完可删）
+// 临时：微信支付测试链路（验证 Key 激活闭环，不暴露给客户，用完可删）
 // 复用与正式下单完全相同的 token_orders / token_api_keys 落库 + unifiedOrder + 回调激活路径。
+// 注：微信风控会拦截金额过小的交易（如 ¥0.01 → "该交易方式存在风险"），
+//     默认金额设为 ¥1（100 分），可通过 body.amount_fen 调整。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
@@ -20,7 +22,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}));
     const buyerEmail = (body.email || "").trim();
-    const buyerName = (body.name || "").trim() || "词元测试¥0.01";
+    const buyerName = (body.name || "").trim() || "词元测试¥1";
+    // 微信风控会拦 ¥0.01 这种极小金额，默认 100 分（¥1），可由 body.amount_fen 覆盖。
+    const amountFen = Math.max(1, Number(body.amount_fen) || 100);
     const supabase = getServiceRoleClient();
     const apiKey = "tk_" + crypto.randomBytes(16).toString("hex");
     const outTradeNo = `WX${Date.now()}${crypto.randomBytes(3).toString("hex").toUpperCase()}`;
@@ -40,14 +44,14 @@ export async function POST(request: NextRequest) {
       .single();
     if (keyErr) throw keyErr;
 
-    // 2) 落订单（pending，金额=1分）
+    // 2) 落订单（pending，金额由 amountFen 决定）
     const { data: order, error: orderErr } = await supabase
       .from("token_orders")
       .insert({
         api_key_id: keyRow.id,
         api_key: apiKey,
         package_key: "trial",
-        amount: 1, // 1 分
+        amount: amountFen,
         currency: "cny",
         calls: 1,
         buyer_email: buyerEmail || null,
@@ -59,11 +63,11 @@ export async function POST(request: NextRequest) {
       .single();
     if (orderErr) throw orderErr;
 
-    // 3) 微信统一下单（native 扫码，1 分）
+    // 3) 微信统一下单（native 扫码）
     const wx = await unifiedOrder({
       out_trade_no: outTradeNo,
-      body: "骆芷蝶智选-测试支付¥0.01",
-      total_fee: 1,
+      body: `骆芷蝶智选-测试支付¥${(amountFen / 100).toFixed(2)}`,
+      total_fee: amountFen,
       platform: "native",
     });
     if (wx.return_code === "FAIL") throw new Error(wx.return_msg || "下单失败");
@@ -77,7 +81,7 @@ export async function POST(request: NextRequest) {
       order_no: outTradeNo,
       code_url: wx.code_url,
       qr,
-      cny: 1,
+      cny: amountFen,
       calls: 1,
       test: true,
     });
