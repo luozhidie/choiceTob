@@ -12,7 +12,7 @@
   <!-- 空 -->
   <view wx:elif="{{stalls.length===0}}" class="empty">
     <text class="empty-icon">🔔</text>
-    <text class="empty-text">还没有订阅任何档口</text>
+    <text class="empty-text">还没有订阅任何风格</text>
     <view class="empty-btn" bindtap="goMarkets">去逛逛市场</view>
   </view>
 

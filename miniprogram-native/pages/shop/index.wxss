@@ -8,7 +8,7 @@ page { background: var(--bg); }
 .nav-back { font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; }
 .nav-fav.fav-on { color: #2d1b2e; background: rgba(233,30,99,.15); }
 
-/* 商品/档口/详情 吸顶切换：单一白底顶部栏（含返回键 + 居中页签 + 分享键） */
+/* 商品/风格/详情 吸顶切换：单一白底顶部栏（含返回键 + 居中页签 + 分享键） */
 .section-tabs { position: fixed; top: 0; left: 0; right: 0; z-index: 99; background: #fff; border-bottom: 1rpx solid rgba(0,0,0,0.04); box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.04); opacity: 0; pointer-events: none; transform: translateY(-100%); transition: opacity 0.22s ease, transform 0.22s ease; }
 .section-tabs.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .section-tabs-inner { height: 88rpx; display: flex; align-items: center; padding: 0 16rpx; }

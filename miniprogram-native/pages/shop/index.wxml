@@ -7,13 +7,13 @@
     </view>
   </view>
 
-  <!-- 商品/档口/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 + 分享键 -->
+  <!-- 商品/风格/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 + 分享键 -->
   <view class="section-tabs {{showSectionTabs?'show':''}}" style="padding-top:{{statusBarHeight}}px;">
     <view class="section-tabs-inner">
       <view class="st-back" bindtap="goBack">‹</view>
       <view class="st-tabs">
         <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
-        <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">档口</view>
+        <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">风格</view>
         <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
       </view>
       <button class="st-share" open-type="share">↗</button>
@@ -105,7 +105,7 @@
         <text class="wish-banner-txt">心愿收集款 · 盲盒集单</text>
         <text class="wish-banner-sub" wx:if="{{wishHasPrice}}">现价打码 {{wishPriceText}}，仅露个位「{{wishUnitsHint}}」；集齐 1 手（5 件）开拿货价，集齐 5 手（25 件）开批量价，单量越多价越低。</text>
         <text class="wish-banner-sub" wx:if="{{wishCount > 0}}">已有 {{wishCount}} 件心愿 · 单量越集越接近开价。</text>
-        <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐手数即去跟档口拿货开价。</text>
+        <text class="wish-banner-sub" wx:if="{{!wishHasPrice}}">喜欢就加入心愿单，集齐手数即去跟风格主理人拿货开价。</text>
       </view>
     </view>
 
@@ -170,7 +170,7 @@
     </view>
   </view>
 
-  <!-- 档口区：店铺大卡片 + 系列切换 + 小卡轮播 -->
+  <!-- 风格区：店铺大卡片 + 系列切换 + 小卡轮播 -->
   <view id="section-shop">
     <!-- 店铺大卡片：展示买手选品货架 banner 图，点击进入货架 -->
     <view class="shop-hero-card" bindtap="goShelf">

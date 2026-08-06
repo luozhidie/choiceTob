@@ -3,12 +3,12 @@
   <view class="header">
     <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
     <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
-    <text class="title">档口市场</text>
+    <text class="title">风格市场</text>
   </view>
 
   <!-- 头图 -->
   <view class="hero">
-    <text class="hero-title">2026 全国精选档口</text>
+    <text class="hero-title">2026 全国精选风格</text>
     <text class="hero-sub">十三行 · 沙河 · 杭州 · 南油 · 中纺… 一手货源直供</text>
   </view>
 

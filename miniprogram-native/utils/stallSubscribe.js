@@ -1,6 +1,10 @@
-// 档口订阅：服务端（openid）持久化 + 本地兜底
+// 风格订阅：服务端（openid）持久化 + 本地兜底
 // 用法：var sub = require('../../utils/stallSubscribe.js');
+// 本地 key 已迁移到 subscribed_styles，读取时兼容老 key subscribed_stalls；迁移完成即清掉老 key。
+// API URL 暂沿用 /api/public/stall-subscriptions；后端入参兼容 stall_id（老）/ style_id（新）。
 var BASE = 'https://colour-choice.art/api/public/stall-subscriptions';
+var STORAGE_KEY_NEW = 'subscribed_styles';
+var STORAGE_KEY_OLD = 'subscribed_stalls';
 
 function getOpenid() {
   var app = getApp();
@@ -42,12 +46,20 @@ function toggleSubscribe(openid, stallId, isSub) {
   });
 }
 
-// 本地订阅数组（兜底/离线）
+// 本地订阅数组（兜底/离线）；优先新 key，回退老 key 一次性迁移
 function localIds() {
-  return wx.getStorageSync('subscribed_stalls') || [];
+  var n = wx.getStorageSync(STORAGE_KEY_NEW);
+  if (Array.isArray(n)) return n;
+  var o = wx.getStorageSync(STORAGE_KEY_OLD);
+  if (Array.isArray(o)) {
+    wx.setStorageSync(STORAGE_KEY_NEW, o); // 迁移
+    return o;
+  }
+  return [];
 }
 function saveLocal(ids) {
-  wx.setStorageSync('subscribed_stalls', ids);
+  wx.setStorageSync(STORAGE_KEY_NEW, ids);
+  wx.removeStorageSync(STORAGE_KEY_OLD); // 清掉老 key
 }
 
 module.exports = {

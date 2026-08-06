@@ -1,4 +1,4 @@
-/* 档口市场选择页：圆形市场头像网格（对标同行底部市场导航） */
+/* 风格市场选择页：圆形市场头像网格（对标同行底部市场导航） */
 Page({
   data: {
     markets: [],
@@ -22,8 +22,8 @@ Page({
             m.initial = (m.name || '档').charAt(0);
             return m;
           });
-          // 顶部增加「全部档口」入口，显示未绑定具体市场的发布档口
-          list.unshift({ id: '', name: '全部档口', initial: '全', location: '' });
+          // 顶部增加「全部风格」入口，显示未绑定具体市场的发布风格
+          list.unshift({ id: '', name: '全部风格', initial: '全', location: '' });
           t.setData({ markets: list, loading: false });
         } else {
           t.setData({ markets: [], loading: false });
@@ -41,7 +41,7 @@ Page({
     var name = e.currentTarget.dataset.name || '';
     var url = id
       ? '/pages/stall/index/index?id=' + id + '&name=' + encodeURIComponent(name)
-      : '/pages/stall/index/index?name=' + encodeURIComponent(name || '全部档口');
+      : '/pages/stall/index/index?name=' + encodeURIComponent(name || '全部风格');
     wx.navigateTo({ url: url });
   },
 

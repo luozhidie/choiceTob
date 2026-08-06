@@ -1,4 +1,4 @@
-/* 档口列表页：某个市场的档口（头图+筛选+档口卡片） */
+/* 风格列表页：某个市场的风格（头图+筛选+风格卡片） */
 var sub = require('../../utils/stallSubscribe.js');
 
 Page({
@@ -33,7 +33,7 @@ Page({
     var name = decodeURIComponent(opt.name || '');
     this.setData({
       marketId: id,
-      marketName: name || (id ? '' : '全部档口'),
+      marketName: name || (id ? '' : '全部风格'),
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
       subscribed: sub.localIds()
     });

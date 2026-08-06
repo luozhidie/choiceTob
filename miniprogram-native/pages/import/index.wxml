@@ -58,7 +58,7 @@
   <view class="input-area" wx:if="{{mode=='excel'}}">
     <view class="excel-pick" bindtap="chooseExcel">
       <text class="ep-icon">📄</text>
-      <text class="ep-text">{{excelName || '从聊天选择 Excel/CSV 文件（档口数据包）'}}</text>
+      <text class="ep-text">{{excelName || '从聊天选择 Excel/CSV 文件（风格数据包）'}}</text>
     </view>
     <view class="btn-import" bindtap="uploadExcel">
       <text wx:if="{{isProcessing}}">导入中...</text>

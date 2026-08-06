@@ -1,4 +1,4 @@
-/* 档口详情页：头像/订阅/粉丝/返单率/简介/评价/商品列表 */
+/* 风格详情页：头像/订阅/粉丝/返单率/简介/评价/商品列表 */
 var sub = require('../../utils/stallSubscribe.js');
 
 Page({
@@ -24,7 +24,7 @@ Page({
     this.setData({
       stallId: id,
       isPriceMember: !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner'),
-      subscribed: (wx.getStorageSync('subscribed_stalls') || []).indexOf(id) >= 0,
+      subscribed: (wx.getStorageSync('subscribed_styles') || wx.getStorageSync('subscribed_stalls') || []).indexOf(id) >= 0,
       reviewName: ui.nickName || ''
     });
     if (id) {
@@ -76,7 +76,7 @@ Page({
           s.products = (s.products || []).map(function (p) { return t.formatProduct(p); });
           t.setData({ stall: s, loading: false });
         } else {
-          wx.showToast({ title: '档口不存在', icon: 'none' });
+          wx.showToast({ title: '风格不存在', icon: 'none' });
           t.setData({ loading: false });
         }
       },

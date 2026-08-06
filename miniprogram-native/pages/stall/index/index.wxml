@@ -3,7 +3,7 @@
   <view class="header">
     <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
     <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
-    <text class="title">{{marketName||'档口列表'}}</text>
+    <text class="title">{{marketName||'风格列表'}}</text>
   </view>
 
   <!-- 市场头图 -->
@@ -45,10 +45,10 @@
   <!-- 空 -->
   <view wx:elif="{{filtered.length===0}}" class="empty">
     <text class="empty-icon">🏪</text>
-    <text class="empty-text">该分类暂无档口</text>
+    <text class="empty-text">该分类暂无风格</text>
   </view>
 
-  <!-- 档口列表 -->
+  <!-- 风格列表 -->
   <view wx:else class="stall-list">
     <view wx:for="{{filtered}}" wx:key="id" class="stall-card" bindtap="goDetail" data-id="{{item.id}}">
       <view class="sc-row">

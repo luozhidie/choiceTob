@@ -125,7 +125,7 @@ Page({
     mediaIndex: 0,             // 当前所在媒体项下标
     mediaTabs: [],             // 动态生成的媒体 Tab [{key,label,start},...]
     mediaTabIndex: 0,          // 当前激活的 Tab 下标
-    // 商品/档口/详情 吸顶切换
+    // 商品/风格/详情 吸顶切换
     showSectionTabs: false,      // 是否显示吸顶 Tab
     sectionActive: 'product',    // 当前激活：product/shop/detail
     statusBarHeight: 20,         // 状态栏高度（px）
@@ -133,7 +133,7 @@ Page({
     tabsHeightPx: 36,            // 吸顶 Tab 高度（px）
     mediaAreaHeightPx: 500,      // 媒体区高度（px）
     windowHeight: 667,           // 视口高度（px）
-    sectionShopTop: 0,           // 档口区距页面顶部距离
+    sectionShopTop: 0,           // 风格区距页面顶部距离
     sectionDetailTop: 0,         // 详情区距页面顶部距离
     // 店铺内容（后台可编辑）
     shopName: '骆芷蝶智选',
@@ -149,8 +149,8 @@ Page({
     colorOptions: [],          // 可选颜色
     selectedSize: '',
     selectedColor: '',
-    shopRecLatest: [],         // 档口最新款
-    shopRecHot: [],            // 档口大爆款
+    shopRecLatest: [],         // 风格最新款
+    shopRecHot: [],            // 风格大爆款
     shopRecNewbie: [],         // 新人推荐
     seriesActive: 'latest',    // 系列切换：latest / hot
     // 买手选品货架入口（卡片展示货架 banner 图，点击进入货架）
@@ -782,7 +782,7 @@ Page({
     wx.navigateTo({ url: '/pages/shipping-explanation/index?' + params });
   },
 
-  // 商品/档口/详情 吸顶切换
+  // 商品/风格/详情 吸顶切换
   onPageScroll: function (e) {
     var t = this;
     var scrollTop = e.scrollTop || 0;
@@ -909,7 +909,7 @@ Page({
     });
   },
 
-  // 店铺推荐位（对标一手：档口最新款 / 档口大爆款 / 新人推荐）
+  // 店铺推荐位（对标一手：风格最新款 / 风格大爆款 / 新人推荐）
   loadShopRecs: function (cat, excludeId) {
     var t = this;
     var normalize = function (list) {

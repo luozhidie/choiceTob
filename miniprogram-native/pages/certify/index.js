@@ -6,7 +6,7 @@ Page({
     name:'',contact:'',phone:'',wechat:'',city:'',district:'',
     shopSizeIndex:-1,shopTypeIndex:-1,
     shopSizes:['<30㎡','30-50㎡','50-80㎡','80-120㎡','120-200㎡','>200㎡'],
-    shopTypes:['实体店','档口','工作室','网店','社群团购','其他'],
+    shopTypes:['实体店','风格主理人','工作室','网店','社群团购','其他'],
 
     /* ── Step 2: 经营画像（全必填 *） ── */
     marketCheck:[false,false,false,false,false,false],

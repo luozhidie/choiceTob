@@ -3,7 +3,7 @@
   <view class="header">
     <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
     <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
-    <text class="title">{{stall.name||'档口详情'}}</text>
+    <text class="title">{{stall.name||'风格详情'}}</text>
   </view>
 
   <!-- 头图 + 头像 -->
@@ -37,7 +37,7 @@
 
   <!-- 简介 -->
   <view wx:if="{{stall.intro}}" class="block">
-    <text class="block-title">档口简介</text>
+    <text class="block-title">风格简介</text>
     <text class="block-text">{{stall.intro}}</text>
   </view>
 
@@ -63,7 +63,7 @@
 
   <!-- 商品 -->
   <view class="block">
-    <text class="block-title">档口商品（{{stall.products.length}}）</text>
+    <text class="block-title">风格商品（{{stall.products.length}}）</text>
     <view wx:if="{{stall.products.length===0}}" class="no-review">暂无商品</view>
     <view wx:else class="grid">
       <view wx:for="{{stall.products}}" wx:key="id" class="card" bindtap="goShop" data-id="{{item.id}}">
