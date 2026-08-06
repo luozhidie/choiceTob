@@ -1393,7 +1393,7 @@ export default function AdminProductsPage() {
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-xs">
-                            鈥
+                            未分类
                           </span>
                         )}
                         {product.subcategory && (
@@ -1421,7 +1421,7 @@ export default function AdminProductsPage() {
                           {formatPrice(product.wholesale_price)}
                         </span>
                       ) : (
-                        <span className="text-gray-300 text-sm">鈥</span>
+                        <span className="text-gray-300 text-sm">—</span>
                       )}
                     </td>
                     <td className="px-5 py-3.5">
