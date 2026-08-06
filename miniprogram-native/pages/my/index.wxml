@@ -94,7 +94,7 @@
     <view class="stat-card" bindtap="goSubscribedStalls">
       <text class="sc-icon">🏪</text>
       <text class="sc-num">{{subCount}}</text>
-      <text class="sc-label">订阅风格</text>
+      <text class="sc-label">订阅档口</text>
     </view>
     <view class="stat-card" bindtap="goFavorites">
       <text class="sc-icon">⭐</text>
@@ -161,7 +161,7 @@
     <text class="sec-title">我的活动</text>
     <view class="activity-grid">
       <view class="ac-item" bindtap="goMarkets">
-        <text class="ac-title">发现宝藏档口</text>
+        <text class="ac-title">发现宝藏搭配</text>
         <text class="ac-desc">2026全国精选...</text>
         <image class="ac-img" src="/assets/icon-store.png" mode="aspectFit"/>
       </view>
