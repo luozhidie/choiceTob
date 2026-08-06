@@ -1626,7 +1626,7 @@ export default function AdminProductsPage() {
                   分别填写每个部件的名称、零售价、批发价、批量价、成本价（元）。下方自动合计，可一键填入上方总价。
                 </p>
                 <div className="flex gap-2 items-center mb-1 px-1">
-                  <span className="flex-1 text-[11px] text-gray-400">部件鍚</span>
+                  <span className="flex-1 text-[11px] text-gray-400">部件名</span>
                   <span className="w-20 text-[11px] text-gray-400 text-center">零售价</span>
                   <span className="w-20 text-[11px] text-gray-400 text-center">批发价</span>
                   <span className="w-20 text-[11px] text-gray-400 text-center">批量价</span>
@@ -1640,7 +1640,7 @@ export default function AdminProductsPage() {
                       value={it.name}
                       onChange={(e) => updateSetItem(idx, "name", e.target.value)}
                       className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      placeholder="部件名，濡 上衣 / 半裙"
+                      placeholder="部件名，如 上衣 / 半裙"
                     />
                     <input
                       type="text"
@@ -1688,12 +1688,12 @@ export default function AdminProductsPage() {
                       className="shrink-0 w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500"
                       title="删除部件"
                     >
-                      鉁
+                      ×
                     </button>
                   </div>
                 ))}
                 {setItems.length === 0 && (
-                  <p className="text-xs text-gray-400">暂无部件，点击。+ 添加部件」。</p>
+                  <p className="text-xs text-gray-400">暂无部件，点击「+ 添加部件」开始录入。</p>
                 )}
                 {setItems.length > 0 &&
                   (() => {
