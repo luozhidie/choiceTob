@@ -228,8 +228,8 @@ export default function AdminProductsPage() {
   const applySetTotal = (r: number, w: number, b: number, c: number) =>
     setForm((f) => ({
       ...f,
-      price: r ? String(r) : f.price,
-      original_price: r ? String(r) : f.original_price,
+      price: r ? String(Math.round(r * 0.5)) : f.price, // 零售价 = 合计×50%（五折）
+      original_price: r ? String(r) : f.original_price, // 原价 = 合计（划线参考）
       wholesale_price: w ? String(w) : f.wholesale_price,
       bulk_price: b ? String(b) : f.bulk_price,
       cost_price: c ? String(c) : f.cost_price,
@@ -542,29 +542,31 @@ export default function AdminProductsPage() {
   };
 
   // 价格体系：成本价 →? 零售价/批发价/批量价/原价
+  // 零售价 = 成本价÷0.26×110%；原价 = 零售价×2（即零售价是原价的五折）
   const calcPricesFromCost = (costY: number) => {
     const retail = Math.round(costY / 0.26 * 1.10);
     const wholesale = Math.round(retail * 0.33);
     const bulk = Math.round(retail * 0.28);
-    return { retail, wholesale, bulk };
+    const original = Math.round(retail * 2); // 原价 = 零售价×2（五折促销口径）
+    return { retail, wholesale, bulk, original };
   };
   const handleCostPriceChange = (val: string) => {
     const costY = parseFloat(val) || 0;
     if (costY > 0) {
-      const { retail, wholesale, bulk } = calcPricesFromCost(costY);
+      const { retail, wholesale, bulk, original } = calcPricesFromCost(costY);
       const snap = autoCalcSnapshot.current;
       const next: typeof form = {
         ...form,
         cost_price: val,
         price: !snap || form.price === snap.price || form.price === "" ? String(retail) : form.price,
-        original_price: !snap || form.original_price === snap.original_price || form.original_price === "" ? String(retail) : form.original_price,
+        original_price: !snap || form.original_price === snap.original_price || form.original_price === "" ? String(original) : form.original_price,
         wholesale_price: !snap || form.wholesale_price === snap.wholesale_price || form.wholesale_price === "" ? String(wholesale) : form.wholesale_price,
         bulk_price: !snap || form.bulk_price === snap.bulk_price || form.bulk_price === "" ? String(bulk) : form.bulk_price,
       };
       autoCalcSnapshot.current = {
         costY,
         price: String(retail),
-        original_price: String(retail),
+        original_price: String(original),
         wholesale_price: String(wholesale),
         bulk_price: String(bulk),
       };
@@ -573,6 +575,18 @@ export default function AdminProductsPage() {
       setForm((f) => ({ ...f, cost_price: val }));
       autoCalcSnapshot.current = null;
     }
+  };
+
+  // 原价输入：若零售价为空，自动按"零售价=原价×50%"填入；手填零售价不覆盖
+  const handleOriginalPriceChange = (val: string) => {
+    setForm((f) => {
+      const originalY = parseFloat(val) || 0;
+      const shouldAutoRetail = !f.price || f.price === "";
+      if (shouldAutoRetail && originalY > 0) {
+        return { ...f, original_price: val, price: String(Math.round(originalY * 0.5)) };
+      }
+      return { ...f, original_price: val };
+    });
   };
 
   const resetForm = () => {
@@ -816,11 +830,11 @@ export default function AdminProductsPage() {
     // 根据当前商品成本价初始化自动换算快照，便于后续判断是否为手填价格
     const loadedCostY = product.cost_price ? product.cost_price / 100 : 0;
     if (loadedCostY > 0) {
-      const { retail, wholesale, bulk } = calcPricesFromCost(loadedCostY);
+      const { retail, wholesale, bulk, original } = calcPricesFromCost(loadedCostY);
       autoCalcSnapshot.current = {
         costY: loadedCostY,
         price: String(retail),
-        original_price: String(retail),
+        original_price: String(original),
         wholesale_price: String(wholesale),
         bulk_price: String(bulk),
       };
@@ -1590,9 +1604,7 @@ export default function AdminProductsPage() {
                   <input
                     type="number"
                     value={form.original_price}
-                    onChange={(e) =>
-                      setForm({ ...form, original_price: e.target.value })
-                    }
+                    onChange={(e) => handleOriginalPriceChange(e.target.value)}
                     className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                     placeholder="原价"
                   />
@@ -1625,7 +1637,7 @@ export default function AdminProductsPage() {
                 <br />
                 <b>预充货款会员：</b>预充5万货款＝零售价×28%，退换比例5%；预充10万货款＝零售价×28%，退换比例10%；预充30万货款＝零售价×26%，退换比例20%。
                 <br />
-                <b>原价 / 零售价：</b>原价＝各部件价格之和（划线参考价）；零售价＝促销价（实际售价）。有零售价时按零售价卖，<b>零售价留空则按原价售出</b>。
+                <b>原价 / 零售价：</b>原价＝各部件价格之和（划线参考价）；<b>零售价＝原价×50%（五折促销）</b>。有零售价时按零售价卖，<b>零售价留空则按原价售出</b>。
               </div>
 
               {/* 套装拆分价（上下装 / 两件装 / 三件套） */}
