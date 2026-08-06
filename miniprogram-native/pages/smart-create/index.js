@@ -122,13 +122,17 @@ Page({
   },
 
   /* PC 端拖拽上传：拖入图片文件（仅桌面微信客户端生效，手机端不触发） */
+  _dragFiles: function (e) {
+    var dt = (e && e.dataTransfer) || (e && e.detail && e.detail.dataTransfer) || null;
+    return (dt && dt.files) || [];
+  },
   onDragEnter: function (e) {
-    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    var files = this._dragFiles(e);
     this.setData({ dragOver: true, dragFileCount: files.length || 0 });
   },
   onDragOver: function (e) {
     if (e && e.preventDefault) { try { e.preventDefault(); } catch (err) {} }
-    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    var files = this._dragFiles(e);
     this.setData({ dragOver: true, dragFileCount: files.length || 0 });
   },
   onDragLeave: function (e) {
@@ -136,7 +140,7 @@ Page({
   },
   onDrop: function (e) {
     var t = this;
-    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    var files = this._dragFiles(e);
     t.setData({ dragOver: false });
     if (!files.length) return;
     // 仅保留图片类文件
