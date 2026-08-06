@@ -41,6 +41,16 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // 词元市场页面：用户常把复数 tokens-market 误打成单数 token-market，做 301 跳转兜底，避免 404
+  async redirects() {
+    return [
+      {
+        source: "/token-market",
+        destination: "/tokens-market",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
