@@ -94,7 +94,7 @@
     <view class="stat-card" bindtap="goSubscribedStalls">
       <text class="sc-icon">🏪</text>
       <text class="sc-num">{{subCount}}</text>
-      <text class="sc-label">订阅档口</text>
+      <text class="sc-label">订阅风格</text>
     </view>
     <view class="stat-card" bindtap="goFavorites">
       <text class="sc-icon">⭐</text>

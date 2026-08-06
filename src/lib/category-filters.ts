@@ -72,7 +72,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -130,7 +130,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -161,7 +161,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -189,7 +189,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -219,7 +219,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -252,7 +252,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },
@@ -286,7 +286,7 @@ export const DEFAULT_CATEGORY_CONFIG: Config = {
       { key: "price_asc", label: "批发价" },
     ],
     quickFilters: [
-      { key: "subscribed_stall", label: "订阅的档口", type: "toggle" },
+      { key: "subscribed_stall", label: "订阅的风格", type: "toggle" },
       { key: "is_special", label: "特价", type: "toggle" },
       { key: "in_stock", label: "现货", type: "toggle" },
       { key: "source_brand", label: "源头厂牌", type: "toggle" },

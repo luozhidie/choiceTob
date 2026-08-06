@@ -146,7 +146,7 @@ async function queryWithClient(supabase: any, request: NextRequest) {
         return query.gt("original_price", 0);
       case "source_brand":    // 源头厂牌：商品参数里标记
         return query.or("params->>source_brand.eq.1,params->>source_brand.eq.true");
-      case "subscribed_stall": // 订阅档口：前端按本地订阅列表过滤，后端放行
+      case "subscribed_stall": // 订阅风格：前端按本地订阅列表过滤，后端放行
         return query;
       default:
         return query;

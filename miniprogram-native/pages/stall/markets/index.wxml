@@ -12,10 +12,10 @@
     <text class="hero-sub">十三行 · 沙河 · 杭州 · 南油 · 中纺… 一手货源直供</text>
   </view>
 
-  <!-- 我订阅的档口 -->
+  <!-- 我订阅的风格 -->
   <view class="sub-entry" bindtap="goSubscribed">
     <text class="se-icon">🔔</text>
-    <text class="se-text">我订阅的档口</text>
+    <text class="se-text">我订阅的风格</text>
     <text class="se-go">›</text>
   </view>
 

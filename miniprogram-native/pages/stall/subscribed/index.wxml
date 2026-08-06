@@ -3,7 +3,7 @@
   <view class="header">
     <view class="back" bindtap="goBack"><text class="icon">‹</text></view>
     <view class="home" bindtap="goHome"><text class="icon">⌂</text></view>
-    <text class="title">我订阅的档口</text>
+    <text class="title">我订阅的风格</text>
   </view>
 
   <!-- 加载 -->

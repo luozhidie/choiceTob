@@ -1972,7 +1972,7 @@ export default function BlocksAdminPage() {
                         {/* 今日新款 */}
                         <div>
                           <label className="block text-xs text-gray-500 mb-1">今日新款 · Tab / 分类（用英文逗号分隔）</label>
-                          <ImeInput type="text" value={((form.content as any)?.newSection?.tabs || []).join(",")} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), newSection: { ...((form.content as any)?.newSection || {}), tabs: val.split(",").map((s: string) => s.trim()).filter(Boolean) } } as any })} placeholder="现货速发,看订阅档口,销量,批发价,筛选" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none mb-1" />
+                          <ImeInput type="text" value={((form.content as any)?.newSection?.tabs || []).join(",")} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), newSection: { ...((form.content as any)?.newSection || {}), tabs: val.split(",").map((s: string) => s.trim()).filter(Boolean) } } as any })} placeholder="现货速发,看订阅风格,销量,批发价,筛选" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none mb-1" />
                           <ImeInput type="text" value={((form.content as any)?.newSection?.categories || []).join(",")} onChange={(val) => setForm({ ...form, content: { ...(form.content as object || {}), newSection: { ...((form.content as any)?.newSection || {}), categories: val.split(",").map((s: string) => s.trim()).filter(Boolean) } } as any })} placeholder="衬衫,长袖T,针织衫,套装,牛仔褂,短外套,休闲裤" className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:border-primary outline-none" />
                         </div>
                       </div>

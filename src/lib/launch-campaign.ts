@@ -139,7 +139,7 @@ export const DEFAULT_LAUNCH_CAMPAIGN: LaunchCampaignContent = {
     ],
   },
   newSection: {
-    tabs: ["现货速发", "看订阅档口", "销量", "批发价", "筛选"],
+    tabs: ["现货速发", "看订阅风格", "销量", "批发价", "筛选"],
     categories: ["衬衫", "长袖T", "针织衫", "套装", "牛仔褂", "短外套", "休闲裤"],
     products: [],
   },

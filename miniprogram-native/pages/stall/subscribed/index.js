@@ -1,4 +1,4 @@
-/* 我订阅的档口：服务端订阅（openid）为主，本地兜底 */
+/* 我订阅的风格：服务端订阅（openid）为主，本地兜底 */
 var sub = require('../../utils/stallSubscribe.js');
 
 Page({
