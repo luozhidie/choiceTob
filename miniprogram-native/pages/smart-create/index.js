@@ -31,7 +31,18 @@ Page({
     // 成本价自动换算快照（避免覆盖手填价格，同时支持连续输入更新）
     lastAutoCalc: null,
     // 定时下架日期（季节性货品），格式 YYYY-MM-DD，留空=不下架
-    unpublishAt: ''
+    unpublishAt: '',
+    // PC 端拖拽上传
+    isPC: false,
+    dragOver: false,
+    dragFileCount: 0
+  },
+
+  /* PC 端检测：Windows / Mac 客户端才显示拖拽提示并启用拖入 */
+  onLoad: function () {
+    var platform = '';
+    try { platform = (wx.getSystemInfoSync().platform || ''); } catch (e) {}
+    this.setData({ isPC: (platform === 'windows' || platform === 'mac') });
   },
 
   /* 套装拆分价 */
@@ -108,6 +119,62 @@ Page({
     var images = this.data.images.slice();
     images.splice(i, 1);
     this.setData({ images: images });
+  },
+
+  /* PC 端拖拽上传：拖入图片文件（仅桌面微信客户端生效，手机端不触发） */
+  onDragEnter: function (e) {
+    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    this.setData({ dragOver: true, dragFileCount: files.length || 0 });
+  },
+  onDragOver: function (e) {
+    if (e && e.preventDefault) { try { e.preventDefault(); } catch (err) {} }
+    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    this.setData({ dragOver: true, dragFileCount: files.length || 0 });
+  },
+  onDragLeave: function (e) {
+    this.setData({ dragOver: false });
+  },
+  onDrop: function (e) {
+    var t = this;
+    var files = (e.dataTransfer && e.dataTransfer.files) || [];
+    t.setData({ dragOver: false });
+    if (!files.length) return;
+    // 仅保留图片类文件
+    var imgExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+    files = files.filter(function (f) {
+      var nm = (f.name || '').toLowerCase();
+      var tp = (f.type || '').toLowerCase();
+      if (tp.indexOf('image') === 0) return true;
+      for (var i = 0; i < imgExt.length; i++) {
+        if (nm.indexOf('.' + imgExt[i]) > -1) return true;
+      }
+      return false;
+    });
+    if (!files.length) { t.showToast('请拖入图片文件'); return; }
+    var fm = wx.getFileSystemManager();
+    var rest = t.data.images.slice();
+    var added = [];
+    var pending = files.length;
+    files.forEach(function (f) {
+      var srcPath = f.path;
+      if (!srcPath) { pending -= 1; return; }
+      var dot = (f.name && f.name.lastIndexOf('.')) > -1 ? f.name.substring(f.name.lastIndexOf('.')) : '.jpg';
+      var dest = wx.env.USER_DATA_PATH + '/' + Date.now() + '_' + Math.floor(Math.random() * 1e6) + dot;
+      fm.copyFile({
+        srcPath: srcPath,
+        destPath: dest,
+        success: function () { rest.push(dest); added.push(dest); },
+        fail: function () {},
+        complete: function () {
+          pending -= 1;
+          if (pending === 0) {
+            t.setData({ images: rest.slice(0, 9) });
+            if (added.length) t.showToast('已拖入 ' + added.length + ' 张图');
+            else t.showToast('拖入图片失败');
+          }
+        }
+      });
+    });
   },
 
   /* 模特图（最多6张） */
