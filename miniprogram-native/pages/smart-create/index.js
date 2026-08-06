@@ -30,17 +30,10 @@ Page({
     uploadedVideoUrl: '',
     // 成本价自动换算快照（避免覆盖手填价格，同时支持连续输入更新）
     lastAutoCalc: null,
+    // 原价 → 零售价 自动联动快照（手填零售价时被锁定）
+    originalPriceSnap: null,
     // 定时下架日期（季节性货品），格式 YYYY-MM-DD，留空=不下架
-    unpublishAt: '',
-    // PC 端检测（用于显示操作提示）
-    isPC: false
-  },
-
-  /* PC 端检测：Windows / Mac 客户端显示提示 */
-  onLoad: function () {
-    var platform = '';
-    try { platform = (wx.getSystemInfoSync().platform || ''); } catch (e) {}
-    this.setData({ isPC: (platform === 'windows' || platform === 'mac') });
+    unpublishAt: ''
   },
 
   /* 套装拆分价 */
@@ -88,14 +81,17 @@ Page({
   },
   applySetTotal: function () {
     var p = Object.assign({}, this.data.product);
+    var newSnap = null;
     if (this.data.setSumR) {
-      p.price = String(this.data.setSumR);
+      // 与网站端一致：原价 = 部件价格之和（划线参考价）；零售价 = 原价 × 50%（五折促销）
       p.original_price = String(this.data.setSumR);
+      p.price = String(Math.round(this.data.setSumR * 0.5));
+      newSnap = { originalY: this.data.setSumR, price: p.price };
     }
     if (this.data.setSumW) p.wholesale_price = String(this.data.setSumW);
     if (this.data.setSumB) p.bulk_price = String(this.data.setSumB);
     if (this.data.setSumC) p.cost_price = String(this.data.setSumC);
-    this.setData({ product: p });
+    this.setData({ product: p, originalPriceSnap: newSnap });
   },
 
   /* 选图（转发/相册里的供应商图） */
@@ -305,9 +301,9 @@ Page({
               var r = Math.round(costY / 0.26 * 1.10);
               var w = Math.round(r * 0.33);
               var b = Math.round(r * 0.28);
-              snap = { costY: costY, price: String(r), original_price: String(r), wholesale_price: String(w), bulk_price: String(b) };
+              snap = { costY: costY, price: String(r), original_price: String(r * 2), wholesale_price: String(w), bulk_price: String(b) };
             }
-            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0, lastAutoCalc: snap });
+            t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0, lastAutoCalc: snap, originalPriceSnap: null });
             if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
             else t.showToast('识别完成，请核对');
           } else {
@@ -327,6 +323,21 @@ Page({
     var field = e.currentTarget.dataset.field;
     var product = Object.assign({}, this.data.product);
     product[field] = e.detail.value;
+    // 与网站端一致：原价 → 零售价 = 原价 × 50%（仅当零售价留空或仍等于「原价×0.5 快照」时自动覆盖）
+    if (field === 'original_price') {
+      var originalY = parseFloat(product.original_price) || 0;
+      var snap = this.data.originalPriceSnap;
+      var matchesSnap = !!(snap && String(product.price) === snap.price);
+      var isEmpty = !product.price || String(product.price) === '';
+      if (originalY > 0 && (isEmpty || matchesSnap)) {
+        var newPrice = String(Math.round(originalY * 0.5));
+        product.price = newPrice;
+        this.setData({ product: product, originalPriceSnap: { originalY: originalY, price: newPrice } });
+        return;
+      }
+      this.setData({ product: product, originalPriceSnap: null });
+      return;
+    }
     this.setData({ product: product });
   },
   onCategory: function (e) { var p = Object.assign({}, this.data.product); p.category = this.data.categoryOptions[e.detail.value]; this.setData({ product: p, categoryCustomMode: false }); },
@@ -351,15 +362,19 @@ Page({
         return v === '' || v === snap[k];
       }
       if (shouldUpdate(p.price, 'price')) p.price = String(retail);
-      if (shouldUpdate(p.original_price, 'original_price')) p.original_price = String(retail);
+      // 与网站端一致：原价 = 零售价 × 2（划线参考价）；零售价留空时按原价售出
+      var originalY2 = 0;
+      if (shouldUpdate(p.original_price, 'original_price')) { p.original_price = String(retail * 2); originalY2 = retail * 2; }
       if (shouldUpdate(p.wholesale_price, 'wholesale_price')) p.wholesale_price = String(wholesale);
       if (shouldUpdate(p.bulk_price, 'bulk_price')) p.bulk_price = String(bulk);
       t.setData({
         product: p,
-        lastAutoCalc: { costY: costY, price: String(retail), original_price: String(retail), wholesale_price: String(wholesale), bulk_price: String(bulk) }
+        lastAutoCalc: { costY: costY, price: String(retail), original_price: String(retail * 2), wholesale_price: String(wholesale), bulk_price: String(bulk) },
+        // 原价 → 零售价 联动快照（零售价与快照一致时，编辑原价可继续按 0.5 倍覆盖零售价）
+        originalPriceSnap: originalY2 > 0 ? { originalY: originalY2, price: String(retail) } : null
       });
     } else {
-      t.setData({ product: p, lastAutoCalc: null });
+      t.setData({ product: p, lastAutoCalc: null, originalPriceSnap: null });
     }
   },
 
