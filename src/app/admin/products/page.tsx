@@ -199,6 +199,10 @@ export default function AdminProductsPage() {
     bulk_price: string;
   } | null>(null);
 
+  // 原价 → 零售价（五折）自动换算快照：记录上一次的 original/price 对，
+  // 当用户改原价时若零售价仍等于快照值则继续联动，否则视为手填不覆盖。
+  const originalPriceSnapshot = useRef<{ originalY: number; price: string } | null>(null);
+
   // 套装拆分价（上下装/两件装/三件套）：部件名 + 零售价/批发价/批量价/成本价(元）
   // 仅用于表单编辑，提交时换算成分(cent)并入 params.set_items，避免新增数据库列
   const [setItems, setSetItems] = useState<
@@ -577,14 +581,21 @@ export default function AdminProductsPage() {
     }
   };
 
-  // 原价输入：若零售价为空，自动按"零售价=原价×50%"填入；手填零售价不覆盖
+  // 原价输入：若零售价为空或仍等于上一次的自动联动值，则按「零售价=原价×50%」联动；
+  // 否则视为手填，不覆盖（与成本价自动换算同模式）
   const handleOriginalPriceChange = (val: string) => {
+    const originalY = parseFloat(val) || 0;
     setForm((f) => {
-      const originalY = parseFloat(val) || 0;
-      const shouldAutoRetail = !f.price || f.price === "";
-      if (shouldAutoRetail && originalY > 0) {
-        return { ...f, original_price: val, price: String(Math.round(originalY * 0.5)) };
+      const snap = originalPriceSnapshot.current;
+      const matchesSnap = !!(snap && f.price === String(Math.round(snap.originalY * 0.5)));
+      const isEmpty = !f.price || f.price === "";
+      if (originalY > 0 && (isEmpty || matchesSnap)) {
+        const newPrice = String(Math.round(originalY * 0.5));
+        originalPriceSnapshot.current = { originalY, price: newPrice };
+        return { ...f, original_price: val, price: newPrice };
       }
+      // 手填了零售价，本次不再联动，清空快照
+      originalPriceSnapshot.current = null;
       return { ...f, original_price: val };
     });
   };
