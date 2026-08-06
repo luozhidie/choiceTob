@@ -82,6 +82,10 @@ export default function CategoryTreePage() {
   const [jsonMode, setJsonMode] = useState(false);
   const [jsonText, setJsonText] = useState("");
 
+  // 上移到 categories 之前：避免同步 useMemo 前向引用触发 TDZ（Cannot access 'getLevel'）
+  const getLevel = (c: CategoryTreeConfig, key: string): TreeLevel | undefined =>
+    c.levels.find((l) => l.key === key);
+
   const categories = useMemo(
     () => (getLevel(cfg, "category")?.values) || [],
     [cfg]
@@ -100,9 +104,6 @@ export default function CategoryTreePage() {
     setToast({ type, msg });
     setTimeout(() => setToast(null), 2500);
   };
-
-  const getLevel = (c: CategoryTreeConfig, key: string): TreeLevel | undefined =>
-    c.levels.find((l) => l.key === key);
 
   // 更新某层（market/vibe/category）的 values
   const setLevelValues = (key: string, values: string[]) =>

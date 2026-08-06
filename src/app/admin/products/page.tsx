@@ -369,6 +369,12 @@ export default function AdminProductsPage() {
     return Array.from(set);
   }, [treeConfig, dbCategories, form.category]);
 
+  // 表单中当前主分类的子分类列表（上移到 subOptions 之前，避免同步 useMemo 前向引用触发 TDZ）
+  const formSubcategories = useMemo(
+    () => (form.category ? getSubcategories(form.category) : []),
+    [form.category]
+  );
+
   // 明细下拉项：优先取分类树按品类的值，回退到历史 getSubcategories
   const subOptions = useMemo(() => {
     if (form.category && treeConfig) {
@@ -445,12 +451,6 @@ export default function AdminProductsPage() {
       cancelled = true;
     };
   }, [form.category]);
-
-  // 表单中当前主分类的子分类列表
-  const formSubcategories = useMemo(
-    () => (form.category ? getSubcategories(form.category) : []),
-    [form.category]
-  );
 
   // 筛选中当前主分类的子分类列表
   const filterSubcategories = useMemo(
