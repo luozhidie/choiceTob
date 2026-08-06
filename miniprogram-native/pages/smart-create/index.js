@@ -32,13 +32,11 @@ Page({
     lastAutoCalc: null,
     // 定时下架日期（季节性货品），格式 YYYY-MM-DD，留空=不下架
     unpublishAt: '',
-    // PC 端拖拽上传
-    isPC: false,
-    dragOver: false,
-    dragFileCount: 0
+    // PC 端检测（用于显示操作提示）
+    isPC: false
   },
 
-  /* PC 端检测：Windows / Mac 客户端显示拖拽提示并启用拖入 */
+  /* PC 端检测：Windows / Mac 客户端显示提示 */
   onLoad: function () {
     var platform = '';
     try { platform = (wx.getSystemInfoSync().platform || ''); } catch (e) {}
@@ -119,68 +117,6 @@ Page({
     var images = this.data.images.slice();
     images.splice(i, 1);
     this.setData({ images: images });
-  },
-
-  /* PC 端拖拽上传：拖入图片文件（仅桌面微信客户端生效，手机端不触发）
-     关键点：dragenter 与 dragover 都必须 preventDefault，否则客户端判定为“不接受”→ 弹「不支持拖入文件」 */
-  _prevent: function (e) { if (e && e.preventDefault) { try { e.preventDefault(); } catch (err) {} } },
-  _dragFiles: function (e) {
-    var dt = (e && e.detail && e.detail.dataTransfer) || (e && e.dataTransfer) || null;
-    return (dt && dt.files) || [];
-  },
-  onDragEnter: function (e) {
-    this._prevent(e);
-    var files = this._dragFiles(e);
-    this.setData({ dragOver: true, dragFileCount: files.length || 0 });
-  },
-  onDragOver: function (e) {
-    this._prevent(e);
-    var files = this._dragFiles(e);
-    this.setData({ dragOver: true, dragFileCount: files.length || 0 });
-  },
-  onDragLeave: function (e) {
-    this.setData({ dragOver: false });
-  },
-  onDrop: function (e) {
-    var t = this;
-    this._prevent(e);
-    var files = this._dragFiles(e);
-    t.setData({ dragOver: false });
-    if (!files.length) { t.showToast('未读到拖入的文件'); return; }
-    // 仅保留图片类文件
-    var imgExt = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
-    files = files.filter(function (f) {
-      var nm = (f.name || '').toLowerCase();
-      var tp = (f.type || '').toLowerCase();
-      if (tp.indexOf('image') === 0) return true;
-      for (var i = 0; i < imgExt.length; i++) {
-        if (nm.indexOf('.' + imgExt[i]) > -1) return true;
-      }
-      return false;
-    });
-    if (!files.length) { t.showToast('请拖入图片文件'); return; }
-    var fm = wx.getFileSystemManager();
-    var rest = t.data.images.slice();
-    var added = [];
-    var pending = files.length;
-    files.forEach(function (f) {
-      var srcPath = f.path;
-      if (!srcPath) { pending -= 1; if (pending === 0) finish(); return; }
-      var dot = (f.name && f.name.lastIndexOf('.')) > -1 ? f.name.substring(f.name.lastIndexOf('.')) : '.jpg';
-      var dest = wx.env.USER_DATA_PATH + '/' + Date.now() + '_' + Math.floor(Math.random() * 1e6) + dot;
-      fm.copyFile({
-        srcPath: srcPath,
-        destPath: dest,
-        success: function () { rest.push(dest); added.push(dest); },
-        fail: function () {},
-        complete: function () { pending -= 1; if (pending === 0) finish(); }
-      });
-    });
-    function finish() {
-      t.setData({ images: rest.slice(0, 9) });
-      if (added.length) t.showToast('已拖入 ' + added.length + ' 张图');
-      else t.showToast('拖入图片失败，请改用 ＋ 按钮');
-    }
   },
 
   /* 模特图（最多6张） */

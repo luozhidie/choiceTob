@@ -2,16 +2,13 @@
   <!-- 步骤1：选图 -->
   <view class="sc-card">
     <view class="sc-card-title">① 选商品图（转发/相册里的供应商图，最多9张）</view>
-    <view class="sc-pc-hint" wx:if="{{isPC}}">💻 PC 端：把图片直接拖到下方虚线区，或点 ＋ 从电脑选图</view>
-    <view class="sc-imgs {{dragOver ? 'sc-imgs-dragover' : ''}}"
-          binddragenter="onDragEnter" binddragover="onDragOver"
-          binddragleave="onDragLeave" binddrop="onDrop">
+    <view class="sc-pc-hint" wx:if="{{isPC}}">💻 PC 端：点 ＋ 从电脑选图（微信暂不开放桌面直接拖入文件）</view>
+    <view class="sc-imgs">
       <view class="sc-img" wx:for="{{images}}" wx:key="*this" wx:for-item="src">
         <image src="{{src}}" mode="aspectFill" bindtap="previewImg" data-src="{{src}}"/>
         <view class="sc-img-del" catchtap="removeImage" data-i="{{index}}">×</view>
       </view>
       <view class="sc-img sc-add" bindtap="chooseImages" wx:if="{{images.length<9}}">＋</view>
-      <view class="sc-drop-tip" wx:if="{{dragOver}}">📂 松开鼠标上传 {{dragFileCount}} 张图</view>
     </view>
     <textarea class="sc-note" placeholder="可选：粘贴供应商报价文字（如：棉麻连衣裙 批发68 零售139 均码 杏色）" value="{{note}}" bindinput="onNote"/>
   </view>
