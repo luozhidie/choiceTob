@@ -130,12 +130,24 @@
     </view>
   </view>
 
-  <!-- ========== 活动横幅 ========== -->
+  <!-- ========== 活动横幅（首单 4 重福利 · 限时） ========== -->
   <view class="promo-banner" bindtap="goPromo">
-    <text class="pb-tag">HOT</text>
-    <text class="pb-title">首单4重福利 · 限时福利</text>
-    <text class="pb-sub">169包邮/免费退货/新人红包/优先发货</text>
-    <text class="pb-go">GO →</text>
+    <view class="pb-deco pb-deco-1"></view>
+    <view class="pb-deco pb-deco-2"></view>
+    <view class="pb-header">
+      <view class="pb-tag-wrap">
+        <text class="pb-tag">HOT</text>
+        <text class="pb-tag-sub">限时</text>
+      </view>
+      <view class="pb-go">GO →</view>
+    </view>
+    <view class="pb-title">首单 4 重福利</view>
+    <view class="pb-chips">
+      <view class="pb-chip"><text class="pb-chip-ic">📦</text><text>169包邮</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">🔄</text><text>免费退货</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">🧧</text><text>新人红包</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">⚡</text><text>优先发货</text></view>
+    </view>
   </view>
 
   <!-- ========== 我的资产 ========== -->
@@ -156,30 +168,39 @@
     </view>
   </view>
 
-  <!-- ========== 我的活动（2x3网格）========== -->
+  <!-- ========== 我的活动（2x2 网格：每卡专属视觉主题）========== -->
   <view class="section" wx:if="{{isLoggedIn}}">
     <text class="sec-title">我的活动</text>
     <view class="activity-grid">
-      <view class="ac-item" bindtap="goMarkets">
+      <!-- 卡 1：发现宝藏搭配（紫调主理人） -->
+      <view class="ac-item ac-theme-styles" bindtap="goMarkets">
+        <view class="ac-deco ac-deco-circle"></view>
         <text class="ac-title">发现宝藏搭配</text>
-        <text class="ac-desc">2026全国精选...</text>
-        <image class="ac-img" src="/assets/icon-store.png" mode="aspectFit"/>
+        <text class="ac-desc">2026 全国精选风格</text>
+        <view class="ac-emoji">✨</view>
       </view>
-      <view class="ac-item ac-highlight" bindtap="goGroupBuy">
+      <!-- 卡 2：店主福利社群（暖金店主） -->
+      <view class="ac-item ac-theme-owner" bindtap="goGroupBuy">
+        <view class="ac-deco ac-deco-gift"></view>
         <text class="ac-title">店主福利社群</text>
-        <text class="ac-desc">运费券/红包活动</text>
-        <image class="ac-img" src="/assets/icon-group.png" mode="aspectFit"/>
+        <text class="ac-desc">运费券 / 红包活动</text>
+        <view class="ac-emoji">🎁</view>
       </view>
-      <view class="ac-item ac-hot" bindtap="goLuckDraw">
+      <!-- 卡 3：集财运（朱红福运） -->
+      <view class="ac-item ac-theme-luck" bindtap="goLuckDraw">
+        <view class="ac-deco ac-deco-luck"></view>
+        <view class="ac-badge ac-badge-luck">🔥 热门</view>
         <text class="ac-title">集财运</text>
-        <text class="ac-desc">赚财运享福利</text>
-        <image class="ac-img" src="/assets/icon-luck.png" mode="aspectFit"/>
+        <text class="ac-desc">攒福气 享福利</text>
+        <view class="ac-emoji">🧧</view>
       </view>
-      <view class="ac-item" bindtap="goInvite">
+      <!-- 卡 4：邀请有奖（深紫尊享） -->
+      <view class="ac-item ac-theme-invite" bindtap="goInvite">
+        <view class="ac-deco ac-deco-share"></view>
+        <view class="ac-badge ac-badge-new">New</view>
         <text class="ac-title">邀请有奖</text>
-        <text class="ac-desc">返8-100元券包</text>
-        <view class="ac-badge-new">New</view>
-        <image class="ac-img" src="/assets/icon-invite.png" mode="aspectFit"/>
+        <text class="ac-desc">返 8-100 元券包</text>
+        <view class="ac-emoji">🤝</view>
       </view>
     </view>
   </view>

@@ -106,11 +106,51 @@ page{background: var(--bg);}
 .oi-label{font-size:21rpx;color:#555;font-weight:500;}
 
 /* ====== 活动横幅 ====== */
-.promo-banner{margin:16rpx 20rpx;background:linear-gradient(135deg,#fff5f7,#ffecb3);border-radius:16rpx;padding:22rpx 24rpx;display:flex;align-items:center;gap:12rpx;border:1rpx solid #ffe0b2;}
-.pb-tag{background:#2d1b2e;color:#fff;font-size:19rpx;font-weight:700;padding:4rpx 14rpx;border-radius:8rpx;shrink:0;}
-.pb-title{font-size:28rpx;font-weight:800;color:#4a3a4b;shrink:0;}
-.pb-sub{font-size:20rpx;color:#4a3a4b;opacity:.7;flex:1;}
-.pb-go{background:#333;color:#fff;font-size:21rpx;font-weight:600;padding:8rpx 18rpx;border-radius:16rpx;shrink:0;}
+/* ========== 活动横幅（首单 4 重福利 · 限时）========== */
+.promo-banner{
+  position:relative;overflow:hidden;
+  margin:20rpx 24rpx;border-radius:24rpx;
+  padding:28rpx 28rpx 26rpx;
+  background:linear-gradient(135deg,#2d1b2e 0%,#4a2748 55%,#6b3a5a 100%);
+  box-shadow:0 12rpx 28rpx rgba(45,27,46,.28),inset 0 1rpx 0 rgba(255,255,255,.08);
+}
+.pb-deco{position:absolute;border-radius:50%;pointer-events:none;}
+.pb-deco-1{top:-60rpx;right:-40rpx;width:220rpx;height:220rpx;background:radial-gradient(circle,rgba(201,162,75,.32),transparent 70%);}
+.pb-deco-2{bottom:-80rpx;left:-30rpx;width:200rpx;height:200rpx;background:radial-gradient(circle,rgba(201,162,75,.18),transparent 70%);}
+.pb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14rpx;}
+.pb-tag-wrap{display:flex;align-items:center;gap:8rpx;}
+.pb-tag{
+  display:inline-block;background:linear-gradient(135deg,#C9A24B,#e3c074);
+  color:#2d1b2e;font-size:20rpx;font-weight:800;letter-spacing:1rpx;
+  padding:5rpx 14rpx;border-radius:8rpx;
+  box-shadow:0 2rpx 6rpx rgba(201,162,75,.4);
+}
+.pb-tag-sub{
+  display:inline-block;background:rgba(255,255,255,.12);color:#fcefe9;
+  font-size:18rpx;font-weight:600;padding:5rpx 12rpx;border-radius:8rpx;
+  border:1rpx solid rgba(201,162,75,.5);
+}
+.pb-go{
+  background:#C9A24B;color:#2d1b2e;font-size:22rpx;font-weight:700;
+  padding:10rpx 22rpx;border-radius:24rpx;line-height:1;
+  box-shadow:0 4rpx 10rpx rgba(201,162,75,.35);
+}
+.pb-title{
+  font-size:40rpx;font-weight:800;color:#fcefe9;line-height:1.2;
+  letter-spacing:1rpx;
+  text-shadow:0 2rpx 6rpx rgba(0,0,0,.25);
+  margin-bottom:18rpx;
+}
+.pb-chips{display:flex;gap:10rpx;flex-wrap:wrap;}
+.pb-chip{
+  display:flex;align-items:center;gap:6rpx;
+  background:rgba(255,255,255,.1);color:#fcefe9;
+  font-size:20rpx;font-weight:500;
+  padding:8rpx 14rpx;border-radius:20rpx;
+  border:1rpx solid rgba(255,255,255,.15);
+  backdrop-filter:blur(4rpx);
+}
+.pb-chip-ic{font-size:22rpx;line-height:1;}
 
 /* ====== 资产行 ====== */
 .asset-row{display:flex;align-items:center;justify-content:space-around;padding:16rpx 0;}
@@ -120,14 +160,77 @@ page{background: var(--bg);}
 .asset-divider{width:1rpx;height:32rpx;background:#eee;}
 
 /* ====== 活动网格 ====== */
-.activity-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12rpx;}
-.ac-item{position:relative;background:#faf8f6;border-radius:14rpx;padding:18rpx 16rpx;display:flex;flex-direction:column;gap:4rpx;overflow:hidden;border:1rpx solid #f0ede9;}
-.ac-highlight{border-color:#ffccbc;background:#fffafdc;}
-.ac-hot{border-color:#ffcdd2;background:#fff5f5;}
-.ac-title{font-size:25rpx;font-weight:600;color:#333;line-height:1.3;}
-.ac-desc{font-size:19rpx;color:#999;line-height:1.3;}
-.ac-img{position:absolute;right:10rpx;top:10rpx;width:52rpx;height:52rpx;opacity:.85;}
-.ac-badge-new{position:absolute;left:12rpx;top:12rpx;background:#2d1b2e;color:#fff;font-size:16rpx;font-weight:700;padding:2rpx 10rpx;border-radius:8rpx;}
+/* ========== 我的活动（2x2，每卡专属视觉）========== */
+.activity-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16rpx;}
+.ac-item{
+  position:relative;overflow:hidden;
+  min-height:170rpx;border-radius:20rpx;padding:22rpx 22rpx 22rpx;
+  display:flex;flex-direction:column;justify-content:flex-end;gap:6rpx;
+  box-shadow:0 6rpx 16rpx rgba(45,27,46,.08);
+  transition:transform .2s ease;
+}
+.ac-item:active{transform:scale(.97);}
+
+/* 卡 1：发现宝藏搭配（紫调主理人 / 时尚深紫）*/
+.ac-theme-styles{
+  background:linear-gradient(135deg,#3a2042 0%,#5a2e54 100%);
+  color:#fcefe9;
+}
+.ac-theme-styles .ac-title{color:#fff;}
+.ac-theme-styles .ac-desc{color:rgba(252,239,233,.72);}
+
+/* 卡 2：店主福利社群（暖金店主 / 米杏色调）*/
+.ac-theme-owner{
+  background:linear-gradient(135deg,#fcefe9 0%,#f3d6b5 100%);
+  color:#5a3d2e;
+  border:1rpx solid #e6c89a;
+}
+.ac-theme-owner .ac-title{color:#2d1b2e;}
+.ac-theme-owner .ac-desc{color:rgba(90,61,46,.75);}
+
+/* 卡 3：集财运（朱红福运）*/
+.ac-theme-luck{
+  background:linear-gradient(135deg,#a8271d 0%,#d33a2e 100%);
+  color:#fff5e8;
+}
+.ac-theme-luck .ac-title{color:#fff;}
+.ac-theme-luck .ac-desc{color:rgba(255,245,232,.8);}
+
+/* 卡 4：邀请有奖（深紫尊享 + 金边）*/
+.ac-theme-invite{
+  background:linear-gradient(135deg,#2d1b2e 0%,#4a2748 100%);
+  color:#fcefe9;
+  box-shadow:0 6rpx 16rpx rgba(45,27,46,.12),inset 0 0 0 1rpx rgba(201,162,75,.4);
+}
+.ac-theme-invite .ac-title{color:#fff;}
+.ac-theme-invite .ac-desc{color:rgba(252,239,233,.72);}
+
+/* 装饰圆 */
+.ac-deco{position:absolute;border-radius:50%;pointer-events:none;}
+.ac-deco-circle{top:-40rpx;right:-40rpx;width:140rpx;height:140rpx;background:radial-gradient(circle,rgba(252,239,233,.22),transparent 70%);}
+.ac-deco-gift{top:-30rpx;right:-30rpx;width:120rpx;height:120rpx;background:radial-gradient(circle,rgba(201,162,75,.35),transparent 70%);}
+.ac-deco-luck{top:-30rpx;right:-30rpx;width:120rpx;height:120rpx;background:radial-gradient(circle,rgba(255,217,160,.3),transparent 70%);}
+.ac-deco-share{top:-40rpx;right:-40rpx;width:140rpx;height:140rpx;background:radial-gradient(circle,rgba(201,162,75,.32),transparent 70%);}
+
+.ac-title{font-size:28rpx;font-weight:700;line-height:1.3;letter-spacing:1rpx;}
+.ac-desc{font-size:20rpx;line-height:1.3;font-weight:500;}
+
+/* 大 emoji 浮在右上 */
+.ac-emoji{
+  position:absolute;top:18rpx;right:18rpx;
+  font-size:60rpx;line-height:1;
+  filter:drop-shadow(0 2rpx 4rpx rgba(0,0,0,.15));
+  opacity:.92;
+}
+
+/* 角标 */
+.ac-badge{
+  position:absolute;top:16rpx;left:16rpx;
+  font-size:18rpx;font-weight:700;padding:4rpx 12rpx;border-radius:10rpx;
+  letter-spacing:0.5rpx;
+}
+.ac-badge-luck{background:#fff5e8;color:#a8271d;}
+.ac-badge-new{background:#C9A24B;color:#2d1b2e;}
 
 /* ====== 服务列表 ====== */
 .service-list{display:flex;flex-wrap:wrap;gap:12rpx;}
