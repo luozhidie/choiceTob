@@ -1599,6 +1599,26 @@ export default function AdminProductsPage() {
                 </div>
               </div>
 
+              {/* 预充货款会员价（按零售价自动计算，仅展示参考） */}
+              {(() => {
+                const pr = form.price ? Number(form.price) : 0;
+                if (pr <= 0) return null;
+                const m5 = Math.round(pr * 0.28);
+                const m10 = Math.round(pr * 0.28);
+                const m30 = Math.round(pr * 0.26);
+                return (
+                  <div className="mt-3 p-3 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-gray-700 leading-relaxed">
+                    <div className="font-semibold text-gray-800 mb-2">预充货款会员价（按零售价自动计算）</div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between"><span>预充5万 · 退换5%</span><b className="text-primary">¥{m5}</b></div>
+                      <div className="flex justify-between"><span>预充10万 · 退换10%</span><b className="text-primary">¥{m10}</b></div>
+                      <div className="flex justify-between"><span>预充30万 · 退换20%</span><b className="text-primary">¥{m30}</b></div>
+                    </div>
+                    <div className="mt-1 text-[11px] text-gray-400">5万/10万＝零售价×28%，30万＝零售价×26%（与上文价格体系一致）</div>
+                  </div>
+                );
+              })()}
+
               {/* 价格体系说明 */}
               <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
                 <b>价格体系，</b>零售价＝成本价÷0.26×110%（0.26 即 30万充值会员拿货折扣，零售价×0.26＝30万会员拿货价），一件起批＝零售价×33%，5件拿货＝零售价×28%。
@@ -1739,8 +1759,8 @@ export default function AdminProductsPage() {
                 const bkM = bkY > 0 ? Math.round(((bkY - costY) / costY) * 100) : null;
                 return (
                   <div className="mt-2 text-xs text-gray-500 flex gap-4">
-                    <span>批发毛利率：<b className={wsM != null && wsM < 0 ? "text-red-500" : "text-green-600"}>{wsM != null ? wsM + "%" : "鈥"}</b></span>
-                    <span>批量毛利率：<b className={bkM != null && bkM < 0 ? "text-red-500" : "text-green-600"}>{bkM != null ? bkM + "%" : "鈥"}</b></span>
+                    <span>批发毛利率：<b className={wsM != null && wsM < 0 ? "text-red-500" : "text-green-600"}>{wsM != null ? wsM + "%" : "—"}</b></span>
+                    <span>批量毛利率：<b className={bkM != null && bkM < 0 ? "text-red-500" : "text-green-600"}>{bkM != null ? bkM + "%" : "—"}</b></span>
                   </div>
                 );
               })()}
