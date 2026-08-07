@@ -52,6 +52,13 @@ Page({
     fallbackImages:[],  // 商品图兜底：无图横幅自动拼照片墙
     ver:'',              // 真实版本号（用于确认手机是否加载最新代码）
     showProductSec:false, // 首页「穿搭·精选」商品区是否展示（当前隐藏，做成专场页）
+    /* 专场页两层联动筛选（风格 → 品类），与分类页 buyer/index 同一套标准 */
+    homeStyleMap:{ styles:[], subcategories:[], map:{} },
+    homeActiveStyle:'全部',
+    homeVisibleSubs:[],
+    homeStyle:'',          // 当前选中风格（传给列表过滤）
+    homeSubcat:'',         // 当前选中子品类（传给列表过滤）
+    homePage:1,
     specTabs:['特价甄选','首次降价','3折以下','反季特价'],
     specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
   },
@@ -387,6 +394,8 @@ Page({
     var cat=t.data.ac==='全部'?'':t.data.ac;
     var url='https://colour-choice.art/api/public/products?limit=20';
     if(cat) url+='&category='+encodeURIComponent(cat);
+    if(t.data.homeStyle) url+='&style='+encodeURIComponent(t.data.homeStyle);
+    if(t.data.homeSubcat) url+='&subcategory='+encodeURIComponent(t.data.homeSubcat);
     wx.request({
       url:url,
       method:'GET',
@@ -437,7 +446,46 @@ Page({
 
   swCat:function(e){
     var cat=e.currentTarget.dataset.c;
-    this.setData({ac:cat});
+    this.setData({ac:cat, homeActiveStyle:'全部', homeVisibleSubs:[], homeStyleMap:{styles:[],subcategories:[],map:{}}, homeStyle:'', homeSubcat:'', homePage:1});
+    this.loadHomeCategoryStyleMap(cat);
     this.loadP();
+  },
+
+  /* 按专区分类拉取「风格 → 子品类」映射，用于专场页两层联动筛选（与分类页同标准） */
+  loadHomeCategoryStyleMap:function(cat){
+    var t=this;
+    if(!cat || cat==='全部'){ t.setData({homeStyleMap:{styles:[],subcategories:[],map:{}}, homeActiveStyle:'全部', homeVisibleSubs:[]}); return; }
+    wx.request({
+      url:'https://colour-choice.art/api/public/category-style-map?category='+encodeURIComponent(cat),
+      method:'GET',
+      success:function(r){
+        var d=r.data||{};
+        var data=(d.success&&d.data)?d.data:{ styles:[], subcategories:[], map:{} };
+        t.setData({ homeStyleMap:data, homeActiveStyle:'全部', homeVisibleSubs:(data.subcategories||[]).slice() });
+      },
+      fail:function(){
+        t.setData({ homeStyleMap:{styles:[],subcategories:[],map:{}}, homeActiveStyle:'全部', homeVisibleSubs:[] });
+      }
+    });
+  },
+
+  /* 切换风格（一级筛选）：联动刷新子品类行并重载商品 */
+  switchHomeStyle:function(e){
+    var name=e.currentTarget.dataset.name;
+    var t=this;
+    var m=t.data.homeStyleMap||{};
+    var subMap=m.map||{};
+    var allSubs=m.subcategories||[];
+    var visible=(name==='全部')?allSubs.slice():((subMap[name]&&subMap[name].length)?subMap[name]:allSubs).slice();
+    t.setData({ homeActiveStyle:name, homeVisibleSubs:visible, homeStyle:(name==='全部'?'':name), homeSubcat:'', homePage:1 });
+    t.loadP();
+  },
+
+  /* 切换子品类（二级筛选）：在当前专区分类下细化 subcategory */
+  switchHomeSubCategory:function(e){
+    var name=e.currentTarget.dataset.name;
+    var t=this;
+    t.setData({ homeSubcat:name, homePage:1 });
+    t.loadP();
   },
 });

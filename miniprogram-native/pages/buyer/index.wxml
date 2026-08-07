@@ -77,11 +77,22 @@
       </block>
     </scroll-view>
 
-    <!-- 第三行：品类货品面料分类 -->
-    <scroll-view wx:if="{{filterConfig.subCategories.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+    <!-- 第三行：风格（一级，始终显示；无真实风格时仅显示「全部」占位，保证两层布局一致） -->
+    <scroll-view class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
       <view class="subcat-row">
-        <view wx:for="{{filterConfig.subCategories}}" wx:key="*this" class="subcat-chip"
-          bindtap="switchSubCategory" data-name="{{item}}">{{item}}</view>
+        <view class="subcat-chip {{activeStyle==='全部'?'subcat-on':''}}" bindtap="switchStyle" data-name="全部">全部</view>
+        <block wx:for="{{categoryStyleMap.styles}}" wx:key="*this">
+          <view class="subcat-chip {{activeStyle===item?'subcat-on':''}}" bindtap="switchStyle" data-name="{{item}}">{{item}}</view>
+        </block>
+      </view>
+    </scroll-view>
+
+    <!-- 第四行：品类（二级，随风格联动；子类目始终来自分类树配置，保证每个品类都有） -->
+    <scroll-view wx:if="{{visibleSubcats.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <block wx:for="{{visibleSubcats}}" wx:key="*this">
+          <view class="subcat-chip" bindtap="switchSubCategory" data-name="{{item}}">{{item}}</view>
+        </block>
       </view>
     </scroll-view>
 

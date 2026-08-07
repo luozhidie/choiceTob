@@ -120,6 +120,17 @@ var CAT_MAP = {
   accessories:'饰品', bags:'女包', kids:'童装', mens:'男装', lingerie:'居家内衣', supplies:'店铺耗材'
 };
 
+/* 硬编码子类目兜底：当后台分类树配置未加载/失败时，仍保证两层筛选有可点标签 */
+var SUB_FALLBACK = {};
+(function(){
+  for(var k in CATEGORY_TREE){
+    if(CAT_MAP[k]){
+      var cat=CAT_MAP[k];
+      SUB_FALLBACK[cat]=CATEGORY_TREE[k].items.filter(function(n){ return n!==cat; });
+    }
+  }
+})();
+
 /* 市场卡片描述（配置里只有市场名，描述静态维护，保留原精致文案） */
 var MARKET_DESC = {
   '广州十三行':'一批市场，快时尚风向标\n中档原创品牌聚集地',
@@ -174,7 +185,7 @@ function buildFromConfig(cfg){
 var DEFAULT_FILTER_CONFIG = {
   sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'批发价'}],
   quickFilters:[
-    {key:'subscribed_stall',label:'订阅的档口',type:'toggle'},
+    {key:'subscribed_stall',label:'订阅的风格',type:'toggle'},
     {key:'is_special',label:'特价',type:'toggle'},
     {key:'source_brand',label:'源头厂牌',type:'toggle'},
     {key:'bulk_price',label:'批量采购价',type:'toggle'},
@@ -214,6 +225,10 @@ Page({
     selectedFilters:{},      // {key:[value,...]}
     minPrice:'',
     maxPrice:'',
+    /* 两层联动筛选：风格 + 品类 */
+    categoryStyleMap:{ styles:[], subcategories:[], map:{} },
+    activeStyle:'全部',
+    visibleSubcats:[],
     /* 营销弹窗 */
     popupCfg:null,
     popupVisible:false,
@@ -299,8 +314,23 @@ Page({
       if(pc){ af.category=pc; af.subcategory=item.value; } else { af.keyword=item.value; }
     }
     else if(item.level==='topic'||item.level==='keyword'){ af.keyword=item.value; }
-    t.setData({ activeTab:item.name, viewMode:'list', page:1, hasMore:true, products:[], selectedFilters:{}, minPrice:'', maxPrice:'', keyword:'', activeFilters:af });
+    t.setData({
+      activeTab:item.name,
+      viewMode:'list',
+      page:1,
+      hasMore:true,
+      products:[],
+      selectedFilters:{},
+      minPrice:'',
+      maxPrice:'',
+      keyword:'',
+      activeFilters:af,
+      categoryStyleMap:{ styles:[], subcategories:[], map:{} },
+      activeStyle:'全部',
+      visibleSubcats:[]
+    });
     t.loadFilterConfig(af.category);
+    t.loadCategoryStyleMap(af.category);
     t.load();
   },
 
@@ -324,7 +354,15 @@ Page({
   },
 
   backToCategory:function(){
-    this.setData({ viewMode:'category', filterOpen:false, quickPopup:null, activeFilters:{ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' } });
+    this.setData({
+      viewMode:'category',
+      filterOpen:false,
+      quickPopup:null,
+      activeFilters:{ market:'', vibe:'', style:'', category:'', subcategory:'', keyword:'' },
+      categoryStyleMap:{ styles:[], subcategories:[], map:{} },
+      activeStyle:'全部',
+      visibleSubcats:[]
+    });
   },
 
   /* 拉取后台分类层级配置，覆盖默认导航（市场→风情→风格→品类→明细） */
@@ -351,7 +389,9 @@ Page({
   },
   getSubCategories:function(cat){
     var m=this.getSubMap();
-    return (cat && m[cat]) ? m[cat] : [];
+    if(cat && m[cat] && m[cat].length) return m[cat];
+    if(cat && SUB_FALLBACK[cat] && SUB_FALLBACK[cat].length) return SUB_FALLBACK[cat];
+    return [];
   },
   findParentCategory:function(name){
     var m=this.getSubMap();
@@ -384,6 +424,43 @@ Page({
   _applySubCats:function(category){
     var t=this;
     t.setData({ filterConfig: Object.assign({}, DEFAULT_FILTER_CONFIG, { subCategories: t.getSubCategories(category) }) });
+  },
+
+  /* 按品类拉取「风格 → 子品类」聚合映射，用于两层联动筛选
+     关键点：子品类(第二行)始终以「后台分类树配置」的全量列表为准，
+     保证每个品类进入列表都有可点的二级标签（即使该品类在商品库里还没上货）；
+     风格(第一行)只展示商品库里真实存在的风格，避免空的/无意义的风格。 */
+  loadCategoryStyleMap:function(category){
+    var t=this;
+    var allSubs=(category)?(t.getSubCategories(category)||[]):[];
+    if(!category){
+      t.setData({ categoryStyleMap:{ styles:[], subcategories:allSubs, map:{} }, activeStyle:'全部', visibleSubcats:allSubs.slice() });
+      return;
+    }
+    wx.request({
+      url:'https://colour-choice.art/api/public/category-style-map?category='+encodeURIComponent(category),
+      method:'GET',
+      success:function(r){
+        var d=r.data||{};
+        var data=(d.success&&d.data)?d.data:{ styles:[], subcategories:[], map:{} };
+        // 子类目全量走配置；风格→子类目 的联动映射来自商品聚合 API
+        var map=data.map||{};
+        t.setData({
+          categoryStyleMap:{ styles:(data.styles||[]).slice(), subcategories:allSubs.slice(), map:map },
+          activeStyle:'全部',
+          visibleSubcats: allSubs.slice()
+        });
+      },
+      fail:function(){
+        // 接口失败时回退到本地默认映射，保证 UI 不空白
+        var map={}; map['全部']=allSubs.slice();
+        t.setData({
+          categoryStyleMap:{ styles:[], subcategories:allSubs.slice(), map:map },
+          activeStyle:'全部',
+          visibleSubcats:allSubs.slice()
+        });
+      }
+    });
   },
 
   /* ===== 商品列表数据 ===== */
@@ -579,6 +656,30 @@ Page({
     t.setData({selectedFilters:sf});
   },
   confirmQuickPopup:function(){ this.setData({quickPopup:null,page:1,hasMore:true}); this.load(); },
+
+  /* 切换风格（一级筛选）：联动刷新第二行品类并重载商品 */
+  switchStyle:function(e){
+    var name=e.currentTarget.dataset.name;
+    var t=this;
+    var m=t.data.categoryStyleMap||{};
+    var subMap=m.map||{};
+    var allSubs=m.subcategories||[];
+    var visible=(name==='全部') ? allSubs.slice() : ((subMap[name]&&subMap[name].length)?subMap[name]:allSubs).slice();
+    var af=JSON.parse(JSON.stringify(t.data.activeFilters||{}));
+    af.style=(name==='全部') ? '' : name;
+    af.subcategory='';   // 风格切换时清掉上一档品类选择
+    t.setData({
+      activeStyle:name,
+      visibleSubcats:visible,
+      activeFilters:af,
+      page:1,
+      hasMore:true,
+      selectedFilters:{},
+      minPrice:'',
+      maxPrice:''
+    });
+    t.load();
+  },
 
   /* 第三行品类标签（明细）：在当前品类下细化 subcategory */
   switchSubCategory:function(e){

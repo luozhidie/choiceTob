@@ -75,6 +75,14 @@ page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMa
 .tg{padding:10rpx 24rpx;border-radius:32rpx;font-size:24rpx;white-space:nowrap;color:#555;background:#fff;transition:all .2s;font-weight:500;}
 .tg-on{color:#fff;background:#2d1b2e;font-weight:700;}
 
+/* ========== 两层联动筛选（风格 → 品类），与分类页 buyer/index 同一套标准 ========== */
+.two-level-filter{padding:4rpx 0 8rpx;}
+.subcat-scroll{white-space:nowrap;padding:10rpx 24rpx;border-bottom:1rpx solid #f0ece8;}
+.subcat-row{display:inline-flex;gap:14rpx;}
+.subcat-chip{display:inline-flex;flex-direction:column;align-items:center;font-size:22rpx;color:#555;background:#f8f7f4;border-radius:12rpx;padding:8rpx 16rpx;white-space:nowrap;}
+.subcat-chip:active{opacity:.7;}
+.subcat-on{background:#2d1b2e;color:#fff;font-weight:700;}
+
 /* ========== 轮播图（在头部下方，不叠加） ========== */
 .hero-banner{position:relative;width:100%;height:calc(100vh - 120rpx);overflow:hidden;background:#1a1225;}
 .hero-banner .sw{width:100%;height:100%;}

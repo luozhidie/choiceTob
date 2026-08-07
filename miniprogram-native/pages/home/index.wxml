@@ -50,6 +50,25 @@
     </scroll-view>
   </view>
 
+  <!-- 两层联动筛选：风格（一级）→ 品类（二级），与分类页 buyer/index 同一套标准 -->
+  <view class="two-level-filter" style="background:{{homeBgColor||topBgColor}};">
+    <scroll-view class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <view class="subcat-chip {{homeActiveStyle==='全部'?'subcat-on':''}}" bindtap="switchHomeStyle" data-name="全部">全部</view>
+        <block wx:for="{{homeStyleMap.styles}}" wx:key="*this">
+          <view class="subcat-chip {{homeActiveStyle===item?'subcat-on':''}}" bindtap="switchHomeStyle" data-name="{{item}}">{{item}}</view>
+        </block>
+      </view>
+    </scroll-view>
+    <scroll-view wx:if="{{homeVisibleSubs.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <block wx:for="{{homeVisibleSubs}}" wx:key="*this">
+          <view class="subcat-chip" bindtap="switchHomeSubCategory" data-name="{{item}}">{{item}}</view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 菜单面板 -->
   <view class="mk {{mo?'show':''}}" bindtap="clsMenu">
     <view class="mp {{mo?'in':''}}" catchtap="noop">
