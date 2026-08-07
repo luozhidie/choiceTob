@@ -9,6 +9,7 @@
     "pages/shop/index",
     "pages/vip/index",
     "pages/orders/index",
+    "pages/orders/detail/index",
     "pages/search/index",
     "pages/deposit/index",
     "pages/looks/index",

@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       address,          // 收货地址
       note,
       platform = 'native', // 'mini' | 'mp' | 'native'
+      out_trade_no,        // 可选：复用已有订单号（小程序建单后传入，使支付回调能对应到订单）
     } = body;
 
     // 不再检查环境变量（wechat-pay.ts 里已有 fallback）
@@ -27,8 +28,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少必要参数: product_id 或 total_fee' }, { status: 400 });
     }
 
-    // 生成订单号
-    const order_no = `WX${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // 生成订单号：优先复用传入的 out_trade_no（小程序建单后传入），否则新生成
+    const order_no = (out_trade_no && String(out_trade_no).trim())
+      ? String(out_trade_no).trim()
+      : `WX${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     // 调用微信统一下单
     const wxResult = await unifiedOrder({
