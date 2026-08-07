@@ -81,6 +81,24 @@ const KEY_ALIAS: Record<string, string> = {
   穿着场景: "scene",
 };
 
+/**
+ * 风格多选 Node 端过滤：params.style 以逗号分隔存储（如 "少女型,优雅型"）。
+ * 任一已选风格命中商品风格列表即保留。兼容中文 key「风格」。
+ * 之所以不在 DB 层做：PostgREST 的 .or() 用逗号分隔条件，无法处理值内逗号。
+ */
+function nodeFilterByStyle(rows: any[], style: string): any[] {
+  const stVals = style.split(",").map((s) => s.trim()).filter(Boolean);
+  if (stVals.length === 0) return rows;
+  return rows.filter((p) => {
+    const ps =
+      (p.params && typeof p.params.style === "string" && p.params.style) ||
+      (p.params && typeof p.params["风格"] === "string" && p.params["风格"]) ||
+      "";
+    const arr = ps.split(",").map((s) => s.trim()).filter(Boolean);
+    return stVals.some((v) => arr.indexOf(v) >= 0);
+  });
+}
+
 function applySort(query: any, sort: string) {
   if (sort === "sales") return query.order("sales", { ascending: false });
   if (sort === "price_asc") return query.order("price", { ascending: true });
@@ -133,7 +151,8 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   });
   if (market) filters.market = [market];
   if (vibe) filters.vibe = [vibe];
-  if (style) filters.style = [style];
+  // 风格不在 DB 层过滤：params.style 以逗号分隔存储（如 "少女型,优雅型"），
+  // PostgREST 的 .or() 无法处理值内逗号，改为 Node 端按子串包含匹配（见下方 nodeFilterByStyle）。
 
   // 快捷开关（toggle）：映射到真实业务字段，而不是去 params 里找不存在的键
   function applyToggle(query: any, key: string) {
@@ -175,24 +194,6 @@ async function queryWithClient(supabase: any, request: NextRequest) {
       if (TOGGLE_KEYS.indexOf(k) >= 0) { query = applyToggle(query, k); continue; }
       // 2) 近期上新
       if (k === "recent") { query = applyRecent(query, vals); continue; }
-
-      // 2.5) 风格：支持多选（params.style 以逗号分隔，如 "少女型,优雅型"）。
-      //      不能简单 eq 整串，需按子串包含匹配，且避免 "优雅" 误中 "优雅型"。
-      if (k === "style") {
-        const stVals = vals
-          .join(",")
-          .split(",")
-          .map((s) => s.trim())
-          .filter(Boolean);
-        const conds: string[] = [];
-        stVals.forEach((v) => {
-          conds.push(`params->>style.eq.${v}`);          // 精确（仅一个风格）
-          conds.push(`params->>style.ilike.${v},%`);      // 开头："优雅型,..."
-          conds.push(`params->>style.ilike.%,${v}`);      // 结尾："...,优雅型"
-        });
-        if (conds.length) query = query.or(conds.join(","));
-        continue;
-      }
 
       // 3) 普通属性：单选存纯值「圆领」，多选存 wrap 值「/圆领/V领/」，两种都要命中；
       //    同时兼容中文 key（面料）与英文 key（fabric）两套录入历史
@@ -241,8 +242,17 @@ async function queryWithClient(supabase: any, request: NextRequest) {
   }
   query = applyFilters(query);
 
+  // 风格多选无法在 DB 层（PostgREST .or 逗号限制）过滤，改为拉取较大窗口后在 Node 端过滤。
+  // 有 style 时从 0 拉一个覆盖「当前页 + 后续若干条」的窗口，避免翻页漏商品。
+  let fetchFrom = offset;
+  let fetchTo = offset + limit - 1;
+  if (style) {
+    fetchFrom = 0;
+    fetchTo = Math.min(1999, offset + limit + 200);
+  }
+
   query = applySort(query, sort);
-  query = query.range(offset, offset + limit - 1);
+  query = query.range(fetchFrom, fetchTo);
 
   let { data, error } = await query;
 
@@ -253,24 +263,22 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     if (subcategory) fallbackQuery = fallbackQuery.eq("subcategory", subcategory);
     if (market) fallbackQuery = fallbackQuery.eq("params->>market", market);
     if (vibe) fallbackQuery = fallbackQuery.eq("params->>vibe", vibe);
-    if (style) {
-      const stVals = style.split(",").map((s) => s.trim()).filter(Boolean);
-      const stConds: string[] = [];
-      stVals.forEach((v) => {
-        stConds.push(`params->>style.eq.${v}`);
-        stConds.push(`params->>style.ilike.${v},%`);
-        stConds.push(`params->>style.ilike.%,${v}`);
-      });
-      if (stConds.length) fallbackQuery = fallbackQuery.or(stConds.join(","));
-    }
+    // 注意：style 不在 DB 层过滤（见上方说明），统一在 Node 端处理
     if (keyword) fallbackQuery = fallbackQuery.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
     if (priceMin) fallbackQuery = fallbackQuery.gte("price", parseFloat(priceMin) * 100);
     if (priceMax) fallbackQuery = fallbackQuery.lte("price", parseFloat(priceMax) * 100);
     fallbackQuery = applySort(fallbackQuery, sort);
-    fallbackQuery = fallbackQuery.range(offset, offset + limit - 1);
+    fallbackQuery = fallbackQuery.range(fetchFrom, fetchTo);
     const fb = await fallbackQuery;
     data = fb.data;
     error = fb.error;
+  }
+
+  // 风格多选：Node 端按子串包含过滤（params.style 以逗号分隔，如 "少女型,优雅型"）
+  if (style && data && data.length) {
+    data = nodeFilterByStyle(data, style);
+    // 窗口化拉取后，按请求的 offset/limit 切片，保证翻页正确
+    data = data.slice(offset, offset + limit);
   }
 
   const wishMap = await fetchWishCounts(supabase, (data || []).map((p: any) => p.id));
