@@ -10,6 +10,9 @@ const supabase = createClient(
 export const dynamic = "force-dynamic";
 export const maxDuration = 25;
 
+// 全局超时预算：始终在 Vercel 函数 25s 内走到草稿兜底，避免被平台掐断返回「网络错误」
+const AI_DEADLINE_MS = 21000;
+
 function parseMiniToken(token: string): { uid: string; exp?: number } | null {
   try {
     if (!token || token.includes(".")) return null;
@@ -105,14 +108,67 @@ function mockResult(images: string[], note?: string): any {
     color: parsed.color,
     material: parsed.material,
     season: "四季",
-    description: note ? note.slice(0, 20) : "AI 服务未配置，已生成草稿待你填写",
+    description: note ? note.slice(0, 20) : "已按图片生成草稿，请核对并补全信息",
     tags: ["待核对"],
     images,
     _mock: true,
   };
 }
 
+// 剩余可用超时（保留 1.5s 解析余量，下限 3s）
+function remainingTimeout(deadline: number): number {
+  return Math.max(3000, deadline - Date.now() - 1500);
+}
+
+// 调用单个视觉模型，支持在 deadline 内重试（主模型传 retries=2）
+async function callVisionModel(
+  model: string,
+  content: any[],
+  openrouterKey: string,
+  deadline: number,
+  retries: number
+): Promise<any | null> {
+  for (let i = 0; i < retries; i++) {
+    const timeout = remainingTimeout(deadline);
+    if (timeout <= 3000 && i > 0) return null; // 重试已无时间预算
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openrouterKey}`,
+          "HTTP-Referer": "https://colour-choice.art",
+          "X-Title": "Luozhidie Zhixuan",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content },
+          ],
+          temperature: 0.3,
+          max_tokens: 1200,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content || "";
+        const parsed = extractJSON(text);
+        if (parsed) return parsed;
+      }
+    } catch {
+      // 超时/网络错误：在预算内重试下一个
+    }
+  }
+  return null;
+}
+
 export async function POST(request: NextRequest) {
+  const deadline = Date.now() + AI_DEADLINE_MS; // 全局超时预算
   try {
     if (!(await checkAdmin(request))) {
       return NextResponse.json({ error: "未授权" }, { status: 401 });
@@ -129,10 +185,9 @@ export async function POST(request: NextRequest) {
     const deepseekKey = process.env.DEEPSEEK_API_KEY;
     const openrouterKey = process.env.OPENROUTER_API_KEY;
 
-    // ===== 方案 A0：OpenRouter 视觉识别（OpenAI 兼容，支持多种视觉模型）=====
-    // 注意：Google/OpenAI 模型在该账户所属地区常被屏蔽，默认首选 Qwen-VL（中国区可用），
-    // 其余作为回退；可通过 OPENROUTER_MODEL 环境变量用逗号自定义顺序。
-    if (openrouterKey && images.length > 0) {
+    // ===== 方案 A0：OpenRouter 视觉识别（中国区可用 Qwen-VL 为主，依次回退）=====
+    // deadline 守卫：预算不足时跳过，确保始终在 25s 内走到草稿兜底
+    if (openrouterKey && images.length > 0 && deadline - Date.now() > 4000) {
       const orModels = (process.env.OPENROUTER_MODEL ||
         "qwen/qwen2.5-vl-72b-instruct,google/gemini-2.5-flash,openai/gpt-4o-mini")
         .split(",").map((s) => s.trim()).filter(Boolean);
@@ -147,46 +202,22 @@ export async function POST(request: NextRequest) {
       for (const url of images.slice(0, 5)) {
         content.push({ type: "image_url", image_url: { url } });
       }
-      for (const model of orModels) {
-        try {
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 15000);
-          const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${openrouterKey}`,
-              "HTTP-Referer": "https://colour-choice.art",
-              "X-Title": "Luozhidie Zhixuan",
-            },
-            body: JSON.stringify({
-              model,
-              messages: [
-                { role: "system", content: SYSTEM },
-                { role: "user", content },
-              ],
-              temperature: 0.3,
-              max_tokens: 1200,
-            }),
-            signal: controller.signal,
-          });
-          clearTimeout(timer);
-          if (res.ok) {
-            const data = await res.json();
-            const text = data.choices?.[0]?.message?.content || "";
-            const parsed = extractJSON(text);
-            if (parsed) {
-              return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
-            }
-          }
-        } catch {
-          // 该模型失败，尝试列表中的下一个
+      for (let i = 0; i < orModels.length; i++) {
+        const parsed = await callVisionModel(
+          orModels[i],
+          content,
+          openrouterKey,
+          deadline,
+          i === 0 ? 2 : 1 // 主模型（Qwen-VL）最多重试 1 次
+        );
+        if (parsed) {
+          return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
         }
       }
     }
 
-    // ===== 方案 A：OpenAI 视觉识别（gpt-4o-mini 支持看图）=====
-    if (openaiKey && images.length > 0) {
+    // ===== 方案 A：OpenAI 视觉识别（gpt-4o-mini 支持看图，受预算约束）=====
+    if (openaiKey && images.length > 0 && deadline - Date.now() > 4000) {
       try {
         const content: any[] = [
           {
@@ -200,7 +231,7 @@ export async function POST(request: NextRequest) {
           content.push({ type: "image_url", image_url: { url } });
         }
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 55000);
+        const timer = setTimeout(() => controller.abort(), remainingTimeout(deadline));
         const res = await fetch("https://api.openai.com/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${openaiKey}` },
@@ -229,11 +260,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ===== 方案 B：仅文字（DeepSeek 文本抽取）=====
-    if (deepseekKey && note) {
+    // ===== 方案 B：仅文字（DeepSeek 文本抽取，受预算约束）=====
+    if (deepseekKey && note && deadline - Date.now() > 4000) {
       try {
         const controller = new AbortController();
-        const timer = setTimeout(() => controller.abort(), 55000);
+        const timer = setTimeout(() => controller.abort(), remainingTimeout(deadline));
         const res = await fetch(process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1/chat/completions", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${deepseekKey}` },
@@ -271,12 +302,40 @@ export async function POST(request: NextRequest) {
 
 function extractJSON(content: string): any | null {
   if (!content) return null;
-  try {
-    const s = content.indexOf("{");
-    const e = content.lastIndexOf("}");
-    if (s === -1 || e === -1 || e <= s) return null;
-    return JSON.parse(content.substring(s, e + 1));
-  } catch {
-    return null;
+  // 收集候选：去 ```json 围栏后的内容 + 原文
+  const candidates: string[] = [];
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) candidates.push(fenced[1].trim());
+  candidates.push(content);
+
+  for (const c of candidates) {
+    const isProduct = (o: any) =>
+      o && typeof o === "object" && !Array.isArray(o) && typeof o.title === "string";
+
+    // 1) 直接解析
+    try {
+      const o = JSON.parse(c);
+      if (isProduct(o)) return o;
+    } catch {}
+
+    // 2) 截取首个 { 到最后一个 }
+    const s = c.indexOf("{");
+    const e = c.lastIndexOf("}");
+    if (s !== -1 && e > s) {
+      const sub = c.substring(s, e + 1);
+      try {
+        const o = JSON.parse(sub);
+        if (isProduct(o)) return o;
+      } catch {}
+      // 3) 修复常见格式问题：尾逗号、单引号，再试
+      try {
+        const repaired = sub
+          .replace(/,(\s*[}\]])/g, "$1")
+          .replace(/'/g, '"');
+        const o = JSON.parse(repaired);
+        if (isProduct(o)) return o;
+      } catch {}
+    }
   }
+  return null;
 }
