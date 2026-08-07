@@ -353,23 +353,24 @@ Page({
     var p = Object.assign({}, t.data.product || {});
     p.cost_price = e.detail.value;
     if (costY > 0) {
-      var retail = Math.round(costY / 0.26 * 1.10);
-      var wholesale = Math.round(retail * 0.33);
-      var bulk = Math.round(retail * 0.28);
+      var original = Math.round(costY / 0.26 * 1.10); // 原价 = 成本价÷0.26×110%（30万会员拿货价 = 原价×0.26）
+      var retail = Math.round(original * 0.5);          // 零售价 = 原价×50%（五折促销）
+      var wholesale = Math.round(original * 0.33);      // 一件起批 = 原价×33%
+      var bulk = Math.round(original * 0.28);           // 5件拿货 = 原价×28%
       var snap = t.data.lastAutoCalc;
       function shouldUpdate(v, k) {
         if (!snap) return true;
         return v === '' || v === snap[k];
       }
       if (shouldUpdate(p.price, 'price')) p.price = String(retail);
-      // 与网站端一致：原价 = 零售价 × 2（划线参考价）；零售价留空时按原价售出
+      // 原价 = 成本价÷0.26×110%；零售价 = 原价×50%
       var originalY2 = 0;
-      if (shouldUpdate(p.original_price, 'original_price')) { p.original_price = String(retail * 2); originalY2 = retail * 2; }
+      if (shouldUpdate(p.original_price, 'original_price')) { p.original_price = String(original); originalY2 = original; }
       if (shouldUpdate(p.wholesale_price, 'wholesale_price')) p.wholesale_price = String(wholesale);
       if (shouldUpdate(p.bulk_price, 'bulk_price')) p.bulk_price = String(bulk);
       t.setData({
         product: p,
-        lastAutoCalc: { costY: costY, price: String(retail), original_price: String(retail * 2), wholesale_price: String(wholesale), bulk_price: String(bulk) },
+        lastAutoCalc: { costY: costY, price: String(retail), original_price: String(original), wholesale_price: String(wholesale), bulk_price: String(bulk) },
         // 原价 → 零售价 联动快照（零售价与快照一致时，编辑原价可继续按 0.5 倍覆盖零售价）
         originalPriceSnap: originalY2 > 0 ? { originalY: originalY2, price: String(retail) } : null
       });
