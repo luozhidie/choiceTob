@@ -2,7 +2,6 @@
   <!-- 步骤1：选图 -->
   <view class="sc-card">
     <view class="sc-card-title">① 选商品图（转发/相册里的供应商图，最多9张）</view>
-    <view class="sc-pc-hint" wx:if="{{isPC}}">💻 PC 端：点 ＋ 从电脑选图（微信暂不开放桌面直接拖入文件）</view>
     <view class="sc-imgs">
       <view class="sc-img" wx:for="{{images}}" wx:key="*this" wx:for-item="src">
         <image src="{{src}}" mode="aspectFill" bindtap="previewImg" data-src="{{src}}"/>
