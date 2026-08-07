@@ -1,6 +1,0 @@
-{
-  "navigationStyle": "custom",
-  "usingComponents": {
-    "filter-bar": "/components/filter-bar/filter-bar"
-  }
-}

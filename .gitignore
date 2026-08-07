@@ -48,3 +48,6 @@ next-env.d.ts
 SUPABASE_SERVICE_ROLE_KEY
 *.env.local
 miniprogram/private.key
+
+# CI 临时构建目录
+dist-upload/
