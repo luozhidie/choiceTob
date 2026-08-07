@@ -1,50 +1,33 @@
 <view class="page">
-  <view class="head">
-    <text class="ht">微购相册抓取</text>
-    <text class="hs">小程序内部链接无法自动下载，需先手动保存图片再上传</text>
+  <view class="hd">
+    <text class="h1">相册采集</text>
+    <text class="sub">从手机相册选图，直接上传到商品图库，自动归集可用链接</text>
   </view>
 
-  <!-- 粘贴链接（仅作记录/复制用） -->
-  <view class="card">
-    <text class="ct">粘贴相册链接（可选）</text>
-    <textarea class="ta" placeholder="粘贴 #小程序:// 链接，方便复制回微信打开" value="{{link}}" bindinput="onLink" auto-height maxlength="-1" />
-    <view class="row">
-      <view class="btn-ghost" bindtap="pasteLink">粘贴</view>
-      <view class="btn-ghost" bindtap="copyLink">复制链接</view>
+  <view class="actions">
+    <view class="btn primary" bindtap="chooseImages">{{uploading ? '上传中...' : '从相册选择'}}</view>
+    <view class="btn ghost" bindtap="copyAll">复制全部链接</view>
+    <view class="btn ghost" bindtap="clearAll">清空</view>
+  </view>
+
+  <view class="tip" wx:if="{{tip}}">{{tip}}</view>
+
+  <view class="grid" wx:if="{{images.length>0}}">
+    <view class="cell" wx:for="{{images}}" wx:key="ts">
+      <image src="{{item.viewUrl}}" mode="aspectFill" class="img" bindtap="copyUrl" data-url="{{item.url}}" />
+      <view class="del" catchtap="deleteOne" data-ts="{{item.ts}}">×</view>
+      <text class="cap" bindtap="copyUrl" data-url="{{item.url}}">复制链接</text>
     </view>
   </view>
 
-  <!-- 三步流程 -->
-  <view class="card">
-    <text class="ct">抓取流程</text>
-
-    <view class="step">
-      <text class="sn">1</text>
-      <view class="sb">
-        <text class="st">在微信打开相册</text>
-        <text class="sd">长按上方可粘贴的链接 → 在微信中打开微购相册该商品/店铺页</text>
-      </view>
-    </view>
-
-    <view class="step">
-      <text class="sn">2</text>
-      <view class="sb">
-        <text class="st">长按保存图片</text>
-        <text class="sd">逐张长按商品图 → 保存到手机相册（可多选保存）</text>
-      </view>
-    </view>
-
-    <view class="step">
-      <text class="sn">3</text>
-      <view class="sb">
-        <text class="st">后台上传入库</text>
-        <text class="sd">打开「图片抓取工具」→ 微信图片上传 → 选相册里的图批量上传</text>
-      </view>
-    </view>
-
-    <view class="btn-copy" bindtap="copyTool">复制图片抓取工具地址</view>
-    <text class="tool-url">https://colour-choice.art/admin/image-grabber</text>
+  <view class="empty" wx:if="{{images.length===0 && !uploading}}">
+    <text class="ei">🖼️</text>
+    <text class="et">还没有采集图片</text>
+    <text class="es">点「从相册选择」批量上传商品图</text>
   </view>
 
-  <view class="note">提示：图片抓取工具在电脑/手机浏览器打开后台「其他 → 图片抓取工具」即可使用。</view>
+  <view class="foot">
+    <text class="ft">链接可直接用于建商品 / 粘贴到后台</text>
+    <view class="btn link" bindtap="goTool">或用网页版采集器 →</view>
+  </view>
 </view>
