@@ -12,6 +12,7 @@ const couponTypeLabels: Record<string, string> = {
   vip_gift: "VIP赠送",
   festival: "节日活动",
   invite_reward: "邀请奖励",
+  freight: "运费券",
 };
 
 export default function AdminCouponsPage() {
