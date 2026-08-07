@@ -39,6 +39,21 @@
         </picker>
       </block>
     </view>
+
+    <view class="sc-field">
+      <view class="sc-label-row">
+        <text class="sc-label">风格</text>
+        <text class="sc-custom-toggle" bindtap="toggleStyleCustom">{{styleCustomMode ? '选择预设' : '自定义'}}</text>
+      </view>
+      <block wx:if="{{styleCustomMode}}">
+        <input class="sc-input" value="{{product.style}}" bindinput="onStyleCustomInput" placeholder="输入自定义风格"/>
+      </block>
+      <block wx:else>
+        <picker mode="selector" range="{{styleOptions}}" bindchange="onStyle">
+          <view class="sc-input sc-picker">{{product.style || '选择风格（影响两级联动筛选）'}}</view>
+        </picker>
+      </block>
+    </view>
     <view class="sc-row">
       <view class="sc-field sc-half">
         <text class="sc-label">零售价(元)</text>

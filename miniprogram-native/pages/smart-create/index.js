@@ -1,5 +1,24 @@
 var app = getApp();
 
+// 从分类树配置提取风格值（按性别取全量并去重；兼容 flat values 旧结构）
+function extractStyles(tree) {
+  if (!tree || !tree.levels) return [];
+  for (var i = 0; i < tree.levels.length; i++) {
+    var lv = tree.levels[i];
+    if (lv && lv.key === 'style') {
+      if (lv.genders) {
+        var merged = (lv.genders['女'] || []).concat(lv.genders['男'] || []);
+        var seen = {}, out = [];
+        merged.forEach(function (s) { if (!seen[s]) { seen[s] = 1; out.push(s); } });
+        return out;
+      }
+      if (Array.isArray(lv.values)) return lv.values;
+      return [];
+    }
+  }
+  return [];
+}
+
 Page({
   data: {
     images: [],          // 已选本地图（tempFilePath）
@@ -14,6 +33,8 @@ Page({
     seasonOptions: ['春', '夏', '秋', '冬', '四季'],
     categoryCustomMode: false,
     seasonCustomMode: false,
+    styleOptions: [],        // 风格（来自分类树配置，按性别取全量去重）
+    styleCustomMode: false,
     // 套装拆分价：部件名 + 零售价/批发价/批量价/成本价(元)，保存时换算成分并入 params.set_items
     setItems: [],
     setSumR: 0,
@@ -270,6 +291,32 @@ Page({
     this.uploadImages(this.data.images, cb);
   },
 
+  /* 拉取分类树，填充风格选择器（两级联动筛选的数据基础） */
+  onLoad: function () {
+    var t = this;
+    wx.request({
+      url: 'https://colour-choice.art/api/public/category-tree',
+      method: 'GET',
+      success: function (r) {
+        var tree = (r.data && r.data.data) || {};
+        t.setData({ styleOptions: extractStyles(tree) });
+      }
+    });
+  },
+
+  /* 风格选择（写入 params.style，供两级联动筛选与商品检索） */
+  onStyle: function (e) {
+    var p = Object.assign({}, this.data.product);
+    p.style = this.data.styleOptions[e.detail.value];
+    this.setData({ product: p, styleCustomMode: false });
+  },
+  toggleStyleCustom: function () { this.setData({ styleCustomMode: !this.data.styleCustomMode }); },
+  onStyleCustomInput: function (e) {
+    var p = Object.assign({}, this.data.product);
+    p.style = e.detail.value;
+    this.setData({ product: p });
+  },
+
   /* AI 识别 */
   extract: function () {
     var t = this;
@@ -294,6 +341,8 @@ Page({
           t.setData({ extracting: false });
           var p = res.data && res.data.product;
           if (p) {
+            // 保留用户已手动选择的风格（AI 不返回 style，避免重识别时覆盖）
+            if (t.data.product && t.data.product.style && !p.style) p.style = t.data.product.style;
             // 默认草稿就在当前，用户可改；用成本价初始化自动换算快照
             var costY = parseFloat(p && p.cost_price) || 0;
             var snap = null;
@@ -484,6 +533,7 @@ Page({
       // 季节、套装拆分价等存入 params JSONB（products 表没有 season 列，不能作为顶层字段）
       var paramsObj = {};
       if (p.season) paramsObj.season = p.season;
+      if (p.style) paramsObj.style = p.style;
       // 套装拆分价：换算成分(cent)
       var setArr = t.data.setItems
         .filter(function (s) { return s.name || s.retail || s.wholesale || s.bulk || s.cost; })
