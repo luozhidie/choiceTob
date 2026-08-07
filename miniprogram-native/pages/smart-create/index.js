@@ -312,11 +312,56 @@ Page({
           }
         },
         fail: function () {
-          t.setData({ extracting: false });
-          t.showToast('网络错误');
+          // 服务/网络不可达：本地按备注生成草稿，保证始终能落单
+          var draft = t.buildLocalDraft(t.data.note, urls);
+          t.setData({
+            extracting: false,
+            product: draft,
+            uploadedUrls: urls,
+            setItems: [],
+            setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0,
+            lastAutoCalc: null,
+            originalPriceSnap: null
+          });
+          t.showToast('识别服务暂不可用，已按备注生成草稿');
         }
       });
     });
+  },
+
+  /* 本地兜底：AI 服务不可达时，按备注+已上传图片生成草稿，保证始终可落单 */
+  buildLocalDraft: function (note, urls) {
+    var product = {
+      title: '导入商品（待核对）',
+      category: '其他',
+      price: '',
+      wholesale_price: '',
+      sizes: '',
+      color: '',
+      material: '',
+      season: '四季',
+      description: '',
+      tags: ['待核对'],
+      images: urls || []
+    };
+    if (note) {
+      var lines = note.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+      var first = lines[0] || '';
+      if (first) product.title = first.slice(0, 30);
+      var nums = (note.match(/\d{2,4}/g) || [])
+        .map(function (n) { return parseInt(n, 10); })
+        .filter(function (v) { return v >= 10 && v <= 99999; });
+      if (nums.length) product.price = String(nums[0]);
+      if (nums.length > 1) product.wholesale_price = String(nums[1]);
+      var sm = note.match(/[SsMmLlXx]{1,5}|均码/);
+      if (sm) product.sizes = sm[0].toUpperCase();
+      var mm = first.match(/(羊毛|棉|涤纶|真丝|麻|混纺|雪纺|针织|牛仔|皮革|聚酯纤维|锦纶|氨纶|黏胶|莫代尔|呢|绒)/);
+      if (mm) product.material = mm[0];
+      var cm = first.match(/(黑|白|灰|红|蓝|绿|黄|粉|紫|杏|卡其|驼|藏青|军绿|米|橙|棕|咖|酒红|天蓝|湖蓝|浅|深)\S{0,2}/);
+      if (cm) product.color = cm[0];
+      product.description = note.slice(0, 20);
+    }
+    return product;
   },
 
   /* 表单编辑 */
