@@ -297,9 +297,9 @@ Page({
   goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
-  goGroupBuy:function(){wx.showToast({title:'社群活动开发中',icon:'none'});},
-  goLuckDraw:function(){wx.showToast({title:'集财运开发中',icon:'none'});},
-  goInvite:function(){wx.showToast({title:'邀请有奖开发中',icon:'none'});},
+  goGroupBuy:function(){wx.navigateTo({url:'/pages/group/index'});},
+  goLuckDraw:function(){wx.navigateTo({url:'/pages/fortune/index'});},
+  goInvite:function(){wx.navigateTo({url:'/pages/invite/index'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
 
   /* ===== 退出登录 ===== */

@@ -57,7 +57,10 @@
     "pages/privacy/index",
     "pages/terms/index",
     "pages/rules/index",
-    "pages/about/index"
+    "pages/about/index",
+    "pages/fortune/index",
+    "pages/invite/index",
+    "pages/group/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

@@ -1,0 +1,44 @@
+<view class="page">
+  <!-- hero -->
+  <view class="hero">
+    <view class="hero-title">一手店主官方福利群</view>
+    <view class="hero-sub">秋冬上新预告 · 专属批发价 · 退换额度 · 集财运任务</view>
+  </view>
+
+  <!-- 二维码 -->
+  <view class="qr-card">
+    <text class="qr-tip">长按或点击二维码，识别进群</text>
+    <image
+      wx:if="{{!qrError}}"
+      class="qr-img"
+      src="{{qrUrl}}"
+      mode="aspectFit"
+      binderror="onQrError"
+      bindtap="previewQr"
+    ></image>
+    <view wx:if="{{qrError}}" class="qr-fallback">
+      <text class="qr-fallback-icon">👥</text>
+      <text class="qr-fallback-text">群二维码待管理员上传</text>
+      <text class="qr-fallback-sub">请联系客服获取进群方式</text>
+    </view>
+    <view class="qr-btn" bindtap="claim">{{claimed ? '已领取 +50 财运值' : '我已进群，领 50 财运值'}}</view>
+  </view>
+
+  <!-- 福利 -->
+  <view class="card-block">
+    <view class="block-title">社群专属福利</view>
+    <view class="benefit" wx:for="{{benefits}}" wx:key="idx">
+      <text class="benefit-icon">{{item.icon}}</text>
+      <view class="benefit-main">
+        <text class="benefit-t">{{item.t}}</text>
+        <text class="benefit-d">{{item.d}}</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{notLogin}}">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-text">请先登录后领取福利</text>
+    <view class="empty-btn" bindtap="goLogin">去登录</view>
+  </view>
+</view>

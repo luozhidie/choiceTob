@@ -19,7 +19,7 @@ const WX_SECRET = process.env.WECHAT_MINI_SECRET || "";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { login_code, phone_code } = body;
+    const { login_code, phone_code, invite_code } = body;
 
     if (!login_code || !phone_code) {
       return NextResponse.json({ error: "缺少登录凭证" }, { status: 400 });
@@ -151,6 +151,20 @@ export async function POST(req: NextRequest) {
         membership_type: 'none',
         store_owner_certified: false,
       };
+
+      // 邀请有奖：用邀请码绑定邀请人（容错）
+      if (invite_code) {
+        try {
+          const { data: inviter } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("invite_code", String(invite_code).toUpperCase())
+            .maybeSingle();
+          if (inviter && inviter.id !== userId) updateData.invited_by = inviter.id;
+        } catch (e) {
+          console.error("[phone-login] 绑定邀请人失败:", e);
+        }
+      }
 
       const { data: updProfile, error: profileErr } = await supabase
         .from("profiles")
