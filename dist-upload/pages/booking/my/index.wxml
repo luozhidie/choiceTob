@@ -1,0 +1,39 @@
+<view class="page">
+  <view class="tabs">
+    <view wx:for="{{tabs}}" wx:key="*this" class="tab {{filter===item?'on':''}}" bindtap="setFilter" data-f="{{item}}">{{item}}</view>
+  </view>
+
+  <view class="list">
+    <block wx:if="{{filter==='全部'}}">
+      <block wx:for="{{list}}" wx:key="id">
+        <view class="b-card">
+          <view class="b-top">
+            <text class="b-name">{{item.consultant_name || '未指定'}}</text>
+            <text class="b-status">{{item.status}}</text>
+          </view>
+          <text class="b-meta">{{item.date}} ｜ {{item.slots.join('、')}}</text>
+          <text class="b-meta">姓名：{{item.name}}　{{item.phone}}</text>
+          <text class="b-meta" wx:if="{{item.location}}">地点：{{item.location}}</text>
+          <text class="b-total">合计 ¥{{item.total}}</text>
+          <view wx:if="{{item.status==='待确认'}}" class="b-cancel" bindtap="cancel" data-id="{{item.id}}">取消预约</view>
+        </view>
+      </block>
+    </block>
+    <block wx:else>
+      <block wx:for="{{list}}" wx:key="id" wx:if="{{item.status===filter}}">
+        <view class="b-card">
+          <view class="b-top">
+            <text class="b-name">{{item.consultant_name || '未指定'}}</text>
+            <text class="b-status">{{item.status}}</text>
+          </view>
+          <text class="b-meta">{{item.date}} ｜ {{item.slots.join('、')}}</text>
+          <text class="b-meta">姓名：{{item.name}}　{{item.phone}}</text>
+          <text class="b-meta" wx:if="{{item.location}}">地点：{{item.location}}</text>
+          <text class="b-total">合计 ¥{{item.total}}</text>
+          <view wx:if="{{item.status==='待确认'}}" class="b-cancel" bindtap="cancel" data-id="{{item.id}}">取消预约</view>
+        </view>
+      </block>
+    </block>
+    <view wx:if="{{list.length===0}}" class="empty">还没有预约记录</view>
+  </view>
+</view>

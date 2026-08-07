@@ -1,0 +1,116 @@
+<view class="page">
+  <!-- 智能建商品入口（拍照/转发识图，AI 自动填参数） -->
+  <view class="smart-entry" bindtap="goSmartCreate">
+    <view class="se-left">
+      <text class="se-title">🤖 智能建商品</text>
+      <text class="se-sub">选图/转发供应商图 → AI 自动识别标题·价格·尺码·材质</text>
+    </view>
+    <view class="se-arrow">→</view>
+  </view>
+
+  <!-- 顶部 Tab -->
+  <view class="tabs">
+    <view class="tab {{mode==='url'?'tab-on':''}}" data-mode="url" bindtap="switchMode">单链接</view>
+    <view class="tab {{mode==='batch'?'tab-on':''}}" data-mode="batch" bindtap="switchMode">批量粘贴</view>
+    <view class="tab {{mode==='image'?'tab-on':''}}" data-mode="image" bindtap="switchMode">图片链接</view>
+    <view class="tab {{mode==='excel'?'tab-on':''}}" data-mode="excel" bindtap="switchMode">Excel导入</view>
+  </view>
+
+  <!-- 输入区 -->
+  <view class="input-area">
+    <textarea wx:if="{{mode=='batch'}}"
+      class="input-box"
+      placeholder="每行一个商品链接：\nhttps://detail.1688.com/offer/xxx.html\nhttps://item.taobao.com/xxx.htm"
+      value="{{inputText}}"
+      bindinput="onInput"
+      auto-height
+      maxlength="-1"
+    />
+    <input wx:elif="{{mode=='url'}}"
+      class="input-single"
+      placeholder="粘贴商品链接..."
+      value="{{inputText}}"
+      bindinput="onInput"
+    />
+    <textarea wx:elif="{{mode=='image'}}"
+      class="input-box"
+      placeholder="粘贴图片链接，每行一个：\nhttps://img.alicdn.com/imgextra/i1/xxx/O1CN01xxx_!!xxx.jpg"
+      value="{{inputText}}"
+      bindinput="onInput"
+      auto-height
+      maxlength="-1"
+    />
+    <view class="btn-import" bindtap="startImport">
+      <text wx:if="{{isProcessing}}">导入中...</text>
+      <text wx:else>开始导入</text>
+    </view>
+  </view>
+
+  <!-- 提示 -->
+  <view class="tip" wx:if="{{mode=='url' || mode=='batch'}}">
+    <text class="tip-text">💡 链接自动导入仅支持服务端可渲染的普通商品页。\n💡 淘宝/天猫/1688/京东/抖音/拼多多/小红书等：长按商品图 → 保存图片到相册 → 用顶部「智能建商品」上传识别。</text>
+  </view>
+  <view class="tip" wx:if="{{mode=='image'}}">
+    <text class="tip-text">💡 适用电脑端/浏览器：右键图片 → 复制图片地址 → 每行一个粘贴到这里。\n💡 手机淘宝 App 无「复制图片链接」入口，建议保存图片后用「智能建商品」。</text>
+  </view>
+
+  <!-- Excel 导入区 -->
+  <view class="input-area" wx:if="{{mode=='excel'}}">
+    <view class="excel-pick" bindtap="chooseExcel">
+      <text class="ep-icon">📄</text>
+      <text class="ep-text">{{excelName || '从聊天选择 Excel/CSV 文件（风格数据包）'}}</text>
+    </view>
+    <view class="btn-import" bindtap="uploadExcel">
+      <text wx:if="{{isProcessing}}">导入中...</text>
+      <text wx:else>开始导入</text>
+    </view>
+    <view class="tip" wx:if="{{excelSummary}}"><text class="tip-text">{{excelSummary}}</text></view>
+  </view>
+
+  <!-- 结果列表 -->
+  <view class="results" wx:if="{{results.length>0}}">
+    <view class="result-header">
+      <text class="rh-title">导入结果（{{results.length}}）</text>
+      <text class="rh-view" bindtap="viewAll">去商品管理查看 →</text>
+    </view>
+
+    <view class="result-item {{item.status}}" wx:for="{{results}}" wx:key="index">
+      <!-- 成功 -->
+      <view wx:if="{{item.status=='success'}}" class="ri-success">
+        <view class="ri-icon">✅</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.title || '导入商品'}}</text>
+          <view class="ri-tags">
+            <text class="ri-detail" wx:if="{{item.price}}">¥{{item.price}}</text>
+            <text class="ri-detail" wx:if="{{item.imageCount>0}}">{{item.imageCount}}张图片</text>
+            <text class="ri-cat">待分类</text>
+          </view>
+        </view>
+        <view class="ri-btn" data-id="{{item.productId}}" bindtap="previewGoods">查看</view>
+      </view>
+
+      <!-- 跳过 -->
+      <view wx:elif="{{item.status=='skipped'}}" class="ri-skipped">
+        <view class="ri-icon">⏭</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.url}}</text>
+          <text class="ri-msg">{{item.message}}</text>
+        </view>
+      </view>
+
+      <!-- 失败 -->
+      <view wx:else class="ri-error">
+        <view class="ri-icon">❌</view>
+        <view class="ri-info">
+          <text class="ri-title">{{item.url}}</text>
+          <text class="ri-msg">{{item.message}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Toast -->
+  <view class="toast {{toastType}}" wx:if="{{toastText}}">
+    <text>{{toastText}}</text>
+  </view>
+</view>

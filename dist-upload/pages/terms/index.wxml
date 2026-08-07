@@ -1,0 +1,18 @@
+<view class="page">
+  <view class="topbar">
+    <view class="nav-title">{{nav}}</view>
+  </view>
+  <view class="updated">更新日期：{{date}}</view>
+  <view class="card">
+    <block wx:for="{{sections}}" wx:key="h">
+      <view class="sec">
+        <view class="sec-h">{{item.h}}</view>
+        <view class="sec-p" wx:if="{{item.p}}"><text>{{item.p}}</text></view>
+        <view class="sec-list" wx:if="{{item.list}}">
+          <view class="sec-li" wx:for="{{item.list}}" wx:for-item="li" wx:key="*this"><text>{{li}}</text></view>
+        </view>
+      </view>
+    </block>
+  </view>
+  <view class="footer">骆芷蝶智选 · 客服微信：luozhidie666</view>
+</view>

@@ -58,15 +58,19 @@ export async function GET(req: NextRequest) {
     if (!error && data) {
       for (const row of data) {
         const p = row.params || {};
-        const style =
+        const rawStyle =
           (typeof p.style === "string" && p.style) ||
           (typeof p["风格"] === "string" && p["风格"]) ||
           "";
         const sub = row.subcategory || "";
-        if (!style || !sub) continue;
-        stylesSet.add(style);
-        if (!map[style]) map[style] = [];
-        if (map[style].indexOf(sub) < 0) map[style].push(sub);
+        if (!rawStyle || !sub) continue;
+        // 风格支持多选：params.style 以逗号分隔（如 "少女型,优雅型"），需拆开各自聚合
+        const styles = rawStyle.split(",").map((s) => s.trim()).filter(Boolean);
+        styles.forEach((style) => {
+          stylesSet.add(style);
+          if (!map[style]) map[style] = [];
+          if (map[style].indexOf(sub) < 0) map[style].push(sub);
+        });
       }
     }
   }

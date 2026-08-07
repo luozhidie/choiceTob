@@ -176,6 +176,24 @@ async function queryWithClient(supabase: any, request: NextRequest) {
       // 2) 近期上新
       if (k === "recent") { query = applyRecent(query, vals); continue; }
 
+      // 2.5) 风格：支持多选（params.style 以逗号分隔，如 "少女型,优雅型"）。
+      //      不能简单 eq 整串，需按子串包含匹配，且避免 "优雅" 误中 "优雅型"。
+      if (k === "style") {
+        const stVals = vals
+          .join(",")
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const conds: string[] = [];
+        stVals.forEach((v) => {
+          conds.push(`params->>style.eq.${v}`);          // 精确（仅一个风格）
+          conds.push(`params->>style.ilike.${v},%`);      // 开头："优雅型,..."
+          conds.push(`params->>style.ilike.%,${v}`);      // 结尾："...,优雅型"
+        });
+        if (conds.length) query = query.or(conds.join(","));
+        continue;
+      }
+
       // 3) 普通属性：单选存纯值「圆领」，多选存 wrap 值「/圆领/V领/」，两种都要命中；
       //    同时兼容中文 key（面料）与英文 key（fabric）两套录入历史
       const safe = vals.map((v) => v.replace(/[/,]/g, "").trim()).filter(Boolean);
@@ -235,7 +253,16 @@ async function queryWithClient(supabase: any, request: NextRequest) {
     if (subcategory) fallbackQuery = fallbackQuery.eq("subcategory", subcategory);
     if (market) fallbackQuery = fallbackQuery.eq("params->>market", market);
     if (vibe) fallbackQuery = fallbackQuery.eq("params->>vibe", vibe);
-    if (style) fallbackQuery = fallbackQuery.eq("params->>style", style);
+    if (style) {
+      const stVals = style.split(",").map((s) => s.trim()).filter(Boolean);
+      const stConds: string[] = [];
+      stVals.forEach((v) => {
+        stConds.push(`params->>style.eq.${v}`);
+        stConds.push(`params->>style.ilike.${v},%`);
+        stConds.push(`params->>style.ilike.%,${v}`);
+      });
+      if (stConds.length) fallbackQuery = fallbackQuery.or(stConds.join(","));
+    }
     if (keyword) fallbackQuery = fallbackQuery.or(`name.ilike.%${keyword}%,title.ilike.%${keyword}%,description.ilike.%${keyword}%`);
     if (priceMin) fallbackQuery = fallbackQuery.gte("price", parseFloat(priceMin) * 100);
     if (priceMax) fallbackQuery = fallbackQuery.lte("price", parseFloat(priceMax) * 100);

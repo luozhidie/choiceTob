@@ -1,0 +1,59 @@
+<view class="page">
+  <!-- 财运值 hero -->
+  <view class="hero">
+    <view class="hero-label">我的财运值</view>
+    <view class="hero-score">{{wealth_score}}</view>
+    <view class="hero-sub">做任务 · 签到 · 邀友，攒财运值兑运费券</view>
+    <view class="hero-exchange {{canExchange?'on':''}}" bindtap="doExchange">
+      兑换 ¥3 运费券（{{exchangeCost}} 财运值）
+    </view>
+    <view class="hero-tip" wx:if="{{!canExchange}}">还差 {{exchangeCost - wealth_score}} 财运值可兑换</view>
+  </view>
+
+  <!-- 签到 -->
+  <view class="card-block">
+    <view class="block-head">
+      <text class="block-title">每日签到</text>
+      <text class="block-extra">连续 {{check_in_streak}} 天</text>
+    </view>
+    <view class="checkin-grid">
+      <view class="checkin-cell {{idx < weekCheckedCount ? 'done' : ''}}" wx:for="{{checkinLabels}}" wx:for-item="label" wx:for-index="idx" wx:key="idx">
+        <text class="checkin-day">第{{idx + 1}}天</text>
+        <text class="checkin-pts">+{{checkinRewards[idx]}}</text>
+        <text class="checkin-flag" wx:if="{{idx < weekCheckedCount}}">✓</text>
+      </view>
+    </view>
+    <view class="checkin-btn {{checkedToday?'done':''}}" bindtap="doCheckIn">
+      {{checkedToday ? '今日已签到' : '立即签到'}}
+    </view>
+  </view>
+
+  <!-- 任务列表 -->
+  <view class="card-block">
+    <view class="block-head">
+      <text class="block-title">赚财运值任务</text>
+      <text class="block-extra">完成后自动到账</text>
+    </view>
+    <view class="task" wx:for="{{tasks}}" wx:key="key">
+      <view class="task-icon">{{item.icon}}</view>
+      <view class="task-main">
+        <text class="task-label">{{item.label}}</text>
+        <text class="task-tag">{{item.type === 'daily' ? '每日' : '一次性'}} +{{item.type === 'daily' ? item.points : item.points}}</text>
+      </view>
+      <view class="task-btn {{item.done?'done':''}}" data-key="{{item.key}}" data-nav="{{item.nav}}" bindtap="doTask">
+        {{item.done ? '已完成' : item.btn}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 未登录 -->
+  <view class="empty" wx:if="{{!loading && notLogin}}">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-text">请先登录后参与活动</text>
+    <view class="empty-btn" bindtap="goLogin">去登录</view>
+  </view>
+
+  <view class="loading" wx:if="{{loading}}">
+    <view class="loading-spinner"></view>
+  </view>
+</view>

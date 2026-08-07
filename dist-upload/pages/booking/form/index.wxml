@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="tip-card">
+    <text class="tc-txt">填写预约信息，客服将在 24 小时内与您确认陪购时间。</text>
+  </view>
+
+  <view class="form">
+    <view class="fi">
+      <text class="fl">姓名 <text class="req">*</text></text>
+      <input class="fin" placeholder="请输入姓名" value="{{form.name}}" bindinput="onName"/>
+    </view>
+    <view class="fi">
+      <text class="fl">联系电话 <text class="req">*</text></text>
+      <input class="fin" type="number" placeholder="请输入手机号" value="{{form.phone}}" bindinput="onPhone"/>
+    </view>
+    <view class="fi">
+      <text class="fl">预约时间</text>
+      <text class="fin static">{{date}} {{slots}}</text>
+    </view>
+    <view class="fi">
+      <text class="fl">备注需求</text>
+      <textarea class="fta" placeholder="如：想补充秋冬大衣、预算范围、偏好风格等" value="{{form.note}}" bindinput="onNote"/>
+    </view>
+    <view class="submit-btn" bindtap="submit">提交预约</view>
+  </view>
+</view>

@@ -1,0 +1,43 @@
+<view class="page">
+  <view wx:if="{{!showForm}}" class="list-wrap">
+    <view wx:if="{{list.length===0}}" class="empty">暂无地址，点击下方按钮添加</view>
+    <block wx:for="{{list}}" wx:key="id">
+      <view class="addr">
+        <view class="addr-top">
+          <text class="addr-name">{{item.name}}</text>
+          <text class="addr-phone">{{item.phone}}</text>
+          <view wx:if="{{item.isDefault}}" class="addr-default">默认</view>
+        </view>
+        <text class="addr-text">{{item.region}} {{item.detail}}</text>
+        <view class="addr-actions">
+          <text wx:if="{{!item.isDefault}}" class="addr-act" bindtap="setDefault" data-id="{{item.id}}">设为默认</text>
+          <text class="addr-act del" bindtap="del" data-id="{{item.id}}">删除</text>
+        </view>
+      </view>
+    </block>
+    <view class="add-btn" bindtap="toggleForm">+ 新增收货地址</view>
+  </view>
+
+  <view wx:else class="form-wrap">
+    <view class="fi">
+      <text class="fl">收货人</text>
+      <input class="fin" placeholder="姓名" value="{{form.name}}" bindinput="onName"/>
+    </view>
+    <view class="fi">
+      <text class="fl">手机号</text>
+      <input class="fin" type="number" placeholder="手机号" value="{{form.phone}}" bindinput="onPhone"/>
+    </view>
+    <view class="fi">
+      <text class="fl">所在地区</text>
+      <picker mode="region" bindchange="onRegion">
+        <view class="fin picker">{{form.region||'省 / 市 / 区'}}</view>
+      </picker>
+    </view>
+    <view class="fi">
+      <text class="fl">详细地址</text>
+      <textarea class="fta" placeholder="街道、门牌号等" value="{{form.detail}}" bindinput="onDetail"/>
+    </view>
+    <view class="submit-btn" bindtap="save">保存地址</view>
+    <view class="cancel-btn" bindtap="toggleForm">取消</view>
+  </view>
+</view>

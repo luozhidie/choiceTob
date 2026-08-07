@@ -1,0 +1,31 @@
+<view class="page">
+  <!-- Hero：全屏大图 -->
+  <view class="hero">
+    <image wx:if="{{heroImage}}" src="{{heroImage}}" mode="aspectFill" class="hero-bg" />
+    <view class="hero-darken"></view>
+    <view class="hero-overlay">
+      <text class="hero-title">个人形象诊断</text>
+      <text class="hero-sub">一次诊断 终身受益</text>
+      <text class="hero-desc">让你找到气质提升的本源</text>
+    </view>
+  </view>
+
+  <!-- 后台配置的满框大图片模块（全宽无 padding） -->
+  <view wx:if="{{blocks.length > 0}}" class="blocks">
+    <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
+  </view>
+
+  <view class="bottom-space"></view>
+</view>
+
+<!-- 底部固定双按钮 -->
+<view class="bottom-bar">
+  <view class="bottom-btn free" bindtap="goTest">
+    <text class="btn-title">智能形象诊断</text>
+    <text class="btn-price">¥99 风格测试</text>
+  </view>
+  <view class="bottom-btn paid" bindtap="goPaid">
+    <text class="btn-title">整体形象诊断</text>
+    <text class="btn-price">预约</text>
+  </view>
+</view>

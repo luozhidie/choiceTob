@@ -1,0 +1,99 @@
+<view class="page">
+  <view class="topbar">
+    <text class="back" bindtap="goBack">‹ 返回</text>
+    <text class="top-title">色彩风格诊断问卷</text>
+    <text class="top-spacer"></text>
+  </view>
+
+  <view class="head">
+    <text class="head-title">色彩风格诊断问卷</text>
+    <text class="head-sub">共 21 题，请详细填写，我们将以微信通知你结果</text>
+  </view>
+
+  <view wx:if="{{needLogin}}" class="login-tip">
+    <text class="login-text">填写问卷需先登录</text>
+    <text class="login-btn" bindtap="goLogin">去登录</text>
+  </view>
+
+  <view class="card">
+    <view wx:for="{{inputQuestions}}" wx:key="id" class="qblock">
+      <text class="q-label">{{item.label}}<text class="req"> *</text></text>
+      <input
+        class="q-input"
+        value="{{form[item.id]}}"
+        placeholder="{{item.placeholder}}"
+        placeholder-class="ph"
+        bindinput="onInput"
+        data-qid="{{item.id}}"
+      />
+    </view>
+
+    <view wx:for="{{choiceQuestions}}" wx:key="id" wx:for-item="q" class="qblock">
+      <text class="q-label">{{q.label}}<text class="req"> *</text></text>
+      <view class="opts">
+        <view
+          wx:for="{{q.options}}"
+          wx:key="*this"
+          wx:for-item="opt"
+          class="opt {{answers[q.id] === opt ? 'opt-on' : ''}}"
+          bindtap="onChoice"
+          data-qid="{{q.id}}"
+          data-opt="{{opt}}"
+        >
+          <view class="radio {{answers[q.id] === opt ? 'radio-on' : ''}}"></view>
+          <text class="opt-text">{{opt}}</text>
+        </view>
+      </view>
+      <view wx:if="{{q.id === 'q12'}}" class="ref-box">
+        <text class="ref-title">上衣长度参考</text>
+        <image src="/images/form-reference/q12.jpg" mode="widthFix" class="ref-img" />
+      </view>
+    </view>
+
+    <view class="qblock qsep">
+      <text class="q-label-big">18. 需要提供的照片</text>
+      <view class="ref-box">
+        <text class="ref-line">1: 一张后背图：示例如下</text>
+        <text class="ref-line">注意：拍后背是为了分清直曲，红框区域需要露出来，肩和背可以不露肤，最好穿贴身衣服</text>
+        <image src="/images/form-reference/q18.jpg" mode="widthFix" class="ref-img" />
+        <text class="ref-line">2: 多张生活照 要求：</text>
+        <text class="ref-line">· 最好全身照或大半身照</text>
+        <text class="ref-line">· 不能戴口罩</text>
+        <text class="ref-line">· 面部清晰</text>
+        <text class="ref-line">· 最好不同场合，不同颜色、款式</text>
+      </view>
+      <textarea
+        class="q-textarea"
+        value="{{photoNote}}"
+        placeholder="填写者回答区"
+        placeholder-class="ph"
+        bindinput="onPhotoNote"
+      />
+    </view>
+
+    <view wx:for="{{[19,20,21]}}" wx:key="*this" class="qblock">
+      <text class="q-label-big">{{item === 19 ? '*19.' : item + '.'}}图片文件{{['一','二','三'][index]}}</text>
+      <view class="uploader" bindtap="choosePhoto" data-idx="{{index}}">
+        <block wx:if="{{photoUrls[index]}}">
+          <image src="{{photoUrls[index]}}" mode="aspectFit" class="up-preview" />
+          <text class="up-done">已上传 ✓</text>
+        </block>
+        <block wx:elif="{{uploadingIndex === index}}">
+          <text class="up-loading">上传中...</text>
+        </block>
+        <block wx:else>
+          <text class="up-icon">↑</text>
+          <text class="up-text">点击上传图片</text>
+          <text class="up-tip">JPG / PNG / WEBP / GIF，单张 ≤ 5MB</text>
+        </block>
+      </view>
+    </view>
+
+    <view class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="submit">
+      {{submitting ? '提交中...' : '提交问卷'}}
+    </view>
+    <text class="secret">所有信息仅用于色彩风格诊断，严格保密</text>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>
