@@ -11,6 +11,7 @@ const menuGroups = [
     { label: "数据概览", href: "/admin/dashboard" },
     { label: "站点图片", href: "/admin/site-assets" },
     { label: "页面背景", href: "/admin/page-background" },
+    { label: "活动配置", href: "/admin/activity-config" },
   ]},
 
   // ─── 店铺管理 ───

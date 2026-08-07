@@ -1,4 +1,5 @@
 // 集财运（店主福利社群）：签到 / 任务 / 财运值 / 兑换运费券
+// 配置（签到奖励、任务、兑换比例）全部读 site_settings，后台「活动配置」可改，不再写死
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -8,6 +9,38 @@ const supabase = createClient(
 );
 
 export const dynamic = "force-dynamic";
+
+// 兜底默认值（与首次 seed 一致），site_settings 未配置时使用
+const DEFAULT_CHECKIN = [100, 200, 300, 500, 800, 1000, 1600];
+const DEFAULT_EXCHANGE = { cost: 3000, amount_cents: 300 };
+const DEFAULT_TASKS = [
+  { key: "know_activity", label: "平台活动提前知（秋款上新福利）", icon: "📣", points: 300, type: "once" as const },
+  { key: "subscribe_stall", label: "订阅档口领财富值", icon: "🔔", points: 300, type: "once" as const },
+  { key: "order_rebate", label: "下单返运费", icon: "🛒", points: 1000, type: "daily" as const },
+  { key: "official_group", label: "加入一手店主官方福利群", icon: "👥", points: 50, type: "once" as const, nav: "/pages/group/index" },
+  { key: "browse_spot", label: "浏览现货 15s", icon: "👀", points: 50, type: "daily" as const },
+  { key: "browse_hot", label: "浏览档口最爆款 15s", icon: "🔥", points: 30, type: "daily" as const },
+  { key: "market_new", label: "每日看市场新款", icon: "✨", points: 20, type: "daily" as const },
+  { key: "browse_invite", label: "浏览邀请 30s", icon: "🔗", points: 20, type: "daily" as const },
+];
+
+async function getSetting<T>(key: string, fallback: T): Promise<T> {
+  const { data } = await supabase.from("site_settings").select("value").eq("key", key).maybeSingle();
+  return (data?.value as T) ?? fallback;
+}
+
+async function loadConfig() {
+  const [checkinRewards, tasks, exchange] = await Promise.all([
+    getSetting<number[]>("fortune_checkin_rewards", DEFAULT_CHECKIN),
+    getSetting<any[]>("fortune_tasks", DEFAULT_TASKS),
+    getSetting<{ cost: number; amount_cents: number }>("fortune_exchange", DEFAULT_EXCHANGE),
+  ]);
+  return {
+    checkinRewards: Array.isArray(checkinRewards) ? checkinRewards : DEFAULT_CHECKIN,
+    tasks: Array.isArray(tasks) ? tasks : DEFAULT_TASKS,
+    exchange: exchange && typeof exchange.cost === "number" ? exchange : DEFAULT_EXCHANGE,
+  };
+}
 
 function parseMiniToken(token: string): { uid: string; exp?: number } | null {
   try {
@@ -35,21 +68,6 @@ async function getUserId(req: NextRequest): Promise<string | null> {
   return null;
 }
 
-// 7 天签到奖励（元→分存储金额无关，这里财运值是整数点）
-const CHECKIN_REWARDS = [100, 200, 300, 500, 800, 1000, 1600];
-
-// 任务配置：key -> { points, type: daily|once }
-const TASKS: Record<string, { points: number; type: "daily" | "once" }> = {
-  know_activity: { points: 300, type: "once" }, // 平台活动提前知（秋款上新福利）
-  subscribe_stall: { points: 300, type: "once" }, // 订阅档口领财富值
-  order_rebate: { points: 1000, type: "daily" }, // 下单返运费
-  official_group: { points: 50, type: "once" }, // 一手店主官方福利群
-  browse_spot: { points: 50, type: "daily" }, // 浏览现货 15s
-  browse_hot: { points: 30, type: "daily" }, // 浏览档口最爆款 15s
-  market_new: { points: 20, type: "daily" }, // 每日看市场新款
-  browse_invite: { points: 20, type: "daily" }, // 浏览邀请 30s
-};
-
 function todayStr(): string {
   return new Date().toISOString().split("T")[0];
 }
@@ -58,7 +76,7 @@ function yesterdayStr(): string {
   return d.toISOString().split("T")[0];
 }
 
-async function getState(userId: string) {
+async function getState(userId: string, tasks: any[]) {
   const { data: profile } = await supabase
     .from("profiles")
     .select("wealth_score, check_in_streak, last_check_in_date")
@@ -75,11 +93,12 @@ async function getState(userId: string) {
 
   const weekChecks = (checks || []).map((c: any) => c.check_date);
   const checkedToday = (profile?.last_check_in_date || "") === t;
+  const onceKeys = new Set(tasks.filter((tk) => tk.type === "once").map((tk) => tk.key));
   const tasksDoneToday = (taskLogs || [])
     .filter((l: any) => l.day === t)
     .map((l: any) => l.task_key);
   const tasksDoneOnce = (taskLogs || [])
-    .filter((l: any) => TASKS[l.task_key]?.type === "once")
+    .filter((l: any) => onceKeys.has(l.task_key))
     .map((l: any) => l.task_key);
 
   return {
@@ -95,7 +114,8 @@ async function getState(userId: string) {
 export async function GET(req: NextRequest) {
   const userId = await getUserId(req);
   if (!userId) return NextResponse.json({ error: "未授权" }, { status: 401 });
-  return NextResponse.json({ success: true, data: await getState(userId) });
+  const cfg = await loadConfig();
+  return NextResponse.json({ success: true, data: await getState(userId, cfg.tasks) });
 }
 
 export async function POST(req: NextRequest) {
@@ -103,6 +123,7 @@ export async function POST(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: "未授权" }, { status: 401 });
   const body = await req.json().catch(() => ({}));
   const action = body.action;
+  const cfg = await loadConfig();
 
   if (action === "check-in") {
     const t = todayStr();
@@ -112,12 +133,11 @@ export async function POST(req: NextRequest) {
       .eq("id", userId)
       .maybeSingle();
     if ((profile?.last_check_in_date || "") === t) {
-      return NextResponse.json({ success: true, already: true, data: await getState(userId) });
+      return NextResponse.json({ success: true, already: true, data: await getState(userId, cfg.tasks) });
     }
-    // 连续天数：昨天签到则 +1，否则重置为 1
     const continues = (profile?.last_check_in_date || "") === yesterdayStr();
     const streak = continues ? (profile?.check_in_streak || 0) + 1 : 1;
-    const points = CHECKIN_REWARDS[(streak - 1) % CHECKIN_REWARDS.length];
+    const points = cfg.checkinRewards[(streak - 1) % cfg.checkinRewards.length];
 
     const { error: insErr } = await supabase.from("check_ins").insert({ user_id: userId, check_date: t, points });
     if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 });
@@ -129,37 +149,35 @@ export async function POST(req: NextRequest) {
       .eq("id", userId);
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-    return NextResponse.json({ success: true, gained: points, data: await getState(userId) });
+    return NextResponse.json({ success: true, gained: points, data: await getState(userId, cfg.tasks) });
   }
 
   if (action === "complete-task") {
     const key = body.task_key;
-    const cfg = TASKS[key];
-    if (!cfg) return NextResponse.json({ error: "未知任务" }, { status: 400 });
+    const cfgTask = cfg.tasks.find((tk: any) => tk.key === key);
+    if (!cfgTask) return NextResponse.json({ error: "未知任务" }, { status: 400 });
     const t = todayStr();
 
-    // 判断是否已完成
     let query = supabase.from("fortune_task_log").select("id").eq("user_id", userId).eq("task_key", key);
-    if (cfg.type === "daily") query = query.eq("day", t);
+    if (cfgTask.type === "daily") query = query.eq("day", t);
     const { data: existing } = await query.maybeSingle();
     if (existing) {
-      return NextResponse.json({ success: true, already: true, data: await getState(userId) });
+      return NextResponse.json({ success: true, already: true, data: await getState(userId, cfg.tasks) });
     }
 
-    const { error: insErr } = await supabase.from("fortune_task_log").insert({ user_id: userId, task_key: key, day: t, points: cfg.points });
+    const { error: insErr } = await supabase.from("fortune_task_log").insert({ user_id: userId, task_key: key, day: t, points: cfgTask.points });
     if (insErr) return NextResponse.json({ error: insErr.message }, { status: 500 });
     const { data: profile } = await supabase.from("profiles").select("wealth_score").eq("id", userId).maybeSingle();
-    const newScore = (profile?.wealth_score || 0) + cfg.points;
+    const newScore = (profile?.wealth_score || 0) + cfgTask.points;
     const { error: updErr } = await supabase.from("profiles").update({ wealth_score: newScore }).eq("id", userId);
     if (updErr) return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-    return NextResponse.json({ success: true, gained: cfg.points, data: await getState(userId) });
+    return NextResponse.json({ success: true, gained: cfgTask.points, data: await getState(userId, cfg.tasks) });
   }
 
   if (action === "exchange") {
-    // 3000 财运值 → ¥3 运费券
-    const COST = 3000;
-    const AMOUNT = 300; // 分
+    const COST = cfg.exchange.cost;
+    const AMOUNT = cfg.exchange.amount_cents;
     const { data: profile } = await supabase.from("profiles").select("wealth_score").eq("id", userId).maybeSingle();
     if ((profile?.wealth_score || 0) < COST) {
       return NextResponse.json({ error: "财运值不足，需 " + COST }, { status: 400 });
@@ -167,8 +185,8 @@ export async function POST(req: NextRequest) {
     const expire = new Date(Date.now() + 30 * 86400000).toISOString().split("T")[0];
     const { error: cErr } = await supabase.from("coupons").insert({
       user_id: userId,
-      title: "¥3 运费券",
-      discount_desc: "立减¥3运费",
+      title: "¥" + (AMOUNT / 100) + " 运费券",
+      discount_desc: "立减¥" + (AMOUNT / 100) + "运费",
       discount_amount: AMOUNT,
       min_amount: 0,
       coupon_type: "freight",
@@ -177,7 +195,7 @@ export async function POST(req: NextRequest) {
     });
     if (cErr) return NextResponse.json({ error: cErr.message }, { status: 500 });
     await supabase.from("profiles").update({ wealth_score: (profile?.wealth_score || 0) - COST }).eq("id", userId);
-    return NextResponse.json({ success: true, message: "已兑换¥3运费券", data: await getState(userId) });
+    return NextResponse.json({ success: true, message: "已兑换¥" + (AMOUNT / 100) + "运费券", data: await getState(userId, cfg.tasks) });
   }
 
   return NextResponse.json({ error: "unknown action" }, { status: 400 });

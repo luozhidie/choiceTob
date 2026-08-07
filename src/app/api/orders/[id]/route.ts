@@ -107,8 +107,18 @@ export async function POST(
             .eq("invitee_id", order.user_id)
             .maybeSingle();
           if (!existing) {
-            // 返 8-100 元随机红包（分单位）
-            const rewardAmount = Math.floor(800 + Math.random() * (10000 - 800));
+            // 邀请返利金额/有效期读 site_settings(invite_reward)，后台可改
+            const { data: cfgRow } = await supabase
+              .from("site_settings")
+              .select("value")
+              .eq("key", "invite_reward")
+              .maybeSingle();
+            const cfg = (cfgRow?.value as any) || { min_cents: 800, max_cents: 10000, expire_days: 30 };
+            const minC = Number(cfg.min_cents) || 800;
+            const maxC = Number(cfg.max_cents) || 10000;
+            const expireDays = Number(cfg.expire_days) || 30;
+            // 返 min~max 元随机红包（分单位）
+            const rewardAmount = Math.floor(minC + Math.random() * Math.max(1, maxC - minC));
             const { error: rErr } = await supabase.from("referral_rewards").insert({
               inviter_id: invitee.invited_by,
               invitee_id: order.user_id,
@@ -118,7 +128,7 @@ export async function POST(
               reward_granted: true,
             });
             if (!rErr) {
-              const expireAt = new Date(Date.now() + 30 * 86400000)
+              const expireAt = new Date(Date.now() + expireDays * 86400000)
                 .toISOString()
                 .split("T")[0];
               await supabase.from("red_packets").insert({

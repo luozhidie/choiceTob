@@ -1,7 +1,7 @@
 var app = getApp();
 
-// 任务配置（与后端 TASKS 对应）
-var TASKS = [
+// 兜底默认值（与后台 site_settings / 首次 seed 一致）
+var DEFAULT_TASKS = [
   { key: 'know_activity', label: '平台活动提前知（秋款上新福利）', icon: '📣', type: 'once' },
   { key: 'subscribe_stall', label: '订阅档口领财富值', icon: '🔔', type: 'once' },
   { key: 'order_rebate', label: '下单返运费', icon: '🛒', type: 'daily' },
@@ -11,10 +11,8 @@ var TASKS = [
   { key: 'market_new', label: '每日看市场新款', icon: '✨', type: 'daily' },
   { key: 'browse_invite', label: '浏览邀请 30s', icon: '🔗', type: 'daily' }
 ];
-
-var CHECKIN_LABELS = ['一', '二', '三', '四', '五', '六', '日'];
-var CHECKIN_REWARDS = [100, 200, 300, 500, 800, 1000, 1600];
-var EXCHANGE_COST = 3000;
+var DEFAULT_CHECKIN = [100, 200, 300, 500, 800, 1000, 1600];
+var DEFAULT_EXCHANGE_COST = 3000;
 
 Page({
   data: {
@@ -23,21 +21,44 @@ Page({
     wealth_score: 0,
     check_in_streak: 0,
     checkedToday: false,
-    weekChecks: [],
-    checkinLabels: CHECKIN_LABELS,
-    checkinRewards: CHECKIN_REWARDS,
+    weekCheckedCount: 0,
+    checkinLabels: ['一', '二', '三', '四', '五', '六', '日'],
+    checkinRewards: DEFAULT_CHECKIN,
     tasks: [],
     canExchange: false,
-    exchangeCost: EXCHANGE_COST
+    exchangeCost: DEFAULT_EXCHANGE_COST
   },
 
-  onShow: function () { this.loadState(); },
+  onShow: function () { this.loadAll(); },
 
-  loadState: function () {
+  // 同时拉取活动配置 + 用户状态
+  loadAll: function () {
     var t = this;
     var token = wx.getStorageSync('token') || '';
     if (!token) { t.setData({ loading: false, notLogin: true }); return; }
     t.setData({ loading: true, notLogin: false });
+
+    wx.request({
+      url: 'https://colour-choice.art/api/public/settings?keys=fortune_checkin_rewards,fortune_tasks,fortune_exchange',
+      method: 'GET',
+      success: function (cr) {
+        var cd = (cr.data || {}).data || {};
+        var checkinRewards = Array.isArray(cd.fortune_checkin_rewards) ? cd.fortune_checkin_rewards : DEFAULT_CHECKIN;
+        var tasksCfg = Array.isArray(cd.fortune_tasks) ? cd.fortune_tasks : DEFAULT_TASKS;
+        var exchange = cd.fortune_exchange && typeof cd.fortune_exchange.cost === 'number' ? cd.fortune_exchange : { cost: DEFAULT_EXCHANGE_COST };
+        t._cfg = { checkinRewards: checkinRewards, tasksCfg: tasksCfg, exchangeCost: exchange.cost };
+        t.loadState(token);
+      },
+      fail: function () {
+        t._cfg = { checkinRewards: DEFAULT_CHECKIN, tasksCfg: DEFAULT_TASKS, exchangeCost: DEFAULT_EXCHANGE_COST };
+        t.loadState(token);
+      }
+    });
+  },
+
+  loadState: function (token) {
+    var t = this;
+    var cfg = t._cfg || { checkinRewards: DEFAULT_CHECKIN, tasksCfg: DEFAULT_TASKS, exchangeCost: DEFAULT_EXCHANGE_COST };
     wx.request({
       url: 'https://colour-choice.art/api/fortune',
       method: 'GET',
@@ -48,7 +69,7 @@ Page({
         (d.tasksDoneToday || []).forEach(function (k) { doneMap[k] = true; });
         (d.tasksDoneOnce || []).forEach(function (k) { doneMap[k] = true; });
         var weekCheckedCount = Math.min((d.weekChecks || []).length, 7);
-        var tasks = TASKS.map(function (tk) {
+        var tasks = cfg.tasksCfg.map(function (tk) {
           return Object.assign({}, tk, {
             done: !!doneMap[tk.key],
             btn: tk.nav ? '去加群' : '完成'
@@ -59,13 +80,14 @@ Page({
           wealth_score: d.wealth_score || 0,
           check_in_streak: d.check_in_streak || 0,
           checkedToday: !!d.checkedToday,
-          weekChecks: d.weekChecks || [],
           weekCheckedCount: weekCheckedCount,
+          checkinRewards: cfg.checkinRewards,
           tasks: tasks,
-          canExchange: (d.wealth_score || 0) >= EXCHANGE_COST
+          exchangeCost: cfg.exchangeCost,
+          canExchange: (d.wealth_score || 0) >= cfg.exchangeCost
         });
       },
-      fail: function () { t.setData({ loading: false }); }
+      fail: function () { t.setData({ loading: false, checkinRewards: cfg.checkinRewards, tasks: cfg.tasksCfg, exchangeCost: cfg.exchangeCost }); }
     });
   },
 
@@ -80,7 +102,7 @@ Page({
       data: { action: 'check-in' },
       success: function (r) {
         if (r.data && r.data.success) {
-          t.loadState();
+          t.loadAll();
           wx.showToast({ title: '签到 +' + r.data.gained, icon: 'none' });
         } else {
           wx.showToast({ title: (r.data && r.data.error) || '签到失败', icon: 'none' });
@@ -102,7 +124,7 @@ Page({
       data: { action: 'complete-task', task_key: key },
       success: function (r) {
         if (r.data && r.data.success) {
-          t.loadState();
+          t.loadAll();
           wx.showToast({ title: '+' + r.data.gained + ' 财运值', icon: 'none' });
         } else {
           wx.showToast({ title: (r.data && r.data.error) || '操作失败', icon: 'none' });
@@ -114,7 +136,7 @@ Page({
   doExchange: function () {
     var t = this;
     if (!t.data.canExchange) {
-      wx.showToast({ title: '财运值满 ' + EXCHANGE_COST + ' 可兑换', icon: 'none' });
+      wx.showToast({ title: '财运值满 ' + t.data.exchangeCost + ' 可兑换', icon: 'none' });
       return;
     }
     var token = wx.getStorageSync('token') || '';
@@ -125,8 +147,8 @@ Page({
       data: { action: 'exchange' },
       success: function (r) {
         if (r.data && r.data.success) {
-          t.loadState();
-          wx.showToast({ title: '已兑换 ¥3 运费券', icon: 'none' });
+          t.loadAll();
+          wx.showToast({ title: '已兑换运费券', icon: 'none' });
         } else {
           wx.showToast({ title: (r.data && r.data.error) || '兑换失败', icon: 'none' });
         }
