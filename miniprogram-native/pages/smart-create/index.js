@@ -325,6 +325,8 @@ Page({
     this.setData({ stylePopupOptions: opts, styleSelected: sel });
   },
   closeStylePopup: function () { this.setData({ stylePopupOpen: false }); },
+  // catchtap 占位：阻止 tap 冒泡到遮罩（空 catchtap="" 在 WeChat 下会冒泡导致弹窗闪退）
+  noop: function () {},
   confirmStylePopup: function () {
     var p = Object.assign({}, this.data.product);
     p.style = this.data.styleSelected.join(",");

@@ -54,7 +54,7 @@
 
       <!-- 风格多选弹窗 -->
       <view class="sc-popup-mask" wx:if="{{stylePopupOpen}}" bindtap="closeStylePopup">
-        <view class="sc-popup" catchtap="">
+        <view class="sc-popup" catchtap="noop">
           <view class="sc-popup-head">
             <text class="sc-popup-title">选择风格（可多选）</text>
             <text class="sc-popup-count">已选 {{styleSelected.length}} 个</text>
