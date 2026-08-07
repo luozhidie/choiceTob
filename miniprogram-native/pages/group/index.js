@@ -1,11 +1,9 @@
 var app = getApp();
 
-// 店主官方福利群二维码（请上传到 Supabase blocks-images 公共桶同名路径）
-var GROUP_QR = 'https://lzdchoice.supabase.co/storage/v1/object/public/blocks-images/owner-group-qr.png';
-
+// 群二维码在后台「站点图片管理」中编辑（site_assets.key = owner_group_qr），不在前端写死
 Page({
   data: {
-    qrUrl: GROUP_QR,
+    qrUrl: '',
     qrError: false,
     claimed: false,
     notLogin: false,
@@ -18,8 +16,26 @@ Page({
   },
 
   onShow: function () {
+    this.loadQr();
     var token = wx.getStorageSync('token') || '';
     if (!token) { this.setData({ notLogin: true }); }
+  },
+
+  // 从后台 site_assets 读取群二维码（owner_group_qr）
+  loadQr: function () {
+    var t = this;
+    wx.request({
+      url: 'https://colour-choice.art/api/public/site-assets?keys=owner_group_qr',
+      method: 'GET',
+      success: function (r) {
+        var map = (r.data || {}).data || {};
+        var url = map.owner_group_qr || '';
+        t.setData({ qrUrl: url, qrError: !url });
+      },
+      fail: function () {
+        t.setData({ qrUrl: '', qrError: true });
+      }
+    });
   },
 
   onQrError: function () {
@@ -27,7 +43,7 @@ Page({
   },
 
   previewQr: function () {
-    if (this.data.qrError) return;
+    if (this.data.qrError || !this.data.qrUrl) return;
     wx.previewImage({ urls: [this.data.qrUrl] });
   },
 

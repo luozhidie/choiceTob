@@ -93,6 +93,14 @@ const ASSET_CONFIGS = [
     sizeHint: "正方形，建议 ≥ 400×400",
     required: false,
   },
+  {
+    key: "owner_group_qr",
+    title: "👥 店主福利社群群二维码",
+    desc: "一手店主官方福利群二维码，用于小程序「我的 → 我的活动 → 店主福利社群」页展示，客户长按识别进群",
+    icon: ImageIcon,
+    sizeHint: "正方形，建议 ≥ 500×500",
+    required: false,
+  },
 ];
 
 export default function AdminSiteAssetsPage() {

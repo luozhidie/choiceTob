@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         pay_wechat_qr: "微信收款二维码",
         pay_alipay_qr: "支付宝收款二维码",
         wechat_work_qr: "企业微信二维码",
+        owner_group_qr: "店主福利社群群二维码",
       };
       const { error } = await supabase
         .from("site_assets")

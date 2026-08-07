@@ -9,14 +9,14 @@
   <view class="qr-card">
     <text class="qr-tip">长按或点击二维码，识别进群</text>
     <image
-      wx:if="{{!qrError}}"
+      wx:if="{{qrUrl && !qrError}}"
       class="qr-img"
       src="{{qrUrl}}"
       mode="aspectFit"
       binderror="onQrError"
       bindtap="previewQr"
     ></image>
-    <view wx:if="{{qrError}}" class="qr-fallback">
+    <view wx:if="{{!qrUrl || qrError}}" class="qr-fallback">
       <text class="qr-fallback-icon">👥</text>
       <text class="qr-fallback-text">群二维码待管理员上传</text>
       <text class="qr-fallback-sub">请联系客服获取进群方式</text>
