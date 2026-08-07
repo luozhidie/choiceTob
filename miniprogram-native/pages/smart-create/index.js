@@ -298,10 +298,11 @@ Page({
             var costY = parseFloat(p && p.cost_price) || 0;
             var snap = null;
             if (costY > 0) {
-              var r = Math.round(costY / 0.26 * 1.10);
+              var r = Math.round(costY / 0.26 * 1.10); // 原价 = 成本价÷0.26×110%
+              var retail = Math.round(r * 0.5);         // 零售价 = 原价×50%（五折促销）
               var w = Math.round(r * 0.33);
               var b = Math.round(r * 0.28);
-              snap = { costY: costY, price: String(r), original_price: String(r * 2), wholesale_price: String(w), bulk_price: String(b) };
+              snap = { costY: costY, price: String(retail), original_price: String(r), wholesale_price: String(w), bulk_price: String(b) };
             }
             t.setData({ product: p, uploadedUrls: urls, setItems: [], setSumR: 0, setSumW: 0, setSumB: 0, setSumC: 0, lastAutoCalc: snap, originalPriceSnap: null });
             if (res.data.source === 'mock') t.showToast('AI 识别超时，已按备注生成草稿');
