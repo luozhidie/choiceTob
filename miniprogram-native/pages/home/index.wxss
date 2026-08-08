@@ -1,4 +1,4 @@
-page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; }
+page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; overflow-x: hidden; }
 
 /* 商品照片墙：横幅无图时自动兜底 */
 .pc-bg{position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(135deg,#8a6d5b,#b08968,#d9c2a8);overflow:hidden;}
@@ -15,9 +15,9 @@ page { background: var(--bg); color: #1a1a2e; font-family: -apple-system,BlinkMa
   padding:max(12rpx,env(safe-area-inset-top)) 28rpx 14rpx;
   box-shadow:0 4rpx 20rpx rgba(0,0,0,.06);
 }
-/* 后台设置的背景图：铺满头部、置于内容之下 */
-.sticky-header .hdr-bg{position:absolute;left:0;top:0;width:100%;height:100%;z-index:0;}
-.sticky-header .hdr-mask{position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,.26);z-index:1;}
+/* 后台设置的背景图：铺满头部（含左右 28rpx padding 区域，与 headerStyle 的 CSS 背景完全对齐）、置于内容之下 */
+.sticky-header .hdr-bg{position:absolute;left:-28rpx;top:0;width:calc(100% + 56rpx);height:100%;z-index:0;}
+.sticky-header .hdr-mask{position:absolute;left:-28rpx;top:0;width:calc(100% + 56rpx);height:100%;background:rgba(0,0,0,.26);z-index:1;}
 .sticky-header .header-top,
 .sticky-header .header-titles,
 .sticky-header .header-search{position:relative;z-index:2;}
