@@ -101,7 +101,7 @@ jobs:
             echo "::warning::私钥首行不是 -----BEGIN ... PRIVATE KEY-----，可能不是有效 PEM"
           fi
           node upload-native.js 2>upload_err.log || {
-            echo "::error::上传失败，错误摘要: $(head -c 1500 upload_err.log | tr '\n' ' ')"
+            echo "::error::上传失败 appid=[${WECHAT_APPID:-空}] 错误摘要: $(head -c 1200 upload_err.log | tr '\n' ' ')"
             exit 1
           }
 
