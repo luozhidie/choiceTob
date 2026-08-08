@@ -355,12 +355,54 @@ export default function AdminProductsPage() {
     style: string;
   }>({ market: "", vibe: "", styleGender: "", style: "" });
 
+  // 风格多选弹窗（电脑端多选+自定义，跟小程序一致；逗号分隔存入 params.style）
+  const [stylePopupOpen, setStylePopupOpen] = useState(false);
+  const [stylePopupOptions, setStylePopupOptions] = useState<{ label: string; selected: boolean }[]>([]);
+  const [styleCustomInput, setStyleCustomInput] = useState("");
+
   useEffect(() => {
     fetch("/api/public/category-tree")
       .then((r) => r.json())
       .then((j) => { if (j.success && j.data) setTreeConfig(j.data); })
       .catch(() => {});
   }, []);
+
+  // 打开风格多选弹窗（预勾选当前已选项；自定义值回填到输入框）
+  const openStylePopup = () => {
+    const presetList: string[] = cascade.styleGender && treeConfig
+      ? getStyleValues(treeConfig, cascade.styleGender)
+      : treeConfig
+        ? getLevelValues(treeConfig, "style")
+        : [];
+    const currentSel = (cascade.style || "").split(",").map((s) => s.trim()).filter(Boolean);
+    const opts = presetList.map((label) => ({ label, selected: currentSel.includes(label) }));
+    const customs = currentSel.filter((v) => !presetList.includes(v));
+    setStylePopupOptions(opts);
+    setStyleCustomInput(customs.join(", "));
+    setStylePopupOpen(true);
+  };
+
+  // 勾选/取消预设风格
+  const toggleStylePopupItem = (i: number) => {
+    const opts = stylePopupOptions.slice();
+    opts[i] = { ...opts[i], selected: !opts[i].selected };
+    setStylePopupOptions(opts);
+  };
+
+  // 关闭风格弹窗（不保存）
+  const closeStylePopup = () => setStylePopupOpen(false);
+
+  // 确定风格选择：合并预设勾选项 + 自定义输入（去重，逗号分隔）
+  const confirmStylePopup = () => {
+    const presetSel = stylePopupOptions.filter((o) => o.selected).map((o) => o.label);
+    const customs = styleCustomInput
+      .split(/[,,，、\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const all = Array.from(new Set([...presetSel, ...customs]));
+    setCascade((c) => ({ ...c, style: all.join(",") }));
+    setStylePopupOpen(false);
+  };
 
   // 品类下拉项：分类树品类值 + 动态品类(方案 AI 写入) + 当前已选(兜底)
   const categoryOptions = useMemo(() => {
@@ -704,7 +746,7 @@ export default function AdminProductsPage() {
       color_hex: form.color_hex.trim() || null,
       color_season_code: form.color_season_code.trim() || null,
       style_conclusion: form.style_conclusion.trim() || null,
-      style_type: (cascade.style || form.style_type).trim() || null,
+      style_type: ((cascade.style ? cascade.style.split(",")[0].trim() : form.style_type) || "").trim() || null,
       // 商品参数
       material: form.fabrics.length > 0 ? form.fabrics.join("/") : null,
       sizes: form.sizesSel.length > 0 ? form.sizesSel.join("/") : null,
@@ -1823,9 +1865,9 @@ export default function AdminProductsPage() {
                       ))}
                     </select>
                   </div>
-                  {/* 风格：性别 + 风格 */}
+                  {/* 风格：性别 + 风格（多选+自定义，逗号分隔存入 params.style） */}
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">风格（女士/男士）</label>
+                    <label className="block text-xs text-gray-500 mb-1">风格（女士/男士，可多选+自定义）</label>
                     <div className="flex gap-1">
                       <select
                         value={cascade.styleGender}
@@ -1842,22 +1884,84 @@ export default function AdminProductsPage() {
                         <option value="女">女</option>
                         <option value="男">男</option>
                       </select>
-                      <select
-                        value={cascade.style}
-                        onChange={(e) => setCascade((c) => ({ ...c, style: e.target.value }))}
-                        className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      <button
+                        type="button"
+                        onClick={openStylePopup}
+                        title={cascade.style || "选择风格"}
+                        className="flex-1 px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-left focus:outline-none focus:ring-2 focus:ring-primary/20 truncate"
                       >
-                        <option value="">风格</option>
-                        {(cascade.styleGender && treeConfig
-                          ? getStyleValues(treeConfig, cascade.styleGender)
-                          : treeConfig
-                            ? getLevelValues(treeConfig, "style")
-                            : []
-                        ).map((v) => (
-                          <option key={v} value={v}>{v}</option>
-                        ))}
-                      </select>
+                        {cascade.style || <span className="text-gray-400">选择风格（可多选+自定义）</span>}
+                      </button>
                     </div>
+                    {/* 风格多选弹窗（电脑端） */}
+                    {stylePopupOpen && (
+                      <div
+                        className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center"
+                        onClick={closeStylePopup}
+                      >
+                        <div
+                          className="bg-white w-full sm:max-w-md sm:rounded-xl rounded-t-2xl flex flex-col max-h-[85vh] shadow-2xl"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100">
+                            <span className="text-base font-semibold text-gray-800">选择风格</span>
+                            <span className="text-xs text-amber-600">已选 {stylePopupOptions.filter((o) => o.selected).length} 个</span>
+                          </div>
+                          <div className="flex-1 overflow-y-auto py-2 min-h-[180px]">
+                            {stylePopupOptions.length === 0 ? (
+                              <div className="text-center text-gray-400 text-sm py-8">暂无可选风格</div>
+                            ) : (
+                              stylePopupOptions.map((opt, i) => (
+                                <div
+                                  key={opt.label}
+                                  onClick={() => toggleStylePopupItem(i)}
+                                  className={`flex items-center px-5 py-2.5 cursor-pointer border-b border-gray-50 ${opt.selected ? "bg-amber-50" : "hover:bg-gray-50"}`}
+                                >
+                                  <span
+                                    className={`w-5 h-5 mr-3 rounded border-2 flex items-center justify-center text-xs flex-shrink-0 ${opt.selected ? "bg-amber-500 border-amber-500 text-white" : "border-gray-300 text-transparent"}`}
+                                  >
+                                    ✓
+                                  </span>
+                                  <span className="text-sm text-gray-800">{opt.label}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                          <div className="px-5 py-3 border-t border-gray-100">
+                            <label className="block text-xs text-gray-500 mb-1">自定义（逗号分隔，可多个，如：国潮,街头,甜酷）</label>
+                            <input
+                              type="text"
+                              value={styleCustomInput}
+                              onChange={(e) => setStyleCustomInput(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.preventDefault();
+                                  confirmStylePopup();
+                                }
+                              }}
+                              placeholder="如：国潮,街头,甜酷"
+                              className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-200"
+                            />
+                          </div>
+                          <div className="flex gap-3 px-5 py-3 border-t border-gray-100">
+                            <button
+                              type="button"
+                              onClick={closeStylePopup}
+                              className="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-600 text-sm font-semibold"
+                            >
+                              取消
+                            </button>
+                            <button
+                              type="button"
+                              onClick={confirmStylePopup}
+                              className="flex-1 py-2.5 rounded-full bg-gradient-to-r from-[#2d1b2e] to-[#4a3a4b] text-white text-sm font-semibold"
+                            >
+                              确定
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {/* 品类 */}
                   <div>
