@@ -88,8 +88,22 @@ jobs:
           });
           UPLOADSCRIPT
 
-          echo "$WECHAT_KEY" > ./private.key && chmod 600 ./private.key
-          node upload-native.js
+          # 规范化私钥：Secret 粘贴时常见把真实换行存成字面 \n，导致 miniprogram-ci 解析失败
+          if printf '%s' "$WECHAT_KEY" | grep -q '\\n'; then
+            echo "[key] 检测到字面 \\n，已还原为真实换行"
+            printf '%s' "$WECHAT_KEY" | sed 's/\\n/\n/g' > ./private.key
+          else
+            printf '%s' "$WECHAT_KEY" > ./private.key
+          fi
+          chmod 600 ./private.key
+          echo "[key] 行数=$(wc -l < ./private.key) 首行=$(head -1 ./private.key | cut -c1-28) 尾行=$(tail -1 ./private.key | cut -c1-18)"
+          if ! head -1 ./private.key | grep -q 'PRIVATE KEY'; then
+            echo "::warning::私钥首行不是 -----BEGIN ... PRIVATE KEY-----，可能不是有效 PEM"
+          fi
+          node upload-native.js 2>upload_err.log || {
+            echo "::error::上传失败，错误摘要: $(head -c 1500 upload_err.log | tr '\n' ' ')"
+            exit 1
+          }
 
       - name: Experience Version 提示（自研小程序需手动设为体验版）
         run: |
