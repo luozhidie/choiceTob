@@ -1,0 +1,27 @@
+<view class="page">
+  <!-- 选择衣服 -->
+  <view class="card">
+    <view class="section-title" bindtap="chooseImg">
+      <text>选择你想搭的衣服</text>
+      <text class="arrow">›</text>
+    </view>
+    <view class="img-row">
+      <view wx:for="{{images}}" wx:key="*this" class="img-cell">
+        <image class="img" src="{{item}}" mode="aspectFill"/>
+        <view class="img-del" bindtap="delImg" data-idx="{{index}}">×</view>
+      </view>
+      <view wx:if="{{images.length<9}}" class="img-cell add" bindtap="chooseImg">
+        <text class="add-icon">{{uploading?'...':'+'}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 穿搭需求 -->
+  <view class="card">
+    <text class="section-title red">*穿搭需求：</text>
+    <textarea class="textarea" placeholder="示例1：这几件衣服单看也不丑啊，穿出来就不是那个味儿！求帮我搭搭看，能不能救一下！&#10;示例2：求帮我搭几套夏季通勤穿搭～" value="{{content}}" bindinput="onContent" maxlength="1000"/>
+    <text class="count">{{content.length}}/1000</text>
+  </view>
+
+  <view class="submit-btn" bindtap="submit">确定</view>
+</view>

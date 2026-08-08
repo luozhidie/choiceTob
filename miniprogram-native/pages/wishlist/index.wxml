@@ -1,0 +1,41 @@
+<view class="page">
+  <view class="nav">
+    <view class="nav-back" bindtap="goBack">‹</view>
+    <text class="nav-title">我的心愿单</text>
+    <text class="nav-count">{{items.length}}</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading">加载中...</view>
+
+  <view wx:elif="{{!loggedIn}}" class="empty">
+    <view class="empty-ic">♡</view>
+    <text class="empty-title">请先登录</text>
+    <text class="empty-sub">登录后可查看你加入心愿单的商品</text>
+    <view class="empty-btn" bindtap="goLogin">去登录</view>
+  </view>
+
+  <view wx:elif="{{items.length===0}}" class="empty">
+    <view class="empty-ic">♡</view>
+    <text class="empty-title">还没有心愿商品</text>
+    <text class="empty-sub">遇到没标价但喜欢的款，点「加入心愿单」，集齐量就开价</text>
+    <view class="empty-btn" bindtap="goBuyer">去逛逛 ›</view>
+  </view>
+
+  <view wx:else class="list">
+    <view class="card" wx:for="{{items}}" wx:key="id">
+      <view class="card-img" bindtap="goShop" data-id="{{item.id}}">
+        <image wx:if="{{item.cover_image}}" src="{{item.cover_image}}" mode="aspectFill" />
+        <text wx:else class="card-ph">🛍</text>
+      </view>
+      <view class="card-body" bindtap="goShop" data-id="{{item.id}}">
+        <text class="card-title">{{item.title}}</text>
+        <view class="card-tags">
+          <text wx:if="{{item.wishlist_mode}}" class="tag">价格待定·心愿收集</text>
+          <text wx:if="{{!item.is_published}}" class="tag off">已下架</text>
+        </view>
+        <text class="card-price">{{item.priceLabel}}</text>
+      </view>
+      <view class="card-del" bindtap="removeWish" data-id="{{item.id}}">移除</view>
+    </view>
+  </view>
+</view>

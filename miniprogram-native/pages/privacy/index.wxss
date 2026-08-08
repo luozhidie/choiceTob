@@ -1,0 +1,14 @@
+.page{background:#f5f5f7;min-height:100vh;padding-bottom:40rpx;}
+.topbar{background:#fff;padding:24rpx 32rpx;border-bottom:1rpx solid #eee;}
+.nav-title{font-size:34rpx;font-weight:700;color:#111;}
+.updated{font-size:22rpx;color:#999;padding:24rpx 32rpx 8rpx;}
+.card{background:#fff;border-radius:24rpx;margin:8rpx 24rpx;padding:32rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,0.04);}
+.sec{margin-bottom:36rpx;}
+.sec:last-child{margin-bottom:0;}
+.sec-h{font-size:30rpx;font-weight:700;color:#111;margin-bottom:16rpx;}
+.sec-p{font-size:27rpx;color:#444;line-height:1.8;}
+.sec-p text{white-space:pre-wrap;}
+.sec-list{margin-top:8rpx;}
+.sec-li{font-size:27rpx;color:#444;line-height:1.8;}
+.sec-li text{white-space:pre-wrap;}
+.footer{text-align:center;font-size:22rpx;color:#aaa;margin-top:40rpx;line-height:1.6;}

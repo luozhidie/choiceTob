@@ -1,0 +1,33 @@
+<view class="page">
+  <view class="hd">
+    <text class="h1">相册采集</text>
+    <text class="sub">从手机相册选图，直接上传到商品图库，自动归集可用链接</text>
+  </view>
+
+  <view class="actions">
+    <view class="btn primary" bindtap="chooseImages">{{uploading ? '上传中...' : '从相册选择'}}</view>
+    <view class="btn ghost" bindtap="copyAll">复制全部链接</view>
+    <view class="btn ghost" bindtap="clearAll">清空</view>
+  </view>
+
+  <view class="tip" wx:if="{{tip}}">{{tip}}</view>
+
+  <view class="grid" wx:if="{{images.length>0}}">
+    <view class="cell" wx:for="{{images}}" wx:key="ts">
+      <image src="{{item.viewUrl}}" mode="aspectFill" class="img" bindtap="copyUrl" data-url="{{item.url}}" />
+      <view class="del" catchtap="deleteOne" data-ts="{{item.ts}}">×</view>
+      <text class="cap" bindtap="copyUrl" data-url="{{item.url}}">复制链接</text>
+    </view>
+  </view>
+
+  <view class="empty" wx:if="{{images.length===0 && !uploading}}">
+    <text class="ei">🖼️</text>
+    <text class="et">还没有采集图片</text>
+    <text class="es">点「从相册选择」批量上传商品图</text>
+  </view>
+
+  <view class="foot">
+    <text class="ft">链接可直接用于建商品 / 粘贴到后台</text>
+    <view class="btn link" bindtap="goTool">或用网页版采集器 →</view>
+  </view>
+</view>

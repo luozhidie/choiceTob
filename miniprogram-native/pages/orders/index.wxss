@@ -1,0 +1,39 @@
+page{background: var(--bg);}
+
+/* Tabs */
+.tabs{display:flex;background:#fff;padding:0 8rpx;border-bottom:1rpx solid #f0ece8;position:sticky;top:0;z-index:10;}
+.tab{flex:1;text-align:center;padding:20rpx 0;font-size:25rpx;color:#888;position:relative;}
+.tab-on{color:#1a1a2e;font-weight:700;}
+.tab-on::after{content:'';position:absolute;bottom:0;left:20%;width:60%;height:4rpx;background:#2d1b2e;border-radius:2rpx;}
+
+/* 列表 */
+.list{padding:12rpx 16rpx;}
+
+/* 卡片 */
+.card{background:#fff;border-radius:16rpx;margin-bottom:16rpx;overflow:hidden;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}
+.card-header{display:flex;justify-content:space-between;align-items:center;padding:18rpx 20rpx;border-bottom:1rpx solid #f5f2ef;}
+.ch-no{font-size:23rpx;color:#888;}
+.ch-status{font-size:24rpx;font-weight:600;color:#2d1b2e;}
+
+.card-body{display:flex;padding:16rpx 20rpx;align-items:center;}
+.cb-img{width:140rpx;height:140rpx;border-radius:12rpx;background:#eee;flex-shrink:0;margin-right:16rpx;}
+.cb-info{flex:1;}
+.cb-name{font-size:27rpx;font-weight:500;color:#333;display:block;margin-bottom:6rpx;}
+.cb-price{font-size:30rpx;color:#2d1b2e;font-weight:700;}
+.cb-qty{font-size:22rpx;color:#999;margin-left:8rpx;}
+
+/* 操作按钮 */
+.card-actions{display:flex;justify-content:flex-end;gap:14rpx;padding:14rpx 20rpx;border-top:1rpx solid #f5f2ef;}
+.ca-btn{padding:12rpx 28rpx;border-radius:24rpx;font-size:24rpx;font-weight:500;}
+.ca-cancel{border:1rpx solid #ddd;color:#888;}
+.ca-pay{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;}
+.ca-confirm{border:1rpx solid #4caf50;color:#4caf50;}
+.ca-refund{border:1rpx solid #ff9800;color:#ff9800;}
+
+/* 空/加载 */
+.empty{text-align:center;padding:120rpx 0;}
+.ei{font-size:80rpx;display:block;color:#ddd;}
+.et{font-size:27rpx;color:#ccc;display:block;margin-top:12rpx;margin-bottom:24rpx;}
+.eb{display:inline-block;background:#1a1a2e;color:#fff;padding:18rpx 48rpx;border-radius:36rpx;font-size:27rpx;}
+.ld{text-align:center;padding:80rpx 0;color:#999;font-size:26rpx;}
+.sbtm{height:30rpx;}

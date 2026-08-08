@@ -1,0 +1,63 @@
+<view class="page">
+  <!-- 日期标签 -->
+  <scroll-view scroll-x class="date-bar">
+    <view wx:for="{{dates}}" wx:key="key" class="date-item {{activeDate===item.key?'on':''}}" bindtap="selectDate" data-key="{{item.key}}">
+      <text class="dw">{{item.week}}</text>
+      <text class="dm">{{item.md}}</text>
+    </view>
+  </scroll-view>
+
+  <!-- 营销方案 -->
+  <view wx:if="{{plans.length>0}}" class="plans">
+    <view class="plans-title">营销方案</view>
+    <scroll-view scroll-x class="plan-scroll">
+      <view wx:for="{{plans}}" wx:key="id" class="plan-card" bindtap="goPlan" data-plan="{{item}}">
+        <image wx:if="{{item.image_url}}" class="plan-img" src="{{item.image_url}}" mode="aspectFill"/>
+        <view wx:else class="plan-img ph">🎁</view>
+        <text class="plan-name">{{item.title}}</text>
+        <text wx:if="{{item.price>0}}" class="plan-price">¥{{item.price}}</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 顾问列表 -->
+  <view wx:if="{{!loading}}" class="list">
+    <block wx:if="{{consultants.length>0}}">
+      <view wx:for="{{consultants}}" wx:key="id" class="c-card">
+        <!-- 顾问头部 -->
+        <view class="c-head">
+          <image wx:if="{{item.avatar_url}}" class="c-avatar" src="{{item.avatar_url}}" mode="aspectFill" bindtap="goConsultant" data-id="{{item.id}}"/>
+          <view wx:else class="c-avatar ph" bindtap="goConsultant" data-id="{{item.id}}">👤</view>
+          <view class="c-info" bindtap="goConsultant" data-id="{{item.id}}">
+            <text class="c-name">{{item.name}}<text class="c-title">{{item.title}}</text></text>
+            <text class="c-desc">{{item.description}}</text>
+          </view>
+          <view class="c-actions">
+            <button class="act-btn follow {{followed.indexOf(item.id)>=0?'on':''}}" bindtap="toggleFollow" data-id="{{item.id}}">{{followed.indexOf(item.id)>=0?'已关注':'关注'}}</button>
+            <button class="act-btn share" open-type="share" bindtap="setShareData" data-id="{{item.id}}" data-name="{{item.name}}">分享</button>
+          </view>
+        </view>
+
+        <!-- 近一周排期 -->
+        <view class="week-list">
+          <view wx:for="{{item.weekSchedule}}" wx:for-item="day" wx:key="date" class="week-row" bindtap="goTime" data-id="{{item.id}}" data-name="{{item.name}}" data-date="{{day.date}}">
+            <text class="wr-date">{{day.label}}</text>
+            <text class="wr-remain">{{day.remain>0?('余'+day.remain+'小时'):'已约满'}}</text>
+            <text class="wr-arrow">›</text>
+          </view>
+        </view>
+
+        <view class="view-all" bindtap="goConsultant" data-id="{{item.id}}">查看全部</view>
+      </view>
+    </block>
+    <view wx:else class="empty">暂无形象顾问，请到后台添加</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中…</view>
+
+  <!-- 我的预约 -->
+  <view class="my-bar" bindtap="goMy">
+    <text>我的预约</text>
+    <text class="mb-arrow">›</text>
+  </view>
+</view>
