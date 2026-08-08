@@ -104,5 +104,10 @@
     "scope.userLocation": {
       "desc": "用于推荐附近货源"
     }
+  },
+  "requiredPrivateInfos": {
+    "chooseAddress": {
+      "desc": "用于选择收货地址"
+    }
   }
 }
