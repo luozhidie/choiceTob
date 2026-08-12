@@ -1,1 +1,0 @@
-ALTER TABLE planning_reports ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now();
