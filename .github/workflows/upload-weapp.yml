@@ -25,7 +25,9 @@ jobs:
       - name: Install miniprogram-ci
         run: |
           cd "$GITHUB_WORKSPACE"
-          npm install miniprogram-ci --save-dev --no-audit --no-fund 2>&1 || npm install miniprogram-ci --save-dev --no-audit --no-fund 2>&1
+          npm install miniprogram-ci@2.1.28 --save-dev --no-audit --no-fund 2>&1 || npm install miniprogram-ci@2.1.28 --save-dev --no-audit --no-fund 2>&1
+          echo "===== 实际安装版本 ====="
+          npx miniprogram-ci --version 2>/dev/null || npm ls miniprogram-ci 2>/dev/null || true
 
       - name: Prepare dist from native code
         run: |
