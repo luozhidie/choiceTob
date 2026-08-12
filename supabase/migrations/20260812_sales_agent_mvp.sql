@@ -18,7 +18,8 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS agent_level text NOT NULL DEFAULT '普通',         -- 普通 | 白银 | 黄金 | 钻石
   ADD COLUMN IF NOT EXISTS tryon_credits integer NOT NULL DEFAULT 0,         -- 剩余试衣次数
   ADD COLUMN IF NOT EXISTS tryon_subscription_tier text NOT NULL DEFAULT 'none', -- none | personal_basic | personal_pro | shop | brand
-  ADD COLUMN IF NOT EXISTS tryon_subscription_expires_at timestamptz;
+  ADD COLUMN IF NOT EXISTS tryon_subscription_expires_at timestamptz,
+  ADD COLUMN IF NOT EXISTS tryon_free_claimed boolean NOT NULL DEFAULT false; -- 是否已领免费试用（前100名）
 
 -- 代理店铺 FK
 ALTER TABLE public.profiles
@@ -293,6 +294,62 @@ $$;
 ALTER TABLE public.payment_orders ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "service_role_all_payment_orders" ON public.payment_orders;
 CREATE POLICY "service_role_all_payment_orders" ON public.payment_orders
+  FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
+
+-- ───────────────────────────────────────────────────────────
+-- 8) 免费试用：前 100 名每人 1 次虚拟试衣
+-- ───────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.tryon_free_trials (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_tryon_free_trials_user ON public.tryon_free_trials(user_id);
+CREATE INDEX IF NOT EXISTS idx_tryon_free_trials_created ON public.tryon_free_trials(created_at);
+
+-- 领取免费试用（限前 100 名，每人 1 次）
+-- 并发极小可忽略；如要绝对严格可加 advisory lock
+CREATE OR REPLACE FUNCTION public.claim_tryon_free_trial(p_user_id uuid)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_count int;
+  v_expires timestamptz;
+  v_sub_id uuid;
+BEGIN
+  -- 已领取（每人 1 次）
+  IF EXISTS (SELECT 1 FROM public.tryon_free_trials WHERE user_id = p_user_id) THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'already_claimed');
+  END IF;
+
+  -- 名额（前 100 名）
+  SELECT count(*) INTO v_count FROM public.tryon_free_trials;
+  IF v_count >= 100 THEN
+    RETURN jsonb_build_object('ok', false, 'reason', 'sold_out', 'remaining', 0);
+  END IF;
+
+  -- 落领取记录
+  INSERT INTO public.tryon_free_trials(user_id) VALUES (p_user_id);
+
+  -- 发放 1 次免费额度：建一条 0 元试用订阅，复用 consume_tryon_credit 正常扣减
+  v_expires := now() + interval '1 month';
+  INSERT INTO public.tryon_subscriptions(
+    user_id, tier, price, credits_total, credits_remaining, expires_at, payment_id, status
+  ) VALUES (
+    p_user_id, 'free_trial', 0, 1, 1, v_expires, 'free_trial', 'active'
+  ) RETURNING id INTO v_sub_id;
+
+  UPDATE public.profiles SET
+    tryon_free_claimed = true,
+    tryon_credits = tryon_credits + 1
+  WHERE id = p_user_id;
+
+  RETURN jsonb_build_object('ok', true, 'credits', 1, 'remaining', 100 - v_count - 1, 'subscription_id', v_sub_id);
+END;
+$$;
+
+ALTER TABLE public.tryon_free_trials ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "service_role_all_tryon_free_trials" ON public.tryon_free_trials;
+CREATE POLICY "service_role_all_tryon_free_trials" ON public.tryon_free_trials
   FOR ALL USING (auth.role() = 'service_role') WITH CHECK (auth.role() = 'service_role');
 
 -- 完成提示

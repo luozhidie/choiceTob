@@ -9,6 +9,19 @@
     <text class="cb-num">{{curCredits}}</text>
   </view>
 
+  <!-- 免费试用：前 100 名，每人 1 次 -->
+  <view class="free-trial">
+    <view class="ft-left">
+      <text class="ft-title">🎁 免费试用虚拟试衣</text>
+      <text class="ft-desc">前 100 名专享 · 每人 1 次 · 剩余 {{freeRemaining}} 名</text>
+    </view>
+    <view class="ft-btn {{freeClaimed ? 'done' : ''}} {{freeRemaining <= 0 ? 'sold' : ''}}" bindtap="claimFree">
+      <text wx:if="{{freeClaimed}}">已领取</text>
+      <text wx:elif="{{freeRemaining <= 0}}">已抢光</text>
+      <text wx:else>立即领取</text>
+    </view>
+  </view>
+
   <view class="plans">
     <view class="plan" wx:for="{{plans}}" wx:key="id" bindtap="buy" data-tier="{{item.id}}">
       <view class="plan-top">

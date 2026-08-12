@@ -11,6 +11,18 @@
 .cb-label { font-size: 13px; color: #b9a89e; }
 .cb-num { font-size: 22px; font-weight: 800; color: #7fc8a0; }
 
+/* 免费试用条 */
+.free-trial { display: flex; align-items: center; justify-content: space-between;
+  background: linear-gradient(135deg, rgba(201,162,75,.18), rgba(224,201,135,.1));
+  border: 1px solid rgba(201,162,75,.5); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; }
+.ft-left { display: flex; flex-direction: column; }
+.ft-title { font-size: 14px; font-weight: 700; color: #e3c987; }
+.ft-desc { font-size: 11px; color: #cdbfa8; margin-top: 3px; }
+.ft-btn { font-size: 13px; font-weight: 700; color: #1a0f1c; background: linear-gradient(145deg, #e3c987, #C9A24B);
+  padding: 8px 16px; border-radius: 20px; }
+.ft-btn.done { background: rgba(127,200,160,.2); color: #7fc8a0; border: 1px solid rgba(127,200,160,.4); }
+.ft-btn.sold { background: rgba(185,168,158,.2); color: #b9a89e; }
+
 .plans { display: flex; flex-direction: column; gap: 12px; }
 .plan { background: linear-gradient(160deg, #241420, #1c1019); border: 1px solid rgba(201,162,75,.25);
   border-radius: 16px; padding: 16px; }
