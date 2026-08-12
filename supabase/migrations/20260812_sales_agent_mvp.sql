@@ -215,21 +215,27 @@ CREATE POLICY "service_role_all_tryon_credit_log" ON public.tryon_credit_log
 
 -- ───────────────────────────────────────────────────────────
 -- 6.5) payment_orders：统一下单的待支付跟踪（notify 靠它识别商品）
+-- 注意：该表可能已由生产环境（Vercel 微信支付路由）创建，结构可能不同。
+-- 因此不 DROP/CREATE，而是按需补齐本迁移需要的列（幂等，不破坏生产数据）。
 -- ───────────────────────────────────────────────────────────
-CREATE TABLE IF NOT EXISTS public.payment_orders (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  out_trade_no text UNIQUE NOT NULL,
-  user_openid text,
-  user_id uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
-  product_type text NOT NULL,   -- wholesale | tryon | vip | product
-  product_id text,
-  amount_fen integer NOT NULL,  -- 微信金额（分）
-  amount_yuan numeric NOT NULL, -- 元
-  status text NOT NULL DEFAULT 'pending', -- pending | paid | failed
-  created_at timestamptz NOT NULL DEFAULT now(),
-  paid_at timestamptz
-);
-CREATE INDEX IF NOT EXISTS idx_payment_orders_no ON public.payment_orders(out_trade_no);
+ALTER TABLE public.payment_orders
+  ADD COLUMN IF NOT EXISTS id uuid DEFAULT gen_random_uuid(),
+  ADD COLUMN IF NOT EXISTS out_trade_no text,
+  ADD COLUMN IF NOT EXISTS user_openid text,
+  ADD COLUMN IF NOT EXISTS user_id uuid,
+  ADD COLUMN IF NOT EXISTS product_type text,
+  ADD COLUMN IF NOT EXISTS product_id text,
+  ADD COLUMN IF NOT EXISTS amount_fen integer,
+  ADD COLUMN IF NOT EXISTS amount_yuan numeric,
+  ADD COLUMN IF NOT EXISTS status text,
+  ADD COLUMN IF NOT EXISTS created_at timestamptz,
+  ADD COLUMN IF NOT EXISTS paid_at timestamptz;
+-- 补齐可能缺失的默认值约束（仅当列刚被新增时生效；已存在则无副作用）
+ALTER TABLE public.payment_orders ALTER COLUMN product_type SET DEFAULT 'product';
+ALTER TABLE public.payment_orders ALTER COLUMN status SET DEFAULT 'pending';
+ALTER TABLE public.payment_orders ALTER COLUMN created_at SET DEFAULT now();
+-- 唯一索引（若生产已存在同名/同列唯一约束会被跳过）
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_orders_no ON public.payment_orders(out_trade_no);
 
 -- ───────────────────────────────────────────────────────────
 -- 6.6) 试衣月卡落地
