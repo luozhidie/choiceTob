@@ -83,7 +83,8 @@ export async function unifiedOrder(params: {
   body: string;
   total_fee: number;       // 单位：分
   openid?: string;          // JSAPI必传
-  platform?: PayPlatform;   // 默认 mini
+  platform?: PayPlatform;   // 默认 native
+  notify_url?: string;      // 可选：自定义回调地址（默认 WECHAT_NOTIFY_URL）
 }) {
   // 环境变量校验
   if (!MCHID || !APIV2_KEY) {
@@ -93,7 +94,7 @@ export async function unifiedOrder(params: {
     throw new Error('微信支付未配置：缺少 WECHAT_NOTIFY_URL 环境变量');
   }
 
-  let { out_trade_no, body, total_fee, openid, platform = 'native' } = params;
+  let { out_trade_no, body, total_fee, openid, platform = 'native', notify_url } = params;
 
   // JSAPI支付必须传openid（小程序/公众号）
   if ((platform === 'mini' || platform === 'mp') && !openid) {
@@ -109,6 +110,8 @@ export async function unifiedOrder(params: {
     mweb: 'MWEB',
   };
 
+  const finalNotify = notify_url || NOTIFY_URL;
+
   const data: Record<string, string> = {
     appid: getAppId(platform),
     mch_id: MCHID,
@@ -117,7 +120,7 @@ export async function unifiedOrder(params: {
     out_trade_no,
     total_fee: String(total_fee),
     spbill_create_ip: '127.0.0.1',
-    notify_url: NOTIFY_URL,
+    notify_url: finalNotify,
     trade_type: tradeTypeMap[platform],
   };
 
