@@ -47,6 +47,10 @@ Page({
     resultUrl: '',
     resultCredits: 0,
     showResult: false,
+    // —— 普及 / 专业 分层 ——
+    proMode: false,
+    categories: [],
+    category: '',
     // —— 付费墙 / 推广 ——
     packages: PACKAGES,
     showPackages: false,
@@ -57,6 +61,7 @@ Page({
 
   onLoad: function (options) {
     if (options && options.promo) { this.setData({ promo: true }); }
+    if (options && options.pro) { this.setData({ proMode: true }); }
     this.refreshPass();
     this.loadData();
   },
@@ -106,10 +111,16 @@ Page({
           return { code: m.code, name_zh: m.name_zh, gender: m.gender, items: items };
         }).filter(function (c) { return c.items.length > 0; });
 
+        // 品类（用于普及版筛选，不暴露季型术语）
+        var catCount = {};
+        products.forEach(function (p) { if (p.category) catCount[p.category] = (catCount[p.category] || 0) + 1; });
+        var categories = Object.keys(catCount).sort(function (a, b) { return catCount[b] - catCount[a]; });
+
         var defBuyer = (mainStyles[0] && mainStyles[0].code) || '';
         t._seasonMap = seasonMap; t._styleMap = styleMap;
         t.setData({
           seasons: seasons, mainStyles: mainStyles, products: products, lookCards: lookCards,
+          categories: categories,
           buyerStyle: defBuyer, buyerProducts: t.computeBuyer(defBuyer, products),
           browseProducts: products,
         });
@@ -128,6 +139,11 @@ Page({
     if (!season) return products;
     return products.filter(function (p) { return p.seasons.indexOf(season) >= 0; });
   },
+  computeByCat: function (cat, products) {
+    products = products || this.data.products;
+    if (!cat) return products;
+    return products.filter(function (p) { return p.category === cat; });
+  },
 
   choosePerson: function () {
     var t = this;
@@ -138,6 +154,40 @@ Page({
         if (f) t.setData({ personPath: f.tempFilePath });
       }
     });
+  },
+
+  // —— 普及版：AI 帮我搭（后台复用专业匹配，话术说人话）——
+  smartPick: function () {
+    var cards = this.data.lookCards;
+    var tray;
+    if (cards.length) {
+      // 取匹配度最高的预置整体造型（背后就是季型×风格的专家逻辑）
+      tray = cards[0].items.slice();
+    } else {
+      tray = this.data.products.slice(0, 4);
+    }
+    this.setData({ tray: tray });
+    wx.showToast({ title: '已为你搭好一套', icon: 'none' });
+  },
+
+  setCategory: function (e) {
+    var c = e.currentTarget.dataset.c;
+    this.setData({ category: c, browseProducts: this.computeByCat(c, this.data.products) });
+  },
+
+  // —— 专业版开关（开通权益后解锁）——
+  togglePro: function () {
+    var self = this;
+    if (!this.data.proMode && !hasPass()) {
+      wx.showModal({
+        title: '专业色彩顾问',
+        content: '开通试衣套餐后解锁：你的色彩季型 / 穿衣风格诊断 + 按风格一键生成专属造型。',
+        confirmText: '去开通', cancelText: '暂不需要',
+        success: function (r) { if (r.confirm) self.openPackages(); }
+      });
+      return;
+    }
+    this.setData({ proMode: !this.data.proMode, mode: 'look' });
   },
 
   setMode: function (e) { this.setData({ mode: e.currentTarget.dataset.m }); },
@@ -239,7 +289,7 @@ Page({
                 pass.triesLeft = 999;
               }
               setPass(pass);
-              t.setData({ showPackages: false });
+              t.setData({ showPackages: false, proMode: false });
               t.refreshPass();
               wx.showToast({ title: '已开通，去试衣', icon: 'success' });
             },
