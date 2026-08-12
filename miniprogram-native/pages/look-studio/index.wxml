@@ -3,6 +3,12 @@
   <view class="hero">
     <text class="ht">整体造型 · Look Studio</text>
     <text class="hs">把打过「色彩季型×穿衣风格」标签的服装，试穿到与你季型/风格匹配的你身上</text>
+    <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
+  </view>
+  <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单体验 ¥1 试穿一整套</view>
+  <view class="pass-bar" bindtap="openPackages">
+    <text class="pass-t">{{passText}}</text>
+    <text class="pass-go">{{isPass ? '管理' : '去开通'}} ›</text>
   </view>
 
   <!-- 我的形象 -->
@@ -107,9 +113,26 @@
 
   <!-- 结果弹层 -->
   <view wx:if="{{showResult}}" class="mask" bindtap="closeResult">
-    <view class="result" catchtap="previewResult">
-      <text class="rc">整体造型已生成 · 消耗 {{resultCredits}} credit（点击看大图）</text>
-      <image src="{{resultUrl}}" mode="widthFix" class="rimg"/>
+    <view class="result" catchtap="noop">
+      <text class="rc">整体造型已生成 · 消耗 {{resultCredits}} credit</text>
+      <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
+      <text class="save-btn" catchtap="saveResult">保存到相册（高清）</text>
+      <text class="close-tip" catchtap="closeResult">点击空白处关闭</text>
+    </view>
+  </view>
+
+  <!-- 套餐面板 -->
+  <view wx:if="{{showPackages}}" class="sheet-mask" bindtap="closePackages">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-t">选择试衣套餐</text>
+      <view wx:for="{{packages}}" wx:key="id" class="pkg {{item.highlight ? 'hl' : ''}}" data-id="{{item.id}}" bindtap="buyPackage">
+        <view class="pkg-l">
+          <text class="pkg-name">{{item.name}}{{item.highlight ? ' · 新人' : ''}}</text>
+          <text class="pkg-desc">{{item.desc}}</text>
+        </view>
+        <text class="pkg-price">¥{{item.price}}<text class="pkg-unit">/{{item.unit}}</text></text>
+      </view>
+      <text class="sheet-close" bindtap="closePackages">关闭</text>
     </view>
   </view>
 </view>
