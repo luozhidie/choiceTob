@@ -1,0 +1,32 @@
+<view class="page">
+  <!-- 标题 -->
+  <view class="hd">
+    <text class="ht">色彩季型VS穿衣风格判断</text>
+  </view>
+
+  <!-- 测试会员购买入口（付费风格测试） -->
+  <view wx:if="{{!isPersonal}}" class="member-card {{testMode==='male'?'mc-blue':''}}">
+    <view class="mc-left">
+      <view class="mc-title-row">
+        <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
+        <view class="mc-switch">
+          <view class="mc-si {{testMode==='female'?'mc-si-on':''}}" data-mode="female" bindtap="switchMode">女士</view>
+          <view class="mc-si {{testMode==='male'?'mc-si-on':''}}" data-mode="male" bindtap="switchMode">男士</view>
+        </view>
+      </view>
+      <text class="mc-desc">14 题自动诊断 · 找到你的本命色彩与穿衣风格</text>
+    </view>
+    <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
+    <view wx:else class="mc-btn mc-done">已开通 ✓</view>
+  </view>
+
+  <!-- 后台可配 Hero 大图 -->
+  <view wx:if="{{heroImage}}" class="hero-img-wrap">
+    <image src="{{heroImage}}" mode="widthFix" class="hero-img" />
+  </view>
+
+  <!-- 后台可配满框图片模块 -->
+  <view wx:if="{{blocks.length > 0}}" class="blocks">
+    <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
+  </view>
+</view>

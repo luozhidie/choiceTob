@@ -1,0 +1,443 @@
+<view class="page" style="{{pageStyle}}">
+  <!-- ========== 粘性头部 ========== -->
+  <view class="sticky-header" style="{{headerStyle}};">
+    <image wx:if="{{homeBgImage}}" src="{{homeBgImage}}" mode="aspectFill" class="hdr-bg"/>
+    <view wx:if="{{homeBgImage}}" class="hdr-mask"/>
+    <!-- 顶部：小标题 -->
+    <view class="header-top">
+      <text class="ht-small">数据趋动·智选未来</text>
+    </view>
+
+    <!-- 大标题 + 副标题 -->
+    <view class="header-titles">
+      <text class="ht-big">骆芷蝶·智选|供应链平台</text>
+      <text class="ht-sub">服装门店一站式赋能平台</text>
+    </view>
+
+    <!-- 菜单按钮（搜索框上方） -->
+    <view class="ham-btn {{mo?'on':''}}" bindtap="togMenu">
+      <text class="ham-icon">☰</text>
+    </view>
+
+    <!-- 搜索框 -->
+    <view class="header-search" bindtap="goSearch">
+      <text class="hs-icon">🔍</text>
+      <text class="hs-ph">搜索</text>
+    </view>
+  </view>
+
+  <!-- ========== 轮播图上方模块（position==='hero_top'）========== -->
+  <block wx:for="{{heroTopBlocks}}" wx:key="id">
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
+  </block>
+
+  <!-- ========== 轮播图（在头部下方，不叠加） ========== -->
+  <view class="hero-banner">
+    <swiper class="sw" autoplay circular indicator-dots="{{false}}" interval="5000" bindchange="onSwiper">
+      <swiper-item wx:for="{{banners}}" wx:key="id"><image src="{{item.image}}" mode="aspectFill" class="si"/></swiper-item>
+      <swiper-item wx:if="{{banners.length===0}}"><view class="ph"></view></swiper-item>
+    </swiper>
+  </view>
+
+  <!-- ========== 分类标签（轮播图下方，滚动后粘性固定在搜索框下方） ========== -->
+  <view class="cat-sticky" style="background:{{homeBgColor||topBgColor}};">
+    <scroll-view scroll-x show-scrollbar="{{false}}" class="header-cat-scroll">
+      <view class="tg-row">
+        <view wx:for="{{categories}}" wx:key="*this"
+          class="tg {{ac===item?'tg-on':''}}"
+          bindtap="swCat" data-c="{{item}}">{{item}}</view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 两层联动筛选：风格（一级）→ 品类（二级），与分类页 buyer/index 同一套标准 -->
+  <view class="two-level-filter" style="background:{{homeBgColor||topBgColor}};">
+    <scroll-view class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <view class="subcat-chip {{homeActiveStyle==='全部'?'subcat-on':''}}" bindtap="switchHomeStyle" data-name="全部">全部</view>
+        <block wx:for="{{homeStyleMap.styles}}" wx:key="*this">
+          <view class="subcat-chip {{homeActiveStyle===item?'subcat-on':''}}" bindtap="switchHomeStyle" data-name="{{item}}">{{item}}</view>
+        </block>
+      </view>
+    </scroll-view>
+    <scroll-view wx:if="{{homeVisibleSubs.length}}" class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
+      <view class="subcat-row">
+        <block wx:for="{{homeVisibleSubs}}" wx:key="*this">
+          <view class="subcat-chip" bindtap="switchHomeSubCategory" data-name="{{item}}">{{item}}</view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 菜单面板 -->
+  <view class="mk {{mo?'show':''}}" bindtap="clsMenu">
+    <view class="mp {{mo?'in':''}}" catchtap="noop">
+      <view class="mph"><text class="mpb">骆芷蝶智选</text><view class="mpc" bindtap="clsMenu"><text>✕</text></view></view>
+      <scroll-view scroll-y class="mpb2" scroll-top="0">
+        <view class="mi" bindtap="goBuyer"><text>🛍</text><text>买手选品</text></view>
+        <view class="mi" bindtap="goCourses"><text>📚</text><text>线上课程</text></view>
+        <view class="mi" bindtap="goLooks"><text>🎨</text><text>每日搭配</text></view>
+        <view class="mi" bindtap="goArticles"><text>📰</text><text>时尚资讯</text></view>
+        <view class="mdv"></view>
+        <view class="mi" bindtap="goStyleTest"><text>📋</text><text>风格测试</text></view>
+        <view class="mi" bindtap="goContact"><text>💬</text><text>联系我们</text></view>
+      </scroll-view>
+      <view class="mpf">
+        <text class="mu">{{un||'未登录'}}</text>
+        <view class="mlg" wx:if="{{!li}}" bindtap="goLogin"><text>微信登录</text></view>
+        <view class="mlg" bindtap="goLoginPage"><text>账号登录</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 商品照片墙模板（横幅无图时自动兜底）========== -->
+  <template name="prod-collage">
+    <view class="pc-bg">
+      <image wx:if="{{images.length===1}}" src="{{images[0]}}" mode="aspectFill" class="pc-full" lazy-load/>
+      <view wx:else class="pc-grid">
+        <image wx:for="{{images}}" wx:key="*this" src="{{item}}" mode="aspectFill" class="pc-img" lazy-load/>
+      </view>
+    </view>
+  </template>
+
+  <!-- ========== 动态模块区（轮播图下方/商品上方，已排除 hero_top）========== -->
+  <block wx:for="{{blocks}}" wx:key="id">
+    <template is="blk" data="{{item:item, quadItems:quadItems, circleItems:circleItems, catNavItems:catNavItems, ac:ac, fallbackImages:fallbackImages}}"/>
+  </block>
+
+  <!-- ========== 模块渲染模板（轮播图上方/下方共用）========== -->
+  <template name="blk">
+    <!-- 统一外壳：套用后台 block.style.bgColor，与网站 renderBlock 的 <section backgroundColor> 保持一致
+         （季节色彩/限时采购等绿色板块即由此 bgColor 驱动，之前小程序多数板块未套用所以不显绿） -->
+    <view class="blk-wrap" style="background:{{item.style.bgColor||'#ffffff'}};">
+    <!-- featured_banner -->
+    <view wx:if="{{item.type==='featured_banner'}}" class="blk-fb" style="padding:{{item.style.padding||20}}rpx 24rpx;">
+      <view class="fb-main" bindtap="goBlockLink" data-link="{{item.content.mainLink}}">
+        <image wx:if="{{item.content.mainImage}}" src="{{item.content.mainImage}}" mode="aspectFill" class="fb-main-img"/>
+        <view wx:else class="fb-main-fallback">
+          <template is="prod-collage" data="{{images:fallbackImages}}"/>
+          <view class="fb-ov"><text class="fb-tap">{{item.content.title||'精选好物'}}</text></view>
+        </view>
+      </view>
+      <view class="fb-subs" wx:if="{{item.content._subs&&item.content._subs.length>0}}">
+        <view class="fb-sub" wx:for="{{item.content._subs}}" wx:key="image"
+          bindtap="goBlockLink" data-link="{{item.link}}">
+          <image src="{{item.image}}" mode="aspectFill" class="fb-sub-img"/>
+          <view wx:if="{{item.title||item.price}}" class="fb-sub-info">
+            <text class="fb-sn">{{item.title}}</text>
+            <text class="fb-sp">{{item.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view wx:else>
+      <!-- banner_large -->
+      <view wx:if="{{item.type==='banner_large'}}" class="blk-bl" style="padding:{{item.style.padding||16}}rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+        <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="bl-img"/>
+        <view wx:else class="bl-bg">
+          <template is="prod-collage" data="{{images:fallbackImages}}"/>
+          <view class="bl-text">
+            <text class="bl-title">{{item.content.title}}</text>
+            <text class="bl-sub">{{item.content.subtitle}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view wx:else>
+        <!-- banner_small -->
+        <view wx:if="{{item.type==='banner_small'}}" class="blk-bs" style="padding:8rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+          <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="widthFix" class="bs-img"/>
+          <view wx:else class="bs-bar bs-bar-collage">
+            <template is="prod-collage" data="{{images:fallbackImages}}"/>
+            <text class="bs-title">{{item.content.title}}</text>
+          </view>
+        </view>
+
+        <view wx:else>
+          <!-- card_single -->
+          <view wx:if="{{item.type==='card_single'}}" class="blk-cs" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.link}}">
+            <view class="cs-card" style="position:relative">
+              <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="cs-img"/>
+              <view wx:else class="cs-img cs-img-fallback">
+                <template is="prod-collage" data="{{images:fallbackImages}}"/>
+              </view>
+              <view class="cs-body">
+                <text class="cs-title">{{item.content.title}}</text>
+                <text class="cs-sub">{{item.content.subtitle}}</text>
+                <view class="cs-btn">{{item.content.buttonText||'查看详情'}}</view>
+              </view>
+            </view>
+          </view>
+
+          <view wx:else>
+            <!-- card_quad -->
+            <view wx:if="{{item.type==='card_quad'}}" class="blk-cq" style="padding:16rpx 24rpx;background:{{item.style.bgColor||'#fff'}};">
+              <view class="cq-row">
+                <view class="cq-card" wx:for="{{quadItems[item.id]}}" wx:key="title"
+                  bindtap="goBlockLink" data-link="{{item.link}}">
+                  <image src="{{item.image}}" mode="aspectFill" class="cq-img"/>
+                  <text class="cq-title">{{item.title}}</text>
+                  <text class="cq-sub">{{item.subtitle}}</text>
+                </view>
+              </view>
+            </view>
+
+            <view wx:else>
+              <!-- circle_row -->
+              <view wx:if="{{item.type==='circle_row'}}" class="blk-cr" style="padding:16rpx 0;">
+                <scroll-view scroll-x show-scrollbar="{{false}}" class="cr-scroll">
+                  <view class="cr-row">
+                    <view class="cr-item" wx:for="{{circleItems[item.id]}}" wx:key="image"
+                      bindtap="goBlockLink" data-link="{{item.link}}">
+                      <image src="{{item.image}}" mode="aspectFill" class="cr-icon"/>
+                      <text class="cr-label" wx:if="{{item.label}}">{{item.label}}</text>
+                    </view>
+                  </view>
+                </scroll-view>
+              </view>
+
+              <view wx:else>
+                <!-- category_nav -->
+                <view wx:if="{{item.type==='category_nav'}}" class="blk-cn">
+                  <scroll-view scroll-x show-scrollbar="{{false}}" class="cn-scroll">
+                    <view class="cn-row">
+                      <view wx:for="{{catNavItems}}" wx:key="label"
+                        class="cn-tab {{ac===item.label?'cn-on':''}}"
+                        bindtap="swCat" data-c="{{item.label}}">
+                        <text>{{item.label}}</text>
+                      </view>
+                    </view>
+                  </scroll-view>
+                </view>
+
+                <view wx:if="{{item.type==='shelf'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goShelf" data-id="{{item.id}}">
+                  <view class="shelf-card">
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="shelf-img"/>
+                  <view wx:else class="shelf-bg">
+                    <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                  </view>
+                    <view class="shelf-mask"></view>
+                    <view class="shelf-body">
+                      <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
+                      <text class="shelf-title">{{item.title}}</text>
+                      <text wx:if="{{item.content.subtitle||item.section_subtitle}}" class="shelf-sub">{{item.content.subtitle||item.section_subtitle}}</text>
+                    </view>
+                  </view>
+                  <view wx:if="{{item.content.subImage1||item.content.subImage2||item.content.subImage3}}" class="shelf-preview">
+                    <image wx:if="{{item.content.subImage1}}" src="{{item.content.subImage1}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage2}}" src="{{item.content.subImage2}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage3}}" src="{{item.content.subImage3}}" mode="aspectFill" class="sp-img"/>
+                  </view>
+                </view>
+
+                <view wx:elif="{{item.type==='assortment'}}" class="blk-shelf" style="padding:16rpx 24rpx;" bindtap="goSeries" data-id="{{item.content.planId}}">
+                  <view class="shelf-card">
+                  <image wx:if="{{item.content.image}}" src="{{item.content.image}}" mode="aspectFill" class="shelf-img"/>
+                  <view wx:else class="shelf-bg">
+                    <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                  </view>
+                    <view class="shelf-mask"></view>
+                    <view class="shelf-body">
+                      <text wx:if="{{item.content.badge}}" class="shelf-badge">{{item.content.badge}}</text>
+                      <text class="shelf-title">{{item.title}}</text>
+                      <text wx:if="{{item.content.subtitle||item.section_subtitle}}" class="shelf-sub">{{item.content.subtitle||item.section_subtitle}}</text>
+                    </view>
+                  </view>
+                  <view wx:if="{{item.content.subImage1||item.content.subImage2||item.content.subImage3}}" class="shelf-preview">
+                    <image wx:if="{{item.content.subImage1}}" src="{{item.content.subImage1}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage2}}" src="{{item.content.subImage2}}" mode="aspectFill" class="sp-img"/>
+                    <image wx:if="{{item.content.subImage3}}" src="{{item.content.subImage3}}" mode="aspectFill" class="sp-img"/>
+                  </view>
+                </view>
+
+                <view wx:elif="{{item.type==='special'}}" class="blk-spec" style="padding:16rpx 24rpx;">
+                  <view wx:if="{{item.section_title}}" class="spec-head">
+                    <text class="spec-title">{{item.section_title}}</text>
+                    <text wx:if="{{item.section_subtitle}}" class="spec-sub">{{item.section_subtitle}}</text>
+                  </view>
+                  <view class="spec-banner" bindtap="goShelf" data-id="{{specMap[item.id].banner.shelfId}}">
+                    <image wx:if="{{specMap[item.id].banner.image}}" src="{{specMap[item.id].banner.image}}" mode="aspectFill" class="spec-banner-img"/>
+                    <view wx:else class="spec-banner-bg">
+                      <template is="prod-collage" data="{{images:fallbackImages}}"/>
+                    </view>
+                    <view class="spec-banner-mask"/>
+                    <view class="spec-banner-body">
+                      <view class="spec-banner-tag">{{specMap[item.id].banner.tag||'限时采购'}}</view>
+                      <view class="spec-banner-title">{{specMap[item.id].banner.headline||'SALE'}}</view>
+                      <view class="spec-banner-sub">{{specMap[item.id].banner.subheadline||'季末·特价捡漏'}}</view>
+                      <view class="spec-banner-desc">{{specMap[item.id].banner.descriptor||'全国批发市场 · 优质大牌'}}</view>
+                    </view>
+                  </view>
+                  <view class="spec-tabs">
+                    <view wx:for="{{specTabs}}" wx:key="*this" wx:for-item="t" class="spec-tab {{specMap[item.id].mode===t?'on':''}}" bindtap="swSpecMode" data-id="{{item.id}}" data-m="{{t}}">{{t}}</view>
+                  </view>
+                  <view wx:if="{{specMap[item.id].products.length>0 && !specMap[item.id].loading}}" class="spec-grid">
+                    <view wx:for="{{specMap[item.id].products}}" wx:key="id" wx:for-item="p" class="spec-card" bindtap="goShop" data-id="{{p.id}}">
+                      <view class="sci">
+                        <image wx:if="{{p.image_url||p.cover_image}}" src="{{p.image_url||p.cover_image}}" mode="aspectFill" class="sci-img"/>
+                        <view wx:else class="sci-ph">暂无图</view>
+                        <view wx:if="{{p.discountText}}" class="spec-badge">{{p.discountText}}</view>
+                      </view>
+                      <view class="spec-cnf">
+                        <text class="spec-cn">{{p.title}}</text>
+                        <text class="spec-cwp">{{p.wholesaleText}}</text>
+                        <text class="spec-cp">¥{{p.priceText}}</text>
+                      </view>
+                    </view>
+                  </view>
+                  <view wx:elif="{{specMap[item.id].loading}}" class="spec-grid">
+                    <view wx:for="[0,1]" wx:key="*this" class="spec-card">
+                      <view class="sci spec-skeleton"/>
+                      <view class="spec-cnf">
+                        <view class="spec-skeleton-line" style="width:60%"/>
+                        <view class="spec-skeleton-line" style="width:40%;margin-top:8rpx"/>
+                      </view>
+                    </view>
+                  </view>
+                  <view wx:else class="spec-empty">该分类暂无特价商品</view>
+                </view>
+
+                <view wx:elif="{{item.type==='launch_campaign'}}" class="blk-launch-teaser" bindtap="goLaunch" data-id="{{item.id}}">
+                  <view class="lt-big">
+                    <image wx:if="{{item.content.heroImages[0] || fallbackImages[0]}}" src="{{item.content.heroImages[0] || fallbackImages[0]}}" mode="aspectFill" class="lt-big-img"/>
+                    <view wx:else class="lt-big-ph"></view>
+                    <view class="lt-big-mask"></view>
+                    <view class="lt-big-info">
+                      <text class="lt-date">{{item.content.dateText||'上新企划'}}</text>
+                      <text class="lt-big-title">{{item.content.title||'秋款大上新'}}</text>
+                    </view>
+                  </view>
+                  <view class="lt-small-row">
+                    <view class="lt-small">
+                      <image wx:if="{{item.content.heroImages[1] || fallbackImages[1]}}" src="{{item.content.heroImages[1] || fallbackImages[1]}}" mode="aspectFill" class="lt-small-img"/>
+                      <view wx:else class="lt-small-ph"></view>
+                    </view>
+                    <view class="lt-small">
+                      <image wx:if="{{item.content.heroImages[2] || fallbackImages[2]}}" src="{{item.content.heroImages[2] || fallbackImages[2]}}" mode="aspectFill" class="lt-small-img"/>
+                      <view wx:else class="lt-small-ph"></view>
+                    </view>
+                    <view class="lt-small">
+                      <image wx:if="{{item.content.heroImages[3] || fallbackImages[3]}}" src="{{item.content.heroImages[3] || fallbackImages[3]}}" mode="aspectFill" class="lt-small-img"/>
+                      <view wx:else class="lt-small-ph"></view>
+                    </view>
+                  </view>
+                  <view class="lt-enter">点击进入活动 →</view>
+                </view>
+                <view wx:else>
+                  <!-- promotion -->
+                  <view wx:if="{{item.type==='promotion'}}" class="blk-pm" style="padding:16rpx 24rpx;" bindtap="goBlockLink" data-link="{{item.content.linkUrl}}">
+                    <view class="pm-card">
+                      <image wx:if="{{item.content.imageUrl}}" src="{{item.content.imageUrl}}" mode="widthFix" class="pm-img"/>
+                      <view class="pm-body">
+                        <text class="pm-title">{{item.content.promoTitle}}</text>
+                        <text class="pm-desc">{{item.content.promoDesc}}</text>
+                        <view class="pm-btn" wx:if="{{item.content.buttonText}}">{{item.content.buttonText}}</view>
+                      </view>
+                    </view>
+                  </view>
+
+                  <view wx:else>
+                    <!-- group_buy -->
+                    <view wx:if="{{item.type==='group_buy'}}" class="blk-gb" style="padding:16rpx 24rpx;">
+                      <view class="gb-card">
+                        <text class="gb-tag">团购</text>
+                        <text class="gb-desc">{{item.content.desc||'多人拼单·超值优惠'}}</text>
+                        <text class="gb-info">{{item.content.minPeople||3}}人成团 · {{Math.round((1-(item.content.discount||0.8))*100)}}折</text>
+                      </view>
+                    </view>
+
+                    <view wx:else>
+                      <!-- flash_sale -->
+                      <view wx:if="{{item.type==='flash_sale'}}" class="blk-fs" style="padding:16rpx 24rpx;">
+                        <view class="fs-card">
+                          <text class="fs-tag">秒杀</text>
+                          <text class="fs-desc">{{item.content.desc||'限时抢购'}}</text>
+                          <text class="fs-info">低至{{Math.round((item.content.discount||0.7)*10)}}折</text>
+                        </view>
+                      </view>
+
+                      <view wx:else>
+                        <!-- products 标题行 -->
+                        <view wx:if="{{item.type==='products'&&item.section_title}}" class="blk-pt" style="padding:12rpx 24rpx;">
+                          <view class="pt-head">
+                            <text class="pt-title">{{item.section_title}}</text>
+                            <text class="pt-sub" wx:if="{{item.section_subtitle}}">{{item.section_subtitle}}</text>
+                          </view>
+                        </view>
+                      </view>
+                    </view>
+                  </view>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+    </view>
+
+  </template>
+
+  <!-- ========== 商品区 ========== -->
+  <view class="sec" wx:if="{{showProductSec}}">
+    <view class="sh">
+      <text class="stt">{{ac==='全部'?'穿搭':ac}} · 精选</text>
+      <text class="stc">({{products.length}}件)</text>
+      <view class="clr" wx:if="{{ac!=='全部'}}" bindtap="swCat" data-c="全部"><text>✕ 清除筛选</text></view>
+    </view>
+
+    <!-- 加载骨架 -->
+    <view wx:if="{{ld}}" class="gd">
+      <view class="sc" wx:for="{{[1,2,3,4,5,6]}}" wx:key="*this">
+        <view class="sci"></view><view class="sl1"></view><view class="sl2"></view>
+      </view>
+    </view>
+
+    <!-- 非加载状态 -->
+    <view wx:else>
+      <!-- 空 -->
+      <view wx:if="{{products.length===0}}" class="empty">
+        <text class="ei">📦</text>
+        <text class="et">该分类暂无选品</text>
+        <view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
+      </view>
+
+      <!-- 列表 -->
+      <view wx:else class="gd">
+        <view class="cd" wx:for="{{products}}" wx:key="id" bindtap="goShop" data-id="{{item.id}}">
+          <view class="cw">
+            <image wx:if="{{item.image_url||item.cover_image}}" src="{{item.image_url||item.cover_image}}" mode="aspectFill" class="ci" lazy-load/>
+            <view wx:else class="cp"><text class="cpt">暂无图片</text></view>
+            <view wx:if="{{item.is_hot}}" class="bh">HOT</view>
+            <view wx:if="{{item.is_new}}" class="bn">NEW</view>
+          </view>
+          <view class="cnf">
+            <text class="cnm">{{item.name||item.title||'商品'}}</text>
+            <text class="cnp">{{item.priceText}}</text>
+            <text class="cwp" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
+            <view class="cbn">下单</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- CTA区 -->
+  <view class="cta">
+    <view class="cbx">
+      <view class="cbg"></view>
+      <view class="cin">
+        <text class="ctt">爆款选品 · 拿货精选</text>
+        <text class="cts">骆芷蝶智选 · 专业推荐</text>
+        <view class="cr">
+          <view class="c1" bindtap="goBuyer"><text>全部商品</text></view>
+          <view class="c2" bindtap="goBuyer"><text>爆款安利 →</text></view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="ver-foot" wx:if="{{ver}}">{{ver}}</view>
+  <view class="sbtm"></view>
+</view>

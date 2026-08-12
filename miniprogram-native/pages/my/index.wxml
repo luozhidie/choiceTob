@@ -1,0 +1,334 @@
+<view class="page">
+  <!-- ====== 头部：头像+用户信息+操作图标 ====== -->
+  <view class="header" style="{{myHeaderStyle}}">
+    <image wx:if="{{myHeaderImage}}" src="{{myHeaderImage}}" mode="aspectFill" class="hdr-bg"/>
+    <view wx:if="{{myHeaderImage}}" class="hdr-mask"/>
+    <view class="header-left" bindtap="{{isLoggedIn?'goSettings':'goLogin'}}">
+      <image class="avatar" src="{{avatarUrl||'/assets/avatar-ph.png'}}" mode="aspectFill"/>
+      <view class="user-meta">
+        <text class="uid">{{isLoggedIn?(userId||'用户'):'登录/注册'}}</text>
+        <text class="role">{{roleText}}</text>
+      </view>
+    </view>
+    <view class="header-icons">
+      <view class="hi" bindtap="goContact"><text>🎧</text></view>
+      <view class="hi" bindtap="goSettings"><text>⚙</text></view>
+      <view class="hi"><text>🔔</text></view>
+    </view>
+  </view>
+
+  <!-- ═══════ 未认证（不管是否登录）：金色左右对比引导卡（同行截图1）═══════ -->
+  <view wx:if="{{!isCertified}}" class="cert-guide-card">
+    <view class="cg-body">
+      <!-- 左侧：当前受限状态 -->
+      <view class="cg-left">
+        <text class="cg-status">您暂未认证</text>
+        <text class="cg-hint">仅能</text>
+        <text class="cg-restrict">零售价拿货</text>
+      </view>
+
+      <!-- 右侧：认证店主权益 -->
+      <view class="cg-right">
+        <view class="cg-title-row">
+          <text class="cg-shield">🛡</text>
+          <text class="cg-cert-title">认证店主</text>
+        </view>
+        <!-- 4个权益图标 -->
+        <view class="cg-icons">
+          <block wx:for="{{certBenefits}}" wx:key="title">
+            <view class="cgi-item">
+              <view class="cgi-circle"><text>{{item.icon}}</text></view>
+              <text class="cgi-label">{{item.title}}</text>
+            </view>
+          </block>
+        </view>
+        <!-- 一键认证按钮 -->
+        <view class="cg-btn" bindtap="{{isLoggedIn?'goCertify':'goLogin'}}">{{isLoggedIn?'一键认证 解锁权益':'登录后一键认证'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ═══════ 已登录 + 已认证：深色等级卡（同行截图2）═══════ -->
+  <view wx:if="{{isLoggedIn && isCertified}}" class="tier-card-dark">
+    <!-- 标题行 -->
+    <view class="tcd-header">
+      <text class="tcd-level">{{tierName}}<text class="tcd-badge">{{tierBadge}}</text></text>
+      <view class="tcd-view-btn" bindtap="goVip"><text>查看权益</text></view>
+    </view>
+    <!-- 等级一句话说明 -->
+    <text class="tcd-desc">{{tierDesc}}</text>
+    <!-- 进度条 -->
+    <view class="tcd-bar-wrap">
+      <view class="tcd-bar-track">
+        <view class="tcd-bar-fill" style="width:{{tierProgress}}%"></view>
+      </view>
+    </view>
+    <!-- 拿货额 / 升级文字 -->
+    <view class="tcd-spent-text" wx:if="{{nextTierName}}">
+      已累计 <text class="tcd-spent-num">{{spentYuan}}</text> 元，累计拿货 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元可享 <text class="tcd-diff-num">{{nextTierDiscount}}</text>
+    </view>
+    <view class="tcd-spent-text" wx:else>
+      已达最高等级 {{tierName}}，感谢一路同行 🎉
+    </view>
+    <!-- 4个权益图标行 -->
+    <view class="tcd-benefits">
+      <block wx:for="{{tierCardBenefits}}" wx:key="title">
+        <view class="tcdb-item">
+          <view class="tcdb-circle"><text>{{item.icon}}</text></view>
+          <text class="tcdb-label">{{item.title}}</text>
+        </view>
+      </block>
+    </view>
+    <!-- 等级计算说明 + 保级 -->
+    <text class="tcd-foot">累计拿货额自动升级 · 连续6月不拿货将降级</text>
+    <!-- 充值入口：累计赛道无退换，充值同时得折扣+退换 -->
+    <view class="tcd-price-entry" bindtap="goVipDeposit">
+      <text class="tcd-price-txt">充值解锁退换额度 + 拿货折扣 →</text>
+    </view>
+  </view>
+
+  <!-- ═══════ 未登录后：正常显示下方内容 ═══════ -->
+
+  <!-- ========== 快捷数据（3格）========== -->
+  <view class="stats-row">
+    <view class="stat-card" bindtap="goSubscribedStalls">
+      <text class="sc-icon">🏪</text>
+      <text class="sc-num">{{subCount}}</text>
+      <text class="sc-label">订阅风格</text>
+    </view>
+    <view class="stat-card" bindtap="goFavorites">
+      <text class="sc-icon">⭐</text>
+      <text class="sc-num">{{favCount}}</text>
+      <text class="sc-label">收藏商品</text>
+    </view>
+    <view class="stat-card" bindtap="goHistory">
+      <text class="sc-icon">👣</text>
+      <text class="sc-num">{{historyCount}}</text>
+      <text class="sc-label">足迹</text>
+    </view>
+  </view>
+
+  <!-- ========== 我的订单 ========== -->
+  <view class="section">
+    <view class="sec-header">
+      <text class="sec-title">我的订单</text>
+      <text class="sec-more" bindtap="goOrders">查看全部 ›</text>
+    </view>
+    <view class="order-row">
+      <view class="oi" bindtap="goOrders" data-status="unpaid">
+        <text class="oi-icon">💰</text><text class="oi-label">待付款</text>
+      </view>
+      <view class="oi" bindtap="goOrders" data-status="toship">
+        <text class="oi-icon">🚚</text><text class="oi-label">待发货</text>
+      </view>
+      <view class="oi" bindtap="goOrders" data-status="toreceive">
+        <text class="oi-icon">📦</text><text class="oi-label">待收货</text>
+      </view>
+      <view class="oi" bindtap="goOrders" data-status="aftersale">
+        <text class="oi-icon">↩️</text><text class="oi-label">售后进度</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 活动横幅（首单 4 重福利 · 限时） ========== -->
+  <view class="promo-banner" bindtap="goPromo">
+    <view class="pb-deco pb-deco-1"></view>
+    <view class="pb-deco pb-deco-2"></view>
+    <view class="pb-header">
+      <view class="pb-tag-wrap">
+        <text class="pb-tag">HOT</text>
+        <text class="pb-tag-sub">限时</text>
+      </view>
+      <view class="pb-go">GO →</view>
+    </view>
+    <view class="pb-title">首单 4 重福利</view>
+    <view class="pb-chips">
+      <view class="pb-chip"><text class="pb-chip-ic">📦</text><text>169包邮</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">🔄</text><text>免费退货</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">🧧</text><text>新人红包</text></view>
+      <view class="pb-chip"><text class="pb-chip-ic">⚡</text><text>优先发货</text></view>
+    </view>
+  </view>
+
+  <!-- ========== 我的资产 ========== -->
+  <view class="section">
+    <text class="sec-title">我的资产</text>
+    <view class="asset-row">
+      <view class="asset-item" bindtap="goSettings">
+        <text class="asset-num">{{walletBalance}}</text><text class="asset-label">钱包</text>
+      </view>
+      <view class="asset-divider"></view>
+      <view class="asset-item" bindtap="goCoupons">
+        <text class="asset-num">{{couponCount}}</text><text class="asset-label">卡券</text>
+      </view>
+      <view class="asset-divider"></view>
+      <view class="asset-item" bindtap="goRedPackets">
+        <text class="asset-num">{{redPackCount}}</text><text class="asset-label">红包</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 我的活动（2x2 网格：每卡专属视觉主题）========== -->
+  <view class="section" wx:if="{{isLoggedIn}}">
+    <text class="sec-title">我的活动</text>
+    <view class="activity-grid">
+      <!-- 卡 1：发现宝藏搭配（紫调主理人） -->
+      <view class="ac-item ac-theme-styles" bindtap="goMarkets">
+        <view class="ac-deco ac-deco-circle"></view>
+        <text class="ac-title">发现宝藏搭配</text>
+        <text class="ac-desc">2026 全国精选风格</text>
+        <view class="ac-emoji">✨</view>
+      </view>
+      <!-- 卡 2：店主福利社群（暖金店主） -->
+      <view class="ac-item ac-theme-owner" bindtap="goGroupBuy">
+        <view class="ac-deco ac-deco-gift"></view>
+        <text class="ac-title">店主福利社群</text>
+        <text class="ac-desc">运费券 / 红包活动</text>
+        <view class="ac-emoji">🎁</view>
+      </view>
+      <!-- 卡 3：集财运（朱红福运） -->
+      <view class="ac-item ac-theme-luck" bindtap="goLuckDraw">
+        <view class="ac-deco ac-deco-luck"></view>
+        <view class="ac-badge ac-badge-luck">🔥 热门</view>
+        <text class="ac-title">集财运</text>
+        <text class="ac-desc">攒福气 享福利</text>
+        <view class="ac-emoji">🧧</view>
+      </view>
+      <!-- 卡 4：邀请有奖（深紫尊享） -->
+      <view class="ac-item ac-theme-invite" bindtap="goInvite">
+        <view class="ac-deco ac-deco-share"></view>
+        <view class="ac-badge ac-badge-new">New</view>
+        <text class="ac-title">邀请有奖</text>
+        <text class="ac-desc">返 8-100 元券包</text>
+        <view class="ac-emoji">🤝</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== VIP形象服务（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
+    <view class="sec-header">
+      <text class="sec-title">VIP形象服务</text>
+    </view>
+
+    <!-- 更多服务：5 图标网格 -->
+    <view class="service-grid">
+      <view class="sg-item" bindtap="goWardrobe">
+        <view class="sg-icon"><text>🚪</text></view>
+        <text class="sg-label">VIP衣橱</text>
+      </view>
+      <view class="sg-item" bindtap="goBooking">
+        <view class="sg-icon"><text>⏰</text></view>
+        <text class="sg-label">预约陪购</text>
+      </view>
+      <view class="sg-item" bindtap="goAddress">
+        <view class="sg-icon"><text>📍</text></view>
+        <text class="sg-label">地址管理</text>
+      </view>
+      <view class="sg-item" bindtap="goFeedback">
+        <view class="sg-icon"><text>✉️</text></view>
+        <text class="sg-label">投诉建议</text>
+      </view>
+      <view class="sg-item" bindtap="goWishlist">
+        <view class="sg-icon"><text>♡</text></view>
+        <text class="sg-label">我的心愿单</text>
+      </view>
+      <view class="sg-item" bindtap="goStyleTest">
+        <view class="sg-icon"><text>📤</text></view>
+        <text class="sg-label">资料上传</text>
+      </view>
+    </view>
+
+    <!-- VIP形象诊断 banner -->
+    <view class="image-diag-card" bindtap="goPersonalImage">
+      <view class="idc-body">
+        <text class="idc-title">VIP形象诊断</text>
+        <text class="idc-desc">请仔细填写诊断信息，龙虾按<text class="idc-highlight">喜欢+适合+需要</text>的规则为您选款拿货</text>
+        <view class="idc-btn">立即诊断 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 时尚买手服务（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
+    <view class="sec-header">
+      <text class="sec-title">时尚买手服务</text>
+    </view>
+    <view class="service-grid">
+      <view class="sg-item" bindtap="goFashionStylist" data-service="buyer_group">
+        <view class="sg-icon"><text>🛒</text></view>
+        <text class="sg-label">买手组货</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="plan">
+        <view class="sg-icon"><text>📋</text></view>
+        <text class="sg-label">商品企划</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="display">
+        <view class="sg-icon"><text>🪟</text></view>
+        <text class="sg-label">陈列搭配</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="marketing">
+        <view class="sg-icon"><text>📣</text></view>
+        <text class="sg-label">营销策划</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="sales">
+        <view class="sg-icon"><text>💡</text></view>
+        <text class="sg-label">销售服务</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="brand">
+        <view class="sg-icon"><text>⭐</text></view>
+        <text class="sg-label">品牌管理</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="design">
+        <view class="sg-icon"><text>✏️</text></view>
+        <text class="sg-label">服装设计</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== AI搭配 / AI企划（仅管理员可见） ========== -->
+  <view class="section" wx:if="{{isAdmin}}">
+    <view class="sec-header">
+      <text class="sec-title">AI搭配 / AI企划</text>
+    </view>
+    <view class="service-grid">
+      <view class="sg-item" bindtap="goFashionStylist" data-service="outfit">
+        <view class="sg-icon"><text>👗</text></view>
+        <text class="sg-label">AI搭配</text>
+      </view>
+      <view class="sg-item" bindtap="goFashionStylist" data-service="plan">
+        <view class="sg-icon"><text>📋</text></view>
+        <text class="sg-label">商品企划</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 我的服务（保留原功能入口） ========== -->
+  <view class="section">
+    <text class="sec-title">我的服务</text>
+    <view class="service-list">
+      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goImport">
+        <text class="sv-icon-text">📦</text>
+        <text class="sv-label">一键导入</text>
+      </view>
+      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goAlbumGrab">
+        <text class="sv-icon-text">🖼️</text>
+        <text class="sv-label">相册采集</text>
+      </view>
+      <view class="sv-item" bindtap="goOneKeyImport">
+        <text class="sv-icon-text">📥</text>
+        <text class="sv-label">一键入库</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- ========== 退出登录（仅登录时显示）========== -->
+  <view wx:if="{{isLoggedIn}}" class="logout-wrap">
+    <button class="btn-logout" bindtap="goLogout">退出登录</button>
+  </view>
+
+  <view class="sbtm"></view>
+</view>
+
+<!-- 营销弹窗 -->
+<popup cfg="{{popupCfg}}" visible="{{popupVisible}}" bind:close="onPopupClose" bind:buttonTap="onPopupButtonTap" />
