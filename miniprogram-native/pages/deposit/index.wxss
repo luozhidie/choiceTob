@@ -5,6 +5,11 @@ page{background: var(--bg);}
 .htitle text{font-size:34rpx;font-weight:bold;color:#4a3a4b;display:block;}
 .hdesc{font-size:25rpx;color:#888;margin-top:8rpx;display:block;line-height:1.5;}
 
+/* 销售代理入口说明 */
+.agent-callout{display:flex;align-items:flex-start;gap:14rpx;margin:8rpx 24rpx 4rpx;padding:20rpx 22rpx;background:linear-gradient(135deg,#fdf6e3 0%,#f7edd0 100%);border:2rpx solid #C9A24B;border-radius:16rpx;}
+.ac-badge{flex:none;font-size:21rpx;font-weight:700;color:#fff;background:#C9A24B;padding:6rpx 14rpx;border-radius:10rpx;margin-top:2rpx;}
+.ac-text{font-size:23rpx;color:#6b5a2e;line-height:1.5;}
+
 /* 卡片 */
 .cards{display:flex;gap:16rpx;padding:0 20rpx;}
 .card{

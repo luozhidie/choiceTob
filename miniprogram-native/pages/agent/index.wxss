@@ -1,0 +1,53 @@
+.page { min-height: 100vh; background: #1a0f1c; padding: 0 16px 20px; box-sizing: border-box; }
+
+.topbar { padding: 22px 4px 16px; }
+.tb-title { display: block; font-size: 22px; font-weight: 800; color: #e3c987;
+  background: linear-gradient(90deg, #e3c987, #C9A24B);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tb-sub { display: block; font-size: 12px; color: #b9a89e; margin-top: 4px; }
+
+.loading, .empty { text-align: center; color: #b9a89e; padding: 60px 0; }
+.empty-emoji { font-size: 40px; display: block; margin-bottom: 10px; }
+.empty-txt { display: block; margin-bottom: 18px; font-size: 14px; }
+
+.btn-gold { background: linear-gradient(145deg, #C9A24B, #9c7a2e); color: #1a0f1c;
+  font-weight: 700; text-align: center; padding: 13px; border-radius: 30px; font-size: 15px; }
+
+/* 引导卡 */
+.hero { padding-top: 10px; }
+.hero-card { background: linear-gradient(160deg, #241420, #1c1019); border: 1px solid rgba(201,162,75,.35);
+  border-radius: 20px; padding: 24px 18px; }
+.hero-title { display: block; font-size: 20px; font-weight: 800; color: #e3c987; }
+.hero-desc { display: block; font-size: 13px; color: #b9a89e; margin: 8px 0 18px; }
+.hero-benefits { display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px; }
+.hb { display: flex; align-items: center; gap: 10px; color: #f3e9df; font-size: 14px; }
+.hb-ic { font-size: 20px; }
+
+/* 代理主页 */
+.id-card { background: linear-gradient(160deg, #2a1a24, #1d1119); border: 1px solid rgba(201,162,75,.5);
+  border-radius: 20px; padding: 18px; margin-bottom: 14px; }
+.id-row { display: flex; justify-content: space-between; align-items: center; }
+.id-badge { background: linear-gradient(145deg, #C9A24B, #9c7a2e); color: #1a0f1c;
+  font-weight: 800; font-size: 14px; padding: 5px 14px; border-radius: 20px; }
+.id-wholesale { color: #7fc8a0; font-size: 12px; font-weight: 600; }
+.id-store { display: block; color: #fcefe9; font-size: 14px; margin: 12px 0; }
+.id-stats { display: flex; border-top: 1px solid rgba(201,162,75,.2); padding-top: 14px; }
+.ids { flex: 1; text-align: center; }
+.ids-num { display: block; font-size: 18px; font-weight: 800; color: #e3c987; }
+.ids-lab { display: block; font-size: 11px; color: #b9a89e; margin-top: 3px; }
+
+.level-card { background: linear-gradient(160deg, #221429, #18101e); border: 1px solid rgba(176,138,214,.35);
+  border-radius: 20px; padding: 18px; margin-bottom: 14px; }
+.lc-head { display: flex; align-items: baseline; gap: 10px; }
+.lc-level { font-size: 22px; font-weight: 800; color: #b08ad6; }
+.lc-tag { font-size: 12px; color: #b9a89e; }
+.lc-bar { height: 8px; background: rgba(255,255,255,.08); border-radius: 6px; overflow: hidden; margin: 12px 0 8px; }
+.lc-fill { height: 100%; background: linear-gradient(90deg, #b08ad6, #C9A24B); border-radius: 6px; }
+.lc-desc { font-size: 12px; color: #b9a89e; }
+
+.actions { display: flex; gap: 12px; }
+.act { flex: 1; background: rgba(252,239,233,.05); border: 1px solid rgba(201,162,75,.25);
+  border-radius: 16px; padding: 16px 12px; text-align: center; }
+.act-ic { display: block; font-size: 26px; }
+.act-t { display: block; font-size: 13px; color: #f3e9df; margin: 6px 0 2px; font-weight: 600; }
+.act-s { display: block; font-size: 11px; color: #C9A24B; }

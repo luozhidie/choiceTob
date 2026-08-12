@@ -12,6 +12,8 @@
     "pages/orders/detail/index",
     "pages/search/index",
     "pages/deposit/index",
+    "pages/agent/index",
+    "pages/tryon-card/index",
     "pages/looks/index",
     "pages/courses/index",
     "pages/courses/detail/index",

@@ -1,0 +1,32 @@
+<view class="page">
+  <view class="topbar">
+    <text class="tb-title">虚拟试衣月卡</text>
+    <text class="tb-sub">先试后买 · 帮客户成交</text>
+  </view>
+
+  <view class="credits-bar">
+    <text class="cb-label">当前试衣次数</text>
+    <text class="cb-num">{{curCredits}}</text>
+  </view>
+
+  <view class="plans">
+    <view class="plan" wx:for="{{plans}}" wx:key="id" bindtap="buy" data-tier="{{item.id}}">
+      <view class="plan-top">
+        <view>
+          <text class="plan-name">{{item.name}}</text>
+          <text class="plan-desc">{{item.desc}}</text>
+        </view>
+        <text class="plan-price">¥{{item.price}}<text class="plan-unit">/月</text></text>
+      </view>
+      <view class="plan-foot">
+        <text class="plan-credits">含 {{item.credits}} 次试衣</text>
+        <text class="plan-sub" wx:if="{{item.sub}}">{{item.sub}}</text>
+        <text class="plan-buy">购买 ›</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="note">单次 AI 试衣成本约 ¥0.50，月卡按次包抵扣；色彩季型 + 风格测试前置可进一步降低试衣频次。</view>
+
+  <view class="sbtm"></view>
+</view>

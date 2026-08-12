@@ -168,6 +168,18 @@
     </view>
   </view>
 
+  <!-- ========== 销售代理 ========== -->
+  <view class="section agent-sec" bindtap="goAgent">
+    <view class="sec-header">
+      <text class="sec-title">销售代理</text>
+      <text class="sec-more">{{isAgent ? '代理中心 ›' : '立即加入 ›'}}</text>
+    </view>
+    <view class="agent-sec-body">
+      <text class="as-title">{{isAgent ? '我的代理中心' : '成为销售代理，拿批发价转售'}}</text>
+      <text class="as-desc">{{isAgent ? agentSummary : '充值即开店 · 批发价 + 退换额度 + 虚拟试衣'}}</text>
+    </view>
+  </view>
+
   <!-- ========== 我的活动（2x2 网格：每卡专属视觉主题）========== -->
   <view class="section" wx:if="{{isLoggedIn}}">
     <text class="sec-title">我的活动</text>

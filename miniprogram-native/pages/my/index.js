@@ -48,6 +48,10 @@ Page({
     isCertified:false,
     certifiedStyle:'',
 
+    /* ===== 销售代理状态 ===== */
+    isAgent:false,
+    agentSummary:'',
+
     /* ===== 拿货等级（累计制） ===== */
     tierIdx:0,
     tierBadge:'L1',
@@ -173,6 +177,7 @@ Page({
       t.loadTierData();
       t.loadStats();
       t.loadAssets(token);
+      t.loadAgent(token);
     } else {
       /* 未登录 */
       t.setData({
@@ -268,11 +273,30 @@ Page({
     });
   },
 
+  /* 销售代理状态 */
+  loadAgent:function(token){
+    var t=this;
+    if(!token)return;
+    wx.request({
+      url:'https://colour-choice.art/api/agent/me?token='+token,
+      success:function(r){
+        var d=r.data||{};
+        if(d.error||!d.success){ t.setData({isAgent:false}); return; }
+        var summary = d.is_sales_agent
+          ? ('批发价'+(d.wholesale_visible?'已开':'')+' · 退换'+d.return_rate+'% · 试衣'+d.tryon_credits+'次')
+          : '';
+        t.setData({ isAgent: !!d.is_sales_agent, agentSummary: summary });
+      },
+      fail:function(){ t.setData({isAgent:false}); }
+    });
+  },
+
   /* ===== 导航 ===== */
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
   goCertify:function(){wx.navigateTo({url:'/pages/certify/index'});},
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
   goVipDeposit:function(){wx.navigateTo({url:'/pages/vip/index?tab=deposit'});},
+  goAgent:function(){wx.navigateTo({url:'/pages/agent/index'});},
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},
   goMarkets:function(){wx.navigateTo({url:'/pages/stall/markets/index'});},
   goSubscribedStalls:function(){wx.navigateTo({url:'/pages/stall/subscribed/index'});},

@@ -99,6 +99,11 @@ page{background: var(--bg);}
 .sec-title{font-size:30rpx;font-weight:700;color:#1a1a2e;}
 .sec-more{font-size:23rpx;color:#999;font-weight:400;}
 
+/* ====== 销售代理入口 ====== */
+.agent-sec-body{display:flex;flex-direction:column;gap:6rpx;padding-top:4rpx;}
+.as-title{font-size:28rpx;font-weight:700;color:#C9A24B;}
+.as-desc{font-size:22rpx;color:#888;}
+
 /* ====== 订单行 ====== */
 .order-row{display:flex;justify-content:space-around;padding:8rpx 0;}
 .oi{display:flex;flex-direction:column;align-items:center;gap:6rpx;flex:1;padding:14rpx 6rpx;border-radius:14rpx;background:#faf8f6;}

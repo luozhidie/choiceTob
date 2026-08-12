@@ -5,6 +5,12 @@
     <text class="hdesc">预存越多，折扣越低。预存款可用于采购下单，随时退。</text>
   </view>
 
+  <!-- 销售代理入口说明 -->
+  <view class="agent-callout">
+    <text class="ac-badge">销售代理</text>
+    <text class="ac-text">充值即成为销售代理，自动开店，享批发价（进货）+ 折扣 + 退换额度，无需店主认证。</text>
+  </view>
+
   <!-- 3档卡片 -->
   <view class="cards">
     <view class="card" bindtap="selectPlan" data-plan="{{plans[0]}}">
