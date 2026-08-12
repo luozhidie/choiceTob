@@ -105,5 +105,6 @@
       "desc": "用于推荐附近货源"
     }
   },
-  "requiredPrivateInfos": ["chooseAddress"]
+  "requiredPrivateInfos": ["chooseAddress"],
+  "lazyCodeLoading": "requiredComponents"
 }
