@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
       effective_discount: effectiveDiscount,
       cumulative_order_amount: profile.cumulative_order_amount || 0,
       tryon_credits: profile.tryon_credits || 0,
-      tryon_free_claimed: !!profile.tryon_free_claimed,
+      tryon_first_offer_used: !!profile.tryon_first_offer_used,
       tryon_subscription_tier: profile.tryon_subscription_tier || "none",
       tryon_subscription_expires_at: profile.tryon_subscription_expires_at || null,
       store_id: profile.agent_store_id || null,

@@ -86,6 +86,14 @@ export async function POST(req: NextRequest) {
         p_out_trade_no: outTradeNo,
       });
       if (error) console.error("[notify] apply_tryon_subscription 失败:", error);
+      // 首单 1 元换衣：支付成功后标记已用（每人仅 1 次）
+      if (order.product_id === "tryon_first_1yuan") {
+        const { error: ue } = await supabase
+          .from("profiles")
+          .update({ tryon_first_offer_used: true })
+          .eq("id", userId);
+        if (ue) console.error("[notify] 标记首单优惠已用失败:", ue);
+      }
     } else if (order.product_type === "product") {
       const { error } = await supabase.rpc("bump_agent_level", {
         p_user_id: userId,
@@ -107,6 +115,7 @@ export async function POST(req: NextRequest) {
 
 function tryonCreditsOf(productId: string): number {
   switch (productId) {
+    case "tryon_first_1yuan": return 1;
     case "tryon_personal_basic": return 80;
     case "tryon_personal_pro": return 200;
     case "tryon_shop": return 600;

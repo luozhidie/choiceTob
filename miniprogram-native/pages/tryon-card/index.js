@@ -8,9 +8,9 @@ var PLANS = [
 ];
 
 Page({
-  data: { plans: PLANS, curCredits: 0, buying: false, freeClaimed: false, freeRemaining: 0, claiming: false },
+  data: { plans: PLANS, curCredits: 0, buying: false, firstOfferUsed: false },
 
-  onShow: function () { this.loadCredits(); this.loadFreeStatus(); },
+  onShow: function () { this.loadCredits(); this.loadFirstOffer(); },
 
   loadCredits: function () {
     var t = this;
@@ -19,56 +19,48 @@ Page({
     wx.request({
       url: "https://colour-choice.art/api/agent/me?token=" + token,
       success: function (r) {
-        if (r.data && !r.data.error) t.setData({ curCredits: r.data.tryon_credits || 0 });
+        if (r.data && !r.data.error) t.setData({ curCredits: r.data.tryon_credits || 0, firstOfferUsed: !!r.data.tryon_first_offer_used });
       },
     });
   },
 
-  loadFreeStatus: function () {
-    var t = this;
-    var token = wx.getStorageSync("token");
-    if (!token) return;
-    wx.request({
-      url: "https://colour-choice.art/api/tryon/free-trial?token=" + token,
-      success: function (r) {
-        if (r.data && r.data.success) {
-          t.setData({ freeClaimed: !!r.data.claimed, freeRemaining: r.data.remaining || 0 });
-        }
-      },
-    });
+  loadFirstOffer: function () {
+    this.loadCredits();
   },
 
-  claimFree: function () {
+  buyFirstOffer: function () {
     var t = this;
-    if (t.data.freeClaimed || t.data.freeRemaining <= 0 || t.data.claiming) return;
+    if (t.data.firstOfferUsed) return;
+    if (t.data.buying) return;
+    t.setData({ buying: true });
     var token = wx.getStorageSync("token");
-    if (!token) { wx.navigateTo({ url: "/pages/login/index" }); return; }
-    t.setData({ claiming: true });
-    wx.showLoading({ title: "领取中..." });
+    if (!token) { wx.navigateTo({ url: "/pages/login/index" }); t.setData({ buying: false }); return; }
+    wx.showLoading({ title: "调起支付..." });
     wx.request({
-      url: "https://colour-choice.art/api/tryon/free-trial",
+      url: "https://colour-choice.art/api/tryon/subscribe",
       method: "POST",
-      data: { token: token },
+      data: { token: token, tier: "tryon_first_1yuan" },
       success: function (r) {
         wx.hideLoading();
         var d = r.data || {};
-        if (!d.ok) {
-          var msg = d.reason === "already_claimed" ? "您已领过免费试用"
-            : (d.reason === "sold_out" ? "名额已抢光" : (d.error || "请稍后重试"));
-          wx.showModal({ title: "领取失败", content: msg, showCancel: false });
-          if (d.reason === "sold_out") t.setData({ freeRemaining: 0 });
-          t.setData({ claiming: false });
+        if (d.error) {
+          wx.showModal({ title: "下单失败", content: d.error, showCancel: false });
+          t.setData({ buying: false });
           return;
         }
-        wx.showToast({ title: "领取成功，可用1次", icon: "success" });
-        t.setData({ freeClaimed: true, freeRemaining: d.remaining != null ? d.remaining : 0 });
-        t.loadCredits();
-        t.setData({ claiming: false });
+        var pm = d.jsapi;
+        wx.requestPayment({
+          timeStamp: pm.timeStamp, nonceStr: pm.nonceStr, package: pm.package,
+          signType: pm.signType || "MD5", paySign: pm.paySign,
+          success: function () { wx.showToast({ title: "开通成功", icon: "success" }); t.loadCredits(); },
+          fail: function () { wx.showToast({ title: "支付取消", icon: "none" }); },
+        });
+        t.setData({ buying: false });
       },
       fail: function () {
         wx.hideLoading();
         wx.showToast({ title: "网络错误", icon: "none" });
-        t.setData({ claiming: false });
+        t.setData({ buying: false });
       },
     });
   },
