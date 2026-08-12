@@ -13,6 +13,10 @@
 .hint { font-size: 20rpx; color: #999; line-height: 1.5; display: block; }
 .pro-entry { font-size: 20rpx; color: #C9A24B; font-weight: 700; margin-top: 12rpx; display: inline-block; }
 .pro-entry.on { color: #999; font-weight: 400; }
+.auth-row { display: flex; align-items: flex-start; margin-top: 14rpx; padding: 14rpx; background: #fff8f3; border: 1rpx solid #f0d9c4; border-radius: 12rpx; }
+.ck { width: 32rpx; height: 32rpx; border-radius: 8rpx; border: 2rpx solid #C9A24B; color: #fff; background: #fff; font-size: 22rpx; line-height: 32rpx; text-align: center; flex-shrink: 0; margin-right: 12rpx; }
+.ck.on { background: #C9A24B; border-color: #C9A24B; }
+.auth-t { font-size: 20rpx; color: #8a6d52; line-height: 1.5; }
 .lab { font-size: 20rpx; color: #999; display: block; margin: 6rpx 0 4rpx; }
 .chips { white-space: nowrap; }
 .chip { display: inline-block; font-size: 20rpx; padding: 6rpx 16rpx; border-radius: 30rpx; border: 1rpx solid #ddd; margin-right: 8rpx; color: #666; background: #fff; }
@@ -59,7 +63,9 @@
 .mask { position: fixed; inset: 0; background: rgba(0,0,0,.88); display: flex; align-items: center; justify-content: center; padding: 30rpx; z-index: 50; }
 .result { width: 100%; }
 .rc { color: #fff; font-size: 22rpx; text-align: center; display: block; margin-bottom: 16rpx; }
-.rimg { width: 100%; border-radius: 16rpx; border: 1rpx solid #444; }
+.rimg-wrap { position: relative; width: 100%; }
+.rimg { width: 100%; border-radius: 16rpx; border: 1rpx solid #444; display: block; }
+.ai-badge { position: absolute; left: 16rpx; bottom: 16rpx; background: rgba(45,27,46,.78); color: #fcefe9; font-size: 20rpx; padding: 6rpx 16rpx; border-radius: 30rpx; border: 1rpx solid #C9A24B; }
 
 /* —— 推广 / 付费墙 —— */
 .promo { background: linear-gradient(90deg,#fcefe9,#fff); color: #2d1b2e; font-size: 24rpx; font-weight: 700; padding: 14rpx 18rpx; border-radius: 14rpx; margin-bottom: 12rpx; border: 1rpx solid #C9A24B; }

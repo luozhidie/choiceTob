@@ -25,6 +25,11 @@
         <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
     </view>
+    <!-- 肖像授权（试衣前必须勾选） -->
+    <view class="auth-row" bindtap="toggleAuth">
+      <view class="ck {{agreedAuth ? 'on' : ''}}">{{agreedAuth ? '✓' : ''}}</view>
+      <text class="auth-t">我已同意《肖像使用授权》：照片仅用于本次 AI 试衣合成，不外传、不公开</text>
+    </view>
   </view>
 
   <!-- ② 挑衣服（普及版：品类筛选 + AI帮我搭） -->
@@ -133,7 +138,10 @@
   <view wx:if="{{showResult}}" class="mask" bindtap="closeResult">
     <view class="result" catchtap="noop">
       <text class="rc">整体造型已生成</text>
-      <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
+      <view class="rimg-wrap">
+        <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
+        <view class="ai-badge">AI 合成</view>
+      </view>
       <text class="save-btn" catchtap="saveResult">保存到相册（高清）</text>
       <text class="buy-tip" catchtap="noop">喜欢这身？在「挑衣服」里点单品即可下单带走</text>
       <text class="close-tip" catchtap="closeResult">点击空白处关闭</text>
