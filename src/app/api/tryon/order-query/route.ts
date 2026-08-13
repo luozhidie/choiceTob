@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { orderQuery } from "@/lib/wechat-pay";
+import { upsertTryonEntitlement, shapeEntitlement } from "@/lib/tryon-entitlement";
 
 const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
   tryon_first_1yuan:       { type: "first",        days: 365, normal: 9,   pro: 1 },
@@ -36,14 +37,6 @@ export async function GET(request: NextRequest) {
       order_no = order?.order_no || suffix;
     }
 
-    if (!order) {
-      return NextResponse.json({ error: "订单不存在" }, { status: 404 });
-    }
-
-    if (!order) {
-      return NextResponse.json({ error: "订单不存在" }, { status: 404 });
-    }
-
     const wx = await orderQuery(order_no);
     const tradeState = wx.trade_state;
 
@@ -74,7 +67,7 @@ export async function GET(request: NextRequest) {
       success: true,
       wechat_state: tradeState,
       order: { order_no: order.order_no, status: order.status, package_id: order.package_id, openid: order.openid },
-      entitlement: ent || null,
+      entitlement: shapeEntitlement(ent),
     });
   } catch (err: any) {
     console.error("[试衣查单] 异常", err);
@@ -122,17 +115,13 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     type = pkg.type;
   }
 
-  const { error } = await supabase.from("tryon_entitlements").upsert(
-    {
-      openid,
-      type,
-      expires_at: new Date(finalExpires).toISOString(),
-      normal_left: normalLeft,
-      pro_left: proLeft,
-      tries_left: normalLeft + proLeft,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "openid" }
-  );
-  if (error) throw new Error("权益发放失败: " + (error.message || JSON.stringify(error)));
+  await upsertTryonEntitlement(supabase, {
+    openid,
+    type,
+    expires_at: new Date(finalExpires).toISOString(),
+    normal_left: normalLeft,
+    pro_left: proLeft,
+    tries_left: normalLeft + proLeft,
+    updated_at: new Date().toISOString(),
+  });
 }

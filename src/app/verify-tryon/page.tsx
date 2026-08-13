@@ -64,7 +64,7 @@ export default function VerifyTryonPage() {
         const res = await fetch('/api/tryon/entitlement?openid=' + encodeURIComponent(openid));
         const d = await res.json();
         setEnt(d);
-        if (d && d.active && (d.normalLeft > 0 || d.proLeft > 0)) {
+        if (d && d.active && (d.normalLeft > 0 || d.proLeft > 0 || d.triesLeft > 0)) {
           if (timerRef.current) clearInterval(timerRef.current);
           setStatus('done');
         }
@@ -88,8 +88,9 @@ export default function VerifyTryonPage() {
       const res = await fetch('/api/tryon/order-query?order_no=' + encodeURIComponent(orderNo));
       const d = await res.json();
       if (!res.ok) throw new Error(d.error || '查单失败');
-      setEnt(d.entitlement || null);
-      if (d.entitlement && (d.entitlement.normal_left > 0 || d.entitlement.pro_left > 0)) {
+      const e = d.entitlement || {};
+      setEnt(e);
+      if (e.active && (e.normalLeft > 0 || e.proLeft > 0 || e.triesLeft > 0)) {
         setStatus('done');
       }
     } catch (e: any) {
@@ -208,9 +209,10 @@ export default function VerifyTryonPage() {
               ✅ 验证通过：普通版 +1、专业版 +1，有效期 7 天
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <Stat label="普通版次数" value={ent ? ent.normalLeft ?? 0 : '—'} />
               <Stat label="专业版次数" value={ent ? ent.proLeft ?? 0 : '—'} />
+              <Stat label="总次数" value={ent ? ent.triesLeft ?? '—' : '—'} />
               <Stat label="剩余天数" value={ent ? ent.daysLeft ?? '—' : '—'} />
             </div>
           )}

@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseXml, signMd5 } from "@/lib/wechat-pay";
+import { upsertTryonEntitlement } from "@/lib/tryon-entitlement";
 
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
@@ -102,21 +103,16 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     type = pkg.type;
   }
 
-  const { error } = await supabase.from("tryon_entitlements").upsert(
-    {
-      openid,
-      type,
-      expires_at: new Date(finalExpires).toISOString(),
-      normal_left: normalLeft,
-      pro_left: proLeft,
-      // 保留 tries_left 作为兼容/只读汇总：normal + pro
-      tries_left: normalLeft + proLeft,
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "openid" }
-  );
-  if (error) console.error("[试衣权益发放] 失败", error);
-  else console.log("[试衣权益发放] 成功", { openid, type, normalLeft, proLeft });
+  const { schema } = await upsertTryonEntitlement(supabase, {
+    openid,
+    type,
+    expires_at: new Date(finalExpires).toISOString(),
+    normal_left: normalLeft,
+    pro_left: proLeft,
+    tries_left: normalLeft + proLeft,
+    updated_at: new Date().toISOString(),
+  });
+  console.log(`[试衣权益发放] 成功 schema=${schema}`, { openid, type, normalLeft, proLeft });
 }
 
 function buildXml(obj: Record<string, string>) {

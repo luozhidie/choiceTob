@@ -4,26 +4,7 @@
 // tier: 'normal' | 'pro'，由客户端按当前模式传入
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-
-function shape(row: any) {
-  const now = Date.now();
-  const expires = row ? new Date(row.expires_at).getTime() : 0;
-  const normalLeft = row ? row.normal_left || 0 : 0;
-  const proLeft = row ? row.pro_left || 0 : 0;
-  const triesLeft = normalLeft + proLeft;
-  // 有效期内且任一计数器有剩余次数才有效
-  const active = expires > now && (normalLeft > 0 || proLeft > 0);
-  const daysLeft = expires > now ? Math.max(0, Math.ceil((expires - now) / 86400000)) : 0;
-  return {
-    active,
-    type: row ? row.type : null,
-    daysLeft,
-    normalLeft,
-    proLeft,
-    triesLeft,
-    expires: row ? row.expires_at : null,
-  };
-}
+import { shapeEntitlement } from "@/lib/tryon-entitlement";
 
 export async function GET(request: NextRequest) {
   const openid = request.nextUrl.searchParams.get("openid");
@@ -31,7 +12,7 @@ export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient();
     const { data } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
-    return NextResponse.json(shape(data));
+    return NextResponse.json(shapeEntitlement(data));
   } catch (err: any) {
     return NextResponse.json({ active: false, error: err.message || "查询失败" }, { status: 500 });
   }
