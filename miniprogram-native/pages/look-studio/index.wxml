@@ -87,7 +87,6 @@
 
     <view class="tabs">
       <text class="tab {{mode==='look'?'on':''}}" data-m="look" bindtap="setMode">造型</text>
-      <text class="tab {{mode==='buyer'?'on':''}}" data-m="buyer" bindtap="setMode">买手</text>
       <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>
       <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按风格生成</text>
     </view>

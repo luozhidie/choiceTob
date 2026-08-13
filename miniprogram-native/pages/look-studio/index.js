@@ -9,12 +9,12 @@ function rewriteSupabase(u) {
 }
 
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
-// normal = 普通版次数，pro = 专业版次数
+// 新规格统一为通用次数，计入 normal；专业版判定靠 proMode，次数走同一个池
 var PACKAGES = [
-  { id: 'tryon_first_1yuan',       name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 9 次普通 + 1 次专业',  type: 'first',        days: 365, normal: 9,   pro: 1,    highlight: true },
-  { id: 'tryon_normal_monthly_59', name: '普通月卡', price: 59,   unit: '月', desc: '30 天 70 次普通试穿',          type: 'normal_month', days: 30,  normal: 70,  pro: 0 },
-  { id: 'tryon_pro_monthly_199',   name: '专业月卡', price: 199,  unit: '月', desc: '30 天 200 次专业诊断',         type: 'pro_month',    days: 30,  normal: 0,   pro: 200 },
-  { id: 'tryon_pro_year_999',      name: '专业年卡', price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',       type: 'pro_year',     days: 365, normal: 0,   pro: 1000 },
+  { id: 'tryon_first_1yuan', name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 10 次通用试穿', type: 'first',   days: 365, normal: 10,  pro: 0, highlight: true },
+  { id: 'tryon_monthly_99',  name: '月卡',     price: 99,   unit: '月', desc: '30 天 120 次通用试穿', type: 'month',   days: 30,  normal: 120, pro: 0 },
+  { id: 'tryon_quarter_199', name: '季卡',     price: 199,  unit: '季', desc: '90 天 280 次通用试穿', type: 'quarter', days: 90,  normal: 280, pro: 0 },
+  { id: 'tryon_year_699',    name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次通用试穿', type: 'year',    days: 365, normal: 1000, pro: 0 },
 ];
 
 // 价格：数据库按分存，展示为元
@@ -95,13 +95,12 @@ Page({
     if (!d.active) {
       txt = '未开通 · 首单 ¥9.9 体验';
     } else if (d.type === 'first') {
-      txt = '首单体验 · 普通 ' + (d.normalLeft || 0) + ' · 专业 ' + (d.proLeft || 0);
+      txt = '首单体验 · 剩余 ' + (d.triesLeft || d.normalLeft || 0) + ' 次';
     } else {
       var days = d.daysLeft || 0;
-      var normal = d.normalLeft || 0;
-      var pro = d.proLeft || 0;
-      var label = d.type === 'normal_month' ? '普通月卡' : d.type === 'pro_month' ? '专业月卡' : '专业年卡';
-      txt = label + '剩余 ' + days + ' 天 · 普通 ' + normal + ' · 专业 ' + pro;
+      var left = d.triesLeft || d.normalLeft || 0;
+      var label = d.type === 'month' ? '月卡' : d.type === 'quarter' ? '季卡' : d.type === 'year' ? '年卡' : '套餐';
+      txt = label + '剩余 ' + days + ' 天 · ' + left + ' 次';
     }
     this.setData({ passText: txt, isPass: d.active });
   },
@@ -197,12 +196,21 @@ Page({
             wx.hideLoading();
             var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
             var url = d.url || (d.data && d.data.url);
-            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); return; }
+            if (!url) {
+              var errMsg = d.error || '上传失败';
+              wx.showModal({ title: '上传失败', content: String(errMsg).slice(0, 120), showCancel: false });
+              console.error('[chooseCloth] 上传无 url', d);
+              return;
+            }
             var item = { id: 'cloth_' + Date.now(), title: '上传的衣服', cover: url, price: '', seasons: [], styles: [], category: '' };
             t.setData({ tray: t.data.tray.concat([item]) });
             wx.showToast({ title: '已加入造型', icon: 'none' });
           },
-          fail: function () { wx.hideLoading(); wx.showToast({ title: '上传失败', icon: 'none' }); }
+          fail: function (err) {
+            wx.hideLoading();
+            wx.showModal({ title: '上传失败', content: '网络错误：' + (err && err.errMsg || '请检查网络与域名白名单'), showCancel: false });
+            console.error('[chooseCloth] uploadFile fail', err);
+          }
         });
       }
     });

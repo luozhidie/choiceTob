@@ -22,7 +22,7 @@ export default function TryonProPage() {
             "普通版全部功能",
             "21 题穿衣风格诊断",
             "AI 按风格自动生成造型",
-            "专属买手推荐 + 优先新款",
+            "风格匹配 + 场合搭配建议",
           ].map((t) => (
             <div key={t}>✓ {t}</div>
           ))}
