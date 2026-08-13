@@ -6,6 +6,13 @@
     <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
   </view>
   <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥1 试穿一整套</view>
+
+  <!-- 普通版 / 专业版 切换 -->
+  <view class="mode-tabs">
+    <view class="mode-tab {{!proMode?'on':''}}" bindtap="switchToBasic">普通版</view>
+    <view class="mode-tab {{proMode?'on':''}}" bindtap="switchToPro">专业版</view>
+  </view>
+
   <view class="pass-bar" bindtap="openPackages">
     <text class="pass-t">{{passText}}</text>
     <text class="pass-go">{{isPass ? '管理' : '去开通'}} ›</text>
@@ -21,7 +28,7 @@
       </view>
       <view class="me-info">
         <text class="hint">仅用于本次试穿，不会公开。试衣为 AI 合成效果，仅供参考。</text>
-        <text wx:if="{{!proMode}}" class="pro-entry" bindtap="togglePro">想要更懂你的色彩/风格诊断？升级专业版 ›</text>
+        <text wx:if="{{!proMode}}" class="pro-entry" bindtap="togglePro">想要更懂你的穿衣风格？升级专业版 ›</text>
         <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
     </view>
@@ -32,33 +39,42 @@
     </view>
   </view>
 
-  <!-- ② 挑衣服（普及版：品类筛选 + AI帮我搭） -->
+  <!-- ② 普通版：上传衣服图 或 从店铺挑选 -->
   <view wx:if="{{!proMode}}" class="card">
-    <text class="ct">② 挑衣服（或让 AI 帮你搭）</text>
-    <text class="auto-btn" bindtap="smartPick">✨ AI 帮我搭一套</text>
-    <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
-      <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
-      <text wx:for="{{categories}}" wx:key="*this" class="chip {{category===item?'on':''}}" data-c="{{item}}" bindtap="setCategory">{{item}}</text>
-    </scroll-view>
-    <view class="grid3">
-      <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
-        <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-        <text class="ptitle">{{item.title}}</text>
-        <text class="pprice">¥{{item.price}}</text>
-        <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+    <text class="ct">② 上传要试穿的衣服</text>
+    <view class="cloth-row">
+      <view class="cloth-pic" bindtap="chooseCloth">
+        <text class="cloth-ph">上传\n衣服</text>
+      </view>
+      <view class="cloth-info">
+        <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），或从店铺挑选。</text>
+        <text class="shop-entry" bindtap="openShopPick">没有衣服图？从店铺挑选 ›</text>
       </view>
     </view>
-    <view wx:if="{{browseProducts.length===0}}" class="empty">该分类暂无商品</view>
+
+    <!-- 展开店铺挑选 -->
+    <block wx:if="{{showShopPick}}">
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
+        <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
+        <text wx:for="{{categories}}" wx:key="*this" class="chip {{category===item?'on':''}}" data-c="{{item}}" bindtap="setCategory">{{item}}</text>
+      </scroll-view>
+      <view class="grid3">
+        <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pprice">¥{{item.price}}</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+        </view>
+      </view>
+      <view wx:if="{{browseProducts.length===0}}" class="empty">该分类暂无商品</view>
+      <text class="close-shop" bindtap="closeShopPick">‹ 收起店铺挑选</text>
+    </block>
   </view>
 
   <!-- 专业版（升级后显示：季型×风格 + 造型/买手/手工/按风格） -->
   <block wx:if="{{proMode}}">
     <view class="card">
-      <text class="ct">我的形象（色彩季型 / 穿衣风格）</text>
-      <text class="lab">色彩季型</text>
-      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-        <text wx:for="{{seasons}}" wx:key="code" class="chip {{mySeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMySeason">{{item.name_zh}}</text>
-      </scroll-view>
+      <text class="ct">我的形象（穿衣风格）</text>
       <text class="lab">穿衣风格（主风格）</text>
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
         <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.gender==='women'?'女':'男'}}·{{item.name_zh}}</text>

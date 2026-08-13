@@ -16,6 +16,14 @@ var PACKAGES = [
   { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天无限次 + 专属顾问', type: 'year', days: 365 },
 ];
 
+// 价格：数据库按分存，展示为元
+function fmtPrice(n) {
+  if (n == null) return '0';
+  var yuan = Math.round(n) / 100;
+  // 去掉无意义的 .00
+  return yuan % 1 === 0 ? String(yuan) : yuan.toFixed(2);
+}
+
 // —— 权益缓存（服务端为权威，localStorage 仅作即时缓存）——
 function getCacheEnt() { try { return wx.getStorageSync('tryon_entitlement') || null; } catch (e) { return null; } }
 function setCacheEnt(e) { try { wx.setStorageSync('tryon_entitlement', e); } catch (e) {} }
@@ -53,6 +61,7 @@ Page({
     isPass: false,
     passText: '未开通 · 首单 ¥1 体验',
     agreedAuth: false,
+    showShopPick: false,
   },
 
   onLoad: function (options) {
@@ -110,7 +119,7 @@ Page({
 
         var products = productsRaw.map(function (p) {
           return {
-            id: p.id, title: p.title, price: p.price, cover: p.cover,
+            id: p.id, title: p.title, price: fmtPrice(p.price), cover: p.cover,
             seasons: p.seasons || [], styles: p.styles || [], category: p.category || '',
             seasonNames: (p.seasons || []).slice(0, 2).map(function (c) { return seasonMap[c] || c; }),
             styleNames: (p.styles || []).slice(0, 1).map(function (c) { return styleMap[c] || c; }),
@@ -169,6 +178,34 @@ Page({
     });
   },
 
+  // —— 普通版：上传自己的衣服图 ——
+  chooseCloth: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      success: function (res) {
+        var f = res.tempFiles && res.tempFiles[0];
+        if (!f) return;
+        wx.showLoading({ title: '上传衣服图...' });
+        wx.uploadFile({
+          url: BASE + '/api/upload',
+          filePath: f.tempFilePath,
+          name: 'file',
+          success: function (up) {
+            wx.hideLoading();
+            var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
+            var url = d.url || (d.data && d.data.url);
+            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); return; }
+            var item = { id: 'cloth_' + Date.now(), title: '上传的衣服', cover: url, price: '', seasons: [], styles: [], category: '' };
+            t.setData({ tray: t.data.tray.concat([item]) });
+            wx.showToast({ title: '已加入造型', icon: 'none' });
+          },
+          fail: function () { wx.hideLoading(); wx.showToast({ title: '上传失败', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
   // —— 普及版：AI 帮我搭（后台复用专业匹配，话术说人话）——
   smartPick: function () {
     var cards = this.data.lookCards;
@@ -181,6 +218,8 @@ Page({
     var c = e.currentTarget.dataset.c;
     this.setData({ category: c, browseProducts: this.computeByCat(c, this.data.products) });
   },
+  openShopPick: function () { this.setData({ showShopPick: true }); },
+  closeShopPick: function () { this.setData({ showShopPick: false }); },
 
   // —— 合规：肖像授权勾选 ——
   toggleAuth: function () {
@@ -194,14 +233,29 @@ Page({
     var self = this;
     if (!this.data.proMode && !this.data.isPass) {
       wx.showModal({
-        title: '专业色彩顾问',
-        content: '开通试衣套餐后解锁：你的色彩季型 / 穿衣风格诊断 + 按风格一键生成专属造型。',
+        title: '专业风格顾问',
+        content: '开通试衣套餐后解锁：21 题穿衣风格诊断 + 按风格一键生成专属造型。',
         confirmText: '去开通', cancelText: '暂不需要',
         success: function (r) { if (r.confirm) self.openPackages(); }
       });
       return;
     }
     this.setData({ proMode: !this.data.proMode, mode: 'look' });
+  },
+
+  switchToBasic: function () { this.setData({ proMode: false }); },
+  switchToPro: function () {
+    var self = this;
+    if (!this.data.isPass) {
+      wx.showModal({
+        title: '专业版',
+        content: '专业版含 21 题穿衣风格诊断与 AI 按风格生成造型。开通任意套餐后即可使用。',
+        confirmText: '去开通', cancelText: '暂不需要',
+        success: function (r) { if (r.confirm) self.openPackages(); }
+      });
+      return;
+    }
+    this.setData({ proMode: true, mode: 'look' });
   },
 
   setMode: function (e) { this.setData({ mode: e.currentTarget.dataset.m }); },
