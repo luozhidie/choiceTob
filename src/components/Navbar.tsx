@@ -12,6 +12,7 @@ const navItems = [
   { label: "教学课程", href: "/courses" },
   { label: "风格测试", href: "/style-test" },
   { label: "买手选品", href: "/buyer" },
+  { label: "买手工作台", href: "/buyer/workbench" },
   { label: "时尚博主", href: "/magazine" },
   { label: "联系我们", href: "/contact" },
 ];
