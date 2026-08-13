@@ -47,15 +47,19 @@ export async function GET(request: NextRequest) {
     const wx = await orderQuery(order_no);
     const tradeState = wx.trade_state;
 
-    if (tradeState === "SUCCESS" && order.status !== "paid") {
-      await supabase
-        .from("tryon_orders")
-        .update({
-          status: "paid",
-          paid_at: new Date().toISOString(),
-          transaction_id: wx.transaction_id,
-        })
-        .eq("order_no", order_no);
+    const force = searchParams.get("force") === "1";
+
+    if (tradeState === "SUCCESS" && (order.status !== "paid" || force)) {
+      if (order.status !== "paid") {
+        await supabase
+          .from("tryon_orders")
+          .update({
+            status: "paid",
+            paid_at: new Date().toISOString(),
+            transaction_id: wx.transaction_id,
+          })
+          .eq("order_no", order_no);
+      }
 
       await grantEntitlement(supabase, order.openid, order.package_id);
     }
