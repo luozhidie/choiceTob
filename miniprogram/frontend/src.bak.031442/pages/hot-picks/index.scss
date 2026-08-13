@@ -1,0 +1,1356 @@
+// 主题色
+$primary: #1a56db;
+$primary-dark: #0d47a1;
+$accent: #c44569;
+$accent-light: #f7e8ec;
+$success: #16a34a;
+$warning: #ea580c;
+$text-primary: #1a1a1a;
+$text-secondary: #666;
+$text-hint: #999;
+$border-color: #eee;
+$bg-card: #fff;
+$bg-page: #f5f5f5;
+
+.hot-picks-page {
+  background: $bg-page;
+  min-height: 100vh;
+  padding-bottom: 120px;
+}
+
+/* ============ Hero ============ */
+.hero {
+  position: relative;
+  height: 320px;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  overflow: hidden;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba($accent, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 48px 32px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
+  margin-bottom: 16px;
+}
+
+.hero-badge-text {
+  font-size: 22px;
+  color: $accent;
+  font-weight: 500;
+}
+
+.hero-title {
+  font-size: 48px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.hero-subtitle {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+  line-height: 1.6;
+}
+
+/* ============ Tab 切换 ============ */
+.tabs-bar {
+  background: #fff;
+  white-space: nowrap;
+  border-bottom: 1px solid $border-color;
+}
+
+.tab-item {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 24px;
+  position: relative;
+}
+
+.tab-text {
+  font-size: 26px;
+  color: $text-hint;
+  font-weight: 500;
+}
+
+.tab-item.active .tab-text {
+  color: $accent;
+  font-weight: 600;
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: $accent;
+  border-radius: 2px;
+}
+
+/* ============ 会员 Banner ============ */
+.member-banner {
+  display: flex;
+  align-items: center;
+  padding: 24px 24px;
+  background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
+  border-bottom: 1px solid #fef3c7;
+}
+
+.banner-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: #fef3c7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 16px;
+}
+
+.banner-icon {
+  font-size: 36px;
+}
+
+.banner-content {
+  flex: 1;
+}
+
+.banner-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #92400e;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.banner-desc {
+  font-size: 22px;
+  color: #b45309;
+  display: block;
+}
+
+.banner-btn {
+  background: #f59e0b;
+  padding: 12px 24px;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.banner-btn:active {
+  opacity: 0.85;
+}
+
+.banner-btn-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 通用 Section ============ */
+.section {
+  padding: 32px 24px;
+  background: #fff;
+  margin-bottom: 16px;
+}
+
+.section-gray {
+  background: $bg-page;
+}
+
+.section-header-center {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.section-label {
+  font-size: 22px;
+  color: $accent;
+  font-weight: 600;
+  letter-spacing: 2px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.section-title-center {
+  font-size: 36px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.section-desc-center {
+  font-size: 24px;
+  color: $text-secondary;
+  display: block;
+  line-height: 1.6;
+}
+
+/* ============ 分类筛选 ============ */
+.filter-bar {
+  white-space: nowrap;
+  margin-bottom: 24px;
+}
+
+.filter-item {
+  display: inline-flex;
+  padding: 12px 24px;
+  border-radius: 12px;
+  background: #f5f5f5;
+  margin-right: 12px;
+}
+
+.filter-item.active {
+  background: $accent;
+}
+
+.filter-text {
+  font-size: 24px;
+  color: $text-secondary;
+  font-weight: 500;
+}
+
+.filter-item.active .filter-text {
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ============ 加载/空状态 ============ */
+.loading-wrap,
+.empty-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+}
+
+.loading-text {
+  font-size: 26px;
+  color: $text-hint;
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 26px;
+  color: $text-hint;
+}
+
+/* ============ 商品列表 ============ */
+.product-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.product-card {
+  width: calc(50% - 8px);
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 1px solid transparent;
+}
+
+.product-card:active {
+  border-color: rgba($accent, 0.3);
+}
+
+.product-img-wrap {
+  position: relative;
+  height: 360px;
+  background: linear-gradient(135deg, rgba($primary, 0.05) 0%, rgba($accent, 0.05) 100%);
+  overflow: hidden;
+}
+
+.product-img {
+  width: 100%;
+  height: 100%;
+}
+
+.product-img-blur {
+  filter: blur(20px);
+  opacity: 0.75;
+}
+
+.product-img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-icon {
+  font-size: 64px;
+  opacity: 0.3;
+}
+
+.product-lock-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.lock-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.lock-text {
+  font-size: 26px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.lock-sub {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 4px;
+}
+
+.product-tags {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+.product-tag {
+  background: rgba($primary, 0.8);
+  padding: 2px 12px;
+  border-radius: 20px;
+}
+
+.product-tag-text {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.product-season {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba($accent, 0.9);
+  padding: 2px 12px;
+  border-radius: 20px;
+}
+
+.product-season-text {
+  font-size: 18px;
+  color: #fff;
+  font-weight: 500;
+}
+
+.product-info {
+  padding: 16px;
+}
+
+.product-name {
+  font-size: 26px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-desc {
+  font-size: 22px;
+  color: $text-secondary;
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.product-price {
+  font-size: 32px;
+  font-weight: bold;
+  color: $accent;
+}
+
+.product-original-price {
+  font-size: 22px;
+  color: $text-hint;
+  text-decoration: line-through;
+}
+
+.product-price-locked {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.price-lock-icon {
+  font-size: 24px;
+}
+
+.price-lock-text {
+  font-size: 22px;
+  color: $text-hint;
+}
+
+.product-consult-btn {
+  margin-top: 16px;
+  background: $accent;
+  padding: 12px 0;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.product-consult-btn:active {
+  opacity: 0.85;
+}
+
+.product-consult-text {
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 买手爆款样衣 ============ */
+.buyer-card {
+  background: #fff;
+  border: 2px solid $border-color;
+  border-radius: 20px;
+  padding: 40px 24px 24px;
+  margin-bottom: 24px;
+  text-align: center;
+  position: relative;
+}
+
+.buyer-card-spring {
+  border-color: #bbf7d0;
+  background: rgba(187, 247, 208, 0.15);
+}
+
+.buyer-card-autumn {
+  border-color: #fed7aa;
+  background: rgba(254, 215, 170, 0.15);
+}
+
+.buyer-tag {
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 24px;
+  border-radius: 24px;
+}
+
+.buyer-tag-spring {
+  background: $success;
+}
+
+.buyer-tag-autumn {
+  background: $warning;
+}
+
+.buyer-tag-text {
+  font-size: 22px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.buyer-name {
+  font-size: 28px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.buyer-price {
+  font-size: 48px;
+  font-weight: bold;
+  color: $accent;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.buyer-meta {
+  font-size: 22px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.buyer-features {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.buyer-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.buyer-feature-check {
+  font-size: 24px;
+  color: $success;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.buyer-feature-text {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.buyer-consult-btn {
+  background: $accent;
+  padding: 16px 0;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.buyer-consult-btn:active {
+  opacity: 0.85;
+}
+
+.buyer-consult-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 样衣租赁 ============ */
+.rental-card {
+  background: #fff;
+  border: 2px solid $border-color;
+  border-radius: 20px;
+  padding: 32px 24px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+}
+
+.rental-card-highlight {
+  border-color: $accent;
+  box-shadow: 0 4px 16px rgba($accent, 0.1);
+}
+
+.rental-recommend {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: $accent;
+  padding: 4px 20px;
+  border-radius: 20px;
+}
+
+.rental-recommend-text {
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.rental-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.rental-name {
+  font-size: 28px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.rental-price {
+  font-size: 44px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.rental-price-accent {
+  color: $accent;
+}
+
+.rental-meta {
+  font-size: 22px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.rental-consult-btn {
+  padding: 16px 0;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.rental-consult-btn:active {
+  opacity: 0.85;
+}
+
+.rental-consult-accent {
+  background: $accent;
+}
+
+.rental-consult-default {
+  background: #f5f5f5;
+}
+
+.rental-consult-text {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.rental-consult-accent .rental-consult-text {
+  color: #fff;
+}
+
+.rental-consult-default .rental-consult-text {
+  color: $text-primary;
+}
+
+/* ============ 信息卡 ============ */
+.info-card {
+  background: #f8f9fa;
+  border: 1px solid $border-color;
+  border-radius: 16px;
+  padding: 24px;
+  margin-top: 24px;
+}
+
+.info-card-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.info-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card-item-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.info-card-item-desc {
+  font-size: 22px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+/* ============ 子 Hero ============ */
+.sub-hero {
+  position: relative;
+  height: 280px;
+  background: linear-gradient(135deg, $primary 0%, $primary-dark 100%);
+  overflow: hidden;
+}
+
+.sub-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 80% 20%, rgba($accent, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.sub-hero-content {
+  position: relative;
+  z-index: 1;
+  padding: 40px 32px;
+}
+
+.sub-hero-badge {
+  display: inline-flex;
+  padding: 8px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 40px;
+  margin-bottom: 12px;
+}
+
+.sub-hero-badge-text {
+  font-size: 22px;
+  color: $accent;
+  font-weight: 500;
+}
+
+.sub-hero-title {
+  font-size: 44px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.sub-hero-desc {
+  font-size: 24px;
+  color: rgba(255, 255, 255, 0.8);
+  display: block;
+  line-height: 1.6;
+}
+
+/* ============ 子 Tab ============ */
+.sub-tabs {
+  display: flex;
+  background: #fff;
+  border-bottom: 1px solid $border-color;
+}
+
+.sub-tab-item {
+  flex: 1;
+  padding: 20px 0;
+  text-align: center;
+  position: relative;
+}
+
+.sub-tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 4px;
+  background: $primary;
+  border-radius: 2px;
+}
+
+.sub-tab-text {
+  font-size: 26px;
+  color: $text-hint;
+  font-weight: 500;
+}
+
+.sub-tab-item.active .sub-tab-text {
+  color: $primary;
+  font-weight: 600;
+}
+
+/* ============ 品类定价 ============ */
+.category-price-card {
+  background: #fff;
+  border: 1px solid $border-color;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.category-price-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.category-name {
+  font-size: 26px;
+  font-weight: 600;
+  color: $text-primary;
+}
+
+.category-base-price {
+  text-align: right;
+}
+
+.category-base-price-value {
+  font-size: 30px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+}
+
+.category-base-price-unit {
+  font-size: 20px;
+  color: $text-hint;
+}
+
+.category-price-row {
+  display: flex;
+  gap: 8px;
+}
+
+.category-price-item {
+  flex: 1;
+  text-align: center;
+  padding: 12px 8px;
+  border-radius: 10px;
+}
+
+.category-price-design {
+  background: #f5f5f5;
+}
+
+.category-price-pattern {
+  background: #eff6ff;
+}
+
+.category-price-sample {
+  background: $accent-light;
+}
+
+.category-price-label {
+  font-size: 20px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-price-label-blue {
+  font-size: 20px;
+  color: $primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-price-label-accent {
+  font-size: 20px;
+  color: $accent;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.category-price-val {
+  font-size: 24px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+}
+
+.category-price-val-blue {
+  font-size: 24px;
+  font-weight: 600;
+  color: $primary;
+  display: block;
+}
+
+.category-price-val-accent {
+  font-size: 24px;
+  font-weight: 600;
+  color: $accent;
+  display: block;
+}
+
+.price-note {
+  font-size: 22px;
+  color: $text-hint;
+  display: block;
+  text-align: center;
+  margin-top: 24px;
+}
+
+/* ============ 套餐 L1-L5 ============ */
+.tier-card {
+  background: #fff;
+  border: 2px solid $border-color;
+  border-radius: 20px;
+  padding: 32px 24px;
+  margin-bottom: 16px;
+  text-align: center;
+  position: relative;
+}
+
+.tier-card-highlight {
+  border-color: $accent;
+  box-shadow: 0 4px 16px rgba($accent, 0.1);
+}
+
+.tier-recommend {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: $accent;
+  padding: 4px 20px;
+  border-radius: 20px;
+}
+
+.tier-recommend-text {
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.tier-level {
+  font-size: 48px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.tier-level-accent {
+  color: $accent;
+}
+
+.tier-name {
+  font-size: 28px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.tier-desc {
+  font-size: 22px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.tier-price {
+  font-size: 36px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.tier-price-accent {
+  color: $accent;
+}
+
+.tier-features {
+  text-align: left;
+  margin-bottom: 24px;
+}
+
+.tier-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.tier-feature-check {
+  font-size: 24px;
+  color: $success;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.tier-feature-text {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.tier-consult-btn {
+  padding: 16px 0;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.tier-consult-btn:active {
+  opacity: 0.85;
+}
+
+.tier-consult-accent {
+  background: $accent;
+}
+
+.tier-consult-default {
+  background: #f5f5f5;
+}
+
+.tier-consult-text {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.tier-consult-accent .tier-consult-text {
+  color: #fff;
+}
+
+.tier-consult-default .tier-consult-text {
+  color: $text-primary;
+}
+
+/* ============ CTA ============ */
+.cta-section {
+  background: $primary;
+  padding: 48px 32px;
+  text-align: center;
+}
+
+.cta-title {
+  font-size: 36px;
+  font-weight: bold;
+  color: #fff;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.cta-desc {
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.7);
+  display: block;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.cta-btn {
+  display: inline-flex;
+  padding: 16px 64px;
+  background: $accent;
+  border-radius: 14px;
+}
+
+.cta-btn:active {
+  opacity: 0.85;
+}
+
+.cta-btn-text {
+  font-size: 28px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 搭配稿 ============ */
+.collocation-card {
+  background: #fff;
+  border: 1px solid $border-color;
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 16px;
+}
+
+.collocation-sample-card {
+  border: 2px solid rgba($accent, 0.2);
+  position: relative;
+}
+
+.sample-badge {
+  position: absolute;
+  top: -12px;
+  right: 20px;
+  background: $accent;
+  padding: 4px 16px;
+  border-radius: 20px;
+}
+
+.sample-badge-text {
+  font-size: 20px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.collocation-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.collocation-card-icon {
+  font-size: 32px;
+}
+
+.collocation-card-name {
+  font-size: 28px;
+  font-weight: bold;
+  color: $text-primary;
+}
+
+.collocation-card-desc {
+  font-size: 24px;
+  color: $text-secondary;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.collocation-card-price {
+  font-size: 40px;
+  font-weight: bold;
+  color: $accent;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.collocation-card-meta {
+  font-size: 22px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.collocation-consult-btn {
+  background: $accent;
+  padding: 14px 0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.collocation-consult-btn:active {
+  opacity: 0.85;
+}
+
+.collocation-consult-text {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.collocation-consult-btn-primary {
+  background: $primary;
+  padding: 14px 0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.collocation-consult-btn-primary:active {
+  opacity: 0.85;
+}
+
+.collocation-consult-text-white {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 购买须知 ============ */
+.notice-card {
+  background: #f0f0f0;
+  padding: 32px 24px;
+}
+
+.notice-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.notice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.notice-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.notice-check {
+  font-size: 24px;
+  color: $success;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notice-text {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+/* ============ 合作模式 ============ */
+.cooperation-card {
+  background: #fff;
+  border: 2px solid $border-color;
+  border-radius: 20px;
+  padding: 28px 24px;
+  margin-bottom: 20px;
+}
+
+.cooperation-level {
+  display: inline-flex;
+  padding: 6px 20px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+}
+
+.cooperation-level-text {
+  font-size: 24px;
+  color: #fff;
+  font-weight: bold;
+}
+
+.cooperation-name {
+  font-size: 30px;
+  font-weight: bold;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.cooperation-price {
+  font-size: 36px;
+  font-weight: bold;
+  color: $accent;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.cooperation-desc {
+  font-size: 24px;
+  color: $text-hint;
+  display: block;
+  margin-bottom: 20px;
+}
+
+.cooperation-section-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 12px;
+  margin-top: 16px;
+}
+
+.cooperation-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cooperation-feature-check {
+  font-size: 24px;
+  color: $success;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.cooperation-feature-text {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.cooperation-suitable {
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.cooperation-suitable-text {
+  font-size: 24px;
+  color: $text-secondary;
+  line-height: 1.5;
+}
+
+.cooperation-consult-btn {
+  margin-top: 20px;
+  background: $primary;
+  padding: 14px 0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.cooperation-consult-btn:active {
+  opacity: 0.85;
+}
+
+.cooperation-consult-text {
+  font-size: 26px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* ============ 合作流程 ============ */
+.flow-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.flow-step {
+  width: calc(50% - 6px);
+  background: #fff;
+  border: 1px solid $border-color;
+  border-radius: 14px;
+  padding: 20px;
+  text-align: center;
+}
+
+.flow-step-num {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: rgba($accent, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+}
+
+.flow-step-num-text {
+  font-size: 28px;
+  font-weight: bold;
+  color: $accent;
+}
+
+.flow-step-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: $text-primary;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.flow-step-desc {
+  font-size: 20px;
+  color: $text-hint;
+  display: block;
+}

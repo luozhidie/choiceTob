@@ -1,0 +1,15 @@
+{
+  "name": "lzd-futu-relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "富途中继：常驻连 OpenD，向 Vercel 暴露下单/持仓 HTTP 接口",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "futu-api": "*",
+    "protobufjs": "^7.4.0"
+  }
+}

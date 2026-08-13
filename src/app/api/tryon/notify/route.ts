@@ -1,0 +1,144 @@
+// app/api/tryon/notify/route.ts
+// 微信支付回调（仅处理试衣订单）。验签 → 记账 → 发放/续期权益。
+// 与生产 /api/wechat-pay/notify 完全独立，互不干扰。
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import crypto from "crypto";
+
+const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
+
+const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
+  tryon_first_1yuan:       { type: "first",        days: 365, normal: 9,   pro: 1 },
+  tryon_normal_monthly_59: { type: "normal_month", days: 30,  normal: 70,  pro: 0 },
+  tryon_pro_monthly_199:   { type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
+  tryon_pro_year_999:      { type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
+  tryon_test_cent:         { type: "test",         days: 7,   normal: 1,   pro: 1 },
+};
+
+export async function POST(request: NextRequest) {
+  try {
+    const xml = await request.text();
+    const params = parseXml(xml);
+    console.log("[试衣支付回调]", params);
+
+    // 验证签名
+    const sign = params.sign;
+    delete params.sign;
+    const localSign = signMd5(params);
+    if (localSign !== sign) {
+      console.error("[试衣支付回调] 签名失败", { localSign, sign });
+      return xmlResp({ return_code: "FAIL", return_msg: "签名失败" });
+    }
+
+    if (params.result_code === "SUCCESS") {
+      const supabase = await createClient();
+      const out_trade_no = params.out_trade_no;
+      const transaction_id = params.transaction_id;
+
+      const { data: order } = await supabase
+        .from("tryon_orders")
+        .select("*")
+        .eq("order_no", out_trade_no)
+        .single();
+
+      if (order && order.status !== "paid") {
+        await supabase
+          .from("tryon_orders")
+          .update({ status: "paid", paid_at: new Date().toISOString(), transaction_id })
+          .eq("order_no", out_trade_no);
+
+        await grantEntitlement(supabase, order.openid, order.package_id);
+      }
+    }
+
+    return xmlResp({ return_code: "SUCCESS", return_msg: "OK" });
+  } catch (err: any) {
+    console.error("[试衣支付回调] 异常", err);
+    return xmlResp({ return_code: "FAIL", return_msg: err.message || "error" });
+  }
+}
+
+// 发放/续期权益（按 openid 合并，有效期内续费 normal/pro 次数分别叠加）
+async function grantEntitlement(supabase: any, openid: string, package_id: string) {
+  const pkg = PACKAGES[package_id];
+  if (!pkg) return;
+  const now = Date.now();
+  const windowMs = pkg.days * 86400000;
+  const computedExpires = now + windowMs;
+
+  const { data: exist } = await supabase
+    .from("tryon_entitlements")
+    .select("*")
+    .eq("openid", openid)
+    .single();
+
+  let normalLeft: number;
+  let proLeft: number;
+  let finalExpires: number;
+  let type: string;
+
+  if (exist) {
+    const existExpires = new Date(exist.expires_at).getTime();
+    finalExpires = Math.max(existExpires, computedExpires);
+    const expired = existExpires <= now;
+    if (pkg.type === "first") {
+      // 首单体验：每人只买一次，普通封顶 9 次、专业封顶 1 次（防薅羊毛）
+      normalLeft = Math.min((exist.normal_left || 0) + pkg.normal, pkg.normal);
+      proLeft = Math.min((exist.pro_left || 0) + pkg.pro, pkg.pro);
+    } else if (expired) {
+      // 已过期：重新发次数
+      normalLeft = pkg.normal;
+      proLeft = pkg.pro;
+    } else {
+      // 有效期内续费：次数叠加
+      normalLeft = (exist.normal_left || 0) + pkg.normal;
+      proLeft = (exist.pro_left || 0) + pkg.pro;
+    }
+    type = pkg.type === "first" ? (exist.type !== "first" ? exist.type : "first") : pkg.type;
+  } else {
+    finalExpires = computedExpires;
+    normalLeft = pkg.normal;
+    proLeft = pkg.pro;
+    type = pkg.type;
+  }
+
+  const { error } = await supabase.from("tryon_entitlements").upsert(
+    {
+      openid,
+      type,
+      expires_at: new Date(finalExpires).toISOString(),
+      normal_left: normalLeft,
+      pro_left: proLeft,
+      // 保留 tries_left 作为兼容/只读汇总：normal + pro
+      tries_left: normalLeft + proLeft,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "openid" }
+  );
+  if (error) console.error("[试衣权益发放] 失败", error);
+  else console.log("[试衣权益发放] 成功", { openid, type, normalLeft, proLeft });
+}
+
+function signMd5(params: Record<string, string>) {
+  const sorted = Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join("&") + `&key=${APIV2_KEY}`;
+  return crypto.createHash("md5").update(sorted, "utf8").digest("hex").toUpperCase();
+}
+
+function buildXml(obj: Record<string, string>) {
+  let xml = "<xml>";
+  for (const [k, v] of Object.entries(obj)) xml += `<${k}>${v}</${k}>`;
+  xml += "</xml>";
+  return xml;
+}
+
+function parseXml(xml: string): Record<string, string> {
+  const result: Record<string, string> = {};
+  const regex = /<([^>]+)>([^<]*)<\/\1>/g;
+  let match;
+  while ((match = regex.exec(xml)) !== null) result[match[1]] = match[2];
+  return result;
+}
+
+function xmlResp(obj: Record<string, string>) {
+  return new NextResponse(buildXml(obj), { headers: { "Content-Type": "application/xml" } });
+}

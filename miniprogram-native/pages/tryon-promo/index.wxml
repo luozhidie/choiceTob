@@ -1,11 +1,11 @@
 <view class="page">
-  <!-- 顶部 Hero：深色 + 金色 -->
+  <!-- Hero：深色 + 金色，首单只放这里 -->
   <view class="hero">
     <view class="hero-tag">骆芷蝶智选 · AI 试衣</view>
     <text class="hero-title">先试再买\n穿上身再决定</text>
-    <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。\n好不好看，一眼就知道。</text>
+    <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。好不好看，一眼就知道。</text>
     <view class="hero-badges">
-      <text class="badge">9.9 元首单</text>
+      <text class="badge">9.9元首单</text>
       <text class="badge">30 秒出图</text>
       <text class="badge">隐私保护</text>
     </view>
@@ -15,7 +15,7 @@
     </view>
   </view>
 
-  <!-- 步骤：三步说明 -->
+  <!-- 三步 -->
   <view class="section">
     <text class="sec-title">三步，看见上身效果</text>
     <view class="steps">
@@ -39,76 +39,34 @@
     </view>
   </view>
 
-  <!-- 版本对比：普通版 vs 专业版 -->
+  <!-- 4 入口卡 -->
   <view class="section">
-    <text class="sec-title">两个版本，按需选择</text>
-    <view class="version-card basic">
-      <view class="v-header">
-        <text class="v-name">普通版</text>
-        <text class="v-price">¥9.9 起</text>
+    <text class="sec-title">选择你的试衣方式</text>
+    <view class="entry-grid">
+      <view class="entry" bindtap="goSub" data-page="tryon-guide">
+        <text class="entry-emoji">📖</text>
+        <text class="entry-name">怎么用</text>
+        <text class="entry-sub">一步步图文教程</text>
       </view>
-      <text class="v-desc">像后台验收一样简单：上传人像 + 上传衣服，点试穿</text>
-      <view class="v-features">
-        <text class="feature ok">✓ 上传自己的人像照片</text>
-        <text class="feature ok">✓ 上传想试穿的衣服照片</text>
-        <text class="feature ok">✓ 一键 AI 合成上身效果</text>
-        <text class="feature ok">✓ 也可以从店铺挑选商品试穿</text>
-        <text class="feature no">— 不含风格诊断</text>
-        <text class="feature no">— 不含 AI 智能搭配 / 买手推荐</text>
+      <view class="entry" bindtap="goSub" data-page="tryon-normal">
+        <text class="entry-emoji">👕</text>
+        <text class="entry-name">普通版</text>
+        <text class="entry-sub">快速看上身 · ¥59/月</text>
       </view>
-      <view class="v-btn" bindtap="onFirstTry">¥9.9 先体验</view>
-    </view>
-
-    <view class="version-card pro">
-      <view class="v-badge">专业版</view>
-      <view class="v-header">
-        <text class="v-name">专业版</text>
-        <text class="v-price">¥199/月起</text>
+      <view class="entry pro" bindtap="goSub" data-page="tryon-pro">
+        <text class="entry-emoji">✨</text>
+        <text class="entry-name">专业版</text>
+        <text class="entry-sub">诊断+搭配 · ¥199/月</text>
       </view>
-      <text class="v-desc">在普通版基础上，加风格诊断与智能搭配</text>
-      <view class="v-features">
-        <text class="feature ok">✓ 普通版全部功能</text>
-        <text class="feature ok">✓ 21 题穿衣风格诊断</text>
-        <text class="feature ok">✓ AI 按风格自动生成造型</text>
-        <text class="feature ok">✓ 专属买手推荐 + 优先新款</text>
-      </view>
-      <view class="v-btn pro-btn" bindtap="onOpenPro">开通专业版</view>
-    </view>
-  </view>
-
-  <!-- 套餐 -->
-  <view class="section">
-    <text class="sec-title">试衣套餐</text>
-    <view wx:for="{{packages}}" wx:key="id" class="pkg-row {{item.highlight?'hl':''}}" data-id="{{item.id}}" bindtap="buyPackage">
-      <view class="pkg-info">
-        <text class="pkg-name">{{item.name}}</text>
-        <text class="pkg-desc">{{item.desc}}</text>
-      </view>
-      <view class="pkg-right">
-        <text class="pkg-price">¥{{item.price}}</text>
+      <view class="entry" bindtap="goSub" data-page="tryon-faq">
+        <text class="entry-emoji">❓</text>
+        <text class="entry-name">常见问题</text>
+        <text class="entry-sub">隐私/效果/退订</text>
       </view>
     </view>
   </view>
 
-  <!-- 常见问题 -->
-  <view class="section faq">
-    <text class="sec-title">常见问题</text>
-    <view class="faq-item">
-      <text class="faq-q">照片会被保存或公开吗？</text>
-      <text class="faq-a">不会。照片仅用于本次 AI 试衣合成，处理后不保留、不公开。</text>
-    </view>
-    <view class="faq-item">
-      <text class="faq-q">试衣效果能当真实试穿看吗？</text>
-      <text class="faq-a">AI 合成效果仅供参考，帮助你判断款式、颜色是否适合自己。</text>
-    </view>
-    <view class="faq-item">
-      <text class="faq-q">专业版可以随时取消吗？</text>
-      <text class="faq-a">可以。到期不续费自动回到基础版，已购权益不受影响。</text>
-    </view>
-  </view>
-
-  <!-- 底部占位，避免被固定栏遮挡 -->
-  <view style="height: 160rpx;"></view>
+  <view class="bottom-pad"></view>
 
   <!-- 底部固定 CTA -->
   <view class="bottom-bar">
@@ -116,9 +74,8 @@
       <text class="bottom-price">首单 ¥9.9</text>
       <text class="bottom-tip">新人限时体验价</text>
     </view>
-    <view class="bottom-btn" bindtap="onFirstTry">立即试穿</view>
+    <view class="bottom-btn" bindtap="goLookStudio">立即试穿</view>
   </view>
 
-  <!-- 权益状态提示 -->
   <view wx:if="{{toast}}" class="toast">{{toast}}</view>
 </view>

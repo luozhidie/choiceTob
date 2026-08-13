@@ -1,0 +1,341 @@
+// 智能建商品：上传商品图（+可选供应商报价文字）→ AI 视觉识别抽取结构化参数
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export const dynamic = "force-dynamic";
+export const maxDuration = 25;
+
+// 全局超时预算：始终在 Vercel 函数 25s 内走到草稿兜底，避免被平台掐断返回「网络错误」
+const AI_DEADLINE_MS = 21000;
+
+function parseMiniToken(token: string): { uid: string; exp?: number } | null {
+  try {
+    if (!token || token.includes(".")) return null;
+    const payload = JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
+    if (!payload.uid) return null;
+    if (payload.exp && payload.exp < Date.now()) return null;
+    return { uid: payload.uid as string, exp: payload.exp as number | undefined };
+  } catch {
+    return null;
+  }
+}
+
+async function checkAdmin(request: NextRequest): Promise<boolean> {
+  const cookie = request.headers.get("cookie") || "";
+  if (cookie.includes("admin_logged_in=true")) return true;
+  const authHeader = request.headers.get("authorization") || "";
+  if (!authHeader.startsWith("Bearer ")) return false;
+  const token = authHeader.slice(7);
+  let userId: string | null = null;
+  if (token.includes(".")) {
+    try {
+      const { data } = await supabase.auth.getUser(token);
+      if (data.user) userId = data.user.id;
+    } catch {}
+  } else {
+    const mini = parseMiniToken(token);
+    if (mini) userId = mini.uid;
+  }
+  if (!userId) return false;
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", userId)
+    .maybeSingle();
+  return !!profile?.is_admin;
+}
+
+const SYSTEM = `你是服装批发行业的商品录入助手。用户会发来商品实拍图（可能多张），以及可选的供应商报价文字。
+请识别并抽取结构化字段，严格只输出如下 JSON（不要任何额外文字、不要 markdown）：
+{
+  "title": "商品标题（中文，含品类+核心卖点，30字以内）",
+  "category": "品类，从[上装,下装,连衣裙,外套,鞋靴,箱包,配饰,珠宝首饰,其他]中选一个最合适",
+  "price": "零售价（数字，单位元；图上看不到就填 0）",
+  "wholesale_price": "批发价（数字，单位元；图或文字有就填，没有填 0）",
+  "sizes": "尺码，逗号分隔，如 S,M,L,XL,XXL 或 均码；看不清填空串",
+  "color": "颜色，逗号分隔，如 黑,白,杏色；看不清填空串",
+  "material": "材质/面料，如 棉,涤纶,羊毛混纺；看不清填空串",
+  "season": "适用季节，从[春,夏,秋,冬,四季]中选",
+  "description": "一句话卖点（20字以内）",
+  "tags": ["标签1","标签2"]
+}`;
+
+function parseNote(note?: string) {
+  if (!note) return null;
+  const lines = note.split("\n").map((l) => l.trim()).filter(Boolean);
+  const prices: number[] = [];
+  const sizeMatch = note.match(/[SsMmLlXx]{1,5}|均码/);
+  const numberMatches = note.match(/\d{2,4}/g);
+  if (numberMatches) {
+    for (const n of numberMatches) {
+      const v = parseInt(n, 10);
+      if (v >= 10 && v <= 99999) prices.push(v);
+    }
+  }
+  const firstLine = lines[0] || "";
+  const materialMatch = firstLine.match(/(羊毛|棉|涤纶|真丝|麻|混纺|雪纺|针织|牛仔|皮革|聚酯纤维|锦纶|氨纶|黏胶|莫代尔|呢|绒)/);
+  const colorMatch = firstLine.match(/(黑|白|灰|红|蓝|绿|黄|粉|紫|杏|卡其|驼|藏青|军绿|米|橙|棕|咖|酒红|天蓝|湖蓝|浅|深)\S{0,2}/);
+  return {
+    title: firstLine.slice(0, 30) || "导入商品（待核对）",
+    prices: prices.slice(0, 2),
+    sizes: sizeMatch ? sizeMatch[0].toUpperCase() : "",
+    material: materialMatch ? materialMatch[0] : "",
+    color: colorMatch ? colorMatch[0] : "",
+  };
+}
+
+function mockResult(images: string[], note?: string): any {
+  const parsed = parseNote(note) || {
+    title: "新款商品（待核对）",
+    prices: [],
+    sizes: "",
+    material: "",
+    color: "",
+  };
+  const price = parsed.prices[0] || 0;
+  const wholesalePrice = parsed.prices[1] || (parsed.prices.length > 1 ? parsed.prices[1] : 0);
+  return {
+    title: parsed.title,
+    category: "其他",
+    price,
+    wholesale_price: wholesalePrice,
+    sizes: parsed.sizes,
+    color: parsed.color,
+    material: parsed.material,
+    season: "四季",
+    description: note ? note.slice(0, 20) : "已按图片生成草稿，请核对并补全信息",
+    tags: ["待核对"],
+    images,
+    _mock: true,
+  };
+}
+
+// 剩余可用超时（保留 1.5s 解析余量，下限 3s）
+function remainingTimeout(deadline: number): number {
+  return Math.max(3000, deadline - Date.now() - 1500);
+}
+
+// 调用单个视觉模型，支持在 deadline 内重试（主模型传 retries=2）
+async function callVisionModel(
+  model: string,
+  content: any[],
+  openrouterKey: string,
+  deadline: number,
+  retries: number
+): Promise<any | null> {
+  for (let i = 0; i < retries; i++) {
+    const timeout = remainingTimeout(deadline);
+    if (timeout <= 3000 && i > 0) return null; // 重试已无时间预算
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${openrouterKey}`,
+          "HTTP-Referer": "https://colour-choice.art",
+          "X-Title": "Luozhidie Zhixuan",
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: SYSTEM },
+            { role: "user", content },
+          ],
+          temperature: 0.3,
+          max_tokens: 1200,
+        }),
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      if (res.ok) {
+        const data = await res.json();
+        const text = data.choices?.[0]?.message?.content || "";
+        const parsed = extractJSON(text);
+        if (parsed) return parsed;
+      }
+    } catch {
+      // 超时/网络错误：在预算内重试下一个
+    }
+  }
+  return null;
+}
+
+export async function POST(request: NextRequest) {
+  const deadline = Date.now() + AI_DEADLINE_MS; // 全局超时预算
+  try {
+    if (!(await checkAdmin(request))) {
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+    const body = await request.json().catch(() => ({}));
+    const images: string[] = Array.isArray(body.images) ? body.images.filter((x: any) => typeof x === "string").slice(0, 9) : [];
+    const note: string = typeof body.note === "string" ? body.note : "";
+
+    if (images.length === 0 && !note) {
+      return NextResponse.json({ error: "请至少提供商品图或供应商文字" }, { status: 400 });
+    }
+
+    const openaiKey = process.env.OPENAI_API_KEY;
+    const deepseekKey = process.env.DEEPSEEK_API_KEY;
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+
+    // ===== 方案 A0：OpenRouter 视觉识别（中国区可用 Qwen-VL 为主，依次回退）=====
+    // deadline 守卫：预算不足时跳过，确保始终在 25s 内走到草稿兜底
+    if (openrouterKey && images.length > 0 && deadline - Date.now() > 4000) {
+      const orModels = (process.env.OPENROUTER_MODEL ||
+        "qwen/qwen2.5-vl-72b-instruct,google/gemini-2.5-flash,openai/gpt-4o-mini")
+        .split(",").map((s) => s.trim()).filter(Boolean);
+      const content: any[] = [
+        {
+          type: "text",
+          text:
+            "请识别这些服装商品并抽取参数。" +
+            (note ? `供应商备注：${note}` : ""),
+        },
+      ];
+      for (const url of images.slice(0, 5)) {
+        content.push({ type: "image_url", image_url: { url } });
+      }
+      for (let i = 0; i < orModels.length; i++) {
+        const parsed = await callVisionModel(
+          orModels[i],
+          content,
+          openrouterKey,
+          deadline,
+          i === 0 ? 2 : 1 // 主模型（Qwen-VL）最多重试 1 次
+        );
+        if (parsed) {
+          return NextResponse.json({ success: true, source: "openrouter", product: { ...parsed, images } });
+        }
+      }
+    }
+
+    // ===== 方案 A：OpenAI 视觉识别（gpt-4o-mini 支持看图，受预算约束）=====
+    if (openaiKey && images.length > 0 && deadline - Date.now() > 4000) {
+      try {
+        const content: any[] = [
+          {
+            type: "text",
+            text:
+              "请识别这些服装商品并抽取参数。" +
+              (note ? `供应商备注：${note}` : ""),
+          },
+        ];
+        for (const url of images.slice(0, 3)) {
+          content.push({ type: "image_url", image_url: { url } });
+        }
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), remainingTimeout(deadline));
+        const res = await fetch("https://api.openai.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${openaiKey}` },
+          body: JSON.stringify({
+            model: "gpt-4o-mini",
+            messages: [
+              { role: "system", content: SYSTEM },
+              { role: "user", content },
+            ],
+            temperature: 0.3,
+            max_tokens: 1200,
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || "";
+          const parsed = extractJSON(text);
+          if (parsed) {
+            return NextResponse.json({ success: true, source: "openai", product: { ...parsed, images } });
+          }
+        }
+      } catch {
+        // 视觉失败转下方兜底
+      }
+    }
+
+    // ===== 方案 B：仅文字（DeepSeek 文本抽取，受预算约束）=====
+    if (deepseekKey && note && deadline - Date.now() > 4000) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), remainingTimeout(deadline));
+        const res = await fetch(process.env.DEEPSEEK_API_URL || "https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${deepseekKey}` },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              { role: "system", content: SYSTEM + "\n（本次只收到文字，无图片，请依据文字抽取）" },
+              { role: "user", content: `供应商报价文字：${note}` },
+            ],
+            temperature: 0.3,
+            max_tokens: 1200,
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timer);
+        if (res.ok) {
+          const data = await res.json();
+          const text = data.choices?.[0]?.message?.content || "";
+          const parsed = extractJSON(text);
+          if (parsed) {
+            return NextResponse.json({ success: true, source: "deepseek", product: { ...parsed, images } });
+          }
+        }
+      } catch {
+        // 转兜底
+      }
+    }
+
+    // ===== 兜底：生成待核对草稿 =====
+    return NextResponse.json({ success: true, source: "mock", product: mockResult(images, note) });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || "服务器错误" }, { status: 500 });
+  }
+}
+
+function extractJSON(content: string): any | null {
+  if (!content) return null;
+  // 收集候选：去 ```json 围栏后的内容 + 原文
+  const candidates: string[] = [];
+  const fenced = content.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fenced) candidates.push(fenced[1].trim());
+  candidates.push(content);
+
+  for (const c of candidates) {
+    const isProduct = (o: any) =>
+      o && typeof o === "object" && !Array.isArray(o) && typeof o.title === "string";
+
+    // 1) 直接解析
+    try {
+      const o = JSON.parse(c);
+      if (isProduct(o)) return o;
+    } catch {}
+
+    // 2) 截取首个 { 到最后一个 }
+    const s = c.indexOf("{");
+    const e = c.lastIndexOf("}");
+    if (s !== -1 && e > s) {
+      const sub = c.substring(s, e + 1);
+      try {
+        const o = JSON.parse(sub);
+        if (isProduct(o)) return o;
+      } catch {}
+      // 3) 修复常见格式问题：尾逗号、单引号，再试
+      try {
+        const repaired = sub
+          .replace(/,(\s*[}\]])/g, "$1")
+          .replace(/'/g, '"');
+        const o = JSON.parse(repaired);
+        if (isProduct(o)) return o;
+      } catch {}
+    }
+  }
+  return null;
+}

@@ -1,0 +1,32 @@
+.page { min-height: 100vh; background: var(--bg); padding: 0 0 160rpx; }
+
+/* ---------- 头部 ---------- */
+.head { background: linear-gradient(160deg, #2d1b2e 0%, #1a0f1a 100%); padding: 56rpx 36rpx 44rpx; color: #fff; }
+.h-title { display: block; font-size: 46rpx; font-weight: 800; letter-spacing: 2rpx; }
+.h-sub { display: block; font-size: 25rpx; color: #d8d0d8; margin-top: 16rpx; line-height: 1.6; }
+
+/* ---------- 卡片 ---------- */
+.card { margin: 32rpx 28rpx 0; background: #fff; border-radius: 22rpx; padding: 34rpx; box-shadow: var(--sh-1); border: 1rpx solid var(--line); }
+.c-h { display: block; font-size: 27rpx; font-weight: 800; color: var(--text); }
+.c-h.mt { margin-top: 28rpx; }
+.feat { display: block; font-size: 25rpx; line-height: 1.8; }
+.feat.ok { color: #2f7d4f; }
+.feat.no { color: var(--text-4); }
+
+/* ---------- 价格行 + 购买 ---------- */
+.price-row { margin: 24rpx 28rpx 0; background: #fff; border-radius: 20rpx; padding: 30rpx; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--sh-1); border: 1rpx solid var(--line); }
+.pr-title { display: block; font-size: 30rpx; font-weight: 800; color: var(--text); }
+.pr-sub { display: block; font-size: 22rpx; color: var(--text-3); margin-top: 6rpx; }
+.pr-num { font-size: 42rpx; font-weight: 800; color: var(--gold); }
+.buy-btn { margin: 18rpx 28rpx 0; background: linear-gradient(135deg, #2d1b2e, #4a3a5a); color: var(--gold); font-size: 32rpx; font-weight: 800; text-align: center; padding: 28rpx 0; border-radius: 16rpx; }
+
+/* ---------- 底部固定栏 ---------- */
+.bottom-pad { height: 140rpx; }
+.bottom-bar { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1rpx solid var(--line); padding: 20rpx 30rpx; padding-bottom: calc(20rpx + constant(safe-area-inset-bottom)); padding-bottom: calc(20rpx + env(safe-area-inset-bottom)); display: flex; align-items: center; justify-content: space-between; z-index: 20; box-shadow: 0 -4rpx 20rpx rgba(0,0,0,.06); }
+.bottom-info { display: flex; flex-direction: column; }
+.bottom-price { font-size: 38rpx; font-weight: 800; color: var(--gold); }
+.bottom-tip { font-size: 20rpx; color: var(--text-3); }
+.bottom-btn { background: #2d1b2e; color: var(--gold); font-size: 32rpx; font-weight: 800; padding: 24rpx 60rpx; border-radius: 16rpx; }
+
+/* ---------- Toast ---------- */
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,.78); color: #fff; font-size: 26rpx; padding: 20rpx 36rpx; border-radius: 12rpx; z-index: 100; }

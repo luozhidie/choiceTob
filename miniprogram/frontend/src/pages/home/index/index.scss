@@ -1,0 +1,372 @@
+/* ========================================
+   骆芷蝶智选 - 首页 v2.0 (竞品风格)
+   顶部功能Tab + 分类标签 + 大图Banner叠加文字 + 双按钮
+   会员积分条 + 商品网格 + 底部品牌区
+   ======================================== */
+
+/* 页面最外层 */
+.home-page-wrap { position: relative; width: 100%; min-height: 100vh; }
+.home-page { background: #f5f5f5; min-height: 100vh; }
+
+/* ================================================================
+   顶部功能Tab：设计 | 买手 | 企划 | 陈列 | 营销
+   ================================================================ */
+.func-tabs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 16rpx 0 8rpx;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.func-tab-item {
+  position: relative;
+  padding: 12rpx 20rpx 18rpx;
+}
+
+.func-tab-text {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: #666;
+  letter-spacing: 2rpx;
+  transition: all 0.25s ease;
+}
+
+.func-tab-text-active {
+  font-size: 30rpx;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: 3rpx;
+}
+
+.func-tab-indicator {
+  position: absolute;
+  bottom: 6rpx;
+  left: calc(50% - 30rpx);
+  width: 60rpx;
+  height: 5rpx;
+  background: linear-gradient(90deg, #1a1a1a, #4a3f35);
+  border-radius: 3rpx;
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ================================================================
+   Banner 区域 v2 — 竞品风格
+   ================================================================ */
+.banner-section-v2 { position: relative; }
+
+/* 分类标签横向滚动 */
+.category-tags-scroll {
+  white-space: nowrap;
+  background: #fff;
+  padding: 10rpx 0 14rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.category-tags-inner { display: inline-flex; padding: 0 24rpx; gap: 16rpx; }
+
+.category-tag-pill {
+  display: inline-block;
+  padding: 10rpx 28rpx;
+  border-radius: 28rpx;
+  border: 1rpx solid #e5e5e5;
+  background: #fafafa;
+
+  &:active { background: #eee; }
+}
+
+.category-tag-text {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Banner轮播 */
+.banner-swiper-v2 { height: 720rpx; width: 100%; }
+
+.banner-slide-v2 {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.banner-bg-img { width: 100%; height: 100%; }
+
+.banner-slide-default {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 三种默认渐变背景 */
+.banner-default-1 { background: linear-gradient(180deg, #c4d7ed 0%, #a8c8e8 30%, #7ba9d8 70%, #5a93c8 100%); }
+.banner-default-2 { background: linear-gradient(180deg, #f5f0e8 0%, #e8dfd0 40%, #ddd0b8 80%, #c9b89a 100%); }
+.banner-default-3 { background: linear-gradient(160deg, #1a1a2e 0%, #2d1b69 40%, #4c1d95 75%, #6d28d9 100%); }
+
+/* Banner文字叠加层（居中偏下） */
+.banner-overlay-v2 {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60rpx 40rpx 90rpx;
+  background: linear-gradient(transparent 30%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.45) 100%);
+  z-index: 2;
+}
+
+.banner-brand-name {
+  font-size: 44rpx;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 6rpx;
+  text-shadow: 0 3rpx 16rpx rgba(0,0,0,0.25);
+  margin-bottom: 10rpx;
+}
+
+.banner-sub-slogan {
+  font-size: 26rpx;
+  font-weight: 400;
+  color: rgba(255,255,255,0.88);
+  letter-spacing: 4rpx;
+  margin-bottom: 36rpx;
+}
+
+/* 双按钮行 */
+.banner-btn-row {
+  display: flex;
+  gap: 24rpx;
+}
+
+.banner-action-btn {
+  padding: 20rpx 44rpx;
+  border-radius: 12rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &:active { transform: scale(0.96); transition: transform 0.1s; }
+}
+
+.btn-outline {
+  background: transparent;
+  border: 2rpx solid rgba(255,255,255,0.85);
+}
+
+.btn-solid {
+  background: rgba(26, 26, 26, 0.88);
+  border: 2rpx solid rgba(255,255,255,0.3);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #ffd700 100%);
+  border: none;
+}
+
+.btn-label {
+  font-size: 27rpx;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 3rpx;
+}
+
+.btn-sub {
+  font-size: 17rpx;
+  font-weight: 500;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 2px;
+  margin-top: 3rpx;
+  text-transform: uppercase;
+}
+
+/* 收藏有礼浮动按钮 */
+.gift-float-btn {
+  position: absolute;
+  bottom: 140rpx;
+  right: 20rpx;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: giftBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  opacity: 0;
+}
+
+@keyframes giftBounceIn {
+  from { opacity: 0; transform: scale(0.5) translateY(20rpx); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gift-icon-wrap {
+  position: relative;
+  width: 84rpx;
+  height: 84rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6rpx 24rpx rgba(239, 68, 68, 0.4);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -4rpx;
+    border-radius: 50%;
+    border: 2rpx dashed rgba(239, 68, 68, 0.4);
+    animation: giftRotate 8s linear infinite;
+  }
+}
+
+@keyframes giftRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.gift-icon-text { font-size: 38rpx; }
+
+.gift-badge {
+  position: absolute;
+  top: -4rpx;
+  right: -4rpx;
+  background: #f97316;
+  color: #fff;
+  font-size: 16rpx;
+  font-weight: 800;
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+  border: 2rpx solid #fff;
+}
+
+.gift-label {
+  font-size: 18rpx;
+  font-weight: 700;
+  color: #dc2626;
+  margin-top: 6rpx;
+  white-space: nowrap;
+  text-shadow: 0 1rpx 4rpx rgba(255,255,255,0.6);
+}
+
+/* ================================================================
+   会员积分条
+   ================================================================ */
+.points-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 28rpx;
+  background: #fffef8;
+  border-bottom: 1rpx solid #f5eed6;
+  margin-bottom: 1rpx;
+
+  &:active { background: #fefce8; }
+}
+
+.points-left { display: flex; align-items: center; gap: 12rpx; }
+.points-icon { font-size: 30rpx; }
+.points-text { font-size: 24rpx; color: #786030; font-weight: 600; letter-spacing: 1rpx; }
+.points-arrow { font-size: 32rpx; color: #b8a060; font-weight: 300; }
+
+/* ================================================================
+   横幅促销条
+   ================================================================ */
+.promo-banner-strip {
+  padding: 24rpx 28rpx;
+  background: linear-gradient(135deg, #fafafa, #f0f0f0);
+  text-align: center;
+
+  &:active { background: linear-gradient(135deg, #f0f0f0, #e8e8e8); }
+}
+
+.promo-banner-text {
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #555;
+  letter-spacing: 4rpx;
+}
+
+/* ================================================================
+   内容区块通用
+   ================================================================ */
+.section-container {
+  background: #fff;
+  margin: 16rpx 20rpx;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx 24rpx;
+}
+
+.section-header-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.section-title-cn {
+  font-size: 34rpx;
+  font-weight: 900;
+  color: #111;
+  letter-spacing: 3rpx;
+}
+
+.section-more {
+  font-size: 24rpx;
+  color: #999;
+  font-weight: 500;
+}
+
+/* ================================================================
+   商品网格
+   ================================================================ */
+.product-grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16rpx; }
+.product-grid-item { background: #fafafa; border-radius: 14rpx; overflow: hidden; border: 1rpx solid #eee; }
+.product-grid-img-wrap { width: 100%; aspect-ratio: 1/1; background: #f0f0f0; position: relative; overflow: hidden; }
+.product-grid-img { width: 100%; height: 100%; }
+.product-img-blur { filter: blur(10px); opacity: 0.7; }
+.product-grid-img-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 56rpx; }
+.product-lock-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.lock-icon { font-size: 46rpx; margin-bottom: 6rpx; }
+.lock-text { font-size: 22rpx; color: #fff; font-weight: 600; }
+.product-grid-info { padding: 13rpx 15rpx 15rpx; }
+.product-grid-title { font-size: 24rpx; color: #1a1a1a; line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; margin-bottom: 8rpx; }
+.product-grid-price-row { display: flex; align-items: baseline; gap: 8rpx; }
+.product-grid-price { font-size: 27rpx; font-weight: bold; color: #c41e3a; }
+.product-grid-original { font-size: 21rpx; color: #bbb; text-decoration: line-through; }
+.product-grid-price-locked { font-size: 23rpx; color: #999; }
+
+/* ================================================================
+   底部品牌区
+   ================================================================ */
+.brand-footer-bar {
+  background: linear-gradient(135deg, #374151, #1f2937);
+  padding: 56rpx 36rpx;
+  text-align: center;
+  margin: 20rpx 0;
+
+  &:active { opacity: 0.92; }
+}
+
+.brand-footer-main {
+  font-size: 42rpx;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 6rpx;
+  display: block;
+}
+
+.brand-footer-sub {
+  font-size: 21rpx;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 2rpx;
+  margin-top: 10rpx;
+  display: block;
+}
+
+.bottom-safe { height: 120rpx; }

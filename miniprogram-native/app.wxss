@@ -6,6 +6,7 @@
 page {
   /* 品牌色 */
   --brand: #2d1b2e;          /* 主品牌深紫（全站唯一强调色） */
+  --gold: #C9A24B;           /* 试衣金（与网站 #C9A24B 对齐） */
   --brand-soft: #4a3a4b;
   --accent: #2d1b2e;         /* 强调=品牌深紫，价格/主按钮统一 */
   --accent-2: #4a3a4b;

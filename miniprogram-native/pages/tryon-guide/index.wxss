@@ -1,0 +1,20 @@
+.page { min-height: 100vh; background: var(--bg); padding-bottom: 40rpx; }
+
+/* ---------- 头部 ---------- */
+.head { background: linear-gradient(160deg, #2d1b2e 0%, #1a0f1a 100%); padding: 56rpx 36rpx 44rpx; color: #fff; }
+.h-title { display: block; font-size: 46rpx; font-weight: 800; letter-spacing: 2rpx; }
+.h-sub { display: block; font-size: 25rpx; color: #d8d0d8; margin-top: 16rpx; line-height: 1.6; }
+
+/* ---------- 步骤 ---------- */
+.steps-list { padding: 32rpx 28rpx; }
+.gstep { display: flex; align-items: flex-start; gap: 24rpx; background: #fff; border-radius: 22rpx; padding: 30rpx; margin-bottom: 22rpx; box-shadow: var(--sh-1); border: 1rpx solid var(--line); }
+.g-num { width: 64rpx; height: 64rpx; line-height: 64rpx; text-align: center; border-radius: 50%; background: linear-gradient(160deg, #2d1b2e, #4a3a5a); color: var(--gold); font-weight: 800; font-size: 30rpx; flex-shrink: 0; }
+.g-body { flex: 1; }
+.g-t { display: block; font-size: 31rpx; font-weight: 800; color: var(--text); }
+.g-d { display: block; font-size: 24rpx; color: var(--text-2); line-height: 1.6; margin-top: 10rpx; }
+.g-tip { display: block; font-size: 22rpx; color: var(--gold); margin-top: 14rpx; }
+
+/* ---------- CTA ---------- */
+.cta-box { margin: 12rpx 28rpx 0; background: linear-gradient(160deg, #2d1b2e, #4a3a5a); border-radius: 22rpx; padding: 40rpx 30rpx; text-align: center; }
+.cta-tip { display: block; font-size: 26rpx; color: rgba(255,255,255,.8); margin-bottom: 22rpx; }
+.cta-btn { display: inline-block; background: linear-gradient(90deg, #C9A24B, #dab860); color: #2d1b2e; font-size: 32rpx; font-weight: 800; padding: 26rpx 70rpx; border-radius: 16rpx; box-shadow: 0 12rpx 30rpx rgba(201,162,75,.4); }
