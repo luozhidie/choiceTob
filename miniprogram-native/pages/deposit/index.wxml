@@ -1,4 +1,3 @@
-<wxs src="./format.wxs" module="fmt" />
 <view class="page">
   <!-- 标题区 -->
   <view class="header">
@@ -9,8 +8,8 @@
   <!-- 当前权益 -->
   <view class="status-bar {{agentStatus.active?'active':''}}">
     <block wx:if="{{agentStatus.active}}">
-      <text class="st-main">已激活：预存 ¥{{fmt.formatMoney(agentStatus.depositAmount)}}</text>
-      <text class="st-sub">拿货 {{(agentStatus.discountRate*10).toFixed(1)}} 折 · 可退 {{(agentStatus.returnRate*100).toFixed(0)}}%</text>
+      <text class="st-main">已激活：预存 ¥{{agentStatus.depositText}}</text>
+      <text class="st-sub">拿货 {{agentStatus.discountText}} 折 · 可退 {{agentStatus.returnText}}%</text>
     </block>
     <block wx:else>
       <text class="st-main">未开通预存货款会员</text>

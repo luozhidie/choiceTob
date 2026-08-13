@@ -24,9 +24,13 @@ Page({
         url:BASE+'/api/agent/me?openid='+encodeURIComponent(openid),
         success:function(r){
           var d=r.data||{};
+          var amt=d.depositAmount||0;
           t.setData({ agentStatus:{
             active:!!d.active,
-            depositAmount:d.depositAmount||0,
+            depositAmount:amt,
+            depositText:t.formatMoney(amt),
+            discountText:((d.discountRate||1)*10).toFixed(1),
+            returnText:((d.returnRate||0)*100).toFixed(0),
             discountRate:d.discountRate||1,
             returnRate:d.returnRate||0,
             lastRecharge:d.lastRecharge||null,
@@ -34,6 +38,18 @@ Page({
         }
       });
     }).catch(function(){});
+  },
+
+  formatMoney:function(cents){
+    if(!cents||cents<=0)return '0';
+    var s=Math.floor(cents/100).toString();
+    var out='';
+    var len=s.length;
+    for(var i=0;i<len;i++){
+      if(i>0&&(len-i)%3===0)out+=',';
+      out+=s.charAt(i);
+    }
+    return out;
   },
 
   formatMoney:function(cents){
