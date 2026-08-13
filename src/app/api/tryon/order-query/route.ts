@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       wechat_state: tradeState,
-      order: { order_no: order.order_no, status: order.status, package_id: order.package_id },
+      order: { order_no: order.order_no, status: order.status, package_id: order.package_id, openid: order.openid },
       entitlement: ent || null,
     });
   } catch (err: any) {
