@@ -10,10 +10,10 @@ function rewriteSupabase(u) {
 
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', days: 365, tries: 1, highlight: true },
-  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天 150 次试穿 + 高清下载', type: 'month', days: 30, tries: 150 },
-  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天 400 次 + 优先新款', type: 'quarter', days: 90, tries: 400 },
-  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天 1000 次 + 专属顾问', type: 'year', days: 365, tries: 1000 },
+  { id: 'tryon_first_1yuan', name: '首单体验', price: 9.9, unit: '次', desc: '新人专享 10 次试穿', type: 'first', days: 365, tries: 10, highlight: true },
+  { id: 'tryon_monthly_99', name: '月卡', price: 99, unit: '次', desc: '30 天 120 次试穿', type: 'month', days: 30, tries: 120 },
+  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '次', desc: '90 天 280 次试穿', type: 'quarter', days: 90, tries: 280 },
+  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '次', desc: '365 天 1000 次试穿', type: 'year', days: 365, tries: 1000 },
 ];
 
 // 价格：数据库按分存，展示为元
@@ -59,7 +59,7 @@ Page({
     showPackages: false,
     promo: false,
     isPass: false,
-    passText: '未开通 · 首单 ¥1 体验',
+    passText: '未开通 · 首单 ¥9.9 体验',
     agreedAuth: false,
     showShopPick: false,
   },
@@ -99,7 +99,7 @@ Page({
     } else {
       var days = d.daysLeft || 0;
       var tries = d.triesLeft || 0;
-      var label = d.type === 'month' ? '包月' : d.type === 'quarter' ? '季卡' : '年卡';
+      var label = d.type === 'month' ? '月卡' : d.type === 'quarter' ? '季卡' : '年卡';
       txt = label + '剩余 ' + days + ' 天 · ' + tries + ' 次';
     }
     this.setData({ passText: txt, isPass: d.active });

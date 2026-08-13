@@ -45,7 +45,7 @@
     <view class="version-card basic">
       <view class="v-header">
         <text class="v-name">普通版</text>
-        <text class="v-price">¥1 起</text>
+        <text class="v-price">¥9.9 起</text>
       </view>
       <text class="v-desc">像后台验收一样简单：上传人像 + 上传衣服，点试穿</text>
       <view class="v-features">
@@ -86,7 +86,6 @@
       </view>
       <view class="pkg-right">
         <text class="pkg-price">¥{{item.price}}</text>
-        <text class="pkg-unit">/{{item.unit}}</text>
       </view>
     </view>
   </view>
@@ -114,7 +113,7 @@
   <!-- 底部固定 CTA -->
   <view class="bottom-bar">
     <view class="bottom-info">
-      <text class="bottom-price">首单 ¥1</text>
+      <text class="bottom-price">首单 ¥9.9</text>
       <text class="bottom-tip">新人限时体验价</text>
     </view>
     <view class="bottom-btn" bindtap="onFirstTry">立即试穿</view>

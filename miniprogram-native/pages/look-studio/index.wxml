@@ -173,7 +173,7 @@
           <text class="pkg-name">{{item.name}}{{item.highlight ? ' · 新人' : ''}}</text>
           <text class="pkg-desc">{{item.desc}}</text>
         </view>
-        <text class="pkg-price">¥{{item.price}}<text class="pkg-unit">/{{item.unit}}</text></text>
+        <text class="pkg-price">¥{{item.price}}</text>
       </view>
       <text class="sheet-close" bindtap="closePackages">关闭</text>
     </view>
