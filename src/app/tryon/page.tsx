@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, type ReactNode } from "react";
+
 /**
  * 虚拟试衣 · 推广落地页（与小程序 tryon-promo 同版式）
  * 双轨定价：首单 ¥9.9 / 普通月卡 ¥59 / 专业月卡 ¥199 / 专业年卡 ¥999
@@ -200,7 +202,7 @@ export default function TryonPromoPage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section style={{ margin: "14px 14px", background: BRAND.card, borderRadius: 14, border: `1px solid ${BRAND.line}`, padding: 14 }}>
       <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 12, color: BRAND.gold }}>{title}</div>
