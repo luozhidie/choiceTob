@@ -1,103 +1,146 @@
 <view class="page">
-  <!-- 顶部 -->
+  <!-- 顶部（零术语，直奔变现：先试再买） -->
   <view class="hero">
-    <text class="ht">整体造型 · Look Studio</text>
-    <text class="hs">把打过「色彩季型×穿衣风格」标签的服装，试穿到与你季型/风格匹配的你身上</text>
+    <text class="ht">AI 虚拟试衣 · 先试再买</text>
+    <text class="hs">上传你的照片，挑好衣服一键试穿，穿上好不好看一眼就知道，喜欢再带回家</text>
     <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
   </view>
-  <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单体验 ¥1 试穿一整套</view>
+  <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥9.9 试穿一整套</view>
+
+  <!-- 普通版 / 专业版 切换 -->
+  <view class="mode-tabs">
+    <view class="mode-tab {{!proMode?'on':''}}" bindtap="switchToBasic">普通版</view>
+    <view class="mode-tab {{proMode?'on':''}}" bindtap="switchToPro">专业版</view>
+  </view>
+
   <view class="pass-bar" bindtap="openPackages">
     <text class="pass-t">{{passText}}</text>
     <text class="pass-go">{{isPass ? '管理' : '去开通'}} ›</text>
   </view>
+  <view class="history-entry" bindtap="goHistory">
+    <text class="he-t">我的试衣记录 ›</text>
+    <text class="he-d">最近 7 天可回看</text>
+  </view>
 
-  <!-- 我的形象 -->
+  <!-- ① 上传照片（普及版，不暴露季型/风格） -->
   <view class="card">
-    <text class="ct">① 我的形象（试穿对象）</text>
+    <text class="ct">① 上传你的照片</text>
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>
         <text wx:else class="me-ph">上传\n照片</text>
       </view>
       <view class="me-info">
-        <text class="lab">色彩季型</text>
-        <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-          <text wx:for="{{seasons}}" wx:key="code" class="chip {{mySeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMySeason">{{item.name_zh}}</text>
-        </scroll-view>
-        <text class="lab">穿衣风格（主风格）</text>
-        <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-          <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.gender==='women'?'女':'男'}}·{{item.name_zh}}</text>
-        </scroll-view>
+        <text class="hint">仅用于本次试穿，不会公开。试衣为 AI 合成效果，仅供参考。</text>
+        <text wx:if="{{!proMode}}" class="pro-entry" bindtap="togglePro">想要更懂你的穿衣风格？升级专业版 ›</text>
+        <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
+    </view>
+    <!-- 肖像授权（试衣前必须勾选） -->
+    <view class="auth-row" bindtap="toggleAuth">
+      <view class="ck {{agreedAuth ? 'on' : ''}}">{{agreedAuth ? '✓' : ''}}</view>
+      <text class="auth-t">我已同意《肖像使用授权》：照片仅用于本次 AI 试衣合成，不外传、不公开</text>
     </view>
   </view>
 
-  <!-- 模式 Tab -->
-  <view class="tabs">
-    <text class="tab {{mode==='look'?'on':''}}" data-m="look" bindtap="setMode">造型</text>
-    <text class="tab {{mode==='buyer'?'on':''}}" data-m="buyer" bindtap="setMode">买手</text>
-    <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>
-    <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按风格生成</text>
-  </view>
-
-  <!-- 造型 -->
-  <view wx:if="{{mode==='look'}}" class="grid2">
-    <view wx:for="{{lookCards}}" wx:key="code" class="lcard">
-      <text class="lname">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 风格造型</text>
-      <view class="lrow">
-        <image wx:for="{{item.items}}" wx:for-item="it" wx:key="id" src="{{it.cover}}" mode="aspectFill" class="limg"/>
+  <!-- ② 普通版：上传衣服图 或 从店铺挑选 -->
+  <view wx:if="{{!proMode}}" class="card">
+    <text class="ct">② 上传要试穿的衣服</text>
+    <view class="cloth-row">
+      <view class="cloth-pic" bindtap="chooseCloth">
+        <text class="cloth-ph">上传\n衣服</text>
       </view>
-      <text class="lbtn" data-code="{{item.code}}" bindtap="loadLook">装入我的造型 →</text>
+      <view class="cloth-info">
+        <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），或从店铺挑选。</text>
+        <text class="shop-entry" bindtap="openShopPick">没有衣服图？从店铺挑选 ›</text>
+      </view>
     </view>
-    <view wx:if="{{lookCards.length===0}}" class="empty">暂无足够商品，去「手工组合」挑选</view>
-  </view>
 
-  <!-- 买手 -->
-  <view wx:if="{{mode==='buyer'}}">
-    <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-      <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{buyerStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setBuyer">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 买手</text>
-    </scroll-view>
-    <view class="grid3">
-      <view wx:for="{{buyerProducts}}" wx:key="id" class="pcard">
-        <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-        <text class="ptitle">{{item.title}}</text>
-        <view class="ptags">
-          <text wx:for="{{item.seasonNames}}" wx:for-item="sn" wx:key="*this" class="tg s">{{sn}}</text>
-          <text wx:for="{{item.styleNames}}" wx:for-item="st" wx:key="*this" class="tg t">{{st}}</text>
+    <!-- 展开店铺挑选 -->
+    <block wx:if="{{showShopPick}}">
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
+        <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
+        <text wx:for="{{categories}}" wx:key="*this" class="chip {{category===item?'on':''}}" data-c="{{item}}" bindtap="setCategory">{{item}}</text>
+      </scroll-view>
+      <view class="grid3">
+        <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pprice">¥{{item.price}}</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
         </view>
-        <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
       </view>
-    </view>
-    <view wx:if="{{buyerProducts.length===0}}" class="empty">该买手暂无匹配商品</view>
+      <view wx:if="{{browseProducts.length===0}}" class="empty">该分类暂无商品</view>
+      <text class="close-shop" bindtap="closeShopPick">‹ 收起店铺挑选</text>
+    </block>
   </view>
 
-  <!-- 手工组合 -->
-  <view wx:if="{{mode==='manual'}}">
-    <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-      <text class="chip {{filterSeason===''?'on':''}}" data-c="" bindtap="setFilter">全部季型</text>
-      <text wx:for="{{seasons}}" wx:key="code" class="chip {{filterSeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setFilter">{{item.name_zh}}</text>
-    </scroll-view>
-    <view class="grid3">
-      <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
-        <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-        <text class="ptitle">{{item.title}}</text>
-        <view class="ptags">
-          <text wx:for="{{item.seasonNames}}" wx:for-item="sn" wx:key="*this" class="tg s">{{sn}}</text>
-          <text wx:for="{{item.styleNames}}" wx:for-item="st" wx:key="*this" class="tg t">{{st}}</text>
+  <!-- 专业版（升级后显示：穿衣风格 + 造型/买手/手工/按风格） -->
+  <block wx:if="{{proMode}}">
+    <view class="card">
+      <text class="ct">我的形象（穿衣风格）</text>
+      <text class="lab">穿衣风格（主风格）</text>
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
+        <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.gender==='women'?'女':'男'}}·{{item.name_zh}}</text>
+      </scroll-view>
+    </view>
+
+    <view class="tabs">
+      <text class="tab {{mode==='look'?'on':''}}" data-m="look" bindtap="setMode">造型</text>
+      <text class="tab {{mode==='buyer'?'on':''}}" data-m="buyer" bindtap="setMode">买手</text>
+      <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>
+      <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按风格生成</text>
+    </view>
+
+    <view wx:if="{{mode==='look'}}" class="grid2">
+      <view wx:for="{{lookCards}}" wx:key="code" class="lcard">
+        <text class="lname">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 风格造型</text>
+        <view class="lrow">
+          <image wx:for="{{item.items}}" wx:for-item="it" wx:key="id" src="{{it.cover}}" mode="aspectFill" class="limg"/>
         </view>
-        <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+        <text class="lbtn" data-code="{{item.code}}" bindtap="loadLook">装入我的造型 →</text>
+      </view>
+      <view wx:if="{{lookCards.length===0}}" class="empty">暂无足够商品，去「手工组合」挑选</view>
+    </view>
+
+    <view wx:if="{{mode==='buyer'}}">
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
+        <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{buyerStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setBuyer">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 买手</text>
+      </scroll-view>
+      <view class="grid3">
+        <view wx:for="{{buyerProducts}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pprice">¥{{item.price}}</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+        </view>
+      </view>
+      <view wx:if="{{buyerProducts.length===0}}" class="empty">该买手暂无匹配商品</view>
+    </view>
+
+    <view wx:if="{{mode==='manual'}}">
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
+        <text class="chip {{filterSeason===''?'on':''}}" data-c="" bindtap="setFilter">全部风格</text>
+        <text wx:for="{{seasons}}" wx:key="code" class="chip {{filterSeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setFilter">{{item.name_zh}}</text>
+      </scroll-view>
+      <view class="grid3">
+        <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pprice">¥{{item.price}}</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 按风格生成 -->
-  <view wx:if="{{mode==='auto'}}" class="auto-box">
-    <text class="auto-tip">基于你在「我的形象」选择的季型与风格，自动挑出最匹配单品组成完整造型。</text>
-    <text class="auto-btn" bindtap="autoGenerate">✨ 一键生成我的专属造型</text>
-    <view class="tray-prev" wx:if="{{tray.length>0}}">
-      <image wx:for="{{tray}}" wx:key="id" src="{{item.cover}}" mode="aspectFill" class="tp-img"/>
+    <view wx:if="{{mode==='auto'}}" class="auto-box">
+      <text class="auto-tip">基于你选的穿衣风格，自动挑出最匹配单品组成完整造型。</text>
+      <text class="auto-btn" bindtap="autoGenerate">✨ 一键生成我的专属造型</text>
+      <view class="tray-prev" wx:if="{{tray.length>0}}">
+        <image wx:for="{{tray}}" wx:key="id" src="{{item.cover}}" mode="aspectFill" class="tp-img"/>
+      </view>
     </view>
-  </view>
+  </block>
 
   <!-- 我的造型 底栏 -->
   <view class="tray-bar">
@@ -108,15 +151,19 @@
         <text class="ti-x" data-id="{{item.id}}" catchtap="removeTray">×</text>
       </view>
     </scroll-view>
-    <text class="try-btn" bindtap="doTryOn">{{loading?'生成中…':'试穿 (' + tray.length + '件/' + tray.length + ' credit)'}}</text>
+    <text class="try-btn" bindtap="doTryOn">{{loading?'生成中…':'试穿 (' + tray.length + '件)'}}</text>
   </view>
 
   <!-- 结果弹层 -->
   <view wx:if="{{showResult}}" class="mask" bindtap="closeResult">
     <view class="result" catchtap="noop">
-      <text class="rc">整体造型已生成 · 消耗 {{resultCredits}} credit</text>
-      <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
+      <text class="rc">整体造型已生成</text>
+      <view class="rimg-wrap">
+        <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
+        <view class="ai-badge">AI 合成</view>
+      </view>
       <text class="save-btn" catchtap="saveResult">保存到相册（高清）</text>
+      <text class="buy-tip" catchtap="noop">喜欢这身？在「挑衣服」里点单品即可下单带走</text>
       <text class="close-tip" catchtap="closeResult">点击空白处关闭</text>
     </view>
   </view>
@@ -130,7 +177,7 @@
           <text class="pkg-name">{{item.name}}{{item.highlight ? ' · 新人' : ''}}</text>
           <text class="pkg-desc">{{item.desc}}</text>
         </view>
-        <text class="pkg-price">¥{{item.price}}<text class="pkg-unit">/{{item.unit}}</text></text>
+        <text class="pkg-price">¥{{item.price}}</text>
       </view>
       <text class="sheet-close" bindtap="closePackages">关闭</text>
     </view>

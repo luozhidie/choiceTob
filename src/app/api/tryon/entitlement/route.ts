@@ -1,20 +1,25 @@
 // app/api/tryon/entitlement/route.ts
 // GET  ?openid=  查询试衣权益（权威来源，防客户端伪造）
-// POST {openid}  扣减首单体验次数（每次成功试衣后调用）
+// POST {openid, tier}  扣减对应档位次数（每次成功试衣后调用）
+// tier: 'normal' | 'pro'，由客户端按当前模式传入
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 function shape(row: any) {
   const now = Date.now();
   const expires = row ? new Date(row.expires_at).getTime() : 0;
-  const triesLeft = row ? row.tries_left || 0 : 0;
-  // 有效期内且仍有剩余次数才有效（过期或次数用完均失效）
-  const active = expires > now && triesLeft > 0;
+  const normalLeft = row ? row.normal_left || 0 : 0;
+  const proLeft = row ? row.pro_left || 0 : 0;
+  const triesLeft = normalLeft + proLeft;
+  // 有效期内且任一计数器有剩余次数才有效
+  const active = expires > now && (normalLeft > 0 || proLeft > 0);
   const daysLeft = expires > now ? Math.max(0, Math.ceil((expires - now) / 86400000)) : 0;
   return {
     active,
     type: row ? row.type : null,
     daysLeft,
+    normalLeft,
+    proLeft,
     triesLeft,
     expires: row ? row.expires_at : null,
   };
@@ -35,25 +40,38 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { openid } = body;
+    const { openid, tier } = body;
     if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
+    if (!tier || (tier !== "normal" && tier !== "pro")) {
+      return NextResponse.json({ error: "缺少 tier 参数（normal/pro）" }, { status: 400 });
+    }
+
     const supabase = await createClient();
     const { data: row } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
-    if (!row) return NextResponse.json({ active: false, triesLeft: 0 });
+    if (!row) return NextResponse.json({ active: false, normalLeft: 0, proLeft: 0, triesLeft: 0 });
 
     const now = Date.now();
     const expired = new Date(row.expires_at).getTime() <= now;
-    const triesLeft = row.tries_left || 0;
+    const col = tier === "pro" ? "pro_left" : "normal_left";
+    const cur = (row[col] || 0) as number;
 
-    // 次数用完或已过期，直接返回失效
-    if (triesLeft <= 0 || expired) {
-      return NextResponse.json({ active: false, type: row.type, daysLeft: 0, triesLeft: 0, expires: row.expires_at });
+    // 对应档位次数用完或已过期，直接返回失效
+    if (cur <= 0 || expired) {
+      return NextResponse.json({
+        active: false,
+        type: row.type,
+        daysLeft: 0,
+        normalLeft: row.normal_left || 0,
+        proLeft: row.pro_left || 0,
+        triesLeft: (row.normal_left || 0) + (row.pro_left || 0),
+        expires: row.expires_at,
+      });
     }
 
-    // 所有套餐统一扣减 1 次
+    // 按档位扣减 1 次
     const { error } = await supabase
       .from("tryon_entitlements")
-      .update({ tries_left: triesLeft - 1, updated_at: new Date().toISOString() })
+      .update({ [col]: cur - 1, updated_at: new Date().toISOString() })
       .eq("openid", openid);
     if (error) console.error("[试衣扣减] 失败", error);
     const { data: updated } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();

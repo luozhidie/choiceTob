@@ -8,25 +8,28 @@ function rewriteSupabase(u) {
   return u;
 }
 
-// 试衣套餐（与网站 /tryon 定价一致）
+// 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
+// normal = 普通版次数，pro = 专业版次数
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', tries: 1, highlight: true },
-  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天无限次试穿 + 高清下载', type: 'month', days: 30 },
-  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天无限次 + 优先新款', type: 'quarter', days: 90 },
-  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天无限次 + 专属顾问', type: 'year', days: 365 },
+  { id: 'tryon_first_1yuan',       name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 9 次普通 + 1 次专业',  type: 'first',        days: 365, normal: 9,   pro: 1,    highlight: true },
+  { id: 'tryon_normal_monthly_59', name: '普通月卡', price: 59,   unit: '月', desc: '30 天 70 次普通试穿',          type: 'normal_month', days: 30,  normal: 70,  pro: 0 },
+  { id: 'tryon_pro_monthly_199',   name: '专业月卡', price: 199,  unit: '月', desc: '30 天 200 次专业诊断',         type: 'pro_month',    days: 30,  normal: 0,   pro: 200 },
+  { id: 'tryon_pro_year_999',      name: '专业年卡', price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',       type: 'pro_year',     days: 365, normal: 0,   pro: 1000 },
 ];
 
-function getPass() {
-  try { return wx.getStorageSync('tryon_pass') || null; } catch (e) { return null; }
+// 价格：数据库按分存，展示为元
+function fmtPrice(n) {
+  if (n == null) return '0';
+  var yuan = Math.round(n) / 100;
+  return yuan % 1 === 0 ? String(yuan) : yuan.toFixed(2);
 }
-function hasPass() {
-  var p = getPass();
-  if (!p) return false;
-  if (p.type === 'first') return (p.triesLeft || 0) > 0;
-  return Date.now() < (p.expires || 0);
-}
-function setPass(p) { try { wx.setStorageSync('tryon_pass', p); } catch (e) {} }
-function clearPass() { try { wx.removeStorageSync('tryon_pass'); } catch (e) {} }
+
+// —— 权益缓存（服务端为权威，localStorage 仅作即时缓存）——
+function getCacheEnt() { try { return wx.getStorageSync('tryon_entitlement') || null; } catch (e) { return null; } }
+function setCacheEnt(e) { try { wx.setStorageSync('tryon_entitlement', e); } catch (e) {} }
+function isActiveEnt(e) { return !!(e && e.active); }
+function getAuth() { try { return wx.getStorageSync('tryon_auth_agreed') || false; } catch (e) { return false; } }
+function setAuth(v) { try { wx.setStorageSync('tryon_auth_agreed', v); } catch (e) {} }
 
 Page({
   data: {
@@ -47,33 +50,60 @@ Page({
     resultUrl: '',
     resultCredits: 0,
     showResult: false,
-    // —— 付费墙 / 推广 ——
+    // —— 普通 / 专业 分层 ——
+    proMode: false,
+    categories: [],
+    category: '',
+    // —— 付费墙 / 推广 / 合规 ——
     packages: PACKAGES,
     showPackages: false,
     promo: false,
     isPass: false,
-    passText: '未开通 · 首单 ¥1 体验',
+    passText: '未开通 · 首单 ¥9.9 体验',
+    agreedAuth: false,
+    showShopPick: false,
   },
 
   onLoad: function (options) {
     if (options && options.promo) { this.setData({ promo: true }); }
-    this.refreshPass();
+    if (options && options.pro) { this.setData({ proMode: true }); }
+    this.setData({ agreedAuth: getAuth() });
+    this.syncEntitlement();
     this.loadData();
   },
 
-  refreshPass: function () {
-    var p = getPass();
+  // 从服务端拉取权益（权威），并写入缓存 + 刷新 UI
+  syncEntitlement: function () {
+    var self = this;
+    return app.getOpenid().then(function (openid) {
+      return new Promise(function (resolve) {
+        wx.request({
+          url: BASE + '/api/tryon/entitlement?openid=' + encodeURIComponent(openid),
+          success: function (r) {
+            var d = r.data || {};
+            if (typeof d.active === 'boolean') { setCacheEnt(d); self.applyEntitlement(d); }
+            resolve(d);
+          },
+          fail: function () { resolve(getCacheEnt()); }
+        });
+      });
+    }).catch(function () { return Promise.resolve(getCacheEnt()); });
+  },
+
+  applyEntitlement: function (d) {
     var txt;
-    if (!p) {
-      txt = '未开通 · 首单 ¥1 体验';
-    } else if (p.type === 'first') {
-      txt = '首单体验剩余 ' + (p.triesLeft || 0) + ' 次';
+    if (!d.active) {
+      txt = '未开通 · 首单 ¥9.9 体验';
+    } else if (d.type === 'first') {
+      txt = '首单体验 · 普通 ' + (d.normalLeft || 0) + ' · 专业 ' + (d.proLeft || 0);
     } else {
-      var days = Math.max(0, Math.ceil((p.expires - Date.now()) / 86400000));
-      var label = p.type === 'month' ? '包月' : p.type === 'quarter' ? '季卡' : '年卡';
-      txt = label + '剩余 ' + days + ' 天';
+      var days = d.daysLeft || 0;
+      var normal = d.normalLeft || 0;
+      var pro = d.proLeft || 0;
+      var label = d.type === 'normal_month' ? '普通月卡' : d.type === 'pro_month' ? '专业月卡' : '专业年卡';
+      txt = label + '剩余 ' + days + ' 天 · 普通 ' + normal + ' · 专业 ' + pro;
     }
-    this.setData({ passText: txt, isPass: hasPass() });
+    this.setData({ passText: txt, isPass: d.active });
   },
 
   loadData: function () {
@@ -91,7 +121,7 @@ Page({
 
         var products = productsRaw.map(function (p) {
           return {
-            id: p.id, title: p.title, price: p.price, cover: p.cover,
+            id: p.id, title: p.title, price: fmtPrice(p.price), cover: p.cover,
             seasons: p.seasons || [], styles: p.styles || [], category: p.category || '',
             seasonNames: (p.seasons || []).slice(0, 2).map(function (c) { return seasonMap[c] || c; }),
             styleNames: (p.styles || []).slice(0, 1).map(function (c) { return styleMap[c] || c; }),
@@ -106,10 +136,15 @@ Page({
           return { code: m.code, name_zh: m.name_zh, gender: m.gender, items: items };
         }).filter(function (c) { return c.items.length > 0; });
 
+        var catCount = {};
+        products.forEach(function (p) { if (p.category) catCount[p.category] = (catCount[p.category] || 0) + 1; });
+        var categories = Object.keys(catCount).sort(function (a, b) { return catCount[b] - catCount[a]; });
+
         var defBuyer = (mainStyles[0] && mainStyles[0].code) || '';
         t._seasonMap = seasonMap; t._styleMap = styleMap;
         t.setData({
           seasons: seasons, mainStyles: mainStyles, products: products, lookCards: lookCards,
+          categories: categories,
           buyerStyle: defBuyer, buyerProducts: t.computeBuyer(defBuyer, products),
           browseProducts: products,
         });
@@ -128,6 +163,11 @@ Page({
     if (!season) return products;
     return products.filter(function (p) { return p.seasons.indexOf(season) >= 0; });
   },
+  computeByCat: function (cat, products) {
+    products = products || this.data.products;
+    if (!cat) return products;
+    return products.filter(function (p) { return p.category === cat; });
+  },
 
   choosePerson: function () {
     var t = this;
@@ -138,6 +178,86 @@ Page({
         if (f) t.setData({ personPath: f.tempFilePath });
       }
     });
+  },
+
+  // —— 普通版：上传自己的衣服图 ——
+  chooseCloth: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      success: function (res) {
+        var f = res.tempFiles && res.tempFiles[0];
+        if (!f) return;
+        wx.showLoading({ title: '上传衣服图...' });
+        wx.uploadFile({
+          url: BASE + '/api/upload',
+          filePath: f.tempFilePath,
+          name: 'file',
+          success: function (up) {
+            wx.hideLoading();
+            var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
+            var url = d.url || (d.data && d.data.url);
+            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); return; }
+            var item = { id: 'cloth_' + Date.now(), title: '上传的衣服', cover: url, price: '', seasons: [], styles: [], category: '' };
+            t.setData({ tray: t.data.tray.concat([item]) });
+            wx.showToast({ title: '已加入造型', icon: 'none' });
+          },
+          fail: function () { wx.hideLoading(); wx.showToast({ title: '上传失败', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
+  // —— 普通版：AI 帮我搭 ——
+  smartPick: function () {
+    var cards = this.data.lookCards;
+    var tray = cards.length ? cards[0].items.slice() : this.data.products.slice(0, 4);
+    this.setData({ tray: tray });
+    wx.showToast({ title: '已为你搭好一套', icon: 'none' });
+  },
+
+  setCategory: function (e) {
+    var c = e.currentTarget.dataset.c;
+    this.setData({ category: c, browseProducts: this.computeByCat(c, this.data.products) });
+  },
+  openShopPick: function () { this.setData({ showShopPick: true }); },
+  closeShopPick: function () { this.setData({ showShopPick: false }); },
+
+  // —— 合规：肖像授权勾选 ——
+  toggleAuth: function () {
+    var v = !this.data.agreedAuth;
+    setAuth(v);
+    this.setData({ agreedAuth: v });
+  },
+
+  // —— 专业版开关（开通权益后解锁）——
+  togglePro: function () {
+    var self = this;
+    if (!this.data.proMode && !this.data.isPass) {
+      wx.showModal({
+        title: '专业风格顾问',
+        content: '开通试衣套餐后解锁：21 题穿衣风格诊断 + 按风格一键生成专属造型。',
+        confirmText: '去开通', cancelText: '暂不需要',
+        success: function (r) { if (r.confirm) self.openPackages(); }
+      });
+      return;
+    }
+    this.setData({ proMode: !this.data.proMode, mode: 'look' });
+  },
+
+  switchToBasic: function () { this.setData({ proMode: false }); },
+  switchToPro: function () {
+    var self = this;
+    if (!this.data.isPass) {
+      wx.showModal({
+        title: '专业版',
+        content: '专业版含 21 题穿衣风格诊断与 AI 按风格生成造型。开通任意套餐后即可使用。',
+        confirmText: '去开通', cancelText: '暂不需要',
+        success: function (r) { if (r.confirm) self.openPackages(); }
+      });
+      return;
+    }
+    this.setData({ proMode: true, mode: 'look' });
   },
 
   setMode: function (e) { this.setData({ mode: e.currentTarget.dataset.m }); },
@@ -180,7 +300,7 @@ Page({
     var t = this;
     var sc = this.data.mySeason ? [this.data.mySeason] : [];
     var st = this.data.myStyle ? [this.data.myStyle] : [];
-    if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选季型/风格', icon: 'none' }); return; }
+    if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选风格', icon: 'none' }); return; }
     var ranked = this.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
       .filter(function (x) { return x.s > 0; })
       .sort(function (a, b) { return b.s - a.s; })
@@ -202,46 +322,32 @@ Page({
     this.payFor(pkg);
   },
 
+  // 调服务端建单 + 微信支付（金额由服务端定，防篡改）
   payFor: function (pkg) {
     var t = this;
     wx.showLoading({ title: '调起支付...' });
     app.getOpenid().then(function (openid) {
       wx.request({
-        url: BASE + '/api/wechat-pay/unified-order',
+        url: BASE + '/api/tryon/create',
         method: 'POST',
-        data: {
-          product_id: pkg.id,
-          product_title: '骆芷蝶智选·虚拟试衣' + pkg.name,
-          total_fee: pkg.price * 100,
-          quantity: 1,
-          platform: 'mini',
-          openid: openid,
-        },
+        data: { package_id: pkg.id, openid: openid },
         success: function (r) {
           wx.hideLoading();
           var d = r.data || {};
           if (d.error) { wx.showModal({ title: '下单失败', content: d.error, showCancel: false }); return; }
-          var params = d.jsapi || d;
           wx.requestPayment({
-            timeStamp: params.timeStamp,
-            nonceStr: params.nonceStr,
-            package: params.package,
-            signType: params.signType || 'MD5',
-            paySign: params.paySign,
+            timeStamp: d.timeStamp, nonceStr: d.nonceStr, package: d.package,
+            signType: d.signType || 'MD5', paySign: d.paySign,
             success: function () {
-              // 开通权益（客户端乐观开通；服务端对账为后续硬化步骤）
-              var pass = { type: pkg.type };
-              if (pkg.type === 'first') {
-                pass.triesLeft = pkg.tries;
-                pass.expires = Date.now() + 365 * 86400000;
-              } else {
-                pass.expires = Date.now() + pkg.days * 86400000;
-                pass.triesLeft = 999;
-              }
-              setPass(pass);
-              t.setData({ showPackages: false });
-              t.refreshPass();
+              // 乐观开通（服务端 notify 异步发放，稍后同步覆盖）
+              var optimistic = {
+                active: true, type: pkg.type, daysLeft: pkg.days || 365,
+                normalLeft: pkg.normal, proLeft: pkg.pro, triesLeft: pkg.normal + pkg.pro
+              };
+              setCacheEnt(optimistic); t.applyEntitlement(optimistic);
+              t.setData({ showPackages: false, proMode: false });
               wx.showToast({ title: '已开通，去试衣', icon: 'success' });
+              setTimeout(function () { t.syncEntitlement(); }, 4000);
             },
             fail: function (err) {
               if (!(err && err.errMsg && err.errMsg.indexOf('cancel') > -1)) {
@@ -259,9 +365,40 @@ Page({
   },
 
   doTryOn: function () {
+    if (!this.data.agreedAuth) {
+      wx.showModal({
+        title: '需同意肖像授权',
+        content: '试衣需先勾选「肖像使用授权」：你的照片仅用于本次 AI 合成，不会公开。',
+        confirmText: '去勾选', cancelText: '取消',
+        success: function (r) { if (r.confirm) { /* 引导到上方勾选框 */ } }
+      });
+      return;
+    }
     if (!this.data.personPath) { wx.showToast({ title: '请先上传你的照片', icon: 'none' }); return; }
     if (this.data.tray.length === 0) { wx.showToast({ title: '请先添加单品', icon: 'none' }); return; }
-    if (!hasPass()) { this.setData({ showPackages: true }); return; }
+
+    var t = this;
+    wx.showLoading({ title: '校验权益...' });
+    t.syncEntitlement().then(function (ent) {
+      wx.hideLoading();
+      if (!isActiveEnt(ent)) { t.setData({ showPackages: true }); return; }
+      // 按当前模式校验对应次数
+      var tier = t.data.proMode ? 'pro' : 'normal';
+      var left = t.data.proMode ? (ent.proLeft || 0) : (ent.normalLeft || 0);
+      if (left <= 0) {
+        wx.showModal({
+          title: (t.data.proMode ? '专业版' : '普通版') + '次数已用完',
+          content: '当前套餐的' + (t.data.proMode ? '专业版' : '普通版') + '次数不足，去开通对应套餐继续试穿。',
+          confirmText: '去开通', cancelText: '暂不需要',
+          success: function (r) { if (r.confirm) t.openPackages(); }
+        });
+        return;
+      }
+      t.runTryOn(ent, tier);
+    });
+  },
+
+  runTryOn: function (ent, tier) {
     var t = this;
     var products = this.data.tray.map(function (p) { return { url: p.cover, title: p.title }; });
     this.setData({ loading: true });
@@ -276,10 +413,28 @@ Page({
         var d;
         try { d = JSON.parse(res.data); } catch (e) { d = {}; }
         if (d.error) { wx.showModal({ title: '试衣失败', content: d.error, showCancel: false }); t.setData({ loading: false }); return; }
-        // 消耗首单次数
-        var p = getPass();
-        if (p && p.type === 'first') { p.triesLeft = Math.max(0, (p.triesLeft || 1) - 1); setPass(p); t.refreshPass(); }
-        t.setData({ resultUrl: rewriteSupabase(d.resultUrl), resultCredits: d.credits || products.length, showResult: true, loading: false });
+
+        var resultUrl = rewriteSupabase(d.resultUrl);
+
+        // 按档位扣减次数
+        if (ent && ent.active) {
+          app.getOpenid().then(function (openid) {
+            wx.request({ url: BASE + '/api/tryon/entitlement', method: 'POST', data: { openid: openid, tier: tier } });
+          }).catch(function () {});
+        }
+
+        // 保存试衣记录（7 天历史）
+        var clothUrls = t.data.tray.map(function (p) { return p.cover; });
+        app.getOpenid().then(function (openid) {
+          wx.request({
+            url: BASE + '/api/tryon/records',
+            method: 'POST',
+            data: { openid: openid, mode: tier, cloth_urls: clothUrls, result_url: resultUrl }
+          });
+        }).catch(function () {});
+
+        t.syncEntitlement();
+        t.setData({ resultUrl: resultUrl, resultCredits: d.credits || products.length, showResult: true, loading: false });
       },
       fail: function () {
         wx.hideLoading();
@@ -294,7 +449,6 @@ Page({
     if (this.data.resultUrl) wx.previewImage({ urls: [this.data.resultUrl], current: this.data.resultUrl });
   },
 
-  // 保存高清图到相册（已付费用户）
   saveResult: function () {
     var url = this.data.resultUrl;
     if (!url) return;
@@ -312,5 +466,10 @@ Page({
       },
       fail: function () { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); }
     });
+  },
+
+  // 跳转到试衣历史
+  goHistory: function () {
+    wx.navigateTo({ url: '/pages/tryon-history/index' });
   },
 });

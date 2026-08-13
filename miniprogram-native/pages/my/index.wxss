@@ -99,6 +99,23 @@ page{background: var(--bg);}
 .sec-title{font-size:30rpx;font-weight:700;color:#1a1a2e;}
 .sec-more{font-size:23rpx;color:#999;font-weight:400;}
 
+/* ====== AI 虚拟试衣入口（深色+金色，变现优先）====== */
+.tryon-entry{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:24rpx 24rpx;border-radius:18rpx;
+  background:linear-gradient(135deg,#2d1b2e 0%,#4a2748 60%,#6b3a5a 100%);
+  box-shadow:0 10rpx 24rpx rgba(45,27,46,.26),inset 0 1rpx 0 rgba(255,255,255,.08);
+}
+.te-left{display:flex;flex-direction:column;gap:8rpx;flex:1;margin-right:18rpx;}
+.te-title{font-size:32rpx;font-weight:800;color:#fcefe9;letter-spacing:1rpx;text-shadow:0 2rpx 6rpx rgba(0,0,0,.25);}
+.te-desc{font-size:22rpx;color:rgba(252,239,233,.78);font-weight:400;line-height:1.4;}
+.te-btn{
+  flex-shrink:0;background:linear-gradient(135deg,#C9A24B,#e3c074);
+  color:#2d1b2e;font-size:24rpx;font-weight:800;
+  padding:16rpx 26rpx;border-radius:30rpx;line-height:1;
+  box-shadow:0 4rpx 12rpx rgba(201,162,75,.4);
+}
+
 /* ====== 订单行 ====== */
 .order-row{display:flex;justify-content:space-around;padding:8rpx 0;}
 .oi{display:flex;flex-direction:column;align-items:center;gap:6rpx;flex:1;padding:14rpx 6rpx;border-radius:14rpx;background:#faf8f6;}

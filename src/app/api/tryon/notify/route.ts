@@ -7,11 +7,11 @@ import crypto from "crypto";
 
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
-const PACKAGES: Record<string, { type: string; days: number; tries: number }> = {
-  tryon_first_1yuan: { type: "first", days: 365, tries: 10 },
-  tryon_monthly_99: { type: "month", days: 30, tries: 120 },
-  tryon_quarter_199: { type: "quarter", days: 90, tries: 280 },
-  tryon_year_699: { type: "year", days: 365, tries: 1000 },
+const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
+  tryon_first_1yuan:       { type: "first",        days: 365, normal: 9,   pro: 1 },
+  tryon_normal_monthly_59: { type: "normal_month", days: 30,  normal: 70,  pro: 0 },
+  tryon_pro_monthly_199:   { type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
+  tryon_pro_year_999:      { type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
 };
 
 export async function POST(request: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 发放/续期权益（按 openid 合并，有效期内续费次数叠加）
+// 发放/续期权益（按 openid 合并，有效期内续费 normal/pro 次数分别叠加）
 async function grantEntitlement(supabase: any, openid: string, package_id: string) {
   const pkg = PACKAGES[package_id];
   if (!pkg) return;
@@ -71,7 +71,8 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     .eq("openid", openid)
     .single();
 
-  let triesLeft: number;
+  let normalLeft: number;
+  let proLeft: number;
   let finalExpires: number;
   let type: string;
 
@@ -80,19 +81,23 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     finalExpires = Math.max(existExpires, computedExpires);
     const expired = existExpires <= now;
     if (pkg.type === "first") {
-      // 首单体验：每人只买一次，最多累计 10 次（防薅羊毛）
-      triesLeft = Math.min((exist.tries_left || 0) + pkg.tries, pkg.tries);
+      // 首单体验：每人只买一次，普通封顶 9 次、专业封顶 1 次（防薅羊毛）
+      normalLeft = Math.min((exist.normal_left || 0) + pkg.normal, pkg.normal);
+      proLeft = Math.min((exist.pro_left || 0) + pkg.pro, pkg.pro);
     } else if (expired) {
       // 已过期：重新发次数
-      triesLeft = pkg.tries;
+      normalLeft = pkg.normal;
+      proLeft = pkg.pro;
     } else {
       // 有效期内续费：次数叠加
-      triesLeft = (exist.tries_left || 0) + pkg.tries;
+      normalLeft = (exist.normal_left || 0) + pkg.normal;
+      proLeft = (exist.pro_left || 0) + pkg.pro;
     }
     type = pkg.type === "first" ? (exist.type !== "first" ? exist.type : "first") : pkg.type;
   } else {
     finalExpires = computedExpires;
-    triesLeft = pkg.tries;
+    normalLeft = pkg.normal;
+    proLeft = pkg.pro;
     type = pkg.type;
   }
 
@@ -101,13 +106,16 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
       openid,
       type,
       expires_at: new Date(finalExpires).toISOString(),
-      tries_left: triesLeft,
+      normal_left: normalLeft,
+      pro_left: proLeft,
+      // 保留 tries_left 作为兼容/只读汇总：normal + pro
+      tries_left: normalLeft + proLeft,
       updated_at: new Date().toISOString(),
     },
     { onConflict: "openid" }
   );
   if (error) console.error("[试衣权益发放] 失败", error);
-  else console.log("[试衣权益发放] 成功", { openid, type, triesLeft });
+  else console.log("[试衣权益发放] 成功", { openid, type, normalLeft, proLeft });
 }
 
 function signMd5(params: Record<string, string>) {

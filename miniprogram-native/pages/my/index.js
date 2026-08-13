@@ -294,6 +294,7 @@ Page({
   goFeedback:function(){wx.navigateTo({url:'/pages/feedback/index'});},
   goPersonalImage:function(){wx.navigateTo({url:'/pages/personal-image/index'});},
   goStyleTest:function(){wx.navigateTo({url:'/pages/diagnosis-form/index'});},
+  goLookStudio:function(){wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});},
   goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
@@ -301,6 +302,7 @@ Page({
   goLuckDraw:function(){wx.navigateTo({url:'/pages/fortune/index'});},
   goInvite:function(){wx.navigateTo({url:'/pages/invite/index'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
+  goLookStudio:function(){wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});},
 
   /* ===== 退出登录 ===== */
   goLogout:function(){
