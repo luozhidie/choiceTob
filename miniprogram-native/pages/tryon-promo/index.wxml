@@ -5,13 +5,13 @@
     <text class="hero-title">先试再买\n穿上身再决定</text>
     <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。\n好不好看，一眼就知道。</text>
     <view class="hero-badges">
-      <text class="badge">1 元首单</text>
+      <text class="badge">9.9 元首单</text>
       <text class="badge">30 秒出图</text>
       <text class="badge">隐私保护</text>
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
-      <text class="cta-main">新人首单 ¥1 试穿</text>
-      <text class="cta-sub">原价 ¥99/次 · 限时体验</text>
+      <text class="cta-main">新人首单 ¥9.9 试穿</text>
+      <text class="cta-sub">9 次普通 + 1 次专业 · 限时体验</text>
     </view>
   </view>
 
@@ -56,14 +56,14 @@
         <text class="feature no">— 不含风格诊断</text>
         <text class="feature no">— 不含 AI 智能搭配 / 买手推荐</text>
       </view>
-      <view class="v-btn" bindtap="onFirstTry">¥1 先体验</view>
+      <view class="v-btn" bindtap="onFirstTry">¥9.9 先体验</view>
     </view>
 
     <view class="version-card pro">
       <view class="v-badge">专业版</view>
       <view class="v-header">
         <text class="v-name">专业版</text>
-        <text class="v-price">¥99/月</text>
+        <text class="v-price">¥199/月起</text>
       </view>
       <text class="v-desc">在普通版基础上，加风格诊断与智能搭配</text>
       <view class="v-features">

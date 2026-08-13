@@ -5,7 +5,7 @@
     <text class="hs">上传你的照片，挑好衣服一键试穿，穿上好不好看一眼就知道，喜欢再带回家</text>
     <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
   </view>
-  <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥1 试穿一整套</view>
+  <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥9.9 试穿一整套</view>
 
   <!-- 普通版 / 专业版 切换 -->
   <view class="mode-tabs">
@@ -16,6 +16,10 @@
   <view class="pass-bar" bindtap="openPackages">
     <text class="pass-t">{{passText}}</text>
     <text class="pass-go">{{isPass ? '管理' : '去开通'}} ›</text>
+  </view>
+  <view class="history-entry" bindtap="goHistory">
+    <text class="he-t">我的试衣记录 ›</text>
+    <text class="he-d">最近 7 天可回看</text>
   </view>
 
   <!-- ① 上传照片（普及版，不暴露季型/风格） -->
@@ -71,7 +75,7 @@
     </block>
   </view>
 
-  <!-- 专业版（升级后显示：季型×风格 + 造型/买手/手工/按风格） -->
+  <!-- 专业版（升级后显示：穿衣风格 + 造型/买手/手工/按风格） -->
   <block wx:if="{{proMode}}">
     <view class="card">
       <text class="ct">我的形象（穿衣风格）</text>
@@ -116,7 +120,7 @@
 
     <view wx:if="{{mode==='manual'}}">
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-        <text class="chip {{filterSeason===''?'on':''}}" data-c="" bindtap="setFilter">全部季型</text>
+        <text class="chip {{filterSeason===''?'on':''}}" data-c="" bindtap="setFilter">全部风格</text>
         <text wx:for="{{seasons}}" wx:key="code" class="chip {{filterSeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setFilter">{{item.name_zh}}</text>
       </scroll-view>
       <view class="grid3">
@@ -130,7 +134,7 @@
     </view>
 
     <view wx:if="{{mode==='auto'}}" class="auto-box">
-      <text class="auto-tip">基于你选的季型与风格，自动挑出最匹配单品组成完整造型。</text>
+      <text class="auto-tip">基于你选的穿衣风格，自动挑出最匹配单品组成完整造型。</text>
       <text class="auto-btn" bindtap="autoGenerate">✨ 一键生成我的专属造型</text>
       <view class="tray-prev" wx:if="{{tray.length>0}}">
         <image wx:for="{{tray}}" wx:key="id" src="{{item.cover}}" mode="aspectFill" class="tp-img"/>

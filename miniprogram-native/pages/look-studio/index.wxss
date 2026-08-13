@@ -86,6 +86,9 @@
 .pass-bar { display: flex; align-items: center; justify-content: space-between; background: #222; color: #fff; border-radius: 14rpx; padding: 16rpx 18rpx; margin-bottom: 14rpx; }
 .pass-t { font-size: 22rpx; }
 .pass-go { font-size: 22rpx; color: #C9A24B; font-weight: 700; }
+.history-entry { display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1rpx solid #eee; border-radius: 14rpx; padding: 16rpx 18rpx; margin-bottom: 14rpx; }
+.he-t { font-size: 24rpx; font-weight: 700; color: #2d1b2e; }
+.he-d { font-size: 20rpx; color: #999; }
 .result .save-btn { display: block; text-align: center; background: #C9A24B; color: #2d1b2e; font-weight: 800; font-size: 26rpx; padding: 20rpx 0; border-radius: 14rpx; margin-top: 18rpx; }
 .buy-tip { color: #fcefe9; font-size: 20rpx; text-align: center; display: block; margin-top: 14rpx; line-height: 1.5; opacity: .85; }
 .close-tip { color: #bbb; font-size: 20rpx; text-align: center; display: block; margin-top: 12rpx; }
