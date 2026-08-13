@@ -38,6 +38,7 @@ jobs:
           find ./dist-upload -type f | head -30
 
       - name: Upload to WeChat
+        continue-on-error: true   # secret 私钥轮换后若未同步会失败；失败时仅告警，不阻断；本地直传兜底（见 upload-weapp.js）
         env:
           WECHAT_APPID: ${{ secrets.WECHAT_APPID }}
           WECHAT_KEY: ${{ secrets.WECHAT_UPLOAD_KEY }}
