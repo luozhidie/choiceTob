@@ -51,3 +51,4 @@ miniprogram/private.key
 
 # CI 临时构建目录
 dist-upload/
+miniprogram/dist/

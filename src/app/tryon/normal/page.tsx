@@ -34,13 +34,35 @@ export default function TryonNormalPage() {
 
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
-          <div className="text-lg font-extrabold text-[#2d1b2e]">普通月卡</div>
-          <div className="text-xs text-gray-500 mt-1">30 天 70 次普通试穿</div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">月卡</div>
+          <div className="text-xs text-gray-500 mt-1">30 天 120 次通用试穿</div>
         </div>
-        <div className="text-2xl font-extrabold text-[#C9A24B]">¥59</div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥99</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_normal_monthly_59" title="普通月卡" price={59} sub="30天70次" />
+        <TryonPayButton productId="tryon_monthly_99" title="月卡" price={99} sub="30天120次" />
+      </div>
+
+      <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
+        <div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">季卡</div>
+          <div className="text-xs text-gray-500 mt-1">90 天 280 次通用试穿</div>
+        </div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥199</div>
+      </div>
+      <div className="mt-3">
+        <TryonPayButton productId="tryon_quarter_199" title="季卡" price={199} sub="90天280次" />
+      </div>
+
+      <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between border-2 border-[#C9A24B]">
+        <div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">年卡</div>
+          <div className="text-xs text-gray-500 mt-1">365 天 1000 次通用试穿</div>
+        </div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥699</div>
+      </div>
+      <div className="mt-3">
+        <TryonPayButton productId="tryon_year_699" title="年卡" price={699} sub="365天1000次" />
       </div>
     </main>
   );

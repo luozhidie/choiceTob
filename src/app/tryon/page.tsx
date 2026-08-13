@@ -29,7 +29,7 @@ export default function TryonPromoPage() {
         <div className="mt-5">
           <TryonPayButton productId="tryon_first_1yuan" title="首单体验" price={9.9} label="新人首单 ¥9.9 试穿" />
         </div>
-        <div className="text-xs text-white/55 mt-2">9 次普通 + 1 次专业 · 限时体验</div>
+        <div className="text-xs text-white/55 mt-2">10 次通用体验 · 限时</div>
       </section>
 
       {/* 三步 */}
@@ -71,7 +71,7 @@ export default function TryonPromoPage() {
           >
             <div className="text-2xl mb-2">👕</div>
             <h3 className="font-bold text-[#2d1b2e]">普通版</h3>
-            <p className="text-xs text-gray-500 mt-1">快速看上身 · ¥59/月</p>
+            <p className="text-xs text-gray-500 mt-1">快速看上身 · ¥99/月</p>
           </Link>
           <Link
             href="/tryon/pro"
@@ -79,7 +79,7 @@ export default function TryonPromoPage() {
           >
             <div className="text-2xl mb-2">✨</div>
             <h3 className="font-bold">专业版</h3>
-            <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥199/月</p>
+            <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥199/季</p>
           </Link>
           <Link
             href="/tryon/faq"
@@ -89,6 +89,65 @@ export default function TryonPromoPage() {
             <h3 className="font-bold text-[#2d1b2e]">常见问题</h3>
             <p className="text-xs text-gray-500 mt-1">隐私/效果/退订</p>
           </Link>
+        </div>
+      </section>
+
+      {/* 套餐选择 */}
+      <section className="px-4 mt-5">
+        <h2 className="text-lg font-bold text-[#2d1b2e] mb-3">选择套餐</h2>
+        <div className="space-y-3">
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#eee5df]">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-[#2d1b2e]">首单体验</div>
+                <div className="text-xs text-gray-500 mt-1">10 次通用 · 365 天</div>
+              </div>
+              <div className="text-xl font-extrabold text-[#C9A24B]">¥9.9</div>
+            </div>
+            <div className="mt-3">
+              <TryonPayButton productId="tryon_first_1yuan" title="首单体验" price={9.9} label="¥9.9 购买" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#eee5df]">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-[#2d1b2e]">月卡</div>
+                <div className="text-xs text-gray-500 mt-1">120 次通用 · 30 天</div>
+              </div>
+              <div className="text-xl font-extrabold text-[#C9A24B]">¥99</div>
+            </div>
+            <div className="mt-3">
+              <TryonPayButton productId="tryon_monthly_99" title="月卡" price={99} label="¥99 购买" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#C9A24B]/40 relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">推荐</div>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-[#2d1b2e]">季卡</div>
+                <div className="text-xs text-gray-500 mt-1">280 次通用 · 90 天</div>
+              </div>
+              <div className="text-xl font-extrabold text-[#C9A24B]">¥199</div>
+            </div>
+            <div className="mt-3">
+              <TryonPayButton productId="tryon_quarter_199" title="季卡" price={199} label="¥199 购买" />
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#eee5df]">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-bold text-[#2d1b2e]">年卡</div>
+                <div className="text-xs text-gray-500 mt-1">1000 次通用 · 365 天</div>
+              </div>
+              <div className="text-xl font-extrabold text-[#C9A24B]">¥699</div>
+            </div>
+            <div className="mt-3">
+              <TryonPayButton productId="tryon_year_699" title="年卡" price={699} label="¥699 购买" />
+            </div>
+          </div>
         </div>
       </section>
 

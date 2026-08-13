@@ -31,24 +31,36 @@ export default function TryonProPage() {
 
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
-          <div className="text-lg font-extrabold text-[#2d1b2e]">专业月卡</div>
-          <div className="text-xs text-gray-500 mt-1">30 天 200 次专业诊断</div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">月卡</div>
+          <div className="text-xs text-gray-500 mt-1">30 天 120 次专业诊断</div>
+        </div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥99</div>
+      </div>
+      <div className="mt-3">
+        <TryonPayButton productId="tryon_monthly_99" title="月卡" price={99} sub="30天120次" />
+      </div>
+
+      <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between border-2 border-[#C9A24B] relative overflow-hidden">
+        <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">推荐</div>
+        <div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">季卡</div>
+          <div className="text-xs text-gray-500 mt-1">90 天 280 次专业诊断</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥199</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_pro_monthly_199" title="专业月卡" price={199} sub="30天200次" />
+        <TryonPayButton productId="tryon_quarter_199" title="季卡" price={199} sub="90天280次" />
       </div>
 
-      <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between border-2 border-[#C9A24B]">
+      <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
-          <div className="text-lg font-extrabold text-[#2d1b2e]">专业年卡</div>
+          <div className="text-lg font-extrabold text-[#2d1b2e]">年卡</div>
           <div className="text-xs text-gray-500 mt-1">365 天 1000 次专业诊断</div>
         </div>
-        <div className="text-2xl font-extrabold text-[#C9A24B]">¥999</div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥699</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_pro_year_999" title="专业年卡" price={999} sub="365天1000次" />
+        <TryonPayButton productId="tryon_year_699" title="年卡" price={699} sub="365天1000次" />
       </div>
     </main>
   );

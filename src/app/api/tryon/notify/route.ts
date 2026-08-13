@@ -9,11 +9,13 @@ import { upsertTryonEntitlement } from "@/lib/tryon-entitlement";
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
 const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
-  tryon_first_1yuan:       { type: "first",        days: 365, normal: 9,   pro: 1 },
-  tryon_normal_monthly_59: { type: "normal_month", days: 30,  normal: 70,  pro: 0 },
-  tryon_pro_monthly_199:   { type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
-  tryon_pro_year_999:      { type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
-  tryon_test_cent:         { type: "test",         days: 7,   normal: 1,   pro: 1 },
+  // 新套餐：通用次数计入 normal_left
+  tryon_first_1yuan:  { type: "first",   days: 365, normal: 10,  pro: 0 },
+  tryon_monthly_99:   { type: "month",   days: 30,  normal: 120, pro: 0 },
+  tryon_quarter_199:  { type: "quarter", days: 90,  normal: 280, pro: 0 },
+  tryon_year_699:     { type: "year",    days: 365, normal: 1000, pro: 0 },
+  // 内部测试通道
+  tryon_test_cent:    { type: "test",    days: 7,   normal: 1,   pro: 1 },
 };
 
 export async function POST(request: NextRequest) {
@@ -83,7 +85,7 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     finalExpires = Math.max(existExpires, computedExpires);
     const expired = existExpires <= now;
     if (pkg.type === "first") {
-      // 首单体验：每人只买一次，普通封顶 9 次、专业封顶 1 次（防薅羊毛）
+      // 首单体验：每人只买一次，普通封顶 10 次（防薅羊毛）
       normalLeft = Math.min((exist.normal_left || 0) + pkg.normal, pkg.normal);
       proLeft = Math.min((exist.pro_left || 0) + pkg.pro, pkg.pro);
     } else if (expired) {

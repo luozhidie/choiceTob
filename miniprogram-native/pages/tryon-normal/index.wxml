@@ -9,12 +9,31 @@
     <text class="c-h mt">不含</text>
     <view class="feat no" wx:for="{{exclude}}" wx:key="*this">— {{item}}</view>
   </view>
-  <view class="price-row" bindtap="buyPackage" data-id="tryon_normal_monthly_59">
+
+  <view class="price-row" bindtap="buyPackage" data-id="tryon_monthly_99">
     <view>
-      <text class="pr-title">普通月卡</text>
-      <text class="pr-sub">30 天 70 次普通试穿</text>
+      <text class="pr-title">月卡</text>
+      <text class="pr-sub">30 天 120 次通用试穿</text>
     </view>
-    <text class="pr-num">¥59</text>
+    <text class="pr-num">¥99</text>
   </view>
-  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_normal_monthly_59">购买 ¥59</view>
+  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_monthly_99">购买 ¥99</view>
+
+  <view class="price-row" bindtap="buyPackage" data-id="tryon_quarter_199">
+    <view>
+      <text class="pr-title">季卡</text>
+      <text class="pr-sub">90 天 280 次通用试穿</text>
+    </view>
+    <text class="pr-num">¥199</text>
+  </view>
+  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_quarter_199">购买 ¥199</view>
+
+  <view class="price-row" bindtap="buyPackage" data-id="tryon_year_699">
+    <view>
+      <text class="pr-title">年卡</text>
+      <text class="pr-sub">365 天 1000 次通用试穿</text>
+    </view>
+    <text class="pr-num">¥699</text>
+  </view>
+  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_year_699">购买 ¥699</view>
 </view>

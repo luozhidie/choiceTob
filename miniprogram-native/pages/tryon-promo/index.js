@@ -1,12 +1,12 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
 
-// 与 look-studio /api/tryon/create 服务端定价保持一致
+// 与 /api/tryon/create 服务端定价保持一致（新套餐：通用次数）
 var PACKAGES = [
-  { id: 'tryon_first_1yuan',       name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 9 次普通 + 1 次专业',  type: 'first',        days: 365, highlight: true },
-  { id: 'tryon_normal_monthly_59', name: '普通月卡', price: 59,   unit: '月', desc: '30 天 70 次普通试穿',          type: 'normal_month', days: 30 },
-  { id: 'tryon_pro_monthly_199',   name: '专业月卡', price: 199,  unit: '月', desc: '30 天 200 次专业诊断',         type: 'pro_month',    days: 30 },
-  { id: 'tryon_pro_year_999',      name: '专业年卡', price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',       type: 'pro_year',     days: 365 },
+  { id: 'tryon_first_1yuan',  name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 10 次通用体验', type: 'first',   days: 365, highlight: true },
+  { id: 'tryon_monthly_99',   name: '月卡',     price: 99,   unit: '月', desc: '30 天 120 次通用试穿',   type: 'month',   days: 30 },
+  { id: 'tryon_quarter_199',  name: '季卡',     price: 199,  unit: '季', desc: '90 天 280 次通用试穿',   type: 'quarter', days: 90, highlight: true },
+  { id: 'tryon_year_699',     name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次通用试穿', type: 'year',    days: 365 },
 ];
 
 function findPkg(id) {

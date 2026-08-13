@@ -33,8 +33,17 @@ export async function POST(request: NextRequest) {
 
     const now = Date.now();
     const expired = new Date(row.expires_at).getTime() <= now;
-    const col = tier === "pro" ? "pro_left" : "normal_left";
-    const cur = (row[col] || 0) as number;
+    let col = tier === "pro" ? "pro_left" : "normal_left";
+    let cur = (row[col] || 0) as number;
+
+    // 专业版次数用完时，可用普通版次数兜底（新套餐均为通用次数）
+    if (tier === "pro" && (cur <= 0 || expired)) {
+      const normalCur = (row.normal_left || 0) as number;
+      if (normalCur > 0 && !expired) {
+        col = "normal_left";
+        cur = normalCur;
+      }
+    }
 
     // 对应档位次数用完或已过期，直接返回失效
     if (cur <= 0 || expired) {

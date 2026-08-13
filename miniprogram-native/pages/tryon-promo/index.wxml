@@ -11,7 +11,7 @@
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
       <text class="cta-main">新人首单 ¥9.9 试穿</text>
-      <text class="cta-sub">9 次普通 + 1 次专业 · 限时体验</text>
+      <text class="cta-sub">10 次通用体验 · 限时</text>
     </view>
   </view>
 
@@ -51,17 +51,34 @@
       <view class="entry" bindtap="goSub" data-page="tryon-normal">
         <text class="entry-emoji">👕</text>
         <text class="entry-name">普通版</text>
-        <text class="entry-sub">快速看上身 · ¥59/月</text>
+        <text class="entry-sub">快速看上身 · ¥99/月</text>
       </view>
       <view class="entry pro" bindtap="goSub" data-page="tryon-pro">
         <text class="entry-emoji">✨</text>
         <text class="entry-name">专业版</text>
-        <text class="entry-sub">诊断+搭配 · ¥199/月</text>
+        <text class="entry-sub">诊断+搭配 · ¥199/季</text>
       </view>
       <view class="entry" bindtap="goSub" data-page="tryon-faq">
         <text class="entry-emoji">❓</text>
         <text class="entry-name">常见问题</text>
         <text class="entry-sub">隐私/效果/退订</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 套餐选择 -->
+  <view class="section">
+    <text class="sec-title">选择套餐</text>
+    <view class="package-list">
+      <view wx:for="{{packages}}" wx:key="id" class="package-card {{item.highlight ? 'highlight' : ''}}" bindtap="buyPackageById" data-id="{{item.id}}">
+        <view class="package-header">
+          <view>
+            <text class="package-name">{{item.name}}</text>
+            <text class="package-desc">{{item.desc}}</text>
+          </view>
+          <text class="package-price">¥{{item.price}}</text>
+        </view>
+        <view class="package-btn">立即购买</view>
       </view>
     </view>
   </view>
