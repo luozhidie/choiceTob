@@ -39,16 +39,24 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient();
     const { data: row } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
     if (!row) return NextResponse.json({ active: false, triesLeft: 0 });
-    if (row.type === "first" && (row.tries_left || 0) > 0) {
-      const { error } = await supabase
-        .from("tryon_entitlements")
-        .update({ tries_left: row.tries_left - 1, updated_at: new Date().toISOString() })
-        .eq("openid", openid);
-      if (error) console.error("[试衣扣减] 失败", error);
-      const { data: updated } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
-      return NextResponse.json(shape(updated));
+
+    const now = Date.now();
+    const expired = new Date(row.expires_at).getTime() <= now;
+    const triesLeft = row.tries_left || 0;
+
+    // 次数用完或已过期，直接返回失效
+    if (triesLeft <= 0 || expired) {
+      return NextResponse.json({ active: false, type: row.type, daysLeft: 0, triesLeft: 0, expires: row.expires_at });
     }
-    return NextResponse.json(shape(row));
+
+    // 所有套餐统一扣减 1 次
+    const { error } = await supabase
+      .from("tryon_entitlements")
+      .update({ tries_left: triesLeft - 1, updated_at: new Date().toISOString() })
+      .eq("openid", openid);
+    if (error) console.error("[试衣扣减] 失败", error);
+    const { data: updated } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
+    return NextResponse.json(shape(updated));
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "扣减失败" }, { status: 500 });
   }

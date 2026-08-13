@@ -7,11 +7,11 @@ import crypto from "crypto";
 
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
-const PACKAGES: Record<string, { type: string; days?: number }> = {
-  tryon_first_1yuan: { type: "first", days: 365 },
-  tryon_monthly_99: { type: "month", days: 30 },
-  tryon_quarter_199: { type: "quarter", days: 90 },
-  tryon_year_699: { type: "year", days: 365 },
+const PACKAGES: Record<string, { type: string; days: number; tries: number }> = {
+  tryon_first_1yuan: { type: "first", days: 365, tries: 1 },
+  tryon_monthly_99: { type: "month", days: 30, tries: 150 },
+  tryon_quarter_199: { type: "quarter", days: 90, tries: 400 },
+  tryon_year_699: { type: "year", days: 365, tries: 1000 },
 };
 
 export async function POST(request: NextRequest) {
@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// 发放/续期权益（按 openid 合并）
+// 发放/续期权益（按 openid 合并，有效期内续费次数叠加）
 async function grantEntitlement(supabase: any, openid: string, package_id: string) {
   const pkg = PACKAGES[package_id];
   if (!pkg) return;
   const now = Date.now();
-  const windowMs = (pkg.days || 365) * 86400000;
+  const windowMs = pkg.days * 86400000;
   const computedExpires = now + windowMs;
 
   const { data: exist } = await supabase
@@ -76,16 +76,23 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
   let type: string;
 
   if (exist) {
-    finalExpires = Math.max(new Date(exist.expires_at).getTime(), computedExpires);
+    const existExpires = new Date(exist.expires_at).getTime();
+    finalExpires = Math.max(existExpires, computedExpires);
+    const expired = existExpires <= now;
     if (pkg.type === "first") {
-      triesLeft = (exist.tries_left || 0) + 1;
+      // 首单体验：每人只叠加 1 次（防薅羊毛）
+      triesLeft = Math.min((exist.tries_left || 0) + 1, 1);
+    } else if (expired) {
+      // 已过期：重新发次数
+      triesLeft = pkg.tries;
     } else {
-      triesLeft = 99999;
+      // 有效期内续费：次数叠加
+      triesLeft = (exist.tries_left || 0) + pkg.tries;
     }
     type = pkg.type === "first" ? (exist.type !== "first" ? exist.type : "first") : pkg.type;
   } else {
     finalExpires = computedExpires;
-    triesLeft = pkg.type === "first" ? 1 : 99999;
+    triesLeft = pkg.tries;
     type = pkg.type;
   }
 
