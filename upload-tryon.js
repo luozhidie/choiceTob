@@ -13,8 +13,8 @@ const project = new ci.Project({
   ignores: ['node_modules/**/*', '.git/**/*', '**/*.map'],
 });
 
-const version = '1.4.6';
-const desc = 'fix: 专业版移除色彩季型，仅保留穿衣风格诊断';
+const version = '1.4.7';
+const desc = 'fix: 试衣套餐改为有限次数，与服务端一致';
 
 ci.upload({
   project,

@@ -15,8 +15,8 @@ const project = new ci.Project({
 
 ci.preview({
   project,
-  version: '1.4.6',
-  desc: 'preview 验证专业版移除色彩季型',
+  version: '1.4.7',
+  desc: 'preview 验证有限次数套餐',
   setting: { urlCheck: false, es6: true, minified: false },
   qrcodeFormat: 'image',
   qrcodeOutputDest: '/workspace/choiceTob-new/验证用-开发版预览码.png',
