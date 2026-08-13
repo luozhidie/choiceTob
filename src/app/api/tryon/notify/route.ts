@@ -3,7 +3,7 @@
 // 与生产 /api/wechat-pay/notify 完全独立，互不干扰。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import crypto from "crypto";
+import { parseXml, signMd5 } from "@/lib/wechat-pay";
 
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
@@ -119,24 +119,11 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
   else console.log("[试衣权益发放] 成功", { openid, type, normalLeft, proLeft });
 }
 
-function signMd5(params: Record<string, string>) {
-  const sorted = Object.keys(params).sort().map((k) => `${k}=${params[k]}`).join("&") + `&key=${APIV2_KEY}`;
-  return crypto.createHash("md5").update(sorted, "utf8").digest("hex").toUpperCase();
-}
-
 function buildXml(obj: Record<string, string>) {
   let xml = "<xml>";
   for (const [k, v] of Object.entries(obj)) xml += `<${k}>${v}</${k}>`;
   xml += "</xml>";
   return xml;
-}
-
-function parseXml(xml: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const regex = /<([^>]+)>([^<]*)<\/\1>/g;
-  let match;
-  while ((match = regex.exec(xml)) !== null) result[match[1]] = match[2];
-  return result;
 }
 
 function xmlResp(obj: Record<string, string>) {

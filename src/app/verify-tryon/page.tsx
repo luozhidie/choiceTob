@@ -81,6 +81,22 @@ export default function VerifyTryonPage() {
     }
   }
 
+  async function manualCheck() {
+    if (!orderNo) return;
+    setErr('');
+    try {
+      const res = await fetch('/api/tryon/order-query?order_no=' + encodeURIComponent(orderNo));
+      const d = await res.json();
+      if (!res.ok) throw new Error(d.error || '查单失败');
+      setEnt(d.entitlement || null);
+      if (d.entitlement && (d.entitlement.normal_left > 0 || d.entitlement.pro_left > 0)) {
+        setStatus('done');
+      }
+    } catch (e: any) {
+      setErr(e.message || '查单失败');
+    }
+  }
+
   return (
     <main
       style={{
@@ -147,6 +163,23 @@ export default function VerifyTryonPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qrData} alt="pay-qr" width={240} height={240} />
               </div>
+              <button
+                onClick={manualCheck}
+                style={{
+                  width: '100%',
+                  marginTop: 14,
+                  padding: '12px 0',
+                  borderRadius: 10,
+                  border: '1px solid rgba(201,162,75,0.5)',
+                  background: 'transparent',
+                  color: '#C9A24B',
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                我已支付，手动查单补发
+              </button>
             </>
           )}
         </div>
