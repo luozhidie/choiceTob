@@ -184,34 +184,52 @@ Page({
     var t = this;
     wx.chooseMedia({
       count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      sizeType: ['compressed', 'original'],
       success: function (res) {
         var f = res.tempFiles && res.tempFiles[0];
         if (!f) return;
-        wx.showLoading({ title: '上传衣服图...' });
-        wx.uploadFile({
-          url: BASE + '/api/upload',
-          filePath: f.tempFilePath,
-          name: 'file',
-          success: function (up) {
-            wx.hideLoading();
-            var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
-            var url = d.url || (d.data && d.data.url);
-            if (!url) {
-              var errMsg = d.error || '上传失败';
-              wx.showModal({ title: '上传失败', content: String(errMsg).slice(0, 120), showCancel: false });
-              console.error('[chooseCloth] 上传无 url', d);
-              return;
-            }
-            var item = { id: 'cloth_' + Date.now(), title: '上传的衣服', cover: url, price: '', seasons: [], styles: [], category: '' };
-            t.setData({ tray: t.data.tray.concat([item]) });
-            wx.showToast({ title: '已加入造型', icon: 'none' });
-          },
-          fail: function (err) {
-            wx.hideLoading();
-            wx.showModal({ title: '上传失败', content: '网络错误：' + (err && err.errMsg || '请检查网络与域名白名单'), showCancel: false });
-            console.error('[chooseCloth] uploadFile fail', err);
-          }
+        wx.showLoading({ title: '准备图片...' });
+        // 压缩+转码为 JPG，规避 iPhone HEIC 与超 5MB 限制
+        wx.compressImage({
+          src: f.tempFilePath,
+          quality: 80,
+          compressedWidth: 1000,
+          success: function (c) { t._uploadCloth(c.tempFilePath); },
+          fail: function () { t._uploadCloth(f.tempFilePath); }
         });
+      }
+    });
+  },
+
+  _uploadCloth: function (filePath) {
+    var t = this;
+    wx.showLoading({ title: '上传衣服图...' });
+    wx.uploadFile({
+      url: BASE + '/api/upload',
+      filePath: filePath,
+      name: 'file',
+      success: function (up) {
+        wx.hideLoading();
+        var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
+        var url = d.url || (d.data && d.data.url);
+        if (!url) {
+          var errMsg = d.error || '服务器未返回图片地址';
+          wx.showModal({ title: '上传失败', content: String(errMsg).slice(0, 140), showCancel: false });
+          console.error('[chooseCloth] 上传无 url', d);
+          return;
+        }
+        var item = { id: 'cloth_' + Date.now(), title: '上传的衣服', cover: url, price: '', seasons: [], styles: [], category: '' };
+        t.setData({ tray: t.data.tray.concat([item]) });
+        wx.showToast({ title: '已加入造型', icon: 'none' });
+      },
+      fail: function (err) {
+        wx.hideLoading();
+        var em = (err && err.errMsg) || '';
+        var tip = em.indexOf('domain') > -1
+          ? '域名不在白名单：请到微信公众平台→开发→开发设置→uploadFile合法域名添加 https://colour-choice.art'
+          : ('网络错误：' + em);
+        wx.showModal({ title: '上传失败', content: tip.slice(0, 200), showCancel: false });
+        console.error('[chooseCloth] uploadFile fail', err);
       }
     });
   },
