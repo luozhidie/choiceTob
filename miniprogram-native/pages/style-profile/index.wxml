@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="hero">
+    <text class="ht">我的形象档案</text>
+    <text class="hs">完成诊断，AI 搭配更精准：按你的色彩季型、风格、身材与常去场合生成造型。</text>
+  </view>
+
+  <view class="card">
+    <text class="ct">色彩季型（选 1 个）</text>
+    <view class="chips">
+      <text wx:for="{{seasonTypes}}" wx:key="code" class="chip {{seasonType===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setSeason">{{item.name}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="ct">穿衣风格（可多选）</text>
+    <view class="chips">
+      <text wx:for="{{styleTagsList}}" wx:key="code" class="chip {{styleTags.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleStyle">{{item.name}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="ct">常去场合（可多选）</text>
+    <view class="chips">
+      <text wx:for="{{occasionsList}}" wx:key="code" class="chip {{occasions.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleOccasion">{{item.name}}</text>
+    </view>
+  </view>
+
+  <view class="card">
+    <text class="ct">身材与尺码</text>
+    <view class="row"><text class="lab">身高(cm)</text><input class="inp" type="digit" value="{{height}}" data-f="height" bindinput="onInput" placeholder="如 165"/></view>
+    <view class="row"><text class="lab">体重(kg)</text><input class="inp" type="digit" value="{{weight}}" data-f="weight" bindinput="onInput" placeholder="如 52"/></view>
+    <view class="row"><text class="lab">上装尺码</text><input class="inp" value="{{sizes.top}}" data-k="top" bindinput="onSize" placeholder="如 M"/></view>
+    <view class="row"><text class="lab">下装尺码</text><input class="inp" value="{{sizes.bottom}}" data-k="bottom" bindinput="onSize" placeholder="如 L"/></view>
+    <view class="row"><text class="lab">鞋码</text><input class="inp" type="digit" value="{{sizes.shoe}}" data-k="shoe" bindinput="onSize" placeholder="如 38"/></view>
+    <view class="row"><text class="lab">身材特点</text><input class="inp" value="{{bodyType}}" data-f="bodyType" bindinput="onInput" placeholder="如 梨形/沙漏型"/></view>
+  </view>
+
+  <view class="card">
+    <text class="ct">全身照（用于试衣合成）</text>
+    <view class="photo" bindtap="choosePhoto">
+      <image wx:if="{{fullBodyPhoto}}" src="{{fullBodyPhoto}}" mode="aspectFill" class="pimg"/>
+      <text wx:else class="ph">上传全身照</text>
+    </view>
+  </view>
+
+  <view class="save-btn" bindtap="save">保存形象档案</view>
+  <view class="bottom-pad"></view>
+</view>

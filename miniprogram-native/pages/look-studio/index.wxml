@@ -88,7 +88,8 @@
     <view class="tabs">
       <text class="tab {{mode==='look'?'on':''}}" data-m="look" bindtap="setMode">造型</text>
       <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>
-      <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按风格生成</text>
+      <text class="tab {{mode==='closet'?'on':''}}" data-m="closet" bindtap="setMode">我的衣橱</text>
+      <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按形象生成</text>
     </view>
 
     <view wx:if="{{mode==='look'}}" class="grid2">
@@ -102,19 +103,20 @@
       <view wx:if="{{lookCards.length===0}}" class="empty">暂无足够商品，去「手工组合」挑选</view>
     </view>
 
-    <view wx:if="{{mode==='buyer'}}">
-      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
-        <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{buyerStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setBuyer">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 买手</text>
-      </scroll-view>
+    <view wx:if="{{mode==='closet'}}" class="closet-box">
+      <text class="cl-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配；试穿时也能直接试你自己的衣服。</text>
+      <view class="cl-upload" bindtap="uploadToCloset"><text>＋ 上传单品到衣橱</text></view>
       <view class="grid3">
-        <view wx:for="{{buyerProducts}}" wx:key="id" class="pcard">
-          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-          <text class="ptitle">{{item.title}}</text>
-          <text class="pprice">¥{{item.price}}</text>
-          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+        <view wx:for="{{closetItems}}" wx:key="id" class="pcard">
+          <image src="{{item.image_url}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.catName}}</text>
+          <view class="cl-acts">
+            <text class="cl-add" data-id="{{item.id}}" bindtap="addClosetToTray">加入</text>
+            <text class="cl-del" data-id="{{item.id}}" bindtap="delCloset">删除</text>
+          </view>
         </view>
       </view>
-      <view wx:if="{{buyerProducts.length===0}}" class="empty">该买手暂无匹配商品</view>
+      <view wx:if="{{closetItems.length===0}}" class="empty">衣橱空空，先上传你的单品吧</view>
     </view>
 
     <view wx:if="{{mode==='manual'}}">

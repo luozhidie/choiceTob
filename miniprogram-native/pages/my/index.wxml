@@ -320,6 +320,13 @@
       </view>
       <view class="te-btn">去试衣 ›</view>
     </view>
+    <view class="tryon-entry alt" bindtap="goStyleProfile">
+      <view class="te-left">
+        <text class="te-title">我的形象档案</text>
+        <text class="te-desc">填色彩季型与风格，AI 搭配更精准</text>
+      </view>
+      <view class="te-btn">去填写 ›</view>
+    </view>
   </view>
 
   <!-- ========== 我的服务（保留原功能入口） ========== -->

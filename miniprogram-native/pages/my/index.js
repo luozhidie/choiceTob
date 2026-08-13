@@ -295,6 +295,7 @@ Page({
   goPersonalImage:function(){wx.navigateTo({url:'/pages/personal-image/index'});},
   goStyleTest:function(){wx.navigateTo({url:'/pages/diagnosis-form/index'});},
   goLookStudio:function(){wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});},
+  goStyleProfile:function(){wx.navigateTo({url:'/pages/style-profile/index'});},
   goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},

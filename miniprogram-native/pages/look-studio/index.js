@@ -17,6 +17,9 @@ var PACKAGES = [
   { id: 'tryon_year_699',    name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次通用试穿', type: 'year',    days: 365, normal: 1000, pro: 0 },
 ];
 
+// 衣橱品类中文名
+var CAT_NAMES = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋', accessory: '配饰' };
+
 // 价格：数据库按分存，展示为元
 function fmtPrice(n) {
   if (n == null) return '0';
@@ -39,6 +42,7 @@ Page({
     lookCards: [],
     buyerProducts: [],
     browseProducts: [],
+    closetItems: [],
     mode: 'look',
     mySeason: '',
     myStyle: '',
@@ -70,6 +74,7 @@ Page({
     this.setData({ agreedAuth: getAuth() });
     this.syncEntitlement();
     this.loadData();
+    this.loadCloset();
   },
 
   // 从服务端拉取权益（权威），并写入缓存 + 刷新 UI
@@ -234,6 +239,95 @@ Page({
     });
   },
 
+  // —— 我的衣橱（toC 形象管理）——
+  loadCloset: function () {
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/closet?openid=' + encodeURIComponent(openid),
+        success: function (r) {
+          var items = (r.data && r.data.items) || [];
+          items.forEach(function (it) { it.catName = CAT_NAMES[it.category] || it.category || '单品'; });
+          t.setData({ closetItems: items });
+        }
+      });
+    }).catch(function () {});
+  },
+
+  uploadToCloset: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      sizeType: ['compressed', 'original'],
+      success: function (res) {
+        var f = res.tempFiles && res.tempFiles[0];
+        if (!f) return;
+        wx.showLoading({ title: '准备图片...' });
+        wx.compressImage({
+          src: f.tempFilePath, quality: 80, compressedWidth: 1000,
+          success: function (c) { t._uploadCloset(c.tempFilePath); },
+          fail: function () { t._uploadCloset(f.tempFilePath); }
+        });
+      }
+    });
+  },
+
+  _uploadCloset: function (filePath) {
+    var t = this;
+    wx.showLoading({ title: '上传到衣橱...' });
+    wx.uploadFile({
+      url: BASE + '/api/upload', filePath: filePath, name: 'file',
+      success: function (up) {
+        wx.hideLoading();
+        var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
+        var url = d.url || (d.data && d.data.url);
+        if (!url) { wx.showModal({ title: '上传失败', content: String(d.error || '服务器未返回地址').slice(0, 140), showCancel: false }); return; }
+        app.getOpenid().then(function (openid) {
+          wx.request({
+            url: BASE + '/api/closet', method: 'POST',
+            data: { openid: openid, image_url: url, category: 'top' },
+            success: function () { t.loadCloset(); wx.showToast({ title: '已加入衣橱', icon: 'none' }); },
+            fail: function () { wx.showToast({ title: '保存失败', icon: 'none' }); }
+          });
+        }).catch(function () { wx.showToast({ title: '请先登录', icon: 'none' }); });
+      },
+      fail: function (err) {
+        wx.hideLoading();
+        var em = (err && err.errMsg) || '';
+        var tip = em.indexOf('domain') > -1 ? '域名不在白名单：请到微信公众平台→开发设置→uploadFile合法域名添加 https://colour-choice.art' : ('网络错误：' + em);
+        wx.showModal({ title: '上传失败', content: tip.slice(0, 200), showCancel: false });
+      }
+    });
+  },
+
+  addClosetToTray: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var it = this.data.closetItems.filter(function (x) { return x.id === id; })[0];
+    if (!it) return;
+    if (this.data.tray.some(function (x) { return x.id === id; })) return;
+    var item = { id: it.id, title: it.catName, cover: it.image_url, price: '', seasons: [], styles: [], category: it.category };
+    this.setData({ tray: this.data.tray.concat([item]) });
+    wx.showToast({ title: '已加入造型', icon: 'none' });
+  },
+
+  delCloset: function (e) {
+    var t = this;
+    var id = e.currentTarget.dataset.id;
+    wx.showModal({
+      title: '删除衣橱单品', content: '确定从衣橱删除这件？',
+      success: function (r) {
+        if (!r.confirm) return;
+        app.getOpenid().then(function (openid) {
+          wx.request({
+            url: BASE + '/api/closet?openid=' + encodeURIComponent(openid) + '&id=' + id,
+            method: 'DELETE',
+            success: function () { t.loadCloset(); }
+          });
+        }).catch(function () {});
+      }
+    });
+  },
+
   // —— 普通版：AI 帮我搭 ——
   smartPick: function () {
     var cards = this.data.lookCards;
@@ -324,15 +418,43 @@ Page({
   },
   autoGenerate: function () {
     var t = this;
-    var sc = this.data.mySeason ? [this.data.mySeason] : [];
-    var st = this.data.myStyle ? [this.data.myStyle] : [];
-    if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选风格', icon: 'none' }); return; }
-    var ranked = this.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
-      .filter(function (x) { return x.s > 0; })
-      .sort(function (a, b) { return b.s - a.s; })
-      .slice(0, 4).map(function (x) { return x.p; });
-    if (!ranked.length) { wx.showToast({ title: '暂无匹配单品', icon: 'none' }); return; }
-    this.setData({ tray: ranked, mode: 'auto' });
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/style-profile?openid=' + encodeURIComponent(openid),
+        success: function (r) {
+          var profile = (r.data && r.data.profile) || null;
+          var sc = (profile && profile.season_type) ? [profile.season_type] : (t.data.mySeason ? [t.data.mySeason] : []);
+          var st = (profile && profile.style_tags && profile.style_tags.length) ? profile.style_tags : (t.data.myStyle ? [t.data.myStyle] : []);
+          if (!sc.length && !st.length && !t.data.myStyle) {
+            wx.showModal({
+              title: '先完善形象档案',
+              content: '在「我的」→ 形象档案 完成色彩季型与风格诊断，生成会更精准。也可直接选下方风格后生成。',
+              confirmText: '去形象档案', cancelText: '先用风格',
+              success: function (m) { if (m.confirm) wx.navigateTo({ url: '/pages/style-profile/index' }); }
+            });
+            return;
+          }
+          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
+            .filter(function (x) { return x.s > 0; })
+            .sort(function (a, b) { return b.s - a.s; })
+            .slice(0, 6).map(function (x) { return x.p; });
+          if (!ranked.length) { wx.showToast({ title: '暂无匹配单品', icon: 'none' }); return; }
+          t.setData({ tray: ranked, mode: 'auto' });
+          wx.showToast({ title: '已按你的形象生成造型', icon: 'none' });
+        },
+        fail: function () {
+          var sc = t.data.mySeason ? [t.data.mySeason] : [];
+          var st = t.data.myStyle ? [t.data.myStyle] : [];
+          if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选风格', icon: 'none' }); return; }
+          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
+            .filter(function (x) { return x.s > 0; })
+            .sort(function (a, b) { return b.s - a.s; })
+            .slice(0, 6).map(function (x) { return x.p; });
+          if (!ranked.length) { wx.showToast({ title: '暂无匹配单品', icon: 'none' }); return; }
+          t.setData({ tray: ranked, mode: 'auto' });
+        }
+      });
+    }).catch(function () { wx.showToast({ title: '请先登录', icon: 'none' }); });
   },
 
   // —— 套餐面板 ——

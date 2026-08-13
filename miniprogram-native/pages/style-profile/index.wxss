@@ -1,0 +1,23 @@
+.page { padding: 24rpx 20rpx 0; background: #f6f3ef; min-height: 100vh; }
+.hero { background: linear-gradient(135deg,#2d1b2e,#7b4dff); border-radius: 20rpx; padding: 28rpx 26rpx; margin-bottom: 18rpx; }
+.ht { display: block; color: #fff; font-size: 34rpx; font-weight: 800; }
+.hs { display: block; color: rgba(255,255,255,.82); font-size: 22rpx; line-height: 1.6; margin-top: 8rpx; }
+
+.card { background: #fff; border-radius: 18rpx; padding: 22rpx 20rpx; margin-bottom: 16rpx; }
+.ct { display: block; font-size: 26rpx; font-weight: 700; color: #2d1b2e; margin-bottom: 14rpx; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 14rpx; }
+.chip { font-size: 23rpx; color: #555; background: #f3efe9; border: 1rpx solid #e7ded2; padding: 12rpx 22rpx; border-radius: 999rpx; }
+.chip.on { color: #fff; background: linear-gradient(135deg,#2d1b2e,#7b4dff); border-color: transparent; font-weight: 700; }
+
+.row { display: flex; align-items: center; padding: 14rpx 0; border-bottom: 1rpx solid #f1ece4; }
+.row:last-child { border-bottom: none; }
+.lab { width: 180rpx; font-size: 24rpx; color: #666; }
+.inp { flex: 1; font-size: 24rpx; color: #333; text-align: right; }
+
+.photo { width: 100%; height: 320rpx; background: #f3efe9; border: 1rpx dashed #d9cdb8; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.pimg { width: 100%; height: 100%; }
+.ph { color: #b0a48c; font-size: 24rpx; }
+
+.save-btn { margin: 8rpx 0 20rpx; background: linear-gradient(135deg,#2d1b2e,#7b4dff); color: #fff; font-size: 30rpx; font-weight: 800; text-align: center; padding: 26rpx 0; border-radius: 16rpx; }
+.bottom-pad { height: 40rpx; }
