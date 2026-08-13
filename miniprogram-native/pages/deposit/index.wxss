@@ -6,17 +6,19 @@ page{background: var(--bg);}
 .hdesc{font-size:25rpx;color:#888;margin-top:8rpx;display:block;line-height:1.5;}
 
 /* 卡片 */
-.cards{display:flex;gap:16rpx;padding:0 20rpx;}
+.cards{display:flex;flex-wrap:wrap;gap:16rpx;padding:0 20rpx;}
 .card{
-  flex:1;
+  width:calc(33.333% - 11rpx);
   background:linear-gradient(180deg,#fff 0%,#fef4f7 100%);
   border-radius:20rpx;
   padding:32rpx 18rpx 24rpx;
   text-align:center;
   position:relative;
   border:2rpx solid #fce4ec;
+  box-sizing:border-box;
 }
 .card-rec{border-color:#f8bbd0;background:linear-gradient(180deg,#fce4ec 0%,#fce4ec 100%);}
+.card-test{border-color:#C9A24B;background:linear-gradient(180deg,#fff 0%,#f9f6ed 100%);}
 .rec-tag{position:absolute;top:-12rpx;right:14rpx;background:#2d1b2e;color:#fff;font-size:19rpx;font-weight:700;padding:4rpx 18rpx;border-radius:14rpx;}
 
 .camt{font-size:44rpx;font-weight:800;color:#333;display:block;}

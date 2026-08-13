@@ -15,7 +15,16 @@ const PLANS: Record<string, {
   depositAmount: number; // 分
   discountRate: number;  // 0.28 = 2.8折
   returnRate: number;    // 0.05 = 5%
+  isTest?: boolean;
 }> = {
+  agent_test_cent: {
+    title: "充值链路测试",
+    totalFee: 1,
+    depositAmount: 1,
+    discountRate: 0.28,
+    returnRate: 0.05,
+    isTest: true,
+  },
   wholesale_5w: {
     title: "充值会员·5万",
     totalFee: 5000000,

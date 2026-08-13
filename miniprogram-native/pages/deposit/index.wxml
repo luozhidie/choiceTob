@@ -17,11 +17,12 @@
     </block>
   </view>
 
-  <!-- 3档卡片 -->
+  <!-- 4档卡片 -->
   <view class="cards">
-    <view class="card" bindtap="selectPlan" data-plan="{{plans[0]}}">
+    <view class="card card-test" bindtap="selectPlan" data-plan="{{plans[0]}}">
+      <view class="rec-tag">测试</view>
       <text class="camt">{{plans[0].amount}}</text>
-      <text class="csub">预存金额</text>
+      <text class="csub">支付金额</text>
       <text class="cdisc">{{plans[0].discount}}</text>
       <text class="crefund">退{{plans[0].refund}}%</text>
       <view class="cexample"><text>{{plans[0].example}}</text></view>
@@ -35,13 +36,21 @@
       <view class="cexample"><text>{{plans[1].example}}</text></view>
     </view>
 
-    <view class="card card-rec" bindtap="selectPlan" data-plan="{{plans[2]}}">
-      <view class="rec-tag">推荐</view>
+    <view class="card" bindtap="selectPlan" data-plan="{{plans[2]}}">
       <text class="camt">{{plans[2].amount}}</text>
       <text class="csub">预存金额</text>
       <text class="cdisc">{{plans[2].discount}}</text>
       <text class="crefund">退{{plans[2].refund}}%</text>
       <view class="cexample"><text>{{plans[2].example}}</text></view>
+    </view>
+
+    <view class="card card-rec" bindtap="selectPlan" data-plan="{{plans[3]}}">
+      <view class="rec-tag">推荐</view>
+      <text class="camt">{{plans[3].amount}}</text>
+      <text class="csub">预存金额</text>
+      <text class="cdisc">{{plans[3].discount}}</text>
+      <text class="crefund">退{{plans[3].refund}}%</text>
+      <view class="cexample"><text>{{plans[3].example}}</text></view>
     </view>
   </view>
 
