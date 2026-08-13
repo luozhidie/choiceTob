@@ -108,7 +108,7 @@ export default function TryonPromoPage() {
         <div style={{ background: "#fff", color: "#222", borderRadius: 16, padding: 16, marginBottom: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 20, fontWeight: 800 }}>普通版</span>
-            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥59<span style={{ fontSize: 13, color: "#aaa" }}/月</span></span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥59<span style={{ fontSize: 13, color: "#aaa" }}>/月</span></span>
           </div>
           <p style={{ fontSize: 13, color: "#888", margin: "8px 0 12px", lineHeight: 1.6 }}>最简单那种：传张人像 + 传件衣服，点一下就出图，跟你后台验收款式一个感觉。</p>
           {[
@@ -134,7 +134,7 @@ export default function TryonPromoPage() {
           <div style={{ position: "absolute", top: 0, right: 16, background: `linear-gradient(90deg, ${BRAND.gold}, #dab860)`, color: "#2d1b2e", fontSize: 12, fontWeight: 800, padding: "6px 14px", borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>更懂你 · 推荐</div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontSize: 20, fontWeight: 800 }}>专业版</span>
-            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥199<span style={{ fontSize: 13, color: "#aaa" }}/月起</span></span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥199<span style={{ fontSize: 13, color: "#aaa" }}>/月起</span></span>
           </div>
           <p style={{ fontSize: 13, color: "#888", margin: "8px 0 12px", lineHeight: 1.6 }}>普通版之上，多一个「懂你风格」——测完帮你搭、帮你选，不是瞎试。</p>
           {[
