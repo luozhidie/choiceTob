@@ -7,11 +7,12 @@ import { unifiedOrder, generateJsapiPayParams } from "@/lib/wechat-pay";
 import type { PayPlatform } from "@/lib/wechat-pay";
 
 // 与小程序端 PACKAGES 保持一致（服务端权威定价）
+// 金额与次数由服务端定死；days 为有效期（天），有效期内用完次数为止。
 const PACKAGES: Record<string, { name: string; price: number; unit: string; type: string; days: number; tries: number }> = {
-  tryon_first_1yuan: { name: "首单体验", price: 1, unit: "次", type: "first", days: 365, tries: 1 },
-  tryon_monthly_99: { name: "包月畅试", price: 99, unit: "月", type: "month", days: 30, tries: 150 },
-  tryon_quarter_199: { name: "季卡", price: 199, unit: "季", type: "quarter", days: 90, tries: 400 },
-  tryon_year_699: { name: "年卡", price: 699, unit: "年", type: "year", days: 365, tries: 1000 },
+  tryon_first_1yuan: { name: "首单体验", price: 9.9, unit: "次", type: "first", days: 365, tries: 10 },
+  tryon_monthly_99: { name: "月卡", price: 99, unit: "次", type: "month", days: 30, tries: 120 },
+  tryon_quarter_199: { name: "季卡", price: 199, unit: "次", type: "quarter", days: 90, tries: 280 },
+  tryon_year_699: { name: "年卡", price: 699, unit: "次", type: "year", days: 365, tries: 1000 },
 };
 
 export async function POST(request: NextRequest) {

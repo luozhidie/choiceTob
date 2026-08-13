@@ -8,7 +8,8 @@ function shape(row: any) {
   const now = Date.now();
   const expires = row ? new Date(row.expires_at).getTime() : 0;
   const triesLeft = row ? row.tries_left || 0 : 0;
-  const active = expires > now || triesLeft > 0;
+  // 有效期内且仍有剩余次数才有效（过期或次数用完均失效）
+  const active = expires > now && triesLeft > 0;
   const daysLeft = expires > now ? Math.max(0, Math.ceil((expires - now) / 86400000)) : 0;
   return {
     active,

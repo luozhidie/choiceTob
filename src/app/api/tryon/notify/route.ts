@@ -8,9 +8,9 @@ import crypto from "crypto";
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
 const PACKAGES: Record<string, { type: string; days: number; tries: number }> = {
-  tryon_first_1yuan: { type: "first", days: 365, tries: 1 },
-  tryon_monthly_99: { type: "month", days: 30, tries: 150 },
-  tryon_quarter_199: { type: "quarter", days: 90, tries: 400 },
+  tryon_first_1yuan: { type: "first", days: 365, tries: 10 },
+  tryon_monthly_99: { type: "month", days: 30, tries: 120 },
+  tryon_quarter_199: { type: "quarter", days: 90, tries: 280 },
   tryon_year_699: { type: "year", days: 365, tries: 1000 },
 };
 
@@ -80,8 +80,8 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     finalExpires = Math.max(existExpires, computedExpires);
     const expired = existExpires <= now;
     if (pkg.type === "first") {
-      // 首单体验：每人只叠加 1 次（防薅羊毛）
-      triesLeft = Math.min((exist.tries_left || 0) + 1, 1);
+      // 首单体验：每人只买一次，最多累计 10 次（防薅羊毛）
+      triesLeft = Math.min((exist.tries_left || 0) + pkg.tries, pkg.tries);
     } else if (expired) {
       // 已过期：重新发次数
       triesLeft = pkg.tries;
