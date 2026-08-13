@@ -1,0 +1,5 @@
+var formatMoney = function(cents){
+  if (!cents) return '0';
+  return (cents / 100).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+};
+module.exports = { formatMoney: formatMoney };

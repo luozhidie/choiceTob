@@ -1,9 +1,19 @@
 // app/api/wechat-pay/notify/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import crypto from 'crypto';
+import { parseXml, signMd5, buildXml } from "@/lib/wechat-pay";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
-const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
+export const dynamic = "force-dynamic";
+
+function getServiceRoleClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error("服务器配置错误：缺少 SUPABASE_SERVICE_ROLE_KEY");
+  }
+  return createSupabaseClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,13 +32,14 @@ export async function POST(request: NextRequest) {
       return new NextResponse(buildXml({ return_code: 'FAIL', return_msg: '签名失败' }), { headers: { 'Content-Type': 'application/xml' } });
     }
     
+    const out_trade_no = params.out_trade_no;
+    const transaction_id = params.transaction_id;
+
     // 更新订单状态 + 自动开通会员
     if (params.result_code === 'SUCCESS') {
       const supabase = await createClient();
-      const out_trade_no = params.out_trade_no;
-      const transaction_id = params.transaction_id;
       
-      // 1. 查询订单
+      // 1. 查询 orders 订单
       const { data: order } = await supabase
         .from('orders')
         .select('*')
@@ -73,22 +84,25 @@ export async function POST(request: NextRequest) {
         // 自动开通会员
         await autoActivateMembership(supabase, memberOrder.user_id, memberOrder.plan_id, out_trade_no);
       }
-    }
 
-    // 3. 词元计费订单（token_orders）：微信支付成功后激活 API Key
-    const { data: tokenOrder } = await supabase
-      .from('token_orders')
-      .select('api_key, status')
-      .eq('out_trade_no', out_trade_no)
-      .single();
-    if (tokenOrder && tokenOrder.status !== 'paid') {
-      await supabase
+      // 3. 词元计费订单（token_orders）：微信支付成功后激活 API Key
+      const { data: tokenOrder } = await supabase
         .from('token_orders')
-        .update({ status: 'paid', updated_at: new Date().toISOString(), paid_at: new Date().toISOString() })
-        .eq('out_trade_no', out_trade_no);
-      if (tokenOrder.api_key) {
-        await supabase.from('token_api_keys').update({ status: 'active' }).eq('api_key', tokenOrder.api_key);
+        .select('api_key, status')
+        .eq('out_trade_no', out_trade_no)
+        .single();
+      if (tokenOrder && tokenOrder.status !== 'paid') {
+        await supabase
+          .from('token_orders')
+          .update({ status: 'paid', updated_at: new Date().toISOString(), paid_at: new Date().toISOString() })
+          .eq('out_trade_no', out_trade_no);
+        if (tokenOrder.api_key) {
+          await supabase.from('token_api_keys').update({ status: 'active' }).eq('api_key', tokenOrder.api_key);
+        }
       }
+
+      // 4. 代理/预存货款充值订单：激活 deposit_discount 身份
+      await handleAgentRecharge(out_trade_no, transaction_id);
     }
 
     return new NextResponse(buildXml({ return_code: 'SUCCESS', return_msg: 'OK' }), { headers: { 'Content-Type': 'application/xml' } });
@@ -165,26 +179,60 @@ async function autoActivateMembership(supabase: any, userId: string, productId: 
   }
 }
 
-function signMd5(params: Record<string, string>) {
-  const sorted = Object.keys(params).sort().map(k => `${k}=${params[k]}`).join('&') + `&key=${APIV2_KEY}`;
-  return crypto.createHash('md5').update(sorted, 'utf8').digest('hex').toUpperCase();
-}
+// 代理/预存货款充值发放
+async function handleAgentRecharge(out_trade_no: string, transaction_id: string) {
+  try {
+    const supabase = getServiceRoleClient();
 
-function buildXml(obj: Record<string, string>) {
-  let xml = '<xml>';
-  for (const [k, v] of Object.entries(obj)) {
-    xml += `<${k}>${v}</${k}>`;
-  }
-  xml += '</xml>';
-  return xml;
-}
+    const { data: rec } = await supabase
+      .from('agent_recharges')
+      .select('*')
+      .eq('order_no', out_trade_no)
+      .single();
 
-function parseXml(xml: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const regex = /<([^>]+)>([^<]*)<\/\1>/g;
-  let match;
-  while ((match = regex.exec(xml)) !== null) {
-    result[match[1]] = match[2];
+    if (!rec || rec.status === 'paid') return;
+
+    // 更新订单为已支付
+    await supabase
+      .from('agent_recharges')
+      .update({
+        status: 'paid',
+        transaction_id,
+        paid_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('order_no', out_trade_no);
+
+    // 根据 openid 反查用户，更新 profiles
+    const openid = rec.openid;
+    const { data: byWechat } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('wechat_openid', openid)
+      .maybeSingle();
+    const { data: byWx } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('wx_openid', openid)
+      .maybeSingle();
+
+    const profile = byWechat || byWx;
+    if (profile?.id) {
+      await supabase
+        .from('profiles')
+        .update({
+          membership_type: 'deposit_discount',
+          deposit_amount: (rec.deposit_amount || 0),
+          deposit_discount_rate: rec.discount_rate,
+          deposit_return_rate: rec.return_rate,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', profile.id);
+      console.log('[代理充值] 已激活', { order: out_trade_no, user: profile.id });
+    } else {
+      console.log('[代理充值] 已到账，但未找到关联 profile，openid=', openid);
+    }
+  } catch (err: any) {
+    console.error('[代理充值回调错误]', err);
   }
-  return result;
 }

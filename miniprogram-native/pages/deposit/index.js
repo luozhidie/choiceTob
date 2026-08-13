@@ -1,14 +1,43 @@
 var app = getApp();
+var BASE = 'https://colour-choice.art';
 
 Page({
   data:{
     showPay:false,
     selectedPlan:null,
+    loading:false,
+    agentStatus:{ active:false, depositAmount:0, discountRate:1, returnRate:0 },
     plans:[
       {id:'wholesale_5w',name:'充值会员·5万',amount:'5万',amountLabel:'¥50,000',discount:'2.8折',refund:5,example:'原价¥100 → ¥28'},
       {id:'wholesale_10w',name:'充值会员·10万',amount:'10万',amountLabel:'¥100,000',discount:'2.8折',refund:10,example:'原价¥100 → ¥28'},
       {id:'wholesale_30w',name:'充值会员·30万',amount:'30万',amountLabel:'¥300,000',discount:'2.6折',refund:20,example:'原价¥100 → ¥26'},
     ],
+  },
+
+  onLoad:function(){ this.fetchAgentStatus(); },
+  onShow:function(){ this.fetchAgentStatus(); },
+
+  fetchAgentStatus:function(){
+    var t=this;
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:BASE+'/api/agent/me?openid='+encodeURIComponent(openid),
+        success:function(r){
+          var d=r.data||{};
+          t.setData({ agentStatus:{
+            active:!!d.active,
+            depositAmount:d.depositAmount||0,
+            discountRate:d.discountRate||1,
+            returnRate:d.returnRate||0,
+            lastRecharge:d.lastRecharge||null,
+          }});
+        }
+      });
+    }).catch(function(){});
+  },
+
+  formatMoney:function(cents){
+    return (cents/100).toLocaleString('zh-CN',{minimumFractionDigits:0,maximumFractionDigits:0});
   },
 
   selectPlan:function(e){var p=e.currentTarget.dataset.plan;this.setData({selectedPlan:p,showPay:true});},
@@ -17,35 +46,50 @@ Page({
   confirmPay:function(){
     var t=this;
     var p=this.data.selectedPlan;
-    if(!p)return;
+    if(!p||t.data.loading)return;
 
-    var feeMap={'wholesale_5w':5000000,'wholesale_10w':10000000,'wholesale_30w':30000000};
+    t.setData({loading:true});
+    wx.showLoading({title:'正在调起支付...'});
 
     app.getOpenid().then(function(openid){
-      wx.showLoading({title:'正在调起支付...'});
       wx.request({
-        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        url:BASE+'/api/agent/recharge',
         method:'POST',
-        data:{product_id:p.id,product_title:p.name,total_fee:feeMap[p.id]||5000000,quantity:1,platform:'mini',openid:openid},
+        data:{plan_id:p.id, openid:openid, platform:'mini'},
         success:function(r){
           wx.hideLoading();
           var d=r.data||{};
+          t.setData({loading:false});
           if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-          var pm=d.jsapi||d;
+
           wx.requestPayment({
-            timeStamp:pm.timeStamp||pm.timestamp,
-            nonceStr:pm.nonceStr,
-            package:pm.package,
-            signType:pm.signType||'MD5',
-            paySign:pm.paySign,
-            success:function(){wx.showToast({title:'充值成功',icon:'success'});t.setData({showPay:false});},
-            fail:function(){wx.showToast({title:'支付取消',icon:'none'});}
+            timeStamp:d.timeStamp,
+            nonceStr:d.nonceStr,
+            package:d.package,
+            signType:d.signType||'MD5',
+            paySign:d.paySign,
+            success:function(){
+              wx.showToast({title:'支付成功',icon:'success'});
+              t.setData({showPay:false});
+              // 延迟后刷新状态
+              setTimeout(function(){t.fetchAgentStatus();},1200);
+            },
+            fail:function(err){
+              console.log('支付取消/失败',err);
+              wx.showToast({title:'支付取消',icon:'none'});
+            }
           });
         },
-        fail:function(){wx.hideLoading();wx.showToast({title:'网络错误',icon:'none'});}
+        fail:function(){
+          wx.hideLoading();
+          t.setData({loading:false});
+          wx.showToast({title:'网络错误',icon:'none'});
+        }
       });
-    }).catch(function(){
-      wx.showToast({title:'无法调起微信支付',icon:'none'});
+    }).catch(function(err){
+      wx.hideLoading();
+      t.setData({loading:false});
+      wx.showToast({title:'无法获取 openid',icon:'none'});
     });
   },
 

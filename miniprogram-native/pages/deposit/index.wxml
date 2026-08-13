@@ -1,8 +1,21 @@
+<wxs src="./format.wxs" module="fmt" />
 <view class="page">
   <!-- 标题区 -->
   <view class="header">
     <view class="htitle"><text>📦 预存货款 · 折扣拿货</text></view>
     <text class="hdesc">预存越多，折扣越低。预存款可用于采购下单，随时退。</text>
+  </view>
+
+  <!-- 当前权益 -->
+  <view class="status-bar {{agentStatus.active?'active':''}}">
+    <block wx:if="{{agentStatus.active}}">
+      <text class="st-main">已激活：预存 ¥{{fmt.formatMoney(agentStatus.depositAmount)}}</text>
+      <text class="st-sub">拿货 {{(agentStatus.discountRate*10).toFixed(1)}} 折 · 可退 {{(agentStatus.returnRate*100).toFixed(0)}}%</text>
+    </block>
+    <block wx:else>
+      <text class="st-main">未开通预存货款会员</text>
+      <text class="st-sub">充值后即可享受批发折扣价</text>
+    </block>
   </view>
 
   <!-- 3档卡片 -->
@@ -44,7 +57,9 @@
       <text class="mname">{{selectedPlan.name}}</text>
       <text class="mpr">{{selectedPlan.amountLabel}}</text>
       <text class="mdesc">{{selectedPlan.discount}} · 退{{selectedPlan.refund}}%可退</text>
-      <view class="mbtn" bindtap="confirmPay"><text>微信支付</text></view>
+      <view class="mbtn {{loading?'disabled':''}}" bindtap="{{loading?'noop':'confirmPay'}}">
+        <text>{{loading?'请稍候...':'微信支付'}}</text>
+      </view>
     </view>
   </view>
 </view>
