@@ -108,7 +108,15 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("[agent/recharge] 写入订单失败", insertError);
-      return NextResponse.json({ error: "创建充值订单失败" }, { status: 500 });
+      const msg = String(insertError.message || "");
+      // 表不存在：通常是 Supabase 未执行建表 SQL
+      if (/relation "agent_recharges" does not exist|42P01/.test(msg)) {
+        return NextResponse.json(
+          { error: "数据库未初始化：请在 Supabase 执行 20260813_agent_recharge.sql 建表" },
+          { status: 500 }
+        );
+      }
+      return NextResponse.json({ error: "创建充值订单失败：" + msg }, { status: 500 });
     }
 
     // 调用微信统一下单
