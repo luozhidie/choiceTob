@@ -1,114 +1,114 @@
 <view class="page">
-  <!-- 顶部 Hero：深色 + 金色 -->
+  <!-- 顶部 Hero：深色 + 金色，首单直接锁死 -->
   <view class="hero">
     <view class="hero-tag">骆芷蝶智选 · AI 试衣</view>
     <text class="hero-title">先试再买\n穿上身再决定</text>
-    <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。\n好不好看，一眼就知道。</text>
+    <text class="hero-sub">把你平时的照片传上来，AI 把店里的衣服「穿」到你身上。好不好看、适不适合，一眼就清楚，省得买回来压箱底。</text>
     <view class="hero-badges">
-      <text class="badge">9.9 元首单</text>
+      <text class="badge">首单 ¥9.9</text>
       <text class="badge">30 秒出图</text>
-      <text class="badge">隐私保护</text>
+      <text class="badge">照片不外流</text>
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
       <text class="cta-main">新人首单 ¥9.9 试穿</text>
       <text class="cta-sub">9 次普通 + 1 次专业 · 限时体验</text>
     </view>
+    <text class="hero-foot">先试后买，少踩一次雷就回本了</text>
   </view>
 
-  <!-- 步骤：三步说明 -->
+  <!-- 三步，看见上身效果 -->
   <view class="section">
     <text class="sec-title">三步，看见上身效果</text>
     <view class="steps">
       <view class="step">
         <view class="step-num">1</view>
-        <text class="step-t">上传照片</text>
-        <text class="step-d">正面半身照，仅用于本次合成</text>
+        <text class="step-t">传照片</text>
+        <text class="step-d">一张日常的你，正面半身最好，只用来这次合成</text>
       </view>
       <view class="step-arrow">→</view>
       <view class="step">
         <view class="step-num">2</view>
-        <text class="step-t">挑选衣服</text>
-        <text class="step-d">从店铺商品里选，或 AI 推荐</text>
+        <text class="step-t">挑衣服</text>
+        <text class="step-d">店里随便挑，或自己拍件衣服图上来看看</text>
       </view>
       <view class="step-arrow">→</view>
       <view class="step">
         <view class="step-num">3</view>
-        <text class="step-t">生成上身图</text>
-        <text class="step-d">AI 合成真实穿着效果</text>
+        <text class="step-t">出上身图</text>
+        <text class="step-d">AI 帮你把衣服「穿」上，30 秒出效果</text>
       </view>
     </view>
   </view>
 
-  <!-- 版本对比：普通版 vs 专业版 -->
+  <!-- 版本对比 -->
   <view class="section">
-    <text class="sec-title">两个版本，按需选择</text>
-    <view class="version-card basic">
-      <view class="v-header">
+    <text class="sec-title">两个版本，按需挑</text>
+
+    <!-- 普通版 -->
+    <view class="vcard basic">
+      <view class="v-head">
         <text class="v-name">普通版</text>
-        <text class="v-price">¥9.9 起</text>
+        <text class="v-price">¥59<text class="v-unit">/月</text></text>
       </view>
-      <text class="v-desc">像后台验收一样简单：上传人像 + 上传衣服，点试穿</text>
-      <view class="v-features">
-        <text class="feature ok">✓ 上传自己的人像照片</text>
-        <text class="feature ok">✓ 上传想试穿的衣服照片</text>
-        <text class="feature ok">✓ 一键 AI 合成上身效果</text>
-        <text class="feature ok">✓ 也可以从店铺挑选商品试穿</text>
-        <text class="feature no">— 不含风格诊断</text>
-        <text class="feature no">— 不含 AI 智能搭配 / 买手推荐</text>
+      <text class="v-desc">最简单那种：传张人像 + 传件衣服，点一下就出图，跟你后台验收款式一个感觉。</text>
+      <view class="v-feat">
+        <text class="ok">✓ 传一张你自己的照片</text>
+        <text class="ok">✓ 传想试穿的衣服图（也能直接用店里的）</text>
+        <text class="ok">✓ 一键 AI 合成上身效果</text>
+        <text class="ok">✓ 店里商品也能直接拿来试</text>
+        <text class="no">— 不做穿衣风格诊断</text>
+        <text class="no">— 不配 AI 智能搭配 / 买手推荐</text>
       </view>
-      <view class="v-btn" bindtap="onFirstTry">¥9.9 先体验</view>
+      <view class="v-foot">
+        <text class="v-foot-t">普通月卡 ¥59 · 30 天 70 次</text>
+        <text class="v-tag">够日常挑款用</text>
+      </view>
+      <view class="v-btn basic-btn" bindtap="onFirstTry">¥9.9 新人首单体验</view>
     </view>
 
-    <view class="version-card pro">
-      <view class="v-badge">专业版</view>
-      <view class="v-header">
+    <!-- 专业版 -->
+    <view class="vcard pro">
+      <view class="v-badge">更懂你 · 推荐</view>
+      <view class="v-head">
         <text class="v-name">专业版</text>
-        <text class="v-price">¥199/月起</text>
+        <text class="v-price">¥199<text class="v-unit">/月起</text></text>
       </view>
-      <text class="v-desc">在普通版基础上，加风格诊断与智能搭配</text>
-      <view class="v-features">
-        <text class="feature ok">✓ 普通版全部功能</text>
-        <text class="feature ok">✓ 21 题穿衣风格诊断</text>
-        <text class="feature ok">✓ AI 按风格自动生成造型</text>
-        <text class="feature ok">✓ 专属买手推荐 + 优先新款</text>
+      <text class="v-desc">普通版之上，多一个「懂你风格」——测完帮你搭、帮你选，不是瞎试。</text>
+      <view class="v-feat">
+        <text class="ok">✓ 普通版能干的它都能</text>
+        <text class="ok">✓ 21 题穿衣风格诊断（先搞清自己适合啥）</text>
+        <text class="ok">✓ AI 按你的风格自动生成造型</text>
+        <text class="ok">✓ 专属买手推荐 + 新款优先看</text>
+      </view>
+      <view class="v-foot">
+        <text class="v-foot-t">专业月卡 ¥199/月起</text>
+        <text class="v-tag pro-tag">想认真穿好看就选它</text>
       </view>
       <view class="v-btn pro-btn" bindtap="onOpenPro">开通专业版</view>
-    </view>
-  </view>
-
-  <!-- 套餐 -->
-  <view class="section">
-    <text class="sec-title">试衣套餐</text>
-    <view wx:for="{{packages}}" wx:key="id" class="pkg-row {{item.highlight?'hl':''}}" data-id="{{item.id}}" bindtap="buyPackage">
-      <view class="pkg-info">
-        <text class="pkg-name">{{item.name}}</text>
-        <text class="pkg-desc">{{item.desc}}</text>
-      </view>
-      <view class="pkg-right">
-        <text class="pkg-price">¥{{item.price}}</text>
+      <view class="v-year" bindtap="buyPackage" data-id="tryon_pro_year_999">
+        或直接选年卡 · ¥999 / 365 天 1000 次专业诊断 ›
       </view>
     </view>
   </view>
 
   <!-- 常见问题 -->
   <view class="section faq">
-    <text class="sec-title">常见问题</text>
+    <text class="sec-title">几个你大概会问的</text>
     <view class="faq-item">
-      <text class="faq-q">照片会被保存或公开吗？</text>
-      <text class="faq-a">不会。照片仅用于本次 AI 试衣合成，处理后不保留、不公开。</text>
+      <text class="faq-q">我的照片会不会被拿去乱用？</text>
+      <text class="faq-a">不会。只用于这次试衣合成，用完不留存、不公开，你随时能让我们删掉。</text>
     </view>
     <view class="faq-item">
-      <text class="faq-q">试衣效果能当真实试穿看吗？</text>
-      <text class="faq-a">AI 合成效果仅供参考，帮助你判断款式、颜色是否适合自己。</text>
+      <text class="faq-q">试出来的效果能当真吗？</text>
+      <text class="faq-a">当参考最稳——帮你判断版型、颜色上身好不好看。真要下单还是以实物为准，别全信图。</text>
     </view>
     <view class="faq-item">
-      <text class="faq-q">专业版可以随时取消吗？</text>
-      <text class="faq-a">可以。到期不续费自动回到基础版，已购权益不受影响。</text>
+      <text class="faq-q">专业版不想要了能退吗？</text>
+      <text class="faq-a">到期不续就自动回普通版，已买的权益照常用，不扣不罚。想提前关也行，跟我们说一声。</text>
     </view>
   </view>
 
-  <!-- 底部占位，避免被固定栏遮挡 -->
-  <view style="height: 160rpx;"></view>
+  <view class="bottom-pad"></view>
 
   <!-- 底部固定 CTA -->
   <view class="bottom-bar">
@@ -119,6 +119,5 @@
     <view class="bottom-btn" bindtap="onFirstTry">立即试穿</view>
   </view>
 
-  <!-- 权益状态提示 -->
   <view wx:if="{{toast}}" class="toast">{{toast}}</view>
 </view>

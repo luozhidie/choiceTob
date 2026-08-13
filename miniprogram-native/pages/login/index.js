@@ -54,7 +54,7 @@ Page({
     var timeoutTimer=setTimeout(function(){
       if(t.data.loading){
         t.setData({loading:false});
-        wx.showToast({title:'��录超时，请重试或用其它方式',icon:'none',duration:2500});
+        wx.showToast({title:'登录超时，请重试或用其它方式',icon:'none',duration:2500});
       }
     },15000);
 

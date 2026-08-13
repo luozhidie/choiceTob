@@ -1,97 +1,31 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-
 /**
- * 虚拟试衣 · 独立推广落地页（扫码即用，不依赖登录）
- * 复用：/api/public/look-studio（公开数据） + /svc/tryon/api/multi-tryon（试衣代理）
- * 收款：/api/wechat-pay/unified-order（platform=native，返回微信扫码支付码）
- *
- * 说明：MVP 版为「免费带水印预览 + 付费去水印/下载/包月」freemium 形态。
- * 付费解锁在客户端做乐观解锁（点「我已支付」即解锁），服务端对账（tryon 订单表 + notify 分支）
- * 为下一步硬化，不影响本页可用性与线上支付。
+ * 虚拟试衣 · 推广落地页（与小程序 tryon-promo 同版式）
+ * 双轨定价：首单 ¥9.9 / 普通月卡 ¥59 / 专业月卡 ¥199 / 专业年卡 ¥999
+ * 网站支付：/api/wechat-pay/unified-order（platform=native，返回微信扫码支付码）
+ * 试衣动作引导至 /look-studio（扫码即用）
  */
 
-type Season = { code: string; name_zh: string; meta?: any };
-type StyleT = { code: string; name_zh: string; gender: string; is_main: boolean };
-type Product = { id: string; title: string; price: number; cover: string; seasons: string[]; styles: string[]; category: string };
-
-const BRAND = { bg: "#2d1b2e", gold: "#C9A24B", apricot: "#fcefe9", card: "rgba(255,255,255,0.06)", line: "rgba(201,162,75,0.35)" };
+const BRAND = { bg: "#2d1b2e", gold: "#C9A24B", apricot: "#fcefe9", card: "rgba(255,255,255,0.06)", line: "rgba(201,162,75,0.35)", sub: "rgba(255,255,255,.7)" };
 
 const PACKAGES = [
-  { id: "tryon_first_1yuan", label: "首单体验", price: 1, unit: "次", desc: "新人专享 1 次整体造型", highlight: true },
-  { id: "tryon_monthly_99", label: "包月畅试", price: 99, unit: "月", desc: "30 天无限次试穿 + 高清下载" },
-  { id: "tryon_quarter_199", label: "季卡", price: 199, unit: "季", desc: "90 天无限次 + 优先新款" },
-  { id: "tryon_year_699", label: "年卡", price: 699, unit: "年", desc: "365 天无限次 + 专属顾问" },
+  { id: "tryon_first_1yuan", label: "首单体验", price: 9.9, unit: "次", desc: "新人专享 9 次普通 + 1 次专业", highlight: true },
+  { id: "tryon_normal_monthly_59", label: "普通月卡", price: 59, unit: "月", desc: "30 天 70 次普通试穿" },
+  { id: "tryon_pro_monthly_199", label: "专业月卡", price: 199, unit: "月", desc: "30 天 200 次专业诊断" },
+  { id: "tryon_pro_year_999", label: "专业年卡", price: 999, unit: "年", desc: "365 天 1000 次专业诊断" },
 ];
 
+const firstPkg = PACKAGES[0];
+const proMonthPkg = PACKAGES[2];
+const proYearPkg = PACKAGES[3];
+
 export default function TryonPromoPage() {
-  const [data, setData] = useState<{ seasons: Season[]; styles: StyleT[]; products: Product[] }>({ seasons: [], styles: [], products: [] });
-  const [loadingData, setLoadingData] = useState(true);
-
-  const [personFile, setPersonFile] = useState<File | null>(null);
-  const [personPreview, setPersonPreview] = useState("");
-  const [tray, setTray] = useState<Product[]>([]);
-  const [filterSeason, setFilterSeason] = useState("");
-  const [result, setResult] = useState<{ url: string; credits: number } | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [err, setErr] = useState("");
-
-  const [paid, setPaid] = useState(false);
   const [pay, setPay] = useState<{ pkg: typeof PACKAGES[number]; codeUrl: string; orderNo: string } | null>(null);
   const [paying, setPaying] = useState(false);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-  const seasonMap = useMemo(() => Object.fromEntries(data.seasons.map((s) => [s.code, s])), [data.seasons]);
-  const styleMap = useMemo(() => Object.fromEntries(data.styles.map((s) => [s.code, s])), [data.styles]);
-
-  useEffect(() => {
-    fetch("/api/public/look-studio")
-      .then((r) => r.json())
-      .then((d) => setData({ seasons: d.seasons || [], styles: d.styles || [], products: d.products || [] }))
-      .catch(() => setErr("数据加载失败，请重试"))
-      .finally(() => setLoadingData(false));
-  }, []);
-
-  const browse = useMemo(() => {
-    let list = data.products;
-    if (filterSeason) list = list.filter((p) => (p.seasons || []).includes(filterSeason));
-    return list;
-  }, [data.products, filterSeason]);
-
-  const onPick = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setPersonFile(f);
-    setPersonPreview(URL.createObjectURL(f));
-  };
-
-  const addTray = (p: Product) => { if (!tray.find((t) => t.id === p.id)) setTray((t) => [...t, p]); };
-  const removeTray = (id: string) => setTray((t) => t.filter((x) => x.id !== id));
-
-  const runTryOn = async () => {
-    setErr("");
-    if (!personFile) { setErr("请先上传你的照片（用于把造型试穿到你身上）"); return; }
-    if (tray.length === 0) { setErr("请先添加至少 1 件单品到「我的造型」"); return; }
-    setLoading(true); setResult(null);
-    try {
-      const fd = new FormData();
-      fd.append("personImage", personFile);
-      fd.append("products", JSON.stringify(tray.map((p) => ({ url: p.cover, title: p.title }))));
-      fd.append("userId", "tryon-promo");
-      const res = await fetch("/svc/tryon/api/multi-tryon", { method: "POST", body: fd });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "试衣失败");
-      setResult({ url: json.resultUrl, credits: json.credits ?? tray.length });
-    } catch (e: any) {
-      setErr(e?.message || "试衣失败");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [err, setErr] = useState("");
 
   const startPay = async (pkg: typeof PACKAGES[number]) => {
-    if (!personFile || tray.length === 0) { setErr("请先完成「上传照片 + 选好单品」再购买"); return; }
     setPaying(true); setErr("");
     try {
       const r = await fetch("/api/wechat-pay/unified-order", {
@@ -100,7 +34,7 @@ export default function TryonPromoPage() {
         body: JSON.stringify({
           product_id: pkg.id,
           product_title: `骆芷蝶智选·虚拟试衣${pkg.label}`,
-          total_fee: pkg.price * 100,
+          total_fee: Math.round(pkg.price * 100),
           platform: "native",
         }),
       });
@@ -114,98 +48,138 @@ export default function TryonPromoPage() {
     }
   };
 
-  const confirmPaid = () => { setPaid(true); setPay(null); };
+  const confirmPaid = () => {
+    setPay(null);
+    setErr("支付成功～ 权益在小程序「我的」里查看，试衣去「立即试穿」");
+  };
 
   return (
     <main style={{ maxWidth: 720, margin: "0 auto", minHeight: "100vh", background: `linear-gradient(180deg, ${BRAND.bg}, #1c1020)`, color: "#fff", fontFamily: "system-ui, sans-serif", paddingBottom: 140 }}>
       {/* 顶部品牌条（柔杏色） */}
       <header style={{ position: "sticky", top: 0, zIndex: 20, background: BRAND.apricot, color: "#2d1b2e", padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", boxShadow: "0 2px 8px rgba(0,0,0,.15)" }}>
         <div style={{ fontWeight: 800, fontSize: 16 }}>骆芷蝶·智选 <span style={{ color: BRAND.gold }}>│ 虚拟试衣</span></div>
-        <div style={{ fontSize: 12, fontWeight: 600 }}>扫码即试 · 逛街网购先试穿</div>
+        <div style={{ fontSize: 12, fontWeight: 600 }}>扫码即试 · 先试再买</div>
       </header>
 
-      <section style={{ padding: "18px 14px 6px" }}>
-        <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800, color: BRAND.gold }}>AI 虚拟试衣 · 先试再买</h1>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,.7)", margin: "6px 0 0", lineHeight: 1.6 }}>
-          上传你的照片，把店里的衣服「穿」到你身上看效果。逛街前试、网购前试，不买错、不踩雷。
+      {/* Hero */}
+      <section style={{ padding: "30px 18px 18px", textAlign: "center" }}>
+        <span style={{ display: "inline-block", fontSize: 12, color: BRAND.gold, border: `1px solid ${BRAND.line}`, padding: "4px 14px", borderRadius: 20 }}>骆芷蝶智选 · AI 试衣</span>
+        <h1 style={{ fontSize: 30, margin: "16px 0 0", fontWeight: 800, lineHeight: 1.25 }}>先试再买<br />穿上身再决定</h1>
+        <p style={{ fontSize: 14, color: BRAND.sub, margin: "14px auto 0", lineHeight: 1.7, maxWidth: 560 }}>
+          把你平时的照片传上来，AI 把店里的衣服「穿」到你身上。好不好看、适不适合，一眼就清楚，省得买回来压箱底。
         </p>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 18, flexWrap: "wrap" }}>
+          {["首单 ¥9.9", "30 秒出图", "照片不外流"].map((b) => (
+            <span key={b} style={{ fontSize: 12, color: BRAND.apricot, background: "rgba(255,255,255,.12)", padding: "6px 14px", borderRadius: 20 }}>{b}</span>
+          ))}
+        </div>
+        <button onClick={() => startPay(firstPkg)} disabled={paying} style={{ marginTop: 22, width: "100%", maxWidth: 420, padding: "16px 0", borderRadius: 14, border: "none", background: `linear-gradient(90deg, ${BRAND.gold}, #dab860)`, color: "#2d1b2e", fontWeight: 800, fontSize: 18, boxShadow: "0 12px 30px rgba(201,162,75,.4)" }}>
+          {paying ? "调起支付…" : "新人首单 ¥9.9 试穿"}
+        </button>
+        <div style={{ fontSize: 13, color: "#5a4723", marginTop: 8, fontWeight: 600 }}>9 次普通 + 1 次专业 · 限时体验</div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.4)", marginTop: 10 }}>先试后买，少踩一次雷就回本了</div>
       </section>
 
-      {loadingData && <p style={{ textAlign: "center", color: "rgba(255,255,255,.6)", fontSize: 13 }}>加载中…</p>}
-      {err && <p style={{ color: "#ff9b9b", fontSize: 13, padding: "8px 14px" }}>{err}</p>}
+      {err && <p style={{ color: "#ff9b9b", fontSize: 13, padding: "6px 18px", textAlign: "center" }}>{err}</p>}
 
-      {/* ① 上传照片 */}
-      <Section title="① 上传你的照片（试穿对象）">
-        <div onClick={() => fileRef.current?.click()} style={{ width: 88, height: 116, borderRadius: 12, border: `1.5px dashed ${BRAND.gold}`, display: "flex", alignItems: "center", justifyContent: "center", color: BRAND.gold, fontSize: 12, textAlign: "center", overflow: "hidden", background: BRAND.card, cursor: "pointer", flexShrink: 0 }}>
-          {personPreview ? <img src={personPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="me" /> : "上传\n照片"}
-        </div>
-        <input ref={fileRef} type="file" accept="image/*" onChange={onPick} style={{ display: "none" }} />
-        <div style={{ flex: 1, fontSize: 12, color: "rgba(255,255,255,.6)", lineHeight: 1.7 }}>
-          上传即表示同意《试衣服务协议》与《隐私政策》。<br />照片仅用于本次试衣，加密存储，可随时删除。
-        </div>
-      </Section>
-
-      {/* ② 选单品 */}
-      <Section title="② 挑选单品（加入我的造型）">
-        <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
-          <Chip on={filterSeason === ""} onClick={() => setFilterSeason("")}>全部</Chip>
-          {data.seasons.map((s) => <Chip key={s.code} on={filterSeason === s.code} onClick={() => setFilterSeason(s.code)}>{s.name_zh}</Chip>)}
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-          {browse.slice(0, 30).map((p) => {
-            const added = !!tray.find((t) => t.id === p.id);
-            return (
-              <div key={p.id} style={{ background: BRAND.card, borderRadius: 10, padding: 6, border: `1px solid ${BRAND.line}` }}>
-                <img src={p.cover} style={{ width: "100%", height: 120, objectFit: "cover", borderRadius: 8 }} alt={p.title} />
-                <div style={{ fontSize: 11, color: "#eee", marginTop: 4, lineHeight: 1.3, height: 28, overflow: "hidden" }}>{p.title}</div>
-                <button onClick={() => addTray(p)} disabled={added} style={{ width: "100%", marginTop: 4, padding: "7px 0", borderRadius: 8, border: "none", background: added ? "#555" : BRAND.gold, color: added ? "#ccc" : "#2d1b2e", fontWeight: 700, fontSize: 12 }}>{added ? "已加入" : "加入造型"}</button>
-              </div>
-            );
-          })}
-        </div>
-      </Section>
-
-      {/* ③ 我的造型 + 试衣 */}
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, background: "#1c1020", borderTop: `1px solid ${BRAND.line}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, maxWidth: 720, margin: "0 auto", zIndex: 20 }}>
-        <div style={{ flex: 1, display: "flex", gap: 6, overflowX: "auto" }}>
-          {tray.length === 0 && <span style={{ fontSize: 12, color: "rgba(255,255,255,.5)" }}>「我的造型」空空如也</span>}
-          {tray.map((p) => (
-            <div key={p.id} style={{ position: "relative", flexShrink: 0 }}>
-              <img src={p.cover} style={{ width: 44, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #444" }} alt={p.title} />
-              <span onClick={() => removeTray(p.id)} style={{ position: "absolute", top: -6, right: -6, background: "#c0392b", color: "#fff", borderRadius: "50%", width: 18, height: 18, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>×</span>
+      {/* 三步 */}
+      <Section title="三步，看见上身效果">
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          {[
+            { n: "1", t: "传照片", d: "一张日常的你，正面半身最好，只用来这次合成" },
+            { n: "2", t: "挑衣服", d: "店里随便挑，或自己拍件衣服图上来看看" },
+            { n: "3", t: "出上身图", d: "AI 帮你把衣服「穿」上，30 秒出效果" },
+          ].map((s, i) => (
+            <div key={s.n} style={{ flex: 1, textAlign: "center" }}>
+              <div style={{ width: 40, height: 40, lineHeight: "40px", borderRadius: "50%", background: BRAND.bg, color: BRAND.gold, fontWeight: 800, margin: "0 auto 10px" }}>{s.n}</div>
+              <div style={{ fontSize: 15, fontWeight: 700 }}>{s.t}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,.55)", marginTop: 6, lineHeight: 1.5 }}>{s.d}</div>
+              {i < 2 && <div style={{ display: "none" }} />}
             </div>
           ))}
         </div>
-        <button onClick={runTryOn} disabled={loading || tray.length === 0} style={{ padding: "11px 16px", borderRadius: 10, border: "none", background: loading ? "#666" : BRAND.gold, color: "#2d1b2e", fontWeight: 800, fontSize: 13, whiteSpace: "nowrap" }}>
-          {loading ? "生成中…" : `试穿 (${tray.length}件)`}
-        </button>
-      </div>
+      </Section>
 
-      {/* 结果弹层 */}
-      {result && (
-        <div onClick={() => setResult(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.88)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50 }}>
-          <div style={{ color: "#fff", fontSize: 13, marginBottom: 8 }}>整体造型已生成 · 消耗 {result.credits} credit</div>
-          <div style={{ position: "relative", maxWidth: "100%" }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={result.url} style={{ maxWidth: "100%", maxHeight: "68vh", borderRadius: 12, border: `1px solid ${BRAND.line}`, filter: paid ? "none" : "blur(0px)" }} alt="look" />
-            {!paid && (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
-                <span style={{ transform: "rotate(-18deg)", color: "rgba(201,162,75,.85)", fontSize: 22, fontWeight: 800, border: `3px solid rgba(201,162,75,.85)`, padding: "6px 14px", borderRadius: 8 }}>AI 虚拟试衣 · 预览</span>
-              </div>
-            )}
+      {/* 版本对比 */}
+      <Section title="两个版本，按需挑">
+        {/* 普通版 */}
+        <div style={{ background: "#fff", color: "#222", borderRadius: 16, padding: 16, marginBottom: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontSize: 20, fontWeight: 800 }}>普通版</span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥59<span style={{ fontSize: 13, color: "#aaa" }}/月</span></span>
           </div>
-          <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 14, width: "100%", maxWidth: 360 }}>
-            {!paid ? (
-              <button onClick={() => startPay(PACKAGES[0])} disabled={paying} style={{ width: "100%", padding: "13px 0", borderRadius: 10, border: "none", background: BRAND.gold, color: "#2d1b2e", fontWeight: 800, fontSize: 15 }}>
-                {paying ? "调起支付…" : "¥1 首单体验 · 去水印 + 高清下载"}
-              </button>
-            ) : (
-              <a href={result.url} download style={{ display: "block", textAlign: "center", width: "100%", padding: "13px 0", borderRadius: 10, border: "none", background: BRAND.gold, color: "#2d1b2e", fontWeight: 800, fontSize: 15, textDecoration: "none" }}>下载高清造型图</a>
-            )}
-            <div style={{ color: "#bbb", fontSize: 12, marginTop: 8, textAlign: "center" }} onClick={(e) => e.stopPropagation()}>点击空白处关闭</div>
+          <p style={{ fontSize: 13, color: "#888", margin: "8px 0 12px", lineHeight: 1.6 }}>最简单那种：传张人像 + 传件衣服，点一下就出图，跟你后台验收款式一个感觉。</p>
+          {[
+            "传一张你自己的照片",
+            "传想试穿的衣服图（也能直接用店里的）",
+            "一键 AI 合成上身效果",
+            "店里商品也能直接拿来试",
+          ].map((t) => <div key={t} style={{ fontSize: 14, color: "#222", lineHeight: 1.9 }}>✓ {t}</div>)}
+          <div style={{ fontSize: 13, color: "#bbb", lineHeight: 1.9, marginTop: 4 }}>
+            — 不做穿衣风格诊断<br />— 不配 AI 智能搭配 / 买手推荐
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f7f5f2", borderRadius: 10, padding: "10px 12px", margin: "12px 0" }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>普通月卡 ¥59 · 30 天 70 次</span>
+            <span style={{ fontSize: 12, color: "#888", background: "#ece7e0", padding: "4px 10px", borderRadius: 16 }}>够日常挑款用</span>
+          </div>
+          <button onClick={() => startPay(firstPkg)} disabled={paying} style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: BRAND.bg, color: BRAND.gold, fontWeight: 800, fontSize: 15 }}>
+            ¥9.9 新人首单体验
+          </button>
+        </div>
+
+        {/* 专业版 */}
+        <div style={{ background: "#fff", color: "#222", borderRadius: 16, padding: 16, border: `2px solid ${BRAND.gold}`, position: "relative" }}>
+          <div style={{ position: "absolute", top: 0, right: 16, background: `linear-gradient(90deg, ${BRAND.gold}, #dab860)`, color: "#2d1b2e", fontSize: 12, fontWeight: 800, padding: "6px 14px", borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>更懂你 · 推荐</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontSize: 20, fontWeight: 800 }}>专业版</span>
+            <span style={{ fontSize: 24, fontWeight: 800, color: BRAND.gold }}>¥199<span style={{ fontSize: 13, color: "#aaa" }}/月起</span></span>
+          </div>
+          <p style={{ fontSize: 13, color: "#888", margin: "8px 0 12px", lineHeight: 1.6 }}>普通版之上，多一个「懂你风格」——测完帮你搭、帮你选，不是瞎试。</p>
+          {[
+            "普通版能干的它都能",
+            "21 题穿衣风格诊断（先搞清自己适合啥）",
+            "AI 按你的风格自动生成造型",
+            "专属买手推荐 + 新款优先看",
+          ].map((t) => <div key={t} style={{ fontSize: 14, color: "#222", lineHeight: 1.9 }}>✓ {t}</div>)}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f7f5f2", borderRadius: 10, padding: "10px 12px", margin: "12px 0" }}>
+            <span style={{ fontSize: 14, fontWeight: 700 }}>专业月卡 ¥199/月起</span>
+            <span style={{ fontSize: 12, color: "#9a7220", background: "rgba(201,162,75,.16)", padding: "4px 10px", borderRadius: 16 }}>想认真穿好看就选它</span>
+          </div>
+          <button onClick={() => startPay(proMonthPkg)} disabled={paying} style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: `linear-gradient(90deg, ${BRAND.gold}, #dab860)`, color: "#2d1b2e", fontWeight: 800, fontSize: 15, boxShadow: "0 10px 26px rgba(201,162,75,.35)" }}>
+            开通专业版
+          </button>
+          <div onClick={() => startPay(proYearPkg)} style={{ textAlign: "center", fontSize: 13, color: "#9a7220", marginTop: 12, cursor: "pointer" }}>
+            或直接选年卡 · ¥999 / 365 天 1000 次专业诊断 ›
           </div>
         </div>
-      )}
+      </Section>
+
+      {/* FAQ */}
+      <Section title="几个你大概会问的">
+        {[
+          { q: "我的照片会不会被拿去乱用？", a: "不会。只用于这次试衣合成，用完不留存、不公开，你随时能让我们删掉。" },
+          { q: "试出来的效果能当真吗？", a: "当参考最稳——帮你判断版型、颜色上身好不好看。真要下单还是以实物为准，别全信图。" },
+          { q: "专业版不想要了能退吗？", a: "到期不续就自动回普通版，已买的权益照常用，不扣不罚。想提前关也行，跟我们说一声。" },
+        ].map((f) => (
+          <div key={f.q} style={{ background: "#fff", color: "#222", borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{f.q}</div>
+            <div style={{ fontSize: 13, color: "#777", lineHeight: 1.6 }}>{f.a}</div>
+          </div>
+        ))}
+      </Section>
+
+      <footer style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,.4)", padding: "16px 14px" }}>
+        本服务由 AI 生成虚拟试衣效果，仅供参考，以实物为准。<br />骆芷蝶·智选 · 泉州鲤城服装批发
+      </footer>
+
+      {/* 底部固定栏 */}
+      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, background: "#fff", borderTop: "1px solid #eee", padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", maxWidth: 720, margin: "0 auto", zIndex: 20, boxShadow: "0 -4px 20px rgba(0,0,0,.06)" }}>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{ fontSize: 22, fontWeight: 800, color: BRAND.gold }}>首单 ¥9.9</span>
+          <span style={{ fontSize: 12, color: "#999" }}>新人限时体验价</span>
+        </div>
+        <a href="/look-studio" style={{ padding: "14px 44px", borderRadius: 14, border: "none", background: `linear-gradient(90deg, ${BRAND.bg}, #4a2d4c)`, color: BRAND.gold, fontWeight: 800, fontSize: 16, textDecoration: "none", boxShadow: "0 8px 22px rgba(45,27,46,.3)" }}>立即试穿</a>
+      </div>
 
       {/* 付费弹窗：扫码支付 */}
       {pay && (
@@ -222,44 +196,15 @@ export default function TryonPromoPage() {
           </div>
         </div>
       )}
-
-      {/* 套餐区（推广展示） */}
-      <Section title="套餐 · 随心试">
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {PACKAGES.map((p) => (
-            <div key={p.id} style={{ background: p.highlight ? "rgba(201,162,75,.12)" : BRAND.card, borderRadius: 12, padding: 12, border: `1px solid ${p.highlight ? BRAND.gold : BRAND.line}` }}>
-              <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-                <span style={{ fontSize: 22, fontWeight: 800, color: BRAND.gold }}>¥{p.price}</span>
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)" }}>/{p.unit}</span>
-                {p.highlight && <span style={{ fontSize: 10, background: BRAND.gold, color: "#2d1b2e", padding: "2px 6px", borderRadius: 6, fontWeight: 700, marginLeft: "auto" }}>新人</span>}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 700, marginTop: 4 }}>{p.label}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.6)", marginTop: 2, lineHeight: 1.4 }}>{p.desc}</div>
-            </div>
-          ))}
-        </div>
-      </Section>
-
-      <footer style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,.4)", padding: "16px 14px" }}>
-        本服务由 AI 生成虚拟试衣效果，仅供参考，以实物为准。<br />骆芷蝶·智选 · 泉州鲤城服装批发
-      </footer>
     </main>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section style={{ margin: "10px 14px", background: BRAND.card, borderRadius: 14, border: `1px solid ${BRAND.line}`, padding: 14 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10, color: BRAND.gold }}>{title}</div>
-      <div style={{ display: "flex", gap: 12 }}>{children}</div>
-    </section>
-  );
-}
-
-function Chip({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <span onClick={onClick} style={{ fontSize: 12, padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer", border: `1px solid ${BRAND.line}`, background: on ? BRAND.gold : "transparent", color: on ? "#2d1b2e" : "#ddd", fontWeight: on ? 700 : 400 }}>
+    <section style={{ margin: "14px 14px", background: BRAND.card, borderRadius: 14, border: `1px solid ${BRAND.line}`, padding: 14 }}>
+      <div style={{ fontSize: 17, fontWeight: 800, marginBottom: 12, color: BRAND.gold }}>{title}</div>
       {children}
-    </span>
+    </section>
   );
 }
