@@ -7,6 +7,7 @@ const NAV = [
   { href: "/tryon/guide", label: "怎么用" },
   { href: "/tryon/normal", label: "普通版" },
   { href: "/tryon/pro", label: "专业版" },
+  { href: "/tryon/profile", label: "形象档案" },
   { href: "/tryon/faq", label: "常见问题" },
 ];
 
