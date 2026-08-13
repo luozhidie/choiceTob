@@ -1,0 +1,20 @@
+<view class="page">
+  <view class="head">
+    <text class="h-title">普通版</text>
+    <text class="h-sub">快速看上身 · 不想研究搭配选这个</text>
+  </view>
+  <view class="card">
+    <text class="c-h">包含</text>
+    <view class="feat ok" wx:for="{{include}}" wx:key="*this">✓ {{item}}</view>
+    <text class="c-h mt">不含</text>
+    <view class="feat no" wx:for="{{exclude}}" wx:key="*this">— {{item}}</view>
+  </view>
+  <view class="price-row" bindtap="buyPackage" data-id="tryon_normal_monthly_59">
+    <view>
+      <text class="pr-title">普通月卡</text>
+      <text class="pr-sub">30 天 70 次普通试穿</text>
+    </view>
+    <text class="pr-num">¥59</text>
+  </view>
+  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_normal_monthly_59">购买 ¥59</view>
+</view>

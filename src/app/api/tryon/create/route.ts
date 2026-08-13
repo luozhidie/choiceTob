@@ -14,14 +14,17 @@ const PACKAGES: Record<string, { name: string; price: number; unit: string; type
   tryon_normal_monthly_59: { name: "普通月卡", price: 59,   unit: "月", type: "normal_month", days: 30,  normal: 70,  pro: 0 },
   tryon_pro_monthly_199:   { name: "专业月卡", price: 199,  unit: "月", type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
   tryon_pro_year_999:      { name: "专业年卡", price: 999,  unit: "年", type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
+  tryon_test_cent:         { name: "一分测试", price: 0.01, unit: "次", type: "test",         days: 7,   normal: 1,   pro: 1 },
 };
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { package_id, openid } = body;
+    const { package_id, openid, platform } = body;
+    const pf: PayPlatform = platform === "native" ? "native" : "mini";
 
-    if (!openid) {
+    // JSAPI（小程序）必须 openid；NATIVE 网站扫码付不依赖 openid
+    if (pf === "mini" && !openid) {
       return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
     }
     const pkg = PACKAGES[package_id];
@@ -53,7 +56,7 @@ export async function POST(request: NextRequest) {
       body: `骆芷蝶智选·虚拟试衣${pkg.name}`,
       total_fee,
       openid,
-      platform: "mini" as PayPlatform,
+      platform: pf,
       notify_url,
     });
 
@@ -64,6 +67,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: wxResult.err_code_des || wxResult.err_code || "下单失败" }, { status: 500 });
     }
 
+    // NATIVE 网站扫码付：返回微信扫码支付码，前端生成二维码
+    if (pf === "native") {
+      return NextResponse.json({ success: true, order_no, code_url: wxResult.code_url });
+    }
     const payParams = generateJsapiPayParams(wxResult.prepay_id, "mini" as PayPlatform);
     return NextResponse.json({ success: true, order_no, ...payParams });
   } catch (err: any) {

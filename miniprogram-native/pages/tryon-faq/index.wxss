@@ -1,0 +1,14 @@
+.page { min-height: 100vh; background: var(--bg); padding-bottom: 40rpx; }
+
+/* ---------- 头部 ---------- */
+.head { background: linear-gradient(160deg, #2d1b2e 0%, #1a0f1a 100%); padding: 56rpx 36rpx 44rpx; color: #fff; }
+.h-title { display: block; font-size: 46rpx; font-weight: 800; letter-spacing: 2rpx; }
+.h-sub { display: block; font-size: 25rpx; color: #d8d0d8; margin-top: 16rpx; }
+
+/* ---------- FAQ 列表 ---------- */
+.faq-list { padding: 30rpx 28rpx; }
+.faq-item { background: #fff; border-radius: 22rpx; padding: 32rpx 30rpx; margin-bottom: 22rpx; box-shadow: var(--sh-1); border: 1rpx solid var(--line); }
+.fq { display: flex; align-items: center; justify-content: space-between; }
+.fqt { font-size: 29rpx; font-weight: 700; color: var(--text); flex: 1; }
+.arrow { font-size: 40rpx; color: var(--gold); font-weight: 700; margin-left: 20rpx; }
+.fa { font-size: 24rpx; color: var(--text-2); line-height: 1.7; margin-top: 18rpx; }

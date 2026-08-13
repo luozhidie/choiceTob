@@ -12,6 +12,7 @@ const PACKAGES: Record<string, { type: string; days: number; normal: number; pro
   tryon_normal_monthly_59: { type: "normal_month", days: 30,  normal: 70,  pro: 0 },
   tryon_pro_monthly_199:   { type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
   tryon_pro_year_999:      { type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
+  tryon_test_cent:         { type: "test",         days: 7,   normal: 1,   pro: 1 },
 };
 
 export async function POST(request: NextRequest) {

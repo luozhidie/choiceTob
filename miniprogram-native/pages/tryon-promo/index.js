@@ -38,17 +38,17 @@ Page({
     this.buyPackageById('tryon_first_1yuan');
   },
 
-  // 开通专业版：默认专业月卡
-  onOpenPro: function () {
-    this.buyPackageById('tryon_pro_monthly_199');
-  },
-
   // 底部「立即试穿」进入试衣间
   goLookStudio: function () {
     wx.navigateTo({ url: '/pages/look-studio/index' });
   },
 
-  // 点击套餐列表
+  // 入口卡片跳转子页
+  goSub: function (e) {
+    var page = e.currentTarget.dataset.page;
+    wx.navigateTo({ url: '/pages/' + page + '/index' });
+  },
+
   buyPackage: function (e) {
     var id = e.currentTarget.dataset.id;
     this.buyPackageById(id);
@@ -76,7 +76,6 @@ Page({
             paySign: d.paySign,
             success: function () {
               wx.showToast({ title: '开通成功', icon: 'success' });
-              // 支付成功后进入试衣间使用权益
               setTimeout(function () {
                 wx.redirectTo({ url: '/pages/look-studio/index?promo=1' });
               }, 900);

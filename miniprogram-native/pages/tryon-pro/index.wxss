@@ -1,0 +1,24 @@
+.page { min-height: 100vh; background: var(--bg); padding: 0 0 40rpx; }
+
+/* ---------- 头部 ---------- */
+.head { background: linear-gradient(160deg, #2d1b2e 0%, #1a0f1a 100%); padding: 56rpx 36rpx 44rpx; color: #fff; }
+.h-title { display: block; font-size: 46rpx; font-weight: 800; letter-spacing: 2rpx; }
+.h-sub { display: block; font-size: 25rpx; color: #d8d0d8; margin-top: 16rpx; }
+.sub { display: block; font-size: 24rpx; color: var(--text-2); line-height: 1.6; padding: 28rpx 36rpx 0; }
+
+/* ---------- 专业版深色卡 ---------- */
+.pro-card { margin: 24rpx 28rpx 0; background: linear-gradient(160deg, #2d1b2e, #4a3a5a); border-radius: 22rpx; padding: 34rpx; box-shadow: var(--sh-3); }
+.pro-tag { display: inline-block; font-size: 21rpx; font-weight: 800; color: #2d1b2e; background: var(--gold); padding: 6rpx 22rpx; border-radius: 30rpx; margin-bottom: 22rpx; }
+.feat { display: block; font-size: 25rpx; color: #fff; line-height: 1.9; }
+
+/* ---------- 价格行 + 购买 ---------- */
+.price-row { margin: 24rpx 28rpx 0; background: #fff; border-radius: 20rpx; padding: 30rpx; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--sh-1); border: 1rpx solid var(--line); }
+.price-row.gold { border: 2rpx solid var(--gold); }
+.pr-title { display: block; font-size: 30rpx; font-weight: 800; color: var(--text); }
+.pr-sub { display: block; font-size: 22rpx; color: var(--text-3); margin-top: 6rpx; }
+.pr-num { font-size: 42rpx; font-weight: 800; color: var(--gold); }
+.buy-btn { margin: 18rpx 28rpx 0; background: linear-gradient(135deg, #2d1b2e, #4a3a5a); color: var(--gold); font-size: 32rpx; font-weight: 800; text-align: center; padding: 28rpx 0; border-radius: 16rpx; }
+.buy-btn.gold { background: linear-gradient(90deg, #C9A24B, #dab860); color: #2d1b2e; box-shadow: 0 12rpx 30rpx rgba(201,162,75,.4); }
+
+/* ---------- Toast ---------- */
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,.78); color: #fff; font-size: 26rpx; padding: 20rpx 36rpx; border-radius: 12rpx; z-index: 100; }
