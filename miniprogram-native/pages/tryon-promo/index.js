@@ -43,6 +43,11 @@ Page({
     this.buyPackageById('tryon_pro_monthly_199');
   },
 
+  // 底部「立即试穿」进入试衣间
+  goLookStudio: function () {
+    wx.navigateTo({ url: '/pages/look-studio/index' });
+  },
+
   // 点击套餐列表
   buyPackage: function (e) {
     var id = e.currentTarget.dataset.id;
