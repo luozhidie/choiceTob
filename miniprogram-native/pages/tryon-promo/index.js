@@ -3,10 +3,10 @@ var BASE = 'https://colour-choice.art';
 
 // 与 look-studio /api/tryon/create 服务端定价保持一致
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', tries: 1, highlight: true },
-  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天无限次试穿 + 高清下载', type: 'month', days: 30 },
-  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天无限次 + 优先新款', type: 'quarter', days: 90 },
-  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天无限次 + 专属顾问', type: 'year', days: 365 },
+  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', days: 365, tries: 1, highlight: true },
+  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天 150 次试穿 + 高清下载', type: 'month', days: 30, tries: 150 },
+  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天 400 次 + 优先新款', type: 'quarter', days: 90, tries: 400 },
+  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天 1000 次 + 专属顾问', type: 'year', days: 365, tries: 1000 },
 ];
 
 function findPkg(id) {

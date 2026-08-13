@@ -10,10 +10,10 @@ function rewriteSupabase(u) {
 
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', tries: 1, highlight: true },
-  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天无限次试穿 + 高清下载', type: 'month', days: 30 },
-  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天无限次 + 优先新款', type: 'quarter', days: 90 },
-  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天无限次 + 专属顾问', type: 'year', days: 365 },
+  { id: 'tryon_first_1yuan', name: '首单体验', price: 1, unit: '次', desc: '新人专享 1 次整体造型', type: 'first', days: 365, tries: 1, highlight: true },
+  { id: 'tryon_monthly_99', name: '包月畅试', price: 99, unit: '月', desc: '30 天 150 次试穿 + 高清下载', type: 'month', days: 30, tries: 150 },
+  { id: 'tryon_quarter_199', name: '季卡', price: 199, unit: '季', desc: '90 天 400 次 + 优先新款', type: 'quarter', days: 90, tries: 400 },
+  { id: 'tryon_year_699', name: '年卡', price: 699, unit: '年', desc: '365 天 1000 次 + 专属顾问', type: 'year', days: 365, tries: 1000 },
 ];
 
 // 价格：数据库按分存，展示为元
@@ -98,8 +98,9 @@ Page({
       txt = '首单体验剩余 ' + (d.triesLeft || 0) + ' 次';
     } else {
       var days = d.daysLeft || 0;
+      var tries = d.triesLeft || 0;
       var label = d.type === 'month' ? '包月' : d.type === 'quarter' ? '季卡' : '年卡';
-      txt = label + '剩余 ' + days + ' 天';
+      txt = label + '剩余 ' + days + ' 天 · ' + tries + ' 次';
     }
     this.setData({ passText: txt, isPass: d.active });
   },
@@ -338,7 +339,7 @@ Page({
             signType: d.signType || 'MD5', paySign: d.paySign,
             success: function () {
               // 乐观开通（服务端 notify 异步发放，稍后同步覆盖）
-              var optimistic = { active: true, type: pkg.type, daysLeft: pkg.days || 365, triesLeft: pkg.type === 'first' ? 1 : 99999 };
+              var optimistic = { active: true, type: pkg.type, daysLeft: pkg.days || 365, triesLeft: pkg.tries || 1 };
               setCacheEnt(optimistic); t.applyEntitlement(optimistic);
               t.setData({ showPackages: false, proMode: false });
               wx.showToast({ title: '已开通，去试衣', icon: 'success' });
@@ -396,8 +397,8 @@ Page({
         var d;
         try { d = JSON.parse(res.data); } catch (e) { d = {}; }
         if (d.error) { wx.showModal({ title: '试衣失败', content: d.error, showCancel: false }); t.setData({ loading: false }); return; }
-        // 首单体验：扣减服务端次数
-        if (ent && ent.type === 'first') {
+        // 每次成功试衣扣减 1 次（首单/订阅统一按次数计费）
+        if (ent && ent.active) {
           app.getOpenid().then(function (openid) {
             wx.request({ url: BASE + '/api/tryon/entitlement', method: 'POST', data: { openid: openid } });
           }).catch(function () {});
