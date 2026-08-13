@@ -118,7 +118,7 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     type = pkg.type;
   }
 
-  await supabase.from("tryon_entitlements").upsert(
+  const { error } = await supabase.from("tryon_entitlements").upsert(
     {
       openid,
       type,
@@ -130,4 +130,5 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     },
     { onConflict: "openid" }
   );
+  if (error) throw new Error("权益发放失败: " + (error.message || JSON.stringify(error)));
 }
