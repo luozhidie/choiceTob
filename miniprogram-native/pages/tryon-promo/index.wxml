@@ -99,16 +99,5 @@
     </view>
   </view>
 
-  <view class="bottom-pad"></view>
-
-  <!-- 底部固定 CTA -->
-  <view class="bottom-bar">
-    <view class="bottom-info">
-      <text class="bottom-price">首单 ¥9.9</text>
-      <text class="bottom-tip">9 次普通 + 1 次专业</text>
-    </view>
-    <view class="bottom-btn" bindtap="goLookStudio">立即试穿</view>
-  </view>
-
   <view wx:if="{{toast}}" class="toast">{{toast}}</view>
 </view>

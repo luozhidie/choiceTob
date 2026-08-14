@@ -193,7 +193,17 @@ export async function POST(req: NextRequest) {
       exp: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7天有效
     })).toString("base64url");
 
-    const isAdmin = userProfile.role === "admin";
+    // 管理员判定：profiles 表标识 或 auth.users 邮箱在白名单
+    let authEmail = "";
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+      authEmail = authUser?.user?.email || "";
+    } catch {}
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin = userProfile.role === "admin" || userProfile.is_admin === true || adminEmails.includes(authEmail.toLowerCase());
 
     return NextResponse.json({
       success: true,

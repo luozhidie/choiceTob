@@ -93,31 +93,52 @@ async function ensureTable(supabase: any) {
   }
 }
 
-// 管理员判定：后台 admin_logged_in cookie，或小程序 Bearer token + profile.is_admin
+// 管理员判定：后台 admin_logged_in cookie，或 Bearer token（JWT/小程序自定义 token）+ profile.is_admin/邮箱白名单
 async function resolveAdmin(req: NextRequest) {
   const cookieHeader = req.headers.get("cookie") || "";
   if (cookieHeader.includes("admin_logged_in=true")) return true;
 
   const auth = req.headers.get("authorization") || "";
-  if (auth.startsWith("Bearer ")) {
-    const token = auth.slice(7);
+  if (!auth.startsWith("Bearer ")) return false;
+  const token = auth.slice(7);
+
+  const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  const checkUser = async (userId: string) => {
     try {
       const supabase = await createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser(token);
-      if (user) {
-        const { data: p } = await supabase
-          .from("profiles")
-          .select("is_admin")
-          .eq("id", user.id)
-          .single();
-        return !!p?.is_admin;
-      }
+      const [{ data: p }, { data: authUser }] = await Promise.all([
+        supabase.from("profiles").select("is_admin").eq("id", userId).single(),
+        supabase.auth.admin.getUserById(userId),
+      ]);
+      return !!(p?.is_admin || adminEmails.includes((authUser?.user?.email || "").toLowerCase()));
     } catch {
-      // ignore
+      return false;
     }
+  };
+
+  // 1) Supabase JWT
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser(token);
+    if (user) return await checkUser(user.id);
+  } catch {
+    // ignore
   }
+
+  // 2) 小程序自定义 token（base64url JSON，如 {uid,openid,exp}）
+  try {
+    const payload = JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
+    if (payload && payload.uid) return await checkUser(payload.uid);
+  } catch {
+    // ignore
+  }
+
   return false;
 }
 

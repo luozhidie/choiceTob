@@ -211,7 +211,7 @@
       <text class="sec-title">VIP形象服务</text>
     </view>
 
-    <!-- 更多服务：5 图标网格 -->
+    <!-- 更多服务：8 图标网格 -->
     <view class="service-grid">
       <view class="sg-item" bindtap="goLookStudio">
         <view class="sg-icon"><text>👗</text></view>
@@ -220,6 +220,14 @@
       <view class="sg-item" bindtap="goWardrobe">
         <view class="sg-icon"><text>🚪</text></view>
         <text class="sg-label">VIP衣橱</text>
+      </view>
+      <view class="sg-item" bindtap="goStyleProfile">
+        <view class="sg-icon"><text>🪞</text></view>
+        <text class="sg-label">我的形象档案</text>
+      </view>
+      <view class="sg-item" bindtap="goStyleTest">
+        <view class="sg-icon"><text>📤</text></view>
+        <text class="sg-label">资料上传</text>
       </view>
       <view class="sg-item" bindtap="goBooking">
         <view class="sg-icon"><text>⏰</text></view>
@@ -236,10 +244,6 @@
       <view class="sg-item" bindtap="goWishlist">
         <view class="sg-icon"><text>♡</text></view>
         <text class="sg-label">我的心愿单</text>
-      </view>
-      <view class="sg-item" bindtap="goStyleTest">
-        <view class="sg-icon"><text>📤</text></view>
-        <text class="sg-label">资料上传</text>
       </view>
     </view>
 
@@ -286,55 +290,6 @@
       <view class="sg-item" bindtap="goFashionStylist" data-service="design">
         <view class="sg-icon"><text>✏️</text></view>
         <text class="sg-label">服装设计</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- ========== AI搭配 / AI企划（登录后可见） ========== -->
-  <view class="section" wx:if="{{isLoggedIn}}">
-    <view class="sec-header">
-      <text class="sec-title">AI搭配 / AI企划</text>
-    </view>
-    <view class="service-grid">
-      <view class="sg-item" bindtap="goFashionStylist" data-service="outfit">
-        <view class="sg-icon"><text>👗</text></view>
-        <text class="sg-label">AI搭配</text>
-      </view>
-      <view class="sg-item" bindtap="goFashionStylist" data-service="plan">
-        <view class="sg-icon"><text>📋</text></view>
-        <text class="sg-label">商品企划</text>
-      </view>
-    </view>
-  </view>
-
-  <!-- ========== AI 虚拟试衣（对所有用户开放，变现入口） ========== -->
-  <view class="section">
-    <view class="sec-header">
-      <text class="sec-title">AI 虚拟试衣</text>
-      <text class="sec-more" bindtap="goLookStudio">进入 ›</text>
-    </view>
-    <view class="tryon-entry" bindtap="goLookStudio">
-      <view class="te-left">
-        <text class="te-title">上传照片 · 先试再买</text>
-        <text class="te-desc">挑好衣服一键试穿，喜欢再带回家 · 新人首单 ¥9.9</text>
-      </view>
-      <view class="te-btn">去试衣 ›</view>
-    </view>
-  </view>
-
-  <!-- ========== 形象管理（登录后可见） ========== -->
-  <view class="section" wx:if="{{isLoggedIn}}">
-    <view class="sec-header">
-      <text class="sec-title">形象管理</text>
-    </view>
-    <view class="service-list">
-      <view class="sv-item" bindtap="goStyleProfile">
-        <text class="sv-icon-text">🪞</text>
-        <text class="sv-label">我的形象档案</text>
-      </view>
-      <view class="sv-item" bindtap="goWardrobe">
-        <text class="sv-icon-text">🚪</text>
-        <text class="sv-label">我的衣橱</text>
       </view>
     </view>
   </view>

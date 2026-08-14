@@ -104,13 +104,25 @@ export async function GET(request: NextRequest) {
       .eq("status", "unused");
     const redPackCount = redPackets?.[0]?.count || 0;
 
+    // 管理员判定：profiles 表标识 或 auth.users 邮箱在白名单
+    let authEmail = "";
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+      authEmail = authUser?.user?.email || "";
+    } catch {}
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin = !!(profile?.role === "admin" || profile?.is_admin === true || adminEmails.includes(authEmail.toLowerCase()));
+
     const response = NextResponse.json({
       success: true,
       data: {
         // 用户信息
         userId: userId,
         role: profile?.role || "user",
-        isAdmin: !!(profile?.role === "admin" || profile?.is_admin === true),
+        isAdmin,
         membershipType: profile?.membership_type || "none",
         membershipExpiresAt: profile?.membership_expires_at || null,
         totalPurchaseAmount: profile?.total_purchase_amount || 0,

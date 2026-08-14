@@ -56,7 +56,9 @@ Page({
     this.buyPackageById(id);
   },
 
-  buyPackageById: function (id) {
+  buyPackageById: function (e) {
+    var id = (typeof e === 'string') ? e : (e && e.currentTarget && e.currentTarget.dataset && e.currentTarget.dataset.id);
+    if (!id) return;
     var pkg = findPkg(id);
     if (!pkg) return;
     var self = this;

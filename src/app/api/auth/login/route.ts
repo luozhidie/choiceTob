@@ -63,12 +63,12 @@ export async function POST(req: NextRequest) {
       console.error("[Auth Login] 查会员信息失败:", e);
     }
 
-    // 管理员判定：profiles.role=admin 或邮箱在 ADMIN_EMAILS 列表中
-    const adminEmails = (process.env.ADMIN_EMAILS || "")
+    // 管理员判定：profiles.role=admin 或邮箱在 ADMIN_EMAILS/默认白名单中
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
       .split(",")
-      .map((e) => e.trim())
+      .map((e) => e.trim().toLowerCase())
       .filter(Boolean);
-    const isAdmin = userRole === "admin" || adminEmails.includes(email);
+    const isAdmin = userRole === "admin" || adminEmails.includes(email.toLowerCase());
 
     // 判断是否为价格会员（用于小程序端批发价显示）
     const isPriceMember = !!(
