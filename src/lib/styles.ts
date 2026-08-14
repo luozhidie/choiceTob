@@ -146,7 +146,7 @@ export type StyleDetail = {
   pattern: string;    // 图案
   detail: string;     // 细节设计
   occasion: string;   // 适用场合
-  body: string;       // 适合人群 / 量感
+  body: string;       // 适合人群（身高骨架版型特征描述）
   avoid: string;      // 避雷
 };
 

@@ -20,8 +20,6 @@ export interface StyleResult {
 }
 
 export interface MaleScoreMap {
-  vol: number;
-  cur: number;
   special?: string;
 }
 
@@ -32,13 +30,6 @@ export interface FemaleScoreEntry {
 export interface MaleScoringLogic {
   questionScores: Record<string, Record<string, MaleScoreMap>>;
   preferenceMap: Record<string, string>;
-  rules: {
-    volumeThresholdHigh: number;
-    volumeThresholdLow: number;
-    curveThresholdHigh: number;
-    curveThresholdLow: number;
-    baseWeight: number;
-  };
 }
 
 export interface FemaleScoringLogic {
@@ -236,92 +227,55 @@ export const maleQuestions: Question[] = [
 
 export const maleScoringLogic: MaleScoringLogic = {
   questionScores: {
-    q1: {
-      A: { vol: 1, cur: 0 },
-      B: { vol: -1, cur: 0 },
-      C: { vol: 0, cur: 0 },
-    },
-    q2: {
-      A: { vol: 0, cur: -1 },
-      B: { vol: 0, cur: 1 },
-    },
-    q3: {
-      A: { vol: 1, cur: 1 },
-      B: { vol: -1, cur: -1 },
-      C: { vol: 0, cur: 0 },
-    },
-    q4: {
-      A: { vol: 1, cur: 0 },
-      B: { vol: 0, cur: 0 },
-    },
+    // 男士风格版型：大/中/小版型，不分直曲；全系统无量感概念。
+    // 仅保留「风格特质指向分」(special)，由风格特征直接指向 5 大主风格：
+    // A=戏剧型 B=自然型 C=古典型 D=浪漫型 E=时尚型
+    // 视觉身高 / 擅长运动 / 正装运动装 等题测量的是「风格特点」（某些风格具备的特征），
+    // 属描述性特征，不再作为量感/曲直数值维度计分。
+    q1: {},
+    q2: {},
+    q3: {},
+    q4: {},
     q5: {
-      A: { vol: 0, cur: 0, special: 'C' },
-      B: { vol: 0, cur: 0 },
+      A: { special: 'C' },
     },
     q6: {
-      A: { vol: 0, cur: 0, special: 'C' },
-      B: { vol: -1, cur: -1, special: 'B' },
-      C: { vol: 0, cur: -1, special: 'E' },
+      A: { special: 'C' },
+      B: { special: 'B' },
+      C: { special: 'E' },
     },
-    q7: {
-      A: { vol: -1, cur: 0 },
-      B: { vol: 1, cur: 0 },
-    },
-    q8: {
-      A: { vol: 0, cur: 0 },
-      B: { vol: -1, cur: 0 },
-    },
-    q9: {
-      A: { vol: 1, cur: 1 },
-      B: { vol: -1, cur: 0 },
-      C: { vol: 0, cur: 0 },
-    },
-    q10: {
-      A: { vol: 0, cur: 1 },
-      B: { vol: 0, cur: -1 },
-    },
-    q11: {
-      A: { vol: 0, cur: 1 },
-      B: { vol: 0, cur: -1 },
-      C: { vol: 0, cur: 0 },
-    },
+    q7: {},
+    q8: {},
+    q9: {},
+    q10: {},
+    q11: {},
     q12: {
-      A: { vol: 1, cur: 0 },
-      B: { vol: -1, cur: 0 },
-      C: { vol: 0, cur: -1, special: 'D' },
-      D: { vol: 0, cur: 1, special: 'C' },
+      C: { special: 'D' },
+      D: { special: 'C' },
     },
-    q13: {
-      A: { vol: 1, cur: 0 },
-      B: { vol: 0, cur: 0 },
-      C: { vol: -1, cur: 0 },
-    },
-    q14: {
-      A: { vol: -1, cur: -1 },
-      B: { vol: 1, cur: 1 },
-    },
+    q13: {},
+    q14: {},
     q15: {
-      A: { vol: 0, cur: -1, special: 'B' },
-      B: { vol: 1, cur: 0, special: 'A' },
-      C: { vol: 0, cur: 1, special: 'C' },
-      D: { vol: 0, cur: 0, special: 'E' },
+      A: { special: 'B' },
+      B: { special: 'A' },
+      C: { special: 'C' },
+      D: { special: 'E' },
     },
     q16: {
-      A: { vol: 1, cur: 0, special: 'A' },
-      B: { vol: -1, cur: 0, special: 'E' },
-      C: { vol: 0, cur: -1, special: 'B' },
-      D: { vol: 0, cur: 1, special: 'C' },
+      A: { special: 'A' },
+      B: { special: 'E' },
+      C: { special: 'B' },
+      D: { special: 'C' },
     },
     q17: {
-      A: { vol: 0, cur: -1, special: 'D' },
-      B: { vol: 0, cur: 0 },
+      A: { special: 'D' },
     },
     q18: {
-      A: { vol: 1, cur: 1, special: 'A' },
-      B: { vol: 0, cur: -1, special: 'B' },
-      C: { vol: 0, cur: 1, special: 'C' },
-      D: { vol: 0, cur: -1, special: 'E' },
-      E: { vol: 0, cur: -1, special: 'D' },
+      A: { special: 'A' },
+      B: { special: 'B' },
+      C: { special: 'C' },
+      D: { special: 'E' },
+      E: { special: 'D' },
     },
   },
   preferenceMap: {
@@ -330,13 +284,6 @@ export const maleScoringLogic: MaleScoringLogic = {
     C: 'C',
     D: 'D',
     E: 'E',
-  },
-  rules: {
-    volumeThresholdHigh: 3,
-    volumeThresholdLow: -3,
-    curveThresholdHigh: 1,
-    curveThresholdLow: -2,
-    baseWeight: 3,
   },
 };
 
@@ -685,7 +632,8 @@ export function calculateMaleResult(
 ): string {
   const { questionScores } = maleScoringLogic;
 
-  // 1. 仅按风格特质指向分（special）累计；系统风格版型无量感/曲直数值维度，故不计 volume/curve
+  // 1. 仅按风格特质指向分（special）累计。男士风格版型为大/中/小版型、不分直曲，
+  //    全系统无量感概念，故不计 volume/curve 等数值维度。
   const specialScores: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, E: 0 };
 
   for (const qId of Object.keys(questionScores)) {
