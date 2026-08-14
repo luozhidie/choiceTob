@@ -93,9 +93,9 @@ export default function LookStudioClient({ data }: Props) {
     const sc = mySeason ? [mySeason] : [];
     const st = myStyle ? [myStyle] : [];
     if (sc.length === 0 && st.length === 0) return products;
+    // 专业版：全部商品都展示，匹配项按分数置顶并标「匹配」
     return [...products]
       .map((p) => ({ p, s: score(p, sc, st) }))
-      .filter((x) => x.s > 0)
       .sort((a, b) => b.s - a.s)
       .map((x) => x.p);
   }, [products, mySeason, myStyle]);
@@ -200,6 +200,9 @@ export default function LookStudioClient({ data }: Props) {
           </button>
         ))}
       </nav>
+      <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 10px", lineHeight: 1.5 }}>
+        普通版 = 按分类挑单品试穿；专业版 = 按你的色彩季型 / 穿衣风格智能排序推荐。两者次数独立，普通套餐不含专业版次数。
+      </p>
 
       {/* ① 上传真人照 */}
       <section style={card}>
@@ -319,7 +322,9 @@ export default function LookStudioClient({ data }: Props) {
           {(!mySeason && !myStyle) && (
             <p style={{ fontSize: 13, color: "#b9a7ad", margin: "0 0 10px" }}>在「①」选好你的季型与风格，这里会自动把最匹配的单品排到前面。</p>
           )}
-          {proProducts.length === 0 && <p style={{ fontSize: 13, color: "#8a7580" }}>暂无匹配单品，可更换季型/风格。</p>}
+          {proProducts.length > 0 && mySeason === '' && myStyle === '' && (
+            <p style={{ fontSize: 12, color: "#8a7580", margin: "0 0 10px", lineHeight: 1.5 }}>已按全部单品展示。在「①」选好季型/风格后，最匹配的会排在前面并标「匹配」。</p>
+          )}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {proProducts.map((p) => (
               <ProductCard key={p.id} p={p} onAdd={addFromShop} seasonName={seasonName} styleName={styleName} matched={edition === "pro" && ((p.seasons || []).includes(mySeason) || (p.styles || []).includes(myStyle))} />

@@ -58,6 +58,8 @@ Page({
     showPackages: false,
     promo: false,
     isPass: false,
+    normalLeft: 0,
+    proLeft: 0,
     passText: '未开通 · 首单 ¥9.9 体验',
     agreedAuth: false,
     showShopPick: false,
@@ -105,7 +107,7 @@ Page({
         txt = label + '剩余 ' + days + ' 天 · 普通 ' + (d.normalLeft || 0) + ' 次';
       }
     }
-    this.setData({ passText: txt, isPass: d.active });
+    this.setData({ passText: txt, isPass: d.active, normalLeft: d.normalLeft || 0, proLeft: d.proLeft || 0 });
   },
 
   loadData: function () {
@@ -338,10 +340,10 @@ Page({
 
   togglePro: function () {
     var self = this;
-    if (!this.data.proMode && !this.data.isPass) {
+    if (!this.data.proMode && this.data.proLeft <= 0) {
       wx.showModal({
         title: '专业风格顾问',
-        content: '开通试衣套餐后解锁：21 题穿衣风格诊断 + 按风格一键生成专属造型。',
+        content: '专业版次数未开通：含 21 题穿衣风格诊断 + 按季型/风格智能推荐单品。普通版套餐不含专业版次数，需开通专业套餐。',
         confirmText: '去开通', cancelText: '暂不需要',
         success: function (r) { if (r.confirm) self.openPackages(); }
       });
@@ -352,10 +354,10 @@ Page({
   switchToBasic: function () { this.setData({ proMode: false }); },
   switchToPro: function () {
     var self = this;
-    if (!this.data.isPass) {
+    if (this.data.proLeft <= 0) {
       wx.showModal({
         title: '专业版',
-        content: '专业版含 21 题穿衣风格诊断与 AI 按风格生成造型。开通任意套餐后即可使用。',
+        content: '专业版次数未开通。普通版套餐仅含普通试穿次数，专业版推荐 / 生成需开通专业套餐。',
         confirmText: '去开通', cancelText: '暂不需要',
         success: function (r) { if (r.confirm) self.openPackages(); }
       });
@@ -491,11 +493,10 @@ Page({
             });
             return;
           }
+          // 专业版推荐：全部商品按匹配度排序，前 6 置顶展示，不会空
           var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
-            .filter(function (x) { return x.s > 0; })
             .sort(function (a, b) { return b.s - a.s; })
             .slice(0, 6).map(function (x) { return x.p; });
-          if (!ranked.length) { wx.showToast({ title: '暂无匹配单品', icon: 'none' }); return; }
           t.setData({ recommend: ranked, mode: 'auto' });
           wx.showToast({ title: '已为你挑好，点「＋加这件」', icon: 'none' });
         },
@@ -504,10 +505,8 @@ Page({
           var st = t.data.myStyle ? [t.data.myStyle] : [];
           if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选风格', icon: 'none' }); return; }
           var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
-            .filter(function (x) { return x.s > 0; })
             .sort(function (a, b) { return b.s - a.s; })
             .slice(0, 6).map(function (x) { return x.p; });
-          if (!ranked.length) { wx.showToast({ title: '暂无匹配单品', icon: 'none' }); return; }
           t.setData({ recommend: ranked, mode: 'auto' });
         }
       });

@@ -12,6 +12,7 @@
     <view class="mode-tab {{!proMode?'on':''}}" bindtap="switchToBasic">普通版</view>
     <view class="mode-tab {{proMode?'on':''}}" bindtap="switchToPro">专业版</view>
   </view>
+  <text class="hint" style="margin:4rpx 0 14rpx;color:#999;">普通版按分类挑单品；专业版按色彩季型/风格智能排序。两者次数独立，普通套餐不含专业版次数。</text>
 
   <view class="pass-bar" bindtap="openPackages">
     <text class="pass-t">{{passText}}</text>
