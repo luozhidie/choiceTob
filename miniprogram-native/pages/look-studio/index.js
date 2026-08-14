@@ -599,4 +599,8 @@ Page({
   goHistory: function () {
     wx.navigateTo({ url: '/pages/tryon-history/index' });
   },
+
+  goOutfit: function () {
+    wx.navigateTo({ url: '/pages/outfit/index' });
+  },
 });

@@ -24,15 +24,31 @@ async function uploadToSupabase(supabase: any, file: File): Promise<string> {
 
 export async function POST(request: NextRequest) {
   try {
-    const form = await request.formData();
-    const personFile = form.get("personImage") as File | null;
-    const topFile = form.get("topImage") as File | null;
-    const bottomFile = form.get("bottomImage") as File | null;
-    const topUrl = (form.get("topImageUrl") as string) || "";
-    const bottomUrl = (form.get("bottomImageUrl") as string) || "";
+    // 兼容 JSON（小程序传 URL）与 multipart/form-data（网站传文件）
+    const ct = request.headers.get("content-type") || "";
+    let personFile: File | null = null;
+    let topFile: File | null = null;
+    let bottomFile: File | null = null;
+    let personImageUrl = "";
+    let topImageUrl = "";
+    let bottomImageUrl = "";
+    if (ct.includes("application/json")) {
+      const j = await request.json();
+      personImageUrl = j.personImageUrl || "";
+      topImageUrl = j.topImageUrl || "";
+      bottomImageUrl = j.bottomImageUrl || "";
+    } else {
+      const form = await request.formData();
+      personFile = form.get("personImage") as File | null;
+      topFile = form.get("topImage") as File | null;
+      bottomFile = form.get("bottomImage") as File | null;
+      topImageUrl = (form.get("topImageUrl") as string) || "";
+      bottomImageUrl = (form.get("bottomImageUrl") as string) || "";
+    }
 
-    if (!personFile) return NextResponse.json({ error: "请上传人物照片" }, { status: 400 });
-    if (!topFile && !topUrl && !bottomFile && !bottomUrl)
+    if (!personFile && !personImageUrl)
+      return NextResponse.json({ error: "请上传人物照片" }, { status: 400 });
+    if (!topFile && !topImageUrl && !bottomFile && !bottomImageUrl)
       return NextResponse.json({ error: "请至少上传一件衣服（上装或下装）" }, { status: 400 });
 
     const apiKey = process.env.DASHSCOPE_API_KEY;
@@ -49,11 +65,9 @@ export async function POST(request: NextRequest) {
     });
     await supabase.storage.createBucket(BUCKET, { public: true });
 
-    const personUrl = await uploadToSupabase(supabase, personFile);
-    let tUrl = topUrl;
-    if (topFile) tUrl = await uploadToSupabase(supabase, topFile);
-    let bUrl = bottomUrl;
-    if (bottomFile) bUrl = await uploadToSupabase(supabase, bottomFile);
+    const personUrl = personImageUrl || (personFile ? await uploadToSupabase(supabase, personFile) : "");
+    const tUrl = topImageUrl || (topFile ? await uploadToSupabase(supabase, topFile) : "");
+    const bUrl = bottomImageUrl || (bottomFile ? await uploadToSupabase(supabase, bottomFile) : "");
 
     if (!tUrl && !bUrl) return NextResponse.json({ error: "缺少衣服图片" }, { status: 400 });
 

@@ -1,0 +1,53 @@
+<view class="page">
+  <view class="title">整体造型 · 一套上身</view>
+  <view class="sub">上传人物 + 上装 + 下装，一次生成完整套装（通义 OutfitAnyone，保留你的脸，无水印）。人物用全身正面照、光照良好、单人。</view>
+
+  <view class="card">
+    <view class="ct">① 人物照片（全身正面）</view>
+    <view class="row">
+      <view class="pick" bindtap="choose" data-slot="person">
+        <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" />
+        <text wx:else>上传</text>
+      </view>
+      <view class="tip">全身正面、单人、光照良好；穿贴身内搭或低领更干净。</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="ct">② 上装 / 连衣裙</view>
+    <view class="row">
+      <view class="pick" bindtap="choose" data-slot="top">
+        <image wx:if="{{topPath}}" src="{{topPath}}" mode="aspectFill" />
+        <text wx:else>上传</text>
+      </view>
+      <view class="tip">平铺 / 挂拍，背景干净、单一主体。</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="ct">③ 下装（裤子 / 裙）</view>
+    <view class="row">
+      <view class="pick" bindtap="choose" data-slot="bottom">
+        <image wx:if="{{bottomPath}}" src="{{bottomPath}}" mode="aspectFill" />
+        <text wx:else>上传</text>
+      </view>
+      <view class="tip">平铺 / 挂拍，背景干净、单一主体。</view>
+    </view>
+  </view>
+
+  <label class="auth">
+    <checkbox checked="{{agreedAuth}}" bindchange="onAuthChange" color="#C9A24B" />
+    <text>我已阅读并同意「肖像使用授权」（照片仅用于本次 AI 合成，不公开）</text>
+  </label>
+
+  <button class="btn" bindtap="generate" disabled="{{loading}}">{{loading ? '生成中…约 15-30 秒' : '生成整套造型 ↗'}}</button>
+
+  <view wx:if="{{err}}" class="err">{{err}}</view>
+
+  <view wx:if="{{resultUrl}}" class="result">
+    <view class="ct" style="color:#fff;margin-bottom:10rpx;">生成结果</view>
+    <image src="{{resultUrl}}" mode="widthFix" bindtap="preview" />
+    <button class="btn ghost" bindtap="save">保存到相册</button>
+    <view class="hint">点击图片可放大查看。</view>
+  </view>
+</view>
