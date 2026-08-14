@@ -1,7 +1,7 @@
 <view class="page">
   <!-- Hero：深色 + 金色，首单只放这里 -->
   <view class="hero">
-    <view class="hero-tag">骆芷蝶智选 · AI 试衣</view>
+    <view class="hero-tag">骆芷蝶智选 · 云衣橱•AI虚拟试衣</view>
     <text class="hero-title">先试再买\n穿上身再决定</text>
     <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。好不好看，一眼就知道。</text>
     <view class="hero-badges">

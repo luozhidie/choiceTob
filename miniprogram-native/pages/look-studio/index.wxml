@@ -1,7 +1,7 @@
 <view class="page">
   <!-- 顶部（零术语，直奔变现：先试再买） -->
   <view class="hero">
-    <text class="ht">AI 虚拟试衣 · 先试再买</text>
+    <text class="ht">云衣橱•AI虚拟试衣 · 先试再买</text>
     <text class="hs">上传你的照片，挑好衣服一键试穿，穿上好不好看一眼就知道，喜欢再带回家</text>
     <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
   </view>

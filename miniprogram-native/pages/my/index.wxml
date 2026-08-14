@@ -257,7 +257,7 @@
   <view class="section" bindtap="goLookStudio">
     <view class="tryon-entry">
       <view class="te-left">
-        <text class="te-title">AI 虚拟试衣</text>
+        <text class="te-title">云衣橱•AI虚拟试衣</text>
         <text class="te-desc">上传照片 · 先试再买 · 新人首单 ¥9.9</text>
       </view>
       <view class="te-btn">去试衣 ›</view>

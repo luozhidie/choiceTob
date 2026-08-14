@@ -21,7 +21,7 @@ export default function TryonLayout({ children }: { children: React.ReactNode })
             骆芷蝶智选
           </Link>
           <Link href="/tryon" className="text-xs text-[#C9A24B]">
-            AI 试衣首页
+            云衣橱•AI虚拟试衣
           </Link>
         </div>
       </header>

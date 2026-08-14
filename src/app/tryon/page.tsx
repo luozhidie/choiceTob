@@ -9,7 +9,7 @@ export default function TryonPromoPage() {
       {/* Hero */}
       <section className="bg-gradient-to-br from-[#2d1b2e] to-[#1c1020] text-white px-5 pt-9 pb-6 text-center">
         <span className="inline-block text-xs text-[#C9A24B] border border-[#C9A24B]/50 rounded-full px-3 py-1">
-          骆芷蝶智选 · AI 试衣
+          骆芷蝶智选 · 云衣橱•AI虚拟试衣
         </span>
         <h1 className="text-3xl font-extrabold leading-tight mt-4">
           先试再买
