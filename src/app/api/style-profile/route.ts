@@ -9,32 +9,32 @@ const supabase = createClient(
   { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
-// 12 色彩季型（Color Me Beautiful）
+// 12 色彩季型（新标准）
 export const SEASON_TYPES: Record<string, string> = {
-  light_spring: "浅春型",
-  warm_spring: "暖春型",
-  bright_spring: "亮春型",
-  light_summer: "浅夏型",
-  soft_summer: "柔夏型",
-  cool_summer: "冷夏型",
-  light_autumn: "浅秋型",
-  soft_autumn: "柔秋型",
-  deep_autumn: "深秋型",
-  light_winter: "浅冬型",
-  clear_winter: "净冬型",
-  deep_winter: "深冬型",
+  deep_cool: "深冷",
+  deep_warm: "深暖",
+  light_cool: "浅冷",
+  light_warm: "浅暖",
+  cool_bright: "冷亮",
+  cool_soft: "冷柔",
+  warm_bright: "暖亮",
+  warm_soft: "暖柔",
+  clear_cool: "净冷",
+  clear_warm: "净暖",
+  soft_cool: "柔冷",
+  soft_warm: "柔暖",
 };
 
-// 风格标签库
+// 风格标签库（新标准）
 export const STYLE_TAGS: Record<string, string> = {
-  natural: "自然",
-  elegant: "优雅",
-  romantic: "浪漫",
-  dramatic: "戏剧",
-  classic: "古典",
-  gamin: "少年",
-  avant_garde: "前卫",
-  sporty: "运动",
+  ingenue: "少女型",
+  elegant: "优雅型",
+  romantic: "浪漫型",
+  gamine: "少年型",
+  trendy: "时尚型",
+  classic: "古典型",
+  natural: "自然型",
+  dramatic: "戏剧型",
 };
 
 // 场合库
@@ -46,14 +46,21 @@ export const OCCASIONS: Record<string, string> = {
   home: "居家",
 };
 
+function isUuid(s: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
 export async function GET(req: NextRequest) {
   const openid = req.nextUrl.searchParams.get("openid");
   if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
-  const { data, error } = await supabase
-    .from("style_profiles")
-    .select("*")
-    .eq("openid", openid)
-    .maybeSingle();
+
+  let query = supabase.from("style_profiles").select("*");
+  if (isUuid(openid)) {
+    query = query.eq("user_id", openid);
+  } else {
+    query = query.eq("openid", openid);
+  }
+  const { data, error } = await query.maybeSingle();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ profile: data || null });
 }
@@ -65,7 +72,8 @@ export async function POST(req: NextRequest) {
     if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
 
     const row: any = {
-      openid,
+      openid: isUuid(openid) ? null : openid,
+      user_id: isUuid(openid) ? openid : null,
       season_type: b.season_type || null,
       season_name: b.season_name || (b.season_type ? SEASON_TYPES[b.season_type] || null : null),
       style_tags: Array.isArray(b.style_tags) ? b.style_tags : [],
@@ -80,7 +88,7 @@ export async function POST(req: NextRequest) {
 
     const { data, error } = await supabase
       .from("style_profiles")
-      .upsert(row, { onConflict: "openid" })
+      .upsert(row, { onConflict: isUuid(openid) ? "user_id" : "openid" })
       .select()
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

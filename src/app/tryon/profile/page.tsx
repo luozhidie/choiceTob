@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth-context";
+import { useRouter } from "next/navigation";
 
 const SEASON_TYPES = [
   { code: "deep_cool", name: "深冷" }, { code: "deep_warm", name: "深暖" },
@@ -20,17 +22,9 @@ const OCCASIONS = [
 ];
 const CAT_NAMES: Record<string, string> = { top: "上装", bottom: "下装", shoes: "鞋履", bag: "包袋", accessory: "配饰" };
 
-function getWebOpenid() {
-  if (typeof window === "undefined") return "";
-  let id = localStorage.getItem("web_openid");
-  if (!id) {
-    id = "web_" + Math.random().toString(36).slice(2) + Date.now();
-    localStorage.setItem("web_openid", id);
-  }
-  return id;
-}
-
 export default function ProfilePage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [openid, setOpenid] = useState("");
   const [season, setSeason] = useState("");
   const [styles, setStyles] = useState<string[]>([]);
@@ -44,7 +38,9 @@ export default function ProfilePage() {
   const [msg, setMsg] = useState("");
 
   useEffect(() => {
-    const oid = getWebOpenid();
+    if (authLoading) return;
+    if (!user) return;
+    const oid = user.id;
     setOpenid(oid);
     fetch("/api/style-profile?openid=" + encodeURIComponent(oid))
       .then((r) => r.json())
@@ -66,13 +62,14 @@ export default function ProfilePage() {
       .then((d) => {
         setCloset((d.items || []).map((it: any) => ({ ...it, catName: CAT_NAMES[it.category] || it.category })));
       });
-  }, []);
+  }, [user, authLoading]);
 
   const toggle = (arr: string[], setArr: any, c: string) => {
     setArr(arr.includes(c) ? arr.filter((x) => x !== c) : [...arr, c]);
   };
 
   const save = async () => {
+    if (!openid) { setMsg("请先登录"); return; }
     if (!season && styles.length === 0) { setMsg("先选色彩季型或风格"); return; }
     const res = await fetch("/api/style-profile", {
       method: "POST",
@@ -121,6 +118,29 @@ export default function ProfilePage() {
     await fetch("/api/closet?openid=" + encodeURIComponent(openid) + "&id=" + id, { method: "DELETE" });
     setCloset(closet.filter((x) => x.id !== id));
   };
+
+  if (authLoading) {
+    return (
+      <main className="max-w-[720px] mx-auto px-4 py-12 text-center text-sm text-gray-500">
+        加载中…
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="max-w-[720px] mx-auto px-4 py-12 text-center">
+        <h1 className="text-xl font-bold text-[#2d1b2e] mb-2">请先登录</h1>
+        <p className="text-sm text-gray-500 mb-6">形象档案属于个人数据，登录后才能保存与查看。</p>
+        <button
+          onClick={() => router.push("/login")}
+          className="px-6 py-2.5 rounded-xl bg-[#2d1b2e] text-white text-sm font-semibold"
+        >
+          去登录 ›
+        </button>
+      </main>
+    );
+  }
 
   return (
     <main className="max-w-[720px] mx-auto px-4 py-6">

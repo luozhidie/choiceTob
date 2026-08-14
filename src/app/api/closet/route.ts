@@ -18,14 +18,21 @@ export const CLOSET_CATEGORIES: Record<string, string> = {
   accessory: "配饰",
 };
 
+function isUuid(s: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
+
 export async function GET(req: NextRequest) {
   const openid = req.nextUrl.searchParams.get("openid");
   if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
-  const { data, error } = await supabase
-    .from("user_closet")
-    .select("*")
-    .eq("openid", openid)
-    .order("created_at", { ascending: false });
+
+  let query = supabase.from("user_closet").select("*");
+  if (isUuid(openid)) {
+    query = query.eq("user_id", openid);
+  } else {
+    query = query.eq("openid", openid);
+  }
+  const { data, error } = await query.order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ items: data || [] });
 }
@@ -37,8 +44,9 @@ export async function POST(req: NextRequest) {
     if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
     if (!b.image_url) return NextResponse.json({ error: "缺少 image_url" }, { status: 400 });
 
-    const row = {
-      openid,
+    const row: any = {
+      openid: isUuid(openid) ? null : openid,
+      user_id: isUuid(openid) ? openid : null,
       image_url: b.image_url,
       category: b.category || "top",
       color: b.color || null,
@@ -57,7 +65,14 @@ export async function DELETE(req: NextRequest) {
   const openid = req.nextUrl.searchParams.get("openid");
   const id = req.nextUrl.searchParams.get("id");
   if (!openid || !id) return NextResponse.json({ error: "缺少 openid 或 id" }, { status: 400 });
-  const { error } = await supabase.from("user_closet").delete().eq("openid", openid).eq("id", id);
+
+  let query = supabase.from("user_closet").delete().eq("id", id);
+  if (isUuid(openid)) {
+    query = query.eq("user_id", openid);
+  } else {
+    query = query.eq("openid", openid);
+  }
+  const { error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
