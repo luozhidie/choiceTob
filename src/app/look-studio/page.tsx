@@ -36,12 +36,13 @@ async function loadData() {
   return out;
 }
 
-export default async function LookStudioPage() {
+export default async function LookStudioPage({ searchParams }: { searchParams?: Promise<{ baseImageUrl?: string }> }) {
   let data;
   try {
     data = await loadData();
   } catch (e: any) {
     data = { seasons: [], styles: [], products: [], error: e?.message || "数据加载失败" };
   }
-  return <LookStudioClient data={data} />;
+  const params = await searchParams;
+  return <LookStudioClient data={data} baseImageUrl={params?.baseImageUrl || ""} />;
 }

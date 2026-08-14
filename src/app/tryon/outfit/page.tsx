@@ -111,6 +111,13 @@ export default function OutfitPage() {
       {uploader(topPrev, "② 上装 / 连衣裙", setTop, setTopPrev)}
       {uploader(bottomPrev, "③ 下装（裤子 / 裙）", setBottom, setBottomPrev)}
 
+      <div style={card}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 8 }}>④ 配饰 / 鞋包（可选）</div>
+        <div style={{ fontSize: 11, color: "#8a7580", lineHeight: 1.6 }}>
+          整体造型默认只替换上装 + 下装。鞋、包、项链等配饰请在生成整套造型后，点击结果下方的「继续叠加配饰」到普通版逐件追加。
+        </div>
+      </div>
+
       <button
         onClick={gen}
         disabled={loading}
@@ -139,6 +146,23 @@ export default function OutfitPage() {
             <img src={result} style={{ width: "100%", borderRadius: 10, border: "1px solid #4a3840" }} alt="result" />
           </a>
           <p style={{ fontSize: 11, color: "#8a7580", marginTop: 6 }}>点击图片可看大图并保存。</p>
+          <a
+            href="/look-studio?baseImageUrl=" + encodeURIComponent(result)
+            style={{
+              display: "block",
+              marginTop: 10,
+              padding: "10px 0",
+              borderRadius: 8,
+              border: "1px solid #C9A24B",
+              color: "#C9A24B",
+              textAlign: "center",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 700,
+            }}
+          >
+            ＋ 继续叠加配饰（鞋 / 包 / 项链）
+          </a>
         </div>
       )}
     </main>

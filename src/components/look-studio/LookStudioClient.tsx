@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { COLOR_SEASON_COLORS } from "@/lib/styles";
 
 type Season = { code: string; name_zh: string; meta?: any };
@@ -25,7 +25,7 @@ type Product = {
 
 type StackItem = { id: string; title: string; cover: string; resultUrl: string };
 
-type Props = { data: { seasons: Season[]; styles: StyleT[]; products: Product[]; error?: string } };
+type Props = { data: { seasons: Season[]; styles: StyleT[]; products: Product[]; error?: string }; baseImageUrl?: string };
 
 const BG = "#1c111d";
 const CARD = "#2a1a2b";
@@ -35,7 +35,7 @@ const GOLD_DIM = "rgba(201,162,75,.18)";
 const ACCESSORY_CATS = new Set(["shoes", "bag", "accessory"]);
 const isAccessory = (cat?: string) => ACCESSORY_CATS.has(cat || "");
 
-export default function LookStudioClient({ data }: Props) {
+export default function LookStudioClient({ data, baseImageUrl }: Props) {
   const seasons = data.seasons || [];
   const styles = data.styles || [];
   const products = data.products || [];
@@ -52,8 +52,15 @@ export default function LookStudioClient({ data }: Props) {
 
   // —— 我的形象 ——
   const [personFile, setPersonFile] = useState<File | null>(null);
-  const [personPreview, setPersonPreview] = useState<string>("");
+  const [personPreview, setPersonPreview] = useState<string>(baseImageUrl || "");
   const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (baseImageUrl) {
+      setPersonPreview(baseImageUrl);
+      setCanvasUrl(baseImageUrl);
+    }
+  }, [baseImageUrl]);
   const [mySeason, setMySeason] = useState<string>("");
   const [myStyle, setMyStyle] = useState<string>("");
 
