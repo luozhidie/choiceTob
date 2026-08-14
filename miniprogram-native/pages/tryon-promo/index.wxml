@@ -66,38 +66,7 @@
     </view>
   </view>
 
-  <!-- 套餐选择 -->
-  <view class="section">
-    <text class="sec-title">普通版套餐</text>
-    <view class="package-list">
-      <view wx:for="{{packages}}" wx:key="id" wx:if="{{item.type === 'first' || item.type === 'normal_month'}}" class="package-card {{item.highlight ? 'highlight' : ''}}" bindtap="buyPackageById" data-id="{{item.id}}">
-        <view class="package-header">
-          <view>
-            <text class="package-name">{{item.name}}</text>
-            <text class="package-desc">{{item.desc}}</text>
-          </view>
-          <text class="package-price">¥{{item.price}}</text>
-        </view>
-        <view class="package-btn">立即购买</view>
-      </view>
-    </view>
-  </view>
-
-  <view class="section" style="padding-top:0">
-    <text class="sec-title">专业版套餐</text>
-    <view class="package-list">
-      <view wx:for="{{packages}}" wx:key="id" wx:if="{{item.type === 'pro_month' || item.type === 'pro_year'}}" class="package-card {{item.highlight ? 'highlight' : ''}} {{item.type === 'pro_year' ? 'dark' : ''}}" bindtap="buyPackageById" data-id="{{item.id}}">
-        <view class="package-header">
-          <view>
-            <text class="package-name">{{item.name}}</text>
-            <text class="package-desc">{{item.desc}}</text>
-          </view>
-          <text class="package-price">¥{{item.price}}</text>
-        </view>
-        <view class="package-btn">立即购买</view>
-      </view>
-    </view>
-  </view>
+  <!-- 套餐选择已移除：入口卡已承载普通版/专业版入口，避免重复堆叠 -->
 
   <view wx:if="{{toast}}" class="toast">{{toast}}</view>
 </view>

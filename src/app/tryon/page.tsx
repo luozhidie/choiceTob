@@ -76,77 +76,7 @@ export default function TryonPromoPage() {
         </div>
       </section>
 
-      {/* 普通版套餐 */}
-      <section className="px-4 mt-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-[#2d1b2e]">普通版套餐</h2>
-          <Link href="/tryon/normal" className="text-xs text-[#C9A24B]">查看全部 ›</Link>
-        </div>
-        <div className="space-y-3">
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#eee5df]">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold text-[#2d1b2e]">首单体验</div>
-                <div className="text-xs text-gray-500 mt-1">9 次普通 + 1 次专业 · 365 天</div>
-              </div>
-              <div className="text-xl font-extrabold text-[#C9A24B]">¥9.9</div>
-            </div>
-            <div className="mt-3">
-              <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} label="¥9.9 购买" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#C9A24B]/40 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">推荐</div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold text-[#2d1b2e]">普通月卡</div>
-                <div className="text-xs text-gray-500 mt-1">30 天 70 次普通试穿</div>
-              </div>
-              <div className="text-xl font-extrabold text-[#C9A24B]">¥59</div>
-            </div>
-            <div className="mt-3">
-              <TryonPayButton productId="tryon_normal_month_59" title="普通月卡" price={59} label="¥59 购买" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 专业版套餐 */}
-      <section className="px-4 mt-5">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-[#2d1b2e]">专业版套餐</h2>
-          <Link href="/tryon/pro" className="text-xs text-[#C9A24B]">查看全部 ›</Link>
-        </div>
-        <div className="space-y-3">
-          <div className="bg-white rounded-2xl shadow-sm p-4 border border-[#eee5df]">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold text-[#2d1b2e]">专业月卡</div>
-                <div className="text-xs text-gray-500 mt-1">30 天 200 次专业诊断</div>
-              </div>
-              <div className="text-xl font-extrabold text-[#C9A24B]">¥199</div>
-            </div>
-            <div className="mt-3">
-              <TryonPayButton productId="tryon_pro_month_199" title="专业月卡" price={199} label="¥199 购买" />
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white rounded-2xl shadow-sm p-4 relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">最划算</div>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-bold">专业年卡</div>
-                <div className="text-xs text-white/70 mt-1">365 天 1000 次专业诊断</div>
-              </div>
-              <div className="text-xl font-extrabold text-[#C9A24B]">¥999</div>
-            </div>
-            <div className="mt-3">
-              <TryonPayButton productId="tryon_pro_year_999" title="专业年卡" price={999} label="¥999 购买" />
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* 套餐列表已移除：入口卡已承载普通版/专业版入口，避免重复堆叠 */}
 
       {/* 底部固定栏 */}
       <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-100 px-5 py-3 flex items-center justify-between max-w-[720px] mx-auto z-20 shadow-[0_-4px_20px_rgba(0,0,0,.06)]">
