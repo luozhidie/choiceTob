@@ -316,16 +316,26 @@
     <view class="tryon-entry" bindtap="goLookStudio">
       <view class="te-left">
         <text class="te-title">上传照片 · 先试再买</text>
-        <text class="te-desc">挑好衣服一键试穿，喜欢再带回家 · 新人首单 ¥1</text>
+        <text class="te-desc">挑好衣服一键试穿，喜欢再带回家 · 新人首单 ¥9.9</text>
       </view>
       <view class="te-btn">去试衣 ›</view>
     </view>
-    <view class="tryon-entry alt" bindtap="goStyleProfile">
-      <view class="te-left">
-        <text class="te-title">我的形象档案</text>
-        <text class="te-desc">填色彩季型与风格，AI 搭配更精准</text>
+  </view>
+
+  <!-- ========== 形象管理（登录后可见） ========== -->
+  <view class="section" wx:if="{{isLoggedIn}}">
+    <view class="sec-header">
+      <text class="sec-title">形象管理</text>
+    </view>
+    <view class="service-list">
+      <view class="sv-item" bindtap="goStyleProfile">
+        <text class="sv-icon-text">🪞</text>
+        <text class="sv-label">我的形象档案</text>
       </view>
-      <view class="te-btn">去填写 ›</view>
+      <view class="sv-item" bindtap="goWardrobe">
+        <text class="sv-icon-text">🚪</text>
+        <text class="sv-label">我的衣橱</text>
+      </view>
     </view>
   </view>
 

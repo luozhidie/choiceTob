@@ -11,10 +11,10 @@ function rewriteSupabase(u) {
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
 // 新规格统一为通用次数，计入 normal；专业版判定靠 proMode，次数走同一个池
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 10 次通用试穿', type: 'first',   days: 365, normal: 10,  pro: 0, highlight: true },
-  { id: 'tryon_monthly_99',  name: '月卡',     price: 99,   unit: '月', desc: '30 天 120 次通用试穿', type: 'month',   days: 30,  normal: 120, pro: 0 },
-  { id: 'tryon_quarter_199', name: '季卡',     price: 199,  unit: '季', desc: '90 天 280 次通用试穿', type: 'quarter', days: 90,  normal: 280, pro: 0 },
-  { id: 'tryon_year_699',    name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次通用试穿', type: 'year',    days: 365, normal: 1000, pro: 0 },
+  { id: 'tryon_first_1yuan', name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 10 次 AI 试衣', type: 'first',   days: 365, normal: 10,  pro: 0, highlight: true },
+  { id: 'tryon_monthly_99',  name: '月卡',     price: 99,   unit: '月', desc: '30 天 120 次 AI 试衣', type: 'month',   days: 30,  normal: 120, pro: 0 },
+  { id: 'tryon_quarter_199', name: '季卡',     price: 199,  unit: '季', desc: '90 天 280 次 AI 试衣', type: 'quarter', days: 90,  normal: 280, pro: 0 },
+  { id: 'tryon_year_699',    name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次 AI 试衣', type: 'year',    days: 365, normal: 1000, pro: 0 },
 ];
 
 // 衣橱品类中文名
@@ -230,10 +230,17 @@ Page({
       fail: function (err) {
         wx.hideLoading();
         var em = (err && err.errMsg) || '';
-        var tip = em.indexOf('domain') > -1
-          ? '域名不在白名单：请到微信公众平台→开发→开发设置→uploadFile合法域名添加 https://colour-choice.art'
-          : ('网络错误：' + em);
-        wx.showModal({ title: '上传失败', content: tip.slice(0, 200), showCancel: false });
+        var tip;
+        if (em.indexOf('domain') > -1 || em.indexOf('not in domain list') > -1 || em.indexOf('url not in domain list') > -1) {
+          tip = '域名未生效：请确认已在「微信公众平台→开发→开发设置→uploadFile合法域名」中保存 https://colour-choice.art（不是 request 域名）。若已保存，请「删除小程序重新进入」刷新缓存。错误：' + em;
+        } else if (em.indexOf('timeout') > -1) {
+          tip = '上传超时，请检查网络或切换网络重试。' + em;
+        } else if (em.indexOf('fail:file too large') > -1 || em.indexOf('exceed') > -1) {
+          tip = '图片超过 5MB，已自动压缩，请换一张更小的图片重试。' + em;
+        } else {
+          tip = '上传失败：' + em + '。若反复失败，请截图联系客服。';
+        }
+        wx.showModal({ title: '上传失败', content: tip.slice(0, 220), showCancel: false });
         console.error('[chooseCloth] uploadFile fail', err);
       }
     });
@@ -294,8 +301,17 @@ Page({
       fail: function (err) {
         wx.hideLoading();
         var em = (err && err.errMsg) || '';
-        var tip = em.indexOf('domain') > -1 ? '域名不在白名单：请到微信公众平台→开发设置→uploadFile合法域名添加 https://colour-choice.art' : ('网络错误：' + em);
-        wx.showModal({ title: '上传失败', content: tip.slice(0, 200), showCancel: false });
+        var tip;
+        if (em.indexOf('domain') > -1 || em.indexOf('not in domain list') > -1 || em.indexOf('url not in domain list') > -1) {
+          tip = '域名未生效：请确认已在「uploadFile合法域名」中保存 https://colour-choice.art（不是 request 域名）。若已保存，请「删除小程序重新进入」刷新缓存。错误：' + em;
+        } else if (em.indexOf('timeout') > -1) {
+          tip = '上传超时，请切换网络重试。' + em;
+        } else if (em.indexOf('fail:file too large') > -1 || em.indexOf('exceed') > -1) {
+          tip = '图片超过 5MB，请换小图重试。' + em;
+        } else {
+          tip = '上传失败：' + em + '。若反复失败请截图联系客服。';
+        }
+        wx.showModal({ title: '上传失败', content: tip.slice(0, 220), showCancel: false });
       }
     });
   },

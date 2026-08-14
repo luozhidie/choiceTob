@@ -3,14 +3,17 @@
 import { useState, useEffect } from "react";
 
 const SEASON_TYPES = [
-  { code: "light_spring", name: "浅春型" }, { code: "warm_spring", name: "暖春型" }, { code: "bright_spring", name: "亮春型" },
-  { code: "light_summer", name: "浅夏型" }, { code: "soft_summer", name: "柔夏型" }, { code: "cool_summer", name: "冷夏型" },
-  { code: "light_autumn", name: "浅秋型" }, { code: "soft_autumn", name: "柔秋型" }, { code: "deep_autumn", name: "深秋型" },
-  { code: "light_winter", name: "浅冬型" }, { code: "clear_winter", name: "净冬型" }, { code: "deep_winter", name: "深冬型" },
+  { code: "deep_cool", name: "深冷" }, { code: "deep_warm", name: "深暖" },
+  { code: "light_cool", name: "浅冷" }, { code: "light_warm", name: "浅暖" },
+  { code: "cool_bright", name: "冷亮" }, { code: "cool_soft", name: "冷柔" },
+  { code: "warm_bright", name: "暖亮" }, { code: "warm_soft", name: "暖柔" },
+  { code: "clear_cool", name: "净冷" }, { code: "clear_warm", name: "净暖" },
+  { code: "soft_cool", name: "柔冷" }, { code: "soft_warm", name: "柔暖" },
 ];
 const STYLE_TAGS = [
-  { code: "natural", name: "自然" }, { code: "elegant", name: "优雅" }, { code: "romantic", name: "浪漫" }, { code: "dramatic", name: "戏剧" },
-  { code: "classic", name: "古典" }, { code: "gamin", name: "少年" }, { code: "avant_garde", name: "前卫" }, { code: "sporty", name: "运动" },
+  { code: "ingenue", name: "少女型" }, { code: "elegant", name: "优雅型" }, { code: "romantic", name: "浪漫型" },
+  { code: "gamine", name: "少年型" }, { code: "trendy", name: "时尚型" }, { code: "classic", name: "古典型" },
+  { code: "natural", name: "自然型" }, { code: "dramatic", name: "戏剧型" },
 ];
 const OCCASIONS = [
   { code: "work", name: "职场通勤" }, { code: "date", name: "约会休闲" }, { code: "travel", name: "出行旅游" }, { code: "social", name: "社交礼仪" }, { code: "home", name: "居家" },

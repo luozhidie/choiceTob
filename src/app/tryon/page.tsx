@@ -29,7 +29,7 @@ export default function TryonPromoPage() {
         <div className="mt-5">
           <TryonPayButton productId="tryon_first_1yuan" title="首单体验" price={9.9} label="新人首单 ¥9.9 试穿" />
         </div>
-        <div className="text-xs text-white/55 mt-2">10 次通用体验 · 限时</div>
+        <div className="text-xs text-white/55 mt-2">10 次 AI 试衣 · 限时</div>
       </section>
 
       {/* 三步 */}

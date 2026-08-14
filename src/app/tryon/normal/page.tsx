@@ -35,7 +35,7 @@ export default function TryonNormalPage() {
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">月卡</div>
-          <div className="text-xs text-gray-500 mt-1">30 天 120 次通用试穿</div>
+          <div className="text-xs text-gray-500 mt-1">30 天 120 次 AI 试衣</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥99</div>
       </div>
@@ -46,7 +46,7 @@ export default function TryonNormalPage() {
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">季卡</div>
-          <div className="text-xs text-gray-500 mt-1">90 天 280 次通用试穿</div>
+          <div className="text-xs text-gray-500 mt-1">90 天 280 次 AI 试衣</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥199</div>
       </div>
@@ -57,7 +57,7 @@ export default function TryonNormalPage() {
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between border-2 border-[#C9A24B]">
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">年卡</div>
-          <div className="text-xs text-gray-500 mt-1">365 天 1000 次通用试穿</div>
+          <div className="text-xs text-gray-500 mt-1">365 天 1000 次 AI 试衣</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥699</div>
       </div>
