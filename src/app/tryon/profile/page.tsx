@@ -96,6 +96,11 @@ export default function ProfilePage() {
   const curMain = mainList.find((m) => m.code === mainStyle) || null;
   const subList = curMain ? curMain.subs : [];
   const mainName = curMain ? curMain.name : "";
+  const subHeading = mainName
+    ? gender === "men"
+      ? `${mainName}的偏风格（可多选叠加）`
+      : `${mainName}的偏风格（曲直 / 冷暖微调）`
+    : "";
 
   const setGenderFn = (g: string) => {
     if (g === gender) return;
@@ -241,7 +246,7 @@ export default function ProfilePage() {
         </div>
         {mainStyle && (
           <>
-            <h3 className="text-xs font-bold text-[#2d1b2e] mt-4 mb-2">{mainName}的偏风格（曲直 / 冷暖微调）</h3>
+            <h3 className="text-xs font-bold text-[#2d1b2e] mt-4 mb-2">{subHeading}</h3>
             <div className="flex flex-wrap gap-2">
               {subList.map((s) => (
                 <button

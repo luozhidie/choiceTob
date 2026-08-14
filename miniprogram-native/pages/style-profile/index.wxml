@@ -22,7 +22,7 @@
       <text wx:for="{{mainList}}" wx:key="code" class="chip {{mainStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="toggleMain">{{item.name}}</text>
     </view>
     <block wx:if="{{mainStyle}}">
-      <text class="sub-ct">{{mainName}}的偏风格（曲直 / 冷暖微调）</text>
+      <text class="sub-ct">{{subHeading}}</text>
       <view class="chips sub-chips">
         <text wx:for="{{subList}}" wx:key="code" class="chip sub-chip {{styleTags.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleSub">{{item.name}}</text>
       </view>

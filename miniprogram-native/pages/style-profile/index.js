@@ -66,6 +66,11 @@ function deriveStyle(gender, tags) {
   }
   return { gender: gender, mainStyle: '', mainName: '', subList: [] };
 }
+// 偏风格小标题：男士风格不分直曲，故不显示「曲直」维度
+function subHeadingOf(gender, mainName) {
+  if (!mainName) return '';
+  return gender === 'men' ? (mainName + '的偏风格（可多选叠加）') : (mainName + '的偏风格（曲直 / 冷暖微调）');
+}
 var OCCASIONS = [
   { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }, { code: 'home', name: '居家' }
 ];
@@ -73,7 +78,7 @@ var OCCASIONS = [
 Page({
   data: {
     seasonTypes: SEASON_TYPES, occasionsList: OCCASIONS,
-    gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [],
+    gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [], subHeading: '',
     seasonType: '', styleTags: [], occasions: [],
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
@@ -95,7 +100,7 @@ Page({
             t.setData({
               seasonType: p.season_type || '',
               styleTags: tags,
-              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList,
+              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName),
               occasions: p.occasions || [],
               bodyType: p.body_type || '',
               height: p.height ? String(p.height) : '',
@@ -119,7 +124,7 @@ Page({
   setGender: function (e) {
     var g = e.currentTarget.dataset.g;
     if (g === this.data.gender) return;
-    this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], styleTags: [] });
+    this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [] });
   },
   toggleMain: function (e) {
     var t = this; var c = e.currentTarget.dataset.c;
@@ -129,11 +134,11 @@ Page({
     var tags = t.data.styleTags.slice();
     if (t.data.mainStyle === c) {
       tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
-      t.setData({ mainStyle: '', mainName: '', subList: [], styleTags: tags });
+      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: tags });
     } else {
       if (old) tags = tags.filter(function (x) { return x !== old.code && !old.subs.some(function (s) { return s.code === x; }); });
       tags.push(c);
-      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, styleTags: tags });
+      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: tags });
     }
   },
   toggleSub: function (e) {
