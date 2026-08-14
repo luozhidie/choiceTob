@@ -683,13 +683,9 @@ export function calculateMaleResult(
   answers: Record<string, string>,
   preference: string,
 ): string {
-  const { questionScores, rules } = maleScoringLogic;
+  const { questionScores } = maleScoringLogic;
 
-  // 1. 计算量感和直曲总分
-  let volumeScore = 0;
-  let curveScore = 0;
-
-  // 特殊指向分
+  // 1. 仅按风格特质指向分（special）累计；系统风格版型无量感/曲直数值维度，故不计 volume/curve
   const specialScores: Record<string, number> = { A: 0, B: 0, C: 0, D: 0, E: 0 };
 
   for (const qId of Object.keys(questionScores)) {
@@ -698,50 +694,17 @@ export function calculateMaleResult(
     const scoreMap = questionScores[qId][answer];
     if (!scoreMap) continue;
 
-    volumeScore += scoreMap.vol;
-    curveScore += scoreMap.cur;
-
     if (scoreMap.special) {
       specialScores[scoreMap.special] += 1;
     }
   }
 
-  // 2. 根据量感+直曲确定基础风格（+3分加权）
-  const { volumeThresholdHigh, volumeThresholdLow, curveThresholdHigh, curveThresholdLow, baseWeight } = rules;
-
-  if (volumeScore >= volumeThresholdHigh) {
-    if (curveScore >= curveThresholdHigh) {
-      specialScores['A'] += baseWeight;
-    } else if (curveScore <= curveThresholdLow) {
-      specialScores['D'] += baseWeight;
-    } else {
-      specialScores['A'] += baseWeight;
-    }
-  } else if (volumeScore <= volumeThresholdLow) {
-    if (curveScore >= curveThresholdHigh) {
-      specialScores['C'] += baseWeight;
-    } else if (curveScore <= curveThresholdLow) {
-      specialScores['E'] += baseWeight;
-    } else {
-      specialScores['E'] += baseWeight;
-    }
-  } else {
-    // 中量感
-    if (curveScore >= 2) {
-      specialScores['C'] += baseWeight;
-    } else if (curveScore <= curveThresholdLow) {
-      specialScores['D'] += baseWeight;
-    } else {
-      specialScores['B'] += baseWeight;
-    }
-  }
-
-  // 3. 加上喜好分
+  // 2. 加上喜好分
   if (preference && specialScores[preference] !== undefined) {
     specialScores[preference] += 2;
   }
 
-  // 4. 找到最高分的风格
+  // 3. 找到最高分的风格
   let maxScore = -Infinity;
   let resultKey = 'B';
 
@@ -752,7 +715,7 @@ export function calculateMaleResult(
     }
   }
 
-  // 5. 映射到风格名称
+  // 4. 映射到风格名称
   const keyToName: Record<string, string> = {
     A: '戏剧型',
     B: '自然型',
