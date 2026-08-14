@@ -14,11 +14,12 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const personFile = formData.get("personImage") as File | null;
+    const personImageUrl = formData.get("personImageUrl") as string | null;
     const productsRaw = formData.get("products") as string | null;
     const garmentImageUrl = formData.get("garmentImageUrl") as string | null;
     const userId = (formData.get("userId") as string | null) || "anonymous";
 
-    if (!personFile) {
+    if (!personFile && !personImageUrl) {
       return NextResponse.json({ error: "缺少人像照片" }, { status: 400 });
     }
 
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "试衣服务未配置" }, { status: 500 });
     }
 
-    // 1. 把人像照片上传到 Supabase，拿到公开 URL（供 Genlook 拉取）
+    // 1. 解析人像 URL：叠加模式直接复用上一次试衣结果图，首件则上传真人照到 Supabase
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) {
@@ -65,23 +66,29 @@ export async function POST(request: NextRequest) {
 
     await supabase.storage.createBucket(BUCKET, { public: true });
 
-    const bytes = await personFile.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const ext = (personFile.name?.split(".").pop() || "jpg").toLowerCase();
-    const safeExt = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? ext : "jpg";
-    const filename = `tryon-person-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${safeExt}`;
+    let personUrl: string;
+    if (personImageUrl) {
+      // 叠加模式：直接用上一件试衣的结果图作为本次基底人像
+      personUrl = personImageUrl;
+    } else {
+      const bytes = await personFile!.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const ext = (personFile!.name?.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? ext : "jpg";
+      const filename = `tryon-person-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${safeExt}`;
 
-    const { error: upErr } = await supabase.storage.from(BUCKET).upload(filename, buffer, {
-      contentType: personFile.type || `image/${safeExt === "jpg" ? "jpeg" : safeExt}`,
-      upsert: false,
-    });
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(filename, buffer, {
+        contentType: personFile!.type || `image/${safeExt === "jpg" ? "jpeg" : safeExt}`,
+        upsert: false,
+      });
 
-    if (upErr) {
-      console.error("[tryon/generate] 上传人像失败", upErr);
-      return NextResponse.json({ error: "上传人像失败：" + upErr.message }, { status: 500 });
+      if (upErr) {
+        console.error("[tryon/generate] 上传人像失败", upErr);
+        return NextResponse.json({ error: "上传人像失败：" + upErr.message }, { status: 500 });
+      }
+
+      personUrl = supabase.storage.from(BUCKET).getPublicUrl(filename).data.publicUrl;
     }
-
-    const { data: { publicUrl: personUrl } } = supabase.storage.from(BUCKET).getPublicUrl(filename);
 
     // 2. 创建 Genlook 试衣任务（异步）
     const externalId = `prod-${Date.now()}`;
