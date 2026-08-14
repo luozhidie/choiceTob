@@ -1,8 +1,8 @@
 <view class="page">
-  <!-- 顶部（零术语，直奔变现：先试再买） -->
+  <!-- 顶部 -->
   <view class="hero">
     <text class="ht">云衣橱•AI虚拟试衣 · 先试再买</text>
-    <text class="hs">上传你的照片，挑好衣服一键试穿，穿上好不好看一眼就知道，喜欢再带回家</text>
+    <text class="hs">上传你的照片，一件件往上加：选好单品点「＋加这件」，真人照上就多一件，叠到满意为止。</text>
     <text class="pkg-link" bindtap="openPackages">试衣套餐 / 续费 ›</text>
   </view>
   <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥9.9 试穿一整套</view>
@@ -22,9 +22,9 @@
     <text class="he-d">最近 7 天可回看</text>
   </view>
 
-  <!-- ① 上传照片（普及版，不暴露季型/风格） -->
+  <!-- ① 上传照片 -->
   <view class="card">
-    <text class="ct">① 上传你的照片</text>
+    <text class="ct">① 上传你的照片（第 1 件试穿对象）</text>
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>
@@ -36,46 +36,79 @@
         <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
     </view>
-    <!-- 肖像授权（试衣前必须勾选） -->
     <view class="auth-row" bindtap="toggleAuth">
       <view class="ck {{agreedAuth ? 'on' : ''}}">{{agreedAuth ? '✓' : ''}}</view>
       <text class="auth-t">我已同意《肖像使用授权》：照片仅用于本次 AI 试衣合成，不外传、不公开</text>
     </view>
   </view>
 
-  <!-- ② 普通版：上传衣服图 或 从店铺挑选 -->
-  <view wx:if="{{!proMode}}" class="card">
-    <text class="ct">② 上传要试穿的衣服</text>
-    <view class="cloth-row">
-      <view class="cloth-pic" bindtap="chooseCloth">
-        <text class="cloth-ph">上传\n衣服</text>
+  <!-- ② 画布 -->
+  <view class="card">
+    <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8rpx;">
+      <text class="ct" style="margin:0;">② 我的造型画布</text>
+      <text style="font-size:24rpx;color:#C9A24B;">已穿 {{stack.length}} 件</text>
+    </view>
+    <view style="width:100%;aspect-ratio:3/4;border-radius:12rpx;background:#16100f;border:1rpx solid #4a3840;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+      <image wx:if="{{canvasUrl}}" src="{{canvasUrl}}" mode="widthFix" style="width:100%;"/>
+      <image wx:elif="{{personPath}}" src="{{personPath}}" mode="aspectFill" style="width:100%;height:100%;"/>
+      <text wx:else style="color:#8a7580;font-size:26rpx;">上传照片后，这里显示你的实时造型</text>
+    </view>
+    <view style="display:flex;gap:16rpx;margin-top:16rpx;">
+      <text style="flex:1;text-align:center;padding:18rpx 0;border-radius:10rpx;border:1rpx solid #4a3840;color:{{stack.length===0?'#6b5560':'#f3ece9'}};font-size:26rpx;" bindtap="undo">↶ 撤销一件</text>
+      <text style="flex:1;text-align:center;padding:18rpx 0;border-radius:10rpx;border:1rpx solid #4a3840;color:{{stack.length===0?'#6b5560':'#f3ece9'}};font-size:26rpx;" bindtap="resetCanvas">清空重来</text>
+    </view>
+    <scroll-view wx:if="{{stack.length>0}}" scroll-x class="tray-scroll" show-scrollbar="{{false}}" style="margin-top:16rpx;">
+      <view wx:for="{{stack}}" wx:key="id" style="position:relative;display:inline-block;width:88rpx;height:116rpx;border-radius:8rpx;overflow:hidden;margin-right:12rpx;border:1rpx solid #4a3840;">
+        <image src="{{item.resultUrl}}" mode="cover" style="width:100%;height:100%;"/>
+        <text style="position:absolute;top:2rpx;left:4rpx;background:rgba(0,0,0,.6);color:#C9A24B;font-size:18rpx;padding:0 8rpx;border-radius:6rpx;">{{index+1}}</text>
       </view>
-      <view class="cloth-info">
-        <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），或从店铺挑选。</text>
-        <text class="shop-entry" bindtap="openShopPick">没有衣服图？从店铺挑选 ›</text>
+    </scroll-view>
+  </view>
+
+  <!-- 普通版：上传我的衣服图 + 全部商品网格 -->
+  <block wx:if="{{!proMode}}">
+    <view class="card">
+      <text class="ct">③ 上传我自己的衣服（直接叠上去）</text>
+      <view class="cloth-row">
+        <view class="cloth-pic" bindtap="chooseCloth">
+          <text class="cloth-ph">上传\n衣服</text>
+        </view>
+        <view class="cloth-info">
+          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），会自动叠到你的造型上。</text>
+          <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
+        </view>
       </view>
+      <block wx:if="{{showShopPick}}">
+        <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
+          <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
+          <text wx:for="{{categories}}" wx:key="code" class="chip {{category===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setCategory">{{item.name}}</text>
+        </scroll-view>
+        <view class="grid3">
+          <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+            <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+            <text class="ptitle">{{item.title}}</text>
+            <text class="pprice">¥{{item.price}}</text>
+            <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+          </view>
+        </view>
+        <text class="close-shop" bindtap="closeShopPick">‹ 收起店铺挑选</text>
+      </block>
     </view>
 
-    <!-- 展开店铺挑选 -->
-    <block wx:if="{{showShopPick}}">
-      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
-        <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
-        <text wx:for="{{categories}}" wx:key="*this" class="chip {{category===item?'on':''}}" data-c="{{item}}" bindtap="setCategory">{{item}}</text>
-      </scroll-view>
+    <view class="card">
+      <text class="ct">挑单品 · 一件件加</text>
       <view class="grid3">
-        <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+        <view wx:for="{{products}}" wx:key="id" class="pcard">
           <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
           <text class="ptitle">{{item.title}}</text>
           <text class="pprice">¥{{item.price}}</text>
-          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
         </view>
       </view>
-      <view wx:if="{{browseProducts.length===0}}" class="empty">该分类暂无商品</view>
-      <text class="close-shop" bindtap="closeShopPick">‹ 收起店铺挑选</text>
-    </block>
-  </view>
+    </view>
+  </block>
 
-  <!-- 专业版（升级后显示：穿衣风格 + 造型/买手/手工/按风格） -->
+  <!-- 专业版：形象 + tabs -->
   <block wx:if="{{proMode}}">
     <view class="card">
       <text class="ct">我的形象（穿衣风格）</text>
@@ -86,37 +119,19 @@
     </view>
 
     <view class="tabs">
-      <text class="tab {{mode==='look'?'on':''}}" data-m="look" bindtap="setMode">造型</text>
+      <text class="tab {{mode==='browse'?'on':''}}" data-m="browse" bindtap="setMode">挑单品</text>
       <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>
       <text class="tab {{mode==='closet'?'on':''}}" data-m="closet" bindtap="setMode">我的衣橱</text>
       <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按形象生成</text>
     </view>
 
-    <view wx:if="{{mode==='look'}}" class="grid2">
-      <view wx:for="{{lookCards}}" wx:key="code" class="lcard">
-        <text class="lname">{{item.gender==='women'?'女·':'男·'}}{{item.name_zh}} 风格造型</text>
-        <view class="lrow">
-          <image wx:for="{{item.items}}" wx:for-item="it" wx:key="id" src="{{it.cover}}" mode="aspectFill" class="limg"/>
-        </view>
-        <text class="lbtn" data-code="{{item.code}}" bindtap="loadLook">装入我的造型 →</text>
+    <view wx:if="{{mode==='browse'}}" class="grid3">
+      <view wx:for="{{products}}" wx:key="id" class="pcard">
+        <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+        <text class="ptitle">{{item.title}}</text>
+        <text class="pprice">¥{{item.price}}</text>
+        <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
       </view>
-      <view wx:if="{{lookCards.length===0}}" class="empty">暂无足够商品，去「手工组合」挑选</view>
-    </view>
-
-    <view wx:if="{{mode==='closet'}}" class="closet-box">
-      <text class="cl-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配；试穿时也能直接试你自己的衣服。</text>
-      <view class="cl-upload" bindtap="uploadToCloset"><text>＋ 上传单品到衣橱</text></view>
-      <view class="grid3">
-        <view wx:for="{{closetItems}}" wx:key="id" class="pcard">
-          <image src="{{item.image_url}}" mode="aspectFill" class="pimg"/>
-          <text class="ptitle">{{item.catName}}</text>
-          <view class="cl-acts">
-            <text class="cl-add" data-id="{{item.id}}" bindtap="addClosetToTray">加入</text>
-            <text class="cl-del" data-id="{{item.id}}" bindtap="delCloset">删除</text>
-          </view>
-        </view>
-      </view>
-      <view wx:if="{{closetItems.length===0}}" class="empty">衣橱空空，先上传你的单品吧</view>
     </view>
 
     <view wx:if="{{mode==='manual'}}">
@@ -129,44 +144,44 @@
           <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
           <text class="ptitle">{{item.title}}</text>
           <text class="pprice">¥{{item.price}}</text>
-          <text class="pbtn" data-id="{{item.id}}" bindtap="addTray">加入造型</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
         </view>
       </view>
     </view>
 
-    <view wx:if="{{mode==='auto'}}" class="auto-box">
-      <text class="auto-tip">基于你选的穿衣风格，自动挑出最匹配单品组成完整造型。</text>
-      <text class="auto-btn" bindtap="autoGenerate">✨ 一键生成我的专属造型</text>
-      <view class="tray-prev" wx:if="{{tray.length>0}}">
-        <image wx:for="{{tray}}" wx:key="id" src="{{item.cover}}" mode="aspectFill" class="tp-img"/>
+    <view wx:if="{{mode==='closet'}}" class="closet-box">
+      <text class="cl-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配；试穿时也能直接试你自己的衣服。</text>
+      <view class="cl-upload" bindtap="uploadToCloset"><text>＋ 上传单品到衣橱</text></view>
+      <view class="grid3">
+        <view wx:for="{{closetItems}}" wx:key="id" class="pcard">
+          <image src="{{item.image_url}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.catName}}</text>
+          <view class="cl-acts">
+            <text class="cl-add" data-id="{{item.id}}" bindtap="addOne">＋ 加</text>
+            <text class="cl-del" data-id="{{item.id}}" bindtap="delCloset">删除</text>
+          </view>
+        </view>
       </view>
+      <view wx:if="{{closetItems.length===0}}" class="empty">衣橱空空，先上传你的单品吧</view>
+    </view>
+
+    <view wx:if="{{mode==='auto'}}" class="auto-box">
+      <text class="auto-tip">基于你选的穿衣风格，自动挑出最匹配单品，点「＋加这件」逐件穿上身。</text>
+      <text class="auto-btn" bindtap="autoGenerate">✨ 按我的形象挑单品</text>
+      <view class="grid3">
+        <view wx:for="{{recommend}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+        </view>
+      </view>
+      <view wx:if="{{recommend.length===0}}" class="empty">点上方按钮，让 AI 按你的风格挑单品</view>
     </view>
   </block>
 
-  <!-- 我的造型 底栏 -->
-  <view class="tray-bar">
-    <scroll-view scroll-x class="tray-scroll" show-scrollbar="{{false}}">
-      <text wx:if="{{tray.length===0}}" class="tray-empty">「我的造型」空空如也</text>
-      <view wx:for="{{tray}}" wx:key="id" class="tray-item">
-        <image src="{{item.cover}}" mode="aspectFill" class="ti-img"/>
-        <text class="ti-x" data-id="{{item.id}}" catchtap="removeTray">×</text>
-      </view>
-    </scroll-view>
-    <text class="try-btn" bindtap="doTryOn">{{loading?'生成中…':'试穿 (' + tray.length + '件)'}}</text>
-  </view>
-
-  <!-- 结果弹层 -->
-  <view wx:if="{{showResult}}" class="mask" bindtap="closeResult">
-    <view class="result" catchtap="noop">
-      <text class="rc">整体造型已生成</text>
-      <view class="rimg-wrap">
-        <image src="{{resultUrl}}" mode="widthFix" class="rimg" bindtap="previewResult"/>
-        <view class="ai-badge">AI 合成</view>
-      </view>
-      <text class="save-btn" catchtap="saveResult">保存到相册（高清）</text>
-      <text class="buy-tip" catchtap="noop">喜欢这身？在「挑衣服」里点单品即可下单带走</text>
-      <text class="close-tip" catchtap="closeResult">点击空白处关闭</text>
-    </view>
+  <!-- 保存最终结果 -->
+  <view wx:if="{{canvasUrl}}" class="card" style="margin-top:12rpx;">
+    <text class="pbtn" style="display:block;text-align:center;background:#C9A24B;color:#1c111d;padding:20rpx 0;border-radius:10rpx;" bindtap="saveResult">保存 / 查看最终造型大图</text>
   </view>
 
   <!-- 套餐面板 -->

@@ -23,7 +23,14 @@ type Product = {
   category: string;
 };
 
+type StackItem = { id: string; title: string; cover: string; resultUrl: string };
+
 type Props = { data: { seasons: Season[]; styles: StyleT[]; products: Product[]; error?: string } };
+
+const BG = "#1c111d";
+const CARD = "#2a1a2b";
+const GOLD = "#C9A24B";
+const GOLD_DIM = "rgba(201,162,75,.18)";
 
 export default function LookStudioClient({ data }: Props) {
   const seasons = data.seasons || [];
@@ -37,19 +44,29 @@ export default function LookStudioClient({ data }: Props) {
   const mainWomen = styles.filter((s) => s.gender === "women" && s.is_main);
   const mainMen = styles.filter((s) => s.gender === "men" && s.is_main);
 
-  const [mode, setMode] = useState<"look" | "buyer" | "manual" | "auto">("look");
-  const [mySeason, setMySeason] = useState<string>("");
-  const [myStyle, setMyStyle] = useState<string>("");
+  // —— 我的形象 ——
   const [personFile, setPersonFile] = useState<File | null>(null);
   const [personPreview, setPersonPreview] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const [mySeason, setMySeason] = useState<string>("");
+  const [myStyle, setMyStyle] = useState<string>("");
 
-  const [tray, setTray] = useState<Product[]>([]);
+  // —— 画布叠加 ——
+  const [canvasUrl, setCanvasUrl] = useState<string>(""); // 当前画布（初始=真人照预览）
+  const [stack, setStack] = useState<StackItem[]>([]); // 已叠加单品序列
+  const [garmentFile, setGarmentFile] = useState<File | null>(null);
+  const [garmentPreview, setGarmentPreview] = useState<string>("");
+  const garmentRef = useRef<HTMLInputElement>(null);
+
+  const [mode, setMode] = useState<"browse" | "buyer" | "manual" | "auto">("browse");
   const [buyerStyle, setBuyerStyle] = useState<string>(mainWomen[0]?.code || "");
   const [filterSeason, setFilterSeason] = useState<string>("");
-  const [result, setResult] = useState<{ url: string; credits: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingTitle, setLoadingTitle] = useState("");
   const [err, setErr] = useState("");
+
+  const seasonName = (c: string) => seasonMap[c]?.name_zh || c;
+  const styleName = (c: string) => styleMap[c]?.name_zh || c;
 
   // 评分：季型权重2，风格权重1
   const score = (p: Product, sc: string[], st: string[]) => {
@@ -58,94 +75,91 @@ export default function LookStudioClient({ data }: Props) {
     return s;
   };
 
-  const seasonName = (c: string) => seasonMap[c]?.name_zh || c;
-  const styleName = (c: string) => styleMap[c]?.name_zh || c;
-
-  // 造型：按主风格生成造型卡（展示「穿衣风格」的具像化）
+  // 造型卡（展示「穿衣风格」的具像化，单品可逐件加）
   const lookCards = useMemo(() => {
     const mains = [...mainWomen, ...mainMen];
     return mains
       .map((m) => {
-        const items = products
-          .filter((p) => (p.styles || []).includes(m.code))
-          .slice(0, 4);
+        const items = products.filter((p) => (p.styles || []).includes(m.code)).slice(0, 4);
         return { style: m, items };
       })
       .filter((c) => c.items.length > 0);
   }, [mainWomen, mainMen, products]);
 
-  // 买手：当前买手风格下的商品
   const buyerProducts = useMemo(() => {
     if (!buyerStyle) return [];
     return products.filter((p) => (p.styles || []).includes(buyerStyle));
   }, [buyerStyle, products]);
 
-  // 手工组合 / 自动：按筛选浏览
   const browseProducts = useMemo(() => {
     let list = products;
     if (filterSeason) list = list.filter((p) => (p.seasons || []).includes(filterSeason));
     return list;
   }, [products, filterSeason]);
 
-  const addToTray = (p: Product) => {
-    if (tray.find((t) => t.id === p.id)) return;
-    setTray((t) => [...t, p]);
-  };
-  const removeTray = (id: string) => setTray((t) => t.filter((x) => x.id !== id));
-
   const onPickPerson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
     setPersonFile(f);
     setPersonPreview(URL.createObjectURL(f));
+    setErr("");
   };
-
-  // 按风格自动生成：用我的季型+风格结论，挑分的高的若干单品
-  const autoGenerate = () => {
-    const sc = mySeason ? [mySeason] : [];
-    const st = myStyle ? [myStyle] : [];
-    if (!sc.length && !st.length) {
-      setErr("请先在「我的形象」选择你的色彩季型和穿衣风格");
-      return;
-    }
-    const ranked = [...products]
-      .map((p) => ({ p, s: score(p, sc, st) }))
-      .filter((x) => x.s > 0)
-      .sort((a, b) => b.s - a.s)
-      .slice(0, 4)
-      .map((x) => x.p);
-    if (!ranked.length) {
-      setErr("暂无与你的季型/风格匹配的商品，试着放宽筛选");
-      return;
-    }
-    setTray(ranked);
+  const onPickGarment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setGarmentFile(f);
+    setGarmentPreview(URL.createObjectURL(f));
     setErr("");
   };
 
-  const runTryOn = async () => {
+  // —— 核心：逐件叠加 ——
+  const tryOnCore = async (item: { cover?: string; title: string }) => {
     setErr("");
-    if (!personFile) {
-      setErr("请先上传你的照片（用于把造型试穿到你身上）");
+    if (!personFile && !canvasUrl) {
+      setErr("请先上传你的照片（第 1 件试穿的对象）");
       return;
     }
-    if (tray.length === 0) {
-      setErr("请先添加至少 1 件单品到「我的造型」");
+    if (!personFile && stack.length === 0) {
+      setErr("请先上传你的照片");
       return;
     }
     setLoading(true);
-    setResult(null);
     try {
       const fd = new FormData();
-      fd.append("personImage", personFile);
-      fd.append(
-        "products",
-        JSON.stringify(tray.map((p) => ({ url: p.cover, title: p.title })))
-      );
+      // 第 1 件传真人照文件；后续用上一张结果图当基底
+      if (stack.length === 0) {
+        if (!personFile) { setErr("请先上传你的照片"); setLoading(false); return; }
+        fd.append("personImage", personFile);
+      } else {
+        fd.append("personImageUrl", canvasUrl);
+      }
+      // 单品：商城 URL 或 用户上传图
+      if (item.cover) {
+        fd.append("garmentImageUrl", item.cover);
+      } else if (garmentFile) {
+        fd.append("garmentImage", garmentFile);
+      } else {
+        setErr("缺少单品图片");
+        setLoading(false);
+        return;
+      }
       fd.append("userId", "lookstudio");
+
       const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "试衣失败");
-      setResult({ url: json.resultUrl, credits: json.credits ?? tray.length });
+
+      const newUrl = json.resultUrl;
+      const entry: StackItem = {
+        id: `s${stack.length}-${Date.now()}`,
+        title: item.title,
+        cover: item.cover || (garmentPreview || ""),
+        resultUrl: newUrl,
+      };
+      setStack((s) => [...s, entry]);
+      setCanvasUrl(newUrl);
+      setGarmentFile(null);
+      setGarmentPreview("");
     } catch (e: any) {
       setErr(e?.message || "试衣失败");
     } finally {
@@ -153,47 +167,63 @@ export default function LookStudioClient({ data }: Props) {
     }
   };
 
+  const addFromShop = (p: Product) => tryOnCore({ cover: p.cover, title: p.title });
+  const addUpload = () => {
+    if (!garmentFile) { setErr("先选一张你的单品图"); return; }
+    tryOnCore({ title: garmentFile.name || "我的单品" });
+  };
+
+  const undo = () => {
+    setStack((s) => {
+      const next = s.slice(0, -1);
+      const last = next[next.length - 1];
+      setCanvasUrl(last ? last.resultUrl : "");
+      return next;
+    });
+  };
+  const resetCanvas = () => { setStack([]); setCanvasUrl(""); };
+
   const tabs: { k: typeof mode; label: string }[] = [
-    { k: "look", label: "造型" },
+    { k: "browse", label: "挑单品" },
     { k: "buyer", label: "买手" },
     { k: "manual", label: "手工组合" },
     { k: "auto", label: "按风格生成" },
   ];
 
   return (
-    <main style={{ maxWidth: 720, margin: "0 auto", padding: 14, fontFamily: "system-ui, sans-serif", color: "#1a1a1a", paddingBottom: 120 }}>
+    <main style={{ maxWidth: 720, margin: "0 auto", padding: 14, fontFamily: "system-ui, sans-serif", color: "#f3ece9", paddingBottom: 120, background: BG, minHeight: "100vh" }}>
       <header style={{ marginBottom: 12 }}>
-        <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800 }}>整体造型 · Look Studio</h1>
-        <p style={{ fontSize: 13, color: "#666", margin: "4px 0 0" }}>
-          把打过「色彩季型 × 穿衣风格」标签的服装，试穿到与你季型/风格结论匹配的你身上。
+        <h1 style={{ fontSize: 22, margin: 0, fontWeight: 800, color: "#fff" }}>云衣橱 · AI 虚拟试衣</h1>
+        <p style={{ fontSize: 13, color: "#b9a7ad", margin: "4px 0 0" }}>
+          一件件往上加：选好单品 → 点「＋加这件」，真人照上就会多出这件衣服，叠到满意为止。
         </p>
       </header>
 
-      {data.error && <p style={{ color: "#c0392b", fontSize: 13 }}>数据加载异常：{data.error}</p>}
+      {data.error && <p style={{ color: "#e88", fontSize: 13 }}>数据加载异常：{data.error}</p>}
 
-      {/* 我的形象 */}
+      {/* ① 上传真人照 */}
       <section style={card}>
-        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8 }}>① 我的形象（试穿对象）</div>
+        <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: "#fff" }}>① 上传你的照片（第 1 件试穿对象）</div>
         <div style={{ display: "flex", gap: 12 }}>
-          <div onClick={() => fileRef.current?.click()} style={{ width: 72, height: 96, borderRadius: 10, border: "1.5px dashed #bbb", display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 12, textAlign: "center", overflow: "hidden", background: "#fafafa", cursor: "pointer", flexShrink: 0 }}>
+          <div onClick={() => fileRef.current?.click()} style={{ width: 72, height: 96, borderRadius: 10, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 12, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer", flexShrink: 0 }}>
             {personPreview ? <img src={personPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="me" /> : "上传\n照片"}
           </div>
           <input ref={fileRef} type="file" accept="image/*" onChange={onPickPerson} style={{ display: "none" }} />
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: "#888", marginBottom: 4 }}>色彩季型</div>
+            <div style={{ fontSize: 12, color: "#b9a7ad", marginBottom: 4 }}>色彩季型</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {seasons.map((s) => (
                 <span key={s.code} onClick={() => setMySeason(s.code)}
-                  style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, cursor: "pointer", border: "1px solid #ddd", background: mySeason === s.code ? seasonColor(s.code) : "#fff", color: mySeason === s.code ? "#fff" : "#555" }}>
+                  style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, cursor: "pointer", border: "1px solid #4a3840", background: mySeason === s.code ? seasonColor(s.code) : "transparent", color: mySeason === s.code ? "#fff" : "#cbb" }}>
                   {s.name_zh}
                 </span>
               ))}
             </div>
-            <div style={{ fontSize: 12, color: "#888", margin: "8px 0 4px" }}>穿衣风格（主风格）</div>
+            <div style={{ fontSize: 12, color: "#b9a7ad", margin: "8px 0 4px" }}>穿衣风格（主风格）</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
               {[...mainWomen, ...mainMen].map((m) => (
                 <span key={m.code} onClick={() => setMyStyle(m.code)}
-                  style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, cursor: "pointer", border: "1px solid #ddd", background: myStyle === m.code ? "#222" : "#fff", color: myStyle === m.code ? "#fff" : "#555" }}>
+                  style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20, cursor: "pointer", border: "1px solid #4a3840", background: myStyle === m.code ? GOLD : "transparent", color: myStyle === m.code ? "#1c111d" : "#cbb" }}>
                   {m.gender === "women" ? "女" : "男"}·{m.name_zh}
                 </span>
               ))}
@@ -202,31 +232,73 @@ export default function LookStudioClient({ data }: Props) {
         </div>
       </section>
 
-      {/* 模式 Tab */}
+      {/* ② 画布 */}
+      <section style={{ ...card, marginTop: 12 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>② 我的造型画布</div>
+          <div style={{ fontSize: 12, color: GOLD }}>已穿 {stack.length} 件 · {stack.length} credits</div>
+        </div>
+        <div onClick={() => canvasUrl && window.open(canvasUrl, "_blank")}
+          style={{ width: "100%", aspectRatio: "3 / 4", borderRadius: 10, border: "1px solid #4a3840", background: "#16100f", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: canvasUrl ? "pointer" : "default" }}>
+          {canvasUrl ? <img src={canvasUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="canvas" />
+            : personPreview ? <img src={personPreview} style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="me" />
+            : <span style={{ color: "#8a7580", fontSize: 13 }}>上传照片后，这里显示你的实时造型</span>}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+          <button onClick={undo} disabled={stack.length === 0 || loading} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #4a3840", background: "transparent", color: stack.length === 0 ? "#6b5560" : "#f3ece9", fontSize: 13, cursor: stack.length === 0 ? "default" : "pointer" }}>↶ 撤销一件</button>
+          <button onClick={resetCanvas} disabled={stack.length === 0} style={{ flex: 1, padding: "9px 0", borderRadius: 9, border: "1px solid #4a3840", background: "transparent", color: stack.length === 0 ? "#6b5560" : "#f3ece9", fontSize: 13, cursor: stack.length === 0 ? "default" : "pointer" }}>清空重来</button>
+        </div>
+        {/* 历史栈 */}
+        {stack.length > 0 && (
+          <div style={{ display: "flex", gap: 6, overflowX: "auto", marginTop: 10, paddingBottom: 4 }}>
+            {stack.map((s, i) => (
+              <div key={s.id} style={{ position: "relative", flexShrink: 0, width: 44, height: 58, borderRadius: 6, overflow: "hidden", border: "1px solid #4a3840" }}>
+                <img src={s.resultUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={s.title} />
+                <span style={{ position: "absolute", top: 1, left: 2, background: "rgba(0,0,0,.6)", color: GOLD, fontSize: 9, padding: "0 4px", borderRadius: 6 }}>{i + 1}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* 上传我的单品图 */}
+      <section style={{ ...card, marginTop: 12 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>③ 上传我自己的单品图（可选）</div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div onClick={() => garmentRef.current?.click()} style={{ width: 60, height: 60, borderRadius: 8, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 11, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer" }}>
+            {garmentPreview ? <img src={garmentPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="g" /> : "单品\n图"}
+          </div>
+          <input ref={garmentRef} type="file" accept="image/*" onChange={onPickGarment} style={{ display: "none" }} />
+          <button onClick={addUpload} disabled={!garmentFile || loading} style={{ ...goldBtn, opacity: !garmentFile ? .5 : 1 }}>＋ 把这张加进造型</button>
+        </div>
+      </section>
+
+      {/* 模式 Tab（挑单品加入画布） */}
       <nav style={{ display: "flex", gap: 6, margin: "14px 0" }}>
         {tabs.map((t) => (
           <button key={t.k} onClick={() => setMode(t.k)}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", background: mode === t.k ? "#222" : "#f0f0f0", color: mode === t.k ? "#fff" : "#555" }}>
+            style={{ flex: 1, padding: "9px 0", borderRadius: 10, border: "none", fontSize: 14, fontWeight: 700, cursor: "pointer", background: mode === t.k ? GOLD : "#33222f", color: mode === t.k ? "#1c111d" : "#d8c3c9" }}>
             {t.label}
           </button>
         ))}
       </nav>
 
-      {/* 造型 */}
-      {mode === "look" && (
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {lookCards.map((c) => (
-            <div key={c.style.code} style={{ ...card, padding: 10 }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 6 }}>{c.style.name_zh} 风格造型</div>
-              <div style={{ display: "flex", gap: 4, height: 120, marginBottom: 6 }}>
-                {c.items.map((p) => (
-                  <img key={p.id} src={p.cover} style={{ flex: 1, height: "100%", objectFit: "cover", borderRadius: 6 }} alt={p.title} />
-                ))}
-              </div>
-              <button onClick={() => { setTray(c.items); setErr(""); }} style={btnSm}>装入「我的造型」并试穿 →</button>
-            </div>
-          ))}
-          {lookCards.length === 0 && <p style={{ color: "#999", fontSize: 13 }}>暂无足够商品生成造型，先去「手工组合」挑选单品。</p>}
+      {err && <p style={{ color: "#e88", fontSize: 13, margin: "4px 0 10px" }}>{err}</p>}
+
+      {loading && (
+        <div style={{ background: GOLD_DIM, color: GOLD, fontSize: 13, padding: "10px 12px", borderRadius: 10, marginBottom: 10 }}>
+          {loadingTitle || "正在把这件穿上…约 15 秒，请稍候"}
+        </div>
+      )}
+
+      {/* 挑单品 */}
+      {mode === "browse" && (
+        <div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            {products.map((p) => (
+              <ProductCard key={p.id} p={p} onAdd={addFromShop} seasonName={seasonName} styleName={styleName} />
+            ))}
+          </div>
         </div>
       )}
 
@@ -236,17 +308,17 @@ export default function LookStudioClient({ data }: Props) {
           <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 8 }}>
             {[...mainWomen, ...mainMen].map((m) => (
               <span key={m.code} onClick={() => setBuyerStyle(m.code)}
-                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer", border: "1px solid #ddd", background: buyerStyle === m.code ? "#222" : "#fff", color: buyerStyle === m.code ? "#fff" : "#555" }}>
+                style={{ fontSize: 12, padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer", border: "1px solid #4a3840", background: buyerStyle === m.code ? GOLD : "transparent", color: buyerStyle === m.code ? "#1c111d" : "#d8c3c9" }}>
                 {m.gender === "women" ? "女·" : "男·"}{m.name_zh} 买手
               </span>
             ))}
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {buyerProducts.map((p) => (
-              <ProductCard key={p.id} p={p} onAdd={() => addToTray(p)} added={!!tray.find((t) => t.id === p.id)} seasonName={seasonName} styleName={styleName} />
+              <ProductCard key={p.id} p={p} onAdd={addFromShop} seasonName={seasonName} styleName={styleName} />
             ))}
           </div>
-          {buyerProducts.length === 0 && <p style={{ color: "#999", fontSize: 13 }}>该买手暂无匹配商品。</p>}
+          {buyerProducts.length === 0 && <p style={{ color: "#8a7580", fontSize: 13 }}>该买手暂无匹配商品。</p>}
         </div>
       )}
 
@@ -261,7 +333,7 @@ export default function LookStudioClient({ data }: Props) {
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {browseProducts.map((p) => (
-              <ProductCard key={p.id} p={p} onAdd={() => addToTray(p)} added={!!tray.find((t) => t.id === p.id)} seasonName={seasonName} styleName={styleName} />
+              <ProductCard key={p.id} p={p} onAdd={addFromShop} seasonName={seasonName} styleName={styleName} />
             ))}
           </div>
         </div>
@@ -270,70 +342,52 @@ export default function LookStudioClient({ data }: Props) {
       {/* 按风格生成 */}
       {mode === "auto" && (
         <div>
-          <p style={{ fontSize: 13, color: "#666" }}>基于你在「我的形象」选择的季型与风格，自动挑出最匹配的单品组成完整造型。</p>
-          <button onClick={autoGenerate} style={{ ...btnSm, background: "#7b4dff", color: "#fff", marginBottom: 10 }}>✨ 一键生成我的专属造型</button>
-          {tray.length > 0 && (
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
-              {tray.map((p) => <img key={p.id} src={p.cover} style={{ width: "100%", height: 90, objectFit: "cover", borderRadius: 6 }} alt={p.title} />)}
-            </div>
-          )}
+          <p style={{ fontSize: 13, color: "#b9a7ad" }}>基于你在「①」选择的季型与风格，点下方逐件把最匹配的单品穿上身。</p>
+          {[...mainWomen, ...mainMen].map((m) => {
+            const items = products.filter((p) => (p.styles || []).includes(m.code)).slice(0, 6);
+            if (!items.length) return null;
+            return (
+              <div key={m.code} style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", margin: "6px 0" }}>{m.gender === "women" ? "女" : "男"}·{m.name_zh} 风格</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                  {items.map((p) => <ProductCard key={p.id} p={p} onAdd={addFromShop} seasonName={seasonName} styleName={styleName} />)}
+                </div>
+              </div>
+            );
+          })}
+          {lookCards.length === 0 && <p style={{ color: "#8a7580", fontSize: 13 }}>暂无足够商品，去「挑单品」手动加。</p>}
         </div>
       )}
 
-      {err && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10 }}>{err}</p>}
-
-      {/* 我的造型 固定底栏 */}
-      <div style={{ position: "fixed", left: 0, right: 0, bottom: 0, background: "#fff", borderTop: "1px solid #eee", padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, maxWidth: 720, margin: "0 auto" }}>
-        <div style={{ flex: 1, display: "flex", gap: 6, overflowX: "auto" }}>
-          {tray.length === 0 && <span style={{ fontSize: 12, color: "#aaa" }}>「我的造型」空空如也</span>}
-          {tray.map((p) => (
-            <div key={p.id} style={{ position: "relative", flexShrink: 0 }}>
-              <img src={p.cover} style={{ width: 44, height: 56, objectFit: "cover", borderRadius: 6, border: "1px solid #eee" }} alt={p.title} />
-              <span onClick={() => removeTray(p.id)} style={{ position: "absolute", top: -6, right: -6, background: "#c0392b", color: "#fff", borderRadius: "50%", width: 18, height: 18, fontSize: 12, display: "flex", alignItems: "center", justifyContent: "center" }}>×</span>
-            </div>
-          ))}
-        </div>
-        <button onClick={runTryOn} disabled={loading || tray.length === 0}
-          style={{ padding: "11px 16px", borderRadius: 10, border: "none", background: loading ? "#aaa" : "#222", color: "#fff", fontWeight: 700, fontSize: 13, whiteSpace: "nowrap" }}>
-          {loading ? "生成中…" : `试穿 (${tray.length}件/${tray.length}credit)`}
-        </button>
-      </div>
-
-      {/* 结果弹层 */}
-      {result && (
-        <div onClick={() => setResult(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 16, zIndex: 50 }}>
-          <div style={{ color: "#fff", fontSize: 13, marginBottom: 8 }}>整体造型已生成 · 消耗 {result.credits} credit</div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={result.url} style={{ maxWidth: "100%", maxHeight: "78vh", borderRadius: 12, border: "1px solid #444" }} alt="look" />
-          <div style={{ color: "#ccc", fontSize: 12, marginTop: 10 }}>点击空白处关闭</div>
-        </div>
+      {/* 结果大图（点画布查看，这里再给一个浮层保存） */}
+      {canvasUrl && (
+        <button onClick={() => window.open(canvasUrl, "_blank")} style={{ ...goldBtn, width: "100%", marginTop: 14 }}>查看 / 保存最终造型大图 ↗</button>
       )}
     </main>
   );
 }
 
-const card: React.CSSProperties = { background: "#fff", borderRadius: 12, border: "1px solid #eee", padding: 12, marginBottom: 4 };
-const btnSm: React.CSSProperties = { width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: "#f0f0f0", color: "#333", fontSize: 12, fontWeight: 600, cursor: "pointer" };
+const card: React.CSSProperties = { background: CARD, borderRadius: 12, border: "1px solid #3a2832", padding: 12 };
+const goldBtn: React.CSSProperties = { padding: "10px 14px", borderRadius: 10, border: "none", background: GOLD, color: "#1c111d", fontWeight: 800, fontSize: 14, cursor: "pointer" };
 const chip = (on: boolean, color?: string): React.CSSProperties => ({
-  fontSize: 12, padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer", border: "1px solid #ddd",
-  background: on ? (color || "#222") : "#fff", color: on ? "#fff" : "#555",
+  fontSize: 12, padding: "6px 12px", borderRadius: 20, whiteSpace: "nowrap", cursor: "pointer", border: "1px solid #4a3840",
+  background: on ? (color || GOLD) : "transparent", color: on ? "#fff" : "#d8c3c9",
 });
 
-function ProductCard({ p, onAdd, added, seasonName, styleName }: {
-  p: Product; onAdd: () => void; added: boolean; seasonName: (c: string) => string; styleName: (c: string) => string;
+function ProductCard({ p, onAdd, seasonName, styleName }: {
+  p: Product; onAdd: (p: Product) => void; seasonName: (c: string) => string; styleName: (c: string) => string;
 }) {
   return (
     <div style={{ ...card, padding: 6 }}>
       <div style={{ position: "relative" }}>
         <img src={p.cover} style={{ width: "100%", height: 130, objectFit: "cover", borderRadius: 8 }} alt={p.title} />
-        {added && <span style={{ position: "absolute", top: 4, right: 4, background: "#27ae60", color: "#fff", fontSize: 10, padding: "2px 6px", borderRadius: 10 }}>已选</span>}
       </div>
-      <div style={{ fontSize: 11, color: "#333", marginTop: 4, lineHeight: 1.3, height: 28, overflow: "hidden" }}>{p.title}</div>
+      <div style={{ fontSize: 11, color: "#e8dde0", marginTop: 4, lineHeight: 1.3, height: 28, overflow: "hidden" }}>{p.title}</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 3, margin: "4px 0" }}>
-        {(p.seasons || []).slice(0, 2).map((s) => <span key={s} style={{ fontSize: 9, background: "#f3f0ff", color: "#7b4dff", padding: "1px 5px", borderRadius: 6 }}>{seasonName(s)}</span>)}
-        {(p.styles || []).slice(0, 1).map((s) => <span key={s} style={{ fontSize: 9, background: "#eef", color: "#446", padding: "1px 5px", borderRadius: 6 }}>{styleName(s)}</span>)}
+        {(p.seasons || []).slice(0, 2).map((s) => <span key={s} style={{ fontSize: 9, background: GOLD_DIM, color: GOLD, padding: "1px 5px", borderRadius: 6 }}>{seasonName(s)}</span>)}
+        {(p.styles || []).slice(0, 1).map((s) => <span key={s} style={{ fontSize: 9, background: "#3a2f3a", color: "#cdd", padding: "1px 5px", borderRadius: 6 }}>{styleName(s)}</span>)}
       </div>
-      <button onClick={onAdd} disabled={added} style={{ ...btnSm, background: added ? "#ddd" : "#222", color: "#fff" }}>{added ? "已加入" : "加入造型"}</button>
+      <button onClick={() => onAdd(p)} style={{ width: "100%", padding: "8px 0", borderRadius: 8, border: "none", background: GOLD, color: "#1c111d", fontSize: 12, fontWeight: 800, cursor: "pointer" }}>＋ 加这件</button>
     </div>
   );
 }

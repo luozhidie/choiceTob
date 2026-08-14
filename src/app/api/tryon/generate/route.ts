@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     const personImageUrl = formData.get("personImageUrl") as string | null;
     const productsRaw = formData.get("products") as string | null;
     const garmentImageUrl = formData.get("garmentImageUrl") as string | null;
+    const garmentFile = formData.get("garmentImage") as File | null;
     const userId = (formData.get("userId") as string | null) || "anonymous";
 
     if (!personFile && !personImageUrl) {
@@ -39,13 +40,9 @@ export async function POST(request: NextRequest) {
       }
       productUrl = products[0]?.url;
       if (products[0]?.title) productTitle = products[0].title;
-    } else if (garmentImageUrl) {
-      productUrl = garmentImageUrl;
     }
 
-    if (!productUrl) {
-      return NextResponse.json({ error: "缺少衣服图片" }, { status: 400 });
-    }
+    // 注：garmentImageUrl / garmentFile 的最终解析在 supabase 就绪后处理（见下方）
 
     const apiKey = process.env.GENLOOK_API_KEY;
     if (!apiKey) {
@@ -88,6 +85,28 @@ export async function POST(request: NextRequest) {
       }
 
       personUrl = supabase.storage.from(BUCKET).getPublicUrl(filename).data.publicUrl;
+    }
+
+    // 2.0 解析单品图：garmentImageUrl 直用；garmentFile 先上传 Supabase
+    if (!productUrl && garmentImageUrl) productUrl = garmentImageUrl;
+    if (!productUrl && garmentFile) {
+      const bytes = await garmentFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+      const ext = (garmentFile.name?.split(".").pop() || "jpg").toLowerCase();
+      const safeExt = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? ext : "jpg";
+      const gname = `tryon-garment-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${safeExt}`;
+      const { error: gErr } = await supabase.storage.from(BUCKET).upload(gname, buffer, {
+        contentType: garmentFile.type || `image/${safeExt === "jpg" ? "jpeg" : safeExt}`,
+        upsert: false,
+      });
+      if (gErr) {
+        console.error("[tryon/generate] 上传单品图失败", gErr);
+        return NextResponse.json({ error: "上传单品图失败：" + gErr.message }, { status: 500 });
+      }
+      productUrl = supabase.storage.from(BUCKET).getPublicUrl(gname).data.publicUrl;
+    }
+    if (!productUrl) {
+      return NextResponse.json({ error: "缺少衣服图片" }, { status: 400 });
     }
 
     // 2. 创建 Genlook 试衣任务（异步）
