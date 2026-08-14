@@ -26,7 +26,7 @@
   <!-- ① 上传照片 -->
   <view class="card">
     <text class="ct">① 上传你的照片（第 1 件试穿对象）</text>
-    <text class="hint" style="margin-bottom:12rpx;">建议用高清正脸半身照，原图越清晰，叠穿后越不易丢细节。</text>
+    <text class="hint" style="margin-bottom:12rpx;">建议传「仅穿贴身内搭 / 低领」的正脸半身照：原衣领口、袖口残留会少很多；原图越清晰，叠穿也越不易丢细节。</text>
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>

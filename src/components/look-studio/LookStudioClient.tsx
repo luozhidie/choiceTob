@@ -207,7 +207,7 @@ export default function LookStudioClient({ data }: Props) {
       {/* ① 上传真人照 */}
       <section style={card}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: "#fff" }}>① 上传你的照片（第 1 件试穿对象）</div>
-        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>建议用高清正脸半身照，原图越清晰，叠穿后越不易丢细节。</p>
+        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>建议上传「仅穿贴身内搭 / 低领单品」的正脸半身照。原衣露在领口、袖口的部分会明显残留，换成低领 / 打底基底后干净很多；原图越清晰，叠穿也越不易丢细节。</p>
         <div style={{ display: "flex", gap: 12 }}>
           <div onClick={() => fileRef.current?.click()} style={{ width: 72, height: 96, borderRadius: 10, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 12, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer", flexShrink: 0 }}>
             {personPreview ? <img src={personPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="me" /> : "上传\n照片"}
@@ -269,6 +269,9 @@ export default function LookStudioClient({ data }: Props) {
               </div>
             ))}
           </div>
+        )}
+        {stack.length > 0 && (
+          <p style={{ fontSize: 11, color: "#8a7580", margin: "10px 0 0", lineHeight: 1.5 }}>若领口 / 袖口还残留原衣服，多半是原图穿了高领或叠穿——点「清空重来」，换张低领 / 贴身内搭的基底照即可解决。</p>
         )}
       </section>
 
