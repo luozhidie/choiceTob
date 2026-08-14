@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 const SERVICES: Record<string, { title: string; src: string }> = {
   trace: { title: "区块链溯源", src: "/svc/trace/trace" },
   collectible: { title: "数字藏品", src: "/svc/collectible/collectible" },
-  tryon: { title: "虚拟试衣", src: "/svc/tryon/tryon" },
+  tryon: { title: "虚拟试衣", src: "/tryon" },
 };
 
 export default function ServiceEmbedPage() {

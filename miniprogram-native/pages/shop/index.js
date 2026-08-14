@@ -992,15 +992,15 @@ Page({
         var personPath = res.tempFiles[0].tempFilePath;
         t.setData({ tryonLoading: true });
         wx.uploadFile({
-          url: 'https://embodied-ai-eight.vercel.app/api/virtual-tryon',
+          url: BASE + '/api/tryon/generate',
           filePath: personPath,
           name: 'personImage',
-          formData: { garmentImageUrl: garment, industry: 'clothing' },
+          formData: { garmentImageUrl: garment, userId: 'mini-shop' },
           success: function (up) {
             var data = {};
             try { data = JSON.parse(up.data); } catch (e) { }
-            if (data.ok) {
-              t.setData({ tryonLoading: false, tryonResult: data.resultUrl, tryonIsDemo: !!data.demo, showTryon: true });
+            if (data.ok && data.resultUrl) {
+              t.setData({ tryonLoading: false, tryonResult: data.resultUrl, tryonIsDemo: false, showTryon: true });
             } else {
               t.setData({ tryonLoading: false });
               wx.showToast({ title: (data.error || '试穿失败'), icon: 'none' });

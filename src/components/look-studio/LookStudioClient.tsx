@@ -142,7 +142,7 @@ export default function LookStudioClient({ data }: Props) {
         JSON.stringify(tray.map((p) => ({ url: p.cover, title: p.title })))
       );
       fd.append("userId", "lookstudio");
-      const res = await fetch("/svc/tryon/api/multi-tryon", { method: "POST", body: fd });
+      const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "试衣失败");
       setResult({ url: json.resultUrl, credits: json.credits ?? tray.length });

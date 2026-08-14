@@ -580,7 +580,7 @@ Page({
     this.setData({ loading: true });
     wx.showLoading({ title: '生成整体造型...' });
     wx.uploadFile({
-      url: BASE + '/svc/tryon/api/multi-tryon',
+      url: BASE + '/api/tryon/generate',
       filePath: this.data.personPath,
       name: 'personImage',
       formData: { products: JSON.stringify(products), userId: 'mini' },
