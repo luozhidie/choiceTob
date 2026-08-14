@@ -1,0 +1,52 @@
+<view class="page" wx:if="{{service}}">
+  <!-- 头部 -->
+  <view class="hero">
+    <text class="hero-icon">{{service.icon}}</text>
+    <text class="hero-title">{{service.label}}</text>
+    <text class="hero-slogan">{{service.slogan}}</text>
+  </view>
+
+  <!-- 专业理论体系 -->
+  <view class="card">
+    <view class="card-title">专业理论体系</view>
+    <view class="item" wx:for="{{service.theory}}" wx:key="*this">
+      <text class="dot">●</text>
+      <text class="item-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 服务内容 -->
+  <view class="card">
+    <view class="card-title">服务体系</view>
+    <view class="item" wx:for="{{service.service}}" wx:key="*this">
+      <text class="dot">●</text>
+      <text class="item-text">{{item}}</text>
+    </view>
+  </view>
+
+  <!-- 培训课程 -->
+  <view class="card course-card">
+    <view class="course-head">
+      <text class="course-icon">📚</text>
+      <view class="course-info">
+        <text class="course-title">{{service.course}}</text>
+        <text class="course-desc">系统学习 · 实战案例 · 持续更新</text>
+      </view>
+    </view>
+    <view class="course-btn" bindtap="goCourse">查看课程 ›</view>
+  </view>
+
+  <!-- AI 辅助工具 -->
+  <view class="ai-card">
+    <view class="ai-left">
+      <text class="ai-icon">🤖</text>
+      <view class="ai-info">
+        <text class="ai-title">AI 智能辅助</text>
+        <text class="ai-desc">输入需求，快速生成 {{service.label}} 初步方案</text>
+      </view>
+    </view>
+    <view class="ai-btn" bindtap="goAIAssist">去使用 ›</view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>

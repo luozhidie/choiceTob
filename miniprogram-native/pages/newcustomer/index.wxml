@@ -1,0 +1,47 @@
+<view class="page">
+  <!-- Hero -->
+  <view class="hero">
+    <view class="hero-deco hero-deco-1"></view>
+    <view class="hero-deco hero-deco-2"></view>
+    <view class="hero-tag">新人专享</view>
+    <view class="hero-title">首单 4 重福利</view>
+    <view class="hero-sub">下单即享，限时放送，错过不再有</view>
+  </view>
+
+  <!-- 福利列表 -->
+  <view class="benefit-list">
+    <view class="benefit-card" wx:for="{{benefits}}" wx:key="title">
+      <view class="b-icon">{{item.icon}}</view>
+      <view class="b-body">
+        <view class="b-title">{{item.title}}</view>
+        <view class="b-desc">{{item.desc}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 如何领取 -->
+  <view class="section">
+    <view class="sec-title">如何领取</view>
+    <view class="step-list">
+      <view class="step" wx:for="{{steps}}" wx:key="*this">
+        <view class="step-num">{{index + 1}}</view>
+        <view class="step-text">{{item}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 领取按钮 -->
+  <view class="cta-wrap">
+    <view class="cta-btn" bindtap="claimRedPacket">一键领取新客红包 ›</view>
+  </view>
+
+  <!-- 新客货架 -->
+  <view class="section shelf-section">
+    <view class="sec-title">
+      <text class="shelf-tag">新客下单专栏货架</text>
+      <text class="shelf-sub">精选好物 · 新人专享价</text>
+    </view>
+    <view class="shelf-hint">进入「专场」或「分类」挑选新人专享好货</view>
+    <view class="shelf-btn" bindtap="goHome">去逛新人专享 ›</view>
+  </view>
+</view>

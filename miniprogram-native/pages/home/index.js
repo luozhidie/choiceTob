@@ -37,6 +37,7 @@ Page({
     mo:false,
     un:'',
     li:false,
+    statusBarHeight:20,   // 菜单顶部安全距离
     isPriceMember:false,  // 价格会员状态
     /* 动态模块 */
     blocks:[],          // 轮播图下方模块（排除 hero_top）
@@ -64,6 +65,8 @@ Page({
   },
 
   onLoad:function(){
+    var sys = wx.getSystemInfoSync();
+    this.setData({statusBarHeight: sys.statusBarHeight || 20});
     var app = getApp();
     var isPriceMember = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
     var isAdmin = !!(app && app.globalData && app.globalData.isAdmin) || !!wx.getStorageSync('is_admin');
@@ -362,11 +365,8 @@ Page({
   goLoginPage:function(){wx.navigateTo({url:'/pages/login/index'});},
 
   /* 导航跳转 */
-  goBuyer:function(e){
-    if(e&&e.currentTarget&&e.currentTarget.dataset.from==='menu')this.setData({mo:false});
-    wx.switchTab({url:'/pages/buyer/index'});
-  },
-  goCourses:function(){this.setData({mo:false});console.log('[goCourses] to /pages/courses/index');wx.navigateTo({url:'/pages/courses/index'});},
+  goBuyer:function(){this.setData({mo:false});wx.switchTab({url:'/pages/buyer/index'});},
+  goCourses:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/courses/index'});},
   goLooks:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/looks/index'});},
   goVipPage:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/vip/index'});},
   goMember:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/member/index'});},

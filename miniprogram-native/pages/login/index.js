@@ -5,8 +5,10 @@ Page({
     loading:false
   },
 
-  onLoad:function(){
-    console.log('[login] version:',this.data._v);
+  onLoad:function(options){
+    var redirect = (options && options.redirect) || '';
+    this.setData({ redirect: redirect });
+    console.log('[login] version:',this.data._v, 'redirect:', redirect);
   },
 
   /* 勾选协议 */
@@ -125,7 +127,14 @@ Page({
         }
 
         wx.showToast({title:'登录成功 ✓',icon:'success'});
-        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1200);
+        var redirect = t.data.redirect;
+        setTimeout(function(){
+          if (redirect) {
+            wx.navigateTo({ url: redirect });
+          } else {
+            wx.switchTab({ url: '/pages/home/index' });
+          }
+        }, 1200);
       },
       fail:function(err){
         clearTimeout(timeoutTimer);
@@ -138,7 +147,9 @@ Page({
 
   /* 使用其它方式登录 */
   goOtherLogin:function(){
-    wx.navigateTo({url:'/pages/email-login/index'});
+    var redirect = this.data.redirect || '';
+    var url = '/pages/email-login/index' + (redirect ? '?redirect=' + encodeURIComponent(redirect) : '');
+    wx.navigateTo({ url: url });
   },
 
   /* 协议链接 */

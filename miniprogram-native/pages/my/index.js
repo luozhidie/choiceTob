@@ -285,7 +285,7 @@ Page({
   goRedPackets:function(){wx.navigateTo({url:'/pages/red-packets/index'});},
   goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
   goSettings:function(){wx.navigateTo({url:'/pages/settings/index'});},
-  goPromo:function(){wx.switchTab({url:'/pages/home/index'});},
+  goPromo:function(){wx.navigateTo({url:'/pages/newcustomer/index'});},
   goImport:function(){wx.navigateTo({url:'/pages/import/index'});},
   goAlbumGrab:function(){wx.navigateTo({url:'/pages/album-grab/index'});},
   goWardrobe:function(){wx.navigateTo({url:'/pages/wardrobe/index'});},
@@ -294,16 +294,23 @@ Page({
   goFeedback:function(){wx.navigateTo({url:'/pages/feedback/index'});},
   goPersonalImage:function(){wx.navigateTo({url:'/pages/personal-image/index'});},
   goStyleTest:function(){wx.navigateTo({url:'/pages/diagnosis-form/index'});},
-  goLookStudio:function(){wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});},
+  goLookStudio:function(){
+    var t=this;
+    if(!t.data.isLoggedIn){
+      wx.navigateTo({url:'/pages/login/index?redirect='+encodeURIComponent('/pages/tryon-promo/index?from=my')});
+      return;
+    }
+    wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});
+  },
   goStyleProfile:function(){wx.navigateTo({url:'/pages/style-profile/index'});},
   goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
+  goBuyerService:function(e){var s=e?e.currentTarget.dataset.service:'buyer_group';wx.navigateTo({url:'/pages/buyer-service/index?service='+s});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
   goGroupBuy:function(){wx.navigateTo({url:'/pages/group/index'});},
   goLuckDraw:function(){wx.navigateTo({url:'/pages/fortune/index'});},
   goInvite:function(){wx.navigateTo({url:'/pages/invite/index'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
-  goLookStudio:function(){wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});},
 
   /* ===== 退出登录 ===== */
   goLogout:function(){

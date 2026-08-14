@@ -16,7 +16,6 @@ Page({
   },
 
   onLoad:function(options){
-    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
     var isPersonal = options && options.scene === 'personal';
     if(isPersonal){wx.setNavigationBarTitle({title:'VIP形象诊断'});}
     this.setData({isPersonal:isPersonal, testMode:options.mode || 'female'});

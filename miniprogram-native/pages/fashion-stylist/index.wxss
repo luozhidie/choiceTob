@@ -67,12 +67,13 @@
 .current {
   font-size: 24rpx;
   color: #888;
-  margin: 20rpx 0 16rpx;
+  margin: 20rpx 0 10rpx;
 }
 .current .cur-name {
   color: #2d1b2e;
   font-weight: 700;
 }
+.ai-tip{font-size:22rpx;color:#999;background:#fff9f0;padding:12rpx 16rpx;border-radius:10rpx;margin-bottom:16rpx;line-height:1.5;}
 
 .input-box {
   background: #fff;

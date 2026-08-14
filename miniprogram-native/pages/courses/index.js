@@ -10,8 +10,6 @@ Page({
   },
 
   onLoad: function () {
-    var app = getApp();
-    if (app && app.checkAdminAccess && !app.checkAdminAccess()) return;
     this.loadCourses(); this.loadTools();
   },
 

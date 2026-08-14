@@ -52,6 +52,7 @@
     "pages/stall/subscribed/index",
     "pages/assortment/detail/index",
     "pages/fashion-stylist/index",
+    "pages/buyer-service/index",
     "pages/look-studio/index",
     "pages/tryon-promo/index",
     "pages/tryon-guide/index",
@@ -67,7 +68,8 @@
     "pages/about/index",
     "pages/fortune/index",
     "pages/invite/index",
-    "pages/group/index"
+    "pages/group/index",
+    "pages/newcustomer/index"
   ],
   "window": {
     "backgroundTextStyle": "light",

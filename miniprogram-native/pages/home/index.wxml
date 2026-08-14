@@ -72,7 +72,7 @@
   <!-- 菜单面板 -->
   <view class="mk {{mo?'show':''}}" bindtap="clsMenu">
     <view class="mp {{mo?'in':''}}" catchtap="noop">
-      <view class="mph"><text class="mpb">骆芷蝶智选</text><view class="mpc" bindtap="clsMenu"><text>✕</text></view></view>
+      <view class="mph" style="padding-top:{{statusBarHeight}}px;"><text class="mpb">骆芷蝶智选</text><view class="mpc" bindtap="clsMenu"><text>✕</text></view></view>
       <scroll-view scroll-y class="mpb2" scroll-top="0">
         <view class="mi" bindtap="goBuyer"><text>🛍</text><text>买手选品</text></view>
         <view class="mi" bindtap="goCourses"><text>📚</text><text>线上课程</text></view>

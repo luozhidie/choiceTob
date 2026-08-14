@@ -8,8 +8,10 @@ Page({
     loading:false
   },
 
-  onLoad:function(){
-    console.log('[email-login] version:',this.data._v);
+  onLoad:function(options){
+    var redirect = (options && options.redirect) || '';
+    this.setData({ redirect: redirect });
+    console.log('[email-login] version:',this.data._v, 'redirect:', redirect);
   },
 
   onEmail:function(e){this.setData({email:e.detail.value});},
@@ -43,7 +45,14 @@ Page({
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         var app=getApp();if(app&&app.setAdminStatus){app.setAdminStatus(!!d.is_admin);}
         wx.showToast({title:'登录成功',icon:'success'});
-        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1000);
+        var redirect = t.data.redirect;
+        setTimeout(function(){
+          if (redirect) {
+            wx.navigateTo({ url: redirect });
+          } else {
+            wx.switchTab({ url: '/pages/home/index' });
+          }
+        }, 1000);
       },
       fail:function(){
         t.setData({loading:false});
@@ -51,7 +60,14 @@ Page({
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',true);
         wx.showToast({title:'已登录（本地）',icon:'success'});
-        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},800);
+        var redirect = t.data.redirect;
+        setTimeout(function(){
+          if (redirect) {
+            wx.navigateTo({ url: redirect });
+          } else {
+            wx.switchTab({ url: '/pages/home/index' });
+          }
+        }, 800);
       }
     });
   },
@@ -87,7 +103,14 @@ Page({
         wx.setStorageSync('vip_status','active');
         wx.setStorageSync('is_price_member',!!d.is_price_member);
         wx.showToast({title:'注册成功',icon:'success'});
-        setTimeout(function(){wx.switchTab({url:'/pages/home/index'});},1000);
+        var redirect = t.data.redirect;
+        setTimeout(function(){
+          if (redirect) {
+            wx.navigateTo({ url: redirect });
+          } else {
+            wx.switchTab({ url: '/pages/home/index' });
+          }
+        }, 1000);
       },
       fail:function(){
         t.setData({loading:false});

@@ -1,13 +1,13 @@
 var API_BASE = "https://colour-choice.art";
 
 var SERVICES = [
-  { key: "outfit", label: "AI搭配", icon: "👗" },
+  { key: "outfit", label: "搭配服务", icon: "👗" },
   { key: "plan", label: "商品企划", icon: "📋" },
-  { key: "buyer_group", label: "买手组货", icon: "🛒" },
+  { key: "buyer_group", label: "买手选品", icon: "🛒" },
   { key: "display", label: "陈列搭配", icon: "🪟" },
   { key: "marketing", label: "营销策划", icon: "📣" },
   { key: "sales", label: "销售服务", icon: "💡" },
-  { key: "brand", label: "品牌管理", icon: "⭐" },
+  { key: "vip", label: "VIP管理", icon: "⭐" },
   { key: "design", label: "服装设计", icon: "✏️" },
 ];
 
@@ -15,7 +15,7 @@ Page({
   data: {
     services: SERVICES,
     service: "outfit",
-    serviceLabel: "AI搭配",
+    serviceLabel: "搭配服务",
     input: "",
     loading: false,
     result: "",
@@ -41,11 +41,11 @@ Page({
       t.setData({ isAdmin: false });
       wx.showModal({
         title: "提示",
-        content: "该功能仅管理员可用，请先登录管理员账号",
+        content: "请先登录后再使用 AI 买手助手",
         showCancel: false,
-        confirmText: "返回",
+        confirmText: "去登录",
         success: function () {
-          wx.navigateBack();
+          wx.navigateTo({ url: "/pages/login/index" });
         },
       });
       return;
@@ -56,25 +56,11 @@ Page({
       header: { "Content-Type": "application/json", Authorization: "Bearer " + token },
       success: function (r) {
         var d = r.data || {};
-        var admin = !!(d.data && d.data.isAdmin);
-        t.setData({ isAdmin: admin });
-        if (!admin) {
-          wx.showModal({
-            title: "提示",
-            content: "该功能仅管理员可用",
-            showCancel: false,
-            confirmText: "返回",
-            success: function () {
-              wx.navigateBack();
-            },
-          });
-        } else {
-          t.loadHistory(token);
-        }
+        t.setData({ isAdmin: !!(d.data && d.data.isAdmin) });
+        t.loadHistory(token);
       },
       fail: function () {
         t.setData({ isAdmin: false });
-        wx.showToast({ title: "网络错误", icon: "none" });
       },
     });
   },
