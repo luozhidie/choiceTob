@@ -111,7 +111,11 @@
   <!-- 专业版：形象 + tabs -->
   <block wx:if="{{proMode}}">
     <view class="card">
-      <text class="ct">我的形象（穿衣风格）</text>
+      <text class="ct">我的形象（色彩季型 + 穿衣风格）</text>
+      <text class="lab">色彩季型</text>
+      <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
+        <text wx:for="{{seasons}}" wx:key="code" class="chip {{mySeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMySeason">{{item.name_zh}}</text>
+      </scroll-view>
       <text class="lab">穿衣风格（主风格）</text>
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
         <text wx:for="{{mainStyles}}" wx:key="code" class="chip {{myStyle===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMyStyle">{{item.gender==='women'?'女':'男'}}·{{item.name_zh}}</text>
