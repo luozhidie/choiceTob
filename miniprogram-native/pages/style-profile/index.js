@@ -9,18 +9,71 @@ var SEASON_TYPES = [
   { code: 'clear_cool', name: '净冷' }, { code: 'clear_warm', name: '净暖' },
   { code: 'soft_cool', name: '柔冷' }, { code: 'soft_warm', name: '柔暖' }
 ];
-var STYLE_TAGS = [
-  { code: 'ingenue', name: '少女型' }, { code: 'elegant', name: '优雅型' }, { code: 'romantic', name: '浪漫型' },
-  { code: 'gamine', name: '少年型' }, { code: 'trendy', name: '时尚型' }, { code: 'classic', name: '古典型' },
-  { code: 'natural', name: '自然型' }, { code: 'dramatic', name: '戏剧型' }
-];
+// 穿衣风格：以系统 style_tags 表为权威源（女士 8 主 + 56 偏；男士 5 主 + 20 偏）
+// 主风格 code 与系统一致：女士 girl/elegant/romantic/boyish/fashion/classic/natural/dramatic；男士加 _m 后缀
+// 偏风格 code 规则：{主}_qz_xxx=曲偏直，{主}_qq_xxx=曲偏曲，{主}_zz_xxx=直偏直，{主}_zq_xxx=直偏曲；男士偏风格无 direction
+var STYLE_DATA = {
+  women: [
+    { code: 'girl', name: '少女型', subs: [
+      { code: 'girl_qz_boyish', name: '少女偏少年' }, { code: 'girl_qz_fashion', name: '少女偏时尚' }, { code: 'girl_qz_classic', name: '少女偏古典' }, { code: 'girl_qz_natural', name: '少女偏自然' }, { code: 'girl_qz_dramatic', name: '少女偏戏剧' }, { code: 'girl_qq_elegant', name: '少女偏优雅' }, { code: 'girl_qq_romantic', name: '少女偏浪漫' }
+    ] },
+    { code: 'elegant', name: '优雅型', subs: [
+      { code: 'elegant_qz_boyish', name: '优雅偏少年' }, { code: 'elegant_qz_fashion', name: '优雅偏时尚' }, { code: 'elegant_qz_classic', name: '优雅偏古典' }, { code: 'elegant_qz_natural', name: '优雅偏自然' }, { code: 'elegant_qz_dramatic', name: '优雅偏戏剧' }, { code: 'elegant_qq_girl', name: '优雅偏少女' }, { code: 'elegant_qq_romantic', name: '优雅偏浪漫' }
+    ] },
+    { code: 'romantic', name: '浪漫型', subs: [
+      { code: 'romantic_qz_boyish', name: '浪漫偏少年' }, { code: 'romantic_qz_fashion', name: '浪漫偏时尚' }, { code: 'romantic_qz_classic', name: '浪漫偏古典' }, { code: 'romantic_qz_natural', name: '浪漫偏自然' }, { code: 'romantic_qz_dramatic', name: '浪漫偏戏剧' }, { code: 'romantic_qq_girl', name: '浪漫偏少女' }, { code: 'romantic_qq_elegant', name: '浪漫偏优雅' }
+    ] },
+    { code: 'boyish', name: '少年型', subs: [
+      { code: 'boyish_zq_girl', name: '少年偏少女' }, { code: 'boyish_zq_elegant', name: '少年偏优雅' }, { code: 'boyish_zq_romantic', name: '少年偏浪漫' }, { code: 'boyish_zz_fashion', name: '少年偏时尚' }, { code: 'boyish_zz_classic', name: '少年偏古典' }, { code: 'boyish_zz_natural', name: '少年偏自然' }, { code: 'boyish_zz_dramatic', name: '少年偏戏剧' }
+    ] },
+    { code: 'fashion', name: '时尚型', subs: [
+      { code: 'fashion_zq_girl', name: '时尚偏少女' }, { code: 'fashion_zq_elegant', name: '时尚偏优雅' }, { code: 'fashion_zq_romantic', name: '时尚偏浪漫' }, { code: 'fashion_zz_boyish', name: '时尚偏少年' }, { code: 'fashion_zz_classic', name: '时尚偏古典' }, { code: 'fashion_zz_natural', name: '时尚偏自然' }, { code: 'fashion_zz_dramatic', name: '时尚偏戏剧' }
+    ] },
+    { code: 'classic', name: '古典型', subs: [
+      { code: 'classic_zq_girl', name: '古典偏少女' }, { code: 'classic_zq_elegant', name: '古典偏优雅' }, { code: 'classic_zq_romantic', name: '古典偏浪漫' }, { code: 'classic_zz_boyish', name: '古典偏少年' }, { code: 'classic_zz_fashion', name: '古典偏时尚' }, { code: 'classic_zz_natural', name: '古典偏自然' }, { code: 'classic_zz_dramatic', name: '古典偏戏剧' }
+    ] },
+    { code: 'natural', name: '自然型', subs: [
+      { code: 'natural_zq_girl', name: '自然偏少女' }, { code: 'natural_zq_elegant', name: '自然偏优雅' }, { code: 'natural_zq_romantic', name: '自然偏浪漫' }, { code: 'natural_zz_boyish', name: '自然偏少年' }, { code: 'natural_zz_fashion', name: '自然偏时尚' }, { code: 'natural_zz_classic', name: '自然偏古典' }, { code: 'natural_zz_dramatic', name: '自然偏戏剧' }
+    ] },
+    { code: 'dramatic', name: '戏剧型', subs: [
+      { code: 'dramatic_zq_girl', name: '戏剧偏少女' }, { code: 'dramatic_zq_elegant', name: '戏剧偏优雅' }, { code: 'dramatic_zq_romantic', name: '戏剧偏浪漫' }, { code: 'dramatic_zz_boyish', name: '戏剧偏少年' }, { code: 'dramatic_zz_fashion', name: '戏剧偏时尚' }, { code: 'dramatic_zz_classic', name: '戏剧偏古典' }, { code: 'dramatic_zz_natural', name: '戏剧偏自然' }
+    ] }
+  ],
+  men: [
+    { code: 'dramatic_m', name: '戏剧型', subs: [
+      { code: 'dramatic_m_natural', name: '戏剧偏自然' }, { code: 'dramatic_m_classic', name: '戏剧偏古典' }, { code: 'dramatic_m_romantic', name: '戏剧偏浪漫' }, { code: 'dramatic_m_fashion', name: '戏剧偏时尚' }
+    ] },
+    { code: 'natural_m', name: '自然型', subs: [
+      { code: 'natural_m_dramatic', name: '自然偏戏剧' }, { code: 'natural_m_classic', name: '自然偏古典' }, { code: 'natural_m_romantic', name: '自然偏浪漫' }, { code: 'natural_m_fashion', name: '自然偏时尚' }
+    ] },
+    { code: 'classic_m', name: '古典型', subs: [
+      { code: 'classic_m_dramatic', name: '古典偏戏剧' }, { code: 'classic_m_natural', name: '古典偏自然' }, { code: 'classic_m_romantic', name: '古典偏浪漫' }, { code: 'classic_m_fashion', name: '古典偏时尚' }
+    ] },
+    { code: 'romantic_m', name: '浪漫型', subs: [
+      { code: 'romantic_m_dramatic', name: '浪漫偏戏剧' }, { code: 'romantic_m_natural', name: '浪漫偏自然' }, { code: 'romantic_m_classic', name: '浪漫偏古典' }, { code: 'romantic_m_fashion', name: '浪漫偏时尚' }
+    ] },
+    { code: 'fashion_m', name: '时尚型', subs: [
+      { code: 'fashion_m_dramatic', name: '时尚偏戏剧' }, { code: 'fashion_m_natural', name: '时尚偏自然' }, { code: 'fashion_m_classic', name: '时尚偏古典' }, { code: 'fashion_m_romantic', name: '时尚偏浪漫' }
+    ] }
+  ]
+};
+function deriveStyle(gender, tags) {
+  var mains = STYLE_DATA[gender];
+  for (var i = 0; i < mains.length; i++) {
+    if (tags.indexOf(mains[i].code) > -1) {
+      return { gender: gender, mainStyle: mains[i].code, mainName: mains[i].name, subList: mains[i].subs };
+    }
+  }
+  return { gender: gender, mainStyle: '', mainName: '', subList: [] };
+}
 var OCCASIONS = [
   { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }, { code: 'home', name: '居家' }
 ];
 
 Page({
   data: {
-    seasonTypes: SEASON_TYPES, styleTagsList: STYLE_TAGS, occasionsList: OCCASIONS,
+    seasonTypes: SEASON_TYPES, occasionsList: OCCASIONS,
+    gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [],
     seasonType: '', styleTags: [], occasions: [],
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
@@ -35,9 +88,14 @@ Page({
         success: function (r) {
           var p = (r.data && r.data.profile) || null;
           if (p) {
+            var tags = p.style_tags || [];
+            var gender = 'women';
+            for (var k = 0; k < tags.length; k++) { if (String(tags[k]).indexOf('_m') > -1) { gender = 'men'; break; } }
+            var der = deriveStyle(gender, tags);
             t.setData({
               seasonType: p.season_type || '',
-              styleTags: p.style_tags || [],
+              styleTags: tags,
+              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList,
               occasions: p.occasions || [],
               bodyType: p.body_type || '',
               height: p.height ? String(p.height) : '',
@@ -58,7 +116,27 @@ Page({
     });
   },
   setSeason: function (e) { this.setData({ seasonType: e.currentTarget.dataset.c }); },
-  toggleStyle: function (e) {
+  setGender: function (e) {
+    var g = e.currentTarget.dataset.g;
+    if (g === this.data.gender) return;
+    this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], styleTags: [] });
+  },
+  toggleMain: function (e) {
+    var t = this; var c = e.currentTarget.dataset.c;
+    var mains = STYLE_DATA[t.data.gender];
+    var cur = null, old = null;
+    for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; if (mains[i].code === t.data.mainStyle) old = mains[i]; }
+    var tags = t.data.styleTags.slice();
+    if (t.data.mainStyle === c) {
+      tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
+      t.setData({ mainStyle: '', mainName: '', subList: [], styleTags: tags });
+    } else {
+      if (old) tags = tags.filter(function (x) { return x !== old.code && !old.subs.some(function (s) { return s.code === x; }); });
+      tags.push(c);
+      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, styleTags: tags });
+    }
+  },
+  toggleSub: function (e) {
     var c = e.currentTarget.dataset.c;
     var arr = this.data.styleTags.slice();
     var i = arr.indexOf(c);

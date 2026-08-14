@@ -12,11 +12,26 @@ const SEASON_TYPES = [
   { code: "clear_cool", name: "净冷" }, { code: "clear_warm", name: "净暖" },
   { code: "soft_cool", name: "柔冷" }, { code: "soft_warm", name: "柔暖" },
 ];
-const STYLE_TAGS = [
-  { code: "ingenue", name: "少女型" }, { code: "elegant", name: "优雅型" }, { code: "romantic", name: "浪漫型" },
-  { code: "gamine", name: "少年型" }, { code: "trendy", name: "时尚型" }, { code: "classic", name: "古典型" },
-  { code: "natural", name: "自然型" }, { code: "dramatic", name: "戏剧型" },
-];
+// 穿衣风格：以系统 style_tags 表为权威源（女士 8 主 + 56 偏；男士 5 主 + 20 偏）
+const STYLE_DATA: Record<string, { code: string; name: string; subs: { code: string; name: string }[] }[]> = {
+  women: [
+    { code: "girl", name: "少女型", subs: [{ code: "girl_qz_boyish", name: "少女偏少年" }, { code: "girl_qz_fashion", name: "少女偏时尚" }, { code: "girl_qz_classic", name: "少女偏古典" }, { code: "girl_qz_natural", name: "少女偏自然" }, { code: "girl_qz_dramatic", name: "少女偏戏剧" }, { code: "girl_qq_elegant", name: "少女偏优雅" }, { code: "girl_qq_romantic", name: "少女偏浪漫" }] },
+    { code: "elegant", name: "优雅型", subs: [{ code: "elegant_qz_boyish", name: "优雅偏少年" }, { code: "elegant_qz_fashion", name: "优雅偏时尚" }, { code: "elegant_qz_classic", name: "优雅偏古典" }, { code: "elegant_qz_natural", name: "优雅偏自然" }, { code: "elegant_qz_dramatic", name: "优雅偏戏剧" }, { code: "elegant_qq_girl", name: "优雅偏少女" }, { code: "elegant_qq_romantic", name: "优雅偏浪漫" }] },
+    { code: "romantic", name: "浪漫型", subs: [{ code: "romantic_qz_boyish", name: "浪漫偏少年" }, { code: "romantic_qz_fashion", name: "浪漫偏时尚" }, { code: "romantic_qz_classic", name: "浪漫偏古典" }, { code: "romantic_qz_natural", name: "浪漫偏自然" }, { code: "romantic_qz_dramatic", name: "浪漫偏戏剧" }, { code: "romantic_qq_girl", name: "浪漫偏少女" }, { code: "romantic_qq_elegant", name: "浪漫偏优雅" }] },
+    { code: "boyish", name: "少年型", subs: [{ code: "boyish_zq_girl", name: "少年偏少女" }, { code: "boyish_zq_elegant", name: "少年偏优雅" }, { code: "boyish_zq_romantic", name: "少年偏浪漫" }, { code: "boyish_zz_fashion", name: "少年偏时尚" }, { code: "boyish_zz_classic", name: "少年偏古典" }, { code: "boyish_zz_natural", name: "少年偏自然" }, { code: "boyish_zz_dramatic", name: "少年偏戏剧" }] },
+    { code: "fashion", name: "时尚型", subs: [{ code: "fashion_zq_girl", name: "时尚偏少女" }, { code: "fashion_zq_elegant", name: "时尚偏优雅" }, { code: "fashion_zq_romantic", name: "时尚偏浪漫" }, { code: "fashion_zz_boyish", name: "时尚偏少年" }, { code: "fashion_zz_classic", name: "时尚偏古典" }, { code: "fashion_zz_natural", name: "时尚偏自然" }, { code: "fashion_zz_dramatic", name: "时尚偏戏剧" }] },
+    { code: "classic", name: "古典型", subs: [{ code: "classic_zq_girl", name: "古典偏少女" }, { code: "classic_zq_elegant", name: "古典偏优雅" }, { code: "classic_zq_romantic", name: "古典偏浪漫" }, { code: "classic_zz_boyish", name: "古典偏少年" }, { code: "classic_zz_fashion", name: "古典偏时尚" }, { code: "classic_zz_natural", name: "古典偏自然" }, { code: "classic_zz_dramatic", name: "古典偏戏剧" }] },
+    { code: "natural", name: "自然型", subs: [{ code: "natural_zq_girl", name: "自然偏少女" }, { code: "natural_zq_elegant", name: "自然偏优雅" }, { code: "natural_zq_romantic", name: "自然偏浪漫" }, { code: "natural_zz_boyish", name: "自然偏少年" }, { code: "natural_zz_fashion", name: "自然偏时尚" }, { code: "natural_zz_classic", name: "自然偏古典" }, { code: "natural_zz_dramatic", name: "自然偏戏剧" }] },
+    { code: "dramatic", name: "戏剧型", subs: [{ code: "dramatic_zq_girl", name: "戏剧偏少女" }, { code: "dramatic_zq_elegant", name: "戏剧偏优雅" }, { code: "dramatic_zq_romantic", name: "戏剧偏浪漫" }, { code: "dramatic_zz_boyish", name: "戏剧偏少年" }, { code: "dramatic_zz_fashion", name: "戏剧偏时尚" }, { code: "dramatic_zz_classic", name: "戏剧偏古典" }, { code: "dramatic_zz_natural", name: "戏剧偏自然" }] },
+  ],
+  men: [
+    { code: "dramatic_m", name: "戏剧型", subs: [{ code: "dramatic_m_natural", name: "戏剧偏自然" }, { code: "dramatic_m_classic", name: "戏剧偏古典" }, { code: "dramatic_m_romantic", name: "戏剧偏浪漫" }, { code: "dramatic_m_fashion", name: "戏剧偏时尚" }] },
+    { code: "natural_m", name: "自然型", subs: [{ code: "natural_m_dramatic", name: "自然偏戏剧" }, { code: "natural_m_classic", name: "自然偏古典" }, { code: "natural_m_romantic", name: "自然偏浪漫" }, { code: "natural_m_fashion", name: "自然偏时尚" }] },
+    { code: "classic_m", name: "古典型", subs: [{ code: "classic_m_dramatic", name: "古典偏戏剧" }, { code: "classic_m_natural", name: "古典偏自然" }, { code: "classic_m_romantic", name: "古典偏浪漫" }, { code: "classic_m_fashion", name: "古典偏时尚" }] },
+    { code: "romantic_m", name: "浪漫型", subs: [{ code: "romantic_m_dramatic", name: "浪漫偏戏剧" }, { code: "romantic_m_natural", name: "浪漫偏自然" }, { code: "romantic_m_classic", name: "浪漫偏古典" }, { code: "romantic_m_fashion", name: "浪漫偏时尚" }] },
+    { code: "fashion_m", name: "时尚型", subs: [{ code: "fashion_m_dramatic", name: "时尚偏戏剧" }, { code: "fashion_m_natural", name: "时尚偏自然" }, { code: "fashion_m_classic", name: "时尚偏古典" }, { code: "fashion_m_romantic", name: "时尚偏浪漫" }] },
+  ],
+};
 const OCCASIONS = [
   { code: "work", name: "职场通勤" }, { code: "date", name: "约会休闲" }, { code: "travel", name: "出行旅游" }, { code: "social", name: "社交礼仪" }, { code: "home", name: "居家" },
 ];
@@ -29,6 +44,8 @@ export default function ProfilePage() {
   const [season, setSeason] = useState("");
   const [styles, setStyles] = useState<string[]>([]);
   const [occasions, setOccasions] = useState<string[]>([]);
+  const [gender, setGender] = useState("women");
+  const [mainStyle, setMainStyle] = useState("");
   const [height, setHeight] = useState("");
   const [weight, setWeight] = useState("");
   const [sizes, setSizes] = useState<{ top: string; bottom: string; shoe: string }>({ top: "", bottom: "", shoe: "" });
@@ -47,8 +64,15 @@ export default function ProfilePage() {
       .then((d) => {
         const p = d.profile;
         if (p) {
+          const tags: string[] = p.style_tags || [];
+          let g = "women";
+          for (const t of tags) { if (String(t).indexOf("_m") > -1) { g = "men"; break; } }
+          let ms = "";
+          for (const m of STYLE_DATA[g]) { if (tags.includes(m.code)) { ms = m.code; break; } }
+          setGender(g);
+          setMainStyle(ms);
           setSeason(p.season_type || "");
-          setStyles(p.style_tags || []);
+          setStyles(tags);
           setOccasions(p.occasions || []);
           setHeight(p.height ? String(p.height) : "");
           setWeight(p.weight ? String(p.weight) : "");
@@ -66,6 +90,33 @@ export default function ProfilePage() {
 
   const toggle = (arr: string[], setArr: any, c: string) => {
     setArr(arr.includes(c) ? arr.filter((x) => x !== c) : [...arr, c]);
+  };
+
+  const mainList = STYLE_DATA[gender];
+  const curMain = mainList.find((m) => m.code === mainStyle) || null;
+  const subList = curMain ? curMain.subs : [];
+  const mainName = curMain ? curMain.name : "";
+
+  const setGenderFn = (g: string) => {
+    if (g === gender) return;
+    setGender(g);
+    setMainStyle("");
+    setStyles([]);
+  };
+  const toggleMain = (c: string) => {
+    const mains = STYLE_DATA[gender];
+    const cur = mains.find((m) => m.code === c) || null;
+    const old = mains.find((m) => m.code === mainStyle) || null;
+    let next = styles.slice();
+    if (mainStyle === c) {
+      next = next.filter((x) => x !== c && !(cur && cur.subs.some((s) => s.code === x)));
+      setMainStyle("");
+    } else {
+      if (old) next = next.filter((x) => x !== old.code && !old.subs.some((s) => s.code === x));
+      next.push(c);
+      setMainStyle(c);
+    }
+    setStyles(next);
   };
 
   const save = async () => {
@@ -171,20 +222,39 @@ export default function ProfilePage() {
 
       {/* 风格 */}
       <section className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
-        <h2 className="text-sm font-bold text-[#2d1b2e] mb-3">穿衣风格（可多选）</h2>
+        <h2 className="text-sm font-bold text-[#2d1b2e] mb-3">穿衣风格（主风格 + 偏风格）</h2>
+        <div className="flex gap-2 mb-3">
+          <button onClick={() => setGenderFn("women")} className={`flex-1 py-2 rounded-xl text-sm border transition ${gender === "women" ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"}`}>女士 · 8 主风格</button>
+          <button onClick={() => setGenderFn("men")} className={`flex-1 py-2 rounded-xl text-sm border transition ${gender === "men" ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"}`}>男士 · 5 主风格</button>
+        </div>
+        <p className="text-xs text-[#a08f74] mb-3">先选你的主风格，再叠加偏风格（可多选）</p>
         <div className="flex flex-wrap gap-2">
-          {STYLE_TAGS.map((s) => (
+          {mainList.map((m) => (
             <button
-              key={s.code}
-              onClick={() => toggle(styles, setStyles, s.code)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition ${
-                styles.includes(s.code) ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"
-              }`}
+              key={m.code}
+              onClick={() => toggleMain(m.code)}
+              className={`px-3 py-1.5 rounded-full text-sm border transition ${mainStyle === m.code ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"}`}
             >
-              {s.name}
+              {m.name}
             </button>
           ))}
         </div>
+        {mainStyle && (
+          <>
+            <h3 className="text-xs font-bold text-[#2d1b2e] mt-4 mb-2">{mainName}的偏风格（曲直 / 冷暖微调）</h3>
+            <div className="flex flex-wrap gap-2">
+              {subList.map((s) => (
+                <button
+                  key={s.code}
+                  onClick={() => toggle(styles, setStyles, s.code)}
+                  className={`px-3 py-1.5 rounded-full text-sm border transition ${styles.includes(s.code) ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"}`}
+                >
+                  {s.name}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* 场合 */}
