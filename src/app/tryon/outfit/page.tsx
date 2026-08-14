@@ -147,7 +147,7 @@ export default function OutfitPage() {
           </a>
           <p style={{ fontSize: 11, color: "#8a7580", marginTop: 6 }}>点击图片可看大图并保存。</p>
           <a
-            href="/look-studio?baseImageUrl=" + encodeURIComponent(result)
+            href={`/look-studio?baseImageUrl=${encodeURIComponent(result)}`}
             style={{
               display: "block",
               marginTop: 10,
