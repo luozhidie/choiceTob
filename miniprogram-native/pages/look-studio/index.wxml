@@ -25,6 +25,7 @@
   <!-- ① 上传照片 -->
   <view class="card">
     <text class="ct">① 上传你的照片（第 1 件试穿对象）</text>
+    <text class="hint" style="margin-bottom:12rpx;">建议用高清正脸半身照，原图越清晰，叠穿后越不易丢细节。</text>
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>
@@ -75,6 +76,7 @@
         </view>
         <view class="cloth-info">
           <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），会自动叠到你的造型上。</text>
+        <text class="hint" style="margin-top:6rpx;color:#aaa;">鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考。</text>
           <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
         </view>
       </view>
@@ -88,6 +90,7 @@
             <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
             <text class="ptitle">{{item.title}}</text>
             <text class="pprice">¥{{item.price}}</text>
+            <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
             <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
           </view>
         </view>
@@ -98,12 +101,13 @@
     <view class="card">
       <text class="ct">挑单品 · 一件件加</text>
       <view class="grid3">
-        <view wx:for="{{products}}" wx:key="id" class="pcard">
-          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-          <text class="ptitle">{{item.title}}</text>
-          <text class="pprice">¥{{item.price}}</text>
-          <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
-        </view>
+          <view wx:for="{{products}}" wx:key="id" class="pcard">
+            <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+            <text class="ptitle">{{item.title}}</text>
+            <text class="pprice">¥{{item.price}}</text>
+            <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
+            <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+          </view>
       </view>
     </view>
   </block>
@@ -129,14 +133,15 @@
       <text class="tab {{mode==='auto'?'on':''}}" data-m="auto" bindtap="setMode">按形象生成</text>
     </view>
 
-    <view wx:if="{{mode==='browse'}}" class="grid3">
-      <view wx:for="{{products}}" wx:key="id" class="pcard">
-        <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
-        <text class="ptitle">{{item.title}}</text>
-        <text class="pprice">¥{{item.price}}</text>
-        <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+      <view wx:if="{{mode==='browse'}}" class="grid3">
+        <view wx:for="{{products}}" wx:key="id" class="pcard">
+          <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+          <text class="ptitle">{{item.title}}</text>
+          <text class="pprice">¥{{item.price}}</text>
+          <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
+          <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+        </view>
       </view>
-    </view>
 
     <view wx:if="{{mode==='manual'}}">
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
@@ -148,6 +153,7 @@
           <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
           <text class="ptitle">{{item.title}}</text>
           <text class="pprice">¥{{item.price}}</text>
+          <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
           <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
         </view>
       </view>
@@ -176,6 +182,7 @@
         <view wx:for="{{recommend}}" wx:key="id" class="pcard">
           <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
           <text class="ptitle">{{item.title}}</text>
+          <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
           <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
         </view>
       </view>

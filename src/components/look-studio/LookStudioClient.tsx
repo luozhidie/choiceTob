@@ -32,6 +32,9 @@ const CARD = "#2a1a2b";
 const GOLD = "#C9A24B";
 const GOLD_DIM = "rgba(201,162,75,.18)";
 
+const ACCESSORY_CATS = new Set(["shoes", "bag", "accessory"]);
+const isAccessory = (cat?: string) => ACCESSORY_CATS.has(cat || "");
+
 export default function LookStudioClient({ data }: Props) {
   const seasons = data.seasons || [];
   const styles = data.styles || [];
@@ -201,6 +204,7 @@ export default function LookStudioClient({ data }: Props) {
       {/* ① 上传真人照 */}
       <section style={card}>
         <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 8, color: "#fff" }}>① 上传你的照片（第 1 件试穿对象）</div>
+        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>建议用高清正脸半身照，原图越清晰，叠穿后越不易丢细节。</p>
         <div style={{ display: "flex", gap: 12 }}>
           <div onClick={() => fileRef.current?.click()} style={{ width: 72, height: 96, borderRadius: 10, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 12, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer", flexShrink: 0 }}>
             {personPreview ? <img src={personPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="me" /> : "上传\n照片"}
@@ -268,6 +272,7 @@ export default function LookStudioClient({ data }: Props) {
       {/* ③ 上传我的单品图 */}
       <section style={{ ...card, marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>③ 上传我自己的单品图（可选）</div>
+        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>衣服平铺 / 挂拍效果最佳；鞋 · 包 · 配饰为 AI 创意合成，比例位置仅供参考。</p>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div onClick={() => garmentRef.current?.click()} style={{ width: 60, height: 60, borderRadius: 8, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 11, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer" }}>
             {garmentPreview ? <img src={garmentPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="g" /> : "单品\n图"}
@@ -281,6 +286,7 @@ export default function LookStudioClient({ data }: Props) {
       <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", margin: "16px 0 8px" }}>
         {edition === "basic" ? "④ 挑单品试穿" : "④ 按我的季型 + 风格 · 智能推荐"}
       </div>
+      <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 10px", lineHeight: 1.5 }}>鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考，效果可能不如服装稳定。</p>
 
       {err && <p style={{ color: "#e88", fontSize: 13, margin: "4px 0 10px" }}>{err}</p>}
 
@@ -344,6 +350,7 @@ function ProductCard({ p, onAdd, seasonName, styleName, matched }: {
       <div style={{ position: "relative" }}>
         <img src={p.cover} style={{ width: "100%", height: 130, objectFit: "cover", borderRadius: 8 }} alt={p.title} />
         {matched && <span style={{ position: "absolute", top: 4, right: 4, background: GOLD, color: "#1c111d", fontSize: 9, fontWeight: 800, padding: "1px 6px", borderRadius: 6 }}>匹配</span>}
+        {isAccessory(p.category) && <span style={{ position: "absolute", top: 4, left: 4, background: "rgba(255,255,255,.18)", color: "#e8dde0", fontSize: 9, fontWeight: 600, padding: "1px 6px", borderRadius: 6 }}>AI 示意</span>}
       </div>
       <div style={{ fontSize: 11, color: "#e8dde0", marginTop: 4, lineHeight: 1.3, height: 28, overflow: "hidden" }}>{p.title}</div>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 3, margin: "4px 0" }}>
