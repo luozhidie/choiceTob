@@ -35,6 +35,11 @@
     </view>
   </view>
 
+  <view class="card">
+    <view class="ct">④ 配饰 / 鞋包（可选）</view>
+    <view class="tip" style="line-height:1.7;">整体造型默认只替换上装 + 下装。鞋、包、项链等配饰请在生成整套造型后，点击结果下方的「继续叠加配饰」到普通版逐件追加。</view>
+  </view>
+
   <label class="auth">
     <checkbox checked="{{agreedAuth}}" bindchange="onAuthChange" color="#C9A24B" />
     <text>我已阅读并同意「肖像使用授权」（照片仅用于本次 AI 合成，不公开）</text>
@@ -48,6 +53,7 @@
     <view class="ct" style="color:#fff;margin-bottom:10rpx;">生成结果</view>
     <image src="{{resultUrl}}" mode="widthFix" bindtap="preview" />
     <button class="btn ghost" bindtap="save">保存到相册</button>
+    <button class="btn ghost" bindtap="continueStack" style="margin-top:12rpx;border-color:#C9A24B;color:#C9A24B;">＋ 继续叠加配饰（鞋 / 包 / 项链）</button>
     <view class="hint">点击图片可放大查看。</view>
   </view>
 </view>

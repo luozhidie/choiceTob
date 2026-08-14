@@ -109,6 +109,12 @@ Page({
     if (this.data.resultUrl) wx.previewImage({ urls: [this.data.resultUrl], current: this.data.resultUrl });
   },
 
+  continueStack: function () {
+    var url = this.data.resultUrl;
+    if (!url) return;
+    wx.navigateTo({ url: '/pages/look-studio/index?baseImageUrl=' + encodeURIComponent(url) });
+  },
+
   save: function () {
     var url = this.data.resultUrl;
     if (!url) return;

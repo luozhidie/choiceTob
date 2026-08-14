@@ -67,8 +67,13 @@ Page({
   },
 
   onLoad: function (options) {
-    if (options && options.promo) { this.setData({ promo: true }); }
-    this.setData({ agreedAuth: getAuth() });
+    var upd = { agreedAuth: getAuth() };
+    if (options && options.promo) { upd.promo = true; }
+    if (options && options.baseImageUrl) {
+      upd.personPath = decodeURIComponent(options.baseImageUrl);
+      upd.canvasUrl = upd.personPath;
+    }
+    this.setData(upd);
     this.syncEntitlement();
     this.loadData();
     this.loadCloset();
