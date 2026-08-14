@@ -1,11 +1,14 @@
 // app/api/tryon/generate/route.ts
-// 直连 Genlook 官方 API 生成虚拟试衣图。
+// 直连 Genlook 官方 API 生成虚拟试衣图（异步轮询模式）。
 // 接收 multipart/form-data（兼容小程序 look-studio 与 shop 两端的旧 form 字段）。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
+
+// Genlook 试衣通常需要 10~60s，放宽函数超时。
+export const maxDuration = 120;
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,6 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少人像照片" }, { status: 400 });
     }
 
+    // Genlook 当前仅支持单品（maxItems: 1），取第一件即可
     let productUrl: string | undefined;
     let productTitle = "单品";
 
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "试衣服务未配置" }, { status: 500 });
     }
 
-    // 1. 把人像照片上传到 Supabase，拿到公开 URL
+    // 1. 把人像照片上传到 Supabase，拿到公开 URL（供 Genlook 拉取）
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     if (!supabaseUrl || !supabaseKey) {
@@ -79,9 +83,9 @@ export async function POST(request: NextRequest) {
 
     const { data: { publicUrl: personUrl } } = supabase.storage.from(BUCKET).getPublicUrl(filename);
 
-    // 2. 调 Genlook 试衣接口
+    // 2. 创建 Genlook 试衣任务（异步）
     const externalId = `prod-${Date.now()}`;
-    const genlookRes = await fetch(`${GENLOOK_BASE}/tryon/v1/try-on`, {
+    const createRes = await fetch(`${GENLOOK_BASE}/tryon/v1/try-on`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -97,29 +101,67 @@ export async function POST(request: NextRequest) {
         ],
         person: { image: { source: { url: personUrl } } },
         externalUserId: userId,
+        output: { watermark: true },
       }),
     });
 
-    const genlookData = await genlookRes.json().catch(() => ({}));
+    const createData = await createRes.json().catch(() => ({}));
 
-    if (!genlookRes.ok) {
-      const msg = genlookData.message || genlookData.error || `试衣生成失败（${genlookRes.status}）`;
-      console.error("[tryon/generate] Genlook 错误", genlookRes.status, genlookData);
-      return NextResponse.json({ error: msg }, { status: genlookRes.status });
+    if (!createRes.ok) {
+      const msg = createData.message || createData.error || `试衣任务创建失败（${createRes.status}）`;
+      console.error("[tryon/generate] Genlook 创建失败", createRes.status, createData);
+      return NextResponse.json({ error: msg }, { status: createRes.status });
     }
 
-    // Genlook 成功响应的字段名可能是 resultUrl / url / imageUrl / outputUrl
-    const resultUrl =
-      genlookData.resultUrl ||
-      genlookData.url ||
-      genlookData.imageUrl ||
-      genlookData.outputUrl ||
-      genlookData.image?.url ||
-      "";
+    const generationId = createData.generationId;
+    if (!generationId) {
+      console.error("[tryon/generate] Genlook 未返回 generationId", createData);
+      return NextResponse.json({ error: "试衣任务ID缺失" }, { status: 500 });
+    }
+
+    // 3. 轮询任务状态直到完成
+    let resultUrl = "";
+    const FAILED_STATES = new Set(["FAILED", "ERROR", "CANCELED"]);
+    for (let i = 0; i < 24; i++) {
+      await new Promise((r) => setTimeout(r, 3000));
+      const gRes = await fetch(`${GENLOOK_BASE}/tryon/v1/generations/${generationId}`, {
+        headers: { "x-api-key": apiKey },
+      });
+      const gData = await gRes.json().catch(() => ({}));
+      const st = gData.status;
+      if (st === "COMPLETED") {
+        resultUrl = gData.resultImageUrl || "";
+        break;
+      }
+      if (FAILED_STATES.has(st)) {
+        const msg = gData.message || gData.error || "试衣生成失败";
+        console.error("[tryon/generate] Genlook 任务失败", st, gData);
+        return NextResponse.json({ error: msg }, { status: 500 });
+      }
+    }
 
     if (!resultUrl) {
-      console.error("[tryon/generate] Genlook 返回中无结果图", genlookData);
-      return NextResponse.json({ error: "试衣结果图缺失" }, { status: 500 });
+      console.error("[tryon/generate] 试衣生成超时", generationId);
+      return NextResponse.json({ error: "试衣生成超时，请重试" }, { status: 504 });
+    }
+
+    // 4. 把结果图转存到自己的 Supabase（Genlook 返回的签名 URL 仅 7 天有效）
+    try {
+      const imgRes = await fetch(resultUrl);
+      if (imgRes.ok) {
+        const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+        const outName = `tryon-result-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+        await supabase.storage.from(BUCKET).upload(outName, imgBuf, {
+          contentType: "image/jpeg",
+          upsert: false,
+        });
+        const { data: { publicUrl: finalUrl } } = supabase.storage.from(BUCKET).getPublicUrl(outName);
+        resultUrl = finalUrl;
+      } else {
+        console.warn("[tryon/generate] 结果图转存失败，回退原始 URL", imgRes.status);
+      }
+    } catch (e) {
+      console.warn("[tryon/generate] 结果图转存异常，回退原始 URL", e);
     }
 
     return NextResponse.json({ ok: true, resultUrl, credits: 1 });
