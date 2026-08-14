@@ -123,7 +123,7 @@ export default function TryonPromoPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="font-bold text-[#2d1b2e]">专业月卡</div>
-                <div className="text-xs text-gray-500 mt-1">30 天 100 次专业诊断</div>
+                <div className="text-xs text-gray-500 mt-1">30 天 200 次专业诊断</div>
               </div>
               <div className="text-xl font-extrabold text-[#C9A24B]">¥199</div>
             </div>

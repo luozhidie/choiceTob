@@ -15,7 +15,7 @@ var PACKAGES = [
   { id: 'tryon_first_9_9',       name: '首单体验',  price: 9.9,  unit: '次', desc: '9 次普通试穿 + 1 次专业诊断', type: 'first',        days: 365, normal: 9,  pro: 1, highlight: true },
   { id: 'tryon_normal_month_59', name: '普通月卡',  price: 59,   unit: '月', desc: '30 天 70 次普通试穿',         type: 'normal_month', days: 30,  normal: 70, pro: 0 },
   // 专业版
-  { id: 'tryon_pro_month_199',   name: '专业月卡',  price: 199,  unit: '月', desc: '30 天 100 次专业诊断',        type: 'pro_month',    days: 30,  normal: 0, pro: 100, highlight: true },
+  { id: 'tryon_pro_month_199',   name: '专业月卡',  price: 199,  unit: '月', desc: '30 天 200 次专业诊断',        type: 'pro_month',    days: 30,  normal: 0, pro: 200, highlight: true },
   { id: 'tryon_pro_year_999',    name: '专业年卡',  price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',      type: 'pro_year',     days: 365, normal: 0, pro: 1000 },
 ];
 

@@ -13,7 +13,7 @@
   <view class="price-row" bindtap="buyPackage" data-id="tryon_pro_month_199">
     <view>
       <text class="pr-title">专业月卡</text>
-      <text class="pr-sub">30 天 100 次专业诊断</text>
+      <text class="pr-sub">30 天 200 次专业诊断</text>
     </view>
     <text class="pr-num">¥199</text>
   </view>
