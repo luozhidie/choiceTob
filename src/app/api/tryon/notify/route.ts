@@ -9,13 +9,14 @@ import { upsertTryonEntitlement } from "@/lib/tryon-entitlement";
 const APIV2_KEY = process.env.WECHAT_APIV2_KEY || "QqQq77137992Qq77137992Qq77137992";
 
 const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
-  // 新套餐：通用次数计入 normal_left
-  tryon_first_1yuan:  { type: "first",   days: 365, normal: 10,  pro: 0 },
-  tryon_monthly_99:   { type: "month",   days: 30,  normal: 120, pro: 0 },
-  tryon_quarter_199:  { type: "quarter", days: 90,  normal: 280, pro: 0 },
-  tryon_year_699:     { type: "year",    days: 365, normal: 1000, pro: 0 },
+  // 普通版
+  tryon_first_9_9:       { type: "first",        days: 365, normal: 9,  pro: 1 },
+  tryon_normal_month_59: { type: "normal_month", days: 30,  normal: 70, pro: 0 },
+  // 专业版
+  tryon_pro_month_199:   { type: "pro_month",    days: 30,  normal: 0,  pro: 100 },
+  tryon_pro_year_999:    { type: "pro_year",     days: 365, normal: 0,  pro: 1000 },
   // 内部测试通道
-  tryon_test_cent:    { type: "test",    days: 7,   normal: 1,   pro: 1 },
+  tryon_test_cent:       { type: "test",         days: 7,   normal: 1,  pro: 1 },
 };
 
 export async function POST(request: NextRequest) {

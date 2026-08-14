@@ -9,12 +9,14 @@ function rewriteSupabase(u) {
 }
 
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
-// 新规格统一为通用次数，计入 normal；专业版判定靠 proMode，次数走同一个池
+// 双轨：普通版次数计入 normal_left，专业版次数计入 pro_left，互不稀释
 var PACKAGES = [
-  { id: 'tryon_first_1yuan', name: '首单体验', price: 9.9,  unit: '次', desc: '新人专享 10 次 AI 试衣', type: 'first',   days: 365, normal: 10,  pro: 0, highlight: true },
-  { id: 'tryon_monthly_99',  name: '月卡',     price: 99,   unit: '月', desc: '30 天 120 次 AI 试衣', type: 'month',   days: 30,  normal: 120, pro: 0 },
-  { id: 'tryon_quarter_199', name: '季卡',     price: 199,  unit: '季', desc: '90 天 280 次 AI 试衣', type: 'quarter', days: 90,  normal: 280, pro: 0 },
-  { id: 'tryon_year_699',    name: '年卡',     price: 699,  unit: '年', desc: '365 天 1000 次 AI 试衣', type: 'year',    days: 365, normal: 1000, pro: 0 },
+  // 普通版
+  { id: 'tryon_first_9_9',       name: '首单体验',  price: 9.9,  unit: '次', desc: '9 次普通试穿 + 1 次专业诊断', type: 'first',        days: 365, normal: 9,  pro: 1, highlight: true },
+  { id: 'tryon_normal_month_59', name: '普通月卡',  price: 59,   unit: '月', desc: '30 天 70 次普通试穿',         type: 'normal_month', days: 30,  normal: 70, pro: 0 },
+  // 专业版
+  { id: 'tryon_pro_month_199',   name: '专业月卡',  price: 199,  unit: '月', desc: '30 天 100 次专业诊断',        type: 'pro_month',    days: 30,  normal: 0, pro: 100, highlight: true },
+  { id: 'tryon_pro_year_999',    name: '专业年卡',  price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',      type: 'pro_year',     days: 365, normal: 0, pro: 1000 },
 ];
 
 // 衣橱品类中文名
@@ -97,15 +99,25 @@ Page({
 
   applyEntitlement: function (d) {
     var txt;
+    var typeLabels = {
+      first: '首单体验',
+      normal_month: '普通月卡',
+      pro_month: '专业月卡',
+      pro_year: '专业年卡',
+      test: '测试套餐'
+    };
     if (!d.active) {
       txt = '未开通 · 首单 ¥9.9 体验';
     } else if (d.type === 'first') {
-      txt = '首单体验 · 剩余 ' + (d.triesLeft || d.normalLeft || 0) + ' 次';
+      txt = '首单体验 · 普通 ' + (d.normalLeft || 0) + ' 次 / 专业 ' + (d.proLeft || 0) + ' 次';
     } else {
       var days = d.daysLeft || 0;
-      var left = d.triesLeft || d.normalLeft || 0;
-      var label = d.type === 'month' ? '月卡' : d.type === 'quarter' ? '季卡' : d.type === 'year' ? '年卡' : '套餐';
-      txt = label + '剩余 ' + days + ' 天 · ' + left + ' 次';
+      var label = typeLabels[d.type] || '套餐';
+      if (d.type && d.type.indexOf('pro') > -1) {
+        txt = label + '剩余 ' + days + ' 天 · 专业 ' + (d.proLeft || 0) + ' 次';
+      } else {
+        txt = label + '剩余 ' + days + ' 天 · 普通 ' + (d.normalLeft || 0) + ' 次';
+      }
     }
     this.setData({ passText: txt, isPass: d.active });
   },

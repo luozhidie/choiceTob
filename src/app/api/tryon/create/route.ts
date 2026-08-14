@@ -9,14 +9,16 @@ import type { PayPlatform } from "@/lib/wechat-pay";
 // 与小程序端 PACKAGES 保持一致（服务端权威定价）
 // 金额与次数由服务端定死；days 为有效期（天），有效期内用完次数为止。
 // normal = 普通版剩余次数，pro = 专业版剩余次数。
+// 双轨套餐：普通版（试穿）与专业版（风格诊断/造型）分开计费，互不稀释。
 const PACKAGES: Record<string, { name: string; price: number; unit: string; type: string; days: number; normal: number; pro: number }> = {
-  // 新套餐：通用次数，全部计入 normal_left；专业版模式下可从 normal_left 兜底扣减
-  tryon_first_1yuan:  { name: "首单体验", price: 9.9,  unit: "次", type: "first",   days: 365, normal: 10,  pro: 0 },
-  tryon_monthly_99:   { name: "月卡",     price: 99,   unit: "月", type: "month",   days: 30,  normal: 120, pro: 0 },
-  tryon_quarter_199:  { name: "季卡",     price: 199,  unit: "季", type: "quarter", days: 90,  normal: 280, pro: 0 },
-  tryon_year_699:     { name: "年卡",     price: 699,  unit: "年", type: "year",    days: 365, normal: 1000, pro: 0 },
+  // 普通版
+  tryon_first_9_9:      { name: "首单体验",  price: 9.9,  unit: "次", type: "first",        days: 365, normal: 9,  pro: 1 },
+  tryon_normal_month_59:{ name: "普通月卡",  price: 59,   unit: "月", type: "normal_month", days: 30,  normal: 70, pro: 0 },
+  // 专业版
+  tryon_pro_month_199:  { name: "专业月卡",  price: 199,  unit: "月", type: "pro_month",    days: 30,  normal: 0,  pro: 100 },
+  tryon_pro_year_999:   { name: "专业年卡",  price: 999,  unit: "年", type: "pro_year",     days: 365, normal: 0,  pro: 1000 },
   // 内部测试通道
-  tryon_test_cent:    { name: "一分测试", price: 0.01, unit: "次", type: "test",    days: 7,   normal: 1,   pro: 1 },
+  tryon_test_cent:      { name: "一分测试",  price: 0.01, unit: "次", type: "test",         days: 7,   normal: 1,  pro: 1 },
 };
 
 export async function POST(request: NextRequest) {

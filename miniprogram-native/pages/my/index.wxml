@@ -205,8 +205,8 @@
     </view>
   </view>
 
-  <!-- ========== VIP形象服务（仅管理员可见） ========== -->
-  <view class="section" wx:if="{{isAdmin}}">
+  <!-- ========== VIP形象服务（登录后可见） ========== -->
+  <view class="section" wx:if="{{isLoggedIn}}">
     <view class="sec-header">
       <text class="sec-title">VIP形象服务</text>
     </view>
@@ -253,8 +253,8 @@
     </view>
   </view>
 
-  <!-- ========== 时尚买手服务（仅管理员可见） ========== -->
-  <view class="section" wx:if="{{isAdmin}}">
+  <!-- ========== 时尚买手服务（登录后可见） ========== -->
+  <view class="section" wx:if="{{isLoggedIn}}">
     <view class="sec-header">
       <text class="sec-title">时尚买手服务</text>
     </view>
@@ -290,8 +290,8 @@
     </view>
   </view>
 
-  <!-- ========== AI搭配 / AI企划（仅管理员可见） ========== -->
-  <view class="section" wx:if="{{isAdmin}}">
+  <!-- ========== AI搭配 / AI企划（登录后可见） ========== -->
+  <view class="section" wx:if="{{isLoggedIn}}">
     <view class="sec-header">
       <text class="sec-title">AI搭配 / AI企划</text>
     </view>
@@ -343,11 +343,11 @@
   <view class="section">
     <text class="sec-title">我的服务</text>
     <view class="service-list">
-      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goImport">
+      <view wx:if="{{isLoggedIn}}" class="sv-item" bindtap="goImport">
         <text class="sv-icon-text">📦</text>
         <text class="sv-label">一键导入</text>
       </view>
-      <view wx:if="{{isAdmin}}" class="sv-item" bindtap="goAlbumGrab">
+      <view wx:if="{{isLoggedIn}}" class="sv-item" bindtap="goAlbumGrab">
         <text class="sv-icon-text">🖼️</text>
         <text class="sv-label">相册采集</text>
       </view>
