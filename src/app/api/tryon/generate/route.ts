@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
         ],
         person: { image: { source: { url: personUrl } } },
         externalUserId: userId,
-        output: { watermark: true },
+        output: { watermark: false },
       }),
     });
 
