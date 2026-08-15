@@ -72,14 +72,17 @@ export default function StyleTryonPage() {
     setResults([]);
     setSelected([]);
     setConcluded(false);
+    // 上传后自动处理白底，少一步操作
+    uploadPerson(f);
   };
 
-  const uploadPerson = async () => {
-    if (!personFile) return;
+  const uploadPerson = async (file?: File) => {
+    const target = file || personFile;
+    if (!target) return;
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append("personImage", personFile);
+      fd.append("personImage", target);
       const res = await fetch("/api/tryon/upload-person", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || "上传失败");
@@ -219,15 +222,16 @@ export default function StyleTryonPage() {
               <img src={personPreview} alt="人像" className="w-20 h-20 object-cover rounded-xl border border-white/20" />
               <div className="flex-1">
                 <p className="text-sm text-white/80">{personFile?.name}</p>
-                {personUrl ? (
+                {uploading ? (
+                  <p className="text-xs text-[#C9A24B] mt-1 flex items-center gap-1"><Loader2 className="w-3.5 h-3.5 animate-spin" />自动处理白底中…</p>
+                ) : personUrl ? (
                   <p className="text-xs text-green-400 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />已处理白底，可开始试穿</p>
                 ) : (
                   <button
-                    onClick={uploadPerson}
-                    disabled={uploading}
-                    className="mt-2 px-4 py-1.5 rounded-lg bg-[#C9A24B] text-[#1a1018] text-xs font-semibold disabled:opacity-50"
+                    onClick={() => uploadPerson()}
+                    className="mt-2 px-4 py-1.5 rounded-lg bg-[#C9A24B] text-[#1a1018] text-xs font-semibold"
                   >
-                    {uploading ? "处理中…" : "处理白底"}
+                    重试处理白底
                   </button>
                 )}
                 <button onClick={() => fileRef.current?.click()} className="ml-2 text-xs text-white/50 underline">重新选择</button>
@@ -250,7 +254,17 @@ export default function StyleTryonPage() {
             disabled={!personUrl || running}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A24B] to-[#e0b85c] text-[#1a1018] font-bold disabled:opacity-40 flex items-center justify-center gap-2"
           >
-            {running ? <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {currentIdx + 1}/{garments.length}…</> : "开始 8 套风格试穿"}
+            {running ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {currentIdx + 1}/{garments.length}…</>
+            ) : !personPreview ? (
+              "请先上传真人照"
+            ) : uploading ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> 白底处理中，完成后即可试穿</>
+            ) : !personUrl ? (
+              "白底处理失败，请重试"
+            ) : (
+              "开始 8 套风格试穿"
+            )}
           </button>
         </section>
 
