@@ -147,7 +147,10 @@ export default function LookStudioClient({ data }: Props) {
 
       const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error || "试衣失败");
+      if (!res.ok) {
+        const detail = json.generationId ? `\n任务号：${json.generationId}` : "";
+        throw new Error((json.error || "试衣失败") + detail);
+      }
 
       const newUrl = json.resultUrl;
       const entry: StackItem = {
