@@ -12,7 +12,6 @@ import {
   Sparkles,
   RotateCcw,
   Home,
-  User,
 } from "lucide-react";
 
 interface TryonResult {
@@ -24,7 +23,6 @@ interface TryonResult {
 
 export default function StyleTryonPage() {
   const supabase = createClient();
-  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
   const [predicted, setPredicted] = useState<string | null>(null);
 
   const [personFile, setPersonFile] = useState<File | null>(null);
@@ -38,23 +36,25 @@ export default function StyleTryonPage() {
 
   const [selected, setSelected] = useState<string[]>([]);
   const [concluded, setConcluded] = useState(false);
-  const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // 读取登录态 + 问卷预测风格
+  // 可选：如果当前有 Supabase 会员登录，读取问卷预测风格做预排序
   useEffect(() => {
     (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setLoggedIn(!!user);
-      if (!user) return;
-      const { data } = await supabase
-        .from("style_test_results")
-        .select("main_style")
-        .eq("gender", "female")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data?.main_style) setPredicted(data.main_style);
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("style_test_results")
+          .select("main_style")
+          .eq("gender", "female")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data?.main_style) setPredicted(data.main_style);
+      } catch {
+        // 未登录或 RLS 失败时静默跳过，不阻塞试穿
+      }
     })();
   }, [supabase]);
 
@@ -135,10 +135,10 @@ export default function StyleTryonPage() {
   };
 
   const saveConclusion = async () => {
-    setSaving(true);
+    const picks = garments.filter((g) => selected.includes(g.id));
+    const primary = picks[0]?.name || "";
     try {
-      const picks = garments.filter((g) => selected.includes(g.id));
-      const primary = picks[0]?.name || "";
+      // 如果当前有 Supabase 会员登录，顺便把结论落库；没登录就只本地展示，不弹任何提示
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from("style_test_results").insert([
@@ -152,10 +152,9 @@ export default function StyleTryonPage() {
         ]);
       }
       setConcluded(true);
-    } catch (err: any) {
-      alert("保存失败：" + (err.message || "请重试"));
-    } finally {
-      setSaving(false);
+    } catch {
+      // 登录/session 任何异常都不影响展示结论
+      setConcluded(true);
     }
   };
 
@@ -200,17 +199,6 @@ export default function StyleTryonPage() {
       </div>
 
       <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
-        {/* 未登录提示 */}
-        {loggedIn === false && (
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 text-center">
-            <User className="w-8 h-8 text-[#C9A24B] mx-auto mb-2" />
-            <p className="text-sm text-white/80">试穿免登录即可体验；登录后可把你的风格结论保存到云端</p>
-            <Link href="/login" className="inline-block mt-3 px-5 py-2 rounded-lg bg-[#C9A24B] text-[#1a1018] text-sm font-semibold">
-              去登录（保存结论用）
-            </Link>
-          </div>
-        )}
-
         {/* Step 1 上传人像 */}
         <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
           <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
@@ -322,12 +310,12 @@ export default function StyleTryonPage() {
             {!concluded ? (
               <div className="text-center">
                 <p className="text-sm text-white/70 mb-3">已选 {selected.length}/3 个风格</p>
-                <button
+                  <button
                   onClick={saveConclusion}
-                  disabled={selected.length === 0 || saving}
+                  disabled={selected.length === 0}
                   className="px-6 py-2.5 rounded-xl bg-[#C9A24B] text-[#1a1018] font-bold disabled:opacity-40"
                 >
-                  {saving ? "保存中…" : "生成并保存我的风格结论"}
+                  生成我的风格结论
                 </button>
               </div>
             ) : (
