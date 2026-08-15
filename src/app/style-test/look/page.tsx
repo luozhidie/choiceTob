@@ -129,8 +129,8 @@ export default function StyleTryonPage() {
   const toggleSelect = (id: string) => {
     setSelected((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) {
-        alert("最多选择 3 个最适合你的风格");
+      if (prev.length >= 2) {
+        alert("最适合的风格最多选 2 个");
         return prev;
       }
       return [...prev, id];
@@ -209,6 +209,15 @@ export default function StyleTryonPage() {
             上传你的真人照
           </h2>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+          <div className="rounded-xl border border-[#C9A24B]/20 bg-[#C9A24B]/5 p-3 mb-3 text-xs text-white/70 space-y-1">
+            <p className="text-[#C9A24B] font-medium">拍照建议（直接影响试穿效果）</p>
+            <ul className="list-disc pl-4 space-y-0.5">
+              <li>正面站立，双腿自然伸直并拢</li>
+              <li>全身或至少膝盖以上入镜</li>
+              <li>光线均匀，背景干净（白墙/纯色最佳）</li>
+              <li>衣服轮廓清楚，不要裁掉手脚</li>
+            </ul>
+          </div>
           {!personPreview ? (
             <button
               onClick={() => fileRef.current?.click()}
@@ -273,7 +282,7 @@ export default function StyleTryonPage() {
           <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
             <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
               <span className="w-6 h-6 rounded-full bg-[#C9A24B] text-[#1a1018] text-xs flex items-center justify-center font-bold">3</span>
-              试穿效果（点击选择最适合你的，最多 3 个）
+              试穿效果（点击选择最适合你的，最多 2 个）
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {garments.map((g, i) => {
@@ -323,7 +332,7 @@ export default function StyleTryonPage() {
             </h2>
             {!concluded ? (
               <div className="text-center">
-                <p className="text-sm text-white/70 mb-3">已选 {selected.length}/3 个风格</p>
+                <p className="text-sm text-white/70 mb-3">已选 {selected.length}/2 个风格</p>
                   <button
                   onClick={saveConclusion}
                   disabled={selected.length === 0}
