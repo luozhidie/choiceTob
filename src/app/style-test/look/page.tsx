@@ -168,7 +168,6 @@ export default function StyleTryonPage() {
     setResults([]);
     setSelected([]);
     setConcluded(false);
-    setCurrentIdx(-1);
   };
 
   const selectedGarments = garments.filter((g) => selected.includes(g.id));
@@ -218,8 +217,8 @@ export default function StyleTryonPage() {
               <li><b className="text-white/90">正面站立，双腿自然伸直并拢，双手自然下垂</b>（不要凹造型、不要摆 pose）</li>
               <li>全身或至少膝盖以上入镜，衣服轮廓清楚，不要裁掉手脚</li>
               <li><b className="text-white/90">面无表情，不要笑太用力</b>（试衣会继承你的表情与嘴型）</li>
-              <li>自己的衣服自然垂落，<b className="text-white/90">不要扎进裤/裙腰</b></li>
-              <li>不穿内搭、真空拍摄也可以（下装由系统统一配黑裙）</li>
+              <li>自己的衣服自然垂落，<b className="text-white/90">不要扎进裤/裙腰</b>；上衣扣子全扣好</li>
+              <li>不穿内搭、真空拍摄也可以；下装保持真人原样，<b className="text-white/90">建议穿黑色短裙/黑裤</b>拍摄</li>
               <li>光线均匀，背景干净（白墙/纯色最佳）</li>
             </ul>
           </div>

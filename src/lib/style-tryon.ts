@@ -17,8 +17,8 @@ export const STYLE_GARMENTS: StyleGarment[] = [
   {
     id: "shaonian",
     name: "少年型",
-    // 实物：深蓝衬衫 + 白裤（清爽利落中性直线，属少年型）
-    storagePath: "style-test/shishang.jpg",
+    // 实物：深蓝衬衫 + 黑裙（清爽利落中性直线，属少年型；扣子必须全扣）
+    storagePath: "style-test/shaonian.jpg",
     short: "帅气利落 · 中性直线",
     desc: "直线条、帅气、利落、偏中性。适合衬衫、西装、直筒裤等硬朗廓形。",
     keywords: ["帅气", "直线", "中性", "利落", "少年感"],
@@ -27,8 +27,8 @@ export const STYLE_GARMENTS: StyleGarment[] = [
   {
     id: "shishang",
     name: "时尚型",
-    // 实物：灰白翻领外套 + 短裙（设计感撞色廓形，属时尚型）
-    storagePath: "style-test/shaonian.jpg",
+    // 实物：灰白翻领外套 + 黑裙（设计感撞色廓形，属时尚型）
+    storagePath: "style-test/shishang.jpg",
     short: "个性潮流 · 设计感",
     desc: "个性、潮流、前卫、有设计感。适合廓形感、解构、撞色等时髦单品。",
     keywords: ["个性", "潮流", "设计感", "酷感"],
