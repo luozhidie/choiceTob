@@ -25,6 +25,15 @@
     <image src="{{heroImage}}" mode="widthFix" class="hero-img" />
   </view>
 
+  <!-- 八大风格真人试穿入口 -->
+  <view class="tryon-entry" bindtap="goTryon">
+    <view class="te-left">
+      <text class="te-title">八大风格 · 真人试穿</text>
+      <text class="te-desc">把你的真人照套进 8 大风格测试衣，比问卷更直观</text>
+    </view>
+    <text class="te-arrow">›</text>
+  </view>
+
   <!-- 后台可配满框图片模块 -->
   <view wx:if="{{blocks.length > 0}}" class="blocks">
     <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />

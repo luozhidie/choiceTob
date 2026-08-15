@@ -22,6 +22,11 @@ Page({
     this.loadConfig();
   },
 
+  /* ========== 进入八大风格真人试穿 ========== */
+  goTryon:function(){
+    wx.navigateTo({ url:'/pages/style-tryon/index' });
+  },
+
   /* ========== 切换男士/女士模式 ========== */
   switchMode:function(e){
     var mode = e.currentTarget.dataset.mode;

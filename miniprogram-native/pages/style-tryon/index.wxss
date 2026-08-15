@@ -1,0 +1,38 @@
+.page { padding: 24rpx; background: #1a1018; min-height: 100vh; box-sizing: border-box; }
+
+.hero { background: linear-gradient(135deg, #2d1b2e, #3a233a); border-radius: 20rpx; padding: 36rpx 28rpx; text-align: center; }
+.ht { display: block; font-size: 36rpx; font-weight: 800; color: #fff; }
+.hs { display: block; font-size: 24rpx; color: #c9b3bb; margin-top: 12rpx; line-height: 1.6; }
+
+.tip-card { background: rgba(201,162,75,.08); border: 1rpx solid rgba(201,162,75,.35); border-radius: 16rpx; padding: 22rpx; margin-top: 20rpx; }
+.tip-t { display: block; font-size: 26rpx; font-weight: 700; color: #C9A24B; margin-bottom: 10rpx; }
+.tip-li { display: block; font-size: 22rpx; color: #d3c4ca; line-height: 1.7; }
+
+.card { background: rgba(255,255,255,.05); border: 1rpx solid rgba(255,255,255,.1); border-radius: 16rpx; padding: 24rpx; margin-top: 20rpx; }
+.ct { display: block; font-size: 28rpx; font-weight: 700; color: #C9A24B; margin-bottom: 14rpx; }
+.hint { font-size: 22rpx; color: #b9a7ad; line-height: 1.6; }
+
+.me-row { display: flex; align-items: center; gap: 24rpx; }
+.me-pic { width: 140rpx; height: 140rpx; border-radius: 16rpx; background: #16100f; border: 1rpx dashed #4a3840; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.me-img { width: 100%; height: 100%; }
+.me-ph { font-size: 22rpx; color: #8a7580; text-align: center; white-space: pre-line; }
+.me-info { flex: 1; }
+
+.btn { display: block; text-align: center; padding: 24rpx 0; border-radius: 14rpx; background: linear-gradient(90deg, #C9A24B, #e0b85c); color: #1a1018; font-weight: 800; font-size: 28rpx; }
+.btn.disabled { opacity: .5; }
+
+.grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.gcard { position: relative; width: calc((100% - 32rpx) / 3); border-radius: 14rpx; overflow: hidden; border: 3rpx solid rgba(255,255,255,.1); background: #16100f; }
+.gcard.tap { }
+.gcard.on { border-color: #C9A24B; }
+.gimg-box { width: 100%; aspect-ratio: 3/4; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.gimg { width: 100%; height: 100%; }
+.gloading { font-size: 22rpx; color: #8a7580; }
+.gerr { font-size: 20rpx; color: #ff9aa2; padding: 8rpx; text-align: center; line-height: 1.4; }
+.gname { display: block; text-align: center; font-size: 22rpx; color: #eee; padding: 10rpx 0; background: rgba(0,0,0,.4); }
+.gcheck { position: absolute; top: 8rpx; right: 8rpx; width: 36rpx; height: 36rpx; border-radius: 50%; background: #C9A24B; color: #1a1018; font-size: 22rpx; text-align: center; line-height: 36rpx; }
+
+.concl { text-align: center; }
+.concl-t { display: block; font-size: 22rpx; color: #b9a7ad; margin-bottom: 8rpx; }
+.concl-v { display: block; font-size: 34rpx; font-weight: 800; color: #C9A24B; }
+.concl-reset { display: inline-block; margin-top: 18rpx; font-size: 22rpx; color: #8a7580; text-decoration: underline; }

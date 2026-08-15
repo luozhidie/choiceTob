@@ -27,6 +27,14 @@ page{background: var(--bg);padding-bottom:calc(40rpx + env(safe-area-inset-botto
 .hero-img-wrap{margin:0 28rpx 24rpx;border-radius:20rpx;overflow:hidden;background:#fff;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
 .hero-img{width:100%;display:block;}
 
+/* 八大风格真人试穿入口 */
+.tryon-entry{display:flex;align-items:center;justify-content:space-between;margin:0 28rpx 24rpx;padding:24rpx;
+  border-radius:20rpx;background:linear-gradient(135deg,#2d1b2e,#3a233a);border:2rpx solid rgba(201,162,75,.4);box-shadow:0 6rpx 18rpx rgba(45,27,46,.18);}
+.te-left{flex:1;display:flex;flex-direction:column;gap:8rpx;min-width:0;}
+.te-title{font-size:28rpx;font-weight:bold;color:#C9A24B;}
+.te-desc{font-size:20rpx;color:rgba(255,255,255,.7);line-height:1.5;}
+.te-arrow{font-size:44rpx;color:#C9A24B;margin-left:16rpx;}
+
 /* 后台可配满框图片模块 */
 .blocks{display:flex;flex-direction:column;gap:0;margin:0 28rpx;}
 .full-img{width:100%;display:block;}
