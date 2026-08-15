@@ -149,9 +149,11 @@ export async function POST(request: NextRequest) {
     const createData = await createRes.json().catch(() => ({}));
 
     if (!createRes.ok) {
-      const msg = translateError(createData.message || createData.error || `试衣任务创建失败（${createRes.status}）`);
+      const raw = createData.message || createData.error || "";
+      const statusHint = ` [状态码:${createRes.status}]`;
+      const msg = translateError(raw || `试衣任务创建失败${statusHint}`) + (raw ? statusHint : "");
       console.error("[tryon/generate] Genlook 创建失败", createRes.status, createData);
-      return NextResponse.json({ error: msg }, { status: createRes.status });
+      return NextResponse.json({ error: msg, raw: createData }, { status: createRes.status });
     }
 
     const generationId = createData.generationId;
@@ -175,9 +177,11 @@ export async function POST(request: NextRequest) {
         break;
       }
       if (FAILED_STATES.has(st)) {
-        const msg = translateError(gData.message || gData.error || "试衣生成失败");
-        console.error("[tryon/generate] Genlook 任务失败", st, gData);
-        return NextResponse.json({ error: msg }, { status: 500 });
+        const raw = gData.message || gData.error || "";
+        const statusHint = ` [Genlook状态:${st}]`;
+        const msg = translateError(raw || `试衣生成失败${statusHint}`) + (raw ? statusHint : "");
+        console.error("[tryon/generate] Genlook 任务失败", generationId, st, gData);
+        return NextResponse.json({ error: msg, raw: gData, generationId }, { status: 500 });
       }
     }
 

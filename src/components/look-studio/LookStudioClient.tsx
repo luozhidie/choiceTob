@@ -299,7 +299,12 @@ export default function LookStudioClient({ data }: Props) {
       </div>
       <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 10px", lineHeight: 1.5 }}>鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考，效果可能不如服装稳定。</p>
 
-      {err && <p style={{ color: "#e88", fontSize: 13, margin: "4px 0 10px" }}>{err}</p>}
+      {err && (
+        <div style={{ color: "#e88", fontSize: 13, margin: "4px 0 10px", lineHeight: 1.5, whiteSpace: "pre-wrap" }}>
+          {err}
+          <div style={{ fontSize: 11, color: "#b07070", marginTop: 4 }}>如持续失败，请换一张高清原图或从店铺挑选商品重试。</div>
+        </div>
+      )}
 
       {loading && (
         <div style={{ background: GOLD_DIM, color: GOLD, fontSize: 13, padding: "10px 12px", borderRadius: 10, marginBottom: 10 }}>
