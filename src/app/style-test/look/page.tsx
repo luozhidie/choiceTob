@@ -1,0 +1,363 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import { STYLE_GARMENTS, sortByPredicted } from "@/lib/style-tryon";
+import { motion } from "framer-motion";
+import {
+  Camera,
+  Loader2,
+  CheckCircle2,
+  Sparkles,
+  RotateCcw,
+  Home,
+  User,
+} from "lucide-react";
+
+interface TryonResult {
+  id: string;
+  name: string;
+  url: string | null;
+  error?: string;
+}
+
+export default function StyleTryonPage() {
+  const supabase = createClient();
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const [predicted, setPredicted] = useState<string | null>(null);
+
+  const [personFile, setPersonFile] = useState<File | null>(null);
+  const [personPreview, setPersonPreview] = useState<string | null>(null);
+  const [personUrl, setPersonUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const [running, setRunning] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(-1);
+  const [results, setResults] = useState<TryonResult[]>([]);
+
+  const [selected, setSelected] = useState<string[]>([]);
+  const [concluded, setConcluded] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // 读取登录态 + 问卷预测风格
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setLoggedIn(!!user);
+      if (!user) return;
+      const { data } = await supabase
+        .from("style_test_results")
+        .select("main_style")
+        .eq("gender", "female")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data?.main_style) setPredicted(data.main_style);
+    })();
+  }, [supabase]);
+
+  const garments = sortByPredicted(STYLE_GARMENTS, predicted);
+
+  const getGarmentUrl = (path: string) =>
+    supabase.storage.from("blocks-images").getPublicUrl(path).data.publicUrl;
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setPersonFile(f);
+    setPersonPreview(URL.createObjectURL(f));
+    setPersonUrl(null);
+    setResults([]);
+    setSelected([]);
+    setConcluded(false);
+  };
+
+  const uploadPerson = async () => {
+    if (!personFile) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("personImage", personFile);
+      const res = await fetch("/api/tryon/upload-person", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.ok) throw new Error(data.error || "上传失败");
+      setPersonUrl(data.personImageUrl);
+    } catch (err: any) {
+      alert("人像处理失败：" + (err.message || "请重试"));
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const startTryon = async () => {
+    if (!personUrl) {
+      await uploadPerson();
+      if (!personUrl) return;
+    }
+    setRunning(true);
+    setResults([]);
+    setSelected([]);
+    setConcluded(false);
+
+    const out: TryonResult[] = [];
+    for (let i = 0; i < garments.length; i++) {
+      const g = garments[i];
+      setCurrentIdx(i);
+      try {
+        const fd = new FormData();
+        fd.append("personImageUrl", personUrl!);
+        fd.append("garmentImageUrl", getGarmentUrl(g.storagePath));
+        fd.append("userId", "style-tryon");
+        const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "试衣失败");
+        out.push({ id: g.id, name: g.name, url: data.resultUrl });
+      } catch (err: any) {
+        out.push({ id: g.id, name: g.name, url: null, error: err.message });
+      }
+      setResults([...out]);
+    }
+    setCurrentIdx(-1);
+    setRunning(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) {
+        alert("最多选择 3 个最适合你的风格");
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const saveConclusion = async () => {
+    setSaving(true);
+    try {
+      const picks = garments.filter((g) => selected.includes(g.id));
+      const primary = picks[0]?.name || "";
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("style_test_results").insert([
+          {
+            gender: "female",
+            answers: {},
+            main_style: primary,
+            sub_style: picks.slice(1).map((p) => p.name).join("/") || null,
+            source: "tryon_style_test",
+          },
+        ]);
+      }
+      setConcluded(true);
+    } catch (err: any) {
+      alert("保存失败：" + (err.message || "请重试"));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const reset = () => {
+    setResults([]);
+    setSelected([]);
+    setConcluded(false);
+    setCurrentIdx(-1);
+  };
+
+  const selectedGarments = garments.filter((g) => selected.includes(g.id));
+  const matchPredicted =
+    predicted && selectedGarments.some((g) => g.name === predicted);
+
+  return (
+    <div className="min-h-screen bg-[#1a1018] text-white">
+      {/* 顶部导航 */}
+      <div className="sticky top-0 z-20 bg-[#1a1018]/90 backdrop-blur border-b border-white/10">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+          <Link href="/style-test" className="flex items-center gap-2 text-white/80 hover:text-white">
+            <Home className="w-4 h-4" /> 风格测试
+          </Link>
+          <span className="font-bold text-[#C9A24B]">八大风格 · 真人试穿</span>
+          <span className="w-4" />
+        </div>
+      </div>
+
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-[#2d1b2e] to-[#3a233a] py-10 px-4 text-center">
+        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#C9A24B]/20 mb-3">
+          <Sparkles className="w-6 h-6 text-[#C9A24B]" />
+        </div>
+        <h1 className="text-2xl font-bold">把真人套进 8 大风格测试衣</h1>
+        <p className="text-white/70 text-sm mt-2 max-w-md mx-auto">
+          上传你的真人照，逐一试穿八大风格代表款，用眼睛判断哪几款最像你——比问卷更直观。
+        </p>
+        {predicted && (
+          <div className="mt-4 inline-block px-4 py-2 rounded-full bg-[#C9A24B]/15 text-[#C9A24B] text-xs font-medium">
+            问卷预测你的主风格：{predicted}（已优先试穿）
+          </div>
+        )}
+      </div>
+
+      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+        {/* 未登录提示 */}
+        {loggedIn === false && (
+          <div className="rounded-2xl bg-white/5 border border-white/10 p-5 text-center">
+            <User className="w-8 h-8 text-[#C9A24B] mx-auto mb-2" />
+            <p className="text-sm text-white/80">试穿会消耗试衣次数，请先登录</p>
+            <Link href="/login" className="inline-block mt-3 px-5 py-2 rounded-lg bg-[#C9A24B] text-[#1a1018] text-sm font-semibold">
+              去登录
+            </Link>
+          </div>
+        )}
+
+        {/* Step 1 上传人像 */}
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-[#C9A24B] text-[#1a1018] text-xs flex items-center justify-center font-bold">1</span>
+            上传你的真人照
+          </h2>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
+          {!personPreview ? (
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="w-full py-10 rounded-xl border-2 border-dashed border-white/20 hover:border-[#C9A24B]/60 flex flex-col items-center gap-2 text-white/60 hover:text-white transition-colors"
+            >
+              <Camera className="w-8 h-8" />
+              <span className="text-sm">点击上传正面、光线良好的半身/全身照</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-4">
+              <img src={personPreview} alt="人像" className="w-20 h-20 object-cover rounded-xl border border-white/20" />
+              <div className="flex-1">
+                <p className="text-sm text-white/80">{personFile?.name}</p>
+                {personUrl ? (
+                  <p className="text-xs text-green-400 mt-1 flex items-center gap-1"><CheckCircle2 className="w-3.5 h-3.5" />已处理白底，可开始试穿</p>
+                ) : (
+                  <button
+                    onClick={uploadPerson}
+                    disabled={uploading}
+                    className="mt-2 px-4 py-1.5 rounded-lg bg-[#C9A24B] text-[#1a1018] text-xs font-semibold disabled:opacity-50"
+                  >
+                    {uploading ? "处理中…" : "处理白底"}
+                  </button>
+                )}
+                <button onClick={() => fileRef.current?.click()} className="ml-2 text-xs text-white/50 underline">重新选择</button>
+              </div>
+            </div>
+          )}
+        </section>
+
+        {/* Step 2 开始试穿 */}
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+          <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
+            <span className="w-6 h-6 rounded-full bg-[#C9A24B] text-[#1a1018] text-xs flex items-center justify-center font-bold">2</span>
+            开始 8 套试穿
+          </h2>
+          <p className="text-xs text-white/60 mb-3">
+            每张风格衣会调用一次试衣（约 15–40 秒），共 8 张，请保持页面打开。
+          </p>
+          <button
+            onClick={startTryon}
+            disabled={!personUrl || running || loggedIn !== true}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A24B] to-[#e0b85c] text-[#1a1018] font-bold disabled:opacity-40 flex items-center justify-center gap-2"
+          >
+            {running ? <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {currentIdx + 1}/{garments.length}…</> : "开始 8 套风格试穿"}
+          </button>
+        </section>
+
+        {/* Step 3 结果网格 */}
+        {(results.length > 0 || running) && (
+          <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+            <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#C9A24B] text-[#1a1018] text-xs flex items-center justify-center font-bold">3</span>
+              试穿效果（点击选择最适合你的，最多 3 个）
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {garments.map((g, i) => {
+                const r = results.find((x) => x.id === g.id);
+                const isSel = selected.includes(g.id);
+                const isCurrent = running && i === currentIdx;
+                return (
+                  <motion.button
+                    key={g.id}
+                    initial={{ opacity: 0, scale: 0.96 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    onClick={() => r?.url && toggleSelect(g.id)}
+                    className={`relative rounded-xl overflow-hidden border-2 text-left ${isSel ? "border-[#C9A24B]" : "border-white/10"} ${r?.url ? "cursor-pointer" : "cursor-default"}`}
+                  >
+                    <div className="aspect-[3/4] bg-black/40 flex items-center justify-center">
+                      {r?.url ? (
+                        <img src={r.url} alt={g.name} className="w-full h-full object-cover" />
+                      ) : isCurrent ? (
+                        <Loader2 className="w-7 h-7 text-[#C9A24B] animate-spin" />
+                      ) : r?.error ? (
+                        <span className="text-[10px] text-red-300 p-2 text-center">{r.error}</span>
+                      ) : (
+                        <span className="text-xs text-white/30">等待中</span>
+                      )}
+                    </div>
+                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/50 text-[11px] font-medium">
+                      {g.name}
+                    </div>
+                    {isSel && (
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-[#C9A24B] flex items-center justify-center">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[#1a1018]" />
+                      </div>
+                    )}
+                  </motion.button>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Step 4 结论 */}
+        {results.length === garments.length && !running && (
+          <section className="rounded-2xl bg-white/5 border border-white/10 p-5">
+            <h2 className="font-bold text-[#C9A24B] mb-3 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#C9A24B] text-[#1a1018] text-xs flex items-center justify-center font-bold">4</span>
+              我的风格结论
+            </h2>
+            {!concluded ? (
+              <div className="text-center">
+                <p className="text-sm text-white/70 mb-3">已选 {selected.length}/3 个风格</p>
+                <button
+                  onClick={saveConclusion}
+                  disabled={selected.length === 0 || saving}
+                  className="px-6 py-2.5 rounded-xl bg-[#C9A24B] text-[#1a1018] font-bold disabled:opacity-40"
+                >
+                  {saving ? "保存中…" : "生成并保存我的风格结论"}
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="rounded-xl bg-[#C9A24B]/10 border border-[#C9A24B]/30 p-4">
+                  <p className="text-xs text-white/60 mb-1">结合你的试穿选择，最适合你的风格</p>
+                  <p className="text-lg font-bold text-[#C9A24B]">
+                    {selectedGarments.map((g) => g.name).join(" / ")}
+                  </p>
+                </div>
+                {predicted && (
+                  <div className={`rounded-xl p-3 text-sm ${matchPredicted ? "bg-green-500/10 text-green-300" : "bg-amber-500/10 text-amber-300"}`}>
+                    {matchPredicted
+                      ? `✓ 与问卷预测（${predicted}）一致`
+                      : `试穿结论与问卷预测（${predicted}）不同——以你眼睛看到的试穿效果为准`}
+                  </div>
+                )}
+                <div className="flex flex-wrap gap-2">
+                  {selectedGarments.map((g) => (
+                    <span key={g.id} className="px-3 py-1 rounded-full bg-white/10 text-xs">{g.short}</span>
+                  ))}
+                </div>
+                <button onClick={reset} className="inline-flex items-center gap-1 text-xs text-white/50 underline">
+                  <RotateCcw className="w-3.5 h-3.5" /> 重新试穿
+                </button>
+              </div>
+            )}
+          </section>
+        )}
+      </div>
+    </div>
+  );
+}

@@ -11,6 +11,10 @@
     "src/app/api/mini/upload-product-image/route.ts": {
       "memory": 2048,
       "maxDuration": 120
+    },
+    "src/app/api/tryon/upload-person/route.ts": {
+      "memory": 2048,
+      "maxDuration": 120
     }
   },
   "crons": [
