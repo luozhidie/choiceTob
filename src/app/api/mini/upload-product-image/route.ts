@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
     let uploadBuffer: Buffer = buffer;
     let uploadMime: string = fileType;
     try {
-      const whitened = await removeBackgroundToImage(buffer, fileType, { person: false });
+      const whitened = await removeBackgroundToImage(buffer, fileType, { person: true });
       if (whitened && whitened.length > 0) {
         uploadBuffer = whitened;
         uploadMime = "image/jpeg";

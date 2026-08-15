@@ -106,15 +106,24 @@ export async function removeBackgroundToImage(
     output: { format: 'image/png' },
     device: 'cpu',
     proxyToWorker: false,
+    // 默认按"含真人"抠图：真人换衣场景下人物轮廓更完整、不误啃人
+    person: opts?.person ?? true,
   } as any);
 
   const pngBuf = Buffer.from(await outBlob.arrayBuffer());
   const img = await loadImage(pngBuf);
   const W = img.width as number;
   const H = img.height as number;
-  const longSide = Math.max(W, H);
 
-  // 单品与人像统一合成白底；长边不足 1024 放大（Genlook 想要 1024+ 才清晰）
+  // alpha 边缘羽化：磨平硬边/锯齿，去除极淡 halo 白边（人物与衣服图均受益）
+  const fCanvas = new Canvas(W, H);
+  const fctx = fCanvas.getContext('2d');
+  fctx.drawImage(img as any, 0, 0);
+  const { data } = fctx.getImageData(0, 0, W, H);
+  featherAlpha(data, W, H, 2);
+  fctx.putImageData(new NapiImageData(data, W, H), 0, 0);
+
+  const longSide = Math.max(W, H);
   let cw = W;
   let ch = H;
   if (longSide < 1024) {
@@ -127,6 +136,39 @@ export async function removeBackgroundToImage(
   const ctx = canvas.getContext('2d');
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, cw, ch);
-  ctx.drawImage(img as any, 0, 0, cw, ch);
+  ctx.drawImage(fCanvas as any, 0, 0, cw, ch);
   return canvas.toBuffer('image/jpeg', { quality: 0.92 });
+}
+
+// 对 RGBA 缓冲的 alpha 通道做轻量 box blur 羽化，并截断极淡 halo（<32 直接透明）
+function featherAlpha(data: Uint8ClampedArray, w: number, h: number, r: number) {
+  const n = w * h;
+  const a = new Float32Array(n);
+  for (let i = 0; i < n; i++) a[i] = data[i * 4 + 3];
+  const hb = new Float32Array(n);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0, cnt = 0;
+      for (let k = -r; k <= r; k++) {
+        const xx = x + k;
+        if (xx >= 0 && xx < w) { sum += a[y * w + xx]; cnt++; }
+      }
+      hb[y * w + x] = sum / cnt;
+    }
+  }
+  const vb = new Float32Array(n);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let sum = 0, cnt = 0;
+      for (let k = -r; k <= r; k++) {
+        const yy = y + k;
+        if (yy >= 0 && yy < h) { sum += hb[yy * w + x]; cnt++; }
+      }
+      vb[y * w + x] = sum / cnt;
+    }
+  }
+  for (let i = 0; i < n; i++) {
+    const v = vb[i];
+    data[i * 4 + 3] = v < 32 ? 0 : v;
+  }
 }
