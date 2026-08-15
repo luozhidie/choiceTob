@@ -194,10 +194,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "试衣任务ID缺失" }, { status: 500 });
     }
 
-    // 3. 轮询任务状态直到完成
+    // 3. 轮询任务状态直到完成（放宽到 40 次 × 3s = 120s，给 Genlook 充足处理时间）
     let resultUrl = "";
     const FAILED_STATES = new Set(["FAILED", "ERROR", "CANCELED"]);
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 40; i++) {
       await new Promise((r) => setTimeout(r, 3000));
       const gRes = await fetch(`${GENLOOK_BASE}/tryon/v1/generations/${generationId}`, {
         headers: { "x-api-key": apiKey },

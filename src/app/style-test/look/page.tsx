@@ -31,7 +31,6 @@ export default function StyleTryonPage() {
   const [uploading, setUploading] = useState(false);
 
   const [running, setRunning] = useState(false);
-  const [currentIdx, setCurrentIdx] = useState(-1);
   const [results, setResults] = useState<TryonResult[]>([]);
 
   const [selected, setSelected] = useState<string[]>([]);
@@ -104,25 +103,29 @@ export default function StyleTryonPage() {
     setSelected([]);
     setConcluded(false);
 
-    const out: TryonResult[] = [];
-    for (let i = 0; i < garments.length; i++) {
-      const g = garments[i];
-      setCurrentIdx(i);
-      try {
-        const fd = new FormData();
-        fd.append("personImageUrl", personUrl!);
-        fd.append("garmentImageUrl", getGarmentUrl(g.storagePath));
-        fd.append("userId", "style-tryon");
-        const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || "试衣失败");
-        out.push({ id: g.id, name: g.name, url: data.resultUrl });
-      } catch (err: any) {
-        out.push({ id: g.id, name: g.name, url: null, error: err.message });
-      }
-      setResults([...out]);
+    // 初始化 8 个空位；按每批 4 件并行生成（兼顾总时长与接口限流，避免串行超时 / 全并发受限）
+    setResults(garments.map((g) => ({ id: g.id, name: g.name, url: null })));
+
+    const BATCH = 4;
+    for (let b = 0; b < garments.length; b += BATCH) {
+      const batch = garments.slice(b, b + BATCH);
+      await Promise.all(
+        batch.map(async (g) => {
+          try {
+            const fd = new FormData();
+            fd.append("personImageUrl", personUrl!);
+            fd.append("garmentImageUrl", getGarmentUrl(g.storagePath));
+            fd.append("userId", "style-tryon");
+            const res = await fetch("/api/tryon/generate", { method: "POST", body: fd });
+            const data = await res.json();
+            if (!res.ok || !data.ok) throw new Error(data.error || "试衣失败");
+            setResults((prev) => prev.map((r) => (r.id === g.id ? { ...r, url: data.resultUrl } : r)));
+          } catch (err: any) {
+            setResults((prev) => prev.map((r) => (r.id === g.id ? { ...r, error: err.message } : r)));
+          }
+        })
+      );
     }
-    setCurrentIdx(-1);
     setRunning(false);
   };
 
@@ -210,12 +213,14 @@ export default function StyleTryonPage() {
           </h2>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onPickFile} />
           <div className="rounded-xl border border-[#C9A24B]/20 bg-[#C9A24B]/5 p-3 mb-3 text-xs text-white/70 space-y-1">
-            <p className="text-[#C9A24B] font-medium">拍照建议（直接影响试穿效果）</p>
+            <p className="text-[#C9A24B] font-medium">拍照要求（直接影响试穿效果）</p>
             <ul className="list-disc pl-4 space-y-0.5">
-              <li>正面站立，双腿自然伸直并拢</li>
-              <li>全身或至少膝盖以上入镜</li>
+              <li><b className="text-white/90">正面站立，双腿自然伸直并拢，双手自然下垂</b>（不要凹造型、不要摆 pose）</li>
+              <li>全身或至少膝盖以上入镜，衣服轮廓清楚，不要裁掉手脚</li>
+              <li><b className="text-white/90">面无表情，不要笑太用力</b>（试衣会继承你的表情与嘴型）</li>
+              <li>自己的衣服自然垂落，<b className="text-white/90">不要扎进裤/裙腰</b></li>
+              <li>不穿内搭、真空拍摄也可以（下装由系统统一配黑裙）</li>
               <li>光线均匀，背景干净（白墙/纯色最佳）</li>
-              <li>衣服轮廓清楚，不要裁掉手脚</li>
             </ul>
           </div>
           {!personPreview ? (
@@ -264,7 +269,7 @@ export default function StyleTryonPage() {
             className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A24B] to-[#e0b85c] text-[#1a1018] font-bold disabled:opacity-40 flex items-center justify-center gap-2"
           >
             {running ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {currentIdx + 1}/{garments.length}…</>
+              <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {results.filter(r => r.url || r.error).length}/{garments.length}…</>
             ) : !personPreview ? (
               "请先上传真人照"
             ) : uploading ? (
@@ -288,7 +293,6 @@ export default function StyleTryonPage() {
               {garments.map((g, i) => {
                 const r = results.find((x) => x.id === g.id);
                 const isSel = selected.includes(g.id);
-                const isCurrent = running && i === currentIdx;
                 return (
                   <motion.button
                     key={g.id}
@@ -300,12 +304,10 @@ export default function StyleTryonPage() {
                     <div className="aspect-[3/4] bg-black/40 flex items-center justify-center">
                       {r?.url ? (
                         <img src={r.url} alt={g.name} className="w-full h-full object-cover" />
-                      ) : isCurrent ? (
-                        <Loader2 className="w-7 h-7 text-[#C9A24B] animate-spin" />
                       ) : r?.error ? (
                         <span className="text-[10px] text-red-300 p-2 text-center">{r.error}</span>
                       ) : (
-                        <span className="text-xs text-white/30">等待中</span>
+                        <Loader2 className="w-7 h-7 text-[#C9A24B] animate-spin" />
                       )}
                     </div>
                     <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/50 text-[11px] font-medium">
