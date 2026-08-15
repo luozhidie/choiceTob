@@ -37,29 +37,29 @@ export default function TryonNormalPage() {
         <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">体验</div>
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">首单体验</div>
-          <div className="text-xs text-gray-500 mt-1">9 次普通 + 1 次专业</div>
+          <div className="text-xs text-gray-500 mt-1">5 次普通试穿</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥9.9</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} sub="9次普通+1次专业" />
+        <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} sub="5次普通试穿" />
       </div>
 
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">普通月卡</div>
-          <div className="text-xs text-gray-500 mt-1">30 天 70 次普通试穿</div>
+          <div className="text-xs text-gray-500 mt-1">30 天 100 次普通试穿</div>
         </div>
-        <div className="text-2xl font-extrabold text-[#C9A24B]">¥59</div>
+        <div className="text-2xl font-extrabold text-[#C9A24B]">¥99</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_normal_month_59" title="普通月卡" price={59} sub="30天70次" />
+        <TryonPayButton productId="tryon_normal_month_99" title="普通月卡" price={99} sub="30天100次" />
       </div>
 
       <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-100 px-5 py-3 flex items-center justify-between max-w-[720px] mx-auto z-20 shadow-[0_-4px_20px_rgba(0,0,0,.06)]">
         <div className="flex flex-col">
-          <span className="text-xl font-extrabold text-[#C9A24B]">普通月卡 ¥59</span>
-          <span className="text-xs text-gray-400">30 天 70 次普通试穿</span>
+          <span className="text-xl font-extrabold text-[#C9A24B]">普通月卡 ¥99</span>
+          <span className="text-xs text-gray-400">30 天 100 次普通试穿</span>
         </div>
         <Link
           href="/look-studio"

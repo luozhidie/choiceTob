@@ -40,10 +40,33 @@ Page({
     selected: [],
     selectedNames: '',
     concluded: false,
+    proLeft: 0,
+    checking: false,
   },
 
   onLoad: function () {
     this.setData({ results: emptyResults() });
+    this.checkEntitlement();
+  },
+
+  checkEntitlement: function () {
+    var t = this;
+    t.setData({ checking: true });
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/tryon/entitlement?openid=' + encodeURIComponent(openid),
+        method: 'GET',
+        success: function (r) {
+          var d = r.data || {};
+          t.setData({ proLeft: d.proLeft || 0, checking: false });
+        },
+        fail: function () { t.setData({ checking: false }); }
+      });
+    }).catch(function () { t.setData({ checking: false }); });
+  },
+
+  buyPro: function () {
+    wx.navigateTo({ url: '/pages/tryon-pro/index' });
   },
 
   choosePerson: function () {
@@ -76,6 +99,16 @@ Page({
 
   startTryon: function () {
     var t = this;
+    if (t.data.proLeft <= 0) {
+      wx.showModal({
+        title: '需开通专业版',
+        content: '八大风格真人试穿属于专业诊断，需购买 ¥998 专业版（100 次）后使用。',
+        confirmText: '去开通',
+        cancelText: '取消',
+        success: function (res) { if (res.confirm) t.buyPro(); }
+      });
+      return;
+    }
     if (!t.data.personUrl) {
       if (t.data.personPath) t.uploadPerson(t.data.personPath);
       return;

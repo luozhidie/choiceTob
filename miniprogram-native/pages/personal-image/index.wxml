@@ -22,10 +22,10 @@
 <view class="bottom-bar">
   <view class="bottom-btn free" bindtap="goTest">
     <text class="btn-title">智能形象诊断</text>
-    <text class="btn-price">¥99 风格测试</text>
+    <text class="btn-price">¥998 风格测试</text>
   </view>
   <view class="bottom-btn paid" bindtap="goPaid">
-    <text class="btn-title">整体形象诊断</text>
-    <text class="btn-price">预约</text>
+    <text class="btn-title">人工兜底</text>
+    <text class="btn-price">¥4000</text>
   </view>
 </view>

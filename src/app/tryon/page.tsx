@@ -29,7 +29,7 @@ export default function TryonPromoPage() {
         <div className="mt-5">
           <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} label="新人首单 ¥9.9 试穿" />
         </div>
-        <div className="text-xs text-white/55 mt-2">9 次普通 + 1 次专业 · 限时</div>
+        <div className="text-xs text-white/55 mt-2">5 次普通试穿 · 限时</div>
       </section>
 
       {/* 三步 */}
@@ -63,7 +63,7 @@ export default function TryonPromoPage() {
           >
             <div className="text-2xl mb-2">👕</div>
             <h3 className="font-bold text-[#2d1b2e]">普通版</h3>
-            <p className="text-xs text-gray-500 mt-1">快速看上身 · ¥59/月</p>
+            <p className="text-xs text-gray-500 mt-1">快速看上身 · ¥99/月 100 次</p>
           </Link>
           <Link
             href="/tryon/pro"
@@ -71,7 +71,7 @@ export default function TryonPromoPage() {
           >
             <div className="text-2xl mb-2">✨</div>
             <h3 className="font-bold">专业版</h3>
-            <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥199/月起</p>
+            <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥998/100 次</p>
           </Link>
         </div>
       </section>
@@ -82,7 +82,7 @@ export default function TryonPromoPage() {
       <div className="fixed left-0 right-0 bottom-0 bg-white border-t border-gray-100 px-5 py-3 flex items-center justify-between max-w-[720px] mx-auto z-20 shadow-[0_-4px_20px_rgba(0,0,0,.06)]">
         <div className="flex flex-col">
           <span className="text-xl font-extrabold text-[#C9A24B]">首单 ¥9.9</span>
-          <span className="text-xs text-gray-400">9 次普通 + 1 次专业</span>
+          <span className="text-xs text-gray-400">5 次普通试穿</span>
         </div>
         <Link
           href="/look-studio"

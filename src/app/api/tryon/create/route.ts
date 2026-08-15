@@ -12,13 +12,16 @@ import type { PayPlatform } from "@/lib/wechat-pay";
 // 双轨套餐：普通版（试穿）与专业版（风格诊断/造型）分开计费，互不稀释。
 const PACKAGES: Record<string, { name: string; price: number; unit: string; type: string; days: number; normal: number; pro: number }> = {
   // 普通版
-  tryon_first_9_9:      { name: "首单体验",  price: 9.9,  unit: "次", type: "first",        days: 365, normal: 9,  pro: 1 },
-  tryon_normal_month_59:{ name: "普通月卡",  price: 59,   unit: "月", type: "normal_month", days: 30,  normal: 70, pro: 0 },
-  // 专业版
-  tryon_pro_month_199:  { name: "专业月卡",  price: 199,  unit: "月", type: "pro_month",    days: 30,  normal: 0,  pro: 200 },
-  tryon_pro_year_999:   { name: "专业年卡",  price: 999,  unit: "年", type: "pro_year",     days: 365, normal: 0,  pro: 1000 },
+  tryon_first_9_9:       { name: "首单体验", price: 9.9,  unit: "次", type: "first",        days: 365, normal: 5,   pro: 0 },
+  tryon_normal_month_99: { name: "普通月卡", price: 99,   unit: "月", type: "normal_month", days: 30,  normal: 100, pro: 0 },
+  // 专业版（含 21 题风格测试 / 八大风格真人试穿）
+  tryon_pro_998:         { name: "专业版",   price: 998,  unit: "次", type: "pro_pack",     days: 365, normal: 0,   pro: 100 },
   // 内部测试通道
-  tryon_test_cent:      { name: "一分测试",  price: 0.01, unit: "次", type: "test",         days: 7,   normal: 1,  pro: 1 },
+  tryon_test_cent:       { name: "一分测试", price: 0.01, unit: "次", type: "test",         days: 7,   normal: 1,   pro: 1 },
+  // 旧套餐兼容（已下线，仅用于历史订单回调/查单补发）
+  tryon_normal_month_59: { name: "普通月卡(旧)", price: 59,  unit: "月", type: "normal_month", days: 30,  normal: 70,  pro: 0 },
+  tryon_pro_month_199:   { name: "专业月卡(旧)", price: 199, unit: "月", type: "pro_month",    days: 30,  normal: 0,   pro: 200 },
+  tryon_pro_year_999:    { name: "专业年卡(旧)", price: 999, unit: "年", type: "pro_year",     days: 365, normal: 0,   pro: 1000 },
 };
 
 export async function POST(request: NextRequest) {

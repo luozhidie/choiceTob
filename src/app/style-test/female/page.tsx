@@ -57,7 +57,7 @@ export default function FemaleStyleTestPage() {
         user_id: user.id,
         plan_id: "style_test_female",
         plan_name: "风格测试（女）",
-        price: 9900,
+        price: 99800,
         payment_method: payMethod,
         status: "pending",
       }]);
@@ -203,9 +203,9 @@ export default function FemaleStyleTestPage() {
           </div>
           <h2 className="text-2xl font-bold text-primary mb-2">女士风格测试</h2>
           <p className="text-sm text-muted-foreground mb-6">
-            微信/支付宝扫码支付 ¥99，客服确认后立即可测（共 {totalQuestions} 道题）
+            微信/支付宝扫码支付 ¥998，客服确认后立即可测（共 {totalQuestions} 道题）
           </p>
-          <div className="text-4xl font-bold text-primary mb-6">¥99</div>
+          <div className="text-4xl font-bold text-primary mb-6">¥998</div>
 
           {/* 支付方式切换 */}
           <div className="flex rounded-xl bg-gray-100 p-1 mb-5">

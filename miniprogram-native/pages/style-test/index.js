@@ -6,9 +6,9 @@ Page({
     testMode:'female',
     isPersonal:false,
 
-    /* 测试会员（付费风格测试） */
+    /* 测试会员（付费风格测试 / 智能形象诊断） */
     isTestMember:false,
-    testFeeLabel:'¥99',
+    testFeeLabel:'¥998',
 
     /* 后台配置的图片 */
     heroImage:'',
@@ -20,10 +20,37 @@ Page({
     if(isPersonal){wx.setNavigationBarTitle({title:'VIP形象诊断'});}
     this.setData({isPersonal:isPersonal, testMode:options.mode || 'female'});
     this.loadConfig();
+    this.checkEntitlement();
+  },
+
+  /* ========== 查询专业版权益（风格测试会员 = 专业版） ========== */
+  checkEntitlement:function(){
+    var t=this;
+    if(!app||!app.getOpenid)return;
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:'https://colour-choice.art/api/tryon/entitlement?openid='+encodeURIComponent(openid),
+        method:'GET',
+        success:function(r){
+          var d=r.data||{};
+          t.setData({isTestMember:!!(d.active && d.proLeft > 0)});
+        }
+      });
+    }).catch(function(){});
   },
 
   /* ========== 进入八大风格真人试穿 ========== */
   goTryon:function(){
+    if(!this.data.isTestMember){
+      wx.showModal({
+        title:'需开通风格测试会员',
+        content:'八大风格真人试穿属于专业诊断，开通 ¥998 风格测试会员（含 100 次专业诊断）后即可使用。',
+        confirmText:'立即开通',
+        cancelText:'取消',
+        success:function(res){ if(res.confirm) wx.navigateTo({url:'/pages/tryon-pro/index'}); }
+      });
+      return;
+    }
     wx.navigateTo({ url:'/pages/style-tryon/index' });
   },
 
@@ -57,27 +84,24 @@ Page({
     });
   },
 
-  /* ========== 开通测试会员（¥99） ========== */
+  /* ========== 开通测试会员（¥998） ========== */
+  // 风格测试会员 = 专业版：100 次专业诊断 + 21 题风格测试 + 八大风格真人试穿
   buyTestMember:function(){
     var t=this;
     if(!app||!app.getOpenid){wx.showToast({title:'暂不支持',icon:'none'});return;}
     wx.showLoading({title:'调起支付...'});
     app.getOpenid().then(function(openid){
-      var isFemale=t.data.testMode==='female';
-      var pid=isFemale?'test_female':'test_male';
-      var title=isFemale?'女士风格测试会员':'男士风格测试会员';
       wx.request({
-        url:'https://colour-choice.art/api/wechat-pay/unified-order',
+        url:'https://colour-choice.art/api/tryon/create',
         method:'POST',
-        data:{product_id:pid,product_title:title,total_fee:9900,quantity:1,platform:'mini',openid:openid},
+        data:{package_id:'tryon_pro_998',openid:openid,platform:'mini'},
         success:function(r){
           wx.hideLoading();
           var d=r.data||{};
           if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
-          var p=d.jsapi||d;
           wx.requestPayment({
-            timeStamp:p.timeStamp,nonceStr:p.nonceStr,package:p.package,
-            signType:p.signType||'MD5',paySign:p.paySign,
+            timeStamp:d.timeStamp,nonceStr:d.nonceStr,package:d.package,
+            signType:d.signType||'MD5',paySign:d.paySign,
             success:function(){wx.showToast({title:'开通成功',icon:'success'});t.setData({isTestMember:true});},
             fail:function(err){if(!(err&&err.errMsg&&err.errMsg.indexOf('cancel')>-1))wx.showToast({title:'支付失败',icon:'none'});}
           });

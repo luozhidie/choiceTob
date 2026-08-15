@@ -55,12 +55,12 @@ export default function StyleTestPage() {
               <User className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-base">风格测试会员 · ¥99</h3>
-              <p className="text-xs text-white/80 mt-0.5">14 题自动诊断 · 找到你的本命色彩与穿衣风格</p>
+              <h3 className="font-bold text-base">风格测试会员 · ¥998</h3>
+              <p className="text-xs text-white/80 mt-0.5">21 题自动诊断 · 八大风格真人试穿 · 100 次专业诊断</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
-            <span className="text-2xl font-black">¥99</span>
+            <span className="text-2xl font-black">¥998</span>
             <div className="flex gap-2">
               <Link href="/style-test/female" className="px-3 py-1.5 bg-white text-primary text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors">女士</Link>
               <Link href="/style-test/male" className="px-3 py-1.5 bg-white text-primary text-xs font-semibold rounded-lg hover:bg-white/90 transition-colors">男士</Link>

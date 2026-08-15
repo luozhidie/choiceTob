@@ -11,7 +11,7 @@
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
       <text class="cta-main">新人首单 ¥9.9 试穿</text>
-      <text class="cta-sub">9 次普通 + 1 次专业 · 限时</text>
+      <text class="cta-sub">5 次普通试穿 · 限时</text>
     </view>
   </view>
 
@@ -46,12 +46,12 @@
       <view class="entry" bindtap="goSub" data-page="tryon-normal">
         <text class="entry-emoji">👕</text>
         <text class="entry-name">普通版</text>
-        <text class="entry-sub">快速看上身 · ¥59/月</text>
+        <text class="entry-sub">快速看上身 · ¥99/月 100 次</text>
       </view>
       <view class="entry pro" bindtap="goSub" data-page="tryon-pro">
         <text class="entry-emoji">✨</text>
         <text class="entry-name">专业版</text>
-        <text class="entry-sub">诊断+搭配 · ¥199/月起</text>
+        <text class="entry-sub">诊断+搭配 · ¥998/100 次</text>
       </view>
       <view class="entry" bindtap="goSub" data-page="tryon-guide">
         <text class="entry-emoji">📖</text>

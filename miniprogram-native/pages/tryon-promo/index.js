@@ -1,14 +1,13 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
 
-// 与 /api/tryon/create 服务端定价保持一致：普通版 / 专业版 双轨，互不稀释
+// 与 /api/tryon/create 服务端定价保持一致
 var PACKAGES = [
   // 普通版
-  { id: 'tryon_first_9_9',        name: '首单体验',  price: 9.9,  unit: '次', desc: '9 次普通试穿 + 1 次专业诊断', type: 'first',        days: 365, highlight: true },
-  { id: 'tryon_normal_month_59',  name: '普通月卡',  price: 59,   unit: '月', desc: '30 天 70 次普通试穿',         type: 'normal_month',  days: 30 },
+  { id: 'tryon_first_9_9',        name: '首单体验',  price: 9.9,  unit: '次', desc: '5 次普通试穿',                type: 'first',        days: 365, highlight: true },
+  { id: 'tryon_normal_month_99',  name: '普通月卡',  price: 99,   unit: '月', desc: '30 天 100 次普通试穿',        type: 'normal_month',  days: 30 },
   // 专业版
-  { id: 'tryon_pro_month_199',    name: '专业月卡',  price: 199,  unit: '月', desc: '30 天 200 次专业诊断',        type: 'pro_month',    days: 30, highlight: true },
-  { id: 'tryon_pro_year_999',     name: '专业年卡',  price: 999,  unit: '年', desc: '365 天 1000 次专业诊断',      type: 'pro_year',     days: 365 },
+  { id: 'tryon_pro_998',          name: '专业版',    price: 998,  unit: '次', desc: '100 次专业诊断 · 含风格测试', type: 'pro_pack',      days: 365, highlight: true },
 ];
 
 function findPkg(id) {
