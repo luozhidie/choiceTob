@@ -32,6 +32,7 @@ Page({
     var t = this;
     wx.chooseMedia({
       count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      sizeType: ['original', 'compressed'],
       success: function (res) {
         var f = res.tempFiles && res.tempFiles[0];
         if (!f) return;
