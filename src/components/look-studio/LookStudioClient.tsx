@@ -61,7 +61,9 @@ export default function LookStudioClient({ data }: Props) {
   const [myStyle, setMyStyle] = useState<string>("");
 
   // —— 画布叠加 ——
-  const [canvasUrl, setCanvasUrl] = useState<string>(baseImageUrl || "");
+  // 注意：从 outfit 跳过来时 baseImageUrl 是「整体造型结果图」，应作为「已上传人像」而非画布基底，
+  // 所以 canvasUrl 初始留空，让用户在其上逐件叠加；首件试穿时 personPreview 即为基底人像。
+  const [canvasUrl, setCanvasUrl] = useState<string>("");
   const [stack, setStack] = useState<StackItem[]>([]);
   const [garmentFile, setGarmentFile] = useState<File | null>(null);
   const [garmentPreview, setGarmentPreview] = useState<string>("");
@@ -129,8 +131,14 @@ export default function LookStudioClient({ data }: Props) {
     try {
       const fd = new FormData();
       if (stack.length === 0) {
-        if (!personFile) { setErr("请先上传你的照片"); setLoading(false); return; }
-        fd.append("personImage", personFile);
+        if (personFile) {
+          fd.append("personImage", personFile);
+        } else if (personPreview) {
+          // 从整体造型（outfit）跳过来时，baseImageUrl 已作为「已上传人像」
+          fd.append("personImageUrl", personPreview);
+        } else {
+          setErr("请先在 ① 上传你的照片"); setLoading(false); return;
+        }
       } else {
         fd.append("personImageUrl", canvasUrl);
       }
@@ -283,9 +291,9 @@ export default function LookStudioClient({ data }: Props) {
 
       {/* ③ 上传我的单品图 */}
       <section style={{ ...card, marginTop: 12 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>③ 上传我自己的单品图（可选）</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>③ 上传要试穿的「单品」图（衣服 / 鞋 / 包）</div>
         <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>
-          衣服平铺 / 挂拍效果最佳；图片尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。鞋 · 包 · 配饰为 AI 创意合成，比例位置仅供参考。
+          <b style={{ color: "#c9a24b" }}>此处只传衣服、鞋子、包包等「物品」图，不要传你的人像照</b>（人像请在 ① 上传）。衣服平铺 / 挂拍效果最佳；图片尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。鞋 · 包 · 配饰为 AI 创意合成，比例位置仅供参考。
         </p>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div onClick={() => garmentRef.current?.click()} style={{ width: 60, height: 60, borderRadius: 8, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 11, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer" }}>
