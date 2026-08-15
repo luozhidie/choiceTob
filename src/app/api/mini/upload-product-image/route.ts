@@ -3,6 +3,7 @@
 // 鉴权：小程序自定义 token 或 Supabase JWT（需登录），service_role 绕过 Storage RLS
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { removeBackgroundToImage } from "@/lib/tryon/removeBg";
 
 function parseMiniToken(token: string): { uid: string; exp?: number } | null {
   try {
@@ -91,12 +92,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "单张图片不能超过 5MB" }, { status: 400 });
     }
 
-    const ext = MIME_EXT[fileType] || "jpg";
+    // 自动白底化：上传前先抠图转白底（失败回退原图，绝不阻断上传）
+    let uploadBuffer: Buffer = buffer;
+    let uploadMime: string = fileType;
+    try {
+      const whitened = await removeBackgroundToImage(buffer, fileType, { person: false });
+      if (whitened && whitened.length > 0) {
+        uploadBuffer = whitened;
+        uploadMime = "image/jpeg";
+      }
+    } catch (rbErr: any) {
+      console.error("[小程序商品图上传] 白底处理失败，回退原图:", rbErr?.message);
+    }
+
+    const ext = uploadMime === "image/jpeg" ? "jpg" : (MIME_EXT[uploadMime] || "jpg");
     const filename = `collected/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
     const { error: upErr } = await supabase.storage
       .from(BUCKET)
-      .upload(filename, buffer, { contentType: fileType, upsert: false });
+      .upload(filename, uploadBuffer, { contentType: uploadMime, upsert: false });
     if (upErr) {
       return NextResponse.json({ error: "上传失败：" + upErr.message }, { status: 500 });
     }
