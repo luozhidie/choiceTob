@@ -3,12 +3,15 @@
 // 接收 multipart/form-data（兼容小程序 look-studio 与 shop 两端的旧 form 字段）。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { removeBackgroundToImage, detectMime } from "@/lib/tryon/removeBg";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
 
-// Genlook 试衣通常需要 10~60s，放宽函数超时。
+// Genlook 试衣通常需要 10~60s，抠图另需数秒~数十秒（含模型冷启动），放宽函数超时与内存。
+export const runtime = "nodejs";
 export const maxDuration = 120;
+export const memory = 2048;
 
 function translateError(msg: string): string {
   if (!msg) return "试衣失败";
@@ -85,11 +88,20 @@ export async function POST(request: NextRequest) {
     } else {
       const bytes = await personFile!.arrayBuffer();
       const buffer = Buffer.from(bytes);
+      // 自动去背景：人像保留透明（抠图失败则回退原图，保证流程不中断）
+      let uploadBuffer = buffer;
+      try {
+        const mime = personFile!.type || detectMime(buffer);
+        uploadBuffer = await removeBackgroundToImage(buffer, mime, { person: true });
+        console.log("[tryon/generate] 人像已自动去背景");
+      } catch (e) {
+        console.warn("[tryon/generate] 人像去背景失败，回退原图", (e as Error)?.message);
+      }
       const ext = (personFile!.name?.split(".").pop() || "jpg").toLowerCase();
       const safeExt = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? ext : "jpg";
       const filename = `tryon-person-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${safeExt}`;
 
-      const { error: upErr } = await supabase.storage.from(BUCKET).upload(filename, buffer, {
+      const { error: upErr } = await supabase.storage.from(BUCKET).upload(filename, uploadBuffer, {
         contentType: personFile!.type || `image/${safeExt === "jpg" ? "jpeg" : safeExt}`,
         upsert: false,
       });
@@ -102,16 +114,36 @@ export async function POST(request: NextRequest) {
       personUrl = supabase.storage.from(BUCKET).getPublicUrl(filename).data.publicUrl;
     }
 
-    // 2.0 解析单品图：garmentImageUrl 直用；garmentFile 先上传 Supabase
-    if (!productUrl && garmentImageUrl) productUrl = garmentImageUrl;
-    if (!productUrl && garmentFile) {
-      const bytes = await garmentFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-      const ext = (garmentFile.name?.split(".").pop() || "jpg").toLowerCase();
-      const safeExt = ["jpg", "jpeg", "png", "gif", "webp"].includes(ext) ? ext : "jpg";
-      const gname = `tryon-garment-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${safeExt}`;
-      const { error: gErr } = await supabase.storage.from(BUCKET).upload(gname, buffer, {
-        contentType: garmentFile.type || `image/${safeExt === "jpg" ? "jpeg" : safeExt}`,
+    // 2.0 解析并自动白底化单品图：优先 garmentFile，其次 garmentImageUrl，再其次 products[0].url
+    // 统一先拿到 Buffer，再跑抠图转白底，最后上传 Supabase 得到 productUrl
+    let garmentBuffer: Buffer | null = null;
+    let garmentMime = "image/jpeg";
+    if (garmentFile) {
+      garmentBuffer = Buffer.from(await garmentFile.arrayBuffer());
+      garmentMime = garmentFile.type || detectMime(garmentBuffer);
+    } else if (garmentImageUrl) {
+      const r = await fetch(garmentImageUrl);
+      if (!r.ok) return NextResponse.json({ error: "单品图下载失败" }, { status: 400 });
+      garmentBuffer = Buffer.from(await r.arrayBuffer());
+      garmentMime = r.headers.get("content-type") || detectMime(garmentBuffer);
+    } else if (productUrl) {
+      // products[0].url（远程商品图）：下载后同样自动白底化
+      const r = await fetch(productUrl);
+      if (!r.ok) return NextResponse.json({ error: "商品图下载失败" }, { status: 400 });
+      garmentBuffer = Buffer.from(await r.arrayBuffer());
+      garmentMime = r.headers.get("content-type") || detectMime(garmentBuffer);
+    }
+    if (garmentBuffer) {
+      let whiteBuf = garmentBuffer;
+      try {
+        whiteBuf = await removeBackgroundToImage(garmentBuffer, garmentMime);
+        console.log("[tryon/generate] 单品已自动去背景转白底");
+      } catch (e) {
+        console.warn("[tryon/generate] 单品去背景失败，回退原图", (e as Error)?.message);
+      }
+      const gname = `tryon-garment-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+      const { error: gErr } = await supabase.storage.from(BUCKET).upload(gname, whiteBuf, {
+        contentType: "image/jpeg",
         upsert: false,
       });
       if (gErr) {

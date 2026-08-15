@@ -6,9 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "node scripts/patch-imgly.mjs"
   },
   "dependencies": {
+    "@imgly/background-removal": "^1.7.0",
+    "@napi-rs/canvas": "^1.0.6",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
     "axios": "^1.17.0",

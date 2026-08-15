@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: process.cwd(),
   },
+  // 原生模块（@napi-rs/canvas）与含 wasm 的 @imgly 必须作为外部依赖，禁止被打包器内联
+  serverExternalPackages: ['@napi-rs/canvas', '@imgly/background-removal'],
   output: "standalone",
   images: {
     remotePatterns: [

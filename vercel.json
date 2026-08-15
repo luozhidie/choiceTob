@@ -3,6 +3,12 @@
   "framework": "nextjs",
   "buildCommand": "next build",
   "outputDirectory": ".next",
+  "functions": {
+    "src/app/api/tryon/generate/route.ts": {
+      "memory": 2048,
+      "maxDuration": 120
+    }
+  },
   "crons": [
     { "path": "/api/finance/signal/run", "schedule": "30 8 * * 1-5" },
     { "path": "/api/ssq/sync", "schedule": "0 14 * * 0,2,4" },
