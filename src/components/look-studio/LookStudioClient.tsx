@@ -105,9 +105,22 @@ export default function LookStudioClient({ data }: Props) {
       .map((x) => x.p);
   }, [products, mySeason, myStyle]);
 
+  const checkImage = (f: File): string => {
+    const name = (f.name || "").toLowerCase();
+    const type = (f.type || "").toLowerCase();
+    if (name.endsWith(".heic") || name.endsWith(".heif") || type.includes("heic") || type.includes("heif")) {
+      return "不支持 HEIC/HEIF 格式，请先在手机相册里「复制为 JPG」或转成 PNG 再上传（iPhone 默认是 HEIC）。";
+    }
+    if (f.size > 12 * 1024 * 1024) {
+      return "图片太大（超过 12MB），请压缩或换一张较小的图再试。";
+    }
+    return "";
+  };
   const onPickPerson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    const warn = checkImage(f);
+    if (warn) { setErr(warn); return; }
     setPersonFile(f);
     setPersonPreview(URL.createObjectURL(f));
     setErr("");
@@ -115,6 +128,8 @@ export default function LookStudioClient({ data }: Props) {
   const onPickGarment = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    const warn = checkImage(f);
+    if (warn) { setErr(warn); return; }
     setGarmentFile(f);
     setGarmentPreview(URL.createObjectURL(f));
     setErr("");
@@ -157,7 +172,10 @@ export default function LookStudioClient({ data }: Props) {
       const json = await res.json();
       if (!res.ok) {
         const detail = json.generationId ? `\n任务号：${json.generationId}` : "";
-        throw new Error((json.error || "试衣失败") + detail);
+        const sent = json.personUrl || json.productUrl
+          ? `\n（已发送 人像:${json.personUrl || "-"} 单品:${json.productUrl || "-"}）`
+          : "";
+        throw new Error((json.error || "试衣失败") + detail + sent);
       }
 
       const newUrl = json.resultUrl;

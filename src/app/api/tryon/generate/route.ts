@@ -179,9 +179,10 @@ export async function POST(request: NextRequest) {
       if (FAILED_STATES.has(st)) {
         const raw = gData.message || gData.error || "";
         const statusHint = ` [Genlook状态:${st}]`;
-        const msg = translateError(raw || `试衣生成失败${statusHint}`) + (raw ? statusHint : "");
+        const diag = `\n已发送 人像:${personUrl}\n已发送 单品:${productUrl}`;
+        const msg = translateError(raw || `试衣生成失败${statusHint}`) + (raw ? statusHint : "") + diag;
         console.error("[tryon/generate] Genlook 任务失败", generationId, st, gData);
-        return NextResponse.json({ error: msg, raw: gData, generationId }, { status: 500 });
+        return NextResponse.json({ error: msg, raw: gData, generationId, personUrl, productUrl }, { status: 500 });
       }
     }
 
