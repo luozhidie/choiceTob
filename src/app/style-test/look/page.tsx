@@ -204,9 +204,9 @@ export default function StyleTryonPage() {
         {loggedIn === false && (
           <div className="rounded-2xl bg-white/5 border border-white/10 p-5 text-center">
             <User className="w-8 h-8 text-[#C9A24B] mx-auto mb-2" />
-            <p className="text-sm text-white/80">试穿会消耗试衣次数，请先登录</p>
+            <p className="text-sm text-white/80">试穿免登录即可体验；登录后可把你的风格结论保存到云端</p>
             <Link href="/login" className="inline-block mt-3 px-5 py-2 rounded-lg bg-[#C9A24B] text-[#1a1018] text-sm font-semibold">
-              去登录
+              去登录（保存结论用）
             </Link>
           </div>
         )}
@@ -259,7 +259,7 @@ export default function StyleTryonPage() {
           </p>
           <button
             onClick={startTryon}
-            disabled={!personUrl || running || loggedIn !== true}
+            disabled={!personUrl || running}
             className="w-full py-3 rounded-xl bg-gradient-to-r from-[#C9A24B] to-[#e0b85c] text-[#1a1018] font-bold disabled:opacity-40 flex items-center justify-center gap-2"
           >
             {running ? <><Loader2 className="w-4 h-4 animate-spin" /> 试穿中 {currentIdx + 1}/{garments.length}…</> : "开始 8 套风格试穿"}
