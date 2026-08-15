@@ -281,7 +281,9 @@ export default function LookStudioClient({ data }: Props) {
       {/* ③ 上传我的单品图 */}
       <section style={{ ...card, marginTop: 12 }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: "#fff", marginBottom: 6 }}>③ 上传我自己的单品图（可选）</div>
-        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>衣服平铺 / 挂拍效果最佳；鞋 · 包 · 配饰为 AI 创意合成，比例位置仅供参考。</p>
+        <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 8px", lineHeight: 1.5 }}>
+          衣服平铺 / 挂拍效果最佳；图片尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。鞋 · 包 · 配饰为 AI 创意合成，比例位置仅供参考。
+        </p>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <div onClick={() => garmentRef.current?.click()} style={{ width: 60, height: 60, borderRadius: 8, border: "1.5px dashed #6b5560", display: "flex", alignItems: "center", justifyContent: "center", color: "#b9a7ad", fontSize: 11, textAlign: "center", overflow: "hidden", background: "#241620", cursor: "pointer" }}>
             {garmentPreview ? <img src={garmentPreview} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="g" /> : "单品\n图"}

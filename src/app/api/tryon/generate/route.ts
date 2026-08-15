@@ -10,6 +10,21 @@ const BUCKET = "blocks-images";
 // Genlook 试衣通常需要 10~60s，放宽函数超时。
 export const maxDuration = 120;
 
+function translateError(msg: string): string {
+  if (!msg) return "试衣失败";
+  const m = msg.toLowerCase();
+  if (m.includes("resolution") && m.includes("too low")) {
+    return "图片分辨率过低，请上传更清晰的单品图（建议 1024×1024 以上）";
+  }
+  if (m.includes("face") || m.includes("no person") || m.includes("person not found")) {
+    return "未检测到人物，请上传正面、光线良好的半身/全身照";
+  }
+  if (m.includes("garment")) {
+    return "衣服图识别失败，请换一张平铺/挂拍的清晰单品图";
+  }
+  return msg;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -134,7 +149,7 @@ export async function POST(request: NextRequest) {
     const createData = await createRes.json().catch(() => ({}));
 
     if (!createRes.ok) {
-      const msg = createData.message || createData.error || `试衣任务创建失败（${createRes.status}）`;
+      const msg = translateError(createData.message || createData.error || `试衣任务创建失败（${createRes.status}）`);
       console.error("[tryon/generate] Genlook 创建失败", createRes.status, createData);
       return NextResponse.json({ error: msg }, { status: createRes.status });
     }
@@ -160,7 +175,7 @@ export async function POST(request: NextRequest) {
         break;
       }
       if (FAILED_STATES.has(st)) {
-        const msg = gData.message || gData.error || "试衣生成失败";
+        const msg = translateError(gData.message || gData.error || "试衣生成失败");
         console.error("[tryon/generate] Genlook 任务失败", st, gData);
         return NextResponse.json({ error: msg }, { status: 500 });
       }

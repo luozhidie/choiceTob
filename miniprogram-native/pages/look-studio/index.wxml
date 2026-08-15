@@ -84,7 +84,7 @@
           <text class="cloth-ph">上传\n衣服</text>
         </view>
         <view class="cloth-info">
-          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），会自动叠到你的造型上。</text>
+          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。</text>
         <text class="hint" style="margin-top:6rpx;color:#aaa;">鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考。</text>
           <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
         </view>
