@@ -126,15 +126,24 @@ Page({
           if(app.setAdminStatus){app.setAdminStatus(!!d.is_admin);}
         }
 
-        wx.showToast({title:'登录成功 ✓',icon:'success'});
         var redirect = t.data.redirect;
-        setTimeout(function(){
-          if (redirect) {
-            wx.navigateTo({ url: redirect });
-          } else {
-            wx.switchTab({ url: '/pages/home/index' });
-          }
-        }, 1200);
+        // 优先返回上一页；有 redirect 则跳 redirect；都失败回首页
+        var goBack = function(){
+          wx.navigateBack({
+            delta: 1,
+            fail: function(){
+              if (redirect) {
+                wx.navigateTo({
+                  url: redirect,
+                  fail: function(){ wx.switchTab({ url: '/pages/home/index' }); }
+                });
+              } else {
+                wx.switchTab({ url: '/pages/home/index' });
+              }
+            }
+          });
+        };
+        wx.showToast({title:'登录成功',icon:'success',duration:800,complete:goBack});
       },
       fail:function(err){
         clearTimeout(timeoutTimer);
