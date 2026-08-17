@@ -24,6 +24,7 @@ function isUuid(s: string) {
 
 export async function GET(req: NextRequest) {
   const openid = req.nextUrl.searchParams.get("openid");
+  const source = req.nextUrl.searchParams.get("source"); // 'self' | 'stylist' 可选过滤
   if (!openid) return NextResponse.json({ error: "缺少 openid" }, { status: 400 });
 
   let query = supabase.from("user_closet").select("*");
@@ -31,6 +32,9 @@ export async function GET(req: NextRequest) {
     query = query.eq("user_id", openid);
   } else {
     query = query.eq("openid", openid);
+  }
+  if (source === "self" || source === "stylist") {
+    query = query.eq("source", source);
   }
   const { data, error } = await query.order("created_at", { ascending: false });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -52,6 +56,10 @@ export async function POST(req: NextRequest) {
       color: b.color || null,
       style_tags: Array.isArray(b.style_tags) ? b.style_tags : [],
       season_type: b.season_type || null,
+      // 来源：self=消费者自传(云衣橱) / stylist=顾问推荐(VIP衣橱)
+      source: b.source === "stylist" ? "stylist" : "self",
+      recommended_by: b.recommended_by || null,
+      recommend_note: b.recommend_note || null,
     };
     const { data, error } = await supabase.from("user_closet").insert(row).select().single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });

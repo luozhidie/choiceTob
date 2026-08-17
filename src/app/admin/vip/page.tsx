@@ -85,6 +85,9 @@ export default function AdminVIPPage() {
         <button onClick={fetchMembers} className="px-3 py-1.5 text-sm border rounded-lg hover:bg-gray-50">
           <Loader2 className="w-4 h-4 inline mr-1" /> 刷新
         </button>
+        <Link href="/admin/vip-closet" className="px-3 py-1.5 text-sm border border-[#C9A24B] text-[#C9A24B] rounded-lg hover:bg-[#C9A24B]/10">
+          👑 客户衣橱·智能推送
+        </Link>
       </div>
 
       {/* 统计卡片 */}

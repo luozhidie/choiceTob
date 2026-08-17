@@ -11,7 +11,6 @@ const ADMIN_PREVIEW_ROUTES = [
   "/fashion-trends", // 时尚趋势（重定向到 magazine）
   "/style-test",     // 风格测试
   "/personal-image", // VIP形象服务
-  "/wardrobe",       // VIP衣橱
   "/booking",        // 预约陪购
 ];
 
@@ -29,7 +28,8 @@ function isAdminPreviewRoute(pathname: string) {
  * - 其余前台路由：内测锁开启时仅管理员（admin_logged_in cookie）可见，否则跳转 /coming-soon
  * - 即使全站开放（SITE_LOCKED=false），以下模块仍仅管理员可见，便于运营方先积攒内容再放出：
  *     线上课程 /courses、每日搭配 /daily-looks、时尚资讯 /magazine、时尚趋势 /fashion-trends、
- *     风格测试 /style-test、VIP形象服务 /personal-image、VIP衣橱 /wardrobe、预约陪购 /booking
+ *     风格测试 /style-test、VIP形象服务 /personal-image、预约陪购 /booking
+ *     （注：我的衣橱 /wardrobe 已对外开放给登录用户，不再受管理员预览限制）
  *
  * 内测锁由环境变量 SITE_LOCKED 控制：
  *   - 未设置 / "true" → 锁定（仅管理员可见）
