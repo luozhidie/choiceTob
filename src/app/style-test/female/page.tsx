@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { femaleTestConfig, calculateFemaleResult, getMarketStyleName } from "@/lib/style-test-data";
 import type { StyleResult } from "@/lib/style-test-data";
 import { motion, AnimatePresence } from "framer-motion";
-import PaymentQRCode from "@/components/PaymentQRCode";
+import StyleTestProPay from "@/components/style-test/StyleTestProPay";
 import {
   ChevronRight,
   Home,
@@ -18,17 +18,13 @@ import {
   User,
   MessageCircle,
   QrCode,
-  CreditCard,
 } from "lucide-react";
 
 const { questions, results } = femaleTestConfig;
 
 export default function FemaleStyleTestPage() {
-  // 支付流程：扫码付款 → pending → 后台确认后开通
-  const [payStep, setPayStep] = useState<"pay" | "pending" | "testing">("pay");
-  const [payMethod, setPayMethod] = useState<"wechat" | "alipay">("wechat");
-  const [paySubmitting, setPaySubmitting] = useState(false);
-  const [payError, setPayError] = useState("");
+  // 支付流程：扫码付款 → 微信回调自动发权益 → 跳转测试（与 tryon 专业版套餐打通）
+  const [payStep, setPayStep] = useState<"pay" | "testing">("pay");
 
   // 测试相关
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -45,53 +41,6 @@ export default function FemaleStyleTestPage() {
 
   const supabase = createClient();
   const totalQuestions = questions.length; // 14
-
-  // 支付：提交订单
-  const handlePaySubmit = async () => {
-    setPaySubmitting(true);
-    setPayError("");
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setPayError("请先登录"); return; }
-      const { error } = await supabase.from("membership_orders").insert([{
-        user_id: user.id,
-        plan_id: "style_test_female",
-        plan_name: "风格测试（女）",
-        price: 99800,
-        payment_method: payMethod,
-        status: "pending",
-      }]);
-      if (error) throw error;
-      setPayStep("pending");
-    } catch (err: any) {
-      setPayError("提交失败：" + (err.message || "请重试"));
-    } finally {
-      setPaySubmitting(false);
-    }
-  };
-
-  // 轮询：后台确认后自动跳转 testing
-  useEffect(() => {
-    if (payStep !== "pending") return;
-    const timer = setInterval(async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("membership_orders")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("plan_id", "style_test_female")
-        .eq("status", "confirmed")
-        .order("confirmed_at", { ascending: false })
-        .limit(1)
-        .single();
-      if (data) {
-        clearInterval(timer);
-        setPayStep("testing");
-      }
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [payStep]);
 
   const handleSelect = (questionId: string, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
@@ -193,69 +142,9 @@ export default function FemaleStyleTestPage() {
 
   const answeredCount = Object.keys(answers).length;
 
-  // 未支付：扫码付款
+  // 未支付：扫码付款（自动支付，微信回调后跳转）
   if (payStep === "pay") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <CreditCard className="w-8 h-8 text-primary" />
-          </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">女士风格测试</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            微信/支付宝扫码支付 ¥998，客服确认后立即可测（共 {totalQuestions} 道题）
-          </p>
-          <div className="text-4xl font-bold text-primary mb-6">¥998</div>
-
-          {/* 支付方式切换 */}
-          <div className="flex rounded-xl bg-gray-100 p-1 mb-5">
-            <button onClick={() => setPayMethod("wechat")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${payMethod === "wechat" ? "bg-white text-green-600 shadow-sm" : "text-gray-500"}`}>
-              <MessageCircle className="w-4 h-4" /> 微信支付
-            </button>
-            <button onClick={() => setPayMethod("alipay")}
-              className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${payMethod === "alipay" ? "bg-white text-blue-600 shadow-sm" : "text-gray-500"}`}>
-              支付宝
-            </button>
-          </div>
-
-          {/* 收款码 */}
-          <div className="mb-4">
-            <div className="w-48 h-48 mx-auto">
-              <PaymentQRCode type={payMethod} className="w-full h-full" />
-            </div>
-          </div>
-          <p className="text-xs text-gray-400 mb-4">
-            请使用{payMethod === "wechat" ? "微信" : "支付宝"}扫描上方二维码付款
-          </p>
-
-          <button onClick={handlePaySubmit}
-            disabled={paySubmitting}
-            className="w-full btn-primary flex items-center justify-center gap-2 py-3 disabled:opacity-50">
-            {paySubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-            {paySubmitting ? "提交中..." : "我已支付"}
-          </button>
-          {payError && <p className="text-sm text-red-500 mt-3">{payError}</p>}
-          <p className="text-xs text-muted-foreground mt-3">提交后客服将在24小时内确认，确认后立即可测</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 已提交支付，等待后台确认
-  if (payStep === "pending") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-lg max-w-md w-full p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-amber-50 flex items-center justify-center mx-auto mb-6">
-            <Loader2 className="w-8 h-8 text-amber-500 animate-spin" />
-          </div>
-          <h2 className="text-2xl font-bold text-primary mb-2">等待确认中</h2>
-          <p className="text-sm text-muted-foreground mb-6">您的付款已提交，客服正在确认，确认后将自动跳转</p>
-          <div className="text-xs text-gray-400">每5秒自动检查确认状态...</div>
-        </div>
-      </div>
-    );
+    return <StyleTestProPay onPaid={() => setPayStep("testing")} />;
   }
 
   // 已支付：显示测试界面
