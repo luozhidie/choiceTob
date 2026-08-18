@@ -3,7 +3,9 @@ module.exports = {
   yuan: function (c) { if (c == null) return '0'; var y = Math.round(c) / 100; return y % 1 === 0 ? '' + y : y.toFixed(2); },
   discount: function (r) { if (!r || r >= 1) return '零售价'; var z = Math.round(r * 1000) / 100; return (z % 1 === 0 ? z.toFixed(0) : z.toFixed(1)) + '折'; },
   rate: function (r) { if (!r) return '0%'; return Math.round(r * 100) + '%'; },
-  first: function (s) { if (!s) return '代'; s = '' + s; return s.charAt(0); }
+  first: function (s) { if (!s) return '代'; s = '' + s; return s.charAt(0); },
+  date: function (s) { if (!s) return ''; var d = getDate(s); return (d.getMonth()+1) + '-' + d.getDate(); },
+  status: function (s) { var map={'pending':'待结算','settled':'已结算','failed':'失败'}; return map[s]||s; }
 };
 </wxs>
 
@@ -27,93 +29,199 @@ module.exports = {
   </view>
 
   <block wx:else>
-    <!-- 身份卡 -->
-    <view class="hero">
-      <view class="hero-top">
-        <view class="hero-avatar">{{f.first(storeName || fullName)}}</view>
-        <view class="hero-meta">
-          <text class="hero-name">{{storeName || fullName || '代理'}}</text>
-          <view class="hero-tags">
-            <text wx:if="{{isCertified}}" class="tag tag-gold">认证店主</text>
-            <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款代理</text>
+    <!-- Tab 导航 -->
+    <view class="tabbar">
+      <view class="tab {{tab==='home'?'active':''}}" data-tab="home" bindtap="switchTab">工作台</view>
+      <view class="tab {{tab==='customers'?'active':''}}" data-tab="customers" bindtap="switchTab">客户</view>
+      <view class="tab {{tab==='sales'?'active':''}}" data-tab="sales" bindtap="switchTab">收益</view>
+      <view class="tab {{tab==='orders'?'active':''}}" data-tab="orders" bindtap="switchTab">订单</view>
+      <view class="tab {{tab==='material'?'active':''}}" data-tab="material" bindtap="switchTab">素材</view>
+    </view>
+
+    <!-- ========== 工作台 ========== -->
+    <view wx:if="{{tab==='home'}}">
+      <!-- 身份卡 -->
+      <view class="hero">
+        <view class="hero-top">
+          <view class="hero-avatar">{{f.first(storeName || fullName)}}</view>
+          <view class="hero-meta">
+            <text class="hero-name">{{storeName || fullName || '代理'}}</text>
+            <view class="hero-tags">
+              <text wx:if="{{isCertified}}" class="tag tag-gold">认证店主</text>
+              <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款代理</text>
+              <text wx:if="{{isAdmin}}" class="tag tag-admin">管理员</text>
+            </view>
           </view>
         </view>
-      </view>
-      <view class="hero-stats">
-        <view class="hs"><text class="hs-num">{{f.discount(discountRate)}}</text><text class="hs-label">拿货折扣</text></view>
-        <view class="hs"><text class="hs-num">{{f.rate(returnRate)}}</text><text class="hs-label">退换额度</text></view>
-        <view class="hs"><text class="hs-num">¥{{f.yuan(depositAmount)}}</text><text class="hs-label">预存货款</text></view>
-      </view>
-    </view>
-
-    <!-- 推广码 -->
-    <view class="card">
-      <view class="card-title">我的推广码</view>
-      <view class="code-row">
-        <text class="code-text">{{inviteCode || '—'}}</text>
-        <view class="code-copy" bindtap="copyCode">复制</view>
-      </view>
-      <view class="code-actions">
-        <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
-        <button class="btn-share" open-type="share">分享给客户</button>
-      </view>
-      <text class="code-tip">客户通过你的码下单，差价自动结算到收益余额</text>
-    </view>
-
-    <!-- 业绩 -->
-    <view class="card">
-      <view class="card-title">推广业绩</view>
-      <view class="perf-row">
-        <view class="perf"><text class="perf-num">{{customerCount}}</text><text class="perf-label">带来客户</text></view>
-        <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">归因订单</text></view>
-        <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">客户GMV</text></view>
-      </view>
-    </view>
-
-    <!-- 收益 -->
-    <view class="card card-profit">
-      <view class="profit-head">
-        <view>
-          <text class="profit-label">可提现收益</text>
-          <text class="profit-num">¥{{f.yuan(walletBalance)}}</text>
+        <view class="hero-stats">
+          <view class="hs"><text class="hs-num">{{f.discount(discountRate)}}</text><text class="hs-label">拿货折扣</text></view>
+          <view class="hs"><text class="hs-num">{{f.rate(returnRate)}}</text><text class="hs-label">退换额度</text></view>
+          <view class="hs"><text class="hs-num">¥{{f.yuan(depositAmount)}}</text><text class="hs-label">预存货款</text></view>
         </view>
-        <view class="btn-withdraw" bindtap="openWithdraw">申请提现</view>
       </view>
-      <text class="profit-tip">收益 = 客户实付 − 批发成本，订单付款成功后自动入账</text>
+
+      <!-- 推广码 -->
+      <view class="card">
+        <view class="card-title">我的推广码</view>
+        <view class="code-row">
+          <text class="code-text">{{inviteCode || '—'}}</text>
+          <view class="code-copy" bindtap="copyCode">复制</view>
+        </view>
+        <view class="code-actions">
+          <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
+          <button class="btn-share" open-type="share">分享给客户</button>
+          <button class="btn-share btn-tryon" open-type="share" data-share="tryon">分享试衣</button>
+        </view>
+        <text class="code-tip">客户通过你的码下单，差价自动结算到收益余额</text>
+      </view>
+
+      <!-- 业绩 -->
+      <view class="card">
+        <view class="card-title">推广业绩</view>
+        <view class="perf-row">
+          <view class="perf"><text class="perf-num">{{customerCount}}</text><text class="perf-label">带来客户</text></view>
+          <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">归因订单</text></view>
+          <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">客户GMV</text></view>
+        </view>
+      </view>
+
+      <!-- 收益 -->
+      <view class="card card-profit">
+        <view class="profit-head">
+          <view>
+            <text class="profit-label">可提现收益</text>
+            <text class="profit-num">¥{{f.yuan(walletBalance)}}</text>
+          </view>
+          <view class="btn-withdraw" bindtap="openWithdraw">申请提现</view>
+        </view>
+        <text class="profit-tip">收益 = 客户实付 − 批发成本，订单付款成功后自动入账</text>
+      </view>
+
+      <!-- 自定义卖价 -->
+      <view class="card">
+        <view class="card-title">商品对客卖价<text class="card-sub">客户看不到批发价</text></view>
+        <view wx:if="{{priceList.length===0}}" class="list-empty">暂无商品</view>
+        <view wx:for="{{priceList}}" wx:key="product_id" class="price-item">
+          <image class="pi-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
+          <view class="pi-img pi-img-ph" wx:else>👗</view>
+          <view class="pi-info">
+            <text class="pi-title">{{item.title}}</text>
+            <view class="pi-prices">
+              <text class="pi-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
+              <text class="pi-custom">卖价 ¥{{item.custom_price ? f.yuan(item.custom_price) : '未设'}}</text>
+            </view>
+          </view>
+          <view class="pi-edit" bindtap="openEdit" data-index="{{index}}">设价</view>
+        </view>
+      </view>
+
+      <!-- 提现记录 -->
+      <view wx:if="{{withdrawals.length>0}}" class="card">
+        <view class="card-title">提现记录</view>
+        <view wx:for="{{withdrawals}}" wx:key="created_at" class="wd-item">
+          <view>
+            <text class="wd-amt">¥{{f.yuan(item.amount)}}</text>
+            <text class="wd-method">{{item.method === 'wechat' ? '微信' : item.method}}</text>
+          </view>
+          <text class="wd-status wd-{{item.status}}">{{item.status === 'paid' ? '已打款' : (item.status === 'pending' ? '处理中' : '已拒绝')}}</text>
+        </view>
+      </view>
+
+      <view class="consult" bindtap="callConsult">📞 代理咨询 13925997776</view>
+      <view class="sec-link" bindtap="goRecruit">了解代理合作方式 ›</view>
     </view>
 
-    <!-- 自定义卖价 -->
-    <view class="card">
-      <view class="card-title">商品对客卖价<text class="card-sub">客户看不到批发价</text></view>
-      <view wx:if="{{priceList.length===0}}" class="list-empty">暂无商品</view>
-      <view wx:for="{{priceList}}" wx:key="product_id" class="price-item">
-        <image class="pi-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
-        <view class="pi-img pi-img-ph" wx:else>👗</view>
-        <view class="pi-info">
-          <text class="pi-title">{{item.title}}</text>
-          <view class="pi-prices">
-            <text class="pi-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
-            <text class="pi-custom">卖价 ¥{{item.custom_price ? f.yuan(item.custom_price) : '未设'}}</text>
+    <!-- ========== 客户管理 ========== -->
+    <view wx:if="{{tab==='customers'}}" class="tab-page">
+      <view wx:if="{{customers.length===0}}" class="list-empty">暂无客户，先去分享你的店铺/试衣吧</view>
+      <view wx:for="{{customers}}" wx:key="userId" class="cus-card">
+        <view class="cus-head">
+          <view class="cus-avatar">{{f.first(item.name)}}</view>
+          <view>
+            <text class="cus-name">{{item.name}}</text>
+            <text wx:if="{{item.phone}}" class="cus-phone">{{item.phone}}</text>
           </view>
         </view>
-        <view class="pi-edit" bindtap="openEdit" data-index="{{index}}">设价</view>
-      </view>
-    </view>
-
-    <!-- 提现记录 -->
-    <view wx:if="{{withdrawals.length>0}}" class="card">
-      <view class="card-title">提现记录</view>
-      <view wx:for="{{withdrawals}}" wx:key="created_at" class="wd-item">
-        <view>
-          <text class="wd-amt">¥{{f.yuan(item.amount)}}</text>
-          <text class="wd-method">{{item.method === 'wechat' ? '微信' : item.method}}</text>
+        <view class="cus-stats">
+          <view class="cs"><text class="cs-num">{{item.orderCount}}</text><text class="cs-label">订单</text></view>
+          <view class="cs"><text class="cs-num">¥{{f.yuan(item.gmv)}}</text><text class="cs-label">GMV</text></view>
+          <view class="cs"><text class="cs-num">{{f.date(item.lastOrderAt)}}</text><text class="cs-label">最近下单</text></view>
         </view>
-        <text class="wd-status wd-{{item.status}}">{{item.status === 'paid' ? '已打款' : (item.status === 'pending' ? '处理中' : '已拒绝')}}</text>
+        <view wx:if="{{item.lastTryon}}" class="cus-tryon">
+          <image class="ct-img" src="{{item.lastTryon.result_image_url}}" mode="aspectFill"/>
+          <text class="ct-text">{{item.lastTryon.product_title || 'AI试衣'}} · {{f.date(item.lastTryon.created_at)}}</text>
+        </view>
       </view>
     </view>
 
-    <view class="consult" bindtap="callConsult">📞 代理咨询 13925997776</view>
-    <view class="sec-link" bindtap="goRecruit">了解代理合作方式 ›</view>
+    <!-- ========== 收益明细 ========== -->
+    <view wx:if="{{tab==='sales'}}" class="tab-page">
+      <view class="filterbar">
+        <view class="filter {{salesFilter==='all'?'active':''}}" data-f="all" bindtap="setSalesFilter">全部</view>
+        <view class="filter {{salesFilter==='settled'?'active':''}}" data-f="settled" bindtap="setSalesFilter">已结算</view>
+        <view class="filter {{salesFilter==='pending'?'active':''}}" data-f="pending" bindtap="setSalesFilter">待结算</view>
+      </view>
+      <view class="sum-card">
+        <view class="sum"><text class="sum-num">¥{{f.yuan(profitSummary.totalProfit)}}</text><text class="sum-label">累计差价</text></view>
+        <view class="sum"><text class="sum-num">¥{{f.yuan(profitSummary.settledProfit)}}</text><text class="sum-label">已结算</text></view>
+        <view class="sum"><text class="sum-num">¥{{f.yuan(profitSummary.pendingProfit)}}</text><text class="sum-label">待结算</text></view>
+      </view>
+      <view wx:if="{{salesList.length===0}}" class="list-empty">暂无收益明细</view>
+      <view wx:for="{{salesList}}" wx:key="order_no" class="sale-card">
+        <view class="sale-row">
+          <text class="sale-no">{{item.order_no}}</text>
+          <text class="sale-status sale-{{item.settlement_status}}">{{f.status(item.settlement_status)}}</text>
+        </view>
+        <text class="sale-title">{{item.product_title}}</text>
+        <view class="sale-amounts">
+          <text>实付 ¥{{f.yuan(item.total_amount)}}</text>
+          <text>成本 ¥{{f.yuan(item.agent_cost)}}</text>
+          <text class="sale-profit">利润 ¥{{f.yuan(item.agent_profit)}}</text>
+        </view>
+        <text class="sale-date">{{item.customer_name}} · {{f.date(item.paid_at || item.created_at)}}</text>
+      </view>
+    </view>
+
+    <!-- ========== 订单物流 ========== -->
+    <view wx:if="{{tab==='orders'}}" class="tab-page">
+      <view wx:if="{{orderList.length===0}}" class="list-empty">暂无归因订单</view>
+      <view wx:for="{{orderList}}" wx:key="order_no" class="order-card">
+        <view class="order-head">
+          <text class="order-no">{{item.order_no}}</text>
+          <text class="order-status">{{item.status==='paid'?'已付款':(item.status==='shipped'?'已发货':(item.status==='delivered'?'已签收':item.status))}}</text>
+        </view>
+        <view class="order-product">
+          <image class="op-img" src="{{item.product_image}}" mode="aspectFill" wx:if="{{item.product_image}}"/>
+          <view class="op-info">
+            <text class="op-title">{{item.product_title}}</text>
+            <text class="op-price">¥{{f.yuan(item.total_amount)}} × {{item.quantity}}</text>
+          </view>
+        </view>
+        <view wx:if="{{item.express_company}}" class="order-logistics">
+          <text>{{item.express_company}} {{item.tracking_no}}</text>
+        </view>
+        <view class="order-actions">
+          <view class="oa-btn" bindtap="applyAfterSale" data-id="{{item.id}}">申请售后</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- ========== 商品素材 ========== -->
+    <view wx:if="{{tab==='material'}}" class="tab-page">
+      <view wx:if="{{materialList.length===0}}" class="list-empty">暂无商品素材</view>
+      <view wx:for="{{materialList}}" wx:key="product_id" class="mat-card">
+        <image class="mat-img" src="{{item.cover_image}}" mode="aspectFill"/>
+        <view class="mat-info">
+          <text class="mat-title">{{item.title}}</text>
+          <text class="mat-price">零售 ¥{{f.yuan(item.retail_price)}}</text>
+        </view>
+        <view class="mat-actions">
+          <view class="mat-btn" bindtap="copyMaterial" data-index="{{index}}">复制文案</view>
+          <view class="mat-btn mat-btn-gold" bindtap="saveImage" data-url="{{item.cover_image}}">下载图片</view>
+        </view>
+      </view>
+    </view>
+
     <view class="sbtm"></view>
   </block>
 

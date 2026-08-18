@@ -35,7 +35,73 @@
 .btn-ghost { background: #f3eee7; color: #2d1b2e; }
 .btn-share { background: #C9A24B; color: #2d1b2e; font-weight: 700; }
 .btn-share::after { border: none; }
+.btn-tryon { background: #f3eee7; color: #2d1b2e; font-weight: 600; }
+.tag-admin { background: rgba(255,255,255,0.15); color: #fff; border: 1rpx solid rgba(255,255,255,0.3); }
 .code-tip { display: block; font-size: 22rpx; color: #9a8f8a; margin-top: 18rpx; line-height: 1.5; }
+
+/* Tab */
+.tabbar { display: flex; background: #fff; border-radius: 0 0 24rpx 24rpx; margin: 0 -24rpx; padding: 0 24rpx; box-shadow: 0 4rpx 20rpx rgba(45,27,46,0.05); position: sticky; top: 0; z-index: 10; }
+.tab { flex: 1; text-align: center; font-size: 26rpx; color: #8a807a; padding: 24rpx 0; position: relative; }
+.tab.active { color: #2d1b2e; font-weight: 700; }
+.tab.active::after { content: ''; position: absolute; bottom: 8rpx; left: 50%; transform: translateX(-50%); width: 40rpx; height: 4rpx; background: #C9A24B; border-radius: 4rpx; }
+.tab-page { padding-top: 8rpx; }
+
+/* 客户管理 */
+.cus-card { background: #fff; border-radius: 24rpx; padding: 28rpx; margin-top: 24rpx; box-shadow: 0 4rpx 20rpx rgba(45,27,46,0.05); }
+.cus-head { display: flex; align-items: center; }
+.cus-avatar { width: 72rpx; height: 72rpx; border-radius: 50%; background: #f3eee7; color: #C9A24B; font-size: 30rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.cus-name { display: block; margin-left: 20rpx; font-size: 28rpx; font-weight: 700; color: #2d1b2e; }
+.cus-phone { display: block; margin-left: 20rpx; font-size: 22rpx; color: #9a8f8a; margin-top: 4rpx; }
+.cus-stats { display: flex; margin-top: 24rpx; padding-top: 24rpx; border-top: 1rpx solid #f1ece6; }
+.cs { flex: 1; text-align: center; }
+.cs-num { display: block; font-size: 30rpx; font-weight: 700; color: #2d1b2e; }
+.cs-label { display: block; font-size: 22rpx; color: #9a8f8a; margin-top: 6rpx; }
+.cus-tryon { display: flex; align-items: center; margin-top: 20rpx; background: #faf8f6; border-radius: 16rpx; padding: 16rpx; }
+.ct-img { width: 80rpx; height: 80rpx; border-radius: 10rpx; }
+.ct-text { margin-left: 16rpx; font-size: 24rpx; color: #6b625c; }
+
+/* 收益 */
+.filterbar { display: flex; gap: 16rpx; margin-top: 24rpx; }
+.filter { flex: 1; text-align: center; background: #fff; color: #6b625c; font-size: 26rpx; padding: 18rpx 0; border-radius: 14rpx; }
+.filter.active { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+.sum-card { display: flex; background: linear-gradient(135deg, #2d1b2e, #3d243d); border-radius: 24rpx; padding: 32rpx 0; margin-top: 24rpx; color: #fff; }
+.sum { flex: 1; text-align: center; }
+.sum-num { display: block; font-size: 32rpx; font-weight: 800; color: #C9A24B; }
+.sum-label { display: block; font-size: 22rpx; color: rgba(255,255,255,0.65); margin-top: 8rpx; }
+.sale-card { background: #fff; border-radius: 24rpx; padding: 28rpx; margin-top: 24rpx; }
+.sale-row { display: flex; justify-content: space-between; }
+.sale-no { font-size: 22rpx; color: #9a8f8a; }
+.sale-status { font-size: 24rpx; }
+.sale-settled { color: #2e9e5b; }
+.sale-pending { color: #C9A24B; }
+.sale-title { display: block; font-size: 28rpx; color: #2d1b2e; font-weight: 700; margin-top: 12rpx; }
+.sale-amounts { display: flex; gap: 24rpx; margin-top: 16rpx; font-size: 24rpx; color: #6b625c; }
+.sale-profit { color: #C9A24B; font-weight: 700; }
+.sale-date { display: block; font-size: 22rpx; color: #b8ada8; margin-top: 12rpx; }
+
+/* 订单 */
+.order-card { background: #fff; border-radius: 24rpx; padding: 28rpx; margin-top: 24rpx; }
+.order-head { display: flex; justify-content: space-between; }
+.order-no { font-size: 22rpx; color: #9a8f8a; }
+.order-status { font-size: 24rpx; color: #C9A24B; }
+.order-product { display: flex; margin-top: 20rpx; }
+.op-img { width: 120rpx; height: 120rpx; border-radius: 14rpx; background: #f3eee7; }
+.op-info { margin-left: 20rpx; flex: 1; }
+.op-title { display: block; font-size: 27rpx; color: #2d1b2e; font-weight: 600; }
+.op-price { display: block; font-size: 24rpx; color: #C9A24B; margin-top: 10rpx; }
+.order-logistics { margin-top: 16rpx; background: #faf8f6; border-radius: 12rpx; padding: 16rpx; font-size: 24rpx; color: #6b625c; }
+.order-actions { display: flex; justify-content: flex-end; margin-top: 20rpx; }
+.oa-btn { font-size: 24rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 28rpx; border-radius: 999rpx; }
+
+/* 素材 */
+.mat-card { background: #fff; border-radius: 24rpx; padding: 24rpx; margin-top: 24rpx; display: flex; align-items: center; }
+.mat-img { width: 140rpx; height: 140rpx; border-radius: 16rpx; background: #f3eee7; }
+.mat-info { flex: 1; margin-left: 24rpx; }
+.mat-title { display: block; font-size: 28rpx; color: #2d1b2e; font-weight: 600; }
+.mat-price { display: block; font-size: 24rpx; color: #C9A24B; margin-top: 10rpx; }
+.mat-actions { display: flex; flex-direction: column; gap: 14rpx; }
+.mat-btn { font-size: 22rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 22rpx; border-radius: 999rpx; text-align: center; }
+.mat-btn-gold { background: #C9A24B; color: #2d1b2e; font-weight: 700; }
 
 /* 业绩 */
 .perf-row { display: flex; margin-top: 24rpx; }

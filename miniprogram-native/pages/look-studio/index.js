@@ -63,6 +63,9 @@ Page({
     agreedAuth: false,
     showShopPick: false,
     showResult: false,
+    referralCode: '',       // 代理推广码
+    fromAgent: false,       // 是否来自代理分享
+    currentTryonId: '',     // 当前试衣记录ID
   },
 
   onLoad: function (options) {
@@ -72,6 +75,11 @@ Page({
     if (options && options.baseImageUrl) {
       upd.personPath = decodeURIComponent(options.baseImageUrl);
       upd.canvasUrl = upd.personPath;
+    }
+    // 接收代理推广码
+    if (options && (options.ref || options.referral_code)) {
+      upd.referralCode = options.ref || options.referral_code;
+      upd.fromAgent = true;
     }
     this.setData(upd);
     this.syncEntitlement().then(function (ent) {
@@ -607,6 +615,11 @@ Page({
 
   goHistory: function () {
     wx.navigateTo({ url: '/pages/tryon-history/index' });
+  },
+  goAgentShop: function () {
+    var code = this.data.referralCode || '';
+    if (!code) return;
+    wx.navigateTo({ url: '/pages/agent-shop/index?ref=' + code });
   },
 
   goOutfit: function () {
