@@ -72,6 +72,8 @@ App({
     if (isAdmin === true) {
       this.globalData.isAdmin = true;
     }
+    // 每次冷启动清除 openid 缓存：防止用户切换微信账号后仍用旧 openid
+    try { wx.removeStorageSync('wx_openid'); } catch (e) {}
   },
 
   // 同步管理员状态（登录后调用）
@@ -93,12 +95,12 @@ App({
     return true;
   },
 
-  // 获取微信openid（带缓存）
+  // 获取微信openid（每次重新获取，避免切换微信账号后仍用旧 openid；并发请求复用同一次 wx.login）
+  _openidPromise: null,
   getOpenid: function() {
-    return new Promise(function(resolve, reject) {
-      var cached = wx.getStorageSync('wx_openid');
-      if (cached) { resolve(cached); return; }
-
+    var app = this;
+    if (app._openidPromise) return app._openidPromise;
+    app._openidPromise = new Promise(function(resolve, reject) {
       wx.login({
         success: function(loginRes) {
           if (!loginRes.code) {
@@ -124,7 +126,8 @@ App({
         },
         fail: function() { reject(new Error('wx.login失败')); }
       });
-    });
+    }).finally(function() { app._openidPromise = null; });
+    return app._openidPromise;
   },
 
   // 检查登录状态
