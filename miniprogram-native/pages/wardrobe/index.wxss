@@ -34,3 +34,22 @@
 
 /* 上传按钮 */
 .fab{position:fixed;right:40rpx;bottom:60rpx;width:96rpx;height:96rpx;border-radius:50%;background:#2d1b2e;color:#fff;font-size:48rpx;display:flex;align-items:center;justify-content:center;box-shadow:0 8rpx 24rpx rgba(45,27,46,.35);z-index:10;}
+
+/* 顶部双 Tab */
+.tabs{display:flex;background:#fff;border-radius:18rpx;padding:8rpx;margin-bottom:24rpx;box-shadow:0 4rpx 16rpx rgba(0,0,0,.05);}
+.tab{flex:1;text-align:center;font-size:28rpx;color:#888;padding:18rpx 0;border-radius:14rpx;transition:all .2s;}
+.tab-on{background:linear-gradient(135deg,#2d1b2e,#4a3a5a);color:#C9A24B;font-weight:bold;}
+
+/* 按场合搭配 */
+.outfit{margin-top:16rpx;}
+.outfit-name{font-size:24rpx;color:#2d1b2e;font-weight:bold;margin-bottom:12rpx;padding-left:8rpx;border-left:6rpx solid #C9A24B;}
+
+/* 每日搭配灵感区块 */
+.zone-looks{display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#f6efe2,#f3e6d0);border:1rpx solid #e7d3ad;}
+.looks-left{display:flex;flex-direction:column;}
+.looks-title{font-size:30rpx;font-weight:bold;color:#2d1b2e;}
+.looks-sub{font-size:22rpx;color:#9a8358;margin-top:6rpx;line-height:1.4;max-width:480rpx;}
+.looks-go{font-size:26rpx;color:#b8893f;font-weight:bold;white-space:nowrap;}
+
+/* 搭配需求输入 */
+.needs{width:100%;min-height:160rpx;background:#f7f5f2;border:1rpx solid #ececec;border-radius:14rpx;padding:20rpx;font-size:26rpx;color:#333;box-sizing:border-box;margin-top:8rpx;}

@@ -11,7 +11,7 @@
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
       <text class="cta-main">新人首单 ¥9.9 试穿</text>
-      <text class="cta-sub">5 次普通试穿 · 限时</text>
+      <text class="cta-sub">10 次普通试穿 · 限时</text>
     </view>
   </view>
 

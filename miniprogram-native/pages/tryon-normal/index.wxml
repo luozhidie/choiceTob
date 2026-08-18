@@ -13,7 +13,7 @@
   <view class="price-row" bindtap="buyPackage" data-id="tryon_first_9_9">
     <view>
       <text class="pr-title">首单体验</text>
-      <text class="pr-sub">5 次普通试穿</text>
+      <text class="pr-sub">10 次普通试穿</text>
     </view>
     <text class="pr-num">¥9.9</text>
   </view>

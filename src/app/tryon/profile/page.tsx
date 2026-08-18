@@ -101,6 +101,7 @@ export default function ProfilePage() {
       ? `${mainName}的偏风格（可多选叠加）`
       : `${mainName}的偏风格（曲直 / 冷暖微调）`
     : "";
+  const pureSelected = !!mainStyle && !!curMain && !curMain.subs.some((s) => styles.includes(s.code));
 
   const setGenderFn = (g: string) => {
     if (g === gender) return;
@@ -120,6 +121,21 @@ export default function ProfilePage() {
       if (old) next = next.filter((x) => x !== old.code && !old.subs.some((s) => s.code === x));
       next.push(c);
       setMainStyle(c);
+    }
+    setStyles(next);
+  };
+
+  // 纯主风格：仅选中主风格 code（清空该主风格下所有偏风格）
+  const togglePureMain = () => {
+    if (!mainStyle) return;
+    const cur = mainList.find((m) => m.code === mainStyle) || null;
+    let next = styles.slice();
+    const hasSubs = cur && cur.subs.some((s) => next.includes(s.code));
+    if (next.includes(mainStyle) && !hasSubs) {
+      next = next.filter((x) => x !== mainStyle);
+    } else {
+      next = next.filter((x) => x !== mainStyle && !(cur && cur.subs.some((s) => s.code === x)));
+      next.push(mainStyle);
     }
     setStyles(next);
   };
@@ -248,6 +264,13 @@ export default function ProfilePage() {
           <>
             <h3 className="text-xs font-bold text-[#2d1b2e] mt-4 mb-2">{subHeading}</h3>
             <div className="flex flex-wrap gap-2">
+              <button
+                key="pure"
+                onClick={togglePureMain}
+                className={`px-3 py-1.5 rounded-full text-sm border transition ${pureSelected ? "bg-[#2d1b2e] text-white border-transparent" : "bg-[#f6f3ef] text-gray-600 border-[#e7ded2]"}`}
+              >
+                纯{mainName}
+              </button>
               {subList.map((s) => (
                 <button
                   key={s.code}

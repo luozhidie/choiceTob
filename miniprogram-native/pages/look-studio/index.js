@@ -10,7 +10,7 @@ function rewriteSupabase(u) {
 
 // 试衣套餐（与网站 /api/tryon/create 服务端定价一致）
 var PACKAGES = [
-  { id: 'tryon_first_9_9',       name: '首单体验',  price: 9.9,  unit: '次', desc: '5 次普通试穿',                type: 'first',        days: 365, normal: 5,   pro: 0, highlight: true },
+  { id: 'tryon_first_9_9',       name: '首单体验',  price: 9.9,  unit: '次', desc: '10 次普通试穿',               type: 'first',        days: 365, normal: 10,  pro: 0, highlight: true },
   { id: 'tryon_normal_month_99', name: '普通月卡',  price: 99,   unit: '月', desc: '30 天 100 次普通试穿',        type: 'normal_month', days: 30,  normal: 100, pro: 0 },
   { id: 'tryon_pro_998',         name: '专业版',    price: 998,  unit: '次', desc: '100 次专业诊断 · 含风格测试', type: 'pro_pack',     days: 365, normal: 0,   pro: 100, highlight: true },
 ];
@@ -67,7 +67,7 @@ Page({
 
   onLoad: function (options) {
     var upd = { agreedAuth: getAuth() };
-    if (options && options.promo) { upd.promo = true; }
+    if (options && options.promo) { upd.promo = true; upd.showPackages = true; }
     if (options && options.baseImageUrl) {
       upd.personPath = decodeURIComponent(options.baseImageUrl);
       upd.canvasUrl = upd.personPath;

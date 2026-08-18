@@ -11,14 +11,36 @@ function rewriteSupabase(u) {
 
 Page({
   data: {
+    activeTab: 'mine',          // 'mine' = 我的衣橱 / 'cloud' = 我的云衣橱
     selfItems: [],
     stylistItems: [],
+    outfits: [],
+    profile: null,
+    needs: '',
+    storeProducts: [],
     loading: true,
     uploading: false,
   },
 
   onShow: function () {
+    this.loadNeeds();
     this.loadCloset();
+    this.loadOutfits();
+    this.loadStore();
+  },
+
+  switchTab: function (e) {
+    this.setData({ activeTab: e.currentTarget.dataset.tab });
+  },
+
+  loadNeeds: function () {
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      try {
+        var v = wx.getStorageSync('wardrobe_needs_' + openid);
+        if (v) t.setData({ needs: v });
+      } catch (e) {}
+    }).catch(function () {});
   },
 
   loadCloset: function () {
@@ -45,6 +67,70 @@ Page({
       t.setData({ loading: false });
       wx.showToast({ title: '请先登录', icon: 'none' });
     });
+  },
+
+  // 按场合搭配（基于形象档案，限量 3 套）
+  loadOutfits: function () {
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/wardrobe/outfits?openid=' + encodeURIComponent(openid),
+        success: function (r) {
+          var d = r.data || {};
+          t.setData({ outfits: d.occasions || [], profile: d.profile || null });
+        },
+        fail: function () {}
+      });
+    }).catch(function () {});
+  },
+
+  // 商城推荐商品（去虚拟试衣下方展示）
+  loadStore: function () {
+    var t = this;
+    wx.request({
+      url: BASE + '/api/public/look-studio',
+      success: function (r) {
+        var d = r.data || {};
+        var products = (d.products || []).slice(0, 12).map(function (p) {
+          return {
+            id: p.id,
+            title: p.title || p.name || '商品',
+            cover: rewriteSupabase(p.cover || p.image_url || ''),
+          };
+        }).filter(function (p) { return p.cover; });
+        t.setData({ storeProducts: products });
+      },
+      fail: function () {}
+    });
+  },
+
+  // 去虚拟试衣（与主试衣共用权益门禁）
+  goTryon: function () {
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/tryon/entitlement?openid=' + encodeURIComponent(openid),
+        success: function (r) {
+          var d = r.data || {};
+          if (d.active) wx.navigateTo({ url: '/pages/look-studio/index' });
+          else wx.navigateTo({ url: '/pages/look-studio/index?promo=1' });
+        },
+        fail: function () { wx.navigateTo({ url: '/pages/look-studio/index?promo=1' }); }
+      });
+    }).catch(function () { wx.navigateTo({ url: '/pages/look-studio/index?promo=1' }); });
+  },
+
+  goLooks: function () {
+    wx.navigateTo({ url: '/pages/looks/index' });
+  },
+
+  onNeedsInput: function (e) {
+    var v = e.detail.value;
+    this.setData({ needs: v });
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      try { wx.setStorageSync('wardrobe_needs_' + openid, v); } catch (e2) {}
+    }).catch(function () {});
   },
 
   uploadToCloset: function () {
@@ -115,10 +201,6 @@ Page({
         }).catch(function () {});
       }
     });
-  },
-
-  goTryon: function () {
-    wx.navigateTo({ url: '/pages/look-studio/index' });
   },
 
   preview: function (e) {

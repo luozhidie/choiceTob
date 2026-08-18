@@ -7,7 +7,7 @@ import { upsertTryonEntitlement, shapeEntitlement } from "@/lib/tryon-entitlemen
 
 // 与 create/notify 路由保持完全一致的服务端权威套餐字典（key 必须一致，否则查单补发时匹配不到导致权益不发放）
 const PACKAGES: Record<string, { type: string; days: number; normal: number; pro: number }> = {
-  tryon_first_9_9:       { type: "first",        days: 365, normal: 5,   pro: 0 },
+  tryon_first_9_9:       { type: "first",        days: 365, normal: 10,  pro: 0 },
   tryon_normal_month_99: { type: "normal_month", days: 30,  normal: 100, pro: 0 },
   tryon_pro_998:         { type: "pro_pack",     days: 365, normal: 0,   pro: 100 },
   tryon_test_cent:       { type: "test",         days: 7,   normal: 1,   pro: 1 },

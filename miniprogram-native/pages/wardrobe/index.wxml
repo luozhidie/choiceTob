@@ -1,48 +1,109 @@
 <view class="page">
   <view class="hero">
     <view class="hero-title">我的衣橱</view>
-    <view class="hero-sub">云衣橱 × VIP形象设计 合并 · 你的单品 + 顾问推荐，都在这里</view>
+    <view class="hero-sub">你的单品 + 顾问推荐 + 按场合搭配，都在这里</view>
   </view>
 
-  <view wx:if="{{loading}}" class="loading">
-    <text>加载中...</text>
+  <!-- 顶部双 Tab -->
+  <view class="tabs">
+    <view class="tab {{activeTab==='mine'?'tab-on':''}}" data-tab="mine" bindtap="switchTab">我的衣橱</view>
+    <view class="tab {{activeTab==='cloud'?'tab-on':''}}" data-tab="cloud" bindtap="switchTab">我的云衣橱</view>
   </view>
 
-  <!-- 顾问推荐 · VIP 衣橱 -->
-  <view class="zone zone-vip">
-    <view class="zone-head">
-      <text class="zone-name">👑 顾问推荐 · VIP 衣橱</text>
-      <text class="zone-count">{{stylistItems.length}} 件</text>
-    </view>
-    <view class="zone-tip">形象顾问根据你的色彩季型与风格，挑选并推入的专属单品，可直接试穿。</view>
-    <view wx:if="{{stylistItems.length===0}}" class="zone-empty">顾问还未推荐单品。完成风格测试后，顾问会为你搭好专属衣橱。</view>
-    <view wx:else class="grid">
-      <view wx:for="{{stylistItems}}" wx:key="id" class="card" bindtap="preview" data-url="{{item.image_url}}">
-        <image class="card-img" src="{{item.image_url}}" mode="aspectFill" lazy-load/>
-        <view class="card-note">{{item.recommend_note || item.catName}}</view>
-        <view class="del" catchtap="delItem" data-id="{{item.id}}" data-source="stylist">×</view>
+  <view wx:if="{{loading}}" class="loading"><text>加载中...</text></view>
+
+  <!-- ============ 我的衣橱 ============ -->
+  <block wx:if="{{activeTab==='mine'}}">
+    <!-- 顾问推荐 · VIP 衣橱 -->
+    <view class="zone zone-vip">
+      <view class="zone-head">
+        <text class="zone-name">👑 顾问推荐 · VIP 衣橱</text>
+        <text class="zone-count">{{stylistItems.length}} 件</text>
+      </view>
+      <view class="zone-tip">形象顾问根据你的色彩季型与风格，挑选并推入的专属单品，可直接试穿。</view>
+      <view wx:if="{{stylistItems.length===0}}" class="zone-empty">顾问还未推荐单品。完成色彩季型与风格测试后，顾问会为你搭好专属衣橱。</view>
+      <view wx:else class="grid">
+        <view wx:for="{{stylistItems}}" wx:key="id" class="card" bindtap="preview" data-url="{{item.image_url}}">
+          <image class="card-img" src="{{item.image_url}}" mode="aspectFill" lazy-load/>
+          <view class="card-note">{{item.recommend_note || item.catName}}</view>
+          <view class="del" catchtap="delItem" data-id="{{item.id}}" data-source="stylist">×</view>
+        </view>
       </view>
     </view>
-  </view>
 
-  <!-- 我的云衣橱 -->
-  <view class="zone">
-    <view class="zone-head">
-      <text class="zone-name">🚪 我的云衣橱（自传）</text>
-      <text class="zone-count">{{selfItems.length}} 件</text>
-    </view>
-    <view class="zone-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配与虚拟试衣。</view>
-    <view wx:if="{{selfItems.length===0}}" class="zone-empty">衣橱空空，点右下角上传你的单品吧。</view>
-    <view wx:else class="grid">
-      <view wx:for="{{selfItems}}" wx:key="id" class="card" bindtap="preview" data-url="{{item.image_url}}">
-        <image class="card-img" src="{{item.image_url}}" mode="aspectFill" lazy-load/>
-        <view class="card-cat">{{item.catName}}</view>
-        <view class="del" catchtap="delItem" data-id="{{item.id}}" data-source="self">×</view>
+    <!-- 按场合搭配（限量） -->
+    <view class="zone">
+      <view class="zone-head">
+        <text class="zone-name">🎯 按场合搭配（为你定制）</text>
+        <text class="zone-count">{{outfits.length}} 套 · 限量</text>
+      </view>
+      <view class="zone-tip">基于你的形象档案（色彩季型 + 风格 + 场合），从在售商品智能搭配。</view>
+      <view wx:if="{{!profile}}" class="zone-empty">先去「我的」→ 形象档案 完善色彩季型与风格，才能生成专属搭配。</view>
+      <view wx:elif="{{outfits.length===0}}" class="zone-empty">暂未匹配到合适单品，顾问会持续为你补充。</view>
+      <view wx:else>
+        <view wx:for="{{outfits}}" wx:key="code" class="outfit">
+          <view class="outfit-name">{{item.name}}场合</view>
+          <view class="grid">
+            <view wx:for="{{item.items}}" wx:for-item="p" wx:key="id" class="card" bindtap="goTryon">
+              <image class="card-img" src="{{p.image_url}}" mode="aspectFill" lazy-load/>
+              <view class="card-cat">{{p.title}}</view>
+            </view>
+          </view>
+        </view>
       </view>
     </view>
-  </view>
 
+    <!-- 更多搭配灵感 → 每日搭配灵感 -->
+    <view class="zone zone-looks" bindtap="goLooks">
+      <view class="looks-left">
+        <text class="looks-title">✨ 更多搭配灵感</text>
+        <text class="looks-sub">开通「每日搭配灵感」，顾问每日为你推送专属造型</text>
+      </view>
+      <text class="looks-go">去开通 ›</text>
+    </view>
+  </block>
+
+  <!-- ============ 我的云衣橱 ============ -->
+  <block wx:if="{{activeTab==='cloud'}}">
+    <view class="zone">
+      <view class="zone-head">
+        <text class="zone-name">🚪 我的单品</text>
+        <text class="zone-count">{{selfItems.length}} 件</text>
+      </view>
+      <view class="zone-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配与虚拟试衣。</view>
+      <view wx:if="{{selfItems.length===0}}" class="zone-empty">衣橱空空，点右下角上传你的单品吧。</view>
+      <view wx:else class="grid">
+        <view wx:for="{{selfItems}}" wx:key="id" class="card" bindtap="preview" data-url="{{item.image_url}}">
+          <image class="card-img" src="{{item.image_url}}" mode="aspectFill" lazy-load/>
+          <view class="card-cat">{{item.catName}}</view>
+          <view class="del" catchtap="delItem" data-id="{{item.id}}" data-source="self">×</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 搭配需求 -->
+    <view class="zone">
+      <view class="zone-head"><text class="zone-name">📝 搭配需求</text></view>
+      <view class="zone-tip">写下你的搭配需求（如场合、偏好、想避开的款式），顾问与 AI 会参考。</view>
+      <textarea class="needs" placeholder="例如：下周出差 3 天，需要通勤+休闲两套，偏好简约高级感…" value="{{needs}}" bindinput="onNeedsInput" maxlength="500" auto-height/>
+    </view>
+  </block>
+
+  <!-- 去虚拟试衣 -->
   <view class="tryon-bar" bindtap="goTryon">去虚拟试衣试穿 ›</view>
+
+  <!-- 商城推荐商品 -->
+  <view class="zone">
+    <view class="zone-head"><text class="zone-name">🛍 商城推荐</text></view>
+    <view class="zone-tip">挑一件，去虚拟试衣看看上身效果。</view>
+    <view wx:if="{{storeProducts.length===0}}" class="zone-empty">商城单品加载中…</view>
+    <view wx:else class="grid">
+      <view wx:for="{{storeProducts}}" wx:key="id" class="card" bindtap="goTryon">
+        <image class="card-img" src="{{item.cover}}" mode="aspectFill" lazy-load/>
+        <view class="card-cat">{{item.title}}</view>
+      </view>
+    </view>
+  </view>
 
   <!-- 上传按钮 -->
   <view class="fab" bindtap="uploadToCloset">+</view>

@@ -37,9 +37,10 @@ let _stripeMissingWarned = false;
 
 function loadStripeLib(): any {
   try {
-    // 用变量名动态 require，绕开构建期对缺失模块的静态解析
-    const name = "stripe";
-    const mod = require(name);
+    // Turbopack（Next 16）会静态解析 require("stripe")，而 stripe 为可选依赖未安装，
+    // 用 new Function 包裹以绕开构建期静态解析；运行时缺失则被 try/catch 捕获返回 null。
+    const req = new Function("m", "return require(m)") as (m: string) => any;
+    const mod = req("stripe");
     return mod && mod.default ? mod.default : mod;
   } catch {
     return null;

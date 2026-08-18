@@ -70,7 +70,22 @@ export async function GET(request: NextRequest) {
         .select("id,name,phone,wechat,gender,color_season,main_style,vip_level,openid")
         .or(`name.ilike.%${q}%,phone.ilike.%${q}%,wechat.ilike.%${q}%`)
         .limit(20);
-      (vip || []).forEach((r: any) =>
+      for (const r of (vip || [])) {
+        let oid = r.openid || null;
+        // 回填：无 openid 的老客户，按手机号关联 profiles.wx_openid
+        if (!oid && r.phone) {
+          try {
+            const { data: prof } = await sb
+              .from("profiles")
+              .select("wx_openid")
+              .eq("phone", r.phone)
+              .maybeSingle();
+            if (prof && prof.wx_openid) {
+              oid = prof.wx_openid;
+              await sb.from("vip_customers").update({ openid: oid }).eq("id", r.id);
+            }
+          } catch {}
+        }
         candidates.push({
           id: r.id,
           name: r.name,
@@ -80,10 +95,10 @@ export async function GET(request: NextRequest) {
           color_season: r.color_season,
           main_style: r.main_style,
           vip_level: r.vip_level,
-          openid: r.openid || null,
+          openid: oid,
           _source: "VIP客户",
-        })
-      );
+        });
+      }
     } catch {}
     try {
       const { data: prof } = await sb

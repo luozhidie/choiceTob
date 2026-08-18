@@ -79,7 +79,7 @@ Page({
   data: {
     seasonTypes: SEASON_TYPES, occasionsList: OCCASIONS,
     gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [], subHeading: '',
-    seasonType: '', styleTags: [], occasions: [],
+    seasonType: '', styleTags: [], occasions: [], pureSelected: false,
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
     fullBodyPhoto: '',
@@ -97,10 +97,12 @@ Page({
             var gender = 'women';
             for (var k = 0; k < tags.length; k++) { if (String(tags[k]).indexOf('_m') > -1) { gender = 'men'; break; } }
             var der = deriveStyle(gender, tags);
+            var hasSubs = der.subList.some(function (s) { return tags.indexOf(s.code) >= 0; });
+            var pureSelected = !!der.mainStyle && !hasSubs;
             t.setData({
               seasonType: p.season_type || '',
               styleTags: tags,
-              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName),
+              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName), pureSelected: pureSelected,
               occasions: p.occasions || [],
               bodyType: p.body_type || '',
               height: p.height ? String(p.height) : '',
@@ -134,11 +136,27 @@ Page({
     var tags = t.data.styleTags.slice();
     if (t.data.mainStyle === c) {
       tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
-      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: tags });
+      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: tags, pureSelected: false });
     } else {
       if (old) tags = tags.filter(function (x) { return x !== old.code && !old.subs.some(function (s) { return s.code === x; }); });
       tags.push(c);
-      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: tags });
+      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: tags, pureSelected: true });
+    }
+  },
+  // 纯主风格：仅选中主风格 code（清空该主风格下所有偏风格）
+  togglePureMain: function () {
+    var t = this; var c = t.data.mainStyle; if (!c) return;
+    var cur = null; var mains = STYLE_DATA[t.data.gender];
+    for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; }
+    var tags = t.data.styleTags.slice();
+    var hasSubs = cur && cur.subs.some(function (s) { return tags.indexOf(s.code) >= 0; });
+    if (tags.indexOf(c) >= 0 && !hasSubs) {
+      tags = tags.filter(function (x) { return x !== c; });
+      t.setData({ styleTags: tags, pureSelected: false });
+    } else {
+      tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
+      tags.push(c);
+      t.setData({ styleTags: tags, pureSelected: true });
     }
   },
   toggleSub: function (e) {
@@ -146,7 +164,10 @@ Page({
     var arr = this.data.styleTags.slice();
     var i = arr.indexOf(c);
     if (i >= 0) arr.splice(i, 1); else arr.push(c);
-    this.setData({ styleTags: arr });
+    var cur = null; var mains = STYLE_DATA[this.data.gender];
+    for (var k = 0; k < mains.length; k++) { if (mains[k].code === this.data.mainStyle) cur = mains[k]; }
+    var pureSelected = !!this.data.mainStyle && cur && !cur.subs.some(function (s) { return arr.indexOf(s.code) >= 0; });
+    this.setData({ styleTags: arr, pureSelected: pureSelected });
   },
   toggleOccasion: function (e) {
     var c = e.currentTarget.dataset.c;

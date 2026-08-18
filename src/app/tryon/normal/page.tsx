@@ -37,12 +37,12 @@ export default function TryonNormalPage() {
         <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">体验</div>
         <div>
           <div className="text-lg font-extrabold text-[#2d1b2e]">首单体验</div>
-          <div className="text-xs text-gray-500 mt-1">5 次普通试穿</div>
+          <div className="text-xs text-gray-500 mt-1">10 次普通试穿</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥9.9</div>
       </div>
       <div className="mt-3">
-        <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} sub="5次普通试穿" />
+        <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} sub="10次普通试穿" />
       </div>
 
       <div className="mt-4 bg-white rounded-2xl shadow-sm p-5 flex items-center justify-between">

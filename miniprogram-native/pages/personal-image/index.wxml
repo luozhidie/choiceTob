@@ -4,8 +4,8 @@
     <image wx:if="{{heroImage}}" src="{{heroImage}}" mode="aspectFill" class="hero-bg" />
     <view class="hero-darken"></view>
     <view class="hero-overlay">
-      <text class="hero-title">个人形象诊断</text>
-      <text class="hero-sub">一次诊断 终身受益</text>
+      <text class="hero-title">形象管理</text>
+      <text class="hero-sub">找到你的色彩与风格</text>
       <text class="hero-desc">让你找到气质提升的本源</text>
     </view>
   </view>
@@ -21,11 +21,39 @@
 <!-- 底部固定双按钮 -->
 <view class="bottom-bar">
   <view class="bottom-btn free" bindtap="goTest">
-    <text class="btn-title">智能形象诊断</text>
-    <text class="btn-price">¥998 风格测试</text>
+    <text class="btn-title">色彩季型与风格测试</text>
+    <text class="btn-price">¥998</text>
   </view>
   <view class="bottom-btn paid" bindtap="goPaid">
-    <text class="btn-title">人工兜底</text>
-    <text class="btn-price">¥4000</text>
+    <text class="btn-title">整体形象管理</text>
+    <!-- 整体形象管理：不展示价格，避免强调补差价 -->
+  </view>
+</view>
+
+<!-- 低调入口：顾问人工服务（提交资料 → 人工报价） -->
+<view class="consult-link" bindtap="openConsult">需要顾问一对一定制？提交资料，顾问人工报价 ›</view>
+
+<!-- 顾问人工服务表单弹窗 -->
+<view wx:if="{{showConsult}}" class="cm-mask" bindtap="closeConsult">
+  <view class="cm-sheet" catchtap="noop">
+    <view class="cm-title">顾问人工服务</view>
+    <view class="cm-tip">提交你的资料，顾问会根据需求人工报价（不在此展示价格）。</view>
+
+    <input class="cm-input" placeholder="姓名" value="{{consultName}}" bindinput="onCName" />
+    <input class="cm-input" placeholder="联系方式（微信 / 手机）" value="{{consultContact}}" bindinput="onCContact" />
+    <textarea class="cm-textarea" placeholder="需求描述（如希望顾问帮我定位风格 / 季型、场合搭配等）" value="{{consultNotes}}" bindinput="onCNotes" maxlength="500" auto-height />
+
+    <view class="cm-photos">
+      <view wx:for="{{consultPhotos}}" wx:key="*this" class="cm-photo">
+        <image src="{{item}}" mode="aspectFill" class="cm-photo-img" />
+        <view class="cm-photo-del" catchtap="removeConsultPhoto" data-idx="{{index}}">×</view>
+      </view>
+      <view wx:if="{{consultPhotos.length < 3}}" class="cm-photo cm-photo-add" bindtap="chooseConsultPhoto">＋</view>
+    </view>
+
+    <button class="cm-submit" bindtap="submitConsult" disabled="{{consultSubmitting}}">
+      {{consultSubmitting ? '提交中…' : '提交资料'}}
+    </button>
+    <view class="cm-cancel" bindtap="closeConsult">取消</view>
   </view>
 </view>
