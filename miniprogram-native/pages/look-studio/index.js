@@ -66,6 +66,7 @@ Page({
   },
 
   onLoad: function (options) {
+    var self = this;
     var upd = { agreedAuth: getAuth() };
     if (options && options.promo) { upd.promo = true; upd.showPackages = true; }
     if (options && options.baseImageUrl) {
@@ -73,7 +74,9 @@ Page({
       upd.canvasUrl = upd.personPath;
     }
     this.setData(upd);
-    this.syncEntitlement();
+    this.syncEntitlement().then(function (ent) {
+      if (!isActiveEnt(ent)) { self.setData({ showPackages: true }); }
+    });
     this.loadData();
     this.loadCloset();
   },
@@ -173,6 +176,7 @@ Page({
   },
 
   choosePerson: function () {
+    if (!this.data.isPass) { this.openPackages(); return; }
     var t = this;
     wx.chooseMedia({
       count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
@@ -185,6 +189,7 @@ Page({
 
   // —— 上传自己的衣服图，直接逐件加进画布 ——
   chooseCloth: function () {
+    if (!this.data.isPass) { this.openPackages(); return; }
     var t = this;
     wx.chooseMedia({
       count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
@@ -605,6 +610,10 @@ Page({
   },
 
   goOutfit: function () {
-    wx.navigateTo({ url: '/pages/outfit/index' });
+    var self = this;
+    this.syncEntitlement().then(function (ent) {
+      if (!isActiveEnt(ent)) { self.setData({ showPackages: true }); return; }
+      wx.navigateTo({ url: '/pages/outfit/index' });
+    });
   },
 });

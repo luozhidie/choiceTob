@@ -7,6 +7,11 @@
   </view>
   <view wx:if="{{promo}}" class="promo">扫码专享 · 新人首单 ¥9.9 试穿一整套</view>
 
+  <view wx:if="{{!isPass}}" bindtap="openPackages" style="background:rgba(201,162,75,.12);border:1rpx solid #C9A24B;border-radius:14rpx;padding:22rpx 24rpx;margin:14rpx 0;">
+    <text style="display:block;font-size:26rpx;color:#C9A24B;font-weight:700;">未开通试衣套餐</text>
+    <text style="display:block;font-size:22rpx;color:#d8c3c9;margin-top:6rpx;line-height:1.5;">上传照片、挑选单品、AI 试穿均需先付费开通套餐。点这里去开通 ›</text>
+  </view>
+
   <view style="display:flex;justify-content:space-between;align-items:center;background:#2d1b2e;border:1rpx solid #C9A24B;border-radius:14rpx;padding:20rpx 22rpx;margin:14rpx 0;" bindtap="goOutfit">
     <view style="flex:1;">
       <text style="display:block;font-size:26rpx;font-weight:800;color:#C9A24B;">整体造型 · 一套上身</text>

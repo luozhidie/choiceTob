@@ -8,17 +8,78 @@ function rewriteSupabase(u) {
   return u;
 }
 
+function getCacheEnt() { try { return wx.getStorageSync('tryon_entitlement') || null; } catch (e) { return null; } }
+function setCacheEnt(e) { try { wx.setStorageSync('tryon_entitlement', e); } catch (e) {} }
+function isActiveEnt(e) { return !!(e && e.active); }
+
 Page({
   data: {
     personPath: '', topPath: '', bottomPath: '',
     loading: false, resultUrl: '', err: '',
     agreedAuth: false,
+    isPass: false,
+    normalLeft: 0,
+    proLeft: 0,
   },
 
   onLoad: function () {
+    var self = this;
     var v = false;
     try { v = wx.getStorageSync('tryon_auth_agreed') || false; } catch (e) {}
     this.setData({ agreedAuth: v });
+    this.syncEntitlement().then(function (ent) {
+      if (!isActiveEnt(ent)) { self.showNeedPackage(); }
+    });
+  },
+
+  syncEntitlement: function () {
+    var self = this;
+    return app.getOpenid().then(function (openid) {
+      return new Promise(function (resolve) {
+        wx.request({
+          url: BASE + '/api/tryon/entitlement?openid=' + encodeURIComponent(openid),
+          success: function (r) {
+            var d = r.data || {};
+            if (typeof d.active === 'boolean') { setCacheEnt(d); self.applyEntitlement(d); }
+            resolve(d);
+          },
+          fail: function () { resolve(getCacheEnt()); }
+        });
+      });
+    }).catch(function () { return Promise.resolve(getCacheEnt()); });
+  },
+
+  applyEntitlement: function (d) {
+    d = d || {};
+    this.setData({
+      isPass: d.active || false,
+      normalLeft: d.normalLeft || 0,
+      proLeft: d.proLeft || 0,
+    });
+  },
+
+  checkGate: function () {
+    if (!this.data.isPass) { this.showNeedPackage(); return false; }
+    if (this.data.normalLeft <= 0) { this.showNoLeft(); return false; }
+    return true;
+  },
+
+  showNeedPackage: function () {
+    wx.showModal({
+      title: '未开通试衣套餐',
+      content: '整体造型 · 一套上身需先开通试衣套餐并支付后才能使用。',
+      confirmText: '去开通', cancelText: '暂不需要',
+      success: function (r) { if (r.confirm) wx.navigateTo({ url: '/pages/tryon-promo/index' }); }
+    });
+  },
+
+  showNoLeft: function () {
+    wx.showModal({
+      title: '普通版次数不足',
+      content: '当前套餐普通试穿次数已用完，去开通或续费继续生成整体造型。',
+      confirmText: '去开通', cancelText: '暂不需要',
+      success: function (r) { if (r.confirm) wx.navigateTo({ url: '/pages/tryon-promo/index' }); }
+    });
   },
 
   onAuthChange: function (e) {
@@ -28,6 +89,7 @@ Page({
   },
 
   choose: function (e) {
+    if (!this.checkGate()) return;
     var slot = e.currentTarget.dataset.slot; // person | top | bottom
     var t = this;
     wx.chooseMedia({
@@ -60,6 +122,7 @@ Page({
 
   generate: function () {
     var t = this;
+    if (!t.checkGate()) return;
     if (!t.data.personPath) { wx.showToast({ title: '请先上传人物照片', icon: 'none' }); return; }
     if (!t.data.topPath && !t.data.bottomPath) { wx.showToast({ title: '请至少上传一件衣服', icon: 'none' }); return; }
     if (!t.data.agreedAuth) {
@@ -93,7 +156,11 @@ Page({
             t.setData({ loading: false, err: d.error || '生成失败' });
             return;
           }
-          t.setData({ loading: false, resultUrl: rewriteSupabase(d.resultUrl) });
+          t.setData({ loading: false, resultUrl: rewriteSupabase(d.resultUrl), normalLeft: Math.max(0, t.data.normalLeft - 1) });
+          // 扣减普通版次数
+          app.getOpenid().then(function (openid) {
+            wx.request({ url: BASE + '/api/tryon/entitlement', method: 'POST', data: { openid: openid, tier: 'normal' } });
+          }).catch(function () {});
         },
         fail: function () {
           wx.hideLoading();

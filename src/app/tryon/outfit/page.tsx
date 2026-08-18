@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import TryonPayButton from "@/components/tryon/TryonPayButton";
 
 export default function OutfitPage() {
   const [person, setPerson] = useState<File | null>(null);
@@ -12,11 +13,39 @@ export default function OutfitPage() {
   const [result, setResult] = useState("");
   const [err, setErr] = useState("");
 
+  // 权益门禁
+  const [ent, setEnt] = useState<{ active: boolean; normalLeft: number; proLeft: number } | null>(null);
+  const [entLoading, setEntLoading] = useState(true);
+  const [paywall, setPaywall] = useState<"need" | "noleft" | null>(null);
+
+  useEffect(() => {
+    let anon = "";
+    try { anon = "web_" + (localStorage.getItem("tryon_web_openid") || ""); } catch (e) {}
+    if (!anon || anon === "web_") {
+      anon = "web_" + Math.random().toString(36).slice(2, 12);
+      try { localStorage.setItem("tryon_web_openid", anon.slice(4)); } catch (e) {}
+    }
+    fetch("/api/tryon/entitlement?openid=" + encodeURIComponent(anon))
+      .then((r) => r.json())
+      .then((d) => setEnt(d || { active: false, normalLeft: 0, proLeft: 0 }))
+      .catch(() => setEnt({ active: false, normalLeft: 0, proLeft: 0 }))
+      .finally(() => setEntLoading(false));
+  }, []);
+
+  const canTry = () => !!ent?.active && (ent?.normalLeft || 0) > 0;
+  const ensureEnt = () => {
+    if (entLoading) return false;
+    if (!ent?.active) { setPaywall("need"); return false; }
+    if ((ent?.normalLeft || 0) <= 0) { setPaywall("noleft"); return false; }
+    return true;
+  };
+
   const pick = (
     setter: (f: File | null) => void,
     prevSetter: (s: string) => void,
     file: File | null
   ) => {
+    if (!ensureEnt()) return;
     if (!file) return;
     setter(file);
     prevSetter(URL.createObjectURL(file));
@@ -65,6 +94,7 @@ export default function OutfitPage() {
   );
 
   const gen = async () => {
+    if (!ensureEnt()) return;
     if (!person) {
       setErr("请先上传人物照片");
       return;
@@ -83,8 +113,18 @@ export default function OutfitPage() {
     try {
       const r = await fetch("/api/tryon/outfit", { method: "POST", body: fd });
       const d = await r.json();
-      if (!r.ok || !d.ok) setErr(d.error || "生成失败");
-      else setResult(d.resultUrl);
+      if (!r.ok || !d.ok) {
+        setErr(d.error || "生成失败");
+      } else {
+        setResult(d.resultUrl);
+        // 本地先扣减，再同步服务端
+        setEnt((prev) => prev ? { ...prev, normalLeft: Math.max(0, prev.normalLeft - 1) } : prev);
+        let anon = "";
+        try { anon = "web_" + (localStorage.getItem("tryon_web_openid") || ""); } catch (e) {}
+        if (anon && anon !== "web_") {
+          fetch("/api/tryon/entitlement", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ openid: anon, tier: "normal" }) }).catch(() => {});
+        }
+      }
     } catch (e: any) {
       setErr(e.message || "网络错误");
     } finally {
@@ -106,6 +146,16 @@ export default function OutfitPage() {
       <p style={{ fontSize: 11, color: "#8a7580", margin: "0 0 14px", lineHeight: 1.5 }}>
         上传人物 + 上装 + 下装，一次生成完整套装效果（通义 OutfitAnyone，保留你的脸，无水印）。人物用全身正面照、光照良好、单人。
       </p>
+
+      {!entLoading && !canTry() && (
+        <div style={{ background: "rgba(201,162,75,.15)", border: "1px solid #C9A24B", borderRadius: 12, padding: 14, marginBottom: 14 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: "#C9A24B" }}>{ent?.active ? "普通版次数已用完" : "未开通试衣套餐"}</div>
+          <div style={{ fontSize: 12, color: "#d8c3c9", marginTop: 4, lineHeight: 1.5 }}>
+            {ent?.active ? "当前套餐普通试穿次数不足，需续费后继续生成整体造型。" : "整体造型 · 一套上身需先付费开通试衣套餐。"}
+            <span onClick={() => setPaywall(ent?.active ? "noleft" : "need")} style={{ color: "#C9A24B", cursor: "pointer", marginLeft: 6 }}>去开通 ›</span>
+          </div>
+        </div>
+      )}
 
       {uploader(personPrev, "① 人物照片（全身正面）", setPerson, setPersonPrev)}
       {uploader(topPrev, "② 上装 / 连衣裙", setTop, setTopPrev)}
@@ -163,6 +213,20 @@ export default function OutfitPage() {
           >
             ＋ 继续叠加配饰（鞋 / 包 / 项链）
           </a>
+        </div>
+      )}
+
+      {/* 付费门禁弹窗 */}
+      {paywall && (
+        <div onClick={() => setPaywall(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#2d1b2e" }}>{paywall === "need" ? "未开通试衣套餐" : "次数已用完"}</div>
+            <p style={{ fontSize: 13, color: "#555", margin: "10px 0 18px", lineHeight: 1.5 }}>
+              {paywall === "need" ? "整体造型 · 一套上身需先付费开通试衣套餐。" : "当前套餐普通试穿次数不足，需续费后继续生成整体造型。"}
+            </p>
+            <TryonPayButton productId="tryon_first_9_9" title="首单体验" price={9.9} label="首单体验 ¥9.9" sub="10 次普通试穿" />
+            <button onClick={() => setPaywall(null)} style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid #ddd", background: "#fff", color: "#666", fontWeight: 700, cursor: "pointer" }}>先逛逛</button>
+          </div>
         </div>
       )}
     </main>

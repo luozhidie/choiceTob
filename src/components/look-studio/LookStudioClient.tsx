@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { COLOR_SEASON_COLORS } from "@/lib/styles";
+import TryonPayButton from "@/components/tryon/TryonPayButton";
 
 type Season = { code: string; name_zh: string; meta?: any };
 type StyleT = {
@@ -74,6 +75,36 @@ export default function LookStudioClient({ data }: Props) {
   const [loadingTitle, setLoadingTitle] = useState("");
   const [err, setErr] = useState("");
 
+  // 试衣权益门禁
+  const [webOpenid, setWebOpenid] = useState<string>("");
+  const [ent, setEnt] = useState<{ active: boolean; normalLeft: number; proLeft: number; triesLeft: number } | null>(null);
+  const [entLoading, setEntLoading] = useState(true);
+  const [paywall, setPaywall] = useState<"need" | "noleft" | null>(null);
+
+  useEffect(() => {
+    let anon = "";
+    try { anon = "web_" + (localStorage.getItem("tryon_web_openid") || ""); } catch (e) {}
+    if (!anon || anon === "web_") {
+      anon = "web_" + Math.random().toString(36).slice(2, 12);
+      try { localStorage.setItem("tryon_web_openid", anon.slice(4)); } catch (e) {}
+    }
+    setWebOpenid(anon);
+    fetch("/api/tryon/entitlement?openid=" + encodeURIComponent(anon))
+      .then((r) => r.json())
+      .then((d) => setEnt(d || { active: false, normalLeft: 0, proLeft: 0, triesLeft: 0 }))
+      .catch(() => setEnt({ active: false, normalLeft: 0, proLeft: 0, triesLeft: 0 }))
+      .finally(() => setEntLoading(false));
+  }, []);
+
+  const leftForEdition = () => (edition === "pro" ? ent?.proLeft || 0 : ent?.normalLeft || 0);
+  const canTry = () => !!ent?.active && leftForEdition() > 0;
+  const ensureEnt = () => {
+    if (entLoading) return false;
+    if (!ent?.active) { setPaywall("need"); return false; }
+    if (leftForEdition() <= 0) { setPaywall("noleft"); return false; }
+    return true;
+  };
+
   const seasonName = (c: string) => seasonMap[c]?.name_zh || c;
   const styleName = (c: string) => styleMap[c]?.name_zh || c;
 
@@ -117,6 +148,7 @@ export default function LookStudioClient({ data }: Props) {
     return "";
   };
   const onPickPerson = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!ensureEnt()) return;
     const f = e.target.files?.[0];
     if (!f) return;
     const warn = checkImage(f);
@@ -126,6 +158,7 @@ export default function LookStudioClient({ data }: Props) {
     setErr("");
   };
   const onPickGarment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!ensureEnt()) return;
     const f = e.target.files?.[0];
     if (!f) return;
     const warn = checkImage(f);
@@ -196,8 +229,12 @@ export default function LookStudioClient({ data }: Props) {
     }
   };
 
-  const addFromShop = (p: Product) => tryOnCore({ cover: p.cover, title: p.title });
+  const addFromShop = (p: Product) => {
+    if (!ensureEnt()) return;
+    tryOnCore({ cover: p.cover, title: p.title });
+  };
   const addUpload = () => {
+    if (!ensureEnt()) return;
     if (!garmentFile) { setErr("先选一张你的单品图"); return; }
     tryOnCore({ title: garmentFile.name || "我的单品" });
   };
@@ -222,6 +259,19 @@ export default function LookStudioClient({ data }: Props) {
       </header>
 
       {data.error && <p style={{ color: "#e88", fontSize: 13 }}>数据加载异常：{data.error}</p>}
+
+      {/* 权益提示 */}
+      {!entLoading && !canTry() && (
+        <div style={{ background: "rgba(201,162,75,.15)", border: "1px solid #C9A24B", borderRadius: 12, padding: 14, margin: "12px 0" }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{ent?.active ? "次数不足" : "未开通试衣套餐"}</div>
+          <div style={{ fontSize: 12, color: "#d8c3c9", marginTop: 4, lineHeight: 1.5 }}>
+            {ent?.active
+              ? `当前${edition === "pro" ? "专业版" : "普通版"}次数已用完，需续费后继续试穿。`
+              : "上传照片、挑选单品、AI 试穿均需先付费开通套餐。"}
+            <span onClick={() => setPaywall(ent?.active ? "noleft" : "need")} style={{ color: GOLD, cursor: "pointer", marginLeft: 6 }}>去开通 ›</span>
+          </div>
+        </div>
+      )}
 
       {/* 版本切换 */}
       <nav style={{ display: "flex", gap: 6, margin: "12px 0" }}>
@@ -377,6 +427,22 @@ export default function LookStudioClient({ data }: Props) {
 
       {canvasUrl && (
         <button onClick={() => window.open(canvasUrl, "_blank")} style={{ ...goldBtn, width: "100%", marginTop: 14 }}>查看 / 保存最终造型大图 ↗</button>
+      )}
+
+      {/* 付费门禁弹窗 */}
+      {paywall && (
+        <div onClick={() => setPaywall(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.85)", zIndex: 60, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ background: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 360, textAlign: "center" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#2d1b2e" }}>{paywall === "need" ? "未开通试衣套餐" : "次数已用完"}</div>
+            <p style={{ fontSize: 13, color: "#555", margin: "10px 0 18px", lineHeight: 1.5 }}>
+              {paywall === "need"
+                ? "上传照片、挑选单品、AI 试穿均需先付费开通套餐。"
+                : `当前${edition === "pro" ? "专业版" : "普通版"}次数已用完，需续费后继续试穿。`}
+            </p>
+            <TryonPayButton productId={edition === "pro" ? "tryon_pro_998" : "tryon_first_9_9"} title={edition === "pro" ? "专业版" : "首单体验"} price={edition === "pro" ? 998 : 9.9} label={edition === "pro" ? "开通专业版 ¥998" : "首单体验 ¥9.9"} sub={edition === "pro" ? "100 次专业诊断" : "10 次普通试穿"} />
+            <button onClick={() => setPaywall(null)} style={{ marginTop: 12, width: "100%", padding: "10px 0", borderRadius: 10, border: "1px solid #ddd", background: "#fff", color: "#666", fontWeight: 700, cursor: "pointer" }}>先逛逛</button>
+          </div>
+        </div>
       )}
     </main>
   );

@@ -2,6 +2,15 @@
   <view class="title">整体造型 · 一套上身</view>
   <view class="sub">上传人物 + 上装 + 下装，一次生成完整套装（通义 OutfitAnyone，保留你的脸，无水印）。人物用全身正面照、光照良好、单人。</view>
 
+  <view wx:if="{{!isPass}}" bindtap="showNeedPackage" style="background:rgba(201,162,75,.12);border:1rpx solid #C9A24B;border-radius:14rpx;padding:22rpx 24rpx;margin:14rpx 0;">
+    <text style="display:block;font-size:26rpx;color:#C9A24B;font-weight:700;">未开通试衣套餐</text>
+    <text style="display:block;font-size:22rpx;color:#d8c3c9;margin-top:6rpx;line-height:1.5;">整体造型 · 一套上身需先付费开通试衣套餐。点这里去开通 ›</text>
+  </view>
+  <view wx:elif="{{normalLeft<=0}}" style="background:rgba(232,136,136,.12);border:1rpx solid #e88;border-radius:14rpx;padding:22rpx 24rpx;margin:14rpx 0;">
+    <text style="display:block;font-size:26rpx;color:#e88;font-weight:700;">普通版次数已用完</text>
+    <text style="display:block;font-size:22rpx;color:#d8c3c9;margin-top:6rpx;line-height:1.5;">当前套餐普通试穿次数不足，去开通或续费继续生成。</text>
+  </view>
+
   <view class="card">
     <view class="ct">① 人物照片（全身正面）</view>
     <view class="row">
