@@ -200,7 +200,7 @@ export default function AgentWorkbenchPage() {
   }
 
   const perf = me?.performance || { customerCount: 0, orderCount: 0, gmv: 0 };
-  const isAgent = me?.isDepositAgent || me?.isCertified;
+  const isAgent = me?.isDepositAgent || me?.isCertified || me?.isAdmin;
 
   return (
     <div className="min-h-screen bg-[#2d1b2e] text-white pb-20">

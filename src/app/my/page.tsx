@@ -21,7 +21,7 @@ import {
   LogIn, UserPlus, Smartphone,
   ShieldCheck,
   Award, Gift, BarChart3, Lock, BadgeCheck,
-  X, TrendingUp, Star, Sparkles, Settings, FileText, ScrollText, Info,
+  X, TrendingUp, Star, Sparkles, Settings, FileText, ScrollText, Info, Store,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -555,6 +555,33 @@ export default function MyPage() {
                 })}
               </div>
             </div>
+
+            {/* ===== 销售代理工作台（管理员可见 + 认证店主/预存货款代理） ===== */}
+            {(profile?.is_admin || profile?.store_owner_certified || profile?.membership_type === "deposit_discount") && (
+              <div className="bg-gradient-to-br from-[#2d1b2e] to-[#1a0f1b] rounded-2xl shadow-sm border border-[#C9A24B]/30 p-6 mb-6">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="font-bold text-white flex items-center gap-2">
+                    <Store className="w-5 h-5 text-[#C9A24B]" /> 销售代理
+                  </h2>
+                  {profile?.is_admin && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#C9A24B]/20 text-[#C9A24B] border border-[#C9A24B]/30">管理员可见</span>
+                  )}
+                </div>
+                <p className="text-white/50 text-xs mb-4">设置卖价 · 转发专属店铺 · 查看归因业绩与差价收益</p>
+                <Link
+                  href="/agent"
+                  className="block w-full text-center py-3 rounded-xl bg-[#C9A24B] text-[#2d1b2e] font-bold hover:bg-[#b8945a] transition-colors"
+                >
+                  进入代理工作台 ›
+                </Link>
+                <Link
+                  href="/agent/recruit"
+                  className="block w-full text-center py-2.5 mt-2 rounded-xl border border-white/15 text-white/70 text-sm hover:bg-white/5 transition-colors"
+                >
+                  了解代理合作方式
+                </Link>
+              </div>
+            )}
 
             {/* 会员权益领取规则弹窗（同行同款） */}
             {showRules && (

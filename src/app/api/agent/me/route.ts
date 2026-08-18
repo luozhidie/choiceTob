@@ -60,14 +60,27 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, store_name, wechat_openid, wx_openid"
+        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, store_name, is_admin, wechat_openid, wx_openid"
       )
       .eq("id", uid)
       .maybeSingle();
 
     if (!profile) {
-      return NextResponse.json({ active: false, user_id: uid, isDepositAgent: false, isCertified: false });
+      return NextResponse.json({ active: false, user_id: uid, isDepositAgent: false, isCertified: false, isAdmin: false });
     }
+
+    // 管理员判定（与 /api/user/me 保持一致）：profiles 标识 或 auth 邮箱白名单
+    let authEmail = "";
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(uid);
+      authEmail = authUser?.user?.email || "";
+    } catch {}
+    const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const isAdmin =
+      profile.role === "admin" || profile.is_admin === true || adminEmails.includes(authEmail.toLowerCase());
 
     const isDepositAgent =
       profile.membership_type === "deposit_discount" && Number(profile.deposit_amount || 0) > 0;
@@ -113,9 +126,10 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      active: isDepositAgent || isCertified,
+      active: isDepositAgent || isCertified || isAdmin,
       isDepositAgent,
       isCertified,
+      isAdmin,
       user_id: profile.id,
       membershipType: profile.membership_type || "none",
       fullName: profile.full_name || profile.store_name || "",
