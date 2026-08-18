@@ -100,7 +100,7 @@ Page({
           return;
         }
         var isAdmin = t.data.isAdmin;
-        if (!d.valid && !isAdmin) {
+        if (!d.active && !d.isAdmin && !isAdmin) {
           t.setData({ notAgent: true, loading: false });
           return;
         }

@@ -283,7 +283,7 @@ Page({
       header:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       success:function(r){
         var d=r.data;
-        var isAgent=!!(d&&d.valid);
+        var isAgent=!!(d&&(d.active||d.isAdmin||d.valid));
         t.setData({isAgent:isAgent});
         wx.setStorageSync('is_agent',isAgent);
       },

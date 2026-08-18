@@ -204,22 +204,22 @@
       </view>
     </view>
 
-    <!-- 代理入口：未申请/未激活显示“成为销售代理”，已是代理显示“代理中心” -->
-    <view wx:if="{{!isAgent}}" class="agent-recruit-banner" bindtap="goAgentRecruit">
-      <view class="arb-left">
-        <text class="arb-badge">JOIN AGENT</text>
-        <text class="arb-title">成为销售代理</text>
-        <text class="arb-desc">预存货款拿批发价 · 邀好友再得返利</text>
-      </view>
-      <view class="arb-btn">立即加入 ›</view>
-    </view>
-    <view wx:else class="agent-center-banner" bindtap="goAgentCenter">
+    <!-- 代理入口：先放出代理中心，权限后续再收紧 -->
+    <view wx:if="{{isLoggedIn}}" class="agent-center-banner" bindtap="goAgentCenter">
       <view class="acb-left">
         <text class="acb-badge">AGENT</text>
         <text class="acb-title">代理中心</text>
         <text class="acb-desc">设对客卖价 · 看业绩 · 提现收益</text>
       </view>
       <view class="acb-btn">进入 ›</view>
+    </view>
+    <view wx:if="{{isLoggedIn && !isAgent && !isAdmin}}" class="agent-recruit-banner" bindtap="goAgentRecruit">
+      <view class="arb-left">
+        <text class="arb-badge">JOIN AGENT</text>
+        <text class="arb-title">成为销售代理</text>
+        <text class="arb-desc">预存货款拿批发价 · 邀好友再得返利</text>
+      </view>
+      <view class="arb-btn">立即加入 ›</view>
     </view>
   </view>
 
