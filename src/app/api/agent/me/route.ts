@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, store_name, is_admin, wechat_openid, wx_openid"
+        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid"
       )
       .eq("id", uid)
       .maybeSingle();
@@ -132,8 +132,8 @@ export async function GET(request: NextRequest) {
       isAdmin,
       user_id: profile.id,
       membershipType: profile.membership_type || "none",
-      fullName: profile.full_name || profile.store_name || "",
-      storeName: profile.store_name || "",
+      fullName: profile.full_name || "",
+      storeName: profile.full_name || "",
       certifiedStyle: profile.certified_style || "",
       depositAmount: profile.deposit_amount || 0,
       discountRate: profile.deposit_discount_rate || 1.0,

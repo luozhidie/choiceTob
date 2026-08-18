@@ -280,7 +280,7 @@ async function activateStoreForDepositAgent(
   try {
     const { data: profile } = await svc
       .from('profiles')
-      .select('id, full_name, store_name, phone, wechat, city, invite_code, deposit_amount, deposit_discount_rate, deposit_return_rate')
+      .select('id, full_name, invite_code, deposit_amount, deposit_discount_rate, deposit_return_rate')
       .eq('id', userId)
       .maybeSingle();
 
