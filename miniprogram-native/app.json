@@ -70,6 +70,7 @@
     "pages/about/index",
     "pages/fortune/index",
     "pages/invite/index",
+    "pages/agent-recruit/index",
     "pages/group/index",
     "pages/newcustomer/index"
   ],

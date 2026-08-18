@@ -203,6 +203,16 @@
         <view class="ac-emoji">🤝</view>
       </view>
     </view>
+
+    <!-- 销售代理招募 banner -->
+    <view class="agent-recruit-banner" bindtap="goAgentRecruit">
+      <view class="arb-left">
+        <text class="arb-badge">JOIN AGENT</text>
+        <text class="arb-title">成为销售代理</text>
+        <text class="arb-desc">预存货款拿批发价 · 邀好友再得返利</text>
+      </view>
+      <view class="arb-btn">立即加入 ›</view>
+    </view>
   </view>
 
   <!-- ========== VIP形象服务（登录后可见） ========== -->

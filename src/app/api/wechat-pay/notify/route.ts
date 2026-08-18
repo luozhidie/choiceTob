@@ -192,7 +192,7 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
 
     if (!rec || rec.status === 'paid') return;
 
-    // 更新订单为已支付
+    // 更新订单为已支付（测试单也标记，但不发放真实权益）
     await supabase
       .from('agent_recharges')
       .update({
@@ -203,32 +203,42 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
       })
       .eq('order_no', out_trade_no);
 
-    // 根据 openid 反查用户，更新 profiles
+    // 测试订单（agent_test_cent，1 分）仅验证链路，不发放真实预存货款/会员权益
+    if (rec.plan_id === 'agent_test_cent') {
+      console.log('[代理充值] 测试订单已标记 paid，不发放权益', { order: out_trade_no });
+      return;
+    }
+
+    // 根据 openid 反查用户，更新 profiles（预存货款余额累加，不覆盖）
     const openid = rec.openid;
     const { data: byWechat } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, deposit_amount, deposit_discount_rate, deposit_return_rate')
       .eq('wechat_openid', openid)
       .maybeSingle();
     const { data: byWx } = await supabase
       .from('profiles')
-      .select('id')
+      .select('id, deposit_amount, deposit_discount_rate, deposit_return_rate')
       .eq('wx_openid', openid)
       .maybeSingle();
 
     const profile = byWechat || byWx;
     if (profile?.id) {
+      const curAmount = Number((profile as any).deposit_amount) || 0;
+      const curDisc = Number((profile as any).deposit_discount_rate) || 1;
+      const curRet = Number((profile as any).deposit_return_rate) || 0;
+      const addAmount = Number(rec.deposit_amount) || 0;
       await supabase
         .from('profiles')
         .update({
           membership_type: 'deposit_discount',
-          deposit_amount: (rec.deposit_amount || 0),
-          deposit_discount_rate: rec.discount_rate,
-          deposit_return_rate: rec.return_rate,
+          deposit_amount: curAmount + addAmount,            // 累加余额，多次充值不丢失
+          deposit_discount_rate: Math.min(curDisc, rec.discount_rate || 1), // 取更优（更低）折扣
+          deposit_return_rate: Math.max(curRet, rec.return_rate || 0),     // 取更高退比
           updated_at: new Date().toISOString(),
         })
         .eq('id', profile.id);
-      console.log('[代理充值] 已激活', { order: out_trade_no, user: profile.id });
+      console.log('[代理充值] 已激活', { order: out_trade_no, user: profile.id, addAmount });
     } else {
       console.log('[代理充值] 已到账，但未找到关联 profile，openid=', openid);
     }
