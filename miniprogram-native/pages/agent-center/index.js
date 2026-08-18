@@ -378,7 +378,14 @@ Page({
   goLogin: function () { wx.navigateTo({ url: '/pages/login/index' }); },
   goRecruit: function () { wx.navigateTo({ url: '/pages/agent-recruit/index' }); },
   goVipDeposit: function () { wx.navigateTo({ url: '/pages/vip/index?tab=deposit' }); },
-  previewShop: function () { if (this.data.inviteCode) wx.navigateTo({ url: '/pages/agent-shop/index?ref=' + this.data.inviteCode }); },
+  previewShop: function () {
+    var code = this.data.inviteCode || '';
+    if (!code) { wx.showToast({ title: '暂未生成推广码', icon: 'none' }); return; }
+    wx.navigateTo({
+      url: '/pages/agent-shop/index?ref=' + code,
+      fail: function () { wx.redirectTo({ url: '/pages/agent-shop/index?ref=' + code }); }
+    });
+  },
   copyCode: function () {
     var code = this.data.inviteCode || '';
     if (!code) return;
