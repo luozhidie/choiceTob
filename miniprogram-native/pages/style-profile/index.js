@@ -160,7 +160,8 @@ Page({
     }
   },
   toggleSub: function (e) {
-    var c = e.currentTarget.dataset.c;
+    var c = e.currentTarget.dataset.c || e.target.dataset.c;
+    if (!c) { wx.showToast({ title: '未取到风格码', icon: 'none' }); return; }
     var arr = this.data.styleTags.slice();
     var i = arr.indexOf(c);
     if (i >= 0) arr.splice(i, 1); else arr.push(c);
@@ -170,7 +171,8 @@ Page({
     this.setData({ styleTags: arr, pureSelected: pureSelected });
   },
   toggleOccasion: function (e) {
-    var c = e.currentTarget.dataset.c;
+    var c = e.currentTarget.dataset.c || e.target.dataset.c;
+    if (!c) { wx.showToast({ title: '未取到场合码', icon: 'none' }); return; }
     var arr = this.data.occasions.slice();
     var i = arr.indexOf(c);
     if (i >= 0) arr.splice(i, 1); else arr.push(c);

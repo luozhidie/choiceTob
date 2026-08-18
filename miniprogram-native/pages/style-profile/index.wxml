@@ -24,8 +24,8 @@
     <block wx:if="{{mainStyle}}">
       <text class="sub-ct">{{subHeading}}</text>
       <view class="chips sub-chips">
-        <text class="chip sub-chip pure {{pureSelected?'on':''}}" bindtap="togglePureMain">纯{{mainName}}</text>
-        <text wx:for="{{subList}}" wx:key="code" class="chip sub-chip {{styleTags.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleSub">{{item.name}}</text>
+        <view class="chip sub-chip pure {{pureSelected?'on':''}}" bindtap="togglePureMain">纯{{mainName}}</view>
+        <view wx:for="{{subList}}" wx:key="code" class="chip sub-chip {{styleTags.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleSub">{{item.name}}</view>
       </view>
     </block>
   </view>
@@ -33,7 +33,7 @@
   <view class="card">
     <text class="ct">常去场合（可多选）</text>
     <view class="chips">
-      <text wx:for="{{occasionsList}}" wx:key="code" class="chip {{occasions.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleOccasion">{{item.name}}</text>
+      <view wx:for="{{occasionsList}}" wx:key="code" class="chip {{occasions.indexOf(item.code)>-1?'on':''}}" data-c="{{item.code}}" bindtap="toggleOccasion">{{item.name}}</view>
     </view>
   </view>
 
