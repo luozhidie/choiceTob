@@ -238,6 +238,22 @@ page{background: var(--bg);}
 .arb-desc{font-size:22rpx;color:rgba(252,239,233,.72);margin-top:8rpx;}
 .arb-btn{background:#C9A24B;color:#2d1b2e;font-size:25rpx;font-weight:700;padding:14rpx 24rpx;border-radius:30rpx;white-space:nowrap;}
 
+/* 代理中心 banner */
+.agent-center-banner{
+  margin:18rpx 24rpx 0;
+  background:linear-gradient(135deg,#3d2a16 0%,#5a3d1f 100%);
+  border-radius:20rpx;
+  padding:30rpx 30rpx;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 6rpx 16rpx rgba(90,61,31,.18),inset 0 0 0 1rpx rgba(201,162,75,.6);
+}
+.agent-center-banner:active{transform:scale(.98);}
+.acb-left{display:flex;flex-direction:column;}
+.acb-badge{font-size:19rpx;letter-spacing:3rpx;color:#C9A24B;font-weight:600;}
+.acb-title{font-size:32rpx;font-weight:800;color:#fff;margin-top:8rpx;}
+.acb-desc{font-size:22rpx;color:rgba(252,239,233,.72);margin-top:8rpx;}
+.acb-btn{background:#C9A24B;color:#2d1b2e;font-size:25rpx;font-weight:700;padding:14rpx 24rpx;border-radius:30rpx;white-space:nowrap;}
+
 /* 装饰圆 */
 .ac-deco{position:absolute;border-radius:50%;pointer-events:none;}
 .ac-deco-circle{top:-40rpx;right:-40rpx;width:140rpx;height:140rpx;background:radial-gradient(circle,rgba(252,239,233,.22),transparent 70%);}

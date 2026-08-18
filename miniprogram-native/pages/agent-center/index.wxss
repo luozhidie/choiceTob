@@ -1,0 +1,91 @@
+.page { min-height: 100vh; background: #faf8f6; padding: 0 24rpx 40rpx; box-sizing: border-box; }
+
+/* 未登录 */
+.empty { display: flex; flex-direction: column; align-items: center; padding: 160rpx 40rpx; }
+.empty-emoji { font-size: 96rpx; }
+.empty-title { font-size: 36rpx; font-weight: 700; color: #2d1b2e; margin-top: 24rpx; }
+.empty-desc { font-size: 26rpx; color: #9a8f8a; margin-top: 12rpx; margin-bottom: 40rpx; }
+.btn-primary { background: #C9A24B; color: #2d1b2e; font-weight: 700; padding: 20rpx 64rpx; border-radius: 999rpx; font-size: 28rpx; }
+
+/* 身份卡 */
+.hero { margin-top: 24rpx; background: linear-gradient(135deg, #2d1b2e, #4a3a4b); border-radius: 28rpx; padding: 36rpx 32rpx; color: #fff; }
+.hero-top { display: flex; align-items: center; }
+.hero-avatar { width: 96rpx; height: 96rpx; border-radius: 50%; background: rgba(201,162,75,0.18); color: #C9A24B; font-size: 44rpx; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.hero-meta { margin-left: 24rpx; flex: 1; }
+.hero-name { font-size: 34rpx; font-weight: 700; display: block; }
+.hero-tags { margin-top: 12rpx; }
+.tag { font-size: 20rpx; padding: 4rpx 14rpx; border-radius: 999rpx; margin-right: 12rpx; }
+.tag-gold { background: rgba(201,162,75,0.2); color: #C9A24B; border: 1rpx solid rgba(201,162,75,0.5); }
+.hero-stats { display: flex; margin-top: 36rpx; border-top: 1rpx solid rgba(255,255,255,0.12); padding-top: 28rpx; }
+.hs { flex: 1; text-align: center; }
+.hs-num { display: block; font-size: 32rpx; font-weight: 700; color: #C9A24B; }
+.hs-label { font-size: 22rpx; color: rgba(255,255,255,0.65); margin-top: 8rpx; display: block; }
+
+/* 通用卡片 */
+.card { background: #fff; border-radius: 24rpx; padding: 32rpx; margin-top: 24rpx; box-shadow: 0 4rpx 20rpx rgba(45,27,46,0.05); }
+.card-title { font-size: 30rpx; font-weight: 700; color: #2d1b2e; display: flex; align-items: baseline; }
+.card-sub { font-size: 22rpx; color: #b09a6a; font-weight: 400; margin-left: 14rpx; }
+
+/* 推广码 */
+.code-row { display: flex; align-items: center; justify-content: space-between; margin-top: 24rpx; background: #faf6ee; border-radius: 16rpx; padding: 24rpx 28rpx; }
+.code-text { font-size: 40rpx; font-weight: 800; letter-spacing: 4rpx; color: #2d1b2e; }
+.code-copy { font-size: 24rpx; color: #C9A24B; font-weight: 700; padding: 8rpx 24rpx; border: 1rpx solid #C9A24B; border-radius: 999rpx; }
+.code-actions { display: flex; gap: 20rpx; margin-top: 24rpx; }
+.btn-ghost, .btn-share { flex: 1; text-align: center; font-size: 28rpx; padding: 20rpx 0; border-radius: 14rpx; }
+.btn-ghost { background: #f3eee7; color: #2d1b2e; }
+.btn-share { background: #C9A24B; color: #2d1b2e; font-weight: 700; }
+.btn-share::after { border: none; }
+.code-tip { display: block; font-size: 22rpx; color: #9a8f8a; margin-top: 18rpx; line-height: 1.5; }
+
+/* 业绩 */
+.perf-row { display: flex; margin-top: 24rpx; }
+.perf { flex: 1; text-align: center; }
+.perf-num { display: block; font-size: 34rpx; font-weight: 800; color: #2d1b2e; }
+.perf-label { font-size: 22rpx; color: #9a8f8a; margin-top: 8rpx; display: block; }
+
+/* 收益 */
+.card-profit { background: linear-gradient(135deg, #2d1b2e, #3d243d); color: #fff; }
+.profit-head { display: flex; align-items: center; justify-content: space-between; }
+.profit-label { font-size: 24rpx; color: rgba(255,255,255,0.7); display: block; }
+.profit-num { font-size: 48rpx; font-weight: 800; color: #C9A24B; display: block; margin-top: 6rpx; }
+.btn-withdraw { background: #C9A24B; color: #2d1b2e; font-weight: 700; font-size: 26rpx; padding: 16rpx 36rpx; border-radius: 999rpx; }
+.profit-tip { display: block; font-size: 22rpx; color: rgba(255,255,255,0.6); margin-top: 20rpx; line-height: 1.5; }
+
+/* 自定义卖价 */
+.list-empty { text-align: center; color: #b8ada8; font-size: 26rpx; padding: 40rpx 0; }
+.price-item { display: flex; align-items: center; padding: 20rpx 0; border-bottom: 1rpx solid #f1ece6; }
+.price-item:last-child { border-bottom: none; }
+.pi-img { width: 96rpx; height: 96rpx; border-radius: 12rpx; background: #f3eee7; }
+.pi-img-ph { display: flex; align-items: center; justify-content: center; font-size: 44rpx; }
+.pi-info { flex: 1; margin-left: 20rpx; overflow: hidden; }
+.pi-title { font-size: 26rpx; color: #2d1b2e; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pi-prices { margin-top: 10rpx; }
+.pi-retail { font-size: 22rpx; color: #b8ada8; margin-right: 18rpx; text-decoration: line-through; }
+.pi-custom { font-size: 24rpx; color: #C9A24B; font-weight: 700; }
+.pi-edit { font-size: 24rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 26rpx; border-radius: 999rpx; font-weight: 600; }
+
+/* 提现记录 */
+.wd-item { display: flex; align-items: center; justify-content: space-between; padding: 18rpx 0; border-bottom: 1rpx solid #f1ece6; }
+.wd-item:last-child { border-bottom: none; }
+.wd-amt { font-size: 28rpx; font-weight: 700; color: #2d1b2e; margin-right: 14rpx; }
+.wd-method { font-size: 22rpx; color: #9a8f8a; }
+.wd-status { font-size: 24rpx; }
+.wd-paid { color: #2e9e5b; }
+.wd-pending { color: #C9A24B; }
+
+/* 底部 */
+.consult { text-align: center; color: #C9A24B; font-size: 26rpx; margin-top: 32rpx; font-weight: 600; }
+.sec-link { text-align: center; color: #9a8f8a; font-size: 24rpx; margin-top: 16rpx; }
+.sbtm { height: 40rpx; }
+
+/* 弹窗 */
+.mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; z-index: 100; }
+.sheet { width: 100%; background: #fff; border-radius: 28rpx 28rpx 0 0; padding: 40rpx 36rpx 60rpx; box-sizing: border-box; }
+.sheet-title { font-size: 32rpx; font-weight: 700; color: #2d1b2e; display: block; }
+.sheet-sub { font-size: 26rpx; color: #6b625c; display: block; margin-top: 12rpx; }
+.sheet-retail { font-size: 24rpx; color: #9a8f8a; display: block; margin-top: 16rpx; }
+.sheet-input { margin-top: 24rpx; background: #f7f4f1; border-radius: 14rpx; padding: 24rpx; font-size: 30rpx; }
+.sheet-btns { display: flex; gap: 20rpx; margin-top: 32rpx; }
+.sheet-cancel, .sheet-save { flex: 1; text-align: center; padding: 24rpx 0; border-radius: 14rpx; font-size: 30rpx; font-weight: 700; }
+.sheet-cancel { background: #f3eee7; color: #6b625c; }
+.sheet-save { background: #C9A24B; color: #2d1b2e; }

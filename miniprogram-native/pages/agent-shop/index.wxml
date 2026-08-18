@@ -1,0 +1,74 @@
+<wxs module="f">
+module.exports = {
+  yuan: function (c) { if (c == null) return '0'; var y = Math.round(c) / 100; return y % 1 === 0 ? '' + y : y.toFixed(2); }
+};
+</wxs>
+
+<view class="page">
+
+  <!-- 加载 -->
+  <view wx:if="{{loading}}" class="loading">加载中…</view>
+
+  <!-- 无效码 -->
+  <view wx:elif="{{!valid}}" class="empty">
+    <text class="empty-emoji">🔗</text>
+    <text class="empty-title">链接无效</text>
+    <text class="empty-desc">推广码不存在或代理未激活</text>
+    <view class="btn-primary" bindtap="goHome">回到首页</view>
+  </view>
+
+  <block wx:else>
+    <!-- 代理店铺头 -->
+    <view class="shop-head">
+      <view class="sh-badge">代理专属店</view>
+      <text class="sh-name">{{agentName}} 的精选店</text>
+      <text class="sh-desc">先试再买 · 由专属代理为你服务</text>
+    </view>
+
+    <!-- 虚拟试衣 CTA -->
+    <view class="try-bar" bindtap="goTry">
+      <view class="tb-left">
+        <text class="tb-title">👗 云衣橱 · AI 虚拟试衣</text>
+        <text class="tb-desc">上传照片，先看上身效果再决定</text>
+      </view>
+      <view class="tb-btn">去试衣 ›</view>
+    </view>
+
+    <!-- 商品橱窗 -->
+    <view class="grid">
+      <view wx:for="{{products}}" wx:key="product_id" class="card">
+        <image class="c-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
+        <view class="c-img c-img-ph" wx:else>👗</view>
+        <text class="c-title">{{item.title}}</text>
+        <view class="c-bottom">
+          <text class="c-price">¥{{f.yuan(item.price)}}</text>
+          <view class="c-buy" bindtap="buy" data-index="{{index}}">立即买</view>
+        </view>
+        <view class="c-try" bindtap="goTry">试穿 ›</view>
+      </view>
+    </view>
+
+    <view class="tip">价格由代理设定，下单即归于该代理店铺</view>
+    <view class="sbtm"></view>
+  </block>
+
+  <!-- 购买弹窗 -->
+  <view wx:if="{{showPay}}" class="mask" bindtap="closePay">
+    <view class="sheet" catchtap="noop">
+      <view class="pay-goods">
+        <image class="pg-img" src="{{payItem.cover_image}}" mode="aspectFill" wx:if="{{payItem.cover_image}}"/>
+        <view class="pg-img pg-img-ph" wx:else>👗</view>
+        <view class="pg-info">
+          <text class="pg-title">{{payItem.title}}</text>
+          <text class="pg-price">¥{{f.yuan(payItem.price)}}</text>
+        </view>
+      </view>
+      <view class="addr" bindtap="chooseAddr">
+        <text wx:if="{{address}}" class="addr-has">{{address.name}} {{address.phone}}\n{{address.province}}{{address.city}}{{address.district}}{{address.detail}}</text>
+        <text wx:else class="addr-empty">＋ 选择收货地址</text>
+      </view>
+      <view class="sheet-save" bindtap="submitOrder">{{paying ? '支付中…' : '微信支付 ¥'+f.yuan(payItem.price)}}</view>
+    </view>
+  </view>
+
+</view>

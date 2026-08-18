@@ -71,6 +71,8 @@
     "pages/fortune/index",
     "pages/invite/index",
     "pages/agent-recruit/index",
+    "pages/agent-center/index",
+    "pages/agent-shop/index",
     "pages/group/index",
     "pages/newcustomer/index"
   ],

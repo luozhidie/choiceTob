@@ -213,6 +213,16 @@
       </view>
       <view class="arb-btn">立即加入 ›</view>
     </view>
+
+    <!-- 代理中心 banner -->
+    <view class="agent-center-banner" bindtap="goAgentCenter">
+      <view class="acb-left">
+        <text class="acb-badge">AGENT</text>
+        <text class="acb-title">代理中心</text>
+        <text class="acb-desc">设对客卖价 · 看业绩 · 提现收益</text>
+      </view>
+      <view class="acb-btn">进入 ›</view>
+    </view>
   </view>
 
   <!-- ========== VIP形象服务（登录后可见） ========== -->

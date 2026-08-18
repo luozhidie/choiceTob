@@ -311,6 +311,7 @@ Page({
   goLuckDraw:function(){wx.navigateTo({url:'/pages/fortune/index'});},
   goInvite:function(){wx.navigateTo({url:'/pages/invite/index'});},
   goAgentRecruit:function(){wx.navigateTo({url:'/pages/agent-recruit/index'});},
+  goAgentCenter:function(){wx.navigateTo({url:'/pages/agent-center/index'});},
   goOneKeyImport:function(){wx.showToast({title:'一键入库开发中',icon:'none'});},
 
   /* ===== 退出登录 ===== */

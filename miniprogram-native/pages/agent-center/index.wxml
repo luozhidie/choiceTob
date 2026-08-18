@@ -1,0 +1,138 @@
+<wxs module="f">
+module.exports = {
+  yuan: function (c) { if (c == null) return '0'; var y = Math.round(c) / 100; return y % 1 === 0 ? '' + y : y.toFixed(2); },
+  discount: function (r) { if (!r || r >= 1) return '零售价'; var z = Math.round(r * 1000) / 100; return (z % 1 === 0 ? z.toFixed(0) : z.toFixed(1)) + '折'; },
+  rate: function (r) { if (!r) return '0%'; return Math.round(r * 100) + '%'; },
+  first: function (s) { if (!s) return '代'; s = '' + s; return s.charAt(0); }
+};
+</wxs>
+
+<view class="page">
+
+  <!-- 未登录 -->
+  <view wx:if="{{notLogin}}" class="empty">
+    <text class="empty-emoji">🔐</text>
+    <text class="empty-title">请先登录</text>
+    <text class="empty-desc">登录后即可使用代理工作台</text>
+    <view class="btn-primary" bindtap="goLogin">去登录</view>
+  </view>
+
+  <block wx:else>
+    <!-- 身份卡 -->
+    <view class="hero">
+      <view class="hero-top">
+        <view class="hero-avatar">{{f.first(storeName || fullName)}}</view>
+        <view class="hero-meta">
+          <text class="hero-name">{{storeName || fullName || '代理'}}</text>
+          <view class="hero-tags">
+            <text wx:if="{{isCertified}}" class="tag tag-gold">认证店主</text>
+            <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款代理</text>
+          </view>
+        </view>
+      </view>
+      <view class="hero-stats">
+        <view class="hs"><text class="hs-num">{{f.discount(discountRate)}}</text><text class="hs-label">拿货折扣</text></view>
+        <view class="hs"><text class="hs-num">{{f.rate(returnRate)}}</text><text class="hs-label">退换额度</text></view>
+        <view class="hs"><text class="hs-num">¥{{f.yuan(depositAmount)}}</text><text class="hs-label">预存货款</text></view>
+      </view>
+    </view>
+
+    <!-- 推广码 -->
+    <view class="card">
+      <view class="card-title">我的推广码</view>
+      <view class="code-row">
+        <text class="code-text">{{inviteCode || '—'}}</text>
+        <view class="code-copy" bindtap="copyCode">复制</view>
+      </view>
+      <view class="code-actions">
+        <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
+        <button class="btn-share" open-type="share">分享给客户</button>
+      </view>
+      <text class="code-tip">客户通过你的码下单，差价自动结算到收益余额</text>
+    </view>
+
+    <!-- 业绩 -->
+    <view class="card">
+      <view class="card-title">推广业绩</view>
+      <view class="perf-row">
+        <view class="perf"><text class="perf-num">{{customerCount}}</text><text class="perf-label">带来客户</text></view>
+        <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">归因订单</text></view>
+        <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">客户GMV</text></view>
+      </view>
+    </view>
+
+    <!-- 收益 -->
+    <view class="card card-profit">
+      <view class="profit-head">
+        <view>
+          <text class="profit-label">可提现收益</text>
+          <text class="profit-num">¥{{f.yuan(walletBalance)}}</text>
+        </view>
+        <view class="btn-withdraw" bindtap="openWithdraw">申请提现</view>
+      </view>
+      <text class="profit-tip">收益 = 客户实付 − 批发成本，订单付款成功后自动入账</text>
+    </view>
+
+    <!-- 自定义卖价 -->
+    <view class="card">
+      <view class="card-title">商品对客卖价<text class="card-sub">客户看不到批发价</text></view>
+      <view wx:if="{{priceList.length===0}}" class="list-empty">暂无商品</view>
+      <view wx:for="{{priceList}}" wx:key="product_id" class="price-item">
+        <image class="pi-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
+        <view class="pi-img pi-img-ph" wx:else>👗</view>
+        <view class="pi-info">
+          <text class="pi-title">{{item.title}}</text>
+          <view class="pi-prices">
+            <text class="pi-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
+            <text class="pi-custom">卖价 ¥{{item.custom_price ? f.yuan(item.custom_price) : '未设'}}</text>
+          </view>
+        </view>
+        <view class="pi-edit" bindtap="openEdit" data-index="{{index}}">设价</view>
+      </view>
+    </view>
+
+    <!-- 提现记录 -->
+    <view wx:if="{{withdrawals.length>0}}" class="card">
+      <view class="card-title">提现记录</view>
+      <view wx:for="{{withdrawals}}" wx:key="created_at" class="wd-item">
+        <view>
+          <text class="wd-amt">¥{{f.yuan(item.amount)}}</text>
+          <text class="wd-method">{{item.method === 'wechat' ? '微信' : item.method}}</text>
+        </view>
+        <text class="wd-status wd-{{item.status}}">{{item.status === 'paid' ? '已打款' : (item.status === 'pending' ? '处理中' : '已拒绝')}}</text>
+      </view>
+    </view>
+
+    <view class="consult" bindtap="callConsult">📞 代理咨询 13925997776</view>
+    <view class="sec-link" bindtap="goRecruit">了解代理合作方式 ›</view>
+    <view class="sbtm"></view>
+  </block>
+
+  <!-- 编辑卖价弹窗 -->
+  <view wx:if="{{showEdit}}" class="mask" bindtap="closeEdit">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-title">设置对客卖价</text>
+      <text class="sheet-sub">{{editItem.title}}</text>
+      <text class="sheet-retail">平台零售价：¥{{f.yuan(editItem.retail_price)}}</text>
+      <input class="sheet-input" type="digit" value="{{editPrice}}" bindinput="onEditPrice" placeholder="输入你给客户的卖价（元）"/>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeEdit">取消</view>
+        <view class="sheet-save" bindtap="savePrice">{{savingPrice ? '保存中…' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 提现弹窗 -->
+  <view wx:if="{{showWithdraw}}" class="mask" bindtap="closeWithdraw">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-title">申请提现</text>
+      <text class="sheet-retail">可提现余额：¥{{f.yuan(walletBalance)}}</text>
+      <input class="sheet-input" type="digit" value="{{withdrawAmt}}" bindinput="onWithdrawAmt" placeholder="输入提现金额（元）"/>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeWithdraw">取消</view>
+        <view class="sheet-save" bindtap="submitWithdraw">{{submittingWithdraw ? '提交中…' : '提交申请'}}</view>
+      </view>
+    </view>
+  </view>
+
+</view>
