@@ -48,6 +48,9 @@ Page({
     isCertified:false,
     certifiedStyle:'',
 
+    /* ===== 代理状态 ===== */
+    isAgent:false,
+
     /* ===== 拿货等级（累计制） ===== */
     tierIdx:0,
     tierBadge:'L1',
@@ -182,6 +185,7 @@ Page({
         roleText:'登录/注册',
         avatarUrl:'',
         isCertified:false,
+        isAgent:false,
         subCount:'--',favCount:'--',historyCount:'--',
         walletBalance:'--',couponCount:'--',redPackCount:'--'
       });
@@ -263,6 +267,25 @@ Page({
         wx.setStorageSync('certified_style',certStyle);
         var app=getApp();
         if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=isCert;
+        t.loadAgentStatus(token);
+      },
+      fail:function(){}
+    });
+  },
+
+  /* 代理状态（决定“我的”页是否显示代理中心/专属服务） */
+  loadAgentStatus:function(token){
+    var t=this;
+    if(!token)return;
+    wx.request({
+      url:'https://colour-choice.art/api/agent/me',
+      method:'GET',
+      header:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      success:function(r){
+        var d=r.data;
+        var isAgent=!!(d&&d.valid);
+        t.setData({isAgent:isAgent});
+        wx.setStorageSync('is_agent',isAgent);
       },
       fail:function(){}
     });

@@ -20,6 +20,7 @@ Page({
   data: {
     loading: true,
     notLogin: false,
+    notAgent: false,
     token: '',
     // 身份
     isDepositAgent: false,
@@ -66,15 +67,20 @@ Page({
     var t = this;
     var token = t.data.token;
     var h = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
-    var done = 0, total = 3;
-    function check() { done++; if (done >= total) t.setData({ loading: false }); }
 
-    // 1) 身份 + 推广码 + 业绩 + 余额
+    // 1) 先校验代理身份，valid 为真才继续加载价格/提现
     wx.request({
       url: BASE + '/api/agent/me', method: 'GET', header: h,
       success: function (r) {
         var d = r.data || {};
-        if (d.error) { if (d.error.indexOf('未登录') >= 0) t.setData({ notLogin: true }); return; }
+        if (d.error) {
+          if (d.error.indexOf('未登录') >= 0) t.setData({ notLogin: true, loading: false });
+          return;
+        }
+        if (!d.valid) {
+          t.setData({ notAgent: true, loading: false });
+          return;
+        }
         t.setData({
           isDepositAgent: !!d.isDepositAgent,
           isCertified: !!d.isCertified,
@@ -89,9 +95,16 @@ Page({
           gmv: (d.performance && d.performance.gmv) || 0,
           walletBalance: d.walletBalance || 0
         });
+        t.loadPriceAndWithdraw(token, h);
       },
-      fail: function () {}, complete: check
+      fail: function () { t.setData({ loading: false }); }
     });
+  },
+
+  loadPriceAndWithdraw: function (token, h) {
+    var t = this;
+    var done = 0, total = 2;
+    function check() { done++; if (done >= total) t.setData({ loading: false }); }
 
     // 2) 自定义卖价列表
     wx.request({
@@ -219,6 +232,7 @@ Page({
 
   goLogin: function () { wx.navigateTo({ url: '/pages/login/index' }); },
   goRecruit: function () { wx.navigateTo({ url: '/pages/agent-recruit/index' }); },
+  goVipDeposit: function () { wx.navigateTo({ url: '/pages/vip/index?tab=deposit' }); },
   previewShop: function () { if (this.data.inviteCode) wx.navigateTo({ url: '/pages/agent-shop/index?ref=' + this.data.inviteCode }); },
   copyCode: function () {
     var code = this.data.inviteCode || '';

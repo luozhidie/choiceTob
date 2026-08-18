@@ -17,6 +17,15 @@ module.exports = {
     <view class="btn-primary" bindtap="goLogin">去登录</view>
   </view>
 
+  <!-- 还不是代理 -->
+  <view wx:elif="{{notAgent}}" class="empty">
+    <text class="empty-emoji">🤝</text>
+    <text class="empty-title">你还不是销售代理</text>
+    <text class="empty-desc">预存货款拿批发价，给商品设对客卖价，转发给客户就能赚钱</text>
+    <view class="btn-primary" bindtap="goRecruit">申请成为代理</view>
+    <view class="btn-ghost" style="margin-top:24rpx;" bindtap="goVipDeposit">去充值预存货款</view>
+  </view>
+
   <block wx:else>
     <!-- 身份卡 -->
     <view class="hero">
