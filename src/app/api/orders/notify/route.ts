@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { verifySign } from "@/lib/payment";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { settleAgentSale } from "@/lib/agent-settlement";
 
 /**
  * POST /api/orders/notify
@@ -38,7 +40,7 @@ export async function POST(req: NextRequest) {
       // 幂等处理：先查订单状态
       const { data: existingOrder } = await supabase
         .from("orders")
-        .select("status")
+        .select("status, agent_id")
         .eq("order_no", tradeOrderId)
         .single();
 
@@ -61,6 +63,17 @@ export async function POST(req: NextRequest) {
       if (error) {
         console.error("更新订单状态失败:", error);
         return new NextResponse("db error", { status: 500 });
+      }
+
+      // 代理差价结算（仅归因订单，平台自动结算）
+      if (existingOrder?.agent_id) {
+        try {
+          const svc = createServiceRoleClient();
+          const r = await settleAgentSale(svc, tradeOrderId);
+          console.log("[代理结算]", r);
+        } catch (e) {
+          console.error("[代理结算失败]", e);
+        }
       }
 
       console.log(`订单 ${tradeOrderId} 支付成功，交易号: ${transactionId}`);
@@ -89,6 +102,8 @@ export async function GET(req: NextRequest) {
 
   const tradeOrderId = params.trade_order_id;
   const status = params.status;
+
+  const supabase = await createClient();
 
   if (status === "OD" && tradeOrderId) {
 

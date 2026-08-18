@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { parseXml, signMd5, buildXml } from "@/lib/wechat-pay";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { settleAgentSale } from "@/lib/agent-settlement";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,17 @@ export async function POST(request: NextRequest) {
             payment_trade_no: transaction_id,
           })
           .eq('order_no', out_trade_no);
+
+        // 2.5 代理差价结算（仅归因订单，平台自动结算：客户实付−批发成本进代理余额）
+        if (order.agent_id) {
+          try {
+            const svc = getServiceRoleClient();
+            const r = await settleAgentSale(svc, out_trade_no);
+            console.log('[代理结算]', r);
+          } catch (e) {
+            console.error('[代理结算失败]', e);
+          }
+        }
 
         // 3. 自动开通会员（核心逻辑）
         if (order.product_id && order.user_id) {

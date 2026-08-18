@@ -15,6 +15,7 @@ const navItems = [
   { label: "买手工作台", href: "/buyer/workbench" },
   { label: "时尚博主", href: "/magazine" },
   { label: "联系我们", href: "/contact" },
+  { label: "代理中心", href: "/agent" },
 ];
 
 export default function Navbar() {
