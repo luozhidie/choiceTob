@@ -92,61 +92,6 @@ export async function POST(
       return NextResponse.json({ error: updErr.message }, { status: 500 });
     }
 
-    // 4. 邀请返利（被邀请人首单完成时，返红包给邀请人）。非阻塞、容错。
-    if (status === "paid" || status === "completed") {
-      try {
-        const { data: invitee } = await supabase
-          .from("profiles")
-          .select("invited_by, invite_code")
-          .eq("id", order.user_id)
-          .maybeSingle();
-        if (invitee?.invited_by) {
-          const { data: existing } = await supabase
-            .from("referral_rewards")
-            .select("id")
-            .eq("invitee_id", order.user_id)
-            .maybeSingle();
-          if (!existing) {
-            // 邀请返利金额/有效期读 site_settings(invite_reward)，后台可改
-            const { data: cfgRow } = await supabase
-              .from("site_settings")
-              .select("value")
-              .eq("key", "invite_reward")
-              .maybeSingle();
-            const cfg = (cfgRow?.value as any) || { min_cents: 800, max_cents: 10000, expire_days: 30 };
-            const minC = Number(cfg.min_cents) || 800;
-            const maxC = Number(cfg.max_cents) || 10000;
-            const expireDays = Number(cfg.expire_days) || 30;
-            // 返 min~max 元随机红包（分单位）
-            const rewardAmount = Math.floor(minC + Math.random() * Math.max(1, maxC - minC));
-            const { error: rErr } = await supabase.from("referral_rewards").insert({
-              inviter_id: invitee.invited_by,
-              invitee_id: order.user_id,
-              invite_code: invitee.invite_code || null,
-              first_order_amount: order.total_amount || 0,
-              reward_amount: rewardAmount,
-              reward_granted: true,
-            });
-            if (!rErr) {
-              const expireAt = new Date(Date.now() + expireDays * 86400000)
-                .toISOString()
-                .split("T")[0];
-              await supabase.from("red_packets").insert({
-                user_id: invitee.invited_by,
-                title: "邀请好友首单红包 ¥" + Math.round(rewardAmount / 100),
-                amount: rewardAmount,
-                packet_type: "referral",
-                expire_at: expireAt,
-                status: "unused",
-              });
-            }
-          }
-        }
-      } catch (e) {
-        console.error("邀请返利发放失败（已忽略）:", e);
-      }
-    }
-
     return NextResponse.json({ success: true, order: updated });
   } catch (err: any) {
     console.error("更新订单状态失败:", err);

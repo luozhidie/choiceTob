@@ -226,15 +226,6 @@ page{background: var(--bg);}
 .ac-theme-luck .ac-title{color:#fff;}
 .ac-theme-luck .ac-desc{color:rgba(255,245,232,.8);}
 
-/* 卡 4：邀请有奖（深紫尊享 + 金边）*/
-.ac-theme-invite{
-  background:linear-gradient(135deg,#2d1b2e 0%,#4a2748 100%);
-  color:#fcefe9;
-  box-shadow:0 6rpx 16rpx rgba(45,27,46,.12),inset 0 0 0 1rpx rgba(201,162,75,.4);
-}
-.ac-theme-invite .ac-title{color:#fff;}
-.ac-theme-invite .ac-desc{color:rgba(252,239,233,.72);}
-
 /* 销售代理招募 banner */
 .agent-recruit-banner{
   margin:18rpx 24rpx 0;

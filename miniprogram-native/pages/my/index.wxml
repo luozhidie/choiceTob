@@ -205,14 +205,6 @@
         <text class="ac-desc">攒福气 享福利</text>
         <view class="ac-emoji">🧧</view>
       </view>
-      <!-- 卡 4：邀请有奖（深紫尊享） -->
-      <view class="ac-item ac-theme-invite" bindtap="goInvite">
-        <view class="ac-deco ac-deco-share"></view>
-        <view class="ac-badge ac-badge-new">New</view>
-        <text class="ac-title">邀请有奖</text>
-        <text class="ac-desc">返 8-100 元券包</text>
-        <view class="ac-emoji">🤝</view>
-      </view>
     </view>
 
     <!-- 代理入口：先放出代理中心，权限后续再收紧 -->
