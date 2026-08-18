@@ -45,7 +45,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   cancelled: { label: "已取消", color: "text-red-500 bg-red-50", icon: XCircle },
 };
 
-// 折扣与退换额度现在只来自「一次性充值」：首充¥6000享2.8折；充5万/10万/30万分别享2.8折+5%、2.8折+10%、2.6折+20%退换。
+// 折扣与退换额度现在只来自「一次性充值」：首充¥6000享2.8折；充5万/10万/30万分别享2.8折+退换5%、2.8折+退换10%、2.6折+退换20%。
 // （认证店主可看批发价；累计拿货自动升级折扣的旧轨道已移除）
 
 export default function MyPage() {
@@ -128,6 +128,21 @@ export default function MyPage() {
   }
 
   // 🔑 未登录时显示登录引导页（类似1688）
+  // 一次性充值档位进度（用于「我的」页认证店主卡）
+  const depositAmountYuan = (profile?.deposit_amount || 0) / 100;
+  const DEPOSIT_TIERS = [
+    { amount: 6000, label: "首充 ¥6,000 可享 2.8折" },
+    { amount: 50000, label: "充 ¥50,000 可享 2.8折 + 退换5%" },
+    { amount: 100000, label: "充 ¥100,000 可享 2.8折 + 退换10%" },
+    { amount: 300000, label: "充 ¥300,000 可享 2.6折 + 退换20%" },
+  ];
+  const nextDepositTier = DEPOSIT_TIERS.find((t) => depositAmountYuan < t.amount);
+  const depositProgress = Math.min(
+    100,
+    (depositAmountYuan / (nextDepositTier?.amount || 300000)) * 100
+  );
+  const nextTierText = nextDepositTier ? nextDepositTier.label : "已解锁最高档位";
+
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 via-accent/5 to-white">
@@ -435,7 +450,7 @@ export default function MyPage() {
               </div>
             )}
 
-            {/* ═══ 已认证：批发价 + 充值享折扣退换（深色卡）════ */}
+            {/* ═══ 已认证：批发价 + 充值享折扣退换（深色等级卡·旧版视觉）════ */}
             {profile?.store_owner_certified && (
               <div className="bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 rounded-2xl p-6 mb-6 text-white shadow-lg">
                 <div className="flex items-center justify-between mb-3">
@@ -447,27 +462,44 @@ export default function MyPage() {
                     查看权益
                   </Link>
                 </div>
-                <p className="text-white/70 text-sm mb-4">已解锁全部商品批发价查看权。充值货款即可享拿货折扣 + 退换额度：</p>
-                <div className="grid grid-cols-2 gap-3 mb-4">
-                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                    <p className="text-[11px] text-white/50">首充 ¥6,000</p>
-                    <p className="text-amber-300 font-bold text-sm">拿货 2.8折</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                    <p className="text-[11px] text-white/50">充 ¥50,000</p>
-                    <p className="text-amber-300 font-bold text-sm">2.8折 + 退换5%</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                    <p className="text-[11px] text-white/50">充 ¥100,000</p>
-                    <p className="text-amber-300 font-bold text-sm">2.8折 + 退换10%</p>
-                  </div>
-                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
-                    <p className="text-[11px] text-white/50">充 ¥300,000</p>
-                    <p className="text-amber-300 font-bold text-sm">2.6折 + 退换20%</p>
+                <p className="text-white/70 text-sm mb-4">认证即享批发价，充值货款解锁拿货折扣 + 退换额度</p>
+
+                {/* 进度条 */}
+                <div className="mb-2">
+                  <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500"
+                      style={{ width: `${depositProgress}%` }}
+                    />
                   </div>
                 </div>
-                <Link href="/vip#deposit" className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors">
-                  立即充值解锁折扣 + 退换额度 →
+                <p className="text-white/60 text-sm mb-5">
+                  已充值 <span className="text-amber-300 font-bold">¥{depositAmountYuan.toLocaleString()}</span>，{nextTierText}
+                </p>
+
+                {/* 4个权益图标 */}
+                <div className="flex justify-around pt-4 border-t border-white/10">
+                  {[
+                    { icon: "🏷️", label: "批发价" },
+                    { icon: "🔄", label: "拿货折扣" },
+                    { icon: "🎟️", label: "新款抢先" },
+                    { icon: "⚡", label: "精准推荐" },
+                  ].map((item) => (
+                    <div key={item.label} className="flex flex-col items-center gap-1.5">
+                      <div className="w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-lg">
+                        {item.icon}
+                      </div>
+                      <span className="text-xs text-white/60 text-center">{item.label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-white/40 text-xs text-center mt-3">一次性充值解锁 · 更高档位享更高退换额度</p>
+
+                <Link
+                  href="/vip#deposit"
+                  className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors mt-4 py-3 rounded-xl bg-amber-400/10 border border-amber-400/20"
+                >
+                  充值解锁退换额度 + 拿货折扣 →
                 </Link>
               </div>
             )}

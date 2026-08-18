@@ -14,10 +14,39 @@ var CERT_BENEFITS=[
 /* 充值档位（折扣+退换额度只来自一次性充值） */
 var RECHARGE_TIERS=[
   {amount:'首充¥6,000',val:'2.8折'},
-  {amount:'充¥50,000',val:'2.8折+退5%'},
-  {amount:'充¥100,000',val:'2.8折+退10%'},
-  {amount:'充¥300,000',val:'2.6折+退20%'}
+  {amount:'充¥50,000',val:'2.8折+退换5%'},
+  {amount:'充¥100,000',val:'2.8折+退换10%'},
+  {amount:'充¥300,000',val:'2.6折+退换20%'}
 ];
+
+/* 一次性充值档位（用于进度条） */
+var DEPOSIT_TIERS=[
+  {amount:6000,text:'首充 ¥6,000 可享 2.8折'},
+  {amount:50000,text:'充 ¥50,000 可享 2.8折 + 退换5%'},
+  {amount:100000,text:'充 ¥100,000 可享 2.8折 + 退换10%'},
+  {amount:300000,text:'充 ¥300,000 可享 2.6折 + 退换20%'}
+];
+
+function formatMoney(n){
+  n=Number(n)||0;
+  return n.toLocaleString('zh-CN',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function calcDepositProgress(depositAmount){
+  // depositAmount 单位：元
+  var yuan=Number(depositAmount)||0;
+  var next=null;
+  for(var i=0;i<DEPOSIT_TIERS.length;i++){
+    if(yuan<DEPOSIT_TIERS[i].amount){next=DEPOSIT_TIERS[i];break;}
+  }
+  var target=next?next.amount:DEPOSIT_TIERS[DEPOSIT_TIERS.length-1].amount;
+  var pct=Math.min(100,(yuan/target)*100);
+  return {
+    depositAmountStr:formatMoney(yuan),
+    depositProgress:Math.max(0,Math.round(pct)),
+    nextTierText:next?next.text:'已解锁最高档位'
+  };
+}
 
 Page({
   data:{
@@ -193,6 +222,8 @@ Page({
         var data=d.data||{};
         var isCert=!!data.storeOwnerCertified;
         var certStyle=data.certifiedStyle||'';
+        var depositAmount=(data.depositAmount!=null?data.depositAmount:data.deposit_amount)||0;
+        var depositInfo=calcDepositProgress(depositAmount);
         t.setData({
           walletBalance:data.walletBalance!=null?data.walletBalance:'--',
           couponCount:data.couponCount!=null?data.couponCount:'--',
@@ -202,7 +233,10 @@ Page({
           isAdmin:!!data.isAdmin,
           isCertified:isCert,
           certifiedStyle:certStyle,
-          roleText:isCert?'已认证店主':'未认证店主'
+          roleText:isCert?'已认证店主':'未认证店主',
+          depositAmountStr:depositInfo.depositAmountStr,
+          depositProgress:depositInfo.depositProgress,
+          nextTierText:depositInfo.nextTierText
         });
         wx.setStorageSync('is_certified_store_owner',isCert);
         wx.setStorageSync('certified_style',certStyle);

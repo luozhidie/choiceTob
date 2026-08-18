@@ -48,7 +48,7 @@
     </view>
   </view>
 
-  <!-- ═══════ 已登录 + 已认证：批发价 + 充值享折扣退换（深色卡）═══════ -->
+  <!-- ═══════ 已登录 + 已认证：批发价 + 充值享折扣退换（深色等级卡·旧版视觉）═══════ -->
   <view wx:if="{{isLoggedIn && isCertified}}" class="tier-card-dark">
     <!-- 标题行 -->
     <view class="tcd-header">
@@ -56,29 +56,40 @@
       <view class="tcd-view-btn" bindtap="goVip"><text>查看权益</text></view>
     </view>
     <!-- 说明 -->
-    <text class="tcd-desc">已解锁全部商品批发价查看权；充值货款享拿货折扣 + 退换额度</text>
-    <!-- 4档充值 -->
-    <view class="tcd-recharge-grid">
-      <view class="tcdrg-item">
-        <text class="tcdrg-amt">首充¥6,000</text>
-        <text class="tcdrg-val">2.8折</text>
-      </view>
-      <view class="tcdrg-item">
-        <text class="tcdrg-amt">充¥50,000</text>
-        <text class="tcdrg-val">2.8折+退5%</text>
-      </view>
-      <view class="tcdrg-item">
-        <text class="tcdrg-amt">充¥100,000</text>
-        <text class="tcdrg-val">2.8折+退10%</text>
-      </view>
-      <view class="tcdrg-item">
-        <text class="tcdrg-amt">充¥300,000</text>
-        <text class="tcdrg-val">2.6折+退20%</text>
+    <text class="tcd-desc">认证即享批发价，充值货款解锁拿货折扣 + 退换额度</text>
+
+    <!-- 进度条 -->
+    <view class="tcd-bar-wrap">
+      <view class="tcd-bar-track">
+        <view class="tcd-bar-fill" style="width:{{depositProgress}}%"></view>
       </view>
     </view>
+    <text class="tcd-spent-text">已充值 <text class="tcd-spent-num">¥{{depositAmountStr}}</text>，{{nextTierText}}</text>
+
+    <!-- 4个权益图标 -->
+    <view class="tcd-benefits">
+      <view class="tcdb-item">
+        <view class="tcdb-circle"><text>🏷️</text></view>
+        <text class="tcdb-label">批发价</text>
+      </view>
+      <view class="tcdb-item">
+        <view class="tcdb-circle"><text>🔄</text></view>
+        <text class="tcdb-label">拿货折扣</text>
+      </view>
+      <view class="tcdb-item">
+        <view class="tcdb-circle"><text>🎟️</text></view>
+        <text class="tcdb-label">新款抢先</text>
+      </view>
+      <view class="tcdb-item">
+        <view class="tcdb-circle"><text>⚡</text></view>
+        <text class="tcdb-label">精准推荐</text>
+      </view>
+    </view>
+    <text class="tcd-foot">一次性充值解锁 · 更高档位享更高退换额度</text>
+
     <!-- 充值入口 -->
     <view class="tcd-price-entry" bindtap="goVipDeposit">
-      <text class="tcd-price-txt">立即充值解锁折扣 + 退换额度 →</text>
+      <text class="tcd-price-txt">充值解锁退换额度 + 拿货折扣 →</text>
     </view>
   </view>
 

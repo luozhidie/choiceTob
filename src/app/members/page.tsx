@@ -274,9 +274,9 @@ export default function MembersPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   {[
                     { amount: "6000", label: "首充6000", discount: "2.8折", ret: "无退换", example: "原价¥100 → ¥28", highlight: false },
-                    { amount: "50000", label: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
-                    { amount: "100000", label: "10万", discount: "2.8折", ret: "退10%", example: "原价¥100 → ¥28", highlight: false },
-                    { amount: "300000", label: "30万", discount: "2.6折", ret: "退20%", example: "原价¥100 → ¥26", highlight: true },
+                    { amount: "50000", label: "5万", discount: "2.8折", ret: "退换5%", example: "原价¥100 → ¥28", highlight: false },
+                    { amount: "100000", label: "10万", discount: "2.8折", ret: "退换10%", example: "原价¥100 → ¥28", highlight: false },
+                    { amount: "300000", label: "30万", discount: "2.6折", ret: "退换20%", example: "原价¥100 → ¥26", highlight: true },
                   ].map((tier) => (
                     <div
                       key={tier.amount}
