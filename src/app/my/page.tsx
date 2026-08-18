@@ -495,9 +495,17 @@ export default function MyPage() {
                 </div>
                 <p className="text-white/40 text-xs text-center mt-3">一次性充值解锁 · 更高档位享更高退换额度</p>
 
+                {/* 代理中心入口：6000 做代理享折扣 */}
+                <Link
+                  href="/agent"
+                  className="block text-center text-sm text-stone-900 font-bold hover:opacity-90 transition-opacity mt-3 py-3 rounded-xl bg-gradient-to-r from-amber-300 to-yellow-400 border border-amber-200 shadow-md shadow-amber-900/20"
+                >
+                  首充 ¥6,000 做代理 · 享 2.8 折拿货 →
+                </Link>
+
                 <Link
                   href="/vip#deposit"
-                  className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors mt-4 py-3 rounded-xl bg-amber-400/10 border border-amber-400/20"
+                  className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors mt-3 py-3 rounded-xl bg-amber-400/10 border border-amber-400/20"
                 >
                   充值解锁退换额度 + 拿货折扣 →
                 </Link>
