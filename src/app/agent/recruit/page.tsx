@@ -19,7 +19,7 @@ const steps = [
     n: "01",
     icon: Store,
     title: "认证或预存",
-    desc: "免费认证店铺即可看批发价；预存货款 5 万起拿 2.8 折 + 退换额度，越存折扣越低。",
+    desc: "免费认证店铺即可看批发价；预存货款 6000 起拿 2.8 折，一次性充 5 万 / 10 万 / 30 万 解锁 5% / 10% / 20% 分级退换额度。",
   },
   {
     n: "02",
@@ -37,8 +37,10 @@ const steps = [
 
 const tiers = [
   { name: "认证店主", deposit: "免费", discount: "看批发价", returnRate: "无退换", tag: "轻起步" },
+  { name: "入门代理", deposit: "6000", discount: "2.8 折", returnRate: "无退换", tag: "首充" },
   { name: "预存代理", deposit: "5 万", discount: "2.8 折", returnRate: "5% 退换", tag: "主力", popular: true },
-  { name: "战略代理", deposit: "30 万", discount: "2.6 折", returnRate: "20% 退换", tag: "深度" },
+  { name: "战略代理", deposit: "10 万", discount: "2.8 折", returnRate: "10% 退换", tag: "深度" },
+  { name: "钻石代理", deposit: "30 万", discount: "2.6 折", returnRate: "20% 退换", tag: "顶级" },
 ];
 
 const faqs = [

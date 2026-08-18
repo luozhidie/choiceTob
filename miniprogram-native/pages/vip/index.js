@@ -6,21 +6,18 @@ Page({
     isMember:false,
     memberLabel:'',
     expireDate:'',
-    /* 拿货升级进度 */
-    purchaseAmount:0,
-    purchaseAmountLabel:'0',
-    currentLevel:0,
-    upgradeProgress:0,
-    nextLevelLabel:'',
-    nextLevelGapLabel:'',
     /* 充值会员套餐（唯一赛道）*/
     depositPlans:[
+      {id:'wholesale_6k',name:'拿货会员·首充6000',priceLabel:'充值 ¥6,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','无退换额度','小批量试拿货'],highlight:false},
       {id:'wholesale_5w',name:'充值会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度5%','优先发货权'],highlight:false},
       {id:'wholesale_10w',name:'充值会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
       {id:'wholesale_30w',name:'充值会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
     ],
     showPay:false,
     selectedPlan:null,
+    /* 代理中心 */
+    isAgent:false,
+    agentStatus:{active:false,depositAmount:0,discountRate:1,returnRate:0},
   },
 
   onLoad:function(options){
@@ -28,8 +25,10 @@ Page({
       this.setData({activeTab:options.tab});
     }
     this.chkLogin();
-    this.loadPurchaseAmount();
+    this.loadAgentStatus();
   },
+
+  onShow:function(){ this.loadAgentStatus(); },
 
   chkLogin:function(){
     var t=this;
@@ -39,63 +38,32 @@ Page({
     }
   },
 
-  /* 获取拿货金额并计算升级进度 */
-  loadPurchaseAmount:function(){
-    var t=this;
-    var ui=wx.getStorageSync('user_info');
-    if(!ui||!ui.id){
-      t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员',nextLevelGapLabel:'50,000'});
-      return;
-    }
-    wx.request({
-      url:'https://colour-choice.art/api/user/me',
-      method:'GET',
-      header:{
-        'Authorization':'Bearer '+ (wx.getStorageSync('token')||'')
-      },
-      success:function(r){
-        var d=(r.data||{}).data||{};  // API返回 {data:{totalPurchaseAmount,...}}
-        var amount=d.totalPurchaseAmount||0;  // 分
-        var amountYuan=Math.round(amount/100);
-        // 阈值（分）
-        var thresholds=[0,500000,1000000,3000000];
-        var levelNames=['普通','5万会员','10万会员','30万会员'];
-        var curLv=0;
-        for(var i=thresholds.length-1;i>=0;i--){
-          if(amount>=thresholds[i]){curLv=i;break;}
-        }
-        var progress=0;
-        var nextLabel='';
-        var gapLabel='';
-        if(curLv<thresholds.length-1){
-          var curT=thresholds[curLv];
-          var nextT=thresholds[curLv+1];
-          var ratio=(amount-curT)/(nextT-curT);
-          progress=Math.min(100,Math.max(0,Math.round(ratio*100)));
-          nextLabel=levelNames[curLv+1];
-          gapLabel=Math.round((nextT-amount)/100).toLocaleString();
-        } else {
-          progress=100;
-        }
-        t.setData({
-          purchaseAmount:amount,
-          purchaseAmountLabel:amountYuan.toLocaleString(),
-          currentLevel:curLv,
-          upgradeProgress:progress,
-          nextLevelLabel:nextLabel,
-          nextLevelGapLabel:gapLabel,
-        });
-      },
-      fail:function(){
-        t.setData({purchaseAmount:0,purchaseAmountLabel:'0',currentLevel:0,upgradeProgress:0,nextLevelLabel:'5万会员',nextLevelGapLabel:'50,000'});
-      }
-    });
-  },
-
   switchTab:function(e){this.setData({activeTab:e.currentTarget.dataset.tab});},
 
-  /* 引导卡：累计赛道 → 回我的页面看进度 */
-  goBackMy:function(){wx.navigateBack();},
+  /* 加载代理状态 */
+  loadAgentStatus:function(){
+    var t=this;
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:'https://colour-choice.art/api/agent/me?openid='+encodeURIComponent(openid),
+        success:function(r){
+          var d=r.data||{};
+          t.setData({
+            isAgent:!!(d.active||d.isAdmin),
+            agentStatus:{
+              active:!!d.active,
+              depositAmount:d.depositAmount||0,
+              discountRate:d.discountRate||1,
+              returnRate:d.returnRate||0,
+            }
+          });
+        }
+      });
+    }).catch(function(){});
+  },
+
+  /* 去代理中心 */
+  goAgentCenter:function(){ wx.navigateTo({url:'/pages/agent-center/index'}); },
 
   /* 引导卡：充值 → 滚动到套餐区 */
   scrollToDeposit:function(){
@@ -175,6 +143,7 @@ Page({
     if(pid==='price_trial')return 1990;
     if(pid==='price_3m')return 12800;
     if(pid==='price_1y')return 39900;
+    if(pid==='wholesale_6k')return 600000;
     if(pid==='wholesale_5w')return 5000000;
     if(pid==='wholesale_10w')return 10000000;
     if(pid==='wholesale_30w')return 30000000;

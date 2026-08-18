@@ -9,7 +9,8 @@ import {
   Crown, Eye, CreditCard, CheckCircle2, X, Clock, Star,
   MessageCircle, Smartphone, Copy, Check, Loader2, ArrowRight,
   ShieldCheck, Zap, Gift, HeadphonesIcon, AlertCircle, Sparkles,
-  Package, User, BarChart3, BookOpen, FileText, Lock, TrendingUp,
+  Package, User, BarChart3, BookOpen, FileText, Lock,
+  Store,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentQRCode from "@/components/PaymentQRCode";
@@ -101,6 +102,24 @@ const plans: Plan[] = [
   // ========================================
   // 第三类：拿货会员（三件起批，拿货折扣和退换服务）
   // ========================================
+  {
+    id: "wholesale_6k",
+    name: "拿货会员·首充6000",
+    price: 600000,        // 首充6000
+    originalPrice: 0,
+    priceLabel: "充值¥6,000",
+    discountLabel: "2.8折拿货",
+    newCustomerLabel: "无退换额度",
+    membershipType: "pro",
+    icon: Package,
+    highlight: false,
+    features: [
+      "同色同款拿货三件起批，享受批发价",
+      "拿货折扣2.8折",
+      "入门首选，先小批量试拿货",
+      "一次性充5万起解锁退换额度",
+    ],
+  },
   {
     id: "wholesale_5w",
     name: "拿货会员·充5万",
@@ -245,6 +264,17 @@ export default function VIPPage() {
   const { user, profile, loading: authLoading, isCertifiedStoreOwner } = useAuth();
 
   const paidTierIndex = getPaidTierIndex(profile?.membership_type);
+
+  // 是否已开通代理店铺（预存货款代理 / 认证店主 / 管理员）
+  const isAgent = !!(
+    profile &&
+    (
+      (profile.membership_type === "deposit_discount" && Number(profile.deposit_amount || 0) > 0) ||
+      profile.store_owner_certified === true ||
+      profile.is_admin === true ||
+      profile.role === "admin"
+    )
+  );
 
   useEffect(() => { setVisible(true); }, []);
 
@@ -400,38 +430,17 @@ export default function VIPPage() {
         </div>
       </section>
 
-      {/* 双轨引导：累计拿货升级 vs 直接充值解锁 */}
+      {/* 充值解锁引导（折扣+退换额度） */}
       <section className="py-6 md:py-8">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" /> 两种解锁方式
+              <Sparkles className="w-5 h-5 text-primary" /> 充值解锁拿货折扣 + 退换额度
             </h2>
-            <p className="text-xs text-gray-400 mb-4">选择适合你的会员路径</p>
+            <p className="text-xs text-gray-400 mb-4">认证店主可先看批发价；折扣与退换额度需一次性充值对应档位</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* 左：累计拿货升级（免费） */}
-              <div className="rounded-2xl border border-gray-200 p-5 bg-gradient-to-br from-gray-50 to-white">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <TrendingUp className="w-6 h-6 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-sm">累计拿货升级</h3>
-                    <p className="text-xs text-gray-400">免费 · 自动升级</p>
-                  </div>
-                </div>
-                <ul className="text-sm text-gray-600 space-y-1.5 mb-4">
-                  <li>· 认证店主后按累计拿货额自动升级</li>
-                  <li>· 5万 / 10万 = <strong className="text-primary">2.8折</strong>，30万 = <strong className="text-primary">2.6折</strong></li>
-                  <li>· 仅解锁拿货折扣权，<strong>不含退换额度</strong></li>
-                  <li>· 连续 6 个月不拿货将逐步降级</li>
-                </ul>
-                <Link href="/my" className="block text-center text-sm text-primary font-medium py-2 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
-                  去拿货累计 →
-                </Link>
-              </div>
               {/* 右：直接充值解锁（付费） */}
-              <div className="rounded-2xl border border-amber-200 p-5 bg-gradient-to-br from-amber-50 to-orange-50">
+              <div className="rounded-2xl border border-amber-200 p-5 bg-gradient-to-br from-amber-50 to-orange-50 sm:col-span-2">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
                     <CreditCard className="w-6 h-6 text-white" />
@@ -545,25 +554,44 @@ export default function VIPPage() {
         </div>
       </section>
 
-      {/* 货款折扣会员入口 */}
+      {/* 货款折扣会员 / 代理工作台入口 */}
       <section id="deposit" className="py-6 md:py-8 scroll-mt-20">
         <div className="container mx-auto px-4 max-w-5xl">
-          <Link href="/members" className="block bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 md:p-6 hover:shadow-md transition-all">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
-                  <CreditCard className="w-6 h-6 text-white" />
+          {isAgent ? (
+            <Link href="/agent" className="block bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 md:p-6 hover:shadow-md transition-all">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
+                    <Store className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary text-base">销售代理工作台</h3>
+                    <p className="text-sm text-gray-600 mt-0.5">设置对客卖价 · 分享试衣 · 查看业绩收益 · 申请提现</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-primary text-base">充值货款折扣会员</h3>
-                  <p className="text-sm text-gray-600 mt-0.5">预存货款享2.6-2.8折拿货 · 5万/10万/30万三档可选</p>
+                <div className="hidden sm:flex items-center gap-2 text-accent font-semibold text-sm shrink-0">
+                  进入工作台 <ArrowRight className="w-4 h-4" />
                 </div>
               </div>
-              <div className="hidden sm:flex items-center gap-2 text-accent font-semibold text-sm shrink-0">
-                去了解 <ArrowRight className="w-4 h-4" />
+            </Link>
+          ) : (
+            <Link href="/members" className="block bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-5 md:p-6 hover:shadow-md transition-all">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
+                    <CreditCard className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-primary text-base">充值货款折扣会员</h3>
+                    <p className="text-sm text-gray-600 mt-0.5">预存货款享2.6-2.8折拿货 · 5万/10万/30万三档可选 · 充值后自动开通代理店铺</p>
+                  </div>
+                </div>
+                <div className="hidden sm:flex items-center gap-2 text-accent font-semibold text-sm shrink-0">
+                  去了解 <ArrowRight className="w-4 h-4" />
+                </div>
               </div>
-            </div>
-          </Link>
+            </Link>
+          )}
         </div>
       </section>
 

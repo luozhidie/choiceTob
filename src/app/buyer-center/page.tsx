@@ -26,7 +26,7 @@ export default function BuyerCenterPage() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<ChargeOrder[]>([]);
   const [showRecharge, setShowRecharge] = useState(false);
-  const [rechargeAmount, setRechargeAmount] = useState<number>(50000);
+  const [rechargeAmount, setRechargeAmount] = useState<number>(6000);
   const [rechargeMethod, setRechargeMethod] = useState<string>('bank_transfer');
   const [submitting, setSubmitting] = useState(false);
 
@@ -264,8 +264,8 @@ export default function BuyerCenterPage() {
                     min={1}
                     step={1000}
                   />
-                  <div className="mt-2 flex gap-2">
-                    {[50000, 100000, 300000].map((amount) => (
+                  <div className="mt-2 flex gap-2 flex-wrap">
+                    {[6000, 50000, 100000, 300000].map((amount) => (
                       <button
                         key={amount}
                         onClick={() => setRechargeAmount(amount)}
@@ -275,7 +275,7 @@ export default function BuyerCenterPage() {
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                         }`}
                       >
-                        {amount / 10000}万
+                        {amount >= 10000 ? `${amount / 10000}万` : `${amount}`}
                       </button>
                     ))}
                   </div>

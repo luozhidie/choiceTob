@@ -29,6 +29,15 @@ page{background: var(--bg);}
 
 /* 状态栏 */
 .status-bar{margin:0 20rpx 20rpx;background:#f8f8f8;border-radius:16rpx;padding:24rpx 28rpx;border-left:8rpx solid #999;}
+
+/* 代理中心入口 */
+.agent-center-entry{margin:0 20rpx 24rpx;background:#fff;border-radius:18rpx;padding:26rpx 24rpx;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3rpx 14rpx rgba(0,0,0,.04);border:2rpx solid transparent;}
+.ace-active{border-color:#C9A24B;background:linear-gradient(180deg,#fff 0%,#fff9f0 100%);}
+.ace-left{flex:1;display:flex;flex-direction:column;gap:6rpx;}
+.ace-title{font-size:29rpx;font-weight:bold;color:#1a1a2e;}
+.ace-desc{font-size:22rpx;color:#888;line-height:1.4;}
+.ace-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;font-size:23rpx;font-weight:600;padding:12rpx 24rpx;border-radius:12rpx;white-space:nowrap;}
+.ace-active .ace-btn{background:#C9A24B;}
 .status-bar.active{background:#f0f9f4;border-left-color:#2d1b2e;}
 .st-main{display:block;font-size:28rpx;font-weight:700;color:#333;}
 .st-sub{display:block;font-size:23rpx;color:#888;margin-top:6rpx;}

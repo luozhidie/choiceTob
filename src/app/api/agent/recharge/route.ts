@@ -25,6 +25,13 @@ const PLANS: Record<string, {
     returnRate: 0.05,
     isTest: true,
   },
+  wholesale_6k: {
+    title: "拿货会员·首充6000",
+    totalFee: 600000,
+    depositAmount: 600000,
+    discountRate: 0.28,
+    returnRate: 0,
+  },
   wholesale_5w: {
     title: "充值会员·5万",
     totalFee: 5000000,

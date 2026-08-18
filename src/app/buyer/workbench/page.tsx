@@ -12,38 +12,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 
-/* ==================== 买手成长等级（与 C端「我的」完全一致的双轨模型） ==================== */
-const TIERS = [
-  { key: "normal",   name: "普通买手",   min: 0,      badge: "L1", discount: "" },
-  { key: "level5w",  name: "5万会员",   min: 50000,  badge: "L2", discount: "2.8折" },
-  { key: "level10w", name: "10万会员",  min: 100000, badge: "L3", discount: "2.8折" },
-  { key: "level30w", name: "30万会员",  min: 300000, badge: "L4", discount: "2.6折" },
-];
-
-function getTierInfo(totalSpentYuan: number) {
-  let idx = 0;
-  for (let i = 0; i < TIERS.length; i++) {
-    if (totalSpentYuan >= TIERS[i].min) idx = i;
-  }
-  const cur = TIERS[idx];
-  const next = TIERS[idx + 1] || null;
-  let progress = 100;
-  let diff = 0;
-  if (next) {
-    const span = next.min - cur.min;
-    progress = span > 0 ? Math.min(100, Math.round(((totalSpentYuan - cur.min) / span) * 100)) : 0;
-    diff = Math.max(0, next.min - totalSpentYuan);
-  }
-  return { idx, cur, next, progress, diff };
-}
-
-/* 认证店主分级退换额度：5万→5% / 10万→10% / 30万→20% */
-function certifiedReturnRate(min: number): number {
-  if (min >= 300000) return 0.2;
-  if (min >= 100000) return 0.1;
-  if (min >= 50000) return 0.05;
-  return 0;
-}
+/* ==================== 买手状态（折扣与退换额度来自一次性充值） ==================== */
 
 const ORDER_STATUS: Record<string, { label: string; cls: string }> = {
   pending:   { label: "待支付", cls: "bg-amber-100 text-amber-700" },
@@ -88,13 +57,6 @@ export default function BuyerWorkbenchPage() {
       }
     })();
   }, [user?.id, supabase]);
-
-  const totalSpentYuan = useMemo(
-    () => Math.round(orders.reduce((s, o) => s + (o.total_amount || 0), 0) / 100),
-    [orders]
-  );
-  const tierInfo = getTierInfo(totalSpentYuan);
-  const certReturn = certifiedReturnRate(tierInfo.cur.min);
 
   if (loading) {
     return (
@@ -168,70 +130,39 @@ export default function BuyerWorkbenchPage() {
             )}
           </div>
 
-          {/* 成长等级 */}
+          {/* 拿货折扣 & 退换额度（来自一次性充值） */}
           <div className="rounded-2xl p-5 border border-primary/15 bg-white">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="w-5 h-5 text-primary" />
-              <span className="text-sm font-semibold text-primary">买手成长等级</span>
+              <span className="text-sm font-semibold text-primary">拿货折扣 / 退换</span>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-lg shrink-0">
-                {tierInfo.cur.badge}
-              </div>
-              <div>
-                <div className="font-bold text-primary">{tierInfo.cur.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  累计拿货 <span className="text-accent font-semibold">{fmtYuan(totalSpentYuan * 100)}</span>
-                </div>
-              </div>
-            </div>
-            {tierInfo.next ? (
-              <div className="mt-3">
-                <div className="h-2 rounded-full bg-primary/10 overflow-hidden">
-                  <div className="h-full bg-accent rounded-full" style={{ width: `${tierInfo.progress}%` }} />
-                </div>
-                <p className="text-[11px] text-muted-foreground mt-1.5">
-                  再拿货 <span className="text-accent font-semibold">{fmtYuan(tierInfo.diff * 100)}</span> 升级
-                  <span className="text-primary font-semibold"> {tierInfo.next.name}</span>
-                  {tierInfo.next.discount && `（${tierInfo.next.discount}）`}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-primary/5 border border-primary/10 p-3">
+                <p className="text-[11px] text-muted-foreground">拿货折扣</p>
+                <p className="text-primary font-bold text-lg">
+                  {isDepositMember ? `${(Number(profile?.deposit_discount_rate || 1) * 10).toFixed(1)}折` : "—"}
                 </p>
               </div>
-            ) : (
-              <p className="text-[11px] text-muted-foreground mt-3">已达最高等级</p>
-            )}
-          </div>
-
-          {/* 批发价 & 退换额度 */}
-          <div className="rounded-2xl p-5 border border-accent/30 bg-white">
-            <div className="flex items-center gap-2 mb-3">
-              <Tag className="w-5 h-5 text-accent" />
-              <span className="text-sm font-semibold text-primary">批发价 / 退换</span>
+              <div className="rounded-xl bg-accent/5 border border-accent/10 p-3">
+                <p className="text-[11px] text-muted-foreground">退换额度</p>
+                <p className="text-accent font-bold text-lg">
+                  {isDepositMember ? `${((profile?.deposit_return_rate || 0) * 100).toFixed(0)}%` : "—"}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">批发价</span>
-              {canViewWholesale ? (
-                <span className="px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold">已开启</span>
-              ) : (
-                <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-500 text-xs font-semibold">未开启</span>
-              )}
-            </div>
-            <div className="flex items-center justify-between text-sm mt-2">
-              <span className="text-muted-foreground">退换额度</span>
-              <span className="text-accent font-bold text-sm">
-                {isDepositMember
-                  ? `${((profile?.deposit_return_rate || 0) * 100).toFixed(0)}%`
-                  : certReturn > 0
-                  ? `${(certReturn * 100).toFixed(0)}%`
-                  : "—"}
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+            <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
               {isDepositMember
-                ? "充值会员退换额度（按充值档位）"
-                : certReturn > 0
-                ? "认证店主分级退换（按累计拿货）"
-                : "认证或开通价格会员后享受退换额度"}
+                ? "充值会员折扣与退换额度（按充值档位）"
+                : "认证店主可看批发价；拿货折扣与退换额度需一次性充值对应档位解锁"}
             </p>
+            {!isDepositMember && (
+              <Link
+                href="/buyer-center"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white bg-accent px-3 py-2 rounded-lg hover:brightness-110 transition"
+              >
+                去充值解锁 <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            )}
           </div>
         </div>
 
@@ -328,7 +259,7 @@ export default function BuyerWorkbenchPage() {
         </div>
 
         <p className="text-[11px] text-muted-foreground text-center mt-6">
-          累计拿货额自动升级 · 连续 6 个月不拿货将降级
+          认证店主可看批发价 · 拿货折扣与退换额度需一次性充值解锁
         </p>
       </div>
     </div>

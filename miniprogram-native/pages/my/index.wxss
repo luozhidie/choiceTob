@@ -86,6 +86,12 @@ page{background: var(--bg);}
   border:1rpx solid rgba(252,211,77,.2);}
 .tcd-price-txt{font-size:21rpx;color:#fcd34d;font-weight:600;text-align:center;}
 
+/* 充值档位网格（替代累计升级进度） */
+.tcd-recharge-grid{display:flex;flex-wrap:wrap;gap:12rpx;margin:6rpx 0 4rpx;}
+.tcdrg-item{flex:1 1 calc(50% - 12rpx);min-width:calc(50% - 12rpx);background:rgba(255,255,255,.06);border:1rpx solid rgba(255,255,255,.12);border-radius:14rpx;padding:16rpx 14rpx;display:flex;flex-direction:column;gap:6rpx;}
+.tcdrg-amt{font-size:21rpx;color:rgba(255,255,255,.55);}
+.tcdrg-val{font-size:26rpx;color:#fcd34d;font-weight:bold;}
+
 /* ====== 快捷数据行（3格）===== */
 .stats-row{display:flex;gap:12rpx;padding:0 20rpx;margin-top:12rpx;}
 .stat-card{flex:1;background:#fff;border-radius:16rpx;padding:20rpx 12rpx;display:flex;flex-direction:column;align-items:center;gap:6rpx;box-shadow:0 2rpx 10rpx rgba(0,0,0,.04);}

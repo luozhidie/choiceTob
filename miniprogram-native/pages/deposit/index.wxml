@@ -17,6 +17,15 @@
     </block>
   </view>
 
+  <!-- 代理中心入口 -->
+  <view class="agent-center-entry {{agentStatus.active?'ace-active':''}}" bindtap="goAgentCenter">
+    <view class="ace-left">
+      <text class="ace-title">代理中心</text>
+      <text class="ace-desc">{{agentStatus.active?'已开通代理店铺 · 去设置对客卖价、分享试衣卖货':'充值后自动开通代理店铺，设置卖价卖货赚差价'}}</text>
+    </view>
+    <view class="ace-btn">{{agentStatus.active?'进入 ›':'去开通 ›'}}</view>
+  </view>
+
   <!-- 4档卡片 -->
   <view class="cards">
     <view class="card card-test" bindtap="selectPlan" data-plan="{{plans[0]}}">

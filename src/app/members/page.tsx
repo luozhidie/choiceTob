@@ -7,7 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   Crown, Sparkles, Package, Megaphone,
   Lock, CheckCircle2, ArrowRight, User, Shield, Star,
-  ShoppingBag,
+  ShoppingBag, Store,
 } from "lucide-react";
 
 /** 会员功能卡片 */
@@ -55,6 +55,17 @@ const MEMBER_FEATURES = [
     href: "/marketing",
     badge: "智能",
     requiresMembership: true,
+  },
+  {
+    key: "agent",
+    title: "销售代理工作台",
+    desc: "预存货款或认证店主后，设置对客卖价、分享试衣、赚取差价、管理客户订单",
+    icon: Store,
+    color: "from-amber-500 to-orange-500",
+    bgColor: "bg-gradient-to-br from-amber-50 to-orange-50 border-amber-200",
+    href: "/agent",
+    badge: "卖货",
+    requiresMembership: false,
   },
 ];
 
@@ -115,6 +126,17 @@ export default function MembersPage() {
   const isMember = isVipMember || (profile?.membership_type && profile?.membership_type !== "");
   const memberType = profile?.membership_type === "view_price" ? "基础VIP（查价特权）"
     : profile?.membership_type === "deposit_discount" ? "高阶VIP（拿货折扣）" : null;
+
+  // 是否已开通代理店铺（预存货款代理 / 认证店主 / 管理员）
+  const isAgent = !!(
+    profile &&
+    (
+      (profile.membership_type === "deposit_discount" && Number(profile.deposit_amount || 0) > 0) ||
+      profile.store_owner_certified === true ||
+      profile.is_admin === true ||
+      profile.role === "admin"
+    )
+  );
 
   // 检查是否有买手选品记录或订单记录（放宽条件：只要注册了就可以看到，部分功能需会员）
   const hasBuyerAccess = !!user; // 已登录即可访问基础功能
@@ -249,8 +271,9 @@ export default function MembersPage() {
                 </h2>
                 <p className="text-xs text-gray-500 mb-4">预存越多，折扣越低。预存款可用于采购下单，随时退。</p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   {[
+                    { amount: "6000", label: "首充6000", discount: "2.8折", ret: "无退换", example: "原价¥100 → ¥28", highlight: false },
                     { amount: "50000", label: "5万", discount: "2.8折", ret: "退5%", example: "原价¥100 → ¥28", highlight: false },
                     { amount: "100000", label: "10万", discount: "2.8折", ret: "退10%", example: "原价¥100 → ¥28", highlight: false },
                     { amount: "300000", label: "30万", discount: "2.6折", ret: "退20%", example: "原价¥100 → ¥26", highlight: true },

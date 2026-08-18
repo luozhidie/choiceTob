@@ -1668,6 +1668,7 @@ export default function AdminProductsPage() {
               {(() => {
                 const pr = form.original_price ? Number(form.original_price) : (form.price ? Number(form.price) : 0);
                 if (pr <= 0) return null;
+                const m6 = Math.round(pr * 0.28);
                 const m5 = Math.round(pr * 0.28);
                 const m10 = Math.round(pr * 0.28);
                 const m30 = Math.round(pr * 0.26);
@@ -1675,11 +1676,12 @@ export default function AdminProductsPage() {
                   <div className="mt-3 p-3 bg-amber-50/60 border border-amber-200 rounded-xl text-xs text-gray-700 leading-relaxed">
                     <div className="font-semibold text-gray-800 mb-2">预充货款会员价（按原价自动计算）</div>
                     <div className="space-y-1">
+                      <div className="flex justify-between"><span>首充6000 · 无退换</span><b className="text-primary">¥{m6}</b></div>
                       <div className="flex justify-between"><span>预充5万 · 退换5%</span><b className="text-primary">¥{m5}</b></div>
                       <div className="flex justify-between"><span>预充10万 · 退换10%</span><b className="text-primary">¥{m10}</b></div>
                       <div className="flex justify-between"><span>预充30万 · 退换20%</span><b className="text-primary">¥{m30}</b></div>
                     </div>
-                    <div className="mt-1 text-[11px] text-gray-400">5万/10万＝原价×28%，30万＝原价×26%（与上文价格体系一致）</div>
+                    <div className="mt-1 text-[11px] text-gray-400">首充6000与5万/10万＝原价×28%，30万＝原价×26%（与上文价格体系一致）</div>
                   </div>
                 );
               })()}
@@ -1688,7 +1690,7 @@ export default function AdminProductsPage() {
               <div className="mt-3 p-3 bg-primary/5 border border-primary/10 rounded-xl text-xs text-gray-700 leading-relaxed">
                 <b>价格体系，</b>原价＝成本价÷0.26×110%（0.26 即 30万充值会员拿货折扣，原价×0.26＝30万会员拿货价），零售价＝原价×50%（五折促销），一件起批＝原价×33%，5件拿货＝原价×28%。
                 <br />
-                <b>预充货款会员：</b>预充5万货款＝原价×28%，退换比例5%；预充10万货款＝原价×28%，退换比例10%；预充30万货款＝原价×26%，退换比例20%。
+                <b>预充货款会员：</b>首充6000货款＝原价×28%，无退换额度；预充5万货款＝原价×28%，退换比例5%；预充10万货款＝原价×28%，退换比例10%；预充30万货款＝原价×26%，退换比例20%。
                 <br />
                 <b>原价 / 零售价：</b>单品原价＝成本价÷0.26×110%；套装原价＝各部件价格之和（划线参考价）。<b>零售价＝原价×50%（五折促销）</b>。有零售价时按零售价卖，<b>零售价留空则按原价售出</b>。
               </div>

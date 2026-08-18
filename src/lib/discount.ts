@@ -12,11 +12,13 @@
  *    - 进阶VIP: 8折 + 5%返利
  *    - 高阶VIP: 7折 + 8%返利
  *
- * 3. 拿货会员：充5万/10万/30万
- *    功能：同色同款三件起批，2.8折/2.6折拿货，退换服务
+ * 3. 拿货会员（预存货款）：首充¥6000 起，一次性充 5万/10万/30万
+ *    功能：同色同款三件起批，2.8折/2.6折拿货，分级退换服务
+ *    - 首充¥6000: 2.8折, 退换额度0%（认证店主可先看批发价）
  *    - 充5万: 2.8折, 退换额度5%
  *    - 充10万: 2.8折, 退换额度10%
  *    - 充30万: 2.6折, 退换额度20%
+ *    注：认证店铺（store_owner_certified）即可查看批发价；首充 6000 享 2.8 折。
  */
 
 export interface MemberTier {
@@ -128,14 +130,25 @@ export const MEMBER_TIERS: MemberTier[] = [
     icon: "👑",
   },
 
-  // ====== 第三类：拿货会员 ======
+  // ====== 第三类：拿货会员（预存货款） ======
+  {
+    key: "wholesale_6k",
+    label: "拿货会员·首充6000",
+    subLabel: "2.8折·无退换",
+    category: "wholesale",
+    discount: 0.28,         // 2.8折
+    rebate: 0,
+    minRecharge: 600000,    // 充6000（首充入门）
+    color: "text-green-600 bg-green-50 border-green-300",
+    icon: "📦",
+  },
   {
     key: "wholesale_5w",
     label: "拿货会员·充5万",
     subLabel: "2.8折·退换5%",
     category: "wholesale",
     discount: 0.28,         // 2.8折
-    rebate: 0,
+    rebate: 0.05,
     minRecharge: 5000000,   // 充5万
     color: "text-green-600 bg-green-50 border-green-300",
     icon: "📦",
@@ -146,7 +159,7 @@ export const MEMBER_TIERS: MemberTier[] = [
     subLabel: "2.8折·退换10%",
     category: "wholesale",
     discount: 0.28,         // 2.8折
-    rebate: 0,
+    rebate: 0.10,
     minRecharge: 10000000,  // 充10万
     color: "text-green-600 bg-green-50 border-green-300",
     icon: "📦",
@@ -158,7 +171,7 @@ export const MEMBER_TIERS: MemberTier[] = [
     subLabel: "2.6折·退换20%",
     category: "wholesale",
     discount: 0.26,         // 2.6折
-    rebate: 0,
+    rebate: 0.20,
     minRecharge: 30000000,  // 充30万
     color: "text-green-600 bg-green-50 border-green-300",
     icon: "📦",

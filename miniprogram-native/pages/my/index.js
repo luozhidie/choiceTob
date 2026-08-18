@@ -3,14 +3,6 @@
 /* 风格订阅：服务端（openid）持久化 + 本地兜底 */
 var sub = require('../../utils/stallSubscribe.js');
 
-/* 拿货会员等级（累计拿货额自动升级，连续6月不拿货降级） */
-var TIERS=[
-  {key:'normal',name:'普通',badge:'L1',threshold:0,discount:''},
-  {key:'level5w',name:'5万会员',badge:'L2',threshold:50000,discount:'2.8折'},
-  {key:'level10w',name:'10万会员',badge:'L3',threshold:100000,discount:'2.8折'},
-  {key:'level30w',name:'30万会员',badge:'L4',threshold:300000,discount:'2.6折'}
-];
-
 /* 未认证时显示的引导权益（同行截图1）*/
 var CERT_BENEFITS=[
   {icon:'价',title:'批发价拿货'},
@@ -19,20 +11,12 @@ var CERT_BENEFITS=[
   {icon:'新',title:'新款先看'}
 ];
 
-/* 已认证时等级卡内权益（拿货会员累计赛道——只有折扣权，退换需充值） */
-var TIER_CARD_BENEFITS=[
-  {icon:'价',title:'批发价'},
-  {icon:'折',title:'拿货折扣'},
-  {icon:'新',title:'新款抢先'},
-  {icon:'荐',title:'精准推荐'}
-];
-
-/* 各等级一句话说明（累计拿货额→折扣权，退换需单独充值） */
-var TIER_DESC=[
-  '认证即享批发价，累计拿货解锁折扣',
-  '累计5万：拿货折扣2.8折',
-  '累计10万：拿货折扣2.8折 + 新款优先',
-  '累计30万：拿货折扣2.6折 + 数据报告'
+/* 充值档位（折扣+退换额度只来自一次性充值） */
+var RECHARGE_TIERS=[
+  {amount:'首充¥6,000',val:'2.8折'},
+  {amount:'充¥50,000',val:'2.8折+退5%'},
+  {amount:'充¥100,000',val:'2.8折+退10%'},
+  {amount:'充¥300,000',val:'2.6折+退20%'}
 ];
 
 Page({
@@ -51,16 +35,6 @@ Page({
     /* ===== 代理状态 ===== */
     isAgent:false,
 
-    /* ===== 拿货等级（累计制） ===== */
-    tierIdx:0,
-    tierBadge:'L1',
-    tierName:'普通',
-    tierDesc:'认证即享批发价，累计拿货解锁折扣',
-    spentYuan:0,
-    nextTierName:'5万会员',
-    nextTierDiff:50000,
-    tierProgress:0,
-
     /* ===== 统计 ===== */
     subCount:'--',
     favCount:'--',
@@ -73,8 +47,7 @@ Page({
 
     /* ===== 常量（模板用）===== */
     certBenefits:CERT_BENEFITS,
-    tierCardBenefits:TIER_CARD_BENEFITS,
-    tiers:TIERS,
+    rechargeTiers:RECHARGE_TIERS,
 
     /* ===== 后台「页面背景」设置：我的页头部 ===== */
     myHeaderColor:'',
@@ -173,7 +146,6 @@ Page({
         isCertified:isCert,
         certifiedStyle:certStyle
       });
-      t.loadTierData();
       t.loadStats();
       t.loadAssets(token);
     } else {
@@ -190,37 +162,6 @@ Page({
         walletBalance:'--',couponCount:'--',redPackCount:'--'
       });
     }
-  },
-
-  /* 计算等级数据 */
-  loadTierData:function(){
-    var t=this;
-    var spent=Number(wx.getStorageSync('total_spent_yuan'))||0;
-    var idx=0;
-    for(var i=TIERS.length-1;i>=0;i--){
-      if(spent>=TIERS[i].threshold){idx=i;break;}
-    }
-    var cur=TIERS[idx];
-    var next=TIERS[idx+1]||null;
-    var progress=0,diff=0;
-    if(next){
-      var span=next.threshold-cur.threshold||1;
-      progress=Math.min(100,Math.round(((spent-cur.threshold)/span)*100));
-      diff=Math.max(0,next.threshold-spent);
-    }else{
-      progress=100;
-    }
-    t.setData({
-      tierIdx:idx,
-      tierBadge:cur.badge,
-      tierName:cur.name,
-      tierDesc:TIER_DESC[idx]||'',
-      spentYuan:spent.toFixed(2),
-      nextTierName:next?next.name:'',
-      nextTierDiff:diff,
-      nextTierDiscount:next?next.discount||'':'',
-      tierProgress:progress
-    });
   },
 
   /* 统计数 */
@@ -379,7 +320,7 @@ Page({
 
   goRules:function(){wx.showModal({
     title:'拿货会员权益规则',
-    content:'【累计赛道·免费】认证后拿货累计金额自动升折扣等级（无退换额度）\nL1 普通(≥0): 批发价查看权\nL2/L3 5万~10万: 拿货2.8折\nL4 30万: 拿货2.6折 + 数据报告\n\n【充值赛道·付费】充值即同时获得 拿货折扣 + 退换额度(5%/10%/20%)，独立权益\n\n【保级规则】连续6个月无拿货记录将降级\n\n【价格会员】单独购买，时间制，到期收回权益',
+    content:'【认证店主·免费】认证后即解锁全部商品批发价查看权。\n\n【充值解锁·付费】一次性充值货款，同时获得拿货折扣 + 退换额度：\n· 首充¥6,000：拿货2.8折\n· 充¥50,000：拿货2.8折 + 退换5%\n· 充¥100,000：拿货2.8折 + 退换10%\n· 充¥300,000：拿货2.6折 + 退换20%\n\n退换额度在退货时按档位自动抵扣。',
     showCancel:false,confirmText:'知道了'
   });}
 });

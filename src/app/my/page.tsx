@@ -21,7 +21,7 @@ import {
   LogIn, UserPlus, Smartphone,
   ShieldCheck,
   Award, Gift, BarChart3, Lock, BadgeCheck,
-  X, TrendingUp, Star, Sparkles, Settings, FileText, ScrollText, Info, Store,
+  X, TrendingUp, Sparkles, Settings, FileText, ScrollText, Info, Store,
 } from "lucide-react";
 import TabBar from "@/components/TabBar";
 
@@ -45,38 +45,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   cancelled: { label: "已取消", color: "text-red-500 bg-red-50", icon: XCircle },
 };
 
-// 成长等级阶梯（双轨模型：累计拿货=折扣权；直接充值=折扣权+退换额度）
-const TIERS = [
-  { key: "normal",   name: "普通",    min: 0,      badge: "L1", discount: "" },
-  { key: "level5w",  name: "5万会员", min: 50000,  badge: "L2", discount: "2.8折" },
-  { key: "level10w", name: "10万会员",min: 100000, badge: "L3", discount: "2.8折" },
-  { key: "level30w", name: "30万会员",min: 300000, badge: "L4", discount: "2.6折" },
-];
-
-// 会员权益（4项横排，汉字徽章，与小程序一致）
-const TIER_BENEFITS = [
-  { key: "wholesale",  title: "批发价",   tier: 0, badge: "价" },
-  { key: "discount",   title: "拿货折扣", tier: 1, badge: "折" },
-  { key: "earlyAccess",title: "新款抢先", tier: 2, badge: "新" },
-  { key: "recommend",  title: "精准推荐", tier: 3, badge: "荐" },
-];
-
-function getTierInfo(totalSpentYuan: number) {
-  let idx = 0;
-  for (let i = 0; i < TIERS.length; i++) {
-    if (totalSpentYuan >= TIERS[i].min) idx = i;
-  }
-  const cur = TIERS[idx];
-  const next = TIERS[idx + 1] || null;
-  let progress = 100;
-  let diff = 0;
-  if (next) {
-    const span = next.min - cur.min;
-    progress = span > 0 ? Math.min(100, Math.round(((totalSpentYuan - cur.min) / span) * 100)) : 0;
-    diff = Math.max(0, next.min - totalSpentYuan);
-  }
-  return { idx, cur, next, progress, diff };
-}
+// 折扣与退换额度现在只来自「一次性充值」：首充¥6000享2.8折；充5万/10万/30万分别享2.8折+5%、2.8折+10%、2.6折+20%退换。
+// （认证店主可看批发价；累计拿货自动升级折扣的旧轨道已移除）
 
 export default function MyPage() {
   const router = useRouter();
@@ -89,10 +59,6 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "cart">("overview");
   const [showRules, setShowRules] = useState(false);
-
-  // 成长等级：依据累计拿货金额计算（与「拿货升级自动会员」逻辑一致）
-  const totalSpentYuan = Math.round(orders.reduce((s, o) => s + (o.total_amount || 0), 0) / 100);
-  const tierInfo = getTierInfo(totalSpentYuan);
 
   useEffect(() => {
     initUser();
@@ -469,92 +435,42 @@ export default function MyPage() {
               </div>
             )}
 
-            {/* ═══ 已认证：深色等级卡（同行截图2）════ */}
+            {/* ═══ 已认证：批发价 + 充值享折扣退换（深色卡）════ */}
             {profile?.store_owner_certified && (
               <div className="bg-gradient-to-br from-stone-800 via-stone-900 to-stone-950 rounded-2xl p-6 mb-6 text-white shadow-lg">
-                {/* 标题行 */}
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-3">
                   <h2 className="text-xl font-bold flex items-center gap-2">
-                    {tierInfo.cur.name}
-                    <span className="text-xs bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-900 px-2.5 py-0.5 rounded-md font-extrabold shadow-md">
-                      {tierInfo.cur.badge || "L1"}
-                    </span>
+                    认证店主
+                    <span className="text-xs bg-gradient-to-r from-amber-400 to-yellow-500 text-stone-900 px-2.5 py-0.5 rounded-md font-extrabold shadow-md">已认证</span>
                   </h2>
                   <Link href="/vip" className="text-xs bg-amber-400/15 border border-amber-400/30 text-amber-300 px-3 py-1.5 rounded-full hover:bg-amber-400/25 transition-colors">
                     查看权益
                   </Link>
                 </div>
-
-                {/* 进度条 */}
-                {tierInfo.next ? (
-                  <>
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden mb-2">
-                      <div className="h-full bg-gradient-to-r from-amber-400 to-yellow-500 rounded-full transition-all duration-500" style={{ width: `${tierInfo.progress}%` }} />
-                    </div>
-                    <p className="text-xs text-white/55 mb-5">
-                      已累计 <span className="text-amber-400 font-bold text-sm">¥{Math.round(totalSpentYuan).toLocaleString()}</span> 元，累计拿货 <span className="text-amber-400 font-bold">¥{tierInfo.diff.toLocaleString()}</span> 元可享 <span className="text-amber-400 font-bold">{tierInfo.next?.discount || ""}</span>
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-xs bg-white/10 inline-block px-3 py-1 rounded-full mb-5">🎉 已达最高等级</p>
-                )}
-
-                {/* 4个权益徽章（汉字，与小程序一致）*/}
-                <div className="flex justify-around pt-4 border-t border-white/8">
-                  {TIER_BENEFITS.map((b) => {
-                    const unlocked = tierInfo.idx >= b.tier;
-                    return (
-                      <div key={b.key} className="flex flex-col items-center gap-1.5">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold ${unlocked ? "bg-amber-400/20 border border-amber-400/40 text-amber-300" : "bg-white/8 border border-white/15 text-white/30"}`}>
-                          {b.badge}
-                        </div>
-                        <span className={`text-[11px] ${unlocked ? "text-white/80" : "text-white/40"}`}>{b.title}</span>
-                      </div>
-                    );
-                  })}
+                <p className="text-white/70 text-sm mb-4">已解锁全部商品批发价查看权。充值货款即可享拿货折扣 + 退换额度：</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <p className="text-[11px] text-white/50">首充 ¥6,000</p>
+                    <p className="text-amber-300 font-bold text-sm">拿货 2.8折</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <p className="text-[11px] text-white/50">充 ¥50,000</p>
+                    <p className="text-amber-300 font-bold text-sm">2.8折 + 退换5%</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <p className="text-[11px] text-white/50">充 ¥100,000</p>
+                    <p className="text-amber-300 font-bold text-sm">2.8折 + 退换10%</p>
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                    <p className="text-[11px] text-white/50">充 ¥300,000</p>
+                    <p className="text-amber-300 font-bold text-sm">2.6折 + 退换20%</p>
+                  </div>
                 </div>
-
-                {/* 注脚 + 充值入口 */}
-                <p className="text-[11px] text-white/40 mt-4 text-center">累计拿货额自动升级 · 连续6月不拿货将降级</p>
-                <Link href="/vip#deposit" className="mt-3 block text-center text-xs text-amber-300 hover:text-amber-200 transition-colors">
-                  充值解锁退换额度 + 拿货折扣 →
+                <Link href="/vip#deposit" className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors">
+                  立即充值解锁折扣 + 退换额度 →
                 </Link>
               </div>
             )}
-
-            {/* 会员权益解锁等级（4列横排）*/}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-              <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-                <Star className="w-5 h-5 text-amber-500" /> 权益解锁等级
-              </h2>
-              <p className="text-xs text-gray-400 mb-4">累计拿货额提升自动解锁更多权益</p>
-
-              {/* 4个权益徽章横排 */}
-              <div className="flex justify-between gap-2">
-                {TIER_BENEFITS.map((b) => {
-                  const unlocked = tierInfo.idx >= b.tier;
-                  return (
-                    <div key={b.key} className="flex-1 flex flex-col items-center">
-                      <div
-                        className={`w-14 h-14 rounded-full flex items-center justify-center mb-2 text-xl font-bold transition-all ${
-                          unlocked
-                            ? "bg-gradient-to-br from-amber-300 to-orange-400 text-white shadow-lg shadow-amber-200/40"
-                            : "bg-gray-100 text-gray-300"
-                        }`}
-                      >
-                        {unlocked ? b.badge : <Lock className="w-5 h-5" />}
-                      </div>
-                      <span className={`text-[11px] font-medium text-center leading-tight ${unlocked ? "text-gray-800" : "text-gray-400"}`}>
-                        {b.title}
-                      </span>
-                      <span className={`text-[10px] mt-0.5 ${unlocked ? "text-amber-600" : "text-gray-300"}`}>
-                        {unlocked ? "已解锁" : TIERS[b.tier].name.replace("会员", "")}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
 
             {/* ===== 销售代理工作台（管理员可见 + 认证店主/预存货款代理） ===== */}
             {(profile?.is_admin || profile?.store_owner_certified || profile?.membership_type === "deposit_discount") && (
@@ -599,24 +515,12 @@ export default function MyPage() {
                   {/* 规则内容 */}
                   <div className="px-6 py-5 space-y-5 text-sm text-gray-700 leading-relaxed">
 
-                    {/* 一、累计拿货解锁（免费） */}
+                    {/* 一、直接充值解锁（付费） */}
                     <section>
-                      <h4 className="font-bold text-gray-900 mb-2">【累计拿货解锁 · 免费】</h4>
-                      <p className="mb-2">认证店主后，按<strong>累计拿货金额</strong>自动升级，无需额外付费，解锁对应等级的<strong>拿货折扣权</strong>（不含退换额度）：</p>
+                      <h4 className="font-bold text-gray-900 mb-2">【充值解锁拿货折扣 + 退换额度 · 付费】</h4>
+                      <p className="mb-2">一次性充值货款，<strong>同时获得拿货折扣权 + 退换额度</strong>（认证店主可先看批发价，折扣与退换需充值解锁）：</p>
                       <ul className="list-disc pl-5 space-y-1 text-gray-600">
-                        <li><strong>L1 普通</strong>：认证即享批发价查看。</li>
-                        <li><strong>L2 5万会员</strong>（累计 ≥ ¥50,000）：拿货折扣 <strong>2.8折</strong>。</li>
-                        <li><strong>L3 10万会员</strong>（累计 ≥ ¥100,000）：拿货折扣 2.8折 + 新款抢先。</li>
-                        <li><strong>L4 30万会员</strong>（累计 ≥ ¥300,000）：拿货折扣 <strong>2.6折</strong> + 精准推荐 / 经营数据报告。</li>
-                      </ul>
-                      <p className="mt-2 text-xs text-gray-400">⚠️ 累计拿货仅解锁折扣权，<strong>不含退换额度</strong>；连续 6 个月不拿货，权益将逐步降级。</p>
-                    </section>
-
-                    {/* 二、直接充值解锁（付费） */}
-                    <section>
-                      <h4 className="font-bold text-gray-900 mb-2">【直接充值解锁 · 付费】</h4>
-                      <p className="mb-2">一次性充值货款，<strong>同时获得折扣权 + 退换额度</strong>：</p>
-                      <ul className="list-disc pl-5 space-y-1 text-gray-600">
+                        <li><strong>首充 ¥6,000</strong>：拿货 <strong>2.8折</strong>（无退换额度）。</li>
                         <li><strong>充值 ¥50,000</strong>：拿货 2.8折 + 退换额度 5%。</li>
                         <li><strong>充值 ¥100,000</strong>：拿货 2.8折 + 退换额度 10%。</li>
                         <li><strong>充值 ¥300,000</strong>：拿货 2.6折 + 退换额度 20%。</li>
@@ -624,7 +528,7 @@ export default function MyPage() {
                       <p className="mt-2 text-xs text-gray-400">退换额度在退货时按档位自动抵扣，折扣权与退换额度同时生效。</p>
                     </section>
 
-                    {/* 三、认证店主平行赛道 */}
+                    {/* 二、认证店主平行赛道 */}
                     <section>
                       <h4 className="font-bold text-gray-900 mb-2">【认证店主 · 平行赛道】</h4>
                       <p className="mb-2">除付费会员外，「认证店主」是一条<strong>完全免费</strong>的平行解锁路径：</p>
@@ -637,31 +541,35 @@ export default function MyPage() {
                       <p className="mt-2 text-xs text-gray-400">注：认证店主不享受退货补贴、新款抢先看、专属客服等付费会员特权。如需全部权益，建议同时开通付费会员。</p>
                     </section>
 
-                    {/* 四、等级对照表 */}
+                    {/* 充值档位一览 */}
                     <section>
-                      <h4 className="font-bold text-gray-900 mb-2">【等级权益一览】</h4>
+                      <h4 className="font-bold text-gray-900 mb-2">【充值档位一览】</h4>
                       <div className="overflow-x-auto">
                         <table className="w-full text-xs border-collapse">
                           <thead>
                             <tr className="bg-gray-50">
-                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">等级</th>
-                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">门槛(累计)</th>
-                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">解锁权益</th>
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">一次性充值</th>
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">拿货折扣</th>
+                              <th className="border border-gray-200 px-3 py-2 text-left font-semibold">退换额度</th>
                             </tr>
                           </thead>
                           <tbody>
-                            {TIERS.slice(1).map((t) => (
-                              <tr key={t.key}>
-                                <td className="border border-gray-200 px-3 py-2 font-medium"><span className="inline-block w-6 h-6 rounded-full bg-amber-100 text-amber-700 text-center text-xs font-bold mr-1 align-middle">{t.badge}</span>{t.name}</td>
-                                <td className="border border-gray-200 px-3 py-2">≥ ¥{t.min.toLocaleString()}</td>
-                                <td className="border border-gray-200 px-3 py-2">
-                                  {TIER_BENEFITS.filter(b => b.tier <= TIERS.indexOf(t)).map(b => b.title).join('、') || '—'}
-                                </td>
+                            {[
+                              { amount: "¥6,000", discount: "2.8折", ret: "无" },
+                              { amount: "¥50,000", discount: "2.8折", ret: "5%" },
+                              { amount: "¥100,000", discount: "2.8折", ret: "10%" },
+                              { amount: "¥300,000", discount: "2.6折", ret: "20%" },
+                            ].map((t) => (
+                              <tr key={t.amount}>
+                                <td className="border border-gray-200 px-3 py-2 font-medium">{t.amount}</td>
+                                <td className="border border-gray-200 px-3 py-2">{t.discount}</td>
+                                <td className="border border-gray-200 px-3 py-2">{t.ret}</td>
                               </tr>
                             ))}
                           </tbody>
                         </table>
                       </div>
+                      <p className="mt-2 text-xs text-gray-400">注：认证店主可免费看批发价；拿货折扣与退换额度均需一次性充值对应档位解锁。</p>
                     </section>
 
                     {/* 底部提示 */}

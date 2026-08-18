@@ -48,42 +48,37 @@
     </view>
   </view>
 
-  <!-- ═══════ 已登录 + 已认证：深色等级卡（同行截图2）═══════ -->
+  <!-- ═══════ 已登录 + 已认证：批发价 + 充值享折扣退换（深色卡）═══════ -->
   <view wx:if="{{isLoggedIn && isCertified}}" class="tier-card-dark">
     <!-- 标题行 -->
     <view class="tcd-header">
-      <text class="tcd-level">{{tierName}}<text class="tcd-badge">{{tierBadge}}</text></text>
+      <text class="tcd-level">认证店主<text class="tcd-badge">已认证</text></text>
       <view class="tcd-view-btn" bindtap="goVip"><text>查看权益</text></view>
     </view>
-    <!-- 等级一句话说明 -->
-    <text class="tcd-desc">{{tierDesc}}</text>
-    <!-- 进度条 -->
-    <view class="tcd-bar-wrap">
-      <view class="tcd-bar-track">
-        <view class="tcd-bar-fill" style="width:{{tierProgress}}%"></view>
+    <!-- 说明 -->
+    <text class="tcd-desc">已解锁全部商品批发价查看权；充值货款享拿货折扣 + 退换额度</text>
+    <!-- 4档充值 -->
+    <view class="tcd-recharge-grid">
+      <view class="tcdrg-item">
+        <text class="tcdrg-amt">首充¥6,000</text>
+        <text class="tcdrg-val">2.8折</text>
+      </view>
+      <view class="tcdrg-item">
+        <text class="tcdrg-amt">充¥50,000</text>
+        <text class="tcdrg-val">2.8折+退5%</text>
+      </view>
+      <view class="tcdrg-item">
+        <text class="tcdrg-amt">充¥100,000</text>
+        <text class="tcdrg-val">2.8折+退10%</text>
+      </view>
+      <view class="tcdrg-item">
+        <text class="tcdrg-amt">充¥300,000</text>
+        <text class="tcdrg-val">2.6折+退20%</text>
       </view>
     </view>
-    <!-- 拿货额 / 升级文字 -->
-    <view class="tcd-spent-text" wx:if="{{nextTierName}}">
-      已累计 <text class="tcd-spent-num">{{spentYuan}}</text> 元，累计拿货 <text class="tcd-diff-num">{{nextTierDiff}}</text> 元可享 <text class="tcd-diff-num">{{nextTierDiscount}}</text>
-    </view>
-    <view class="tcd-spent-text" wx:else>
-      已达最高等级 {{tierName}}，感谢一路同行 🎉
-    </view>
-    <!-- 4个权益图标行 -->
-    <view class="tcd-benefits">
-      <block wx:for="{{tierCardBenefits}}" wx:key="title">
-        <view class="tcdb-item">
-          <view class="tcdb-circle"><text>{{item.icon}}</text></view>
-          <text class="tcdb-label">{{item.title}}</text>
-        </view>
-      </block>
-    </view>
-    <!-- 等级计算说明 + 保级 -->
-    <text class="tcd-foot">累计拿货额自动升级 · 连续6月不拿货将降级</text>
-    <!-- 充值入口：累计赛道无退换，充值同时得折扣+退换 -->
+    <!-- 充值入口 -->
     <view class="tcd-price-entry" bindtap="goVipDeposit">
-      <text class="tcd-price-txt">充值解锁退换额度 + 拿货折扣 →</text>
+      <text class="tcd-price-txt">立即充值解锁折扣 + 退换额度 →</text>
     </view>
   </view>
 

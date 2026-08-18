@@ -18,6 +18,8 @@ Page({
   onLoad:function(){ this.fetchAgentStatus(); },
   onShow:function(){ this.fetchAgentStatus(); },
 
+  goAgentCenter:function(){ wx.navigateTo({url:'/pages/agent-center/index'}); },
+
   fetchAgentStatus:function(){
     var t=this;
     app.getOpenid().then(function(openid){

@@ -128,6 +128,26 @@ export async function POST(request: NextRequest) {
 async function autoActivateMembership(supabase: any, userId: string, productId: string, orderNo: string) {
   console.log('[自动开通会员]', { userId, productId, orderNo });
 
+  // 拿货会员充值（wholesale_5w/10w/30w）：走代理店铺自动开通逻辑
+  const WHOLESALE_PLANS: Record<string, { amount: number; discount: number; ret: number }> = {
+    wholesale_6k: { amount: 600000, discount: 0.28, ret: 0 },
+    wholesale_5w: { amount: 5000000, discount: 0.28, ret: 0.05 },
+    wholesale_10w: { amount: 10000000, discount: 0.28, ret: 0.10 },
+    wholesale_30w: { amount: 30000000, discount: 0.26, ret: 0.20 },
+  };
+  if (WHOLESALE_PLANS[productId]) {
+    const plan = WHOLESALE_PLANS[productId];
+    const svc = getServiceRoleClient();
+    await activateStoreForDepositAgent(svc, userId, {
+      deposit_amount: plan.amount,
+      discount_rate: plan.discount,
+      return_rate: plan.ret,
+      plan_id: productId,
+    });
+    console.log('[自动开通会员] wholesale 代理店铺已开通', { userId, productId });
+    return;
+  }
+
   // 根据 productId/planId 判断会员类型和有效期
   let membershipType = 'none';
   let expiresAt = new Date();
@@ -215,46 +235,108 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
       })
       .eq('order_no', out_trade_no);
 
-    // 测试订单（agent_test_cent，1 分）仅验证链路，不发放真实预存货款/会员权益
+    // 测试订单（agent_test_cent，1 分）仅验证链路，不发放真实权益
     if (rec.plan_id === 'agent_test_cent') {
       console.log('[代理充值] 测试订单已标记 paid，不发放权益', { order: out_trade_no });
       return;
     }
 
-    // 根据 openid 反查用户，更新 profiles（预存货款余额累加，不覆盖）
+    // 根据 openid 反查用户，自动开通代理店铺
     const openid = rec.openid;
     const { data: byWechat } = await supabase
       .from('profiles')
-      .select('id, deposit_amount, deposit_discount_rate, deposit_return_rate')
+      .select('id')
       .eq('wechat_openid', openid)
       .maybeSingle();
     const { data: byWx } = await supabase
       .from('profiles')
-      .select('id, deposit_amount, deposit_discount_rate, deposit_return_rate')
+      .select('id')
       .eq('wx_openid', openid)
       .maybeSingle();
 
     const profile = byWechat || byWx;
     if (profile?.id) {
-      const curAmount = Number((profile as any).deposit_amount) || 0;
-      const curDisc = Number((profile as any).deposit_discount_rate) || 1;
-      const curRet = Number((profile as any).deposit_return_rate) || 0;
-      const addAmount = Number(rec.deposit_amount) || 0;
-      await supabase
-        .from('profiles')
-        .update({
-          membership_type: 'deposit_discount',
-          deposit_amount: curAmount + addAmount,            // 累加余额，多次充值不丢失
-          deposit_discount_rate: Math.min(curDisc, rec.discount_rate || 1), // 取更优（更低）折扣
-          deposit_return_rate: Math.max(curRet, rec.return_rate || 0),     // 取更高退比
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', profile.id);
-      console.log('[代理充值] 已激活', { order: out_trade_no, user: profile.id, addAmount });
+      await activateStoreForDepositAgent(supabase, profile.id, {
+        deposit_amount: Number(rec.deposit_amount) || 0,
+        discount_rate: Number(rec.discount_rate) || 1,
+        return_rate: Number(rec.return_rate) || 0,
+        plan_id: rec.plan_id,
+      });
+      console.log('[代理充值] 已激活并开通店铺', { order: out_trade_no, user: profile.id });
     } else {
       console.log('[代理充值] 已到账，但未找到关联 profile，openid=', openid);
     }
   } catch (err: any) {
     console.error('[代理充值回调错误]', err);
+  }
+}
+
+// 预存货款充值后自动开通代理店铺（复用于 agent_recharges 与 membership_orders wholesale 计划）
+async function activateStoreForDepositAgent(
+  svc: any,
+  userId: string,
+  rec: { deposit_amount: number; discount_rate: number; return_rate: number; plan_id?: string }
+) {
+  try {
+    const { data: profile } = await svc
+      .from('profiles')
+      .select('id, full_name, store_name, phone, wechat, city, invite_code, deposit_amount, deposit_discount_rate, deposit_return_rate')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (!profile) return;
+
+    // 兜底生成推广码
+    let inviteCode = profile.invite_code || null;
+    if (!inviteCode) {
+      inviteCode = 'LZD' + String(userId).replace(/-/g, '').slice(0, 8).toUpperCase();
+    }
+
+    const curAmount = Number(profile.deposit_amount) || 0;
+    const curDisc = Number(profile.deposit_discount_rate) || 1;
+    const curRet = Number(profile.deposit_return_rate) || 0;
+    const addAmount = Number(rec.deposit_amount) || 0;
+
+    await svc
+      .from('profiles')
+      .update({
+        membership_type: 'deposit_discount',
+        store_owner_certified: true,
+        certified_at: new Date().toISOString(),
+        deposit_amount: curAmount + addAmount,
+        deposit_discount_rate: Math.min(curDisc, rec.discount_rate || 1),
+        deposit_return_rate: Math.max(curRet, rec.return_rate || 0),
+        invite_code: inviteCode,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
+
+    // 自动创建店铺（如无 active 店铺）
+    const { data: existingStore } = await svc
+      .from('stores')
+      .select('id')
+      .eq('owner_id', userId)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (!existingStore) {
+      const defaultName = profile.store_name || (profile.full_name ? profile.full_name + '的店铺' : '我的店铺');
+      await svc.from('stores').insert({
+        owner_id: userId,
+        name: defaultName,
+        contact_person: profile.full_name || null,
+        phone: profile.phone || null,
+        wechat: profile.wechat || null,
+        city: profile.city || null,
+        status: 'active',
+        business_data: {
+          source: 'auto_deposit',
+          plan_id: rec.plan_id || null,
+          auto_created_at: new Date().toISOString(),
+        },
+      });
+    }
+  } catch (err: any) {
+    console.error('[activateStoreForDepositAgent]', err);
   }
 }

@@ -1913,6 +1913,17 @@ export default function BuyerPage() {
                        onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
                     <div className="flex items-center justify-between">
                       <div>
+                        <span className="text-xs font-bold text-green-700">📦 拿货会员·首充6000</span>
+                        <p className="text-[10px] text-gray-500">2.8折·无退换额度</p>
+                      </div>
+                      <span className="text-sm font-bold text-green-600">充值¥6,000</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-lg p-3 border border-green-200 hover:border-green-400 transition-colors cursor-pointer"
+                       onClick={() => user ? router.push('/vip') : router.push('/login?redirect=/vip')}>
+                    <div className="flex items-center justify-between">
+                      <div>
                         <span className="text-xs font-bold text-green-700">📦 拿货会员·充5万</span>
                         <p className="text-[10px] text-gray-500">2.8折·退换额度5%</p>
                       </div>
