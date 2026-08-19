@@ -63,6 +63,9 @@ Page({
     // 商品素材
     materialList: [],
     shareProduct: null,
+    batchDownloading: false,
+    batchDone: 0,
+    batchFailed: 0,
     // 弹窗
     showEdit: false,
     editIndex: -1,
@@ -175,13 +178,25 @@ Page({
   onShareAppMessage: function (res) {
     var code = this.data.inviteCode || '';
     var name = this.data.storeName || this.data.fullName || '精选推荐';
-    var shareProduct = this.data.shareProduct;
-    if (shareProduct && shareProduct.product_id) {
+    // 优先从 button dataset 取（更可靠）
+    var ds = (res && res.target && res.target.dataset) || {};
+    var pid = ds.productId;
+    var title = ds.title;
+    var cover = ds.cover;
+    if (!pid) {
+      var shareProduct = this.data.shareProduct;
+      if (shareProduct && shareProduct.product_id) {
+        pid = shareProduct.product_id;
+        title = shareProduct.title;
+        cover = shareProduct.cover_image;
+      }
+    }
+    if (pid) {
       this.setData({ shareProduct: null });
       return {
-        title: (shareProduct.title ? shareProduct.title.slice(0, 24) : name + ' 精选推荐'),
-        path: 'pages/shop/index?id=' + shareProduct.product_id + '&ref=' + encodeURIComponent(code),
-        imageUrl: shareProduct.cover_image || ''
+        title: (title ? (title + '').slice(0, 24) : name + ' 精选推荐'),
+        path: 'pages/shop/index?id=' + pid + '&ref=' + encodeURIComponent(code),
+        imageUrl: cover || ''
       };
     }
     return {
@@ -193,6 +208,61 @@ Page({
     var idx = e.currentTarget.dataset.index;
     var item = this.data.materialList[idx];
     if (item) this.setData({ shareProduct: item });
+  },
+  // 批量下载全部素材图到相册
+  downloadAllImages: function () {
+    var t = this;
+    if (t.data.batchDownloading) return;
+    var list = (t.data.materialList || []).filter(function (x) { return x.cover_image; });
+    if (list.length === 0) { wx.showToast({ title: '没有可下载的图片', icon: 'none' }); return; }
+
+    // 先检查/申请相册权限
+    wx.getSetting({
+      success: function (settingRes) {
+        var auth = settingRes.authSetting['scope.writePhotosAlbum'];
+        if (auth === false) {
+          wx.showModal({
+            title: '需要相册权限', content: '请到设置中开启保存到相册权限', showCancel: false,
+            success: function () { wx.openSetting(); }
+          });
+          return;
+        }
+        t.setData({ batchDownloading: true, batchDone: 0, batchFailed: 0 });
+        wx.showLoading({ title: '准备下载...', mask: true });
+        var done = 0, failed = 0, i = 0;
+        function next() {
+          if (i >= list.length) {
+            t.setData({ batchDownloading: false, batchDone: done, batchFailed: failed });
+            wx.hideLoading();
+            var msg = '已保存 ' + done + ' 张';
+            if (failed > 0) msg += '，失败 ' + failed + ' 张';
+            wx.showModal({ title: '下载完成', content: msg, showCancel: false });
+            return;
+          }
+          var item = list[i++];
+          var url = item.cover_image;
+          // 确保走代理
+          if (url.indexOf('supabase.co') > -1) {
+            url = url.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
+            url = url.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
+          }
+          wx.showLoading({ title: '保存中 ' + i + '/' + list.length, mask: true });
+          wx.downloadFile({
+            url: url,
+            success: function (res) {
+              if (res.statusCode !== 200) { failed++; next(); return; }
+              wx.saveImageToPhotosAlbum({
+                filePath: res.tempFilePath,
+                success: function () { done++; t.setData({ batchDone: done }); next(); },
+                fail: function () { failed++; t.setData({ batchFailed: failed }); next(); }
+              });
+            },
+            fail: function () { failed++; t.setData({ batchFailed: failed }); next(); }
+          });
+        }
+        next();
+      }
+    });
   },
   goDetail: function (e) {
     var id = e.currentTarget.dataset.id;

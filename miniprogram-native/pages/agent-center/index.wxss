@@ -94,12 +94,18 @@
 .oa-btn { font-size: 24rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 28rpx; border-radius: 999rpx; }
 
 /* 素材 */
+.mat-toolbar { display: flex; align-items: center; justify-content: space-between; margin-top: 24rpx; }
+.mat-count { font-size: 24rpx; color: #9a8f8a; }
+.mat-batch { font-size: 24rpx; color: #2d1b2e; background: #C9A24B; font-weight: 700; padding: 14rpx 26rpx; border-radius: 999rpx; }
+.mat-batch-loading { opacity: 0.7; }
 .mat-card { background: #fff; border-radius: 24rpx; padding: 24rpx; margin-top: 24rpx; }
 .mat-top { display: flex; align-items: center; }
 .mat-img { width: 140rpx; height: 140rpx; border-radius: 16rpx; background: #f3eee7; }
-.mat-info { flex: 1; margin-left: 24rpx; }
-.mat-title { display: block; font-size: 28rpx; color: #2d1b2e; font-weight: 600; }
-.mat-price { display: block; font-size: 24rpx; color: #C9A24B; margin-top: 10rpx; }
+.mat-info { flex: 1; margin-left: 24rpx; overflow: hidden; }
+.mat-title { display: block; font-size: 28rpx; color: #2d1b2e; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mat-price-row { display: flex; align-items: center; margin-top: 10rpx; flex-wrap: wrap; }
+.mat-price-retail { display: inline-block; font-size: 22rpx; color: #b8ada8; text-decoration: line-through; margin-right: 16rpx; }
+.mat-price-custom { display: inline-block; font-size: 26rpx; color: #C9A24B; font-weight: 700; }
 .mat-actions { display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 20rpx; }
 .mat-btn { font-size: 22rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 22rpx; border-radius: 999rpx; text-align: center; }
 .mat-btn-gold { background: #C9A24B; color: #2d1b2e; font-weight: 700; }
