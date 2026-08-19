@@ -538,6 +538,7 @@ Page({
       wx.request({
         url: BASE + '/api/tryon/generate/' + encodeURIComponent(generationId),
         method: 'GET',
+        timeout: 60000,
         success: function (res) {
           if (done) return;
           var d = res.data || {};
@@ -573,7 +574,7 @@ Page({
       });
     };
     poll();
-    var timer = setInterval(poll, 3000);
+    var timer = setInterval(poll, 5000);
   },
 
   noLeft: function (label) {
