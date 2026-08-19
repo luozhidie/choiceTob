@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
           try {
             let enhancedBuf: Buffer;
             // 优先阿里云 AI 人脸修复（细节增强）；无 key 或调用失败时回退 sharp 本地增强
-            const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(resultUrl) : null;
+            const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(imgBuf) : null;
             enhancedBuf = aiBuf ?? (await enhanceBuffer(imgBuf, { scale: 2 }));
             const enName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
             await supabase.storage.from(BUCKET).upload(enName, enhancedBuf, {

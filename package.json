@@ -15,6 +15,7 @@
     "@napi-rs/canvas": "^1.0.6",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.2",
+    "ali-oss": "^6.23.0",
     "axios": "^1.17.0",
     "cheerio": "^1.2.0",
     "docx": "^9.6.1",

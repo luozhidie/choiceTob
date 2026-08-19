@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     await supabase.storage.from(BUCKET).upload(srcName, buffer, { contentType: "image/jpeg", upsert: false });
     const srcUrl = supabase.storage.from(BUCKET).getPublicUrl(srcName).data.publicUrl;
 
-    const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(srcUrl) : null;
+    const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(buffer) : null;
     const enhanced = aiBuf ?? (await enhanceBuffer(buffer, { scale: 2 }));
 
     const outName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
