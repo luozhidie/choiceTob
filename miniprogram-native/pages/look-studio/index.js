@@ -428,47 +428,152 @@ Page({
   runAdd: function (item, ent, tier) {
     var t = this;
     var stackLen = this.data.stack.length;
-    // 第 1 件：personPath 是真人照；后续：用 canvasUrl 作基底，personPath 仅作占位文件（后端忽略）
-    var fd = { userId: 'mini' };
+    var garmentImageUrl = rewriteSupabase(item.cover);
+    var isRemotePerson = typeof this.data.personPath === 'string' && /^https?:\/\//.test(this.data.personPath);
+    t.setData({ addingId: item.id, loading: true });
+
+    // 统一完成回调：扣权益、写记录、更新画布
+    var onDone = function (resultUrl) {
+      resultUrl = rewriteSupabase(resultUrl);
+      app.getOpenid().then(function (openid) {
+        wx.request({ url: BASE + '/api/tryon/entitlement', method: 'POST', data: { openid: openid, tier: tier } });
+      }).catch(function () {});
+      app.getOpenid().then(function (openid) {
+        wx.request({
+          url: BASE + '/api/tryon/records', method: 'POST',
+          data: { openid: openid, mode: tier, cloth_urls: [item.cover], result_url: resultUrl }
+        });
+      }).catch(function () {});
+      var newStack = t.data.stack.concat([{ id: item.id, title: item.title, cover: item.cover, resultUrl: resultUrl }]);
+      t.syncEntitlement();
+      t.setData({ canvasUrl: resultUrl, stack: newStack, loading: false, addingId: '', showShopPick: false });
+    };
+
+    // 创建任务并轮询
+    var doGenerate = function (personImageUrl) {
+      wx.showLoading({ title: stackLen === 0 ? '生成第 1 件...' : '叠加第 ' + (stackLen + 1) + ' 件...' });
+      wx.request({
+        url: BASE + '/api/tryon/generate',
+        method: 'POST',
+        data: {
+          userId: 'mini',
+          personImageUrl: personImageUrl,
+          garmentImageUrl: garmentImageUrl,
+          title: item.title || '单品'
+        },
+        success: function (res) {
+          var d = res.data || {};
+          if (d.error) {
+            wx.hideLoading();
+            wx.showModal({ title: '试衣失败', content: String(d.error).slice(0, 160), showCancel: false });
+            t.setData({ loading: false, addingId: '' });
+            return;
+          }
+          if (d.generationId) {
+            t.pollTryon(d.generationId, onDone);
+          } else if (d.resultUrl) {
+            // 兼容同步返回
+            wx.hideLoading();
+            onDone(d.resultUrl);
+          } else {
+            wx.hideLoading();
+            wx.showToast({ title: '生成异常', icon: 'none' });
+            t.setData({ loading: false, addingId: '' });
+          }
+        },
+        fail: function () {
+          wx.hideLoading();
+          wx.showToast({ title: '网络错误', icon: 'none' });
+          t.setData({ loading: false, addingId: '' });
+        }
+      });
+    };
+
     if (stackLen === 0) {
-      fd.garmentImageUrl = item.cover;
-    } else {
-      fd.personImageUrl = this.data.canvasUrl;
-      fd.garmentImageUrl = item.cover;
-    }
-    this.setData({ addingId: item.id, loading: true });
-    wx.showLoading({ title: stackLen === 0 ? '生成第 1 件...' : '叠加第 ' + (stackLen + 1) + ' 件...' });
-    wx.uploadFile({
-      url: BASE + '/api/tryon/generate',
-      filePath: this.data.personPath,
-      name: 'personImage',
-      formData: fd,
-      success: function (res) {
-        wx.hideLoading();
-        var d; try { d = JSON.parse(res.data); } catch (e2) { d = {}; }
-        if (d.error) { wx.showModal({ title: '试衣失败', content: String(d.error).slice(0, 160), showCancel: false }); t.setData({ loading: false, addingId: '' }); return; }
-        var resultUrl = rewriteSupabase(d.resultUrl);
-        // 扣权益
-        app.getOpenid().then(function (openid) {
-          wx.request({ url: BASE + '/api/tryon/entitlement', method: 'POST', data: { openid: openid, tier: tier } });
-        }).catch(function () {});
-        // 记录
-        app.getOpenid().then(function (openid) {
-          wx.request({
-            url: BASE + '/api/tryon/records', method: 'POST',
-            data: { openid: openid, mode: tier, cloth_urls: [item.cover], result_url: resultUrl }
-          });
-        }).catch(function () {});
-        var newStack = t.data.stack.concat([{ id: item.id, title: item.title, cover: item.cover, resultUrl: resultUrl }]);
-        t.syncEntitlement();
-        t.setData({ canvasUrl: resultUrl, stack: newStack, loading: false, addingId: '', showShopPick: false });
-      },
-      fail: function () {
-        wx.hideLoading();
-        wx.showToast({ title: '网络错误', icon: 'none' });
+      // 第 1 件：先拿到稳定人像 URL（远程 URL 直接用；本地文件上传到服务端自动抠图）
+      if (isRemotePerson) {
+        doGenerate(this.data.personPath);
+      } else if (this.data.personPath) {
+        wx.uploadFile({
+          url: BASE + '/api/tryon/upload-person',
+          filePath: this.data.personPath,
+          name: 'personImage',
+          success: function (res) {
+            var d; try { d = JSON.parse(res.data); } catch (e2) { d = {}; }
+            if (d.error || !d.personImageUrl) {
+              wx.hideLoading();
+              wx.showModal({ title: '上传人像失败', content: String(d.error || '未返回地址').slice(0, 140), showCancel: false });
+              t.setData({ loading: false, addingId: '' });
+              return;
+            }
+            doGenerate(d.personImageUrl);
+          },
+          fail: function (err) {
+            wx.hideLoading();
+            var em = (err && err.errMsg) || '';
+            var tip = em.indexOf('domain') > -1 ? '域名未生效：请确认 uploadFile 合法域名已保存 https://colour-choice.art。'
+              : em.indexOf('timeout') > -1 ? '上传超时，请重试。' : '上传失败：' + em;
+            wx.showModal({ title: '上传人像失败', content: tip.slice(0, 200), showCancel: false });
+            t.setData({ loading: false, addingId: '' });
+          }
+        });
+      } else {
+        wx.showToast({ title: '请先上传你的照片', icon: 'none' });
         t.setData({ loading: false, addingId: '' });
       }
-    });
+    } else {
+      // 后续叠加：以上一次结果图为基底
+      doGenerate(this.data.canvasUrl);
+    }
+  },
+
+  pollTryon: function (generationId, onDone) {
+    var t = this;
+    var attempts = 0;
+    var maxAttempts = 40;
+    var done = false;
+    var poll = function () {
+      if (done) return;
+      attempts++;
+      wx.request({
+        url: BASE + '/api/tryon/generate/' + encodeURIComponent(generationId),
+        method: 'GET',
+        success: function (res) {
+          if (done) return;
+          var d = res.data || {};
+          if (d.error) {
+            done = true;
+            wx.hideLoading();
+            wx.showModal({ title: '试衣失败', content: String(d.error).slice(0, 160), showCancel: false });
+            t.setData({ loading: false, addingId: '' });
+            return;
+          }
+          if (d.status === 'COMPLETED' && d.resultUrl) {
+            done = true;
+            wx.hideLoading();
+            onDone(d.resultUrl);
+            return;
+          }
+          if (attempts >= maxAttempts) {
+            done = true;
+            wx.hideLoading();
+            wx.showModal({ title: '生成超时', content: '试衣生成时间较长，请稍后到历史记录查看结果。', showCancel: false });
+            t.setData({ loading: false, addingId: '' });
+          }
+        },
+        fail: function () {
+          if (done) return;
+          if (attempts >= maxAttempts) {
+            done = true;
+            wx.hideLoading();
+            wx.showToast({ title: '网络错误', icon: 'none' });
+            t.setData({ loading: false, addingId: '' });
+          }
+        }
+      });
+    };
+    poll();
+    var timer = setInterval(poll, 3000);
   },
 
   noLeft: function (label) {
