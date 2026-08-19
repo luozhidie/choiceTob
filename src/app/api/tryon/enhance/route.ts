@@ -64,7 +64,17 @@ export async function POST(request: NextRequest) {
     }
     const finalUrl = supabase.storage.from(BUCKET).getPublicUrl(outName).data.publicUrl;
 
-    return NextResponse.json({ ok: true, resultUrl: finalUrl, enhanced: true, ai: Boolean(aiBuf) });
+    return NextResponse.json({
+      ok: true,
+      resultUrl: finalUrl,
+      enhanced: true,
+      ai: Boolean(aiBuf),
+      debug: {
+        enabled: ALIYUN_VISION_ENABLED,
+        hasId: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_ID),
+        hasSecret: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_SECRET),
+      },
+    });
   } catch (err: any) {
     console.error("[tryon/enhance] 异常", err);
     // 增强失败不影响原图：若传入的是 URL，回退返回原图，保证流程不中断
