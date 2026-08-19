@@ -1,7 +1,7 @@
 // app/api/tryon/enhance/route.ts
 // 独立画质修复接口：接收 imageUrl（或上传文件），返回增强后的 Supabase 公共 URL。
 // 用于前端"画质修复 / 人像增强"按钮手动触发或二次增强对比。
-// 后端增强逻辑见 lib/tryon/enhance.ts（当前为 sharp 本地增强，零成本）。
+// 后端增强逻辑见 lib/tryon/enhance.ts：优先阿里云 AI 人脸增强（EnhanceFace），否则 sharp 本地增强兜底。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
@@ -46,11 +46,7 @@ export async function POST(request: NextRequest) {
       buffer = Buffer.from(await r.arrayBuffer());
     }
 
-    // 先落盘原图拿公网 URL；配置了阿里云则优先 AI 人脸修复，否则本地 sharp 增强
-    const srcName = `tryon-src-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
-    await supabase.storage.from(BUCKET).upload(srcName, buffer, { contentType: "image/jpeg", upsert: false });
-    const srcUrl = supabase.storage.from(BUCKET).getPublicUrl(srcName).data.publicUrl;
-
+    // 配置了阿里云则优先 AI 人脸修复，否则本地 sharp 增强兜底
     let aiBuf: Buffer | null = null;
     let aiError: string | null = null;
     if (ALIYUN_VISION_ENABLED) {
@@ -79,12 +75,6 @@ export async function POST(request: NextRequest) {
       enhanced: true,
       ai: Boolean(aiBuf),
       aiError,
-      debug: {
-        enabled: ALIYUN_VISION_ENABLED,
-        hasId: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_ID),
-        hasSecret: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_SECRET),
-        hasBucket: Boolean(process.env.ALIYUN_OSS_BUCKET),
-      },
     });
   } catch (err: any) {
     console.error("[tryon/enhance] 异常", err);
