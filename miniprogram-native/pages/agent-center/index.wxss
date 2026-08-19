@@ -94,14 +94,17 @@
 .oa-btn { font-size: 24rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 28rpx; border-radius: 999rpx; }
 
 /* 素材 */
-.mat-card { background: #fff; border-radius: 24rpx; padding: 24rpx; margin-top: 24rpx; display: flex; align-items: center; }
+.mat-card { background: #fff; border-radius: 24rpx; padding: 24rpx; margin-top: 24rpx; }
+.mat-top { display: flex; align-items: center; }
 .mat-img { width: 140rpx; height: 140rpx; border-radius: 16rpx; background: #f3eee7; }
 .mat-info { flex: 1; margin-left: 24rpx; }
 .mat-title { display: block; font-size: 28rpx; color: #2d1b2e; font-weight: 600; }
 .mat-price { display: block; font-size: 24rpx; color: #C9A24B; margin-top: 10rpx; }
-.mat-actions { display: flex; flex-direction: column; gap: 14rpx; }
+.mat-actions { display: flex; flex-wrap: wrap; gap: 14rpx; margin-top: 20rpx; }
 .mat-btn { font-size: 22rpx; color: #2d1b2e; background: #f3eee7; padding: 12rpx 22rpx; border-radius: 999rpx; text-align: center; }
 .mat-btn-gold { background: #C9A24B; color: #2d1b2e; font-weight: 700; }
+.mat-share { margin: 0; padding: 12rpx 22rpx; line-height: normal; display: inline-block; }
+.mat-share::after { border: none; }
 
 /* 业绩 */
 .perf-row { display: flex; margin-top: 24rpx; }

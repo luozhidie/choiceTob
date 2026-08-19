@@ -62,6 +62,7 @@ Page({
     orderMore: true,
     // 商品素材
     materialList: [],
+    shareProduct: null,
     // 弹窗
     showEdit: false,
     editIndex: -1,
@@ -171,13 +172,31 @@ Page({
   },
 
   // 分享
-  onShareAppMessage: function () {
+  onShareAppMessage: function (res) {
     var code = this.data.inviteCode || '';
     var name = this.data.storeName || this.data.fullName || '精选推荐';
+    var shareProduct = this.data.shareProduct;
+    if (shareProduct && shareProduct.product_id) {
+      this.setData({ shareProduct: null });
+      return {
+        title: (shareProduct.title ? shareProduct.title.slice(0, 24) : name + ' 精选推荐'),
+        path: 'pages/shop/index?id=' + shareProduct.product_id + '&ref=' + encodeURIComponent(code),
+        imageUrl: shareProduct.cover_image || ''
+      };
+    }
     return {
       title: name + ' 的精选店 · 先试再买',
-      path: 'pages/agent-shop/index?ref=' + code
+      path: 'pages/agent-shop/index?ref=' + encodeURIComponent(code)
     };
+  },
+  setShareProduct: function (e) {
+    var idx = e.currentTarget.dataset.index;
+    var item = this.data.materialList[idx];
+    if (item) this.setData({ shareProduct: item });
+  },
+  goDetail: function (e) {
+    var id = e.currentTarget.dataset.id;
+    if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id });
   },
 
   // 分享给客户试衣

@@ -210,14 +210,19 @@ module.exports = {
     <view wx:if="{{tab==='material'}}" class="tab-page">
       <view wx:if="{{materialList.length===0}}" class="list-empty">暂无商品素材</view>
       <view wx:for="{{materialList}}" wx:key="product_id" class="mat-card">
-        <image class="mat-img" src="{{item.cover_image}}" mode="aspectFill"/>
-        <view class="mat-info">
-          <text class="mat-title">{{item.title}}</text>
-          <text class="mat-price">零售 ¥{{f.yuan(item.retail_price)}}</text>
+        <view class="mat-top" bindtap="goDetail" data-id="{{item.product_id}}">
+          <image class="mat-img" src="{{item.cover_image}}" mode="aspectFill" catchtap="goDetail" data-id="{{item.product_id}}"/>
+          <view class="mat-info" catchtap="goDetail" data-id="{{item.product_id}}">
+            <text class="mat-title">{{item.title}}</text>
+            <text class="mat-price">零售 ¥{{f.yuan(item.retail_price)}}</text>
+          </view>
         </view>
-        <view class="mat-actions">
+        <view class="mat-actions" catchtap="noop">
           <view class="mat-btn" bindtap="copyMaterial" data-index="{{index}}">复制文案</view>
           <view class="mat-btn mat-btn-gold" bindtap="saveImage" data-url="{{item.cover_image}}">下载图片</view>
+          <view class="mat-btn" bindtap="goDetail" data-id="{{item.product_id}}">查看详情</view>
+          <view class="mat-btn mat-btn-gold" bindtap="goDetail" data-id="{{item.product_id}}">去下单</view>
+          <button class="mat-btn mat-share" open-type="share" bindtap="setShareProduct" data-index="{{index}}">分享</button>
         </view>
       </view>
     </view>
