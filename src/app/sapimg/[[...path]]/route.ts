@@ -11,10 +11,12 @@ export async function GET(request: NextRequest, { params }: { params: { path?: s
   const target = `${UPSTREAM}/${upstreamPath}${search}`;
 
   try {
+    const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const upstreamRes = await fetch(target, {
       method: "GET",
       headers: {
         accept: request.headers.get("accept") || "image/webp,image/apng,image/*,*/*;q=0.8",
+        ...(apiKey ? { apikey: apiKey, Authorization: `Bearer ${apiKey}` } : {}),
       },
       redirect: "follow",
     });

@@ -11,6 +11,7 @@ export async function GET(request: NextRequest, { params }: { params: { path?: s
   const target = `${UPSTREAM}/${upstreamPath}${search}`;
 
   try {
+    // /simg 代理的是 fxeknwkmytzedkhplozn（旧项目）的公共存储桶，匿名即可访问，无需 key
     const upstreamRes = await fetch(target, {
       method: "GET",
       headers: {
