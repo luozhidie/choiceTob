@@ -55,6 +55,7 @@
         <view wx:if="{{selected.indexOf(item.id) >= 0}}" class="gcheck">✓</view>
       </view>
     </view>
+    <view class="hint" style="color:#C9A24B;margin-top:12rpx;">✨ AI 已自动画质增强（超分 + 锐化）</view>
   </view>
 
   <!-- ④ 结论 -->

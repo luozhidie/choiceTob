@@ -64,5 +64,6 @@
     <button class="btn ghost" bindtap="save">保存到相册</button>
     <button class="btn ghost" bindtap="continueStack" style="margin-top:12rpx;border-color:#C9A24B;color:#C9A24B;">＋ 继续叠加配饰（鞋 / 包 / 项链）</button>
     <view class="hint">点击图片可放大查看。</view>
+    <view class="hint" style="color:#C9A24B;margin-top:8rpx;">✨ AI 已自动画质增强（超分 + 锐化）</view>
   </view>
 </view>
