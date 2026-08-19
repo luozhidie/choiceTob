@@ -4,6 +4,15 @@ import { NextRequest, NextResponse } from "next/server";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 
+// Genlook 在海外服务器直连图片源更稳；把本站代理域名反写为 Supabase 原始公共 URL，
+// 这样前端/网站端无需关心图片源，只管传可能已被代理改写过的 URL 即可。
+function reverseProxy(u: string): string {
+  if (typeof u !== "string") return u;
+  u = u.replace(/^https?:\/\/colour-choice\.art\/simg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
+  u = u.replace(/^https?:\/\/colour-choice\.art\/sapimg\//i, "https://lzdchoice.supabase.co/");
+  return u;
+}
+
 function translateError(msg: string): string {
   if (!msg) return "试衣失败";
   const m = msg.toLowerCase();
@@ -34,6 +43,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少衣服图片" }, { status: 400 });
     }
 
+    // 反写为 Supabase 原始公共 URL，确保 Genlook 服务器可直连拉取
+    const personUrl = reverseProxy(personImageUrl);
+    const garmentUrl = reverseProxy(garmentImageUrl);
+
     const apiKey = process.env.GENLOOK_API_KEY;
     if (!apiKey) {
       console.error("[tryon/generate] 未配置 GENLOOK_API_KEY");
@@ -53,10 +66,10 @@ export async function POST(request: NextRequest) {
           {
             externalId,
             title: productTitle,
-            images: [{ source: { url: garmentImageUrl } }],
+            images: [{ source: { url: garmentUrl } }],
           },
         ],
-        person: { image: { source: { url: personImageUrl } } },
+        person: { image: { source: { url: personUrl } } },
         externalUserId: userId,
         output: { watermark: false },
       }),
