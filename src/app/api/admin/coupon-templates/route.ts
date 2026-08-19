@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
     if (!title || !discount_amount) {
       return NextResponse.json({ error: "标题和抵扣金额必填" }, { status: 400 });
     }
-    // coupon_type 受 CHECK 约束：general / vip_gift / festival / invite_reward
-    const allowed = ["general", "vip_gift", "festival", "invite_reward"];
+    // coupon_type 受 CHECK 约束：general / vip_gift / festival
+    const allowed = ["general", "vip_gift", "festival"];
     if (!allowed.includes(coupon_type)) {
       return NextResponse.json({ error: "优惠券类型不合法" }, { status: 400 });
     }

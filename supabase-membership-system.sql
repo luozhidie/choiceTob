@@ -64,7 +64,7 @@ ON CONFLICT (level_key) DO UPDATE SET
 -- 【3】coupons 表补充：增加 admin 管理字段
 -- 注意：原有 coupons 表 user_id 引用 auth.users(id)
 ALTER TABLE coupons
-  ADD COLUMN IF NOT EXISTS coupon_type TEXT DEFAULT 'general' CHECK (coupon_type IN ('general', 'vip_gift', 'festival', 'invite_reward')),
+  ADD COLUMN IF NOT EXISTS coupon_type TEXT DEFAULT 'general' CHECK (coupon_type IN ('general', 'vip_gift', 'festival')),
   ADD COLUMN IF NOT EXISTS batch_id UUID,                              -- 批量发放批次ID
   ADD COLUMN IF NOT EXISTS total_count INTEGER DEFAULT 0,             -- 总发放数量
   ADD COLUMN IF NOT EXISTS used_count INTEGER DEFAULT 0;              -- 已使用数量
@@ -75,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_coupons_expire ON coupons(expire_at) WHERE status
 
 -- 【4】red_packets 表补充：增加 admin 管理字段
 ALTER TABLE red_packets
-  ADD COLUMN IF NOT EXISTS packet_type TEXT DEFAULT 'general' CHECK (packet_type IN ('general', 'vip_gift', 'festival', 'invite_reward')),
+  ADD COLUMN IF NOT EXISTS packet_type TEXT DEFAULT 'general' CHECK (packet_type IN ('general', 'vip_gift', 'festival')),
   ADD COLUMN IF NOT EXISTS batch_id UUID,
   ADD COLUMN IF NOT EXISTS total_count INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS used_count INTEGER DEFAULT 0;

@@ -11,7 +11,6 @@ const couponTypeLabels: Record<string, string> = {
   general: "通用",
   vip_gift: "VIP赠送",
   festival: "节日活动",
-  invite_reward: "邀请奖励",
   freight: "运费券",
 };
 
@@ -569,7 +568,6 @@ export default function AdminCouponsPage() {
                     <option value="general">通用</option>
                     <option value="vip_gift">VIP赠送</option>
                     <option value="festival">节日活动</option>
-                    <option value="invite_reward">邀请奖励</option>
                   </select>
                 </div>
                 <div>
@@ -697,7 +695,6 @@ export default function AdminCouponsPage() {
                     <option value="general">通用</option>
                     <option value="vip_gift">VIP赠送</option>
                     <option value="festival">节日活动</option>
-                    <option value="invite_reward">邀请奖励</option>
                   </select>
                 </div>
                 <div>

@@ -136,11 +136,10 @@ export default function AdminRedPacketsPage() {
   }
 
   const packetTypeLabels: Record<string, string> = {
-    general: "通用",
-    vip_gift: "VIP赠送",
-    festival: "节日活动",
-    invite_reward: "邀请奖励",
-  };
+  general: "通用",
+  vip_gift: "VIP赠送",
+  festival: "节日活动",
+};
 
   return (
     <div className="min-h-screen">
@@ -282,7 +281,6 @@ export default function AdminRedPacketsPage() {
                     <option value="general">通用</option>
                     <option value="vip_gift">VIP赠送</option>
                     <option value="festival">节日活动</option>
-                    <option value="invite_reward">邀请奖励</option>
                   </select>
                 </div>
                 <div>
