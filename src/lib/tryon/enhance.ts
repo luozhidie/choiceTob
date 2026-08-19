@@ -7,11 +7,10 @@
 //   2) sharp 本地增强（零成本兜底）—— AK / OSS 未配置或 AI 调用失败时回退，
 //      仍然做了超分 + 锐化 + 通透微调。
 //
-// 接入点说明（避免日后踩坑）：
-//   - ALIYUN_VISION_ACCESS_KEY_ID / ALIYUN_VISION_ACCESS_KEY_SECRET：阿里云 AK（已注入 Vercel）
-//   - ALIYUN_OSS_BUCKET / ALIYUN_OSS_REGION / ALIYUN_OSS_ENDPOINT：中转 OSS 配置（待用户建桶后注入）
+// 注意：这里不依赖 ali-oss SDK（Vercel serverless 打包会爆 urllib 代理依赖错误），
+//       OSS 上传/签名/删除全部用 Node.js 内置 crypto + fetch 实现。
 import sharp from "sharp";
-import OSS from "ali-oss";
+import crypto from "crypto";
 
 export interface EnhanceOptions {
   scale?: number; // 超分倍数，默认 2（设为 1 则不放大）
@@ -22,31 +21,69 @@ export const ALIYUN_VISION_ENABLED = Boolean(
   process.env.ALIYUN_VISION_ACCESS_KEY_ID && process.env.ALIYUN_VISION_ACCESS_KEY_SECRET
 );
 
-let _oss: OSS | null = null;
-function getOssClient(): OSS | null {
-  if (_oss) return _oss;
-  const bucket = process.env.ALIYUN_OSS_BUCKET;
-  if (!bucket) return null;
-  const region = process.env.ALIYUN_OSS_REGION || "cn-shanghai";
-  const endpoint = process.env.ALIYUN_OSS_ENDPOINT || `oss-${region}.aliyuncs.com`;
-  _oss = new OSS({
-    region,
-    accessKeyId: process.env.ALIYUN_VISION_ACCESS_KEY_ID as string,
-    accessKeySecret: process.env.ALIYUN_VISION_ACCESS_KEY_SECRET as string,
-    bucket,
-    endpoint,
-  });
-  return _oss;
+function ossSign(method: string, contentType: string, expires: number, resource: string): string {
+  const stringToSign = [method, "", contentType, String(expires), resource].join("\n");
+  return crypto
+    .createHmac("sha1", process.env.ALIYUN_VISION_ACCESS_KEY_SECRET as string)
+    .update(stringToSign)
+    .digest("base64");
 }
 
-/** 把图片字节临时上传到上海 OSS，返回公网 URL 与 object key（用于事后清理）。未配置 OSS 返回 null。 */
+function getOssConfig() {
+  const bucket = process.env.ALIYUN_OSS_BUCKET;
+  const endpoint = process.env.ALIYUN_OSS_ENDPOINT || "oss-cn-shanghai.aliyuncs.com";
+  const accessKeyId = process.env.ALIYUN_VISION_ACCESS_KEY_ID;
+  if (!bucket || !accessKeyId) return null;
+  return { bucket, endpoint, accessKeyId };
+}
+
+function ossObjectUrl(key: string, query?: string): string {
+  const cfg = getOssConfig();
+  if (!cfg) throw new Error("OSS 未配置");
+  const base = `https://${cfg.bucket}.${cfg.endpoint}/${key}`;
+  return query ? `${base}?${query}` : base;
+}
+
+/** 把图片字节临时上传到上海 OSS。返回 {url: 临时签名URL, key: object key}。 */
 async function uploadToOss(buffer: Buffer): Promise<{ url: string; key: string } | null> {
-  const client = getOssClient();
-  if (!client) return null;
+  const cfg = getOssConfig();
+  if (!cfg) return null;
   const key = `tryon-tmp/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
-  await client.put(key, buffer, { contentType: "image/jpeg" });
-  // 用临时签名 URL（有效期 120s），无需把 Bucket 设为公共读，更安全
-  return { url: client.signatureUrl(key, { expires: 120 }), key };
+  const contentType = "image/jpeg";
+  const expires = Math.floor(Date.now() / 1000) + 120;
+  const resource = `/${cfg.bucket}/${key}`;
+  const signature = ossSign("PUT", contentType, expires, resource);
+  const query = `OSSAccessKeyId=${encodeURIComponent(cfg.accessKeyId)}&Expires=${expires}&Signature=${encodeURIComponent(
+    signature
+  )}`;
+  const url = ossObjectUrl(key, query);
+
+  const r = await fetch(url, {
+    method: "PUT",
+    body: Uint8Array.from(buffer),
+    headers: { "Content-Type": contentType },
+  });
+  if (!r.ok) {
+    const text = await r.text().catch(() => "");
+    throw new Error(`OSS 上传失败 ${r.status}: ${text}`);
+  }
+
+  // 返回给 EnhanceFace 用的临时签名 URL（有效期 120s）
+  return { url, key };
+}
+
+async function deleteOssObject(key: string): Promise<void> {
+  const cfg = getOssConfig();
+  if (!cfg) return;
+  const expires = Math.floor(Date.now() / 1000) + 120;
+  const resource = `/${cfg.bucket}/${key}`;
+  const signature = ossSign("DELETE", "", expires, resource);
+  const query = `OSSAccessKeyId=${encodeURIComponent(cfg.accessKeyId)}&Expires=${expires}&Signature=${encodeURIComponent(
+    signature
+  )}`;
+  await fetch(ossObjectUrl(key, query), { method: "DELETE" }).catch(() => {
+    /* 清理失败不阻断 */
+  });
 }
 
 /**
@@ -87,11 +124,7 @@ export async function enhanceFaceViaAlibaba(input: Buffer): Promise<Buffer | nul
     console.warn("[enhance] 阿里云 EnhanceFace 调用失败，将回退本地增强：", e?.message || e);
     return null;
   } finally {
-    try {
-      await getOssClient()?.delete(tmp.key);
-    } catch {
-      /* 临时文件清理失败不阻断主流程 */
-    }
+    await deleteOssObject(tmp.key);
   }
 }
 
