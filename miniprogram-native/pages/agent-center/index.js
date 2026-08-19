@@ -279,18 +279,60 @@ Page({
     wx.setClipboardData({ data: text, success: function () { wx.showToast({ title: '文案已复制', icon: 'success' }); } });
   },
   saveImage: function (e) {
+    var t = this;
     var url = e.currentTarget.dataset.url;
     if (!url) return;
+    // 确保 URL 经过 app.js 代理改写；如未改写也兜底
+    if (url.indexOf('supabase.co') > -1) {
+      url = url.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
+      url = url.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
+    }
+    // 第一步：常规 wx.downloadFile
     wx.downloadFile({
       url: url,
       success: function (res) {
+        if (res.statusCode !== 200) {
+          console.error('[saveImage] downloadFile status', res.statusCode, url);
+          return t.saveImageFallback(url);
+        }
         wx.saveImageToPhotosAlbum({
           filePath: res.tempFilePath,
           success: function () { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
-          fail: function () { wx.showToast({ title: '保存失败，请授权相册', icon: 'none' }); }
+          fail: function (err) {
+            console.error('[saveImage] saveImageToPhotosAlbum fail', err);
+            wx.showToast({ title: '保存失败，请授权相册', icon: 'none' });
+          }
         });
       },
-      fail: function () { wx.showToast({ title: '图片下载失败', icon: 'none' }); }
+      fail: function (err) {
+        console.error('[saveImage] downloadFile fail', err);
+        t.saveImageFallback(url);
+      }
+    });
+  },
+  // 下载兜底：先尝试 wx.getImageInfo 取本地缓存路径，再保存相册；仍失败则预览原图
+  saveImageFallback: function (url) {
+    wx.getImageInfo({
+      src: url,
+      success: function (res) {
+        wx.saveImageToPhotosAlbum({
+          filePath: res.path,
+          success: function () { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
+          fail: function (err) {
+            console.error('[saveImage] fallback saveImageToPhotosAlbum fail', err);
+            wx.showToast({ title: '保存失败，请授权相册', icon: 'none' });
+          }
+        });
+      },
+      fail: function (err) {
+        console.error('[saveImage] getImageInfo fail', err);
+        wx.previewImage({
+          urls: [url],
+          current: url,
+          fail: function () { wx.showToast({ title: '图片打开失败', icon: 'none' }); }
+        });
+        wx.showToast({ title: '请长按图片保存', icon: 'none' });
+      }
     });
   },
 
