@@ -14,6 +14,7 @@ declare module "ali-oss" {
     put(key: string, data: Buffer | Uint8Array, options?: PutOptions): Promise<unknown>;
     delete(key: string): Promise<unknown>;
     generateObjectUrl(key: string): string;
+    signatureUrl(key: string, options?: { expires?: number }): string;
   }
   export = OSS;
 }

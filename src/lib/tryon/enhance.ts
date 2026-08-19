@@ -45,7 +45,8 @@ async function uploadToOss(buffer: Buffer): Promise<{ url: string; key: string }
   if (!client) return null;
   const key = `tryon-tmp/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
   await client.put(key, buffer, { contentType: "image/jpeg" });
-  return { url: client.generateObjectUrl(key), key };
+  // 用临时签名 URL（有效期 120s），无需把 Bucket 设为公共读，更安全
+  return { url: client.signatureUrl(key, { expires: 120 }), key };
 }
 
 /**
