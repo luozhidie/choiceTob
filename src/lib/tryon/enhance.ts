@@ -44,8 +44,8 @@ function ossObjectUrl(key: string, query?: string): string {
   return query ? `${base}?${query}` : base;
 }
 
-/** 把图片字节临时上传到上海 OSS。返回 {url: 临时签名URL, key: object key}。 */
-async function uploadToOss(buffer: Buffer): Promise<{ url: string; key: string } | null> {
+/** 把图片字节临时上传到上海 OSS。返回 {publicUrl: 无签名公共读URL, key: object key}。 */
+async function uploadToOss(buffer: Buffer): Promise<{ publicUrl: string; key: string } | null> {
   const cfg = getOssConfig();
   if (!cfg) return null;
   const key = `tryon-tmp/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
@@ -56,9 +56,9 @@ async function uploadToOss(buffer: Buffer): Promise<{ url: string; key: string }
   const query = `OSSAccessKeyId=${encodeURIComponent(cfg.accessKeyId)}&Expires=${expires}&Signature=${encodeURIComponent(
     signature
   )}`;
-  const url = ossObjectUrl(key, query);
+  const putUrl = ossObjectUrl(key, query);
 
-  const r = await fetch(url, {
+  const r = await fetch(putUrl, {
     method: "PUT",
     body: Uint8Array.from(buffer),
     headers: { "Content-Type": contentType },
@@ -68,8 +68,8 @@ async function uploadToOss(buffer: Buffer): Promise<{ url: string; key: string }
     throw new Error(`OSS 上传失败 ${r.status}: ${text}`);
   }
 
-  // 返回给 EnhanceFace 用的临时签名 URL（有效期 120s）
-  return { url, key };
+  // EnhanceFace 只认无签名的上海 OSS 公共读 URL
+  return { publicUrl: ossObjectUrl(key), key };
 }
 
 async function deleteOssObject(key: string): Promise<void> {
@@ -108,7 +108,7 @@ export async function enhanceFaceViaAlibaba(input: Buffer): Promise<Buffer | nul
       endpoint: "https://facebody.cn-shanghai.aliyuncs.com",
       apiVersion: "2019-12-30",
     });
-    const res: any = await client.request("EnhanceFace", { ImageURL: tmp.url }, { method: "POST" });
+    const res: any = await client.request("EnhanceFace", { ImageURL: tmp.publicUrl }, { method: "POST" });
     const outUrl: string | undefined = res?.Data?.ImageURL || res?.Data?.ResultURL;
     if (!outUrl) {
       console.warn("[enhance] 阿里云 EnhanceFace 未返回图片地址");
