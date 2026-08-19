@@ -48,8 +48,8 @@ page{background: var(--bg);}
 /* 信息区 */
 .linfo{padding:18rpx 18rpx 22rpx;}
 .ltag{font-size:20rpx;color:#2d1b2e;background:#fce4ec;padding:3rpx 14rpx;border-radius:12rpx;display:inline-block;margin-bottom:8rpx;}
-.lname{font-size:28rpx;font-weight:bold;color:#333;display:block;margin-bottom:6rpx;}
-.ldesc{font-size:23rpx;color:#888;line-height:1.4;display:block;margin-bottom:12rpx;}
+.lname{font-size:28rpx;font-weight:bold;color:#333;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;line-height:1.35;margin-bottom:6rpx;}
+.ldesc{font-size:23rpx;color:#888;line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin-bottom:12rpx;}
 .cdots{display:flex;gap:10rpx;}
 .cdot{width:22rpx;height:22rpx;border-radius:50%;}
 
