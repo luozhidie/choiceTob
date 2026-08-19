@@ -51,7 +51,16 @@ export async function POST(request: NextRequest) {
     await supabase.storage.from(BUCKET).upload(srcName, buffer, { contentType: "image/jpeg", upsert: false });
     const srcUrl = supabase.storage.from(BUCKET).getPublicUrl(srcName).data.publicUrl;
 
-    const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(buffer) : null;
+    let aiBuf: Buffer | null = null;
+    let aiError: string | null = null;
+    if (ALIYUN_VISION_ENABLED) {
+      try {
+        aiBuf = await enhanceFaceViaAlibaba(buffer);
+      } catch (e: any) {
+        aiError = e?.message || String(e);
+        console.warn("[tryon/enhance] AI 增强失败:", aiError);
+      }
+    }
     const enhanced = aiBuf ?? (await enhanceBuffer(buffer, { scale: 2 }));
 
     const outName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
@@ -69,10 +78,12 @@ export async function POST(request: NextRequest) {
       resultUrl: finalUrl,
       enhanced: true,
       ai: Boolean(aiBuf),
+      aiError,
       debug: {
         enabled: ALIYUN_VISION_ENABLED,
         hasId: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_ID),
         hasSecret: Boolean(process.env.ALIYUN_VISION_ACCESS_KEY_SECRET),
+        hasBucket: Boolean(process.env.ALIYUN_OSS_BUCKET),
       },
     });
   } catch (err: any) {

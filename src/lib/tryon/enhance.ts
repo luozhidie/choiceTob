@@ -122,7 +122,7 @@ export async function enhanceFaceViaAlibaba(input: Buffer): Promise<Buffer | nul
     return Buffer.from(await r.arrayBuffer());
   } catch (e: any) {
     console.warn("[enhance] 阿里云 EnhanceFace 调用失败，将回退本地增强：", e?.message || e);
-    return null;
+    throw e;
   } finally {
     await deleteOssObject(tmp.key);
   }
