@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  Loader2, Save, Plus, Trash2, RefreshCw, Coins, Gift, Users, ListChecks, Sparkles,
+  Loader2, Save, Plus, Trash2, RefreshCw, Coins, Gift, ListChecks, Sparkles,
 } from "lucide-react";
 
 interface TaskCfg {
@@ -32,7 +32,6 @@ const DEFAULTS = {
     { key: "browse_invite", label: "浏览邀请 30s", icon: "🔗", points: 20, type: "daily" as const },
   ],
   fortune_exchange: { cost: 3000, amount_cents: 300 },
-  invite_reward: { min_cents: 800, max_cents: 10000, expire_days: 30 },
   group_benefits: [
     { icon: "🍂", t: "秋冬上新预告", d: "新款提前看，抢先组货不上架" },
     { icon: "💰", t: "专属批发价", d: "认证店主解锁批发价与分级退换额度" },
@@ -47,7 +46,6 @@ export default function AdminActivityConfigPage() {
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [checkin, setCheckin] = useState<number[]>(DEFAULTS.fortune_checkin_rewards);
   const [exchange, setExchange] = useState(DEFAULTS.fortune_exchange);
-  const [invite, setInvite] = useState(DEFAULTS.invite_reward);
   const [tasks, setTasks] = useState<TaskCfg[]>(DEFAULTS.fortune_tasks as TaskCfg[]);
   const [benefits, setBenefits] = useState<Benefit[]>(DEFAULTS.group_benefits);
 
@@ -62,14 +60,13 @@ export default function AdminActivityConfigPage() {
     setLoading(true);
     try {
       const res = await fetch(
-        "/api/public/settings?keys=fortune_checkin_rewards,fortune_tasks,fortune_exchange,invite_reward,group_benefits"
+        "/api/public/settings?keys=fortune_checkin_rewards,fortune_tasks,fortune_exchange,group_benefits"
       );
       const json = await res.json();
       const d = json.data || {};
       if (Array.isArray(d.fortune_checkin_rewards)) setCheckin(d.fortune_checkin_rewards);
       if (d.fortune_tasks) setTasks(d.fortune_tasks);
       if (d.fortune_exchange) setExchange(d.fortune_exchange);
-      if (d.invite_reward) setInvite(d.invite_reward);
       if (d.group_benefits) setBenefits(d.group_benefits);
     } catch (e: any) {
       showToast("error", "加载失败：" + e.message);
@@ -97,7 +94,6 @@ export default function AdminActivityConfigPage() {
       await saveOne("fortune_checkin_rewards", checkin);
       await saveOne("fortune_tasks", tasks);
       await saveOne("fortune_exchange", exchange);
-      await saveOne("invite_reward", invite);
       await saveOne("group_benefits", benefits);
       showToast("success", "全部已保存，小程序实时生效");
     } catch (e: any) {
@@ -146,7 +142,7 @@ export default function AdminActivityConfigPage() {
         <div>
           <h1 className="text-2xl font-bold text-primary">活动配置</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            集财运 / 邀请有奖 / 店主福利社群 的全部数值与文案，改完小程序实时生效，无需重新部署
+            集财运 / 店主福利社群 的全部数值与文案，改完小程序实时生效，无需重新部署
           </p>
         </div>
         <div className="flex gap-2">
@@ -189,21 +185,6 @@ export default function AdminActivityConfigPage() {
           </Field>
           <Field label="券金额（元）">
             <input type="number" step="0.01" value={(exchange.amount_cents / 100).toFixed(2)} onChange={(e) => setExchange({ ...exchange, amount_cents: Math.round(Number(e.target.value) * 100) })} className="w-32 px-3 py-2 rounded-lg border border-border bg-white" />
-          </Field>
-        </div>
-      </Section>
-
-      {/* 邀请返利 */}
-      <Section icon={Users} title="邀请有奖 · 首单返红包" desc="被邀请人完成首单，邀请人获得的随机红包（元）与有效期">
-        <div className="flex flex-wrap gap-6">
-          <Field label="最低（元）">
-            <input type="number" step="0.01" value={(invite.min_cents / 100).toFixed(2)} onChange={(e) => setInvite({ ...invite, min_cents: Math.round(Number(e.target.value) * 100) })} className="w-32 px-3 py-2 rounded-lg border border-border bg-white" />
-          </Field>
-          <Field label="最高（元）">
-            <input type="number" step="0.01" value={(invite.max_cents / 100).toFixed(2)} onChange={(e) => setInvite({ ...invite, max_cents: Math.round(Number(e.target.value) * 100) })} className="w-32 px-3 py-2 rounded-lg border border-border bg-white" />
-          </Field>
-          <Field label="有效期（天）">
-            <input type="number" value={invite.expire_days} onChange={(e) => setInvite({ ...invite, expire_days: Number(e.target.value) || 0 })} className="w-32 px-3 py-2 rounded-lg border border-border bg-white" />
           </Field>
         </div>
       </Section>

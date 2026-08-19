@@ -4,7 +4,7 @@
 // 后端增强逻辑见 lib/tryon/enhance.ts（当前为 sharp 本地增强，零成本）。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enhanceBuffer } from "@/lib/tryon/enhance";
+import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
 
 const BUCKET = "blocks-images";
 export const runtime = "nodejs";
@@ -46,7 +46,13 @@ export async function POST(request: NextRequest) {
       buffer = Buffer.from(await r.arrayBuffer());
     }
 
-    const enhanced = await enhanceBuffer(buffer, { scale: 2 });
+    // 先落盘原图拿公网 URL；配置了阿里云则优先 AI 人脸修复，否则本地 sharp 增强
+    const srcName = `tryon-src-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+    await supabase.storage.from(BUCKET).upload(srcName, buffer, { contentType: "image/jpeg", upsert: false });
+    const srcUrl = supabase.storage.from(BUCKET).getPublicUrl(srcName).data.publicUrl;
+
+    const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(srcUrl) : null;
+    const enhanced = aiBuf ?? (await enhanceBuffer(buffer, { scale: 2 }));
 
     const outName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
     const { error } = await supabase.storage.from(BUCKET).upload(outName, enhanced, {
@@ -58,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
     const finalUrl = supabase.storage.from(BUCKET).getPublicUrl(outName).data.publicUrl;
 
-    return NextResponse.json({ ok: true, resultUrl: finalUrl, enhanced: true });
+    return NextResponse.json({ ok: true, resultUrl: finalUrl, enhanced: true, ai: Boolean(aiBuf) });
   } catch (err: any) {
     console.error("[tryon/enhance] 异常", err);
     // 增强失败不影响原图：若传入的是 URL，回退返回原图，保证流程不中断

@@ -3,6 +3,7 @@
 // 完整替换全身套装，保留原脸，输出默认无水印。异步任务模式。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
 
 const BUCKET = "blocks-images";
 const DASHSCOPE_BASE = "https://dashscope.aliyuncs.com";
@@ -132,6 +133,25 @@ export async function POST(request: NextRequest) {
         const outName = `outfit-result-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
         await supabase.storage.from(BUCKET).upload(outName, imgBuf, { contentType: "image/jpeg", upsert: false });
         resultUrl = supabase.storage.from(BUCKET).getPublicUrl(outName).data.publicUrl;
+
+        // 自动画质修复（默认开启，env TRYON_AUTO_ENHANCE=false 可关；失败自动回退原图）
+        if (process.env.TRYON_AUTO_ENHANCE !== "false") {
+          try {
+            let enhancedBuf: Buffer;
+            // 优先阿里云 AI 人脸修复（细节增强）；无 key 或调用失败时回退 sharp 本地增强
+            const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(resultUrl) : null;
+            enhancedBuf = aiBuf ?? (await enhanceBuffer(imgBuf, { scale: 2 }));
+            const enName = `outfit-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+            await supabase.storage.from(BUCKET).upload(enName, enhancedBuf, {
+              contentType: "image/jpeg",
+              upsert: false,
+            });
+            resultUrl = supabase.storage.from(BUCKET).getPublicUrl(enName).data.publicUrl;
+            console.log("[tryon/outfit] 已自动画质增强（" + (aiBuf ? "AI" : "本地") + "）");
+          } catch (enErr) {
+            console.warn("[tryon/outfit] 画质增强失败，回退原图", (enErr as Error)?.message);
+          }
+        }
       } else {
         console.warn("[tryon/outfit] 结果图转存失败，回退原始 URL", imgRes.status);
       }

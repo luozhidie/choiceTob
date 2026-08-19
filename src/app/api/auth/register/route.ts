@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, password, full_name, invite_code } = body;
+    const { email, password, full_name } = body;
 
     if (!email || !password) {
       return NextResponse.json({ error: "请输入邮箱和密码" }, { status: 400 });
@@ -50,29 +50,6 @@ export async function POST(req: NextRequest) {
       let msg = error.message;
       if (msg === "User already registered") msg = "该邮箱已注册，请直接登录";
       return NextResponse.json({ error: msg }, { status: 400 });
-    }
-
-    // 邀请有奖：用邀请码绑定邀请人（容错，绝不影响注册主流程）
-    if (invite_code && data.user?.id) {
-      try {
-        const serviceClient = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
-        );
-        const { data: inviter } = await serviceClient
-          .from("profiles")
-          .select("id")
-          .eq("invite_code", String(invite_code).toUpperCase())
-          .maybeSingle();
-        if (inviter && inviter.id !== data.user.id) {
-          await serviceClient
-            .from("profiles")
-            .update({ invited_by: inviter.id })
-            .eq("id", data.user.id);
-        }
-      } catch (e) {
-        console.error("[Auth Register] 绑定邀请人失败:", e);
-      }
     }
 
     // ── 是否需要邮箱验证 ──

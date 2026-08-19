@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { removeBackgroundToImage, detectMime } from "@/lib/tryon/removeBg";
+import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
       let uploadBuffer = buffer;
       try {
         const mime = personFile!.type || detectMime(buffer);
-        uploadBuffer = await removeBackgroundToImage(buffer, mime, { person: true });
+        uploadBuffer = Buffer.from(await removeBackgroundToImage(buffer, mime, { person: true }));
         console.log("[tryon/generate] 人像已自动去背景");
       } catch (e) {
         console.warn("[tryon/generate] 人像去背景失败，回退原图", (e as Error)?.message);
@@ -235,6 +236,25 @@ export async function POST(request: NextRequest) {
         });
         const { data: { publicUrl: finalUrl } } = supabase.storage.from(BUCKET).getPublicUrl(outName);
         resultUrl = finalUrl;
+
+        // 自动画质修复（默认开启，env TRYON_AUTO_ENHANCE=false 可关；失败自动回退原图）
+        if (process.env.TRYON_AUTO_ENHANCE !== "false") {
+          try {
+            let enhancedBuf: Buffer;
+            // 优先阿里云 AI 人脸修复（细节增强）；无 key 或调用失败时回退 sharp 本地增强
+            const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(resultUrl) : null;
+            enhancedBuf = aiBuf ?? (await enhanceBuffer(imgBuf, { scale: 2 }));
+            const enName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
+            await supabase.storage.from(BUCKET).upload(enName, enhancedBuf, {
+              contentType: "image/jpeg",
+              upsert: false,
+            });
+            resultUrl = supabase.storage.from(BUCKET).getPublicUrl(enName).data.publicUrl;
+            console.log("[tryon/generate] 已自动画质增强（" + (aiBuf ? "AI" : "本地") + "）");
+          } catch (enErr) {
+            console.warn("[tryon/generate] 画质增强失败，回退原图", (enErr as Error)?.message);
+          }
+        }
       } else {
         console.warn("[tryon/generate] 结果图转存失败，回退原始 URL", imgRes.status);
       }

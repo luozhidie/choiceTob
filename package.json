@@ -10,6 +10,7 @@
     "postinstall": "node scripts/patch-imgly.mjs"
   },
   "dependencies": {
+    "@alicloud/pop-core": "^1.8.0",
     "@imgly/background-removal": "^1.7.0",
     "@napi-rs/canvas": "^1.0.6",
     "@supabase/ssr": "^0.10.3",
@@ -27,6 +28,7 @@
     "react-dom": "19.2.4",
     "react-is": "^19.2.7",
     "recharts": "^3.8.1",
+    "sharp": "^0.34.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
