@@ -7,6 +7,11 @@ import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/l
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
 
+// 转存 + 画质增强可能耗时较长，放宽函数超时（Hobby 计划上限 60s，Pro 可达更高）
+export const runtime = "nodejs";
+export const maxDuration = 120;
+export const memory = 2048;
+
 // 简单内存缓存：避免每次轮询都重复转存/增强。Serverless 多实例不共享，但无害（会多转存几张）。
 const resultCache = new Map<string, { resultUrl: string; createdAt: number }>();
 
