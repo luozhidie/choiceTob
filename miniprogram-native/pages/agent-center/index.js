@@ -25,12 +25,16 @@ function matchMain(styleStr, token) {
 function buildStyleLists(materialList) {
   var women = [], men = [];
   STYLE_MAIN.forEach(function (m) {
-    var cnt = (materialList || []).filter(function (p) { return matchMain(p.style, m.token); }).length;
+    var cnt = (materialList || []).filter(function (p) {
+      var s = p._libStyle || p.style || '';
+      return matchMain(s, m.token);
+    }).length;
     (m.gender === '女' ? women : men).push({ token: m.token, count: cnt });
   });
   return { womenStyleList: women, menStyleList: men };
 }
 var CORE_KEY = 'agent_core_clients';
+var MY_MATERIALS_KEY = 'agent_my_materials';
 
 function fmtYuan(cents) {
   if (cents == null) return '0';
@@ -91,16 +95,24 @@ Page({
     orderList: [],
     orderPage: 1,
     orderMore: true,
-    // 商品素材
-    materialList: [],
-    filteredMaterial: [],
-    styleFilter: '',
-    womenStyleList: [],
-    menStyleList: [],
+    // 商品素材：全店仓库 vs 我的素材库
+    materialList: [],          // 全店有图商品（仓库）
+    filteredMaterial: [],      // 当前展示的列表（我的素材库按风格过滤 或 仓库列表）
+    styleFilter: '',           // 当前选中的主风格
+    womenStyleList: [],        // 我的素材库女士风格统计
+    menStyleList: [],          // 我的素材库男士风格统计
+    allWomenStyles: STYLE_MAIN.filter(function (m) { return m.gender === '女'; }).map(function (m) { return { token: m.token }; }),
+    allMenStyles: STYLE_MAIN.filter(function (m) { return m.gender === '男'; }).map(function (m) { return { token: m.token }; }),
+    myMaterials: [],           // 我入库的素材 [{product_id, style, addedAt}]
+    warehouseMode: false,      // 是否在选品入库模式
     shareProduct: null,
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
+    // 风格选择弹窗（加入素材库时使用）
+    showStylePicker: false,
+    pickerProduct: null,
+    pickerStyle: '',
     // 八位核心客户（本地存储，无需后端迁移）
     coreClients: {},
     showCoreEdit: false,
@@ -197,15 +209,12 @@ Page({
           };
         });
         var materialList = list.filter(function (x) { return x.cover_image; });
-        var styleLists = buildStyleLists(materialList);
         t.setData({
           priceList: list,
           materialList: materialList,
-          womenStyleList: styleLists.womenStyleList,
-          menStyleList: styleLists.menStyleList,
           homeQuickPicks: materialList.slice(0, 6)
         });
-        t.applyStyleFilter();
+        t.loadMyMaterials();
       },
       fail: function () {}, complete: check
     });
@@ -543,29 +552,116 @@ Page({
           return { product_id: p.product_id, title: p.title || '', cover_image: p.cover_image || '', retail_price: p.retail_price || 0, custom_price: p.custom_price, marketing_copy: p.marketing_copy || '', style: p.style || '' };
         });
         var materialList = list.filter(function (x) { return x.cover_image; });
-        var styleLists = buildStyleLists(materialList);
-        t.setData({ priceList: list, materialList: materialList, womenStyleList: styleLists.womenStyleList, menStyleList: styleLists.menStyleList, homeQuickPicks: materialList.slice(0, 6) });
-        t.applyStyleFilter();
+        t.setData({ priceList: list, materialList: materialList, homeQuickPicks: materialList.slice(0, 6) });
+        t.loadMyMaterials();
       }
     });
   },
 
-  // 风格过滤：把素材列表按所选主风格过滤
-  applyStyleFilter: function () {
+  // 我的素材库（本地存储）
+  loadMyMaterials: function () {
     var t = this;
+    var arr = [];
+    try { var raw = wx.getStorageSync(MY_MATERIALS_KEY); arr = (raw && Array.isArray(raw)) ? raw : []; } catch (e) { arr = []; }
+    t.setData({ myMaterials: arr });
+    t.applyStyleFilter(true);
+  },
+  saveMyMaterials: function (arr, cb) {
+    try { wx.setStorageSync(MY_MATERIALS_KEY, arr); } catch (e) {}
+    this.setData({ myMaterials: arr }, cb);
+  },
+  // 把 myMaterials 与商品信息合并，生成带 style 的商品列表（style 以代理入库时选的为准）
+  buildMyMaterialList: function () {
+    var t = this;
+    var map = {};
+    (t.data.materialList || []).forEach(function (p) { map[p.product_id] = p; });
+    return (t.data.myMaterials || []).map(function (m) {
+      var p = map[m.product_id] || {};
+      return Object.assign({}, p, { _libStyle: m.style, product_id: m.product_id, addedAt: m.addedAt });
+    }).filter(function (x) { return x.product_id; });
+  },
+
+  // 风格过滤：默认过滤我的素材库；warehouseMode 下不过滤
+  applyStyleFilter: function (silent) {
+    var t = this;
+    if (t.data.warehouseMode) {
+      var inLib = {};
+      (t.data.myMaterials || []).forEach(function (m) { inLib[m.product_id] = true; });
+      var list = (t.data.materialList || []).filter(function (p) { return !inLib[p.product_id]; });
+      t.setData({ filteredMaterial: list });
+      return;
+    }
+    var myList = t.buildMyMaterialList();
     var f = t.data.styleFilter;
-    var list = t.data.materialList || [];
-    var filtered = f ? list.filter(function (p) { return matchMain(p.style, f); }) : list;
-    t.setData({ filteredMaterial: filtered });
+    var filtered = f ? myList.filter(function (p) { return p._libStyle === f; }) : myList;
+    var styleLists = buildStyleLists(myList);
+    var upd = { filteredMaterial: filtered, womenStyleList: styleLists.womenStyleList, menStyleList: styleLists.menStyleList };
+    if (silent === true) { t.setData(upd); } else { t.setData(upd); }
   },
   setMaterialStyle: function (e) {
     var token = e.currentTarget.dataset.token;
-    this.setData({ styleFilter: token, tab: 'material' });
+    this.setData({ styleFilter: token, warehouseMode: false, tab: 'material' });
     this.applyStyleFilter();
   },
   clearMaterialStyle: function () {
-    this.setData({ styleFilter: '' });
+    this.setData({ styleFilter: '', warehouseMode: false });
     this.applyStyleFilter();
+  },
+  // 选品入库模式切换
+  enterWarehouse: function () {
+    this.setData({ warehouseMode: true, styleFilter: '', tab: 'material' });
+    this.applyStyleFilter();
+  },
+  exitWarehouse: function () {
+    this.setData({ warehouseMode: false });
+    this.applyStyleFilter();
+  },
+  // 打开风格选择弹窗
+  openStylePicker: function (e) {
+    var pid = e.currentTarget.dataset.pid;
+    var t = this;
+    var product = (t.data.materialList || []).find(function (p) { return p.product_id === pid; });
+    if (!product) return;
+    var defaultStyle = product.style ? product.style.split(',')[0].trim() : STYLE_MAIN[0].token;
+    t.setData({ showStylePicker: true, pickerProduct: product, pickerStyle: defaultStyle });
+  },
+  closeStylePicker: function () { this.setData({ showStylePicker: false, pickerProduct: null, pickerStyle: '' }); },
+  onPickerStyle: function (e) { this.setData({ pickerStyle: e.currentTarget.dataset.token }); },
+  confirmAddToLibrary: function () {
+    var t = this;
+    var p = t.data.pickerProduct;
+    var style = t.data.pickerStyle;
+    if (!p || !style) return;
+    var arr = (t.data.myMaterials || []).slice();
+    if (arr.some(function (m) { return m.product_id === p.product_id; })) {
+      wx.showToast({ title: '已在素材库中', icon: 'none' });
+      t.closeStylePicker();
+      return;
+    }
+    arr.unshift({ product_id: p.product_id, style: style, addedAt: Date.now() });
+    t.saveMyMaterials(arr, function () {
+      t.closeStylePicker();
+      t.applyStyleFilter();
+      wx.showToast({ title: '已加入素材库', icon: 'success' });
+    });
+  },
+  removeFromLibrary: function (e) {
+    var pid = e.currentTarget.dataset.pid;
+    var t = this;
+    wx.showModal({
+      title: '移出素材库', content: '确定从素材库移出该商品？', showCancel: true,
+      success: function (res) {
+        if (!res.confirm) return;
+        var arr = (t.data.myMaterials || []).filter(function (m) { return m.product_id !== pid; });
+        t.saveMyMaterials(arr, function () {
+          t.applyStyleFilter();
+          wx.showToast({ title: '已移出', icon: 'success' });
+        });
+      }
+    });
+  },
+  inLibrary: function (pid) {
+    return (this.data.myMaterials || []).some(function (m) { return m.product_id === pid; });
   },
 
   // 八位核心客户（本地存储）
@@ -602,11 +698,25 @@ Page({
     t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
     wx.showToast({ title: '已保存', icon: 'success' });
   },
-  // 点击某核心客户「去分享」：按该风格过滤素材并切到素材页
+  // 点击某核心客户「去分享」：按该风格过滤我的素材库，没有则引导去选品
   coreShare: function (e) {
     var token = e.currentTarget.dataset.token;
-    this.setData({ styleFilter: token, tab: 'material' });
-    this.applyStyleFilter();
+    var t = this;
+    var has = (t.data.myMaterials || []).some(function (m) { return m.style === token; });
+    if (!has) {
+      wx.showModal({
+        title: token + ' · 素材库为空',
+        content: '该风格还没有入库素材，先去选品入库？',
+        confirmText: '去选品',
+        cancelText: '取消',
+        success: function (res) {
+          if (res.confirm) t.enterWarehouse();
+        }
+      });
+      return;
+    }
+    t.setData({ styleFilter: token, warehouseMode: false, tab: 'material' });
+    t.applyStyleFilter();
   },
 
   // 提现

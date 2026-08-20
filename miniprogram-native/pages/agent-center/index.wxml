@@ -88,15 +88,15 @@ module.exports = {
           <view class="step">
             <text class="step-num">1</text>
             <view>
-              <text class="step-t">去「素材」挑商品</text>
-              <text class="step-d">选好商品，给客户设一个对客卖价（他看到的价格）</text>
+              <text class="step-t">去「素材」选品入库</text>
+              <text class="step-d">按你的客户风格，把商品加入自己的素材库</text>
             </view>
           </view>
           <view class="step">
             <text class="step-num">2</text>
             <view>
               <text class="step-t">点「发商品给客户」</text>
-              <text class="step-d">转发给微信好友或朋友圈，客户直接看批发价下单</text>
+              <text class="step-d">把对应风格的商品转发给微信好友，客户直接下单</text>
             </view>
           </view>
           <view class="step">
@@ -127,10 +127,10 @@ module.exports = {
         <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多商品 ›</view>
       </view>
 
-      <!-- 风格选品：按主风格归类衣服 -->
-      <view class="card" wx:if="{{womenStyleList.length>0 || menStyleList.length>0}}">
-        <view class="card-title">风格选品<text class="card-sub">按风格归类，精准发给客户</text></view>
-        <text class="style-tip">女士 8 主风格 · 男士 5 主风格，共 64 / 25 种风格组合。点风格看该风格的全部在售商品。</text>
+      <!-- 风格选品：我的素材库按主风格归类 -->
+      <view class="card" wx:if="{{womenStyleList.length>0 || menStyleList.length>0 || myMaterials.length>0}}">
+        <view class="card-title">我的素材库<text class="card-sub">按客户风格归类</text></view>
+        <text class="style-tip">你入库的商品会按风格分类，方便对准客户一键分享。</text>
         <view class="style-group-label">女士 · 8 主风格</view>
         <view class="style-grid">
           <view wx:for="{{womenStyleList}}" wx:key="token" class="style-tile" bindtap="setMaterialStyle" data-token="{{item.token}}">
@@ -145,7 +145,7 @@ module.exports = {
             <text class="style-num">{{item.count}} 款</text>
           </view>
         </view>
-        <view class="quick-more" bindtap="switchTab" data-tab="material">去素材页按风格筛选 ›</view>
+        <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
       <!-- 八位核心客户：立项经营模型 -->
@@ -253,7 +253,7 @@ module.exports = {
       <view wx:if="{{salesList.length===0}}" class="list-empty-box">
         <text class="list-empty">暂无收益明细</text>
         <text class="list-empty-desc">客户付款后，你的拿货差价会在这里显示</text>
-        <view class="btn-ghost" bindtap="switchTab" data-tab="material">去选品发给客户 ›</view>
+        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给客户 ›</view>
       </view>
       <view wx:for="{{salesList}}" wx:key="order_no" class="sale-card">
         <view class="sale-row">
@@ -294,7 +294,7 @@ module.exports = {
       <view wx:if="{{orderList.length===0}}" class="list-empty-box">
         <text class="list-empty">暂无供货订单</text>
         <text class="list-empty-desc">客户通过你的供货号下单后，订单会同步到这里</text>
-        <view class="btn-ghost" bindtap="switchTab" data-tab="material">去选品发给客户 ›</view>
+        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给客户 ›</view>
       </view>
       <view wx:for="{{orderList}}" wx:key="order_no" class="order-card">
         <view class="order-head">
@@ -317,22 +317,50 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ========== 商品素材 ========== -->
+    <!-- ========== 商品素材（我的素材库 / 选品入库） ========== -->
     <view wx:if="{{tab==='material'}}" class="tab-page">
-      <view class="mat-stylebar" wx:if="{{womenStyleList.length>0 || menStyleList.length>0}}">
+      <!-- 模式标题 -->
+      <view class="mat-header">
+        <view>
+          <text class="mat-header-title">{{warehouseMode ? '选品入库' : '我的素材库'}}</text>
+          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按客户风格归类'}}</text>
+        </view>
+        <view wx:if="{{warehouseMode}}" class="mat-header-btn" bindtap="exitWarehouse">返回素材库</view>
+        <view wx:else class="mat-header-btn" bindtap="enterWarehouse">去选品入库</view>
+      </view>
+
+      <!-- 风格筛选条：仅在我的素材库且已有风格时显示 -->
+      <block wx:if="{{!warehouseMode && (womenStyleList.length>0 || menStyleList.length>0)}}">
+        <view class="mat-section-label">女士 · 8 主风格</view>
         <scroll-view scroll-x class="sb-scroll" enable-flex>
           <view class="sb-chip {{styleFilter===''?'on':''}}" bindtap="clearMaterialStyle">全部</view>
-          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{womenStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}}</view>
-          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{menStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}}</view>
+          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{womenStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
         </scroll-view>
-      </view>
-      <view class="mat-toolbar" wx:if="{{filteredMaterial.length>0}}">
+        <view class="mat-section-label" style="margin-top:20rpx;">男士 · 5 主风格</view>
+        <scroll-view scroll-x class="sb-scroll" enable-flex>
+          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{menStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
+        </scroll-view>
+      </block>
+
+      <!-- 工具栏 -->
+      <view class="mat-toolbar" wx:if="{{filteredMaterial.length>0 && !warehouseMode}}">
         <text class="mat-count">{{styleFilter ? styleFilter + ' · ' : ''}}共 {{filteredMaterial.length}} 款商品素材</text>
         <view class="mat-batch {{batchDownloading?'mat-batch-loading':''}}" bindtap="downloadAllImages">
           {{batchDownloading ? '下载中 ' + batchDone + '/' + filteredMaterial.length : '一键下载全部图片'}}
         </view>
       </view>
-      <view wx:if="{{filteredMaterial.length===0}}" class="list-empty">{{materialList.length===0 ? '暂无商品素材' : '该风格暂无商品'}}</view>
+      <view class="mat-toolbar" wx:if="{{warehouseMode}}">
+        <text class="mat-count">仓库共 {{filteredMaterial.length}} 款未入库商品</text>
+      </view>
+
+      <!-- 空状态 -->
+      <view wx:if="{{filteredMaterial.length===0}}" class="list-empty-box">
+        <text class="list-empty">{{warehouseMode ? '仓库暂时没有更多商品' : '素材库还是空的'}}</text>
+        <text class="list-empty-desc">{{warehouseMode ? '可以先去上传商品，再回来挑选' : '去选品入库，按你的客户群体风格添加商品'}}</text>
+        <view wx:if="{{!warehouseMode}}" class="btn-ghost" bindtap="enterWarehouse">去选品入库 ›</view>
+      </view>
+
+      <!-- 商品列表 -->
       <view wx:for="{{filteredMaterial}}" wx:key="product_id" class="mat-card">
         <view class="mat-top" bindtap="goDetail" data-id="{{item.product_id}}">
           <image class="mat-img" src="{{item.cover_image}}" mode="aspectFill" catchtap="goDetail" data-id="{{item.product_id}}"/>
@@ -342,14 +370,24 @@ module.exports = {
               <text class="mat-price-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
               <text class="mat-price-custom">{{item.custom_price ? '卖价 ¥' + f.yuan(item.custom_price) : '卖价未设'}}</text>
             </view>
+            <text wx:if="{{!warehouseMode && item._libStyle}}" class="mat-lib-tag">{{item._libStyle}}</text>
           </view>
         </view>
         <view class="mat-actions" catchtap="noop">
-          <view class="mat-btn" bindtap="copyMaterial" data-index="{{index}}">复制文案</view>
-          <view class="mat-btn mat-btn-gold" bindtap="saveImage" data-url="{{item.cover_image}}">下载图片</view>
-          <view class="mat-btn" bindtap="goDetail" data-id="{{item.product_id}}">查看详情</view>
-          <view class="mat-btn mat-btn-gold" bindtap="goDetail" data-id="{{item.product_id}}">去下单</view>
-          <button class="mat-btn mat-share" open-type="share" data-product-id="{{item.product_id}}" data-title="{{item.title}}" data-cover="{{item.cover_image}}">分享</button>
+          <!-- 我的素材库操作 -->
+          <block wx:if="{{!warehouseMode}}">
+            <view class="mat-btn" bindtap="copyMaterial" data-index="{{index}}">复制文案</view>
+            <view class="mat-btn mat-btn-gold" bindtap="saveImage" data-url="{{item.cover_image}}">下载图片</view>
+            <view class="mat-btn" bindtap="goDetail" data-id="{{item.product_id}}">查看详情</view>
+            <view class="mat-btn mat-btn-gold" bindtap="goDetail" data-id="{{item.product_id}}">去下单</view>
+            <button class="mat-btn mat-share" open-type="share" data-product-id="{{item.product_id}}" data-title="{{item.title}}" data-cover="{{item.cover_image}}">分享</button>
+            <view class="mat-btn mat-btn-remove" bindtap="removeFromLibrary" data-pid="{{item.product_id}}">移出</view>
+          </block>
+          <!-- 仓库选品操作 -->
+          <block wx:else>
+            <view class="mat-btn" bindtap="goDetail" data-id="{{item.product_id}}">查看详情</view>
+            <view class="mat-btn mat-btn-gold" bindtap="openStylePicker" data-pid="{{item.product_id}}">加入素材库</view>
+          </block>
         </view>
       </view>
     </view>
@@ -380,6 +418,27 @@ module.exports = {
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeWithdraw">取消</view>
         <view class="sheet-save" bindtap="submitWithdraw">{{submittingWithdraw ? '提交中…' : '提交申请'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加入素材库：风格选择弹窗 -->
+  <view wx:if="{{showStylePicker}}" class="mask" bindtap="closeStylePicker">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-title">加入素材库</text>
+      <text class="sheet-sub">{{pickerProduct.title}}</text>
+      <text class="sheet-retail">选择该商品对应的客户风格（主风格）</text>
+      <view class="picker-section">女士 · 8 主风格</view>
+      <view class="picker-grid">
+        <view wx:for="{{allWomenStyles}}" wx:key="token" class="picker-tile {{pickerStyle===item.token?'on':''}}" bindtap="onPickerStyle" data-token="{{item.token}}">{{item.token}}</view>
+      </view>
+      <view class="picker-section">男士 · 5 主风格</view>
+      <view class="picker-grid">
+        <view wx:for="{{allMenStyles}}" wx:key="token" class="picker-tile {{pickerStyle===item.token?'on':''}}" bindtap="onPickerStyle" data-token="{{item.token}}">{{item.token}}</view>
+      </view>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeStylePicker">取消</view>
+        <view class="sheet-save" bindtap="confirmAddToLibrary">确定加入</view>
       </view>
     </view>
   </view>
