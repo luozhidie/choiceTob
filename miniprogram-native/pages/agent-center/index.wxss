@@ -231,3 +231,39 @@
 .sheet-cancel, .sheet-save { flex: 1; text-align: center; padding: 24rpx 0; border-radius: 14rpx; font-size: 30rpx; font-weight: 700; }
 .sheet-cancel { background: #f3eee7; color: #6b625c; }
 .sheet-save { background: #C9A24B; color: #2d1b2e; }
+
+/* ========== VIP客户资料管理 ========== */
+.vip-head { display: flex; align-items: center; justify-content: space-between; padding: 8rpx 4rpx 12rpx; }
+.vip-head-l { display: flex; flex-direction: column; }
+.vip-title { font-size: 32rpx; font-weight: 800; color: #2d1b2e; }
+.vip-sub { font-size: 23rpx; color: #9a8f8a; margin-top: 6rpx; }
+.vip-new { background: #2d1b2e; color: #C9A24B; font-size: 28rpx; font-weight: 700; padding: 16rpx 30rpx; border-radius: 999rpx; }
+.vip-card { background: #fff; border-radius: 24rpx; padding: 28rpx; margin-top: 22rpx; box-shadow: 0 4rpx 20rpx rgba(45,27,46,0.05); }
+.vip-card-top { display: flex; align-items: center; }
+.vip-avatar { width: 76rpx; height: 76rpx; border-radius: 50%; background: #2d1b2e; color: #C9A24B; font-size: 32rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.vip-info { flex: 1; margin-left: 20rpx; display: flex; flex-direction: column; }
+.vip-name { font-size: 30rpx; font-weight: 800; color: #2d1b2e; }
+.vip-meta { font-size: 23rpx; color: #9a8f8a; margin-top: 4rpx; }
+.vip-actions { display: flex; align-items: center; gap: 24rpx; }
+.vip-act { font-size: 26rpx; color: #C9A24B; font-weight: 700; }
+.vip-act.vip-del { color: #c0392b; }
+.vip-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
+.vtag { font-size: 22rpx; color: #2d1b2e; background: #faf6ee; border: 1rpx solid #f0e6d2; border-radius: 999rpx; padding: 8rpx 18rpx; }
+.vip-row { font-size: 26rpx; color: #4a423d; margin-top: 12rpx; display: flex; }
+.vip-k { color: #9a8f8a; width: 88rpx; flex-shrink: 0; }
+.vip-note { line-height: 1.5; }
+.vip-more { text-align: center; color: #C9A24B; font-size: 26rpx; padding: 28rpx 0; font-weight: 700; }
+
+/* VIP 表单 */
+.vip-sheet { max-height: 86vh; display: flex; flex-direction: column; }
+.vip-form { margin-top: 24rpx; max-height: 56vh; }
+.vfield { margin-bottom: 22rpx; }
+.vlabel { font-size: 25rpx; color: #6b625c; display: block; margin-bottom: 12rpx; font-weight: 600; }
+.vreq { color: #c0392b; }
+.vinput { background: #f7f4f1; border-radius: 14rpx; padding: 22rpx 24rpx; font-size: 30rpx; color: #2d1b2e; }
+.vpick { display: flex; align-items: center; }
+.vph { color: #b8ada8; }
+.varea { background: #f7f4f1; border-radius: 14rpx; padding: 22rpx 24rpx; font-size: 28rpx; color: #2d1b2e; width: 100%; box-sizing: border-box; height: 150rpx; }
+.seg { display: flex; gap: 16rpx; }
+.seg-i { flex: 1; text-align: center; padding: 18rpx 0; background: #f7f4f1; border-radius: 14rpx; font-size: 28rpx; color: #6b625c; }
+.seg-i.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }

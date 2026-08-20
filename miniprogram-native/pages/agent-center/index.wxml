@@ -33,6 +33,7 @@ module.exports = {
     <view class="tabbar">
       <view class="tab {{tab==='home'?'active':''}}" data-tab="home" bindtap="switchTab">工作台</view>
       <view class="tab {{tab==='customers'?'active':''}}" data-tab="customers" bindtap="switchTab">客户</view>
+      <view class="tab {{tab==='vip'?'active':''}}" data-tab="vip" bindtap="switchTab">VIP</view>
       <view class="tab {{tab==='sales'?'active':''}}" data-tab="sales" bindtap="switchTab">收益</view>
       <view class="tab {{tab==='orders'?'active':''}}" data-tab="orders" bindtap="switchTab">订单</view>
       <view class="tab {{tab==='material'?'active':''}}" data-tab="material" bindtap="switchTab">素材</view>
@@ -234,6 +235,48 @@ module.exports = {
           <text class="ct-text">{{item.lastTryon.product_title || 'AI试衣'}} · {{f.date(item.lastTryon.created_at)}}</text>
         </view>
       </view>
+    </view>
+
+    <!-- ========== VIP客户资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"） ========== -->
+    <view wx:if="{{tab==='vip'}}" class="tab-page">
+      <view class="vip-head">
+        <view class="vip-head-l">
+          <text class="vip-title">VIP客户档案</text>
+          <text class="vip-sub">维护高价值客户资料，按色彩季型与风格精准配货</text>
+        </view>
+        <view class="vip-new" bindtap="openVipForm">＋ 新建</view>
+      </view>
+
+      <view wx:if="{{vipCustomers.length===0 && !loading}}" class="list-empty-box">
+        <text class="list-empty">还没有VIP客户档案</text>
+        <text class="list-empty-desc">把核心客户的姓名、用色季型、风格与跟进记录建在这里，方便精准选品与配货</text>
+        <view class="btn-primary" bindtap="openVipForm">＋ 新建VIP客户</view>
+      </view>
+
+      <view wx:for="{{vipCustomers}}" wx:key="id" class="vip-card">
+        <view class="vip-card-top">
+          <view class="vip-avatar">{{item.initial}}</view>
+          <view class="vip-info">
+            <text class="vip-name">{{item.name}}</text>
+            <text class="vip-meta">{{item.gender || '未填性别'}} · {{item.vip_level || 'V1'}}</text>
+          </view>
+          <view class="vip-actions">
+            <text class="vip-act" bindtap="editVip" data-id="{{item.id}}">编辑</text>
+            <text class="vip-act vip-del" bindtap="deleteVip" data-id="{{item.id}}">删除</text>
+          </view>
+        </view>
+        <view class="vip-tags" wx:if="{{item.color_season || item.main_style || item.sub_style}}">
+          <text class="vtag" wx:if="{{item.color_season}}">{{item.color_season}}</text>
+          <text class="vtag" wx:if="{{item.main_style}}">{{item.main_style}}</text>
+          <text class="vtag" wx:if="{{item.sub_style}}">{{item.sub_style}}</text>
+        </view>
+        <view class="vip-row" wx:if="{{item.phone}}"><text class="vip-k">手机</text>{{item.phone}}</view>
+        <view class="vip-row" wx:if="{{item.wechat}}"><text class="vip-k">微信</text>{{item.wechat}}</view>
+        <view class="vip-row" wx:if="{{item.company}}"><text class="vip-k">店铺</text>{{item.company}}</view>
+        <view class="vip-row vip-note" wx:if="{{item.notes}}"><text class="vip-k">备注</text>{{item.notes}}</view>
+      </view>
+
+      <view wx:if="{{vipCustomers.length>0 && vipMore}}" class="vip-more" bindtap="loadVipCustomers">加载更多</view>
     </view>
 
     <!-- ========== 收益明细 ========== -->
@@ -445,6 +488,67 @@ module.exports = {
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeCoreEdit">取消</view>
         <view class="sheet-save" bindtap="saveCoreEdit">{{coreSaving ? '保存中…' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- VIP客户资料：新建 / 编辑 表单弹窗 -->
+  <view wx:if="{{showVipForm}}" class="mask" bindtap="closeVipForm">
+    <view class="sheet vip-sheet" catchtap="noop">
+      <text class="sheet-title">{{editingVipId ? '编辑VIP客户' : '新建VIP客户'}}</text>
+      <text class="sheet-sub">{{editingVipId ? '修改客户资料并保存' : '填写客户资料，建立你的VIP档案'}}</text>
+      <scroll-view scroll-y class="vip-form">
+        <view class="vfield"><text class="vlabel">姓名 <text class="vreq">*</text></text><input class="vinput" value="{{vipForm.name}}" bindinput="onVipInput" data-field="name" placeholder="客户称呼 / 姓名"/></view>
+        <view class="vfield"><text class="vlabel">手机号</text><input class="vinput" value="{{vipForm.phone}}" bindinput="onVipInput" data-field="phone" placeholder="11 位手机号"/></view>
+        <view class="vfield"><text class="vlabel">微信号</text><input class="vinput" value="{{vipForm.wechat}}" bindinput="onVipInput" data-field="wechat" placeholder="选填"/></view>
+        <view class="vfield"><text class="vlabel">店铺 / 公司</text><input class="vinput" value="{{vipForm.company}}" bindinput="onVipInput" data-field="company" placeholder="选填"/></view>
+        <view class="vfield">
+          <text class="vlabel">性别</text>
+          <view class="seg">
+            <view class="seg-i {{vipForm.gender==='女'?'on':''}}" bindtap="setVipGender" data-g="女">女</view>
+            <view class="seg-i {{vipForm.gender==='男'?'on':''}}" bindtap="setVipGender" data-g="男">男</view>
+          </view>
+        </view>
+        <view class="vfield">
+          <text class="vlabel">色彩季型</text>
+          <view class="vinput vpick {{vipForm.color_season?'':'vph'}}" bindtap="openVipSeasonPicker">{{vipForm.color_season || '选择六大固有色 → 十二季型'}}</view>
+        </view>
+        <view class="vfield"><text class="vlabel">主风格</text><input class="vinput" value="{{vipForm.main_style}}" bindinput="onVipInput" data-field="main_style" placeholder="如：优雅型 / 戏剧型"/></view>
+        <view class="vfield"><text class="vlabel">副风格</text><input class="vinput" value="{{vipForm.sub_style}}" bindinput="onVipInput" data-field="sub_style" placeholder="选填"/></view>
+        <view class="vfield">
+          <text class="vlabel">VIP等级</text>
+          <view class="seg">
+            <view class="seg-i {{vipForm.vip_level==='V1'?'on':''}}" bindtap="setVipLevel" data-l="V1">V1</view>
+            <view class="seg-i {{vipForm.vip_level==='V2'?'on':''}}" bindtap="setVipLevel" data-l="V2">V2</view>
+            <view class="seg-i {{vipForm.vip_level==='V3'?'on':''}}" bindtap="setVipLevel" data-l="V3">V3</view>
+          </view>
+        </view>
+        <view class="vfield">
+          <text class="vlabel">备注</text>
+          <textarea class="varea" value="{{vipForm.notes}}" bindinput="onVipInput" data-field="notes" placeholder="体型 / 偏好 / 尺码 / 跟进记录等"/>
+        </view>
+      </scroll-view>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeVipForm">取消</view>
+        <view class="sheet-save" bindtap="submitVip">{{savingVip ? '保存中…' : '保存'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- VIP资料：色彩季型选择弹窗 -->
+  <view wx:if="{{showVipSeason}}" class="mask" bindtap="closeVipSeason">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-title">选择色彩季型</text>
+      <text class="sheet-sub">六大固有色特征 → 十二个色彩季型</text>
+      <block wx:for="{{colorGroups}}" wx:key="*this">
+        <view class="picker-section">{{item}}色组</view>
+        <view class="picker-grid">
+          <view wx:for="{{allSeasons}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="picker-tile {{vipForm.color_season===s.token?'on':''}}" bindtap="pickVipSeason" data-token="{{s.token}}">{{s.token}}</view>
+        </view>
+      </block>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeVipSeason">取消</view>
+        <view class="sheet-save" bindtap="closeVipSeason">确定</view>
       </view>
     </view>
   </view>

@@ -120,7 +120,16 @@ Page({
     showWithdraw: false,
     withdrawAmt: '',
     submittingWithdraw: false,
-    withdrawals: []
+    withdrawals: [],
+    // VIP客户资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"）
+    vipCustomers: [],
+    vipPage: 1,
+    vipMore: true,
+    showVipForm: false,
+    editingVipId: '',
+    vipForm: { name: '', phone: '', wechat: '', company: '', gender: '', color_season: '', main_style: '', sub_style: '', vip_level: 'V1', notes: '' },
+    savingVip: false,
+    showVipSeason: false
   },
 
   onShow: function () {
@@ -223,6 +232,7 @@ Page({
     var tab = e.currentTarget.dataset.tab;
     this.setData({ tab: tab });
     if (tab === 'customers' && this.data.customers.length === 0) this.loadCustomers(true);
+    if (tab === 'vip' && this.data.vipCustomers.length === 0) this.loadVipCustomers(true);
     if (tab === 'sales' && this.data.salesList.length === 0) this.loadSales(true);
     if (tab === 'orders' && this.data.orderList.length === 0) this.loadOrders(true);
   },
@@ -755,5 +765,118 @@ Page({
     wx.setClipboardData({ data: code, success: function () { wx.showToast({ title: '已复制推广码', icon: 'success' }); } });
   },
   callConsult: function () { wx.makePhoneCall({ phoneNumber: '13925997776' }); },
+
+  // ========== VIP客户资料管理（连接后台 vip_customers，按代理隔离） ==========
+  loadVipCustomers: function (reset) {
+    var t = this;
+    var page = reset ? 1 : t.data.vipPage;
+    if (!reset && !t.data.vipMore) return;
+    wx.request({
+      url: BASE + '/api/agent/vip-customers',
+      method: 'GET',
+      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.error) return; // 非代理等静默
+        var list = (d.customers || []).map(function (c) {
+          return Object.assign({}, c, { initial: (c.name || '?').charAt(0) });
+        });
+        t.setData({
+          vipCustomers: reset ? list : t.data.vipCustomers.concat(list),
+          vipPage: page + 1,
+          vipMore: list.length >= 200
+        });
+      },
+      fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); }
+    });
+  },
+  openVipForm: function () {
+    this.setData({
+      showVipForm: true,
+      editingVipId: '',
+      vipForm: { name: '', phone: '', wechat: '', company: '', gender: '', color_season: '', main_style: '', sub_style: '', vip_level: 'V1', notes: '' },
+      showVipSeason: false
+    });
+  },
+  closeVipForm: function () { this.setData({ showVipForm: false, editingVipId: '' }); },
+  onVipInput: function (e) {
+    var field = e.currentTarget.dataset.field;
+    var f = Object.assign({}, this.data.vipForm);
+    f[field] = e.detail.value;
+    this.setData({ vipForm: f });
+  },
+  setVipGender: function (e) { this.setData({ 'vipForm.gender': e.currentTarget.dataset.g }); },
+  setVipLevel: function (e) { this.setData({ 'vipForm.vip_level': e.currentTarget.dataset.l }); },
+  openVipSeasonPicker: function () { this.setData({ showVipSeason: true }); },
+  closeVipSeason: function () { this.setData({ showVipSeason: false }); },
+  pickVipSeason: function (e) { this.setData({ 'vipForm.color_season': e.currentTarget.dataset.token, showVipSeason: false }); },
+  submitVip: function () {
+    var t = this;
+    if (t.data.savingVip) return;
+    var f = t.data.vipForm;
+    if (!f.name || !f.name.trim()) { wx.showToast({ title: '请填写客户姓名', icon: 'none' }); return; }
+    t.setData({ savingVip: true });
+    var url = BASE + '/api/agent/vip-customers';
+    var method = t.data.editingVipId ? 'PUT' : 'POST';
+    var data = Object.assign({}, f);
+    if (t.data.editingVipId) data.id = t.data.editingVipId;
+    wx.request({
+      url: url, method: method,
+      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+      data: data,
+      success: function (r) {
+        var d = r.data || {};
+        if (d.error) { wx.showModal({ title: '保存失败', content: d.error, showCancel: false }); return; }
+        wx.showToast({ title: '已保存', icon: 'success' });
+        t.setData({ showVipForm: false, editingVipId: '' });
+        t.loadVipCustomers(true);
+      },
+      fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); },
+      complete: function () { t.setData({ savingVip: false }); }
+    });
+  },
+  editVip: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var item = (this.data.vipCustomers || []).find(function (c) { return c.id === id; });
+    if (!item) return;
+    this.setData({
+      showVipForm: true,
+      editingVipId: id,
+      vipForm: {
+        name: item.name || '',
+        phone: item.phone || '',
+        wechat: item.wechat || '',
+        company: item.company || '',
+        gender: item.gender || '',
+        color_season: item.color_season || '',
+        main_style: item.main_style || '',
+        sub_style: item.sub_style || '',
+        vip_level: item.vip_level || 'V1',
+        notes: item.notes || ''
+      }
+    });
+  },
+  deleteVip: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var t = this;
+    wx.showModal({
+      title: '删除VIP客户', content: '确定删除该客户档案？', showCancel: true,
+      success: function (res) {
+        if (!res.confirm) return;
+        wx.request({
+          url: BASE + '/api/agent/vip-customers?id=' + id, method: 'DELETE',
+          header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+          success: function (r) {
+            var d = r.data || {};
+            if (d.error) { wx.showModal({ title: '删除失败', content: d.error, showCancel: false }); return; }
+            wx.showToast({ title: '已删除', icon: 'success' });
+            t.loadVipCustomers(true);
+          },
+          fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
   noop: function () {}
 });
