@@ -66,6 +66,10 @@ Page({
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
+    // 工作台快捷推荐
+    homeQuickPicks: [],
+    // 订单状态汇总
+    orderStats: { paid: 0, shipped: 0, delivered: 0, aftersale: 0 },
     // 弹窗
     showEdit: false,
     editIndex: -1,
@@ -147,7 +151,12 @@ Page({
             marketing_copy: p.marketing_copy || ''
           };
         });
-        t.setData({ priceList: list, materialList: list.filter(function (x) { return x.cover_image; }) });
+        var materialList = list.filter(function (x) { return x.cover_image; });
+        t.setData({
+          priceList: list,
+          materialList: materialList,
+          homeQuickPicks: materialList.slice(0, 6)
+        });
       },
       fail: function () {}, complete: check
     });
@@ -180,6 +189,12 @@ Page({
     var name = this.data.storeName || this.data.fullName || '精选推荐';
     // 优先从 button dataset 取（更可靠）
     var ds = (res && res.target && res.target.dataset) || {};
+    if (ds.share === 'tryon') {
+      return {
+        title: name + ' 邀请你体验 AI 虚拟试衣',
+        path: 'pages/look-studio/index?ref=' + encodeURIComponent(code)
+      };
+    }
     var pid = ds.productId;
     var title = ds.title;
     var cover = ds.cover;
@@ -340,10 +355,18 @@ Page({
       success: function (r) {
         var d = r.data || {};
         var list = d.list || [];
+        var stats = { paid: 0, shipped: 0, delivered: 0, aftersale: 0 };
+        list.forEach(function (o) {
+          if (o.status === 'paid') stats.paid++;
+          else if (o.status === 'shipped') stats.shipped++;
+          else if (o.status === 'delivered') stats.delivered++;
+          if (o.aftersale_status && o.aftersale_status !== 'none') stats.aftersale++;
+        });
         t.setData({
           orderList: reset ? list : t.data.orderList.concat(list),
           orderPage: page + 1,
-          orderMore: list.length >= 20
+          orderMore: list.length >= 20,
+          orderStats: stats
         });
       }
     });
@@ -470,7 +493,8 @@ Page({
         var list = (d.products || []).map(function (p) {
           return { product_id: p.product_id, title: p.title || '', cover_image: p.cover_image || '', retail_price: p.retail_price || 0, custom_price: p.custom_price, marketing_copy: p.marketing_copy || '' };
         });
-        t.setData({ priceList: list, materialList: list.filter(function (x) { return x.cover_image; }) });
+        var materialList = list.filter(function (x) { return x.cover_image; });
+        t.setData({ priceList: list, materialList: materialList, homeQuickPicks: materialList.slice(0, 6) });
       }
     });
   },

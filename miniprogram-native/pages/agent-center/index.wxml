@@ -60,16 +60,16 @@ module.exports = {
         </view>
       </view>
 
-      <!-- 推广码 -->
+      <!-- 推广码 + 核心动作 -->
       <view class="card">
         <view class="card-title">我的推广码</view>
         <view class="code-row">
           <text class="code-text">{{inviteCode || '—'}}</text>
           <view class="code-copy" bindtap="copyCode">复制</view>
         </view>
+        <button class="btn-share btn-share-main" open-type="share">分享给客户 · 赚差价</button>
         <view class="code-actions">
           <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
-          <button class="btn-share" open-type="share">分享给客户</button>
           <button class="btn-share btn-tryon" open-type="share" data-share="tryon">分享试衣</button>
         </view>
         <text class="code-tip">客户通过你的码下单，差价自动结算到收益余额</text>
@@ -83,6 +83,48 @@ module.exports = {
           <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">归因订单</text></view>
           <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">客户GMV</text></view>
         </view>
+        <!-- 0 业绩时给明确行动路径 -->
+        <view wx:if="{{customerCount===0 && orderCount===0 && gmv===0}}" class="steps">
+          <view class="step">
+            <text class="step-num">1</text>
+            <view>
+              <text class="step-t">去「素材」挑商品</text>
+              <text class="step-d">选有卖价的商品，客户看到的价格 = 你的利润</text>
+            </view>
+          </view>
+          <view class="step">
+            <text class="step-num">2</text>
+            <view>
+              <text class="step-t">点「分享给客户」</text>
+              <text class="step-d">转发给微信好友或朋友圈，客户用推广码下单</text>
+            </view>
+          </view>
+          <view class="step">
+            <text class="step-num">3</text>
+            <view>
+              <text class="step-t">收益自动到账</text>
+              <text class="step-d">订单付款后差价进入可提现收益</text>
+            </view>
+          </view>
+          <view class="btn-ghost" style="margin-top:20rpx;" bindtap="switchTab" data-tab="material">去挑素材 ›</view>
+        </view>
+      </view>
+
+      <!-- 今日可推：工作台直接给转发抓手 -->
+      <view class="card" wx:if="{{homeQuickPicks.length>0}}">
+        <view class="card-title">
+          今日可推
+          <text class="card-sub">点卡片直接分享</text>
+        </view>
+        <view class="quick-grid">
+          <view wx:for="{{homeQuickPicks}}" wx:key="product_id" class="quick-item">
+            <image class="quick-img" src="{{item.cover_image}}" mode="aspectFill"/>
+            <text class="quick-title">{{item.title}}</text>
+            <text class="quick-price">{{item.custom_price ? '¥'+f.yuan(item.custom_price) : '卖价未设'}}</text>
+            <button class="quick-share" open-type="share" data-product-id="{{item.product_id}}" data-title="{{item.title}}" data-cover="{{item.cover_image}}">分享</button>
+          </view>
+        </view>
+        <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多素材 ›</view>
       </view>
 
       <!-- 收益 -->
@@ -133,7 +175,11 @@ module.exports = {
 
     <!-- ========== 客户管理 ========== -->
     <view wx:if="{{tab==='customers'}}" class="tab-page">
-      <view wx:if="{{customers.length===0}}" class="list-empty">暂无客户，先去分享你的店铺/试衣吧</view>
+      <view wx:if="{{customers.length===0}}" class="list-empty-box">
+        <text class="list-empty">暂无客户</text>
+        <text class="list-empty-desc">把店铺或试衣分享给客户，他们首次访问后会出现在这里</text>
+        <button class="btn-primary" open-type="share">去分享</button>
+      </view>
       <view wx:for="{{customers}}" wx:key="userId" class="cus-card">
         <view class="cus-head">
           <view class="cus-avatar">{{f.first(item.name)}}</view>
@@ -166,7 +212,11 @@ module.exports = {
         <view class="sum"><text class="sum-num">¥{{f.yuan(profitSummary.settledProfit)}}</text><text class="sum-label">已结算</text></view>
         <view class="sum"><text class="sum-num">¥{{f.yuan(profitSummary.pendingProfit)}}</text><text class="sum-label">待结算</text></view>
       </view>
-      <view wx:if="{{salesList.length===0}}" class="list-empty">暂无收益明细</view>
+      <view wx:if="{{salesList.length===0}}" class="list-empty-box">
+        <text class="list-empty">暂无收益明细</text>
+        <text class="list-empty-desc">客户付款后，差价收益会在这里显示</text>
+        <view class="btn-ghost" bindtap="switchTab" data-tab="material">去分享素材赚钱 ›</view>
+      </view>
       <view wx:for="{{salesList}}" wx:key="order_no" class="sale-card">
         <view class="sale-row">
           <text class="sale-no">{{item.order_no}}</text>
@@ -184,7 +234,30 @@ module.exports = {
 
     <!-- ========== 订单物流 ========== -->
     <view wx:if="{{tab==='orders'}}" class="tab-page">
-      <view wx:if="{{orderList.length===0}}" class="list-empty">暂无归因订单</view>
+      <!-- 订单状态汇总 -->
+      <view class="order-summary" wx:if="{{orderList.length>0}}">
+        <view class="os-item">
+          <text class="os-num">{{orderStats.paid}}</text>
+          <text class="os-label">待发货</text>
+        </view>
+        <view class="os-item">
+          <text class="os-num">{{orderStats.shipped}}</text>
+          <text class="os-label">已发货</text>
+        </view>
+        <view class="os-item">
+          <text class="os-num">{{orderStats.delivered}}</text>
+          <text class="os-label">已签收</text>
+        </view>
+        <view class="os-item">
+          <text class="os-num">{{orderStats.aftersale}}</text>
+          <text class="os-label">售后中</text>
+        </view>
+      </view>
+      <view wx:if="{{orderList.length===0}}" class="list-empty-box">
+        <text class="list-empty">暂无归因订单</text>
+        <text class="list-empty-desc">客户通过你的推广码下单后，订单会同步到这里</text>
+        <view class="btn-ghost" bindtap="switchTab" data-tab="material">去选品推广 ›</view>
+      </view>
       <view wx:for="{{orderList}}" wx:key="order_no" class="order-card">
         <view class="order-head">
           <text class="order-no">{{item.order_no}}</text>
