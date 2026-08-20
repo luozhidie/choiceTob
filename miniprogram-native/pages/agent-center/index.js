@@ -1,37 +1,24 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
 
-// 风格选品：13 个主风格（女士 8 + 男士 5），与分类树 params.style 存储完全对齐
-// 商品 params.style 形如 "少女型,少女偏少年"，按主风格前缀匹配（主+其偏风格一并归类）
-var STYLE_MAIN = [
-  { token: '少女型', gender: '女' }, { token: '优雅型', gender: '女' },
-  { token: '浪漫型', gender: '女' }, { token: '少年型', gender: '女' },
-  { token: '时尚型', gender: '女' }, { token: '古典型', gender: '女' },
-  { token: '自然型', gender: '女' }, { token: '戏剧型', gender: '女' },
-  { token: '戏剧型', gender: '男' }, { token: '自然型', gender: '男' },
-  { token: '古典型', gender: '男' }, { token: '浪漫型', gender: '男' },
-  { token: '时尚型', gender: '男' }
+// 色彩季型：六大固有色特征 -> 十二个色彩季型
+// 作为素材库主分类维度（替代风格），方便代理按客户肤色/用色精准选品
+var COLOR_SEASONS = [
+  { token: '深冷', group: '深' }, { token: '深暖', group: '深' },
+  { token: '浅冷', group: '浅' }, { token: '浅暖', group: '浅' },
+  { token: '冷亮', group: '冷' }, { token: '冷柔', group: '冷' },
+  { token: '暖亮', group: '暖' }, { token: '暖柔', group: '暖' },
+  { token: '净冷', group: '净' }, { token: '净暖', group: '净' },
+  { token: '柔冷', group: '柔' }, { token: '柔暖', group: '柔' }
 ];
-// 商品风格串是否命中某主风格（主风格名 或 以「主风格前缀+偏」开头的偏风格）
-function matchMain(styleStr, token) {
-  if (!styleStr) return false;
-  var prefix = token.slice(0, -1); // 少女型 -> 少女
-  var arr = styleStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
-  for (var i = 0; i < arr.length; i++) {
-    if (arr[i] === token || arr[i].indexOf(prefix + '偏') === 0) return true;
-  }
-  return false;
-}
-function buildStyleLists(materialList) {
-  var women = [], men = [];
-  STYLE_MAIN.forEach(function (m) {
-    var cnt = (materialList || []).filter(function (p) {
-      var s = p._libStyle || p.style || '';
-      return matchMain(s, m.token);
-    }).length;
-    (m.gender === '女' ? women : men).push({ token: m.token, count: cnt });
+var COLOR_GROUPS = ['深', '浅', '冷', '暖', '净', '柔'];
+function buildSeasonLists(materialList) {
+  var list = [];
+  COLOR_SEASONS.forEach(function (s) {
+    var cnt = (materialList || []).filter(function (p) { return (p._libSeason || p.season) === s.token; }).length;
+    list.push({ token: s.token, group: s.group, count: cnt });
   });
-  return { womenStyleList: women, menStyleList: men };
+  return list;
 }
 var CORE_KEY = 'agent_core_clients';
 var MY_MATERIALS_KEY = 'agent_my_materials';
@@ -97,22 +84,21 @@ Page({
     orderMore: true,
     // 商品素材：全店仓库 vs 我的素材库
     materialList: [],          // 全店有图商品（仓库）
-    filteredMaterial: [],      // 当前展示的列表（我的素材库按风格过滤 或 仓库列表）
-    styleFilter: '',           // 当前选中的主风格
-    womenStyleList: [],        // 我的素材库女士风格统计
-    menStyleList: [],          // 我的素材库男士风格统计
-    allWomenStyles: STYLE_MAIN.filter(function (m) { return m.gender === '女'; }).map(function (m) { return { token: m.token }; }),
-    allMenStyles: STYLE_MAIN.filter(function (m) { return m.gender === '男'; }).map(function (m) { return { token: m.token }; }),
-    myMaterials: [],           // 我入库的素材 [{product_id, style, addedAt}]
+    filteredMaterial: [],      // 当前展示的列表（我的素材库按色彩季型过滤 或 仓库列表）
+    colorFilter: '',            // 当前选中的色彩季型
+    seasonList: [],            // 我的素材库十二季型统计（带 group）
+    allSeasons: COLOR_SEASONS.map(function (s) { return { token: s.token, group: s.group }; }),
+    colorGroups: COLOR_GROUPS,
+    myMaterials: [],           // 我入库的素材 [{product_id, season, style(辅助), addedAt}]
     warehouseMode: false,      // 是否在选品入库模式
     shareProduct: null,
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
-    // 风格选择弹窗（加入素材库时使用）
-    showStylePicker: false,
+    // 色彩季型选择弹窗（加入素材库时使用）
+    showColorPicker: false,
     pickerProduct: null,
-    pickerStyle: '',
+    pickerSeason: '',
     // 八位核心客户（本地存储，无需后端迁移）
     coreClients: {},
     showCoreEdit: false,
@@ -563,26 +549,28 @@ Page({
     var t = this;
     var arr = [];
     try { var raw = wx.getStorageSync(MY_MATERIALS_KEY); arr = (raw && Array.isArray(raw)) ? raw : []; } catch (e) { arr = []; }
+    // 兼容旧数据：以前用 style 字段作为主分类，现在主分类是 season（色彩季型）
+    arr.forEach(function (m) { if (!m.season && m.style) { m.season = m.style; } });
     t.setData({ myMaterials: arr });
-    t.applyStyleFilter(true);
+    t.applyColorFilter(true);
   },
   saveMyMaterials: function (arr, cb) {
     try { wx.setStorageSync(MY_MATERIALS_KEY, arr); } catch (e) {}
     this.setData({ myMaterials: arr }, cb);
   },
-  // 把 myMaterials 与商品信息合并，生成带 style 的商品列表（style 以代理入库时选的为准）
+  // 把 myMaterials 与商品信息合并，生成带 season 的商品列表（season 以代理入库时选的色彩季型为准）
   buildMyMaterialList: function () {
     var t = this;
     var map = {};
     (t.data.materialList || []).forEach(function (p) { map[p.product_id] = p; });
     return (t.data.myMaterials || []).map(function (m) {
       var p = map[m.product_id] || {};
-      return Object.assign({}, p, { _libStyle: m.style, product_id: m.product_id, addedAt: m.addedAt });
+      return Object.assign({}, p, { _libSeason: m.season, _libStyle: m.style, product_id: m.product_id, addedAt: m.addedAt });
     }).filter(function (x) { return x.product_id; });
   },
 
-  // 风格过滤：默认过滤我的素材库；warehouseMode 下不过滤
-  applyStyleFilter: function (silent) {
+  // 色彩季型过滤：默认过滤我的素材库；warehouseMode 下不过滤
+  applyColorFilter: function (silent) {
     var t = this;
     if (t.data.warehouseMode) {
       var inLib = {};
@@ -592,56 +580,56 @@ Page({
       return;
     }
     var myList = t.buildMyMaterialList();
-    var f = t.data.styleFilter;
-    var filtered = f ? myList.filter(function (p) { return p._libStyle === f; }) : myList;
-    var styleLists = buildStyleLists(myList);
-    var upd = { filteredMaterial: filtered, womenStyleList: styleLists.womenStyleList, menStyleList: styleLists.menStyleList };
+    var f = t.data.colorFilter;
+    var filtered = f ? myList.filter(function (p) { return p._libSeason === f; }) : myList;
+    var seasonList = buildSeasonLists(myList);
+    var upd = { filteredMaterial: filtered, seasonList: seasonList };
     if (silent === true) { t.setData(upd); } else { t.setData(upd); }
   },
-  setMaterialStyle: function (e) {
+  setMaterialColor: function (e) {
     var token = e.currentTarget.dataset.token;
-    this.setData({ styleFilter: token, warehouseMode: false, tab: 'material' });
-    this.applyStyleFilter();
+    this.setData({ colorFilter: token, warehouseMode: false, tab: 'material' });
+    this.applyColorFilter();
   },
-  clearMaterialStyle: function () {
-    this.setData({ styleFilter: '', warehouseMode: false });
-    this.applyStyleFilter();
+  clearMaterialColor: function () {
+    this.setData({ colorFilter: '', warehouseMode: false });
+    this.applyColorFilter();
   },
   // 选品入库模式切换
   enterWarehouse: function () {
-    this.setData({ warehouseMode: true, styleFilter: '', tab: 'material' });
-    this.applyStyleFilter();
+    this.setData({ warehouseMode: true, colorFilter: '', tab: 'material' });
+    this.applyColorFilter();
   },
   exitWarehouse: function () {
     this.setData({ warehouseMode: false });
-    this.applyStyleFilter();
+    this.applyColorFilter();
   },
-  // 打开风格选择弹窗
-  openStylePicker: function (e) {
+  // 打开色彩季型选择弹窗
+  openColorPicker: function (e) {
     var pid = e.currentTarget.dataset.pid;
     var t = this;
     var product = (t.data.materialList || []).find(function (p) { return p.product_id === pid; });
     if (!product) return;
-    var defaultStyle = product.style ? product.style.split(',')[0].trim() : STYLE_MAIN[0].token;
-    t.setData({ showStylePicker: true, pickerProduct: product, pickerStyle: defaultStyle });
+    var defaultSeason = COLOR_SEASONS[0].token;
+    t.setData({ showColorPicker: true, pickerProduct: product, pickerSeason: defaultSeason });
   },
-  closeStylePicker: function () { this.setData({ showStylePicker: false, pickerProduct: null, pickerStyle: '' }); },
-  onPickerStyle: function (e) { this.setData({ pickerStyle: e.currentTarget.dataset.token }); },
+  closeColorPicker: function () { this.setData({ showColorPicker: false, pickerProduct: null, pickerSeason: '' }); },
+  onPickerSeason: function (e) { this.setData({ pickerSeason: e.currentTarget.dataset.token }); },
   confirmAddToLibrary: function () {
     var t = this;
     var p = t.data.pickerProduct;
-    var style = t.data.pickerStyle;
-    if (!p || !style) return;
+    var season = t.data.pickerSeason;
+    if (!p || !season) return;
     var arr = (t.data.myMaterials || []).slice();
     if (arr.some(function (m) { return m.product_id === p.product_id; })) {
       wx.showToast({ title: '已在素材库中', icon: 'none' });
-      t.closeStylePicker();
+      t.closeColorPicker();
       return;
     }
-    arr.unshift({ product_id: p.product_id, style: style, addedAt: Date.now() });
+    arr.unshift({ product_id: p.product_id, season: season, style: p.style || '', addedAt: Date.now() });
     t.saveMyMaterials(arr, function () {
-      t.closeStylePicker();
-      t.applyStyleFilter();
+      t.closeColorPicker();
+      t.applyColorFilter();
       wx.showToast({ title: '已加入素材库', icon: 'success' });
     });
   },
@@ -654,7 +642,7 @@ Page({
         if (!res.confirm) return;
         var arr = (t.data.myMaterials || []).filter(function (m) { return m.product_id !== pid; });
         t.saveMyMaterials(arr, function () {
-          t.applyStyleFilter();
+          t.applyColorFilter();
           wx.showToast({ title: '已移出', icon: 'success' });
         });
       }
@@ -664,7 +652,7 @@ Page({
     return (this.data.myMaterials || []).some(function (m) { return m.product_id === pid; });
   },
 
-  // 八位核心客户（本地存储）
+  // 十二位核心客户（本地存储）：每个色彩季型绑定一位核心客户
   loadCoreClients: function () {
     var arr;
     try { arr = wx.getStorageSync(CORE_KEY) || {}; } catch (e) { arr = {}; }
@@ -698,15 +686,15 @@ Page({
     t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
     wx.showToast({ title: '已保存', icon: 'success' });
   },
-  // 点击某核心客户「去分享」：按该风格过滤我的素材库，没有则引导去选品
+  // 点击某核心客户「去分享」：按该色彩季型过滤我的素材库，没有则引导去选品
   coreShare: function (e) {
     var token = e.currentTarget.dataset.token;
     var t = this;
-    var has = (t.data.myMaterials || []).some(function (m) { return m.style === token; });
+    var has = (t.data.myMaterials || []).some(function (m) { return m.season === token; });
     if (!has) {
       wx.showModal({
         title: token + ' · 素材库为空',
-        content: '该风格还没有入库素材，先去选品入库？',
+        content: '该色彩季型还没有入库素材，先去选品入库？',
         confirmText: '去选品',
         cancelText: '取消',
         success: function (res) {
@@ -715,8 +703,8 @@ Page({
       });
       return;
     }
-    t.setData({ styleFilter: token, warehouseMode: false, tab: 'material' });
-    t.applyStyleFilter();
+    t.setData({ colorFilter: token, warehouseMode: false, tab: 'material' });
+    t.applyColorFilter();
   },
 
   // 提现

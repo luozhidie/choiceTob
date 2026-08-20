@@ -89,14 +89,14 @@ module.exports = {
             <text class="step-num">1</text>
             <view>
               <text class="step-t">去「素材」选品入库</text>
-              <text class="step-d">按你的客户风格，把商品加入自己的素材库</text>
+              <text class="step-d">按客户色彩季型，把商品加入自己的素材库</text>
             </view>
           </view>
           <view class="step">
             <text class="step-num">2</text>
             <view>
               <text class="step-t">点「发商品给客户」</text>
-              <text class="step-d">把对应风格的商品转发给微信好友，客户直接下单</text>
+              <text class="step-d">把对应色彩季型的商品转发给微信好友，客户直接下单</text>
             </view>
           </view>
           <view class="step">
@@ -127,42 +127,40 @@ module.exports = {
         <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多商品 ›</view>
       </view>
 
-      <!-- 风格选品：我的素材库按主风格归类 -->
-      <view class="card" wx:if="{{womenStyleList.length>0 || menStyleList.length>0 || myMaterials.length>0}}">
-        <view class="card-title">我的素材库<text class="card-sub">按客户风格归类</text></view>
-        <text class="style-tip">你入库的商品会按风格分类，方便对准客户一键分享。</text>
-        <view class="style-group-label">女士 · 8 主风格</view>
-        <view class="style-grid">
-          <view wx:for="{{womenStyleList}}" wx:key="token" class="style-tile" bindtap="setMaterialStyle" data-token="{{item.token}}">
-            <text class="style-name">{{item.token}}</text>
-            <text class="style-num">{{item.count}} 款</text>
+      <!-- 色彩季型选品：我的素材库按十二季型归类 -->
+      <view class="card" wx:if="{{seasonList.length>0 || myMaterials.length>0}}">
+        <view class="card-title">我的素材库<text class="card-sub">按客户色彩季型归类</text></view>
+        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型。你入库的商品按季型分类，对准客户肤色/用色一键分享。</text>
+        <block wx:for="{{colorGroups}}" wx:key="*this">
+          <view class="style-group-label">{{item}}色组 · {{item==='深'||item==='浅'? '明度' : (item==='冷'||item==='暖' ? '色温' : '纯度')}}</view>
+          <view class="style-grid">
+            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="style-tile" bindtap="setMaterialColor" data-token="{{s.token}}">
+              <text class="style-name">{{s.token}}</text>
+              <text class="style-num">{{s.count}} 款</text>
+            </view>
           </view>
-        </view>
-        <view class="style-group-label">男士 · 5 主风格</view>
-        <view class="style-grid">
-          <view wx:for="{{menStyleList}}" wx:key="token" class="style-tile" bindtap="setMaterialStyle" data-token="{{item.token}}">
-            <text class="style-name">{{item.token}}</text>
-            <text class="style-num">{{item.count}} 款</text>
-          </view>
-        </view>
+        </block>
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
-      <!-- 八位核心客户：立项经营模型 -->
+      <!-- 十二位核心客户：每个色彩季型绑定一位 -->
       <view class="card">
-        <view class="card-title">我的八位核心客户<text class="card-sub">八风格各绑定一位</text></view>
-        <text class="style-tip">立项思路：每位店主/代理维护 8 位分别对应女士 8 主风格的核心客户，找齐 8 人即可支撑日常销售与分享，覆盖全风格需求。</text>
-        <view class="core-grid">
-          <view wx:for="{{womenStyleList}}" wx:key="token" class="core-slot {{coreClients[item.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{item.token}}">
-            <text class="core-style">{{item.token}}</text>
-            <block wx:if="{{coreClients[item.token]}}">
-              <text class="core-name">{{coreClients[item.token].name}}</text>
-              <text class="core-sub" wx:if="{{coreClients[item.token].contact}}">{{coreClients[item.token].contact}}</text>
-              <view class="core-share" catchtap="coreShare" data-token="{{item.token}}">去分享 ›</view>
-            </block>
-            <text wx:else class="core-empty">＋ 待开发</text>
+        <view class="card-title">我的十二位核心客户<text class="card-sub">十二季型各绑定一位</text></view>
+        <text class="style-tip">每位店主/代理维护 12 位分别对应十二个色彩季型的核心客户，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
+        <block wx:for="{{colorGroups}}" wx:key="*this">
+          <view class="style-group-label">{{item}}色组</view>
+          <view class="core-grid">
+            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+              <text class="core-style">{{s.token}}</text>
+              <block wx:if="{{coreClients[s.token]}}">
+                <text class="core-name">{{coreClients[s.token].name}}</text>
+                <text class="core-sub" wx:if="{{coreClients[s.token].contact}}">{{coreClients[s.token].contact}}</text>
+                <view class="core-share" catchtap="coreShare" data-token="{{s.token}}">去分享 ›</view>
+              </block>
+              <text wx:else class="core-empty">＋ 待开发</text>
+            </view>
           </view>
-        </view>
+        </block>
       </view>
 
       <!-- 收益 -->
@@ -323,28 +321,23 @@ module.exports = {
       <view class="mat-header">
         <view>
           <text class="mat-header-title">{{warehouseMode ? '选品入库' : '我的素材库'}}</text>
-          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按客户风格归类'}}</text>
+          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按客户色彩季型归类'}}</text>
         </view>
         <view wx:if="{{warehouseMode}}" class="mat-header-btn" bindtap="exitWarehouse">返回素材库</view>
         <view wx:else class="mat-header-btn" bindtap="enterWarehouse">去选品入库</view>
       </view>
 
-      <!-- 风格筛选条：仅在我的素材库且已有风格时显示 -->
-      <block wx:if="{{!warehouseMode && (womenStyleList.length>0 || menStyleList.length>0)}}">
-        <view class="mat-section-label">女士 · 8 主风格</view>
+      <!-- 色彩季型筛选条：仅在我的素材库且已有季型时显示 -->
+      <block wx:if="{{!warehouseMode && seasonList.length>0}}">
         <scroll-view scroll-x class="sb-scroll" enable-flex>
-          <view class="sb-chip {{styleFilter===''?'on':''}}" bindtap="clearMaterialStyle">全部</view>
-          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{womenStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
-        </scroll-view>
-        <view class="mat-section-label" style="margin-top:20rpx;">男士 · 5 主风格</view>
-        <scroll-view scroll-x class="sb-scroll" enable-flex>
-          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{menStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
+          <view class="sb-chip {{colorFilter===''?'on':''}}" bindtap="clearMaterialColor">全部</view>
+          <view class="sb-chip {{colorFilter===item.token?'on':''}}" wx:for="{{seasonList}}" wx:key="token" bindtap="setMaterialColor" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
         </scroll-view>
       </block>
 
       <!-- 工具栏 -->
       <view class="mat-toolbar" wx:if="{{filteredMaterial.length>0 && !warehouseMode}}">
-        <text class="mat-count">{{styleFilter ? styleFilter + ' · ' : ''}}共 {{filteredMaterial.length}} 款商品素材</text>
+        <text class="mat-count">{{colorFilter ? colorFilter + ' · ' : ''}}共 {{filteredMaterial.length}} 款商品素材</text>
         <view class="mat-batch {{batchDownloading?'mat-batch-loading':''}}" bindtap="downloadAllImages">
           {{batchDownloading ? '下载中 ' + batchDone + '/' + filteredMaterial.length : '一键下载全部图片'}}
         </view>
@@ -356,7 +349,7 @@ module.exports = {
       <!-- 空状态 -->
       <view wx:if="{{filteredMaterial.length===0}}" class="list-empty-box">
         <text class="list-empty">{{warehouseMode ? '仓库暂时没有更多商品' : '素材库还是空的'}}</text>
-        <text class="list-empty-desc">{{warehouseMode ? '可以先去上传商品，再回来挑选' : '去选品入库，按你的客户群体风格添加商品'}}</text>
+        <text class="list-empty-desc">{{warehouseMode ? '可以先去上传商品，再回来挑选' : '去选品入库，按你的客户群体色彩季型添加商品'}}</text>
         <view wx:if="{{!warehouseMode}}" class="btn-ghost" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
@@ -370,7 +363,7 @@ module.exports = {
               <text class="mat-price-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
               <text class="mat-price-custom">{{item.custom_price ? '卖价 ¥' + f.yuan(item.custom_price) : '卖价未设'}}</text>
             </view>
-            <text wx:if="{{!warehouseMode && item._libStyle}}" class="mat-lib-tag">{{item._libStyle}}</text>
+            <text wx:if="{{!warehouseMode && item._libSeason}}" class="mat-lib-tag">{{item._libSeason}}</text>
           </view>
         </view>
         <view class="mat-actions" catchtap="noop">
@@ -386,7 +379,7 @@ module.exports = {
           <!-- 仓库选品操作 -->
           <block wx:else>
             <view class="mat-btn" bindtap="goDetail" data-id="{{item.product_id}}">查看详情</view>
-            <view class="mat-btn mat-btn-gold" bindtap="openStylePicker" data-pid="{{item.product_id}}">加入素材库</view>
+            <view class="mat-btn mat-btn-gold" bindtap="openColorPicker" data-pid="{{item.product_id}}">加入素材库</view>
           </block>
         </view>
       </view>
@@ -422,22 +415,20 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 加入素材库：风格选择弹窗 -->
-  <view wx:if="{{showStylePicker}}" class="mask" bindtap="closeStylePicker">
+  <!-- 加入素材库：色彩季型选择弹窗 -->
+  <view wx:if="{{showColorPicker}}" class="mask" bindtap="closeColorPicker">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">加入素材库</text>
       <text class="sheet-sub">{{pickerProduct.title}}</text>
-      <text class="sheet-retail">选择该商品对应的客户风格（主风格）</text>
-      <view class="picker-section">女士 · 8 主风格</view>
-      <view class="picker-grid">
-        <view wx:for="{{allWomenStyles}}" wx:key="token" class="picker-tile {{pickerStyle===item.token?'on':''}}" bindtap="onPickerStyle" data-token="{{item.token}}">{{item.token}}</view>
-      </view>
-      <view class="picker-section">男士 · 5 主风格</view>
-      <view class="picker-grid">
-        <view wx:for="{{allMenStyles}}" wx:key="token" class="picker-tile {{pickerStyle===item.token?'on':''}}" bindtap="onPickerStyle" data-token="{{item.token}}">{{item.token}}</view>
-      </view>
+      <text class="sheet-retail">选择该商品对应的客户色彩季型（六大固有色 → 十二季型）</text>
+      <block wx:for="{{colorGroups}}" wx:key="*this">
+        <view class="picker-section">{{item}}色组</view>
+        <view class="picker-grid">
+          <view wx:for="{{allSeasons}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="picker-tile {{pickerSeason===s.token?'on':''}}" bindtap="onPickerSeason" data-token="{{s.token}}">{{s.token}}</view>
+        </view>
+      </block>
       <view class="sheet-btns">
-        <view class="sheet-cancel" bindtap="closeStylePicker">取消</view>
+        <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
         <view class="sheet-save" bindtap="confirmAddToLibrary">确定加入</view>
       </view>
     </view>
@@ -447,7 +438,7 @@ module.exports = {
   <view wx:if="{{showCoreEdit}}" class="mask" bindtap="closeCoreEdit">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">核心客户 · {{coreEditToken}}</text>
-      <text class="sheet-sub">绑定一位对应此风格的客户</text>
+      <text class="sheet-sub">绑定一位对应此色彩季型的客户</text>
       <input class="sheet-input" value="{{coreEditName}}" bindinput="onCoreName" placeholder="客户称呼（如：李姐）"/>
       <input class="sheet-input" value="{{coreEditContact}}" bindinput="onCoreContact" placeholder="微信 / 电话"/>
       <input class="sheet-input" value="{{coreEditNote}}" bindinput="onCoreNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
