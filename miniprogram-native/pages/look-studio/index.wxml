@@ -208,6 +208,7 @@
   <!-- 保存最终结果 -->
   <view wx:if="{{canvasUrl}}" class="card" style="margin-top:12rpx;">
     <text class="pbtn" style="display:block;text-align:center;background:#C9A24B;color:#1c111d;padding:20rpx 0;border-radius:10rpx;" bindtap="saveResult">保存 / 查看最终造型大图</text>
+    <text wx:if="{{stack.length>0}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="genCard">生成搭配卡片 / 分享给客户 ›</text>
     <text wx:if="{{fromAgent && referralCode}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="goAgentShop">喜欢这套？去代理店铺购买 ›</text>
   </view>
 
@@ -223,6 +224,30 @@
         <text class="pkg-price">¥{{item.price}}</text>
       </view>
       <text class="sheet-close" bindtap="closePackages">关闭</text>
+    </view>
+  </view>
+
+  <!-- 搭配卡片（本人试穿图 + 单品拆解 + 分享/下载/下单） -->
+  <view wx:if="{{showCard}}" class="card-mask" bindtap="closeCard">
+    <view class="card-view" catchtap="noop">
+      <view class="cv-head">
+        <text class="cv-t">我的搭配 · 共 {{stack.length}} 件</text>
+        <text class="cv-x" bindtap="closeCard">✕</text>
+      </view>
+      <image src="{{canvasUrl}}" mode="widthFix" class="cv-img"/>
+      <text class="cv-sub">本套单品（点「去下单」购买）</text>
+      <view class="cv-grid">
+        <view wx:for="{{stack}}" wx:key="id" class="cv-item">
+          <image src="{{item.cover}}" mode="aspectFill" class="cv-cover"/>
+          <text class="cv-name">{{item.title}}</text>
+          <text wx:if="{{item.price}}" class="cv-price">¥{{item.price}}</text>
+          <text class="cv-buy" data-id="{{item.id}}" catchtap="goBuyCard">去下单</text>
+        </view>
+      </view>
+      <view class="cv-acts">
+        <text class="cv-btn" bindtap="downloadAll">一键下载整套</text>
+        <button class="cv-btn cv-share" open-type="share">分享给客户</button>
+      </view>
     </view>
   </view>
 </view>

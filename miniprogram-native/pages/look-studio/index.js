@@ -66,6 +66,7 @@ Page({
     referralCode: '',       // 代理推广码
     fromAgent: false,       // 是否来自代理分享
     currentTryonId: '',     // 当前试衣记录ID
+    showCard: false,        // 搭配卡片视图
   },
 
   onLoad: function (options) {
@@ -400,7 +401,14 @@ Page({
     var list = (this.data.products || []).concat(this.data.closetItems || []);
     for (var i = 0; i < list.length; i++) {
       if (list[i].id === id) {
-        return { id: id, title: list[i].title || list[i].catName || '单品', cover: list[i].cover || list[i].image_url };
+        var it = list[i];
+        return {
+          id: id,
+          title: it.title || it.catName || '单品',
+          cover: it.cover || it.image_url,
+          price: it.price ? fmtPrice(it.price) : '',
+          category: it.category || ''
+        };
       }
     }
     return null;
@@ -444,7 +452,7 @@ Page({
           data: { openid: openid, mode: tier, cloth_urls: [item.cover], result_url: resultUrl }
         });
       }).catch(function () {});
-      var newStack = t.data.stack.concat([{ id: item.id, title: item.title, cover: item.cover, resultUrl: resultUrl }]);
+      var newStack = t.data.stack.concat([{ id: item.id, title: item.title, cover: item.cover, resultUrl: resultUrl, price: item.price || '', category: item.category || '' }]);
       t.syncEntitlement();
       t.setData({ canvasUrl: resultUrl, stack: newStack, loading: false, addingId: '', showShopPick: false });
     };
@@ -701,21 +709,102 @@ Page({
     if (this.data.canvasUrl) wx.previewImage({ urls: [this.data.canvasUrl], current: this.data.canvasUrl });
   },
   saveResult: function () {
-    var url = this.data.canvasUrl;
+    var url = rewriteSupabase(this.data.canvasUrl);
     if (!url) { wx.showToast({ title: '还没有造型图', icon: 'none' }); return; }
-    wx.showLoading({ title: '保存中...' });
-    wx.downloadFile({
-      url: url,
-      success: function (r) {
-        wx.hideLoading();
-        if (r.statusCode !== 200) { wx.showToast({ title: '保存失败', icon: 'none' }); return; }
-        wx.saveImageToPhotosAlbum({
-          filePath: r.tempFilePath,
-          success: function () { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
-          fail: function () { wx.showToast({ title: '保存失败，请授权相册', icon: 'none' }); }
+    this._saveImages([url], '造型图');
+  },
+
+  // 统一保存图片：downloadFile → getImageInfo → previewImage 兜底
+  _saveImages: function (urls, label) {
+    var t = this;
+    urls = (urls || []).filter(Boolean).map(rewriteSupabase);
+    if (!urls.length) { wx.showToast({ title: '没有可保存的图片', icon: 'none' }); return; }
+    wx.showLoading({ title: '保存' + (label || '') + '...' });
+
+    var authAlbum = function (cb) {
+      wx.getSetting({
+        success: function (res) {
+          if (!res.authSetting['scope.writePhotosAlbum']) {
+            wx.authorize({
+              scope: 'scope.writePhotosAlbum',
+              success: function () { cb(true); },
+              fail: function () {
+                wx.hideLoading();
+                wx.showModal({
+                  title: '需要相册权限', content: '请允许保存图片到相册',
+                  confirmText: '去设置',
+                  success: function (r) { if (r.confirm) wx.openSetting(); }
+                });
+              }
+            });
+          } else { cb(true); }
+        },
+        fail: function () { cb(true); }
+      });
+    };
+
+    var tryDownload = function (url, cb) {
+      wx.downloadFile({
+        url: url,
+        success: function (r) {
+          if (r.statusCode === 200) {
+            wx.saveImageToPhotosAlbum({
+              filePath: r.tempFilePath,
+              success: function () { cb(true); },
+              fail: function () { cb(false); }
+            });
+          } else { cb(false); }
+        },
+        fail: function () { cb(false); }
+      });
+    };
+
+    var tryGetInfo = function (url, cb) {
+      wx.getImageInfo({
+        src: url,
+        success: function (res) {
+          wx.saveImageToPhotosAlbum({
+            filePath: res.path,
+            success: function () { cb(true); },
+            fail: function () { cb(false); }
+          });
+        },
+        fail: function () { cb(false); }
+      });
+    };
+
+    var tryPreview = function (url) {
+      wx.hideLoading();
+      wx.previewImage({ urls: [url], current: url });
+      wx.showToast({ title: '长按图片可保存', icon: 'none' });
+    };
+
+    authAlbum(function (ok) {
+      if (!ok) return;
+      var done = 0, fail = 0, idx = 0;
+      var step = function () {
+        if (idx >= urls.length) {
+          wx.hideLoading();
+          if (urls.length === 1 && fail === 1) {
+            tryPreview(urls[0]);
+            return;
+          }
+          wx.showToast({
+            title: '已保存 ' + done + ' 张' + (fail ? '，' + fail + ' 张失败' : ''),
+            icon: fail ? 'none' : 'success'
+          });
+          return;
+        }
+        var u = urls[idx++];
+        tryDownload(u, function (ok1) {
+          if (ok1) { done++; step(); return; }
+          tryGetInfo(u, function (ok2) {
+            if (ok2) { done++; step(); return; }
+            fail++; step();
+          });
         });
-      },
-      fail: function () { wx.hideLoading(); wx.showToast({ title: '下载失败', icon: 'none' }); }
+      };
+      step();
     });
   },
 
@@ -734,5 +823,42 @@ Page({
       if (!isActiveEnt(ent)) { self.setData({ showPackages: true }); return; }
       wx.navigateTo({ url: '/pages/outfit/index' });
     });
+  },
+
+  // —— 搭配卡片（本人试穿图 + 单品拆解 + 分享/下载/下单）——
+  genCard: function () {
+    if (this.data.stack.length === 0) { wx.showToast({ title: '先加几件单品', icon: 'none' }); return; }
+    this.setData({ showCard: true });
+  },
+  closeCard: function () { this.setData({ showCard: false }); },
+
+  goBuyCard: function (e) {
+    var id = e.currentTarget.dataset.id;
+    if (!id) return;
+    var ref = this.data.referralCode ? ('&ref=' + this.data.referralCode) : '';
+    wx.navigateTo({ url: '/pages/shop/index?id=' + id + ref });
+  },
+
+  // 一键下载整套：试穿大图 + 各单品图
+  downloadAll: function () {
+    var urls = [this.data.canvasUrl].concat(this.data.stack.map(function (s) { return s.cover; }));
+    this._saveImages(urls, '整套搭配');
+  },
+
+  // 分享搭配：主商品链接 + 搭配图，客户点开看商品
+  onShareAppMessage: function () {
+    var stack = this.data.stack || [];
+    var first = stack[0] || {};
+    var code = this.data.referralCode || '';
+    var count = stack.length;
+    var title = count > 0 ? ('我搭了 ' + count + ' 件 · ' + (first.title || '精选搭配')) : '精选搭配';
+    var path = first.id
+      ? ('/pages/shop/index?id=' + first.id + (code ? '&ref=' + code : ''))
+      : '/pages/look-studio/index';
+    return {
+      title: title,
+      path: path,
+      imageUrl: this.data.canvasUrl || first.cover || ''
+    };
   },
 });

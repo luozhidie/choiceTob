@@ -111,3 +111,22 @@
 .cl-acts { display: flex; gap: 8rpx; margin-top: 8rpx; }
 .cl-add { flex: 1; text-align: center; background: #2d1b2e; color: #fff; font-size: 20rpx; padding: 10rpx 0; border-radius: 10rpx; }
 .cl-del { flex: 1; text-align: center; background: #fff; color: #c0392b; border: 1rpx solid #f0c0b8; font-size: 20rpx; padding: 10rpx 0; border-radius: 10rpx; }
+
+/* —— 搭配卡片（本人试穿图 + 单品拆解） —— */
+.card-mask { position: fixed; inset: 0; background: rgba(0,0,0,.82); display: flex; align-items: center; justify-content: center; padding: 28rpx; z-index: 60; }
+.card-view { width: 100%; max-height: 90vh; background: #fff; border-radius: 22rpx; padding: 22rpx; box-sizing: border-box; display: flex; flex-direction: column; overflow: hidden; }
+.cv-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14rpx; }
+.cv-t { font-size: 28rpx; font-weight: 800; color: #2d1b2e; }
+.cv-x { font-size: 32rpx; color: #999; padding: 0 8rpx; }
+.cv-img { width: 100%; border-radius: 14rpx; background: #16100f; border: 1rpx solid #4a3840; }
+.cv-sub { font-size: 22rpx; color: #888; margin: 16rpx 0 10rpx; display: block; }
+.cv-grid { display: flex; flex-wrap: wrap; gap: 14rpx; overflow-y: auto; }
+.cv-item { width: calc(33.33% - 10rpx); background: #fafafa; border: 1rpx solid #eee; border-radius: 14rpx; padding: 10rpx; box-sizing: border-box; }
+.cv-cover { width: 100%; height: 200rpx; border-radius: 10rpx; background: #f0f0f0; }
+.cv-name { font-size: 20rpx; color: #333; margin-top: 8rpx; line-height: 1.3; height: 52rpx; overflow: hidden; display: block; }
+.cv-price { font-size: 22rpx; font-weight: 800; color: #C9A24B; margin-top: 4rpx; display: block; }
+.cv-buy { display: block; text-align: center; background: #2d1b2e; color: #C9A24B; font-size: 20rpx; font-weight: 700; padding: 10rpx 0; border-radius: 10rpx; margin-top: 8rpx; }
+.cv-acts { display: flex; gap: 14rpx; margin-top: 18rpx; }
+.cv-btn { flex: 1; text-align: center; background: #C9A24B; color: #2d1b2e; font-weight: 800; font-size: 26rpx; padding: 20rpx 0; border-radius: 14rpx; line-height: normal; }
+.cv-btn::after { border: none; }
+.cv-share { margin: 0; background: #2d1b2e; color: #C9A24B; }
