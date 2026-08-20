@@ -1,3 +1,5 @@
+var app = getApp();
+
 Page({
   data: {
     heroImage: '',
