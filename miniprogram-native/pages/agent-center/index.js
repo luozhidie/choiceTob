@@ -1,6 +1,37 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
 
+// 风格选品：13 个主风格（女士 8 + 男士 5），与分类树 params.style 存储完全对齐
+// 商品 params.style 形如 "少女型,少女偏少年"，按主风格前缀匹配（主+其偏风格一并归类）
+var STYLE_MAIN = [
+  { token: '少女型', gender: '女' }, { token: '优雅型', gender: '女' },
+  { token: '浪漫型', gender: '女' }, { token: '少年型', gender: '女' },
+  { token: '时尚型', gender: '女' }, { token: '古典型', gender: '女' },
+  { token: '自然型', gender: '女' }, { token: '戏剧型', gender: '女' },
+  { token: '戏剧型', gender: '男' }, { token: '自然型', gender: '男' },
+  { token: '古典型', gender: '男' }, { token: '浪漫型', gender: '男' },
+  { token: '时尚型', gender: '男' }
+];
+// 商品风格串是否命中某主风格（主风格名 或 以「主风格前缀+偏」开头的偏风格）
+function matchMain(styleStr, token) {
+  if (!styleStr) return false;
+  var prefix = token.slice(0, -1); // 少女型 -> 少女
+  var arr = styleStr.split(',').map(function (s) { return s.trim(); }).filter(Boolean);
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i] === token || arr[i].indexOf(prefix + '偏') === 0) return true;
+  }
+  return false;
+}
+function buildStyleLists(materialList) {
+  var women = [], men = [];
+  STYLE_MAIN.forEach(function (m) {
+    var cnt = (materialList || []).filter(function (p) { return matchMain(p.style, m.token); }).length;
+    (m.gender === '女' ? women : men).push({ token: m.token, count: cnt });
+  });
+  return { womenStyleList: women, menStyleList: men };
+}
+var CORE_KEY = 'agent_core_clients';
+
 function fmtYuan(cents) {
   if (cents == null) return '0';
   var y = Math.round(cents) / 100;
@@ -62,10 +93,22 @@ Page({
     orderMore: true,
     // 商品素材
     materialList: [],
+    filteredMaterial: [],
+    styleFilter: '',
+    womenStyleList: [],
+    menStyleList: [],
     shareProduct: null,
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
+    // 八位核心客户（本地存储，无需后端迁移）
+    coreClients: {},
+    showCoreEdit: false,
+    coreEditToken: '',
+    coreEditName: '',
+    coreEditContact: '',
+    coreEditNote: '',
+    coreSaving: false,
     // 工作台快捷推荐
     homeQuickPicks: [],
     // 订单状态汇总
@@ -91,6 +134,7 @@ Page({
     }
     var isAdmin = wx.getStorageSync('is_admin') || false;
     t.setData({ token: token, notLogin: false, isAdmin: isAdmin, loading: true, tab: 'home' });
+    t.loadCoreClients();
     t.loadAll();
   },
 
@@ -148,15 +192,20 @@ Page({
             cover_image: p.cover_image || '',
             retail_price: p.retail_price || 0,
             custom_price: p.custom_price,
-            marketing_copy: p.marketing_copy || ''
+            marketing_copy: p.marketing_copy || '',
+            style: p.style || ''
           };
         });
         var materialList = list.filter(function (x) { return x.cover_image; });
+        var styleLists = buildStyleLists(materialList);
         t.setData({
           priceList: list,
           materialList: materialList,
+          womenStyleList: styleLists.womenStyleList,
+          menStyleList: styleLists.menStyleList,
           homeQuickPicks: materialList.slice(0, 6)
         });
+        t.applyStyleFilter();
       },
       fail: function () {}, complete: check
     });
@@ -221,14 +270,14 @@ Page({
   },
   setShareProduct: function (e) {
     var idx = e.currentTarget.dataset.index;
-    var item = this.data.materialList[idx];
+    var item = this.data.filteredMaterial[idx];
     if (item) this.setData({ shareProduct: item });
   },
   // 批量下载全部素材图到相册
   downloadAllImages: function () {
     var t = this;
     if (t.data.batchDownloading) return;
-    var list = (t.data.materialList || []).filter(function (x) { return x.cover_image; });
+    var list = (t.data.filteredMaterial || []).filter(function (x) { return x.cover_image; });
     if (list.length === 0) { wx.showToast({ title: '没有可下载的图片', icon: 'none' }); return; }
 
     // 先检查/申请相册权限
@@ -385,7 +434,7 @@ Page({
   // 复制营销文案
   copyMaterial: function (e) {
     var idx = e.currentTarget.dataset.index;
-    var item = this.data.materialList[idx];
+    var item = this.data.filteredMaterial[idx];
     if (!item) return;
     var text = item.marketing_copy || (item.title + '\n零售价 ¥' + fmtYuan(item.retail_price) + '\n快来我的店铺看看～');
     wx.setClipboardData({ data: text, success: function () { wx.showToast({ title: '文案已复制', icon: 'success' }); } });
@@ -491,12 +540,73 @@ Page({
       success: function (r) {
         var d = r.data || {};
         var list = (d.products || []).map(function (p) {
-          return { product_id: p.product_id, title: p.title || '', cover_image: p.cover_image || '', retail_price: p.retail_price || 0, custom_price: p.custom_price, marketing_copy: p.marketing_copy || '' };
+          return { product_id: p.product_id, title: p.title || '', cover_image: p.cover_image || '', retail_price: p.retail_price || 0, custom_price: p.custom_price, marketing_copy: p.marketing_copy || '', style: p.style || '' };
         });
         var materialList = list.filter(function (x) { return x.cover_image; });
-        t.setData({ priceList: list, materialList: materialList, homeQuickPicks: materialList.slice(0, 6) });
+        var styleLists = buildStyleLists(materialList);
+        t.setData({ priceList: list, materialList: materialList, womenStyleList: styleLists.womenStyleList, menStyleList: styleLists.menStyleList, homeQuickPicks: materialList.slice(0, 6) });
+        t.applyStyleFilter();
       }
     });
+  },
+
+  // 风格过滤：把素材列表按所选主风格过滤
+  applyStyleFilter: function () {
+    var t = this;
+    var f = t.data.styleFilter;
+    var list = t.data.materialList || [];
+    var filtered = f ? list.filter(function (p) { return matchMain(p.style, f); }) : list;
+    t.setData({ filteredMaterial: filtered });
+  },
+  setMaterialStyle: function (e) {
+    var token = e.currentTarget.dataset.token;
+    this.setData({ styleFilter: token, tab: 'material' });
+    this.applyStyleFilter();
+  },
+  clearMaterialStyle: function () {
+    this.setData({ styleFilter: '' });
+    this.applyStyleFilter();
+  },
+
+  // 八位核心客户（本地存储）
+  loadCoreClients: function () {
+    var arr;
+    try { arr = wx.getStorageSync(CORE_KEY) || {}; } catch (e) { arr = {}; }
+    if (!arr || typeof arr !== 'object') arr = {};
+    this.setData({ coreClients: arr });
+  },
+  openCoreEdit: function (e) {
+    var token = e.currentTarget.dataset.token;
+    var c = this.data.coreClients[token] || {};
+    this.setData({
+      showCoreEdit: true, coreEditToken: token,
+      coreEditName: c.name || '', coreEditContact: c.contact || '', coreEditNote: c.note || ''
+    });
+  },
+  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
+  onCoreName: function (e) { this.setData({ coreEditName: e.detail.value }); },
+  onCoreContact: function (e) { this.setData({ coreEditContact: e.detail.value }); },
+  onCoreNote: function (e) { this.setData({ coreEditNote: e.detail.value }); },
+  saveCoreEdit: function () {
+    var t = this;
+    if (t.data.coreSaving) return;
+    var name = (t.data.coreEditName || '').trim();
+    var contact = (t.data.coreEditContact || '').trim();
+    if (!name && !contact) { wx.showToast({ title: '至少填一项', icon: 'none' }); return; }
+    var token = t.data.coreEditToken;
+    var clients = Object.assign({}, t.data.coreClients);
+    var cur = clients[token] || { shares: 0 };
+    cur.name = name; cur.contact = contact; cur.note = t.data.coreEditNote || '';
+    clients[token] = cur;
+    try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
+    t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+    wx.showToast({ title: '已保存', icon: 'success' });
+  },
+  // 点击某核心客户「去分享」：按该风格过滤素材并切到素材页
+  coreShare: function (e) {
+    var token = e.currentTarget.dataset.token;
+    this.setData({ styleFilter: token, tab: 'material' });
+    this.applyStyleFilter();
   },
 
   // 提现

@@ -127,6 +127,44 @@ module.exports = {
         <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多商品 ›</view>
       </view>
 
+      <!-- 风格选品：按主风格归类衣服 -->
+      <view class="card" wx:if="{{womenStyleList.length>0 || menStyleList.length>0}}">
+        <view class="card-title">风格选品<text class="card-sub">按风格归类，精准发给客户</text></view>
+        <text class="style-tip">女士 8 主风格 · 男士 5 主风格，共 64 / 25 种风格组合。点风格看该风格的全部在售商品。</text>
+        <view class="style-group-label">女士 · 8 主风格</view>
+        <view class="style-grid">
+          <view wx:for="{{womenStyleList}}" wx:key="token" class="style-tile" bindtap="setMaterialStyle" data-token="{{item.token}}">
+            <text class="style-name">{{item.token}}</text>
+            <text class="style-num">{{item.count}} 款</text>
+          </view>
+        </view>
+        <view class="style-group-label">男士 · 5 主风格</view>
+        <view class="style-grid">
+          <view wx:for="{{menStyleList}}" wx:key="token" class="style-tile" bindtap="setMaterialStyle" data-token="{{item.token}}">
+            <text class="style-name">{{item.token}}</text>
+            <text class="style-num">{{item.count}} 款</text>
+          </view>
+        </view>
+        <view class="quick-more" bindtap="switchTab" data-tab="material">去素材页按风格筛选 ›</view>
+      </view>
+
+      <!-- 八位核心客户：立项经营模型 -->
+      <view class="card">
+        <view class="card-title">我的八位核心客户<text class="card-sub">八风格各绑定一位</text></view>
+        <text class="style-tip">立项思路：每位店主/代理维护 8 位分别对应女士 8 主风格的核心客户，找齐 8 人即可支撑日常销售与分享，覆盖全风格需求。</text>
+        <view class="core-grid">
+          <view wx:for="{{womenStyleList}}" wx:key="token" class="core-slot {{coreClients[item.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{item.token}}">
+            <text class="core-style">{{item.token}}</text>
+            <block wx:if="{{coreClients[item.token]}}">
+              <text class="core-name">{{coreClients[item.token].name}}</text>
+              <text class="core-sub" wx:if="{{coreClients[item.token].contact}}">{{coreClients[item.token].contact}}</text>
+              <view class="core-share" catchtap="coreShare" data-token="{{item.token}}">去分享 ›</view>
+            </block>
+            <text wx:else class="core-empty">＋ 待开发</text>
+          </view>
+        </view>
+      </view>
+
       <!-- 收益 -->
       <view class="card card-profit">
         <view class="profit-head">
@@ -281,14 +319,21 @@ module.exports = {
 
     <!-- ========== 商品素材 ========== -->
     <view wx:if="{{tab==='material'}}" class="tab-page">
-      <view class="mat-toolbar" wx:if="{{materialList.length>0}}">
-        <text class="mat-count">共 {{materialList.length}} 款商品素材</text>
+      <view class="mat-stylebar" wx:if="{{womenStyleList.length>0 || menStyleList.length>0}}">
+        <scroll-view scroll-x class="sb-scroll" enable-flex>
+          <view class="sb-chip {{styleFilter===''?'on':''}}" bindtap="clearMaterialStyle">全部</view>
+          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{womenStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}}</view>
+          <view class="sb-chip {{styleFilter===item.token?'on':''}}" wx:for="{{menStyleList}}" wx:key="token" bindtap="setMaterialStyle" data-token="{{item.token}}">{{item.token}}</view>
+        </scroll-view>
+      </view>
+      <view class="mat-toolbar" wx:if="{{filteredMaterial.length>0}}">
+        <text class="mat-count">{{styleFilter ? styleFilter + ' · ' : ''}}共 {{filteredMaterial.length}} 款商品素材</text>
         <view class="mat-batch {{batchDownloading?'mat-batch-loading':''}}" bindtap="downloadAllImages">
-          {{batchDownloading ? '下载中 ' + batchDone + '/' + materialList.length : '一键下载全部图片'}}
+          {{batchDownloading ? '下载中 ' + batchDone + '/' + filteredMaterial.length : '一键下载全部图片'}}
         </view>
       </view>
-      <view wx:if="{{materialList.length===0}}" class="list-empty">暂无商品素材</view>
-      <view wx:for="{{materialList}}" wx:key="product_id" class="mat-card">
+      <view wx:if="{{filteredMaterial.length===0}}" class="list-empty">{{materialList.length===0 ? '暂无商品素材' : '该风格暂无商品'}}</view>
+      <view wx:for="{{filteredMaterial}}" wx:key="product_id" class="mat-card">
         <view class="mat-top" bindtap="goDetail" data-id="{{item.product_id}}">
           <image class="mat-img" src="{{item.cover_image}}" mode="aspectFill" catchtap="goDetail" data-id="{{item.product_id}}"/>
           <view class="mat-info" catchtap="goDetail" data-id="{{item.product_id}}">
@@ -335,6 +380,21 @@ module.exports = {
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeWithdraw">取消</view>
         <view class="sheet-save" bindtap="submitWithdraw">{{submittingWithdraw ? '提交中…' : '提交申请'}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心客户编辑弹窗 -->
+  <view wx:if="{{showCoreEdit}}" class="mask" bindtap="closeCoreEdit">
+    <view class="sheet" catchtap="noop">
+      <text class="sheet-title">核心客户 · {{coreEditToken}}</text>
+      <text class="sheet-sub">绑定一位对应此风格的客户</text>
+      <input class="sheet-input" value="{{coreEditName}}" bindinput="onCoreName" placeholder="客户称呼（如：李姐）"/>
+      <input class="sheet-input" value="{{coreEditContact}}" bindinput="onCoreContact" placeholder="微信 / 电话"/>
+      <input class="sheet-input" value="{{coreEditNote}}" bindinput="onCoreNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeCoreEdit">取消</view>
+        <view class="sheet-save" bindtap="saveCoreEdit">{{coreSaving ? '保存中…' : '保存'}}</view>
       </view>
     </view>
   </view>

@@ -179,6 +179,30 @@
 .sec-link { text-align: center; color: #9a8f8a; font-size: 24rpx; margin-top: 16rpx; }
 .sbtm { height: 40rpx; }
 
+/* 风格选品 */
+.style-tip { font-size: 22rpx; color: #9a8f8a; line-height: 1.5; margin-top: 12rpx; }
+.style-group-label { font-size: 24rpx; color: #2d1b2e; font-weight: 700; margin-top: 28rpx; margin-bottom: 16rpx; }
+.style-grid { display: flex; flex-wrap: wrap; gap: 18rpx; }
+.style-tile { width: calc((100% - 36rpx) / 3); box-sizing: border-box; background: #faf6ee; border: 1rpx solid #f0e6d2; border-radius: 16rpx; padding: 22rpx 0; text-align: center; }
+.style-name { display: block; font-size: 28rpx; font-weight: 700; color: #2d1b2e; }
+.style-num { display: block; font-size: 22rpx; color: #b09a6a; margin-top: 6rpx; }
+
+/* 八位核心客户 */
+.core-grid { display: flex; flex-wrap: wrap; gap: 18rpx; margin-top: 20rpx; }
+.core-slot { width: calc((100% - 36rpx) / 3); box-sizing: border-box; background: #f7f4f9; border: 1rpx dashed #ddd0e0; border-radius: 16rpx; padding: 20rpx 16rpx; display: flex; flex-direction: column; align-items: center; min-height: 130rpx; justify-content: center; }
+.core-slot.filled { background: #fff; border: 1rpx solid #C9A24B; box-shadow: 0 4rpx 16rpx rgba(201,162,75,0.12); }
+.core-style { font-size: 26rpx; font-weight: 800; color: #2d1b2e; }
+.core-name { font-size: 24rpx; color: #2d1b2e; margin-top: 8rpx; font-weight: 600; }
+.core-sub { font-size: 20rpx; color: #9a8f8a; margin-top: 2rpx; }
+.core-share { font-size: 22rpx; color: #C9A24B; font-weight: 700; margin-top: 12rpx; }
+.core-empty { font-size: 22rpx; color: #b8ada8; margin-top: 6rpx; }
+
+/* 素材风格筛选条 */
+.mat-stylebar { margin-top: 24rpx; }
+.sb-scroll { white-space: nowrap; }
+.sb-chip { display: inline-block; font-size: 24rpx; color: #6b5e58; background: #f3eee7; border-radius: 999rpx; padding: 12rpx 26rpx; margin-right: 14rpx; }
+.sb-chip.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+
 /* 弹窗 */
 .mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; z-index: 100; }
 .sheet { width: 100%; background: #fff; border-radius: 28rpx 28rpx 0 0; padding: 40rpx 36rpx 60rpx; box-sizing: border-box; }

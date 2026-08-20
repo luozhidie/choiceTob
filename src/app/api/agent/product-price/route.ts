@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceRoleClient();
     const { data: products } = await supabase
       .from("products")
-      .select("id, title, cover_image, price")
+      .select("id, title, cover_image, price, params")
       .eq("is_published", true)
       .order("sort_order", { ascending: true });
     const { data: prices } = await supabase
@@ -71,6 +71,7 @@ export async function GET(request: NextRequest) {
       cover_image: p.cover_image || null,
       retail_price: p.price || 0,
       custom_price: map.has(p.id) ? map.get(p.id) : null,
+      style: (p.params && typeof p.params.style === "string" && p.params.style) || "",
     }));
     return NextResponse.json({ products: list });
   } catch (err: any) {
