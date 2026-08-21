@@ -24,14 +24,18 @@ var CORE_KEY = 'agent_core_clients';
 var MY_MATERIALS_KEY = 'agent_my_materials';
 
 // 穿衣风格客户盘：女士 8 主风格 × 8 偏风格 = 64；男士 5 主风格 × 5 偏风格 = 25
-var LADY_MAIN_STYLES = ['少女型', '少年型', '优雅型', '浪漫型', '古典型', '自然型', '戏剧型', '时尚型'];
-var MAN_MAIN_STYLES = ['少年型', '古典型', '自然型', '浪漫型', '时尚型'];
+// 数据来源：形象档案页面（女士8主风格 / 男士5主风格）
+var LADY_MAIN_STYLES = ['少女型', '优雅型', '浪漫型', '少年型', '时尚型', '古典型', '自然型', '戏剧型'];
+var MAN_MAIN_STYLES = ['戏剧型', '自然型', '古典型', '浪漫型', '时尚型'];
 var STYLE_CLIENTS_KEY = 'agent_style_clients';
 function buildStyleCombos(mains) {
   var list = [];
   mains.forEach(function (main) {
+    // 主风格自身：纯X型
+    list.push({ token: '纯' + main, main: main, sub: main, pure: true });
+    // 主风格偏其他风格
     mains.forEach(function (sub) {
-      if (main === sub) return; // 主偏同型不存在，如没有"少女偏少女"
+      if (main === sub) return;
       list.push({ token: main + '偏' + sub, main: main, sub: sub });
     });
   });

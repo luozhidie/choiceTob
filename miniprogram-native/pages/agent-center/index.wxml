@@ -169,13 +169,13 @@ module.exports = {
 
       <!-- 女士风格客户盘：8 主风格 × 8 偏风格 = 64（可折叠） -->
       <view class="card">
-        <view class="card-title">女士风格客户盘<text class="card-sub">56 种主偏风格组合</text></view>
-        <text class="style-tip">维护 56 种女士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">女士风格客户盘<text class="card-sub">64 种风格组合</text></view>
+        <text class="style-tip">维护 64 种女士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
         <view class="mat-parent-bar style-parent-bar">
-          <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{expandedLadyStyle===item?'on':''}}" bindtap="expandLadyStyle" data-main="{{item}}">{{item.replace('型','')}}</view>
+          <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{expandedLadyStyle===item?'on':''}}" bindtap="expandLadyStyle" data-main="{{item}}">{{item}}</view>
         </view>
         <view wx:if="{{expandedLadyStyle}}" class="core-subtree">
-          <view class="style-group-label">{{expandedLadyStyle}} · 7 种组合</view>
+          <view class="style-group-label">{{expandedLadyStyle}}的偏风格（曲直 / 冷暖微调）· 8 种组合</view>
           <view class="core-grid style-core-grid">
             <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
               <text class="core-style">{{s.token}}</text>
@@ -191,13 +191,13 @@ module.exports = {
 
       <!-- 男士风格客户盘：5 主风格 × 5 偏风格 = 25（可折叠） -->
       <view class="card">
-        <view class="card-title">男士风格客户盘<text class="card-sub">20 种主偏风格组合</text></view>
-        <text class="style-tip">维护 20 种男士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">男士风格客户盘<text class="card-sub">25 种风格组合</text></view>
+        <text class="style-tip">维护 25 种男士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
         <view class="mat-parent-bar style-parent-bar">
-          <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{expandedManStyle===item?'on':''}}" bindtap="expandManStyle" data-main="{{item}}">{{item.replace('型','')}}</view>
+          <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{expandedManStyle===item?'on':''}}" bindtap="expandManStyle" data-main="{{item}}">{{item}}</view>
         </view>
         <view wx:if="{{expandedManStyle}}" class="core-subtree">
-          <view class="style-group-label">{{expandedManStyle}} · 4 种组合</view>
+          <view class="style-group-label">{{expandedManStyle}}的偏风格（可多选叠加）· 5 种组合</view>
           <view class="core-grid style-core-grid">
             <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
               <text class="core-style">{{s.token}}</text>
