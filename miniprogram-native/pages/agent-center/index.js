@@ -31,6 +31,7 @@ function buildStyleCombos(mains) {
   var list = [];
   mains.forEach(function (main) {
     mains.forEach(function (sub) {
+      if (main === sub) return; // 主偏同型不存在，如没有"少女偏少女"
       list.push({ token: main + '偏' + sub, main: main, sub: sub });
     });
   });
