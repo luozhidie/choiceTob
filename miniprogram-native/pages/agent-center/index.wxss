@@ -281,3 +281,14 @@
 .style-tile.on { background: #2d1b2e; border-color: #2d1b2e; }
 .style-tile.on .style-name { color: #C9A24B; }
 .style-tile.on .style-num { color: rgba(201,162,75,0.85); }
+
+/* 核心客户 12 季型可折叠 */
+.core-parent-bar { margin-top: 20rpx; }
+.core-subtree { margin-top: 16rpx; padding: 20rpx; background: #faf8f6; border-radius: 20rpx; }
+.core-subtree .style-group-label { margin-top: 0; margin-bottom: 16rpx; }
+
+/* 风格客户盘 */
+.style-parent-bar { margin-top: 20rpx; flex-wrap: wrap; }
+.style-parent-bar .mat-parent { flex: 1 1 100rpx; min-width: 100rpx; font-size: 24rpx; padding: 16rpx 0; }
+.style-core-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.style-core-grid .core-slot { width: calc((100% - 16rpx) / 2); min-height: 120rpx; }

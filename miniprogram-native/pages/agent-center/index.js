@@ -23,6 +23,22 @@ function buildSeasonLists(materialList) {
 var CORE_KEY = 'agent_core_clients';
 var MY_MATERIALS_KEY = 'agent_my_materials';
 
+// 穿衣风格客户盘：女士 8 主风格 × 8 偏风格 = 64；男士 5 主风格 × 5 偏风格 = 25
+var LADY_MAIN_STYLES = ['少女型', '少年型', '优雅型', '浪漫型', '古典型', '自然型', '戏剧型', '时尚型'];
+var MAN_MAIN_STYLES = ['少年型', '古典型', '自然型', '浪漫型', '时尚型'];
+var STYLE_CLIENTS_KEY = 'agent_style_clients';
+function buildStyleCombos(mains) {
+  var list = [];
+  mains.forEach(function (main) {
+    mains.forEach(function (sub) {
+      list.push({ token: main + '偏' + sub, main: main, sub: sub });
+    });
+  });
+  return list;
+}
+var LADY_STYLE_COMBOS = buildStyleCombos(LADY_MAIN_STYLES);
+var MAN_STYLE_COMBOS = buildStyleCombos(MAN_MAIN_STYLES);
+
 function fmtYuan(cents) {
   if (cents == null) return '0';
   var y = Math.round(cents) / 100;
@@ -101,8 +117,17 @@ Page({
     showColorPicker: false,
     pickerProduct: null,
     pickerSeason: '',
-    // 八位核心客户（本地存储，无需后端迁移）
+    // 核心客户（本地存储，无需后端迁移）
     coreClients: {},
+    expandedCoreGroup: '',     // 核心客户 12 季型当前展开的固有色组
+    // 穿衣风格客户盘（女士 64 + 男士 25）
+    ladyMainStyles: LADY_MAIN_STYLES,
+    ladyStyleCombos: LADY_STYLE_COMBOS,
+    manMainStyles: MAN_MAIN_STYLES,
+    manStyleCombos: MAN_STYLE_COMBOS,
+    styleClients: {},
+    expandedLadyStyle: '',
+    expandedManStyle: '',
     showCoreEdit: false,
     coreEditToken: '',
     coreEditName: '',
@@ -144,6 +169,7 @@ Page({
     var isAdmin = wx.getStorageSync('is_admin') || false;
     t.setData({ token: token, notLogin: false, isAdmin: isAdmin, loading: true, tab: 'home' });
     t.loadCoreClients();
+    t.loadStyleClients();
     t.loadAll();
   },
 
@@ -611,6 +637,10 @@ Page({
     var group = e.currentTarget.dataset.group;
     this.setData({ expandedGroup: this.data.expandedGroup === group ? '' : group });
   },
+  expandCoreGroup: function (e) {
+    var group = e.currentTarget.dataset.group;
+    this.setData({ expandedCoreGroup: this.data.expandedCoreGroup === group ? '' : group });
+  },
   // 选品入库模式切换
   enterWarehouse: function () {
     this.setData({ warehouseMode: true, colorFilter: '', tab: 'material' });
@@ -675,9 +705,27 @@ Page({
     if (!arr || typeof arr !== 'object') arr = {};
     this.setData({ coreClients: arr });
   },
+  // 穿衣风格客户盘（女士 64 + 男士 25）
+  loadStyleClients: function () {
+    var arr;
+    try { arr = wx.getStorageSync(STYLE_CLIENTS_KEY) || {}; } catch (e) { arr = {}; }
+    if (!arr || typeof arr !== 'object') arr = {};
+    this.setData({ styleClients: arr });
+  },
+  expandLadyStyle: function (e) {
+    var main = e.currentTarget.dataset.main;
+    this.setData({ expandedLadyStyle: this.data.expandedLadyStyle === main ? '' : main });
+  },
+  expandManStyle: function (e) {
+    var main = e.currentTarget.dataset.main;
+    this.setData({ expandedManStyle: this.data.expandedManStyle === main ? '' : main });
+  },
+  isSeasonToken: function (token) {
+    return COLOR_SEASONS.some(function (s) { return s.token === token; });
+  },
   openCoreEdit: function (e) {
     var token = e.currentTarget.dataset.token;
-    var c = this.data.coreClients[token] || {};
+    var c = (this.data.coreClients[token] || this.data.styleClients[token]) || {};
     this.setData({
       showCoreEdit: true, coreEditToken: token,
       coreEditName: c.name || '', coreEditContact: c.contact || '', coreEditNote: c.note || ''
@@ -694,18 +742,34 @@ Page({
     var contact = (t.data.coreEditContact || '').trim();
     if (!name && !contact) { wx.showToast({ title: '至少填一项', icon: 'none' }); return; }
     var token = t.data.coreEditToken;
-    var clients = Object.assign({}, t.data.coreClients);
-    var cur = clients[token] || { shares: 0 };
-    cur.name = name; cur.contact = contact; cur.note = t.data.coreEditNote || '';
-    clients[token] = cur;
-    try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-    t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+    var cur = { name: name, contact: contact, note: t.data.coreEditNote || '', shares: 0 };
+    var prev = (t.data.coreClients[token] || t.data.styleClients[token]) || {};
+    if (prev.shares) cur.shares = prev.shares;
+    if (t.isSeasonToken(token)) {
+      var clients = Object.assign({}, t.data.coreClients);
+      clients[token] = cur;
+      try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
+      t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+    } else {
+      var styleClients = Object.assign({}, t.data.styleClients);
+      styleClients[token] = cur;
+      try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
+      t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+    }
     wx.showToast({ title: '已保存', icon: 'success' });
   },
-  // 点击某核心客户「去分享」：按该色彩季型过滤我的素材库，没有则引导去选品
+  // 点击某核心客户「去分享」：季型按素材库色彩季型过滤；风格暂按季型素材提示
   coreShare: function (e) {
     var token = e.currentTarget.dataset.token;
     var t = this;
+    if (!t.isSeasonToken(token)) {
+      wx.showModal({
+        title: token,
+        content: '风格客户盘去分享功能开发中，可先按该客户的色彩季型去素材库分享。',
+        showCancel: false
+      });
+      return;
+    }
     var has = (t.data.myMaterials || []).some(function (m) { return m.season === token; });
     if (!has) {
       wx.showModal({

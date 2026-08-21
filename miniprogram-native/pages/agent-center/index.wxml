@@ -144,14 +144,17 @@ module.exports = {
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
-      <!-- 十二位核心客户：每个色彩季型绑定一位 -->
+      <!-- 十二位核心客户：每个色彩季型绑定一位（可折叠） -->
       <view class="card">
         <view class="card-title">我的十二位核心客户<text class="card-sub">十二季型各绑定一位</text></view>
         <text class="style-tip">每位店主/代理维护 12 位分别对应十二个色彩季型的核心客户，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
-        <block wx:for="{{colorGroups}}" wx:key="*this">
-          <view class="style-group-label">{{item}}色组</view>
+        <view class="mat-parent-bar core-parent-bar">
+          <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedCoreGroup===item?'on':''}}" bindtap="expandCoreGroup" data-group="{{item}}">{{item}}</view>
+        </view>
+        <view wx:if="{{expandedCoreGroup}}" class="core-subtree">
+          <view class="style-group-label">{{expandedCoreGroup}}：{{groupLabels[expandedCoreGroup]}}</view>
           <view class="core-grid">
-            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===expandedCoreGroup}}" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
               <text class="core-style">{{s.token}}</text>
               <block wx:if="{{coreClients[s.token]}}">
                 <text class="core-name">{{coreClients[s.token].name}}</text>
@@ -161,7 +164,51 @@ module.exports = {
               <text wx:else class="core-empty">＋ 待开发</text>
             </view>
           </view>
-        </block>
+        </view>
+      </view>
+
+      <!-- 女士风格客户盘：8 主风格 × 8 偏风格 = 64（可折叠） -->
+      <view class="card">
+        <view class="card-title">女士风格客户盘<text class="card-sub">64 种主偏风格组合</text></view>
+        <text class="style-tip">维护 64 种女士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="mat-parent-bar style-parent-bar">
+          <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{expandedLadyStyle===item?'on':''}}" bindtap="expandLadyStyle" data-main="{{item}}">{{item.replace('型','')}}</view>
+        </view>
+        <view wx:if="{{expandedLadyStyle}}" class="core-subtree">
+          <view class="style-group-label">{{expandedLadyStyle}} · 8 种组合</view>
+          <view class="core-grid style-core-grid">
+            <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+              <text class="core-style">{{s.token}}</text>
+              <block wx:if="{{styleClients[s.token]}}">
+                <text class="core-name">{{styleClients[s.token].name}}</text>
+                <text class="core-sub" wx:if="{{styleClients[s.token].contact}}">{{styleClients[s.token].contact}}</text>
+              </block>
+              <text wx:else class="core-empty">＋ 待开发</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 男士风格客户盘：5 主风格 × 5 偏风格 = 25（可折叠） -->
+      <view class="card">
+        <view class="card-title">男士风格客户盘<text class="card-sub">25 种主偏风格组合</text></view>
+        <text class="style-tip">维护 25 种男士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="mat-parent-bar style-parent-bar">
+          <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{expandedManStyle===item?'on':''}}" bindtap="expandManStyle" data-main="{{item}}">{{item.replace('型','')}}</view>
+        </view>
+        <view wx:if="{{expandedManStyle}}" class="core-subtree">
+          <view class="style-group-label">{{expandedManStyle}} · 5 种组合</view>
+          <view class="core-grid style-core-grid">
+            <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+              <text class="core-style">{{s.token}}</text>
+              <block wx:if="{{styleClients[s.token]}}">
+                <text class="core-name">{{styleClients[s.token].name}}</text>
+                <text class="core-sub" wx:if="{{styleClients[s.token].contact}}">{{styleClients[s.token].contact}}</text>
+              </block>
+              <text wx:else class="core-empty">＋ 待开发</text>
+            </view>
+          </view>
+        </view>
       </view>
 
       <!-- 收益 -->
