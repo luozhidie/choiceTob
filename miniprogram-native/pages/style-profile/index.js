@@ -237,6 +237,7 @@ Page({
           openid: openid,
           season_type: t.data.seasonType,
           style_tags: t.data.styleTags,
+          gender: t.data.gender,
           occasions: t.data.occasions,
           body_type: t.data.bodyType,
           height: t.data.height ? Number(t.data.height) : null,

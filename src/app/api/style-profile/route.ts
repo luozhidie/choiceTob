@@ -46,6 +46,64 @@ export const OCCASIONS: Record<string, string> = {
   home: "居家",
 };
 
+// 主风格码 -> 中文（覆盖前端 STYLE_DATA 的真实码，含男士 _m 后缀）
+const MAIN_STYLE_MAP: Record<string, string> = {
+  girl: "少女型", elegant: "优雅型", romantic: "浪漫型", boyish: "少年型",
+  fashion: "时尚型", classic: "古典型", natural: "自然型", dramatic: "戏剧型",
+  dramatic_m: "戏剧型", natural_m: "自然型", classic_m: "古典型", romantic_m: "浪漫型", fashion_m: "时尚型",
+};
+// 从 style_tags 解析主风格 + 偏风格中文（与前端 STYLE_DATA 码一致）
+function parseStyles(tags: string[]): { main_style: string; sub_style: string } {
+  let main = "";
+  const subs: string[] = [];
+  (tags || []).forEach((t: string) => {
+    if (MAIN_STYLE_MAP[t]) { if (!main) main = MAIN_STYLE_MAP[t]; return; }
+    const parts = t.split("_");
+    const base = MAIN_STYLE_MAP[parts[0]] ? parts[0] : null;
+    let target = "";
+    for (const p of parts) {
+      if (MAIN_STYLE_MAP[p] && p !== base) { target = MAIN_STYLE_MAP[p]; break; }
+    }
+    if (target) subs.push("偏" + target.replace("型", ""));
+  });
+  return { main_style: main, sub_style: subs.join("·") };
+}
+// 形象档案同步到 vip_customers（source='profile'，仅管理员可见）
+async function syncProfileToVip(b: any, openid: string) {
+  try {
+    const supabase = createClient();
+    const ownerId = isUuid(openid) ? openid : openid;
+    const hasMale = (b.style_tags || []).some((t: string) => t.indexOf("_m") > -1);
+    const gender =
+      b.gender === "men" ? "male"
+      : b.gender === "women" ? "female"
+      : hasMale ? "male" : "female";
+    const colorName = b.season_type ? SEASON_TYPES[b.season_type] || null : null;
+    const parsed = parseStyles(b.style_tags || []);
+    const notes = [
+      "形象档案",
+      "openid: " + openid,
+      b.body_type ? "身材: " + b.body_type : "",
+      b.height && b.weight ? "身高: " + b.height + "cm 体重: " + b.weight + "kg" : "",
+      b.occasions && b.occasions.length ? "场合: " + b.occasions.join("/") : "",
+    ].filter(Boolean).join(" | ");
+    const payload: any = {
+      owner_id: ownerId, agent_id: null, source: "profile", gender,
+      color_season: colorName, main_style: parsed.main_style, sub_style: parsed.sub_style,
+      notes, is_active: true, updated_at: new Date().toISOString(),
+    };
+    const { data: exist } = await supabase
+      .from("vip_customers").select("id").eq("owner_id", ownerId).eq("source", "profile").maybeSingle();
+    if (exist && exist.id) {
+      await supabase.from("vip_customers").update(payload).eq("id", exist.id);
+    } else {
+      await supabase.from("vip_customers").insert([payload]);
+    }
+  } catch (e: any) {
+    console.error("syncProfileToVip error:", e?.message || e);
+  }
+}
+
 function isUuid(s: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 }
@@ -92,6 +150,8 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    // 同步到 vip_customers（source='profile'，仅管理员可见）
+    await syncProfileToVip(b, openid);
     return NextResponse.json({ profile: data });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

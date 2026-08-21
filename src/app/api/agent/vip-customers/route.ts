@@ -65,24 +65,66 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
 
-  const name = (body.name || "").trim();
-  if (!name) return NextResponse.json({ error: "请填写客户姓名" }, { status: 400 });
+  const allowedSources = ["manual", "agent", "import", "style_test", "agent_core", "profile"];
+  const source = (body.source || "agent").trim();
+  if (!allowedSources.includes(source)) return NextResponse.json({ error: "来源不合法" }, { status: 400 });
 
-  const row: any = {
-    name,
-    phone: (body.phone || "").trim() || null,
-    wechat: (body.wechat || "").trim() || null,
-    company: (body.company || "").trim() || null,
-    gender: body.gender || null,
-    color_season: (body.color_season || "").trim() || null,
-    main_style: (body.main_style || "").trim() || null,
-    sub_style: (body.sub_style || "").trim() || null,
-    vip_level: (body.vip_level || "V1").trim() || "V1",
-    notes: (body.notes || "").trim() || null,
-    is_active: true,
-    source: "agent",
-    agent_id: userId,
-  };
+  const name = (body.name || "").trim();
+  const ownerId = (body.owner_id || "").trim() || null;
+
+  let row: any;
+
+  if (source === "profile") {
+    // 形象档案：按 owner_id(用户openid) 归属，name 可空，agent_id 留空（代理看不到）
+    if (!ownerId) return NextResponse.json({ error: "缺少 owner_id" }, { status: 400 });
+    row = {
+      name: name || null,
+      owner_id: ownerId,
+      agent_id: null,
+      source: "profile",
+      gender: body.gender || null,
+      color_season: (body.color_season || "").trim() || null,
+      main_style: (body.main_style || "").trim() || null,
+      sub_style: (body.sub_style || "").trim() || null,
+      notes: (body.notes || "").trim() || null,
+      is_active: true,
+    };
+  } else if (source === "agent_core") {
+    // 核心客户：按 agent_id 归属，色彩季型(季型) 必填
+    const colorSeason = (body.color_season || "").trim();
+    if (!colorSeason) return NextResponse.json({ error: "请选择色彩季型" }, { status: 400 });
+    row = {
+      name,
+      owner_id: null,
+      agent_id: userId,
+      source: "agent_core",
+      gender: body.gender || null,
+      color_season: colorSeason,
+      wechat: (body.wechat || body.contact || "").trim() || null,
+      notes: (body.notes || "").trim() || null,
+      vip_level: "V1",
+      is_active: true,
+    };
+  } else {
+    // agent / manual / import / style_test：原有逻辑，姓名必填
+    if (!name) return NextResponse.json({ error: "请填写客户姓名" }, { status: 400 });
+    row = {
+      name,
+      owner_id: null,
+      agent_id: userId,
+      source,
+      phone: (body.phone || "").trim() || null,
+      wechat: (body.wechat || "").trim() || null,
+      company: (body.company || "").trim() || null,
+      gender: body.gender || null,
+      color_season: (body.color_season || "").trim() || null,
+      main_style: (body.main_style || "").trim() || null,
+      sub_style: (body.sub_style || "").trim() || null,
+      vip_level: (body.vip_level || "V1").trim() || "V1",
+      notes: (body.notes || "").trim() || null,
+      is_active: true,
+    };
+  }
 
   const supabase = createClient();
   const { data, error } = await supabase

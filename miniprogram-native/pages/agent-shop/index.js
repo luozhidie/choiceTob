@@ -71,7 +71,10 @@ Page({
           }
         });
       },
-      fail: function () { wx.showToast({ title: '请授权地址', icon: 'none' }); }
+      fail: function (err) {
+        if (err && err.errMsg && err.errMsg.indexOf('cancel') >= 0) return;
+        wx.showModal({ title: '微信地址未开通', content: '请在下方手动填写收货地址，或前往「微信公众平台 > 开发管理 > 接口设置」申请开通。', showCancel: false });
+      }
     });
   },
 

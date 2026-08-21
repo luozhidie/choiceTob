@@ -548,6 +548,7 @@ module.exports = {
       <input class="sheet-input" value="{{coreEditContact}}" bindinput="onCoreContact" placeholder="微信 / 电话"/>
       <input class="sheet-input" value="{{coreEditNote}}" bindinput="onCoreNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
       <view class="sheet-btns">
+        <view wx:if="{{coreEditIsSeason && coreEditIds[coreEditToken]}}" class="sheet-delete" bindtap="deleteCore">删除</view>
         <view class="sheet-cancel" bindtap="closeCoreEdit">取消</view>
         <view class="sheet-save" bindtap="saveCoreEdit">{{coreSaving ? '保存中…' : '保存'}}</view>
       </view>

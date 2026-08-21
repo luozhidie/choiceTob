@@ -123,8 +123,9 @@ Page({
     showColorPicker: false,
     pickerProduct: null,
     pickerSeason: '',
-    // 核心客户（本地存储，无需后端迁移）
+    // 核心客户（已同步后端 vip_customers，source='agent_core'，本地作兜底）
     coreClients: {},
+    coreEditIds: {},           // 季型 token -> 后端记录 id（用于 PUT 更新）
     expandedCoreGroup: '',     // 核心客户 12 季型当前展开的固有色组
     // 穿衣风格客户盘（女士 64 + 男士 25）
     ladyMainStyles: LADY_MAIN_STYLES,
@@ -708,12 +709,32 @@ Page({
     return (this.data.myMaterials || []).some(function (m) { return m.product_id === pid; });
   },
 
-  // 十二位核心客户（本地存储）：每个色彩季型绑定一位核心客户
+  // 十二位核心客户：每个色彩季型绑定一位核心客户，数据同步到后端 vip_customers(source='agent_core')
   loadCoreClients: function () {
+    var t = this;
+    // 本地兜底先渲染
     var arr;
     try { arr = wx.getStorageSync(CORE_KEY) || {}; } catch (e) { arr = {}; }
     if (!arr || typeof arr !== 'object') arr = {};
-    this.setData({ coreClients: arr });
+    t.setData({ coreClients: arr });
+    // 后端加载（按 agent_id 隔离，仅本代理）
+    wx.request({
+      url: BASE + '/api/agent/vip-customers',
+      method: 'GET',
+      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.error) return;
+        var map = {}; var ids = {};
+        (d.customers || []).forEach(function (c) {
+          if (c.source !== 'agent_core' || !c.color_season) return;
+          map[c.color_season] = { name: c.name || '', contact: c.wechat || '', note: c.notes || '', shares: 0 };
+          ids[c.color_season] = c.id;
+        });
+        try { wx.setStorageSync(CORE_KEY, map); } catch (e) {}
+        t.setData({ coreClients: map, coreEditIds: ids });
+      }
+    });
   },
   // 穿衣风格客户盘（女士 64 + 男士 25）
   loadStyleClients: function () {
@@ -737,11 +758,11 @@ Page({
     var token = e.currentTarget.dataset.token;
     var c = (this.data.coreClients[token] || this.data.styleClients[token]) || {};
     this.setData({
-      showCoreEdit: true, coreEditToken: token,
+      showCoreEdit: true, coreEditToken: token, coreEditIsSeason: this.isSeasonToken(token),
       coreEditName: c.name || '', coreEditContact: c.contact || '', coreEditNote: c.note || ''
     });
   },
-  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
+  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
   onCoreName: function (e) { this.setData({ coreEditName: e.detail.value }); },
   onCoreContact: function (e) { this.setData({ coreEditContact: e.detail.value }); },
   onCoreNote: function (e) { this.setData({ coreEditNote: e.detail.value }); },
@@ -755,18 +776,76 @@ Page({
     var cur = { name: name, contact: contact, note: t.data.coreEditNote || '', shares: 0 };
     var prev = (t.data.coreClients[token] || t.data.styleClients[token]) || {};
     if (prev.shares) cur.shares = prev.shares;
+
     if (t.isSeasonToken(token)) {
-      var clients = Object.assign({}, t.data.coreClients);
-      clients[token] = cur;
-      try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-      t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
-    } else {
-      var styleClients = Object.assign({}, t.data.styleClients);
-      styleClients[token] = cur;
-      try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
-      t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+      // 核心客户：同步到后端 vip_customers（source='agent_core'）
+      var existingId = t.data.coreEditIds[token];
+      var body = { name: name, source: 'agent_core', color_season: token, wechat: contact, notes: t.data.coreEditNote || '' };
+      if (existingId) body.id = existingId;
+      wx.request({
+        url: BASE + '/api/agent/vip-customers',
+        method: existingId ? 'PUT' : 'POST',
+        header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+        data: body,
+        success: function (r) {
+          var d = r.data || {};
+          var clients = Object.assign({}, t.data.coreClients);
+          var ids = Object.assign({}, t.data.coreEditIds);
+          clients[token] = cur;
+          if (d.data && d.data.id) ids[token] = d.data.id;
+          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
+          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+          wx.showToast({ title: '已保存', icon: 'success' });
+        },
+        fail: function () {
+          // 后端失败则存本地兜底
+          var clients = Object.assign({}, t.data.coreClients);
+          clients[token] = cur;
+          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
+          t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+          wx.showToast({ title: '已存本地', icon: 'none' });
+        }
+      });
+      return;
     }
+    // 风格客户盘：保持本地存储（本次未要求同步后端）
+    var styleClients = Object.assign({}, t.data.styleClients);
+    styleClients[token] = cur;
+    try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
+    t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
     wx.showToast({ title: '已保存', icon: 'success' });
+  },
+  deleteCore: function () {
+    var t = this;
+    var token = t.data.coreEditToken;
+    var existingId = (t.data.coreEditIds || {})[token];
+    if (!existingId) return;
+    wx.showModal({
+      title: '删除确认',
+      content: '确定删除「' + token + '」的核心客户吗？',
+      confirmText: '删除',
+      success: function (res) {
+        if (!res.confirm) return;
+        function finish() {
+          var clients = Object.assign({}, t.data.coreClients);
+          var ids = Object.assign({}, t.data.coreEditIds);
+          delete clients[token];
+          delete ids[token];
+          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
+          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditName: '', coreEditContact: '', coreEditNote: '' });
+          wx.showToast({ title: '已删除', icon: 'success' });
+        }
+        wx.request({
+          url: BASE + '/api/agent/vip-customers?id=' + encodeURIComponent(existingId),
+          method: 'DELETE',
+          header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+          success: function (r) { finish(); },
+          fail: function () {
+            wx.showModal({ title: '删除失败', content: '网络错误，已保留本地记录，请稍后重试。', showCancel: false });
+          }
+        });
+      }
+    });
   },
   // 点击某核心客户「去分享」：季型按素材库色彩季型过滤；风格暂按季型素材提示
   coreShare: function (e) {
@@ -858,7 +937,9 @@ Page({
       success: function (r) {
         var d = r.data || {};
         if (d.error) return; // 非代理等静默
-        var list = (d.customers || []).map(function (c) {
+        var list = (d.customers || []).filter(function (c) {
+          return c.source !== 'agent_core';
+        }).map(function (c) {
           return Object.assign({}, c, { initial: (c.name || '?').charAt(0) });
         });
         t.setData({
