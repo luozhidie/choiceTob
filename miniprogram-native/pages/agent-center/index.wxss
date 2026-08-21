@@ -270,11 +270,14 @@
 
 /* 素材库色彩季型分类树 */
 .mat-season-tree { background: #fff; border-radius: 24rpx; padding: 28rpx; margin-top: 24rpx; box-shadow: 0 4rpx 20rpx rgba(45,27,46,0.05); }
-.mat-season-tree .style-group-label { margin-top: 24rpx; }
-.mat-season-tree .style-group-label:first-of-type { margin-top: 18rpx; }
-.mat-season-tree .style-tile { width: calc((100% - 16rpx) / 2); padding: 26rpx 0; }
 .mat-tree-all { display: inline-block; font-size: 26rpx; color: #6b5e58; background: #f3eee7; border-radius: 999rpx; padding: 14rpx 32rpx; margin-top: 16rpx; }
 .mat-tree-all.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+.mat-parent-bar { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 24rpx; }
+.mat-parent { flex: 1; min-width: 80rpx; text-align: center; font-size: 28rpx; color: #6b5e58; background: #f3eee7; border-radius: 16rpx; padding: 18rpx 0; font-weight: 600; }
+.mat-parent.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+.mat-subtree { margin-top: 20rpx; padding: 20rpx; background: #faf8f6; border-radius: 20rpx; }
+.mat-subtree .style-group-label { margin-top: 0; margin-bottom: 16rpx; }
+.mat-subtree .style-tile { width: calc((100% - 16rpx) / 2); padding: 26rpx 0; }
 .style-tile.on { background: #2d1b2e; border-color: #2d1b2e; }
 .style-tile.on .style-name { color: #C9A24B; }
 .style-tile.on .style-num { color: rgba(201,162,75,0.85); }

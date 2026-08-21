@@ -89,6 +89,8 @@ Page({
     seasonList: [],            // 我的素材库十二季型统计（带 group）
     allSeasons: COLOR_SEASONS.map(function (s) { return { token: s.token, group: s.group }; }),
     colorGroups: COLOR_GROUPS,
+    groupLabels: { 深: '深冷、深暖', 浅: '浅冷、浅暖', 冷: '冷亮、冷柔', 暖: '暖亮、暖柔', 净: '净冷、净暖', 柔: '柔冷、柔暖' },
+    expandedGroup: '',         // 素材库分类树当前展开的固有色组
     myMaterials: [],           // 我入库的素材 [{product_id, season, style(辅助), addedAt}]
     warehouseMode: false,      // 是否在选品入库模式
     shareProduct: null,
@@ -604,6 +606,10 @@ Page({
   clearMaterialColor: function () {
     this.setData({ colorFilter: '', warehouseMode: false });
     this.applyColorFilter();
+  },
+  expandGroup: function (e) {
+    var group = e.currentTarget.dataset.group;
+    this.setData({ expandedGroup: this.data.expandedGroup === group ? '' : group });
   },
   // 选品入库模式切换
   enterWarehouse: function () {
