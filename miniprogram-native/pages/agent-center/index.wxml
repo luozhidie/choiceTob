@@ -370,13 +370,20 @@ module.exports = {
         <view wx:else class="mat-header-btn" bindtap="enterWarehouse">去选品入库</view>
       </view>
 
-      <!-- 色彩季型筛选条：仅在我的素材库且已有季型时显示 -->
-      <block wx:if="{{!warehouseMode && seasonList.length>0}}">
-        <scroll-view scroll-x class="sb-scroll" enable-flex>
-          <view class="sb-chip {{colorFilter===''?'on':''}}" bindtap="clearMaterialColor">全部</view>
-          <view class="sb-chip {{colorFilter===item.token?'on':''}}" wx:for="{{seasonList}}" wx:key="token" bindtap="setMaterialColor" data-token="{{item.token}}">{{item.token}} {{item.count}}</view>
-        </scroll-view>
-      </block>
+      <!-- 色彩季型分类树：六大固有色 -> 十二季型 -->
+      <view wx:if="{{!warehouseMode && seasonList.length>0}}" class="mat-season-tree">
+        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型，按客户肤色/用色归类选品</text>
+        <view class="mat-tree-all {{colorFilter===''?'on':''}}" bindtap="clearMaterialColor">全部 · {{myMaterials.length}} 款</view>
+        <block wx:for="{{colorGroups}}" wx:key="*this">
+          <view class="style-group-label">{{item}}：{{item==='深'?'深冷、深暖':(item==='浅'?'浅冷、浅暖':(item==='冷'?'冷亮、冷柔':(item==='暖'?'暖亮、暖柔':(item==='净'?'净冷、净暖':'柔冷、柔暖'))))}}</view>
+          <view class="style-grid">
+            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="style-tile {{colorFilter===s.token?'on':''}}" bindtap="setMaterialColor" data-token="{{s.token}}">
+              <text class="style-name">{{s.token}}</text>
+              <text class="style-num">{{s.count}} 款</text>
+            </view>
+          </view>
+        </block>
+      </view>
 
       <!-- 工具栏 -->
       <view class="mat-toolbar" wx:if="{{filteredMaterial.length>0 && !warehouseMode}}">
