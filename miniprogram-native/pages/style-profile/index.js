@@ -122,14 +122,19 @@ Page({
       });
     });
   },
-  setSeason: function (e) { this.setData({ seasonType: e.currentTarget.dataset.c }); },
+  _codeFrom: function (e) {
+    var ct = e.currentTarget || {};
+    var tg = e.target || {};
+    return ct.dataset && (ct.dataset.c || ct.dataset.code || ct.id) || (tg.dataset && (tg.dataset.c || tg.dataset.code || tg.id)) || '';
+  },
+  setSeason: function (e) { var c = this._codeFrom(e); if (!c) return; this.setData({ seasonType: c }); },
   setGender: function (e) {
     var g = e.currentTarget.dataset.g;
     if (g === this.data.gender) return;
     this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [] });
   },
   toggleMain: function (e) {
-    var t = this; var c = e.currentTarget.dataset.c;
+    var t = this; var c = t._codeFrom(e); if (!c) return;
     var mains = STYLE_DATA[t.data.gender];
     var cur = null, old = null;
     for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; if (mains[i].code === t.data.mainStyle) old = mains[i]; }
@@ -160,7 +165,7 @@ Page({
     }
   },
   toggleSub: function (e) {
-    var c = e.currentTarget.dataset.c || e.target.dataset.c;
+    var c = this._codeFrom(e);
     if (!c) { wx.showToast({ title: '未取到风格码', icon: 'none' }); return; }
     var arr = this.data.styleTags.slice();
     var i = arr.indexOf(c);
@@ -171,7 +176,7 @@ Page({
     this.setData({ styleTags: arr, pureSelected: pureSelected });
   },
   toggleOccasion: function (e) {
-    var c = e.currentTarget.dataset.c || e.target.dataset.c;
+    var c = this._codeFrom(e);
     if (!c) { wx.showToast({ title: '未取到场合码', icon: 'none' }); return; }
     var arr = this.data.occasions.slice();
     var i = arr.indexOf(c);
