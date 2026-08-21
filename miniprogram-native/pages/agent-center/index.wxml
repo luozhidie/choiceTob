@@ -128,19 +128,22 @@ module.exports = {
         <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多商品 ›</view>
       </view>
 
-      <!-- 色彩季型选品：我的素材库按十二季型归类 -->
+      <!-- 色彩季型选品：我的素材库按十二季型归类（可折叠，同素材 tab） -->
       <view class="card" wx:if="{{seasonList.length>0 || myMaterials.length>0}}">
         <view class="card-title">我的素材库<text class="card-sub">按客户色彩季型归类</text></view>
         <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型。你入库的商品按季型分类，对准客户肤色/用色一键分享。</text>
-        <block wx:for="{{colorGroups}}" wx:key="*this">
-          <view class="style-group-label">{{item}}色组 · {{item==='深'||item==='浅'? '明度' : (item==='冷'||item==='暖' ? '色温' : '纯度')}}</view>
+        <view class="mat-parent-bar workshop-parent-bar">
+          <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedWorkshopGroup===item?'on':''}}" bindtap="expandWorkshopGroup" data-group="{{item}}">{{item}}</view>
+        </view>
+        <view wx:if="{{expandedWorkshopGroup}}" class="workshop-subtree">
+          <view class="style-group-label">{{expandedWorkshopGroup}}色组 · {{expandedWorkshopGroup==='深'||expandedWorkshopGroup==='浅'? '明度' : (expandedWorkshopGroup==='冷'||expandedWorkshopGroup==='暖' ? '色温' : '纯度')}} · {{groupLabels[expandedWorkshopGroup]}}</view>
           <view class="style-grid">
-            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="style-tile" bindtap="setMaterialColor" data-token="{{s.token}}">
+            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===expandedWorkshopGroup}}" class="style-tile" bindtap="setMaterialColor" data-token="{{s.token}}">
               <text class="style-name">{{s.token}}</text>
               <text class="style-num">{{s.count}} 款</text>
             </view>
           </view>
-        </block>
+        </view>
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 

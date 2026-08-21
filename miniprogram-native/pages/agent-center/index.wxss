@@ -287,6 +287,12 @@
 .core-subtree { margin-top: 16rpx; padding: 20rpx; background: #faf8f6; border-radius: 20rpx; }
 .core-subtree .style-group-label { margin-top: 0; margin-bottom: 16rpx; }
 
+/* 工作台我的素材库卡片可折叠 */
+.workshop-parent-bar { margin-top: 20rpx; }
+.workshop-subtree { margin-top: 16rpx; padding: 20rpx; background: #faf8f6; border-radius: 20rpx; }
+.workshop-subtree .style-group-label { margin-top: 0; margin-bottom: 16rpx; }
+.workshop-subtree .style-tile { width: calc((100% - 16rpx) / 2); padding: 26rpx 0; }
+
 /* 风格客户盘 */
 .style-parent-bar { margin-top: 20rpx; flex-wrap: wrap; }
 .style-parent-bar .mat-parent { flex: 1 1 100rpx; min-width: 100rpx; font-size: 24rpx; padding: 16rpx 0; }
