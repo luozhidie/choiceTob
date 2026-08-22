@@ -71,7 +71,6 @@ function parseStyles(tags: string[]): { main_style: string; sub_style: string } 
 // 形象档案同步到 vip_customers（source='profile'，仅管理员可见）
 async function syncProfileToVip(b: any, openid: string) {
   try {
-    const supabase = createClient();
     const ownerId = isUuid(openid) ? openid : openid;
     const hasMale = (b.style_tags || []).some((t: string) => t.indexOf("_m") > -1);
     const gender =

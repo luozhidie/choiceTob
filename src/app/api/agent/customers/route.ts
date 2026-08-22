@@ -6,7 +6,7 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (token) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.auth.getUser(token);
     if (data?.user?.id) return data.user.id;
   }
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "未登录" }, { status: 401 });
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // 取代理身份信息，判断 valid
   const { data: profile } = await supabase

@@ -6,7 +6,7 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
   if (token) {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase.auth.getUser(token);
     if (data?.user?.id) return data.user.id;
   }
@@ -17,7 +17,7 @@ async function resolveUserId(req: NextRequest): Promise<string | null> {
 
 // 是否代理（与 agent/customers 保持一致）
 async function resolveAgent(userId: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
     .select("membership_type, deposit_amount, store_owner_certified, role")
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
   const { isAgent } = await resolveAgent(userId);
   if (!isAgent) return NextResponse.json({ error: "无权限" }, { status: 403 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("vip_customers")
     .select("*")
@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
     };
   }
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("vip_customers")
     .insert([row])
@@ -175,7 +175,7 @@ export async function PUT(req: NextRequest) {
     }
   });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("vip_customers")
     .update(patch)
@@ -201,7 +201,7 @@ export async function DELETE(req: NextRequest) {
   const id = new URL(req.url).searchParams.get("id");
   if (!id) return NextResponse.json({ error: "缺少记录ID" }, { status: 400 });
 
-  const supabase = createClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("vip_customers")
     .delete()
