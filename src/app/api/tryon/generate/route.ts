@@ -9,7 +9,7 @@ const GENLOOK_BASE = "https://api.genlook.app";
 function reverseProxy(u: string): string {
   if (typeof u !== "string") return u;
   u = u.replace(/^https?:\/\/colour-choice\.art\/simg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
-  u = u.replace(/^https?:\/\/colour-choice\.art\/sapimg\//i, "https://lzdchoice.supabase.co/");
+  u = u.replace(/^https?:\/\/colour-choice\.art\/sapimg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
   return u;
 }
 

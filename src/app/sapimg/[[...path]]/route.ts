@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const UPSTREAM = "https://lzdchoice.supabase.co";
+const UPSTREAM = "https://fxeknwkmytzedkhplozn.supabase.co";
 
 export async function GET(request: NextRequest, { params }: { params: { path?: string[] } }) {
   const segments = params.path || [];

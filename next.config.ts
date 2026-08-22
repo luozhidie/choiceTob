@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/sapimg/:path*",
-        destination: "https://lzdchoice.supabase.co/:path*",
+        destination: "https://fxeknwkmytzedkhplozn.supabase.co/:path*",
       },
     ];
   },

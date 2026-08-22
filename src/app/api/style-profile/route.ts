@@ -91,12 +91,15 @@ async function syncProfileToVip(b: any, openid: string) {
       color_season: colorName, main_style: parsed.main_style, sub_style: parsed.sub_style,
       notes, is_active: true, updated_at: new Date().toISOString(),
     };
-    const { data: exist } = await supabase
+    const { data: exist, error: selErr } = await supabase
       .from("vip_customers").select("id").eq("owner_id", ownerId).eq("source", "profile").maybeSingle();
+    if (selErr) { console.error("syncProfileToVip select error:", selErr.message); return; }
     if (exist && exist.id) {
-      await supabase.from("vip_customers").update(payload).eq("id", exist.id);
+      const { error: updErr } = await supabase.from("vip_customers").update(payload).eq("id", exist.id);
+      if (updErr) console.error("syncProfileToVip update error:", updErr.message);
     } else {
-      await supabase.from("vip_customers").insert([payload]);
+      const { error: insErr } = await supabase.from("vip_customers").insert([payload]);
+      if (insErr) console.error("syncProfileToVip insert error:", insErr.message);
     }
   } catch (e: any) {
     console.error("syncProfileToVip error:", e?.message || e);
