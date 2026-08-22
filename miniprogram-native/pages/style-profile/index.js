@@ -79,6 +79,11 @@ function deriveStyle(gender, tags) {
   return { gender: gender, mainStyle: '', mainName: '', subList: [], styleTags: [], selectedSub: '', pureSelected: false };
 }
 // 偏风格小标题：男士风格不分直曲，故不显示「曲直」维度
+function occasionMap(arr) {
+  var m = {};
+  (arr || []).forEach(function (c) { m[c] = true; });
+  return m;
+}
 function subHeadingOf(gender, mainName) {
   if (!mainName) return '';
   return gender === 'men' ? (mainName + '的偏风格（如' + mainName + '偏自然，单选）') : (mainName + '的偏风格（如' + mainName + '偏浪漫，单选）');
@@ -91,7 +96,7 @@ Page({
   data: {
     seasonTypes: SEASON_TYPES, occasionsList: OCCASIONS,
     gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [], subHeading: '',
-    seasonType: '', styleTags: [], selectedSub: '', occasions: [], pureSelected: false,
+    seasonType: '', styleTags: [], selectedSub: '', occasions: [], occasionSelected: {}, pureSelected: false,
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
     fullBodyPhoto: '',
@@ -115,6 +120,7 @@ Page({
               selectedSub: der.selectedSub,
               gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName), pureSelected: der.pureSelected,
               occasions: p.occasions || [],
+              occasionSelected: occasionMap(p.occasions || []),
               bodyType: p.body_type || '',
               height: p.height ? String(p.height) : '',
               weight: p.weight ? String(p.weight) : '',
@@ -180,7 +186,7 @@ Page({
     var arr = this.data.occasions.slice();
     var i = arr.indexOf(c);
     if (i >= 0) arr.splice(i, 1); else arr.push(c);
-    this.setData({ occasions: arr });
+    this.setData({ occasions: arr, occasionSelected: occasionMap(arr) });
   },
   onInput: function (e) { var f = e.currentTarget.dataset.f; this.setData({ [f]: e.detail.value }); },
   onSize: function (e) { var k = e.currentTarget.dataset.k; var s = Object.assign({}, this.data.sizes); s[k] = e.detail.value; this.setData({ sizes: s }); },

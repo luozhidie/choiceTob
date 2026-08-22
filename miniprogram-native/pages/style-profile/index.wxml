@@ -33,7 +33,7 @@
   <view class="card">
     <text class="ct">常去场合（可多选）</text>
     <view class="chips">
-      <button wx:for="{{occasionsList}}" wx:key="code" plain hover-class="none" data-c="{{item.code}}" id="{{item.code}}" class="chip {{occasions.indexOf(item.code)>-1?'on':''}}" bindtap="toggleOccasion">{{item.name}}</button>
+      <button wx:for="{{occasionsList}}" wx:key="code" plain hover-class="none" data-c="{{item.code}}" id="{{item.code}}" class="chip {{occasionSelected[item.code]?'on':''}}" bindtap="toggleOccasion">{{item.name}}</button>
     </view>
   </view>
 
