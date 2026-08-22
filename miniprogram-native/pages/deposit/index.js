@@ -6,9 +6,13 @@ Page({
     showPay:false,
     selectedPlan:null,
     loading:false,
+    showAgreement:false,
+    agreementText:'',
+    agreementSigned:false,
     agentStatus:{ active:false, depositAmount:0, discountRate:1, returnRate:0 },
     plans:[
       {id:'agent_test_cent',name:'链路测试',amount:'0.01',amountLabel:'¥0.01',discount:'2.8折',refund:5,example:'验证充值到账',isTest:true},
+      {id:'wholesale_6k',name:'拿货会员·首充6000',amount:'6000',amountLabel:'¥6,000',discount:'2.8折',refund:0,tryonTip:'充值¥6000将自动扣除¥998专业版试衣费，剩余¥5002计入预存货款（仅用于拿货，不退现）',example:'原价¥100 → ¥28 + 赠专业试衣100次'},
       {id:'wholesale_5w',name:'充值会员·5万',amount:'5万',amountLabel:'¥50,000',discount:'2.8折',refund:5,example:'原价¥100 → ¥28'},
       {id:'wholesale_10w',name:'充值会员·10万',amount:'10万',amountLabel:'¥100,000',discount:'2.8折',refund:10,example:'原价¥100 → ¥28'},
       {id:'wholesale_30w',name:'充值会员·30万',amount:'30万',amountLabel:'¥300,000',discount:'2.6折',refund:20,example:'原价¥100 → ¥26'},
@@ -58,6 +62,40 @@ Page({
   selectPlan:function(e){var p=e.currentTarget.dataset.plan;this.setData({selectedPlan:p,showPay:true});},
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
 
+  // 协议：拉取文本并展示
+  openAgreement:function(){
+    var t=this;
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:BASE+'/api/agent/agreement?openid='+encodeURIComponent(openid),
+        success:function(r){
+          var d=r.data||{};
+          if(d.signed){ t.setData({agreementSigned:true}); return; }
+          t.setData({showAgreement:true, agreementText:d.agreementText||'《预充货款协议》'});
+        }
+      });
+    });
+  },
+  closeAgreement:function(){this.setData({showAgreement:false});},
+  signAgreement:function(){
+    var t=this;
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:BASE+'/api/agent/agreement',
+        method:'POST',
+        data:{version:'v1', openid:openid},
+        success:function(r){
+          if(r.data&&r.data.ok){
+            t.setData({showAgreement:false, agreementSigned:true});
+            wx.showToast({title:'已签署',icon:'success'});
+          }else{
+            wx.showModal({title:'签约失败',content:(r.data&&r.data.error)||'请重试',showCancel:false});
+          }
+        }
+      });
+    });
+  },
+
   confirmPay:function(){
     var t=this;
     var p=this.data.selectedPlan;
@@ -75,7 +113,13 @@ Page({
           wx.hideLoading();
           var d=r.data||{};
           t.setData({loading:false});
-          if(d.error){wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
+          if(d.error){
+            // 未签协议：弹协议签约
+            if(d.needAgreement){
+              t.openAgreement();
+              return;
+            }
+            wx.showModal({title:'下单失败',content:d.error,showCancel:false});return;}
 
           wx.requestPayment({
             timeStamp:d.timeStamp,

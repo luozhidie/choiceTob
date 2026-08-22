@@ -82,6 +82,28 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = getServiceRoleClient();
+
+    // 下单前校验已签《预充货款协议》（仅对真实充值套餐，测试单除外）
+    if (!plan.isTest) {
+      const { data: byWechat } = await supabase
+        .from("profiles")
+        .select("id, pre_deposit_agreed")
+        .eq("wechat_openid", openid)
+        .maybeSingle();
+      const { data: byWx } = await supabase
+        .from("profiles")
+        .select("id, pre_deposit_agreed")
+        .eq("wx_openid", openid)
+        .maybeSingle();
+      const profile = byWechat || byWx;
+      if (!profile?.pre_deposit_agreed) {
+        return NextResponse.json(
+          { error: "请先签署《预充货款协议》", needAgreement: true },
+          { status: 403 }
+        );
+      }
+    }
+
     const orderNo = generateOrderNo();
 
     // 如果该 openid 已关联 auth 用户，记录 user_id
@@ -109,6 +131,7 @@ export async function POST(request: NextRequest) {
       deposit_amount: plan.depositAmount,
       discount_rate: plan.discountRate,
       return_rate: plan.returnRate,
+      agreement_version: plan.isTest ? null : "v1",
       status: "pending",
       platform,
     });

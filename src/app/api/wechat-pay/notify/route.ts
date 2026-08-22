@@ -256,13 +256,48 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
 
     const profile = byWechat || byWx;
     if (profile?.id) {
+      // 计算实际货款与试衣费（wholesale_6k 扣 998 试衣费，其余全额进货款）
+      let tryonFee = 0;
+      let depositGrant = Number(rec.deposit_amount) || 0;
+
+      const is6k = rec.plan_id === 'wholesale_6k';
+      const alreadyGranted = rec.tryon_granted || rec.deposit_granted_flag;
+
+      if (is6k && !alreadyGranted) {
+        tryonFee = 99800; // ¥998 专业版试衣费（分）
+        depositGrant = (Number(rec.amount) || 600000) - tryonFee; // 剩余进货款 = 500200
+      }
+
+      // 幂等发放：未发放过才发试衣 + 写货款/试衣标识
+      if (is6k && !rec.tryon_granted) {
+        try {
+          const { grantTryonEntitlement } = await import('@/lib/tryon-grant');
+          await grantTryonEntitlement(supabase, openid, 'tryon_pro_998');
+          console.log('[代理充值] 已发放 tryon_pro_998', { order: out_trade_no, openid });
+        } catch (e) {
+          console.error('[代理充值] 试衣权益发放失败', e);
+        }
+      }
+
+      if (!alreadyGranted) {
+        await supabase
+          .from('agent_recharges')
+          .update({
+            tryon_fee: tryonFee,
+            deposit_granted: depositGrant,
+            tryon_granted: is6k ? true : rec.tryon_granted,
+            deposit_granted_flag: true,
+          })
+          .eq('order_no', out_trade_no);
+      }
+
       await activateStoreForDepositAgent(supabase, profile.id, {
-        deposit_amount: Number(rec.deposit_amount) || 0,
+        deposit_amount: depositGrant,
         discount_rate: Number(rec.discount_rate) || 1,
         return_rate: Number(rec.return_rate) || 0,
         plan_id: rec.plan_id,
       });
-      console.log('[代理充值] 已激活并开通店铺', { order: out_trade_no, user: profile.id });
+      console.log('[代理充值] 已激活并开通店铺', { order: out_trade_no, user: profile.id, depositGrant });
     } else {
       console.log('[代理充值] 已到账，但未找到关联 profile，openid=', openid);
     }

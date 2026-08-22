@@ -12,6 +12,7 @@ const PACKAGES: Record<string, { type: string; days: number; normal: number; pro
   // 普通版
   tryon_first_9_9:       { type: "first",        days: 365, normal: 10,  pro: 0 },
   tryon_normal_month_99: { type: "normal_month", days: 30,  normal: 100, pro: 0 },
+  tryon_normal_month_299: { type: "normal_month", days: 30,  normal: 100, pro: 0 },
   // 专业版（含 21 题风格测试 / 八大风格真人试穿）
   tryon_pro_998:         { type: "pro_pack",     days: 365, normal: 0,   pro: 100 },
   // 内部测试通道
