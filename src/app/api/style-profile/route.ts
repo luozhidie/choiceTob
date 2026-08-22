@@ -43,7 +43,6 @@ export const OCCASIONS: Record<string, string> = {
   date: "约会休闲",
   travel: "出行旅游",
   social: "社交礼仪",
-  home: "居家",
 };
 
 // 主风格码 -> 中文（覆盖前端 STYLE_DATA 的真实码，含男士 _m 后缀）

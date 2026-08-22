@@ -33,7 +33,7 @@ const STYLE_DATA: Record<string, { code: string; name: string; subs: { code: str
   ],
 };
 const OCCASIONS = [
-  { code: "work", name: "职场通勤" }, { code: "date", name: "约会休闲" }, { code: "travel", name: "出行旅游" }, { code: "social", name: "社交礼仪" }, { code: "home", name: "居家" },
+  { code: "work", name: "职场通勤" }, { code: "date", name: "约会休闲" }, { code: "travel", name: "出行旅游" }, { code: "social", name: "社交礼仪" },
 ];
 const CAT_NAMES: Record<string, string> = { top: "上装", bottom: "下装", shoes: "鞋履", bag: "包袋", accessory: "配饰" };
 

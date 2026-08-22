@@ -89,7 +89,7 @@ function subHeadingOf(gender, mainName) {
   return gender === 'men' ? (mainName + '的偏风格（如' + mainName + '偏自然，单选）') : (mainName + '的偏风格（如' + mainName + '偏浪漫，单选）');
 }
 var OCCASIONS = [
-  { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }, { code: 'home', name: '居家' }
+  { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }
 ];
 
 Page({
