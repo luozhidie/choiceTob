@@ -2,7 +2,7 @@
 // 轮询 Genlook 虚拟试衣任务状态；完成后自动把结果图转存到 Supabase 并做画质增强。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
+import { enhancePipeline, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
@@ -70,16 +70,14 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
           // 自动画质修复（默认开启，env TRYON_AUTO_ENHANCE=false 可关；失败自动回退原图）
           if (process.env.TRYON_AUTO_ENHANCE !== "false") {
             try {
-              let enhancedBuf: Buffer;
-              const aiBuf = ALIYUN_VISION_ENABLED ? await enhanceFaceViaAlibaba(imgBuf) : null;
-              enhancedBuf = aiBuf ?? (await enhanceBuffer(imgBuf, { scale: 2 }));
+              const r = await enhancePipeline(imgBuf);
               const enName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
-              await supabase.storage.from(BUCKET).upload(enName, enhancedBuf, {
+              await supabase.storage.from(BUCKET).upload(enName, r.buffer, {
                 contentType: "image/jpeg",
                 upsert: false,
               });
               resultUrl = supabase.storage.from(BUCKET).getPublicUrl(enName).data.publicUrl;
-              console.log("[tryon/generate/poll] 已自动画质增强（" + (aiBuf ? "AI" : "本地") + "）");
+              console.log("[tryon/generate/poll] 已自动画质增强（" + (r.ai ? "AI-" + r.stage : "本地") + "）");
             } catch (enErr) {
               console.warn("[tryon/generate/poll] 画质增强失败，回退原图", (enErr as Error)?.message);
             }

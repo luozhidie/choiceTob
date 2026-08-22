@@ -129,6 +129,75 @@ export async function enhanceFaceViaAlibaba(input: Buffer): Promise<Buffer | nul
 }
 
 /**
+ * 阿里云视觉智能：图像超分辨率（SuperResolution）。
+ * 把低清整图放大变清晰（接近 Wink「画质增强」的整图清晰化效果）。
+ * 与 EnhanceFace 一样只认上海 OSS 公共读链接，内部自动中转。
+ * @returns 超分后的图片 Buffer；未配置 / 失败返回 null（由调用方回退 sharp）
+ */
+export async function superResolutionViaAlibaba(input: Buffer): Promise<Buffer | null> {
+  if (!ALIYUN_VISION_ENABLED) return null;
+  if (!process.env.ALIYUN_OSS_BUCKET) {
+    console.warn("[enhance] 未配置 ALIYUN_OSS_BUCKET，无法使用超分，回退本地");
+    return null;
+  }
+  const tmp = await uploadToOss(input);
+  if (!tmp) return null;
+  try {
+    const pkg: any = await import("@alicloud/pop-core");
+    const RPCClient = pkg.default || pkg;
+    const client = new RPCClient({
+      accessKeyId: process.env.ALIYUN_VISION_ACCESS_KEY_ID as string,
+      accessKeySecret: process.env.ALIYUN_VISION_ACCESS_KEY_SECRET as string,
+      endpoint: "https://imageenhan.cn-shanghai.aliyuncs.com",
+      apiVersion: "2019-09-30",
+    });
+    const res: any = await client.request(
+      "SuperResolution",
+      { ImageURL: tmp.publicUrl, Mode: "HD" },
+      { method: "POST" }
+    );
+    const outUrl: string | undefined = res?.Data?.ImageURL || res?.Data?.ResultURL;
+    if (!outUrl) {
+      console.warn("[enhance] 阿里云 SuperResolution 未返回图片地址");
+      return null;
+    }
+    const r = await fetch(outUrl);
+    if (!r.ok) {
+      console.warn("[enhance] 阿里云 SuperResolution 结果下载失败", r.status);
+      return null;
+    }
+    return Buffer.from(await r.arrayBuffer());
+  } catch (e: any) {
+    console.warn("[enhance] 阿里云 SuperResolution 调用失败，将回退本地增强：", e?.message || e);
+    return null;
+  } finally {
+    await deleteOssObject(tmp.key);
+  }
+}
+
+/**
+ * 组合增强流水线：超分（整图清晰）→ 人脸修复（修脸）→ 失败回退 sharp 本地增强。
+ * 这是试衣结果后处理的主入口，输出尽量接近 Wink 画质。
+ */
+export async function enhancePipeline(input: Buffer): Promise<{ buffer: Buffer; ai: boolean; stage: string }> {
+  // 1) 阿里云超分（整图清晰化）
+  if (ALIYUN_VISION_ENABLED && process.env.ALIYUN_OSS_BUCKET) {
+    const sr = await superResolutionViaAlibaba(input);
+    if (sr) {
+      // 2) 超分后再人脸修复（EnhanceFace 只修脸，不吃整图放大）
+      const face = await enhanceFaceViaAlibaba(sr).catch(() => null);
+      return { buffer: face ?? sr, ai: true, stage: face ? "sr+face" : "sr" };
+    }
+    // 超分失败但配置齐全，试人脸修复
+    const face = await enhanceFaceViaAlibaba(input).catch(() => null);
+    if (face) return { buffer: face, ai: true, stage: "face" };
+  }
+  // 3) 兜底：sharp 本地超分 + 锐化
+  const buf = await enhanceBuffer(input, { scale: 2 });
+  return { buffer: buf, ai: false, stage: "sharp" };
+}
+
+/**
  * sharp 本地画质增强（零成本兜底）：超分放大 + 锐化 + 通透微调。
  */
 export async function enhanceBuffer(input: Buffer, opts: EnhanceOptions = {}): Promise<Buffer> {

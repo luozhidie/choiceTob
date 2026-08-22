@@ -4,7 +4,7 @@
 // 后端增强逻辑见 lib/tryon/enhance.ts：优先阿里云 AI 人脸增强（EnhanceFace），否则 sharp 本地增强兜底。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enhanceBuffer, enhanceFaceViaAlibaba, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
+import { enhancePipeline, enhanceBuffer, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
 
 const BUCKET = "blocks-images";
 export const runtime = "nodejs";
@@ -46,18 +46,18 @@ export async function POST(request: NextRequest) {
       buffer = Buffer.from(await r.arrayBuffer());
     }
 
-    // 配置了阿里云则优先 AI 人脸修复，否则本地 sharp 增强兜底
-    let aiBuf: Buffer | null = null;
+    // 配置了阿里云则优先 AI 超分+人脸修复，否则本地 sharp 增强兜底
+    let r: { buffer: Buffer; ai: boolean; stage: string } | null = null;
     let aiError: string | null = null;
     if (ALIYUN_VISION_ENABLED) {
       try {
-        aiBuf = await enhanceFaceViaAlibaba(buffer);
+        r = await enhancePipeline(buffer);
       } catch (e: any) {
         aiError = e?.message || String(e);
         console.warn("[tryon/enhance] AI 增强失败:", aiError);
       }
     }
-    const enhanced = aiBuf ?? (await enhanceBuffer(buffer, { scale: 2 }));
+    const enhanced = r?.buffer ?? (await enhanceBuffer(buffer, { scale: 2 }));
 
     const outName = `tryon-enhanced-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
     const { error } = await supabase.storage.from(BUCKET).upload(outName, enhanced, {
@@ -73,7 +73,8 @@ export async function POST(request: NextRequest) {
       ok: true,
       resultUrl: finalUrl,
       enhanced: true,
-      ai: Boolean(aiBuf),
+      ai: Boolean(r?.ai),
+      stage: r?.stage || "sharp",
       aiError,
     });
   } catch (err: any) {
