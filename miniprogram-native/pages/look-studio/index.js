@@ -730,6 +730,8 @@ Page({
     if (!set.length) { wx.showToast({ title: '没有可试穿的搭配', icon: 'none' }); return; }
     if (!t.data.personPath) { wx.showToast({ title: '请先上传你的照片', icon: 'none' }); return; }
     if (!t.data.agreedAuth) { t.needAuth(); return; }
+    // 先清空画布：整套搭配从「纯真人」开始，避免叠在旧衣服上导致原衣残留
+    t.setData({ stack: [], canvasUrl: '' });
     t.syncEntitlement().then(function (ent) {
       if (!isActiveEnt(ent)) { t.setData({ showPackages: true }); return; }
       var tier = t.data.proMode ? 'pro' : 'normal';
