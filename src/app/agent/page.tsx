@@ -200,7 +200,33 @@ export default function AgentWorkbenchPage() {
   }
 
   const perf = me?.performance || { customerCount: 0, orderCount: 0, gmv: 0 };
-  const isAgent = me?.isDepositAgent || me?.isCertified || me?.isAdmin;
+  const isAgent = me?.active || me?.isDepositAgent || me?.isCertified || me?.isAdmin;
+
+  if (user && me && !isAgent) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2d1b2e] text-center px-4">
+        <ShieldCheck className="w-14 h-14 text-[#C9A24B] mb-4" />
+        <h1 className="text-2xl font-bold text-white">你当前还不是有效批发客户</h1>
+        <p className="text-white/60 mt-2 max-w-md">
+          预存货款后即可开通代理工作台、专属推广码、商品定价与佣金提现。货款支持全额退还（扣除已用部分）。
+        </p>
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={() => router.push('/agent/recruit')}
+            className="px-6 py-3 bg-[#C9A24B] text-[#2d1b2e] font-bold rounded-xl hover:bg-[#b8945a] transition-colors"
+          >
+            了解合作方式
+          </button>
+          <button
+            onClick={() => router.push('/vip?tab=deposit')}
+            className="px-6 py-3 border border-[#C9A24B]/40 text-[#C9A24B] font-bold rounded-xl hover:bg-[#C9A24B]/10 transition-colors"
+          >
+            去充值预存货款
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#2d1b2e] text-white pb-20">
@@ -245,16 +271,18 @@ export default function AgentWorkbenchPage() {
           </div>
         )}
 
-        {/* 身份卡 */}
+        {/* 资金账单卡 */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
         >
           <StatCard icon={Percent} label="我的折扣" value={discountLabel(me?.discountRate)} hint="拿货折扣" />
           <StatCard icon={ShieldCheck} label="退换额度" value={`${Math.round((me?.returnRate || 0) * 100)}%`} hint="可退换比例" />
           <StatCard icon={Coins} label="预存货款" value={fmtYuan(me?.depositAmount)} hint="货款余额" />
           <StatCard icon={Wallet} label="可提现" value={fmtYuan(me?.walletBalance)} hint="差价收益" />
+          <StatCard icon={TrendingUp} label="冻结中" value={fmtYuan(me?.frozenBalance)} hint="发货后解锁" />
+          <StatCard icon={ShoppingBag} label="专业试衣" value={`${me?.tryon?.proLeft || 0}次`} hint="剩余额度" />
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -365,6 +393,20 @@ export default function AgentWorkbenchPage() {
                   {wdBusy ? "提交中…" : "申请提现"}
                 </button>
               </div>
+              {wdAmount && Number(wdAmount) > 0 && (
+                <div className="mt-2 text-xs text-white/60 space-y-1">
+                  <p>应扣个税（估算）：¥{(() => {
+                    const cents = Math.round(Number(wdAmount) * 100);
+                    const taxable = cents <= 400000 ? Math.max(0, cents - 80000) : Math.round(cents * 0.8);
+                    return (Math.round(taxable * 0.2) / 100).toFixed(2);
+                  })()}；实际到账：¥{(() => {
+                    const cents = Math.round(Number(wdAmount) * 100);
+                    const taxable = cents <= 400000 ? Math.max(0, cents - 80000) : Math.round(cents * 0.8);
+                    return (Math.max(0, cents - Math.round(taxable * 0.2)) / 100).toFixed(2);
+                  })()}</p>
+                  <p>预计到账：1-7 个工作日（当天提最快隔日，周五提最快下周一）</p>
+                </div>
+              )}
               {wdMsg && <p className="text-sm text-[#C9A24B] mt-2">{wdMsg}</p>}
 
               {withdrawals.length > 0 && (

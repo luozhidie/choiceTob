@@ -299,3 +299,15 @@
 .style-parent-bar .mat-parent { flex: 1 1 100rpx; min-width: 100rpx; font-size: 24rpx; padding: 16rpx 0; }
 .style-core-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
 .style-core-grid .core-slot { width: calc((100% - 16rpx) / 2); min-height: 120rpx; }
+
+/* 提现弹窗增强 */
+.wd-methods{display:flex;gap:20rpx;margin:24rpx 0;}
+.wd-m{flex:1;text-align:center;padding:18rpx 0;border-radius:12rpx;background:#f7f4f1;color:#6b625c;font-size:26rpx;}
+.wd-m.on{background:#2d1b2e;color:#C9A24B;}
+.wd-bank{margin:16rpx 0 24rpx;padding:20rpx 24rpx;background:#f7f4f1;border-radius:12rpx;font-size:26rpx;color:#2d1b2e;}
+.wd-bank-empty{color:#C9A24B;}
+.wd-tax{margin:16rpx 0;padding:20rpx;background:#fdf6ec;border-radius:12rpx;}
+.wt-row{display:block;font-size:24rpx;color:#8a6d3b;line-height:1.6;}
+.wt-strong{font-size:28rpx;color:#2d1b2e;font-weight:700;margin-top:8rpx;}
+.wt-tip{display:block;font-size:20rpx;color:#bfa276;margin-top:10rpx;line-height:1.4;}
+.wd-arrival{display:block;font-size:22rpx;color:#999;margin:14rpx 0 6rpx;}

@@ -1,8 +1,10 @@
 // 代理收益提现（差价收益 → 申请提现，后台人工打款）
-// GET: 返回可提现余额 + 提现记录
-// POST: 提交提现申请（扣减 user_wallet.balance，写 agent_withdrawals）
+// 仅可提现佣金(user_wallet.balance)，货款不可提现。
+// GET: 返回可提现余额 + 冻结余额 + 提现记录
+// POST: 提交提现申请（微信/银行卡，含个税估算 + 工作日到账说明）
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { calcCommissionTax, calcExpectedArrival } from "@/lib/agent-deposit";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +59,7 @@ export async function GET(request: NextRequest) {
     const supabase = getServiceRoleClient();
     const { data: w } = await supabase
       .from("user_wallet")
-      .select("balance")
+      .select("balance, frozen_balance")
       .eq("user_id", uid)
       .maybeSingle();
     const { data: ws } = await supabase
@@ -68,6 +70,7 @@ export async function GET(request: NextRequest) {
       .limit(20);
     return NextResponse.json({
       balance: w ? Number(w.balance || 0) : 0,
+      frozenBalance: w ? Number(w.frozen_balance || 0) : 0,
       withdrawals: ws || [],
     });
   } catch (err: any) {
@@ -82,9 +85,19 @@ export async function POST(request: NextRequest) {
     if (!uid) return NextResponse.json({ error: "未登录" }, { status: 401 });
     const body = await request.json();
     const amount = Math.round(Number(body.amount)); // 分
+    const method: string = body.method || "wechat";
+    const bankCardId: string | null = body.bank_card_id || null;
+
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: "提现金额无效" }, { status: 400 });
     }
+    if (!["wechat", "bank"].includes(method)) {
+      return NextResponse.json({ error: "不支持的提现方式" }, { status: 400 });
+    }
+    if (method === "bank" && !bankCardId) {
+      return NextResponse.json({ error: "请选择提现银行卡" }, { status: 400 });
+    }
+
     const supabase = getServiceRoleClient();
     const { data: w } = await supabase
       .from("user_wallet")
@@ -93,25 +106,55 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
     const balance = w ? Number(w.balance || 0) : 0;
     if (balance < amount) {
-      return NextResponse.json({ error: "可提现余额不足" }, { status: 400 });
+      return NextResponse.json({ error: "可提现佣金不足" }, { status: 400 });
     }
-    // 扣减余额
+
+    // 银行卡归属校验（防止提别人卡）
+    if (method === "bank") {
+      const { data: bc } = await supabase
+        .from("user_bank_cards")
+        .select("id")
+        .eq("id", bankCardId)
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (!bc) return NextResponse.json({ error: "银行卡不存在或不属于您" }, { status: 400 });
+    }
+
+    // 个税估算 + 工作日到账
+    const { taxDeducted, actualPaid } = calcCommissionTax(amount);
+    const expected = calcExpectedArrival(new Date());
+
+    // 扣减可提现余额
     await supabase
       .from("user_wallet")
       .update({ balance: balance - amount, updated_at: new Date().toISOString() })
       .eq("user_id", uid);
+
     // 写提现申请（后台人工打款后标记 paid）
     const { data: rec } = await supabase
       .from("agent_withdrawals")
       .insert({
         agent_id: uid,
         amount,
-        method: body.method || "wechat",
+        type: "commission",
+        method,
+        bank_card_id: method === "bank" ? bankCardId : null,
         status: "pending",
+        tax_deducted: taxDeducted,
+        actual_paid: actualPaid,
+        expected_arrival_at: expected.toISOString(),
       })
       .select()
       .single();
-    return NextResponse.json({ success: true, balance: balance - amount, withdrawal: rec });
+
+    return NextResponse.json({
+      success: true,
+      balance: balance - amount,
+      withdrawal: rec,
+      taxDeducted,
+      actualPaid,
+      expectedArrival: expected.toISOString(),
+    });
   } catch (err: any) {
     console.error("[agent/withdraw]", err);
     return NextResponse.json({ error: err.message || "系统错误" }, { status: 500 });

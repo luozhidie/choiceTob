@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid"
+        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid, pre_deposit_agreed, payment_password_hash"
       )
       .eq("id", uid)
       .maybeSingle();
@@ -112,18 +112,52 @@ export async function GET(request: NextRequest) {
       // orders.agent_id 尚未建：业绩展示为 0，不影响其余功能
     }
 
-    // 代理可提现收益余额（差价结算累计）
+    // 代理可提现收益余额 + 冻结余额（差价结算累计）
     let walletBalance = 0;
+    let frozenBalance = 0;
     try {
       const { data: w } = await supabase
         .from("user_wallet")
-        .select("balance")
+        .select("balance, frozen_balance")
         .eq("user_id", profile.id)
         .maybeSingle();
       walletBalance = w ? Number(w.balance || 0) : 0;
+      frozenBalance = w ? Number(w.frozen_balance || 0) : 0;
     } catch {
       // user_wallet 尚未建：余额 0
     }
+
+    // 试衣剩余次数（按 openid）
+    let tryon = { normalLeft: 0, proLeft: 0, daysLeft: 0 };
+    const tryonOpenid = profile.wechat_openid || profile.wx_openid;
+    if (tryonOpenid) {
+      try {
+        const { data: te } = await supabase
+          .from("tryon_entitlements")
+          .select("normal_left, pro_left, expires_at")
+          .eq("openid", tryonOpenid)
+          .maybeSingle();
+        if (te) {
+          const days = Math.max(0, Math.ceil((new Date(te.expires_at).getTime() - Date.now()) / 86400000));
+          tryon = {
+            normalLeft: Number(te.normal_left || 0),
+            proLeft: Number(te.pro_left || 0),
+            daysLeft: days,
+          };
+        }
+      } catch {}
+    }
+
+    // 银行卡（脱敏）
+    let bankCards: any[] = [];
+    try {
+      const { data: bc } = await supabase
+        .from("user_bank_cards")
+        .select("id, bank_name, account_name, card_no_last4")
+        .eq("user_id", profile.id)
+        .order("created_at", { ascending: false });
+      bankCards = bc || [];
+    } catch {}
 
     return NextResponse.json({
       active: isDepositAgent || isCertified || isAdmin,
@@ -140,7 +174,12 @@ export async function GET(request: NextRequest) {
       returnRate: profile.deposit_return_rate || 0,
       inviteCode,
       walletBalance,
+      frozenBalance,
       performance,
+      preDepositAgreed: !!profile.pre_deposit_agreed,
+      paymentPasswordSet: !!profile.payment_password_hash,
+      bankCards,
+      tryon,
     });
   } catch (err: any) {
     console.error("[agent/me]", err);

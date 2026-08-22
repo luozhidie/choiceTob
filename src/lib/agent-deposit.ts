@@ -96,3 +96,35 @@ export function agreementContentHash(text: string): string {
   const { createHash } = require("crypto");
   return createHash("sha256").update(text, "utf8").digest("hex");
 }
+
+// ---------- 佣金个税估算（劳务报酬所得，简化） ----------
+// 规则：每次收入 ≤4000 减 800；>4000 减 20%；税率 20%。
+// 返回 { taxDeducted(分), actualPaid(分) }。仅估算展示，实际代缴线下完成。
+export function calcCommissionTax(amountCents: number): { taxDeducted: number; actualPaid: number } {
+  const yuan = amountCents / 100;
+  let taxable = 0;
+  if (yuan <= 0) return { taxDeducted: 0, actualPaid: 0 };
+  if (yuan <= 4000) {
+    taxable = yuan - 800;
+  } else {
+    taxable = yuan * 0.8;
+  }
+  if (taxable <= 0) return { taxDeducted: 0, actualPaid: Math.round(amountCents) };
+  const taxYuan = taxable * 0.2;
+  const taxDeducted = Math.round(taxYuan * 100);
+  return { taxDeducted, actualPaid: Math.round(amountCents - taxDeducted) };
+}
+
+// ---------- 工作日到账时间估算 ----------
+// 当天提最快隔日，周五提最快下周一，最晚 7 个工作日。返回 Date。
+export function calcExpectedArrival(submitDate: Date = new Date()): Date {
+  // 往后数 7 个工作日（跳过周末）
+  const d = new Date(submitDate);
+  let added = 0;
+  while (added < 7) {
+    d.setDate(d.getDate() + 1);
+    const day = d.getDay();
+    if (day !== 0 && day !== 6) added++;
+  }
+  return d;
+}

@@ -152,7 +152,11 @@ Page({
     editPrice: '',
     savingPrice: false,
     showWithdraw: false,
+    withdrawMethod: 'wechat',
     withdrawAmt: '',
+    wdTaxText: '0.00',
+    wdActualText: '0.00',
+    selectedBankIndex: 0,
     submittingWithdraw: false,
     withdrawals: [],
     // VIP客户资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"）
@@ -195,6 +199,7 @@ Page({
         }
         var isAdmin = t.data.isAdmin;
         if (!d.active && !d.isAdmin && !isAdmin) {
+          // 严格拦截：非管理员且非充值会员，整页拦截，不渲染任何代理数据
           t.setData({ notAgent: true, loading: false });
           return;
         }
@@ -206,11 +211,19 @@ Page({
           discountRate: d.discountRate || 1,
           returnRate: d.returnRate || 0,
           depositAmount: d.depositAmount || 0,
+          depositText: fmtYuan(d.depositAmount || 0),
           inviteCode: d.inviteCode || '',
           customerCount: (d.performance && d.performance.customerCount) || 0,
           orderCount: (d.performance && d.performance.orderCount) || 0,
           gmv: (d.performance && d.performance.gmv) || 0,
-          walletBalance: d.walletBalance || 0
+          walletBalance: d.walletBalance || 0,
+          walletText: fmtYuan(d.walletBalance || 0),
+          frozenBalance: d.frozenBalance || 0,
+          frozenText: fmtYuan(d.frozenBalance || 0),
+          paymentPasswordSet: !!d.paymentPasswordSet,
+          bankCards: d.bankCards || [],
+          tryon: d.tryon || { normalLeft: 0, proLeft: 0, daysLeft: 0 },
+          preDepositAgreed: !!d.preDepositAgreed
         });
         t.loadPriceAndWithdraw(token, h);
       },
@@ -254,8 +267,19 @@ Page({
       success: function (r) {
         var d = r.data || {};
         t.setData({
+          walletBalance: d.balance || 0,
+          walletText: fmtYuan(d.balance || 0),
+          frozenBalance: d.frozenBalance || 0,
+          frozenText: fmtYuan(d.frozenBalance || 0),
           withdrawals: (d.withdrawals || []).map(function (w) {
-            return { amount: w.amount, status: w.status, created_at: w.created_at, method: w.method };
+            return {
+              amount: w.amount,
+              status: w.status,
+              created_at: w.created_at,
+              method: w.method,
+              tax_deducted: w.tax_deducted || 0,
+              actual_paid: w.actual_paid || 0
+            };
           })
         });
       },
@@ -877,10 +901,29 @@ Page({
   // 提现
   openWithdraw: function () {
     if (this.data.walletBalance <= 0) { wx.showToast({ title: '暂无可提现余额', icon: 'none' }); return; }
-    this.setData({ showWithdraw: true, withdrawAmt: '' });
+    this.setData({ showWithdraw: true, withdrawMethod: 'wechat', withdrawAmt: '', wdTaxText: '0.00', wdActualText: '0.00', selectedBankIndex: 0 });
   },
   closeWithdraw: function () { this.setData({ showWithdraw: false }); },
-  onWithdrawAmt: function (e) { this.setData({ withdrawAmt: e.detail.value }); },
+  setWdMethod: function (e) { this.setData({ withdrawMethod: e.currentTarget.dataset.m }); this.calcWdTax(); },
+  onWithdrawAmt: function (e) {
+    var val = e.detail.value;
+    // 最多两位小数
+    val = val.replace(/[^\d.]/g, '').replace(/\./, '#').replace(/\./g, '').replace('#', '.');
+    var dot = val.indexOf('.');
+    if (dot >= 0) val = val.slice(0, dot + 3);
+    this.setData({ withdrawAmt: val });
+    this.calcWdTax();
+  },
+  calcWdTax: function () {
+    var yuan = parseFloat(this.data.withdrawAmt) || 0;
+    var cents = Math.round(yuan * 100);
+    var taxable = 0;
+    if (cents <= 400000) taxable = Math.max(0, cents - 80000); else taxable = Math.round(cents * 0.8);
+    var tax = Math.round(taxable * 0.2);
+    var actual = Math.max(0, cents - tax);
+    this.setData({ wdTaxText: fmtYuan(tax), wdActualText: fmtYuan(actual) });
+  },
+  goBindBank: function () { wx.navigateTo({ url: '/pages/bank-cards/index' }); },
   submitWithdraw: function () {
     var t = this;
     if (t.data.submittingWithdraw) return;
@@ -888,16 +931,25 @@ Page({
     if (!yuan || yuan <= 0) { wx.showToast({ title: '请输入提现金额', icon: 'none' }); return; }
     var cents = Math.round(yuan * 100);
     if (cents > t.data.walletBalance) { wx.showToast({ title: '超过可提现余额', icon: 'none' }); return; }
+    if (cents < 100) { wx.showToast({ title: '最少提现 1 元', icon: 'none' }); return; }
+    var method = t.data.withdrawMethod;
+    var bankCardId = null;
+    if (method === 'bank') {
+      var cards = t.data.bankCards || [];
+      var idx = t.data.selectedBankIndex || 0;
+      if (!cards.length) { wx.showToast({ title: '请先绑定银行卡', icon: 'none' }); return; }
+      bankCardId = cards[idx] && cards[idx].id;
+    }
     t.setData({ submittingWithdraw: true });
     wx.request({
       url: BASE + '/api/agent/withdraw', method: 'POST',
       header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
-      data: { amount: cents, method: 'wechat' },
+      data: { amount: cents, method: method, bank_card_id: bankCardId },
       success: function (r) {
         var d = r.data || {};
         if (d.error) { wx.showModal({ title: '提现失败', content: d.error, showCancel: false }); return; }
         wx.showToast({ title: '已提交，等待打款', icon: 'success' });
-        t.setData({ showWithdraw: false, walletBalance: (d.balance != null ? d.balance : t.data.walletBalance - cents) });
+        t.setData({ showWithdraw: false });
         t.loadAll();
       },
       fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); },

@@ -1,0 +1,19 @@
+.wrap{padding:24rpx;}
+.card-list{display:flex;flex-direction:column;gap:20rpx;}
+.bank-card{background:#fff;border-radius:16rpx;padding:28rpx;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4rpx 14rpx rgba(0,0,0,.06);}
+.bc-info{display:flex;flex-direction:column;}
+.bc-name{font-size:30rpx;color:#333;font-weight:600;}
+.bc-no{font-size:24rpx;color:#999;margin-top:8rpx;}
+.bc-unbind{font-size:25rpx;color:#c98a2b;padding:10rpx 16rpx;}
+.empty{text-align:center;padding:80rpx 0;color:#999;}
+.empty-title{font-size:28rpx;color:#555;display:block;margin-bottom:10rpx;}
+.empty-desc{font-size:23rpx;color:#999;display:block;}
+.add-btn{margin:40rpx 20rpx;height:86rpx;line-height:86rpx;text-align:center;background:#2d1b2e;color:#C9A24B;border-radius:14rpx;font-size:28rpx;}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:999;}
+.sheet{width:100%;background:#fff;border-radius:24rpx 24rpx 0 0;padding:30rpx 30rpx 50rpx;}
+.sheet-title{font-size:32rpx;color:#333;font-weight:600;display:block;margin-bottom:20rpx;text-align:center;}
+.sheet-input{height:86rpx;line-height:86rpx;background:#f7f7f7;border-radius:12rpx;margin:16rpx 0;padding:0 20rpx;font-size:28rpx;}
+.sheet-btns{display:flex;gap:20rpx;margin-top:30rpx;}
+.sheet-cancel,.sheet-save{flex:1;height:80rpx;line-height:80rpx;text-align:center;border-radius:12rpx;font-size:28rpx;}
+.sheet-cancel{background:#f2f2f2;color:#666;}
+.sheet-save{background:#2d1b2e;color:#C9A24B;}

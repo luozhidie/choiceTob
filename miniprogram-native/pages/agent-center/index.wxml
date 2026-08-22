@@ -19,13 +19,12 @@ module.exports = {
     <view class="btn-primary" bindtap="goLogin">去登录</view>
   </view>
 
-  <!-- 还不是代理 -->
+  <!-- 严格拦截：非管理员且非充值会员，整页拦截，不渲染任何代理功能 -->
   <view wx:elif="{{notAgent}}" class="empty">
-    <text class="empty-emoji">🤝</text>
-    <text class="empty-title">你还不是销售代理</text>
-    <text class="empty-desc">预存货款拿批发价，给商品设对客卖价，转发给客户就能赚钱</text>
-    <view class="btn-primary" bindtap="goRecruit">申请成为代理</view>
-    <view class="btn-ghost" style="margin-top:24rpx;" bindtap="goVipDeposit">去充值预存货款</view>
+    <text class="empty-emoji">🔒</text>
+    <text class="empty-title">代理中心暂未开放</text>
+    <text class="empty-desc">本平台为服装批发供货，预存货款拿一手批发价、自设卖价转售赚差价。请先充值预存货款开通代理权限。</text>
+    <view class="btn-primary" bindtap="goVipDeposit">去充值预存货款开通</view>
   </view>
 
   <block wx:else>
@@ -218,12 +217,39 @@ module.exports = {
       <view class="card card-profit">
         <view class="profit-head">
           <view>
-            <text class="profit-label">可提现收益</text>
+            <text class="profit-label">可提现收益（佣金）</text>
             <text class="profit-num">¥{{f.yuan(walletBalance)}}</text>
           </view>
           <view class="btn-withdraw" bindtap="openWithdraw">申请提现</view>
         </view>
-        <text class="profit-tip">收益 = 客户付款 − 你的拿货成本，订单付款后自动入账</text>
+        <view class="profit-sub">
+          <text class="ps-item">冻结中：¥{{f.yuan(frozenBalance)}}</text>
+          <text class="ps-item ps-tip">发货后转可提现</text>
+        </view>
+        <text class="profit-tip">佣金 = 客户付款 − 你的拿货成本，仅佣金可提现，预存货款不可提现</text>
+      </view>
+
+      <!-- 资金概览 -->
+      <view class="card">
+        <view class="card-title">资金概览</view>
+        <view class="overview-grid">
+          <view class="ov-item">
+            <text class="ov-num">¥{{f.yuan(depositAmount)}}</text>
+            <text class="ov-label">预存货款</text>
+          </view>
+          <view class="ov-item">
+            <text class="ov-num">¥{{f.yuan(walletBalance)}}</text>
+            <text class="ov-label">可提现佣金</text>
+          </view>
+          <view class="ov-item">
+            <text class="ov-num">¥{{f.yuan(frozenBalance)}}</text>
+            <text class="ov-label">冻结中佣金</text>
+          </view>
+          <view class="ov-item">
+            <text class="ov-num">{{tryon.proLeft}}次</text>
+            <text class="ov-label">专业试衣剩</text>
+          </view>
+        </view>
       </view>
 
       <!-- 自定义卖价 -->
@@ -510,9 +536,32 @@ module.exports = {
   <!-- 提现弹窗 -->
   <view wx:if="{{showWithdraw}}" class="mask" bindtap="closeWithdraw">
     <view class="sheet" catchtap="noop">
-      <text class="sheet-title">申请提现</text>
-      <text class="sheet-retail">可提现余额：¥{{f.yuan(walletBalance)}}</text>
+      <text class="sheet-title">申请提现（仅佣金）</text>
+      <text class="sheet-retail">可提现佣金：¥{{f.yuan(walletBalance)}}</text>
+
+      <!-- 方式选择 -->
+      <view class="wd-methods">
+        <view class="wd-m {{withdrawMethod==='wechat'?'on':''}}" bindtap="setWdMethod" data-m="wechat">微信</view>
+        <view class="wd-m {{withdrawMethod==='bank'?'on':''}}" bindtap="setWdMethod" data-m="bank">银行卡</view>
+      </view>
+
+      <!-- 银行卡选择 -->
+      <view wx:if="{{withdrawMethod==='bank'}}" class="wd-bank" bindtap="goBindBank">
+        <text wx:if="{{bankCards.length===0}}" class="wd-bank-empty">＋ 绑定银行卡</text>
+        <text wx:else>{{bankCards[selectedBankIndex].bankName}}（{{bankCards[selectedBankIndex].last4}}）</text>
+      </view>
+
       <input class="sheet-input" type="digit" value="{{withdrawAmt}}" bindinput="onWithdrawAmt" placeholder="输入提现金额（元）"/>
+
+      <!-- 个税预览 -->
+      <view wx:if="{{withdrawAmt>0}}" class="wd-tax">
+        <text class="wt-row">应扣个税（估算）：¥{{wdTaxText}}</text>
+        <text class="wt-row wt-strong">实际到账：¥{{wdActualText}}</text>
+        <text class="wt-tip">佣金属劳务所得，平台将依法提示个税；实际代缴线下完成</text>
+      </view>
+
+      <text class="wd-arrival">预计到账：1-7 个工作日（当天提最快隔日，周五提最快下周一）</text>
+
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeWithdraw">取消</view>
         <view class="sheet-save" bindtap="submitWithdraw">{{submittingWithdraw ? '提交中…' : '提交申请'}}</view>

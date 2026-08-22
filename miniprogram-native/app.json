@@ -72,6 +72,7 @@
     "pages/agent-recruit/index",
     "pages/agent-center/index",
     "pages/agent-shop/index",
+    "pages/bank-cards/index",
     "pages/group/index",
     "pages/newcustomer/index"
   ],
