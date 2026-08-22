@@ -180,7 +180,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // 货款抵扣：扣 profiles.deposit_amount + 写流水（建单成功后）
+    // 货款抵扣：扣 profiles.deposit_amount + 写流水（建单成功后，同事务语义）
     if (depositDeducted > 0) {
       try {
         const { data: pf } = await svc
@@ -188,7 +188,16 @@ export async function POST(req: NextRequest) {
           .select("deposit_amount")
           .eq("id", uid)
           .maybeSingle();
-        const newBal = Math.max(0, Number(pf?.deposit_amount || 0) - depositDeducted);
+        const cur = Number(pf?.deposit_amount || 0);
+        if (cur < depositDeducted) {
+          // 余额不足（并发/边界），撤销订单，让用户重新支付
+          await supabase.from("orders").delete().eq("order_no", orderNo);
+          return NextResponse.json(
+            { error: "货款余额不足，抵扣已取消，请重新下单" },
+            { status: 409 }
+          );
+        }
+        const newBal = cur - depositDeducted;
         await svc
           .from("profiles")
           .update({ deposit_amount: newBal, updated_at: new Date().toISOString() })
@@ -202,7 +211,13 @@ export async function POST(req: NextRequest) {
           remark: "下单货款抵扣",
         });
       } catch (e) {
-        console.error("[货款抵扣] 扣减失败", e);
+        // 扣减失败：撤销订单，避免「微信少收但货款未扣」的资金漏洞
+        console.error("[货款抵扣] 扣减失败，撤销订单", e);
+        await supabase.from("orders").delete().eq("order_no", orderNo);
+        return NextResponse.json(
+          { error: "货款抵扣处理失败，订单已取消，请重试" },
+          { status: 500 }
+        );
       }
     }
 

@@ -256,20 +256,26 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
 
     const profile = byWechat || byWx;
     if (profile?.id) {
+      const is6k = rec.plan_id === 'wholesale_6k';
+      const alreadyGranted = rec.tryon_granted || rec.deposit_granted_flag;
+
+      if (alreadyGranted) {
+        // 幂等：已发放过（回调重放），跳过发放与激活，避免重复加货款
+        console.log('[代理充值] 已发放过，跳过（幂等）', { order: out_trade_no });
+        return;
+      }
+
       // 计算实际货款与试衣费（wholesale_6k 扣 998 试衣费，其余全额进货款）
       let tryonFee = 0;
       let depositGrant = Number(rec.deposit_amount) || 0;
 
-      const is6k = rec.plan_id === 'wholesale_6k';
-      const alreadyGranted = rec.tryon_granted || rec.deposit_granted_flag;
-
-      if (is6k && !alreadyGranted) {
+      if (is6k) {
         tryonFee = 99800; // ¥998 专业版试衣费（分）
         depositGrant = (Number(rec.amount) || 600000) - tryonFee; // 剩余进货款 = 500200
       }
 
-      // 幂等发放：未发放过才发试衣 + 写货款/试衣标识
-      if (is6k && !rec.tryon_granted) {
+      // 发放试衣权益（6k 套餐）
+      if (is6k) {
         try {
           const { grantTryonEntitlement } = await import('@/lib/tryon-grant');
           await grantTryonEntitlement(supabase, openid, 'tryon_pro_998');
@@ -279,17 +285,16 @@ async function handleAgentRecharge(out_trade_no: string, transaction_id: string)
         }
       }
 
-      if (!alreadyGranted) {
-        await supabase
-          .from('agent_recharges')
-          .update({
-            tryon_fee: tryonFee,
-            deposit_granted: depositGrant,
-            tryon_granted: is6k ? true : rec.tryon_granted,
-            deposit_granted_flag: true,
-          })
-          .eq('order_no', out_trade_no);
-      }
+      // 标记发放（幂等标志）
+      await supabase
+        .from('agent_recharges')
+        .update({
+          tryon_fee: tryonFee,
+          deposit_granted: depositGrant,
+          tryon_granted: is6k ? true : rec.tryon_granted,
+          deposit_granted_flag: true,
+        })
+        .eq('order_no', out_trade_no);
 
       await activateStoreForDepositAgent(supabase, profile.id, {
         deposit_amount: depositGrant,

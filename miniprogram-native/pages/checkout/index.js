@@ -72,8 +72,10 @@ Page({
           t.setData({
             isAgent:true,
             depositAmountCents:Number(d.depositAmount||0),
-            depositText:t.fmt(d.depositAmount||0)
+            depositText:t.fmt(d.depositAmount||0),
+            myInviteCode:d.inviteCode||''
           });
+          wx.setStorageSync('my_invite_code', d.inviteCode||'');
         }
       }
     });
@@ -189,10 +191,12 @@ Page({
       note:t.data.remark||'',
       payment_type:'wechat'
     };
-    /* 货款抵扣：传开关 + 支付密码 */
+    /* 货款抵扣：传开关 + 支付密码 + 本人推广码（保证归因） */
     if(t.data.useDeposit){
       createData.use_deposit_deduction=true;
       createData.payment_password=t.data.payPwd;
+      var myCode=wx.getStorageSync('my_invite_code')||t.data.myInviteCode||'';
+      if(myCode) createData.referral_code=myCode;
     }
     wx.request({
       url:'https://colour-choice.art/api/orders/create',

@@ -124,14 +124,8 @@ export async function POST(request: NextRequest) {
     const { taxDeducted, actualPaid } = calcCommissionTax(amount);
     const expected = calcExpectedArrival(new Date());
 
-    // 扣减可提现余额
-    await supabase
-      .from("user_wallet")
-      .update({ balance: balance - amount, updated_at: new Date().toISOString() })
-      .eq("user_id", uid);
-
     // 写提现申请（后台人工打款后标记 paid）
-    const { data: rec } = await supabase
+    const { data: rec, error: insErr } = await supabase
       .from("agent_withdrawals")
       .insert({
         agent_id: uid,
@@ -146,6 +140,17 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+
+    if (insErr) {
+      // 写入失败：不扣余额，避免资金丢失
+      return NextResponse.json({ error: "提现申请创建失败：" + insErr.message }, { status: 500 });
+    }
+
+    // 扣减可提现余额（写记录成功后再扣，避免「扣了但没记录」）
+    await supabase
+      .from("user_wallet")
+      .update({ balance: balance - amount, updated_at: new Date().toISOString() })
+      .eq("user_id", uid);
 
     return NextResponse.json({
       success: true,
