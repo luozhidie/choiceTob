@@ -88,6 +88,37 @@ Page({
     });
     this.loadData();
     this.loadCloset();
+    this.loadStyleProfile();
+  },
+
+  // 从形象档案自动载入全身照 + 色彩季型 + 主风格
+  loadStyleProfile: function () {
+    var t = this;
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/style-profile?openid=' + encodeURIComponent(openid),
+        success: function (r) {
+          var p = (r.data && r.data.profile) || null;
+          if (!p) return;
+          var upd = {};
+          if (p.full_body_photo && !t.data.personPath) {
+            upd.personPath = rewriteSupabase(p.full_body_photo);
+          }
+          if (p.season_type) upd.mySeason = p.season_type;
+          var tags = Array.isArray(p.style_tags) ? p.style_tags : [];
+          var mainCode = '';
+          for (var i = 0; i < tags.length; i++) {
+            if (/^[a-z]+(_m)?$/i.test(tags[i])) { mainCode = tags[i]; break; }
+          }
+          if (!mainCode && tags.length) {
+            var parts = tags[0].split('_');
+            mainCode = parts[0] + (tags[0].indexOf('_m') > -1 ? '_m' : '');
+          }
+          if (mainCode) upd.myStyle = mainCode;
+          if (Object.keys(upd).length) t.setData(upd);
+        }
+      });
+    }).catch(function () {});
   },
 
   syncEntitlement: function () {
@@ -823,6 +854,9 @@ Page({
       if (!isActiveEnt(ent)) { self.setData({ showPackages: true }); return; }
       wx.navigateTo({ url: '/pages/outfit/index' });
     });
+  },
+  goProfile: function () {
+    wx.navigateTo({ url: '/pages/style-profile/index' });
   },
 
   // —— 搭配卡片（本人试穿图 + 单品拆解 + 分享/下载/下单）——

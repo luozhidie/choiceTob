@@ -69,7 +69,7 @@ function deriveStyle(gender, tags) {
 // 偏风格小标题：男士风格不分直曲，故不显示「曲直」维度
 function subHeadingOf(gender, mainName) {
   if (!mainName) return '';
-  return gender === 'men' ? (mainName + '的偏风格（可多选叠加）') : (mainName + '的偏风格（曲直 / 冷暖微调）');
+  return gender === 'men' ? (mainName + '的偏风格（如' + mainName + '偏自然，可多选）') : (mainName + '的偏风格（如' + mainName + '偏浪漫，可多选）');
 }
 var OCCASIONS = [
   { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }, { code: 'home', name: '居家' }

@@ -47,6 +47,8 @@
       </view>
       <view class="me-info">
         <text class="hint">仅用于本次试穿，不会公开。试衣为 AI 合成效果，仅供参考。</text>
+        <text wx:if="{{!personPath}}" class="pro-entry" bindtap="goProfile">📋 去形象档案上传全身照 ›</text>
+        <text wx:if="{{personPath}}" class="pro-entry on">已载入照片，点击左侧可重新上传</text>
         <text wx:if="{{!proMode}}" class="pro-entry" bindtap="togglePro">想要更懂你的穿衣风格？升级专业版 ›</text>
         <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
