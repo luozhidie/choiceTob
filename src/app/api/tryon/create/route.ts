@@ -40,11 +40,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未知套餐" }, { status: 400 });
     }
 
+    const supabase = await createClient();
+
+    // 首单体验每个 openid 只能购买一次（已支付或待支付均视为已占用）
+    if (package_id === "tryon_first_9_9") {
+      const { data: firstOrder } = await supabase
+        .from("tryon_orders")
+        .select("status")
+        .eq("openid", openid)
+        .eq("package_id", "tryon_first_9_9")
+        .in("status", ["paid", "pending"])
+        .maybeSingle();
+      if (firstOrder) {
+        return NextResponse.json({ error: "首单体验每个账号仅限购买一次" }, { status: 400 });
+      }
+    }
+
     const total_fee = Math.round(pkg.price * 100); // 分
     const order_no = `TRY${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
 
     // 1) 预建订单（pending），供回调对账
-    const supabase = await createClient();
     const { error: insErr } = await supabase.from("tryon_orders").insert({
       order_no,
       openid,

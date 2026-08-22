@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       .eq("openid", openid);
     if (error) console.error("[试衣扣减] 失败", error);
     const { data: updated } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
-    return NextResponse.json(shape(updated));
+    return NextResponse.json(shapeEntitlement(updated));
   } catch (err: any) {
     return NextResponse.json({ error: err.message || "扣减失败" }, { status: 500 });
   }
