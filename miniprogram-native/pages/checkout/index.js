@@ -64,27 +64,28 @@ Page({
 
   onRemark:function(e){this.setData({remark:e.detail.value});},
 
-  goAddress:function(){
+  loadDefaultAddress:function(){
     var t=this;
-    wx.chooseAddress({
-      success:function(res){
-        t.setData({
-          address:{
-            name:res.userName,
-            phone:res.telNumber,
-            province:res.provinceName,
-            city:res.cityName,
-            district:res.countyName,
-            detail:res.detailInfo,
-          }
-        });
-      },
-      fail:function(err){
-        if(err&&err.errMsg&&err.errMsg.indexOf('cancel')>=0)return;
-        wx.showModal({title:'微信地址未开通',content:'请在地址栏手动填写收货地址，或前往「微信公众平台 > 开发管理 > 接口设置」申请开通。',showCancel:false});
-      }
-    });
+    var list=wx.getStorageSync('address_list')||[];
+    var def=null;
+    for(var i=0;i<list.length;i++){ if(list[i].isDefault){def=list[i];break;} }
+    if(!def && list.length>0) def=list[0];
+    if(def){
+      var parts=(def.region||'').split(' ');
+      t.setData({
+        address:{
+          name:def.name,
+          phone:def.phone,
+          province:parts[0]||'',
+          city:parts[1]||'',
+          district:parts[2]||'',
+          detail:def.detail
+        }
+      });
+    }
   },
+  onShow:function(){ this.loadDefaultAddress(); },
+  goAddress:function(){ wx.navigateTo({ url:'/pages/address/index' }); },
 
   submitOrder:function(){
     var t=this;
