@@ -71,12 +71,12 @@ function deriveStyle(gender, tags) {
     if (subCode) break;
   }
   if (subCode && mainObj) {
-    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [subCode], pureSelected: false };
+    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [subCode], selectedSub: subCode, pureSelected: false };
   }
   if (mainObj) {
-    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [mainObj.code], pureSelected: true };
+    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [mainObj.code], selectedSub: '', pureSelected: true };
   }
-  return { gender: gender, mainStyle: '', mainName: '', subList: [], styleTags: [], pureSelected: false };
+  return { gender: gender, mainStyle: '', mainName: '', subList: [], styleTags: [], selectedSub: '', pureSelected: false };
 }
 // 偏风格小标题：男士风格不分直曲，故不显示「曲直」维度
 function subHeadingOf(gender, mainName) {
@@ -91,7 +91,7 @@ Page({
   data: {
     seasonTypes: SEASON_TYPES, occasionsList: OCCASIONS,
     gender: 'women', mainList: STYLE_DATA.women, mainStyle: '', mainName: '', subList: [], subHeading: '',
-    seasonType: '', styleTags: [], occasions: [], pureSelected: false,
+    seasonType: '', styleTags: [], selectedSub: '', occasions: [], pureSelected: false,
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
     fullBodyPhoto: '',
@@ -112,6 +112,7 @@ Page({
             t.setData({
               seasonType: p.season_type || '',
               styleTags: der.styleTags,
+              selectedSub: der.selectedSub,
               gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName), pureSelected: der.pureSelected,
               occasions: p.occasions || [],
               bodyType: p.body_type || '',
@@ -141,7 +142,7 @@ Page({
   setGender: function (e) {
     var g = e.currentTarget.dataset.g;
     if (g === this.data.gender) return;
-    this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [] });
+    this.setData({ gender: g, mainList: STYLE_DATA[g], mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [], selectedSub: '' });
   },
   toggleMain: function (e) {
     var t = this; var c = t._codeFrom(e); if (!c) return;
@@ -149,28 +150,28 @@ Page({
     var cur = null, old = null;
     for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; if (mains[i].code === t.data.mainStyle) old = mains[i]; }
     if (t.data.mainStyle === c) {
-      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [], pureSelected: false });
+      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [], selectedSub: '', pureSelected: false });
     } else {
-      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: [c], pureSelected: true });
+      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: [c], selectedSub: '', pureSelected: true });
     }
   },
   // 纯主风格：结论 = 主风格本身（唯一结论）
   togglePureMain: function () {
     var t = this; var c = t.data.mainStyle; if (!c) return;
     if (t.data.pureSelected && t.data.styleTags.length === 1 && t.data.styleTags[0] === c) {
-      t.setData({ styleTags: [], pureSelected: false });
+      t.setData({ styleTags: [], selectedSub: '', pureSelected: false });
     } else {
-      t.setData({ styleTags: [c], pureSelected: true });
+      t.setData({ styleTags: [c], selectedSub: '', pureSelected: true });
     }
   },
   // 偏风格：单选唯一结论（要么纯主风格，要么主偏某风格）
   toggleSub: function (e) {
     var c = this._codeFrom(e);
     if (!c) { wx.showToast({ title: '未取到风格码', icon: 'none' }); return; }
-    if (this.data.styleTags.length === 1 && this.data.styleTags[0] === c) {
-      this.setData({ styleTags: [], pureSelected: false });
+    if (this.data.selectedSub === c) {
+      this.setData({ styleTags: [], selectedSub: '', pureSelected: false });
     } else {
-      this.setData({ styleTags: [c], pureSelected: false });
+      this.setData({ styleTags: [c], selectedSub: c, pureSelected: false });
     }
   },
   toggleOccasion: function (e) {

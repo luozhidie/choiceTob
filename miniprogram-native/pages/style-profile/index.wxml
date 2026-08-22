@@ -17,7 +17,7 @@
       <button class="gt {{gender==='women'?'gt-on':''}}" plain hover-class="none" data-g="women" bindtap="setGender">女士 · 8 主风格</button>
       <button class="gt {{gender==='men'?'gt-on':''}}" plain hover-class="none" data-g="men" bindtap="setGender">男士 · 5 主风格</button>
     </view>
-    <text class="sub-tip">先选你的主风格，再叠加偏风格（可多选）</text>
+    <text class="sub-tip">先选你的主风格，再选一个偏风格（最终结论唯一）</text>
     <view class="chips">
       <button wx:for="{{mainList}}" wx:key="code" plain hover-class="none" data-c="{{item.code}}" id="{{item.code}}" class="chip {{mainStyle===item.code?'on':''}}" bindtap="toggleMain">{{item.name}}</button>
     </view>
@@ -25,7 +25,7 @@
       <text class="sub-ct">{{subHeading}}</text>
       <view class="chips sub-chips">
         <button class="chip sub-chip pure {{pureSelected?'on':''}}" plain hover-class="none" bindtap="togglePureMain">纯{{mainName}}</button>
-        <button wx:for="{{subList}}" wx:key="code" plain hover-class="none" data-c="{{item.code}}" id="{{item.code}}" class="chip sub-chip {{styleTags.indexOf(item.code)>-1?'on':''}}" bindtap="toggleSub">{{item.name}}</button>
+        <button wx:for="{{subList}}" wx:key="code" plain hover-class="none" data-c="{{item.code}}" id="{{item.code}}" class="chip sub-chip {{selectedSub===item.code?'on':''}}" bindtap="toggleSub">{{item.name}}</button>
       </view>
     </view>
   </view>
