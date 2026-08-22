@@ -4,7 +4,7 @@ var STORAGE_KEY = 'album_grabbed';
 // 与 app.js 图片代理一致：把 Supabase 域名改写为本站已白名单域名，供 <image> 直接展示
 function toViewUrl(u) {
   if (typeof u !== 'string') return u;
-  return u.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
+  return u.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
 }
 
 Page({

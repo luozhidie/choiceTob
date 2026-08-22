@@ -348,7 +348,6 @@ Page({
           // 确保走代理
           if (url.indexOf('supabase.co') > -1) {
             url = url.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
-            url = url.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
           }
           wx.showLoading({ title: '保存中 ' + i + '/' + list.length, mask: true });
           wx.downloadFile({
@@ -486,7 +485,6 @@ Page({
     // 确保 URL 经过 app.js 代理改写；如未改写也兜底
     if (url.indexOf('supabase.co') > -1) {
       url = url.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
-      url = url.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
     }
     // 第一步：常规 wx.downloadFile
     wx.downloadFile({

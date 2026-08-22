@@ -5,7 +5,6 @@ var CAT_NAMES = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋
 function rewriteSupabase(u) {
   if (typeof u !== 'string') return u;
   u = u.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
-  u = u.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
   return u;
 }
 

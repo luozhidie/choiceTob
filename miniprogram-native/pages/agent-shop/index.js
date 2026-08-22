@@ -9,7 +9,6 @@ function fmtYuan(cents) {
 function proxyImg(u) {
   if (typeof u !== 'string') return u;
   u = u.replace(/^https?:\/\/fxeknwkmytzedkhplozn\.supabase\.co\//i, 'https://colour-choice.art/simg/');
-  u = u.replace(/^https?:\/\/lzdchoice\.supabase\.co\//i, 'https://colour-choice.art/sapimg/');
   return u;
 }
 
