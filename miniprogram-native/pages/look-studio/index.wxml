@@ -47,12 +47,18 @@
       </view>
       <view class="me-info">
         <text class="hint">仅用于本次试穿，不会公开。试衣为 AI 合成效果，仅供参考。</text>
-        <text wx:if="{{!personPath}}" class="pro-entry" bindtap="goProfile">📋 去形象档案上传全身照 ›</text>
-        <text wx:if="{{personPath}}" class="pro-entry on">已载入照片，点击左侧可重新上传</text>
+        <text wx:if="{{!personPath && !personPhotos.length}}" class="pro-entry" bindtap="goProfile">📋 去形象档案上传全身照 ›</text>
+        <text wx:if="{{personPath || personPhotos.length}}" class="pro-entry on">已载入照片，点击左侧可重新上传</text>
         <text wx:if="{{!proMode}}" class="pro-entry" bindtap="togglePro">想要更懂你的穿衣风格？升级专业版 ›</text>
         <text wx:if="{{proMode}}" class="pro-entry on" bindtap="togglePro">‹ 返回极简模式</text>
       </view>
     </view>
+    <scroll-view wx:if="{{personPhotos.length}}" scroll-x class="person-photo-bar" show-scrollbar="{{false}}">
+      <view wx:for="{{personPhotos}}" wx:key="*this" class="pp-item {{selectedPersonIndex===index?'on':''}}" data-index="{{index}}" bindtap="selectPersonPhoto">
+        <image src="{{item}}" mode="aspectFill" class="pp-img"/>
+        <text wx:if="{{selectedPersonIndex===index}}" class="pp-badge">当前</text>
+      </view>
+    </scroll-view>
     <view class="auth-row" bindtap="toggleAuth">
       <view class="ck {{agreedAuth ? 'on' : ''}}">{{agreedAuth ? '✓' : ''}}</view>
       <text class="auth-t">我已同意《肖像使用授权》：照片仅用于本次 AI 试衣合成，不外传、不公开</text>
@@ -193,9 +199,23 @@
     </view>
 
     <view wx:if="{{mode==='auto'}}" class="auto-box">
-      <text class="auto-tip">基于你选的穿衣风格，自动挑出最匹配单品，点「＋加这件」逐件穿上身。</text>
-      <text class="auto-btn" bindtap="autoGenerate">✨ 按我的形象挑单品</text>
-      <view class="grid3">
+      <text wx:if="{{profileLabel}}" class="auto-profile">根据档案：{{profileLabel}}</text>
+      <text class="auto-tip">基于你的色彩季型、穿衣风格和常去场合，自动挑出最匹配单品，点「＋加这件」逐件穿上身；也可直接试穿下方成套搭配。</text>
+      <text class="auto-btn" bindtap="autoGenerate">✨ 按我的形象挑单品 / 成套搭配</text>
+
+      <view wx:if="{{outfitSet.length}}" class="outfit-set">
+        <text class="os-title">🎯 推荐整套搭配</text>
+        <scroll-view scroll-x class="os-scroll" show-scrollbar="{{false}}">
+          <view wx:for="{{outfitSet}}" wx:key="id" class="os-item">
+            <image src="{{item.cover}}" mode="aspectFill" class="os-img"/>
+            <text class="os-name">{{item.title}}</text>
+            <text class="os-cat">{{catNames[item.category]||item.category}}</text>
+          </view>
+        </scroll-view>
+        <text class="auto-btn" style="background:#2d1b2e;margin-top:12rpx;" bindtap="tryOnOutfitSet">👗 一键试穿整套搭配</text>
+      </view>
+
+      <view wx:if="{{recommend.length}}" class="grid3">
         <view wx:for="{{recommend}}" wx:key="id" class="pcard">
           <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
           <text class="ptitle">{{item.title}}</text>
@@ -203,7 +223,7 @@
           <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
         </view>
       </view>
-      <view wx:if="{{recommend.length===0}}" class="empty">点上方按钮，让 AI 按你的风格挑单品</view>
+      <view wx:if="{{recommend.length===0 && outfitSet.length===0}}" class="empty">点上方按钮，让 AI 按你的风格挑单品</view>
     </view>
   </block>
 

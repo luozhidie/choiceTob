@@ -15,6 +15,7 @@ var PACKAGES = [
 ];
 
 var CAT_NAMES = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋', accessory: '配饰' };
+var CAT_NAMES_DATA = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋', accessory: '配饰' };
 
 function fmtPrice(n) {
   if (n == null) return '0';
@@ -41,6 +42,8 @@ Page({
     mySeason: '',
     myStyle: '',
     personPath: '',
+    personPhotos: [],
+    selectedPersonIndex: 0,
     // 画布叠加状态
     canvasUrl: '',
     stack: [],
@@ -66,6 +69,7 @@ Page({
     fromAgent: false,       // 是否来自代理分享
     currentTryonId: '',     // 当前试衣记录ID
     showCard: false,        // 搭配卡片视图
+    catNames: CAT_NAMES_DATA,
   },
 
   onLoad: function (options) {
@@ -100,8 +104,15 @@ Page({
           var p = (r.data && r.data.profile) || null;
           if (!p) return;
           var upd = {};
-          if (p.full_body_photo && !t.data.personPath) {
-            upd.personPath = rewriteSupabase(p.full_body_photo);
+          var photos = Array.isArray(p.full_body_photos) && p.full_body_photos.length
+            ? p.full_body_photos
+            : (p.full_body_photo ? [p.full_body_photo] : []);
+          var selectedIdx = typeof p.selected_photo_index === 'number' ? p.selected_photo_index : 0;
+          if (selectedIdx >= photos.length) selectedIdx = 0;
+          if (photos.length) {
+            upd.personPhotos = photos.map(rewriteSupabase);
+            upd.selectedPersonIndex = selectedIdx;
+            if (!t.data.personPath) upd.personPath = rewriteSupabase(photos[selectedIdx]);
           }
           if (p.season_type) upd.mySeason = p.season_type;
           var tags = Array.isArray(p.style_tags) ? p.style_tags : [];
@@ -118,6 +129,12 @@ Page({
         }
       });
     }).catch(function () {});
+  },
+  selectPersonPhoto: function (e) {
+    var idx = e.currentTarget.dataset.index;
+    var photos = this.data.personPhotos;
+    if (idx < 0 || idx >= photos.length) return;
+    this.setData({ selectedPersonIndex: idx, personPath: photos[idx], canvasUrl: '' });
   },
 
   syncEntitlement: function () {
@@ -645,6 +662,8 @@ Page({
           var profile = (r.data && r.data.profile) || null;
           var sc = (profile && profile.season_type) ? [profile.season_type] : (t.data.mySeason ? [t.data.mySeason] : []);
           var st = (profile && profile.style_tags && profile.style_tags.length) ? profile.style_tags : (t.data.myStyle ? [t.data.myStyle] : []);
+          var oc = (profile && profile.occasions && profile.occasions.length) ? profile.occasions : [];
+          var profileLabel = t.buildProfileLabel(profile);
           if (!sc.length && !st.length && !t.data.myStyle) {
             wx.showModal({
               title: '先完善形象档案',
@@ -655,30 +674,86 @@ Page({
             return;
           }
           // 专业版推荐：全部商品按匹配度排序，前 6 置顶展示，不会空
-          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
+          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st, oc) }; })
             .sort(function (a, b) { return b.s - a.s; })
             .slice(0, 6).map(function (x) { return x.p; });
-          t.setData({ recommend: ranked, mode: 'auto' });
+          var outfitSet = t.buildOutfitSet(sc, st, oc);
+          t.setData({ recommend: ranked, outfitSet: outfitSet, mode: 'auto', profileLabel: profileLabel });
           wx.showToast({ title: '已为你挑好，点「＋加这件」', icon: 'none' });
         },
         fail: function () {
           var sc = t.data.mySeason ? [t.data.mySeason] : [];
           var st = t.data.myStyle ? [t.data.myStyle] : [];
           if (!sc.length && !st.length) { wx.showToast({ title: '请先在「我的形象」选风格', icon: 'none' }); return; }
-          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st) }; })
+          var ranked = t.data.products.map(function (p) { return { p: p, s: t.score(p, sc, st, []) }; })
             .sort(function (a, b) { return b.s - a.s; })
             .slice(0, 6).map(function (x) { return x.p; });
-          t.setData({ recommend: ranked, mode: 'auto' });
+          t.setData({ recommend: ranked, outfitSet: [], profileLabel: '', mode: 'auto' });
         }
       });
     }).catch(function () { wx.showToast({ title: '请先登录', icon: 'none' }); });
   },
 
-  score: function (p, sc, st) {
+  buildProfileLabel: function (profile) {
+    if (!profile) return '';
+    var parts = [];
+    if (profile.season_type) parts.push(profile.season_type);
+    if (profile.style_tags && profile.style_tags.length) parts.push(profile.style_tags[0]);
+    if (profile.occasions && profile.occasions.length) parts.push(profile.occasions.join('/'));
+    return parts.join(' · ');
+  },
+
+  score: function (p, sc, st, oc) {
     var s = 0;
     (p.seasons || []).forEach(function (x) { if (sc.indexOf(x) >= 0) s += 2; });
     (p.styles || []).forEach(function (x) { if (st.indexOf(x) >= 0) s += 1; });
+    (p.occasions || []).forEach(function (x) { if (oc.indexOf(x) >= 0) s += 1; });
     return s;
+  },
+
+  buildOutfitSet: function (sc, st, oc) {
+    var t = this;
+    var cats = ['top', 'bottom', 'shoes', 'bag', 'accessory'];
+    var set = [];
+    cats.forEach(function (cat) {
+      var items = t.data.products.filter(function (p) { return p.category === cat; })
+        .map(function (p) { return { p: p, s: t.score(p, sc, st, oc) }; })
+        .sort(function (a, b) { return b.s - a.s; });
+      if (items.length) set.push(items[0].p);
+    });
+    return set;
+  },
+
+  tryOnOutfitSet: function () {
+    var t = this;
+    var set = t.data.outfitSet || [];
+    if (!set.length) { wx.showToast({ title: '没有可试穿的搭配', icon: 'none' }); return; }
+    if (!t.data.personPath) { wx.showToast({ title: '请先上传你的照片', icon: 'none' }); return; }
+    if (!t.data.agreedAuth) { t.needAuth(); return; }
+    t.syncEntitlement().then(function (ent) {
+      if (!isActiveEnt(ent)) { t.setData({ showPackages: true }); return; }
+      var tier = t.data.proMode ? 'pro' : 'normal';
+      var left = t.data.proMode ? (ent.proLeft || 0) : (ent.normalLeft || 0);
+      if (left < set.length) { t.noLeft(t.data.proMode ? '专业版' : '普通版'); return; }
+      var idx = 0;
+      var next = function () {
+        if (idx >= set.length) {
+          wx.hideLoading();
+          wx.showToast({ title: '整套试穿完成', icon: 'success' });
+          return;
+        }
+        var item = set[idx++];
+        if (idx > 1) wx.showLoading({ title: '试穿第 ' + idx + '/' + set.length + ' 件...' });
+        else wx.showLoading({ title: '开始试穿整套...' });
+        t.runAdd(item, ent, tier);
+        var check = function () {
+          if (t.data.addingId) { setTimeout(check, 300); return; }
+          setTimeout(next, 300);
+        };
+        setTimeout(check, 500);
+      };
+      next();
+    });
   },
 
   // —— 套餐面板 ——

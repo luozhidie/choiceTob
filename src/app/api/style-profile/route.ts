@@ -155,6 +155,8 @@ export async function POST(req: NextRequest) {
       sizes: b.sizes && typeof b.sizes === "object" ? b.sizes : {},
       occasions: Array.isArray(b.occasions) ? b.occasions : [],
       full_body_photo: b.full_body_photo || null,
+      full_body_photos: Array.isArray(b.full_body_photos) ? b.full_body_photos : (b.full_body_photo ? [b.full_body_photo] : []),
+      selected_photo_index: typeof b.selected_photo_index === 'number' ? b.selected_photo_index : 0,
       updated_at: new Date().toISOString(),
     };
 

@@ -48,10 +48,18 @@
   </view>
 
   <view class="card">
-    <text class="ct">全身照（用于试衣合成）</text>
-    <view class="photo" bindtap="choosePhoto">
-      <image wx:if="{{fullBodyPhoto}}" src="{{fullBodyPhoto}}" mode="aspectFill" class="pimg"/>
-      <text wx:else class="ph">上传全身照</text>
+    <text class="ct">全身照（可多张，用于试衣合成）</text>
+    <text class="sub-tip">点选一张照片作为默认试衣照片；长按或点 × 删除。</text>
+    <view class="photo-grid">
+      <view wx:for="{{fullBodyPhotos}}" wx:key="*this" class="photo-thumb {{selectedPhotoIndex===index?'on':''}}" bindtap="selectPhoto" data-index="{{index}}">
+        <image src="{{item}}" mode="aspectFill" class="timg"/>
+        <view wx:if="{{selectedPhotoIndex===index}}" class="default-badge">默认</view>
+        <view class="del-photo" catchtap="deletePhoto" data-index="{{index}}">×</view>
+      </view>
+      <view wx:if="{{fullBodyPhotos.length<9}}" class="photo-thumb add" bindtap="choosePhoto">
+        <text class="add-icon">＋</text>
+        <text class="add-t">上传照片</text>
+      </view>
     </view>
   </view>
 

@@ -100,6 +100,8 @@ Page({
     bodyType: '', height: '', weight: '',
     sizes: { top: '', bottom: '', shoe: '' },
     fullBodyPhoto: '',
+    fullBodyPhotos: [],
+    selectedPhotoIndex: 0,
   },
   onLoad: function () {
     var t = this;
@@ -114,6 +116,11 @@ Page({
             var gender = 'women';
             for (var k = 0; k < tags.length; k++) { if (String(tags[k]).indexOf('_m') > -1) { gender = 'men'; break; } }
             var der = deriveStyle(gender, tags);
+            var photos = Array.isArray(p.full_body_photos) && p.full_body_photos.length
+              ? p.full_body_photos
+              : (p.full_body_photo ? [p.full_body_photo] : []);
+            var selectedIdx = typeof p.selected_photo_index === 'number' ? p.selected_photo_index : 0;
+            if (selectedIdx >= photos.length) selectedIdx = 0;
             t.setData({
               seasonType: p.season_type || '',
               styleTags: der.styleTags,
@@ -125,7 +132,9 @@ Page({
               height: p.height ? String(p.height) : '',
               weight: p.weight ? String(p.weight) : '',
               sizes: (p.sizes && typeof p.sizes === 'object') ? p.sizes : {},
-              fullBodyPhoto: p.full_body_photo || '',
+              fullBodyPhoto: photos[selectedIdx] || p.full_body_photo || '',
+              fullBodyPhotos: photos,
+              selectedPhotoIndex: selectedIdx,
             });
           }
         }
@@ -192,27 +201,65 @@ Page({
   onSize: function (e) { var k = e.currentTarget.dataset.k; var s = Object.assign({}, this.data.sizes); s[k] = e.detail.value; this.setData({ sizes: s }); },
   choosePhoto: function () {
     var t = this;
+    var remain = 9 - (t.data.fullBodyPhotos || []).length;
+    if (remain <= 0) { wx.showToast({ title: '最多 9 张照片', icon: 'none' }); return; }
     wx.chooseMedia({
-      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'],
+      count: remain, mediaType: ['image'], sourceType: ['album', 'camera'],
       success: function (res) {
-        var f = res.tempFiles && res.tempFiles[0]; if (!f) return;
-        wx.showLoading({ title: '上传...' });
-        wx.compressImage({ src: f.tempFilePath, quality: 80, compressedWidth: 1000,
-          success: function (c) { t._up(c.tempFilePath); }, fail: function () { t._up(f.tempFilePath); } });
+        var files = res.tempFiles || []; if (!files.length) return;
+        wx.showLoading({ title: '上传 ' + files.length + ' 张...' });
+        var idx = 0;
+        var urls = [];
+        var next = function () {
+          if (idx >= files.length) {
+            wx.hideLoading();
+            var photos = t.data.fullBodyPhotos.concat(urls);
+            var selectedIdx = t.data.selectedPhotoIndex;
+            if (selectedIdx >= photos.length || selectedIdx < 0) selectedIdx = 0;
+            t.setData({ fullBodyPhotos: photos, fullBodyPhoto: photos[selectedIdx] || '', selectedPhotoIndex: selectedIdx });
+            wx.showToast({ title: '已上传 ' + urls.length + ' 张', icon: 'none' });
+            return;
+          }
+          var f = files[idx++];
+          wx.compressImage({
+            src: f.tempFilePath, quality: 80, compressedWidth: 1000,
+            success: function (c) { t._up(c.tempFilePath, function (u) { if (u) urls.push(u); next(); }); },
+            fail: function () { t._up(f.tempFilePath, function (u) { if (u) urls.push(u); next(); }); }
+          });
+        };
+        next();
       }
     });
   },
-  _up: function (filePath) {
+  selectPhoto: function (e) {
+    var idx = e.currentTarget.dataset.index;
+    var photos = this.data.fullBodyPhotos;
+    if (idx < 0 || idx >= photos.length) return;
+    this.setData({ selectedPhotoIndex: idx, fullBodyPhoto: photos[idx] });
+  },
+  deletePhoto: function (e) {
+    var t = this;
+    var idx = e.currentTarget.dataset.index;
+    var photos = t.data.fullBodyPhotos.slice();
+    photos.splice(idx, 1);
+    var selectedIdx = t.data.selectedPhotoIndex;
+    if (selectedIdx >= photos.length) selectedIdx = photos.length ? photos.length - 1 : 0;
+    if (selectedIdx < 0) selectedIdx = 0;
+    t.setData({ fullBodyPhotos: photos, selectedPhotoIndex: selectedIdx, fullBodyPhoto: photos[selectedIdx] || '' });
+  },
+  _up: function (filePath, cb) {
     var t = this;
     wx.uploadFile({
       url: BASE + '/api/upload', filePath: filePath, name: 'file',
       success: function (up) {
-        wx.hideLoading();
         var d; try { d = JSON.parse(up.data); } catch (e) { d = {}; }
         var url = d.url || (d.data && d.data.url);
-        if (!url) { wx.showModal({ title: '上传失败', content: String(d.error || '服务器未返回地址').slice(0, 140), showCancel: false }); return; }
-        t.setData({ fullBodyPhoto: url });
-        wx.showToast({ title: '已上传', icon: 'none' });
+        if (!url) {
+          if (cb) return cb('');
+          wx.showModal({ title: '上传失败', content: String(d.error || '服务器未返回地址').slice(0, 140), showCancel: false });
+          return;
+        }
+        if (cb) cb(url); else { t.setData({ fullBodyPhoto: url }); wx.showToast({ title: '已上传', icon: 'none' }); }
       },
       fail: function (err) {
         wx.hideLoading();
@@ -248,7 +295,9 @@ Page({
           height: t.data.height ? Number(t.data.height) : null,
           weight: t.data.weight ? Number(t.data.weight) : null,
           sizes: t.data.sizes,
-          full_body_photo: t.data.fullBodyPhoto
+          full_body_photo: t.data.fullBodyPhoto,
+          full_body_photos: t.data.fullBodyPhotos,
+          selected_photo_index: t.data.selectedPhotoIndex
         },
         success: function (r) {
           wx.hideLoading();

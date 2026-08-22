@@ -25,9 +25,15 @@
 .lab { width: 180rpx; font-size: 24rpx; color: #666; }
 .inp { flex: 1; font-size: 24rpx; color: #333; text-align: right; }
 
-.photo { width: 100%; height: 320rpx; background: #f3efe9; border: 1rpx dashed #d9cdb8; border-radius: 14rpx; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.pimg { width: 100%; height: 100%; }
-.ph { color: #b0a48c; font-size: 24rpx; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 16rpx; }
+.photo-thumb { position: relative; width: calc(33.33% - 11rpx); aspect-ratio: 3/4; background: #f3efe9; border: 2rpx dashed #d9cdb8; border-radius: 14rpx; overflow: hidden; box-sizing: border-box; }
+.photo-thumb.on { border: 2rpx solid #C9A24B; }
+.timg { width: 100%; height: 100%; }
+.default-badge { position: absolute; top: 8rpx; left: 8rpx; background: rgba(201,162,75,.92); color: #fff; font-size: 18rpx; padding: 2rpx 10rpx; border-radius: 8rpx; }
+.del-photo { position: absolute; top: 4rpx; right: 4rpx; width: 40rpx; height: 40rpx; background: rgba(0,0,0,.55); color: #fff; border-radius: 50%; font-size: 26rpx; text-align: center; line-height: 40rpx; }
+.photo-thumb.add { display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f8f5f1; border: 2rpx dashed #c9bdb0; }
+.add-icon { font-size: 48rpx; color: #a08f74; line-height: 1; }
+.add-t { font-size: 20rpx; color: #a08f74; margin-top: 8rpx; }
 
 .save-btn { margin: 8rpx 0 20rpx; background: linear-gradient(135deg,#2d1b2e,#7b4dff); color: #fff; font-size: 30rpx; font-weight: 800; text-align: center; padding: 26rpx 0; border-radius: 16rpx; }
 .bottom-pad { height: 40rpx; }
