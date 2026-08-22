@@ -52,21 +52,33 @@ const MAIN_STYLE_MAP: Record<string, string> = {
   fashion: "时尚型", classic: "古典型", natural: "自然型", dramatic: "戏剧型",
   dramatic_m: "戏剧型", natural_m: "自然型", classic_m: "古典型", romantic_m: "浪漫型", fashion_m: "时尚型",
 };
-// 从 style_tags 解析主风格 + 偏风格中文（与前端 STYLE_DATA 码一致）
+// 从 style_tags 解析唯一风格结论（与前端 STYLE_DATA 码一致）
+// 单选模式：tags 要么=[主风格码]（纯风格），要么=[偏风格码]（主偏某风格）
 function parseStyles(tags: string[]): { main_style: string; sub_style: string } {
-  let main = "";
-  const subs: string[] = [];
-  (tags || []).forEach((t: string) => {
-    if (MAIN_STYLE_MAP[t]) { if (!main) main = MAIN_STYLE_MAP[t]; return; }
+  const t = (tags || [])[0] || "";
+  if (!t) return { main_style: "", sub_style: "" };
+  const isMen = t.indexOf("_m") > -1;
+  let mainCode = "";
+  let subCode = "";
+  if (MAIN_STYLE_MAP[t]) {
+    mainCode = t; // 纯主风格
+  } else {
+    subCode = t; // 偏风格码
     const parts = t.split("_");
-    const base = MAIN_STYLE_MAP[parts[0]] ? parts[0] : null;
-    let target = "";
-    for (const p of parts) {
-      if (MAIN_STYLE_MAP[p] && p !== base) { target = MAIN_STYLE_MAP[p]; break; }
+    mainCode = isMen && parts.length >= 2 ? parts[0] + "_m" : parts[0];
+  }
+  const main = MAIN_STYLE_MAP[mainCode] || "";
+  let sub = "";
+  if (subCode) {
+    for (const p of subCode.split("_")) {
+      const test = isMen && !MAIN_STYLE_MAP[p] ? p + "_m" : p;
+      if (MAIN_STYLE_MAP[test] && test !== mainCode) {
+        sub = "偏" + MAIN_STYLE_MAP[test].replace("型", "");
+        break;
+      }
     }
-    if (target) subs.push("偏" + target.replace("型", ""));
-  });
-  return { main_style: main, sub_style: subs.join("·") };
+  }
+  return { main_style: main, sub_style: sub };
 }
 // 形象档案同步到 vip_customers（source='profile'，仅管理员可见）
 async function syncProfileToVip(b: any, openid: string) {

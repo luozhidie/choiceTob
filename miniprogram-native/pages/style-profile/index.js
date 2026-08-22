@@ -59,17 +59,29 @@ var STYLE_DATA = {
 };
 function deriveStyle(gender, tags) {
   var mains = STYLE_DATA[gender];
-  for (var i = 0; i < mains.length; i++) {
-    if (tags.indexOf(mains[i].code) > -1) {
-      return { gender: gender, mainStyle: mains[i].code, mainName: mains[i].name, subList: mains[i].subs };
+  // 单选结论：优先取偏风格码，再取主风格码；历史多选脏数据只保留一个结论
+  var subCode = '', mainCode = '', mainObj = null;
+  for (var i = 0; i < (tags || []).length; i++) {
+    var t = tags[i];
+    var parts = t.split('_');
+    var base = parts[0] + (t.indexOf('_m') > -1 ? '_m' : '');
+    for (var j = 0; j < mains.length; j++) {
+      if (mains[j].code === base) { mainObj = mains[j]; if (parts.length > 1) subCode = t; else if (!mainCode) mainCode = t; break; }
     }
+    if (subCode) break;
   }
-  return { gender: gender, mainStyle: '', mainName: '', subList: [] };
+  if (subCode && mainObj) {
+    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [subCode], pureSelected: false };
+  }
+  if (mainObj) {
+    return { gender: gender, mainStyle: mainObj.code, mainName: mainObj.name, subList: mainObj.subs, styleTags: [mainObj.code], pureSelected: true };
+  }
+  return { gender: gender, mainStyle: '', mainName: '', subList: [], styleTags: [], pureSelected: false };
 }
 // 偏风格小标题：男士风格不分直曲，故不显示「曲直」维度
 function subHeadingOf(gender, mainName) {
   if (!mainName) return '';
-  return gender === 'men' ? (mainName + '的偏风格（如' + mainName + '偏自然，可多选）') : (mainName + '的偏风格（如' + mainName + '偏浪漫，可多选）');
+  return gender === 'men' ? (mainName + '的偏风格（如' + mainName + '偏自然，单选）') : (mainName + '的偏风格（如' + mainName + '偏浪漫，单选）');
 }
 var OCCASIONS = [
   { code: 'work', name: '职场通勤' }, { code: 'date', name: '约会休闲' }, { code: 'travel', name: '出行旅游' }, { code: 'social', name: '社交礼仪' }, { code: 'home', name: '居家' }
@@ -97,12 +109,10 @@ Page({
             var gender = 'women';
             for (var k = 0; k < tags.length; k++) { if (String(tags[k]).indexOf('_m') > -1) { gender = 'men'; break; } }
             var der = deriveStyle(gender, tags);
-            var hasSubs = der.subList.some(function (s) { return tags.indexOf(s.code) >= 0; });
-            var pureSelected = !!der.mainStyle && !hasSubs;
             t.setData({
               seasonType: p.season_type || '',
-              styleTags: tags,
-              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName), pureSelected: pureSelected,
+              styleTags: der.styleTags,
+              gender: der.gender, mainList: STYLE_DATA[der.gender], mainStyle: der.mainStyle, mainName: der.mainName, subList: der.subList, subHeading: subHeadingOf(der.gender, der.mainName), pureSelected: der.pureSelected,
               occasions: p.occasions || [],
               bodyType: p.body_type || '',
               height: p.height ? String(p.height) : '',
@@ -138,42 +148,30 @@ Page({
     var mains = STYLE_DATA[t.data.gender];
     var cur = null, old = null;
     for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; if (mains[i].code === t.data.mainStyle) old = mains[i]; }
-    var tags = t.data.styleTags.slice();
     if (t.data.mainStyle === c) {
-      tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
-      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: tags, pureSelected: false });
+      t.setData({ mainStyle: '', mainName: '', subList: [], subHeading: '', styleTags: [], pureSelected: false });
     } else {
-      if (old) tags = tags.filter(function (x) { return x !== old.code && !old.subs.some(function (s) { return s.code === x; }); });
-      tags.push(c);
-      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: tags, pureSelected: true });
+      t.setData({ mainStyle: c, mainName: cur.name, subList: cur.subs, subHeading: subHeadingOf(t.data.gender, cur.name), styleTags: [c], pureSelected: true });
     }
   },
-  // 纯主风格：仅选中主风格 code（清空该主风格下所有偏风格）
+  // 纯主风格：结论 = 主风格本身（唯一结论）
   togglePureMain: function () {
     var t = this; var c = t.data.mainStyle; if (!c) return;
-    var cur = null; var mains = STYLE_DATA[t.data.gender];
-    for (var i = 0; i < mains.length; i++) { if (mains[i].code === c) cur = mains[i]; }
-    var tags = t.data.styleTags.slice();
-    var hasSubs = cur && cur.subs.some(function (s) { return tags.indexOf(s.code) >= 0; });
-    if (tags.indexOf(c) >= 0 && !hasSubs) {
-      tags = tags.filter(function (x) { return x !== c; });
-      t.setData({ styleTags: tags, pureSelected: false });
+    if (t.data.pureSelected && t.data.styleTags.length === 1 && t.data.styleTags[0] === c) {
+      t.setData({ styleTags: [], pureSelected: false });
     } else {
-      tags = tags.filter(function (x) { return x !== c && !(cur && cur.subs.some(function (s) { return s.code === x; })); });
-      tags.push(c);
-      t.setData({ styleTags: tags, pureSelected: true });
+      t.setData({ styleTags: [c], pureSelected: true });
     }
   },
+  // 偏风格：单选唯一结论（要么纯主风格，要么主偏某风格）
   toggleSub: function (e) {
     var c = this._codeFrom(e);
     if (!c) { wx.showToast({ title: '未取到风格码', icon: 'none' }); return; }
-    var arr = this.data.styleTags.slice();
-    var i = arr.indexOf(c);
-    if (i >= 0) arr.splice(i, 1); else arr.push(c);
-    var cur = null; var mains = STYLE_DATA[this.data.gender];
-    for (var k = 0; k < mains.length; k++) { if (mains[k].code === this.data.mainStyle) cur = mains[k]; }
-    var pureSelected = !!this.data.mainStyle && cur && !cur.subs.some(function (s) { return arr.indexOf(s.code) >= 0; });
-    this.setData({ styleTags: arr, pureSelected: pureSelected });
+    if (this.data.styleTags.length === 1 && this.data.styleTags[0] === c) {
+      this.setData({ styleTags: [], pureSelected: false });
+    } else {
+      this.setData({ styleTags: [c], pureSelected: false });
+    }
   },
   toggleOccasion: function (e) {
     var c = this._codeFrom(e);
