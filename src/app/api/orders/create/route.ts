@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { generateOrderNo } from "@/lib/payment";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { resolveAgentByCode } from "@/lib/agent-settlement";
+import { verifyPaymentPassword } from "@/lib/agent-deposit";
 
 /**
  * 解析小程序自定义 token（base64url JSON，如 {uid,exp}），与 user/me 保持一致。
@@ -65,6 +66,8 @@ export async function POST(req: NextRequest) {
       note,
       payment_type = "wechat",
       referral_code,
+      use_deposit_deduction = false,
+      payment_password,
     } = body;
 
     // 代理归因：推广码(invite_code) → 代理 user_id
@@ -118,6 +121,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 货款余额抵扣（仅本人有效代理，且已设支付密码）
+    let depositDeducted = 0;
+    if (use_deposit_deduction) {
+      const { data: profile } = await svc
+        .from("profiles")
+        .select("deposit_amount, payment_password_hash, membership_type")
+        .eq("id", uid)
+        .maybeSingle();
+      const isAgent =
+        profile?.membership_type === "deposit_discount" &&
+        Number(profile?.deposit_amount || 0) > 0;
+      if (!isAgent) {
+        return NextResponse.json({ error: "您当前无可用的预存货款" }, { status: 400 });
+      }
+      if (!profile?.payment_password_hash) {
+        return NextResponse.json(
+          { error: "请先设置货款支付密码", needPayPassword: true },
+          { status: 400 }
+        );
+      }
+      if (!payment_password || !verifyPaymentPassword(payment_password, profile.payment_password_hash)) {
+        return NextResponse.json({ error: "支付密码错误", payPasswordError: true }, { status: 401 });
+      }
+      const avail = Number(profile.deposit_amount || 0);
+      depositDeducted = Math.min(avail, totalAmount);
+    }
+
+    const wechatPay = totalAmount - depositDeducted;
+
     const orderNo = generateOrderNo();
 
     const { data: order, error: dbError } = await supabase
@@ -138,6 +170,7 @@ export async function POST(req: NextRequest) {
         payment_method: payment_type,
         agent_id: agentId,
         referral_code: code ? String(code).toUpperCase() : null,
+        deposit_deducted: depositDeducted,
       })
       .select()
       .single();
@@ -147,9 +180,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
+    // 货款抵扣：扣 profiles.deposit_amount + 写流水（建单成功后）
+    if (depositDeducted > 0) {
+      try {
+        const { data: pf } = await svc
+          .from("profiles")
+          .select("deposit_amount")
+          .eq("id", uid)
+          .maybeSingle();
+        const newBal = Math.max(0, Number(pf?.deposit_amount || 0) - depositDeducted);
+        await svc
+          .from("profiles")
+          .update({ deposit_amount: newBal, updated_at: new Date().toISOString() })
+          .eq("id", uid);
+        await svc.from("deposit_transactions").insert({
+          user_id: uid,
+          type: "order_deduct",
+          amount: -depositDeducted,
+          balance_after: newBal,
+          ref_order_no: orderNo,
+          remark: "下单货款抵扣",
+        });
+      } catch (e) {
+        console.error("[货款抵扣] 扣减失败", e);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       order: order,
+      wechat_pay: wechatPay,
+      deposit_deducted: depositDeducted,
       message: "订单已创建",
     });
   } catch (err: any) {

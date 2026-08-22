@@ -36,3 +36,17 @@ page{background: var(--bg);}
 .st-label{font-size:26rpx;color:#666;}
 .st-total{font-size:36rpx;font-weight:800;color:#2d1b2e;margin-right:16rpx;}
 .st-btn{background:linear-gradient(135deg,#2d1b2e,#4a3a4b);color:#fff;padding:20rpx 80rpx;border-radius:40rpx;font-size:29rpx;font-weight:700;}
+
+/* 货款抵扣 */
+.deposit-sec{background:#fff;padding:20rpx 24rpx;display:flex;align-items:center;justify-content:space-between;margin-bottom:12rpx;}
+.ds-left{display:flex;flex-direction:column;}
+.ds-title{font-size:27rpx;color:#333;font-weight:600;}
+.ds-sub{font-size:22rpx;color:#999;margin-top:4rpx;}
+.ds-switch{width:88rpx;height:48rpx;border-radius:24rpx;background:#e0dcd8;position:relative;transition:background .2s;}
+.ds-switch.on{background:#2d1b2e;}
+.ds-dot{position:absolute;top:4rpx;left:4rpx;width:40rpx;height:40rpx;border-radius:50%;background:#fff;transition:left .2s;}
+.ds-switch.on .ds-dot{left:44rpx;}
+.fee-minus{color:#c98a2b;font-weight:600;}
+
+/* 支付密码弹层 */
+.pwd-input{margin:20rpx 0;text-align:center;font-size:36rpx;letter-spacing:12rpx;height:80rpx;border:1rpx solid #ddd;border-radius:12rpx;background:#fafafa;}

@@ -8,6 +8,13 @@ Page({
     subtotal:'0.00',
     shipping:'0.00',
     total:'0.00',
+    isAgent:false,
+    depositAmountCents:0,
+    depositText:'0',
+    useDeposit:false,
+    showPayPwd:false,
+    payPwd:'',
+    needSetPwd:false,
   },
 
   onLoad:function(opt){
@@ -48,7 +55,48 @@ Page({
       this.setData({items:items});
       this.calc();
     }
+    /* 拉取本人代理状态（决定是否可货款抵扣） */
+    this.loadAgentStatus();
   },
+
+  loadAgentStatus:function(){
+    var t=this;
+    var token=wx.getStorageSync('token')||'';
+    if(!token)return;
+    wx.request({
+      url:'https://colour-choice.art/api/agent/me',
+      header:{'Authorization':'Bearer '+token},
+      success:function(r){
+        var d=r.data||{};
+        if(d.active && Number(d.depositAmount||0)>0){
+          t.setData({
+            isAgent:true,
+            depositAmountCents:Number(d.depositAmount||0),
+            depositText:t.fmt(d.depositAmount||0)
+          });
+        }
+      }
+    });
+  },
+
+  fmt:function(cents){
+    if(!cents||cents<=0)return '0';
+    var s=Math.floor(cents/100).toString();
+    var out='';
+    for(var i=0;i<s.length;i++){ if(i>0&&(s.length-i)%3===0)out+=','; out+=s.charAt(i); }
+    return out;
+  },
+
+  toggleDeposit:function(){
+    if(!this.data.isAgent)return;
+    var on=!this.data.useDeposit;
+    var totalCents=Math.round(Number(this.data.total)*100);
+    var deduct=on?Math.min(this.data.depositAmountCents,totalCents):0;
+    this.setData({useDeposit:on, depositDeductText:(deduct/100).toFixed(2), payPwd:''});
+  },
+
+  onPayPwdInput:function(e){this.setData({payPwd:e.detail.value});},
+  closePayPwd:function(){this.setData({showPayPwd:false,payPwd:''});},
 
   calc:function(){
     var items=this.data.items;
@@ -63,6 +111,8 @@ Page({
   },
 
   onRemark:function(e){this.setData({remark:e.detail.value});},
+
+  noop:function(){},
 
   loadDefaultAddress:function(){
     var t=this;
@@ -110,6 +160,15 @@ Page({
     var t=this;
     var items=t.data.items;
     if(!items||items.length===0){wx.showToast({title:'无商品',icon:'none'});return;}
+
+    /* 若开启货款抵扣但未输密码，先弹密码层（提交时再走真正支付） */
+    if(t.data.useDeposit){
+      if(!t.data.payPwd || t.data.payPwd.length!==6){
+        t.setData({showPayPwd:true});
+        return;
+      }
+    }
+
     var total=Math.round(Number(t.data.total)*100);/* 转成分 */
     var qty=items.reduce(function(s,i){return s+(i.quantity||1);},0);
     var addr=t.data.address||{};
@@ -118,27 +177,42 @@ Page({
 
     wx.showLoading({title:'提交中...'});
     /* 第一步：建单落库（拿 order_no，供支付回调对应） */
+    var createData={
+      product_id:items[0].id,
+      product_title:items[0].name,
+      product_image:items[0].image||'',
+      product_price:items[0].price||0, /* 分 */
+      quantity:qty,
+      total_amount:total,             /* 分 */
+      contact:(addr.name||'')+' '+(addr.phone||''),
+      address:addrText,
+      note:t.data.remark||'',
+      payment_type:'wechat'
+    };
+    /* 货款抵扣：传开关 + 支付密码 */
+    if(t.data.useDeposit){
+      createData.use_deposit_deduction=true;
+      createData.payment_password=t.data.payPwd;
+    }
     wx.request({
       url:'https://colour-choice.art/api/orders/create',
       method:'POST',
       header:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      data:{
-        product_id:items[0].id,
-        product_title:items[0].name,
-        product_image:items[0].image||'',
-        product_price:items[0].price||0, /* 分 */
-        quantity:qty,
-        total_amount:total,             /* 分 */
-        contact:(addr.name||'')+' '+(addr.phone||''),
-        address:addrText,
-        note:t.data.remark||'',
-        payment_type:'wechat'
-      },
+      data:createData,
       success:function(cr){
         var cd=cr.data||{};
-        if(cd.error||!cd.success){wx.hideLoading();wx.showModal({title:'创建订单失败',content:cd.error||'请重试',showCancel:false});return;}
+        if(cd.error||!cd.success){
+          wx.hideLoading();
+          /* 未设支付密码：提示去设置 */
+          if(cd.needPayPassword){ t.setData({showPayPwd:false,needSetPwd:true}); return; }
+          /* 密码错误：重输 */
+          if(cd.payPasswordError){ t.setData({showPayPwd:true,payPwd:''}); wx.showToast({title:'支付密码错误',icon:'none'}); return; }
+          wx.showModal({title:'创建订单失败',content:cd.error||'请重试',showCancel:false});return;}
         var order_no=cd.order&&cd.order.order_no;
         if(!order_no){wx.hideLoading();wx.showModal({title:'创建订单失败',content:'未获取到订单号',showCancel:false});return;}
+
+        /* 微信实付额：抵扣后为 wechat_pay，未抵扣则 total */
+        var wechatPay = (typeof cd.wechat_pay==='number') ? cd.wechat_pay : total;
 
         /* 第二步：统一下单（复用 order_no，使支付回调能标记该订单已支付） */
         wx.request({
@@ -147,7 +221,7 @@ Page({
           data:{
             product_id:items[0].id,
             product_title:items[0].name,
-            total_fee:total,
+            total_fee:wechatPay,
             quantity:qty,
             platform:'mini',
             openid:openid,

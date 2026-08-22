@@ -32,10 +32,22 @@
     <input class="ri" placeholder="选填，可备注颜色/尺码等" value="{{remark}}" bindinput="onRemark"/>
   </view>
 
+  <!-- 货款抵扣（仅有效代理） -->
+  <view class="deposit-sec" wx:if="{{isAgent}}">
+    <view class="ds-left">
+      <text class="ds-title">用预存货款抵扣</text>
+      <text class="ds-sub">可用货款 ¥{{depositText}}（支付密码验证）</text>
+    </view>
+    <view class="ds-switch {{useDeposit?'on':''}}" bindtap="toggleDeposit">
+      <view class="ds-dot"></view>
+    </view>
+  </view>
+
   <!-- 金额明细 -->
   <view class="fee-sec">
     <view class="fee-row"><text>商品合计</text><text>¥{{subtotal}}</text></view>
     <view class="fee-row"><text>运费</text><text>¥{{shipping}}</text></view>
+    <view class="fee-row" wx:if="{{useDeposit}}"><text>货款抵扣</text><text class="fee-minus">-¥{{depositDeductText||'0.00'}}</text></view>
     <view class="fee-row fee-total"><text>应付总额</text><text class="fee-num">¥{{total}}</text></view>
   </view>
 
@@ -44,5 +56,15 @@
     <text class="st-label">应付：</text>
     <text class="st-total">¥{{total}}</text>
     <view class="st-btn" bindtap="submitOrder">提交订单</view>
+  </view>
+
+  <!-- 支付密码弹层 -->
+  <view class="mask" wx:if="{{showPayPwd}}" bindtap="closePayPwd">
+    <view class="modal" catchtap="noop">
+      <text class="mtit">输入货款支付密码</text>
+      <input class="pwd-input" type="number" password="{{true}}" maxlength="6" placeholder="6位支付密码" value="{{payPwd}}" bindinput="onPayPwdInput"/>
+      <view class="mbtn" bindtap="doPay">确认支付</view>
+      <view class="mcancel" bindtap="closePayPwd">取消</view>
+    </view>
   </view>
 </view>
