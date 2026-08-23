@@ -23,14 +23,15 @@ export async function GET(request: NextRequest) {
     // 解析有效代理（预存货款 + 充值，或认证店主/管理员均可预览/开通店铺）
     const { data: agent } = await supabase
       .from("profiles")
-      .select("id, full_name, membership_type, deposit_amount, is_admin, store_owner_certified, role")
+      .select("id, full_name, membership_type, deposit_amount, is_admin, store_owner_certified, role, is_tryon_agent")
       .eq("invite_code", ref)
       .maybeSingle();
     const isDepositAgent =
       !!agent && agent.membership_type === "deposit_discount" && Number(agent.deposit_amount || 0) > 0;
+    const isTryonAgent = !!agent && agent.is_tryon_agent === true;
     const isPrivileged =
       !!agent && (agent.is_admin === true || agent.store_owner_certified === true || agent.role === "admin");
-    const isValid = isDepositAgent || isPrivileged;
+    const isValid = isDepositAgent || isPrivileged || isTryonAgent;
     if (!isValid) {
       return NextResponse.json({ valid: false, products: [] });
     }

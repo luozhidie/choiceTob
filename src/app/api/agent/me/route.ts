@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid, pre_deposit_agreed, payment_password_hash"
+        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid, pre_deposit_agreed, payment_password_hash, is_tryon_agent"
       )
       .eq("id", uid)
       .maybeSingle();
@@ -84,6 +84,7 @@ export async function GET(request: NextRequest) {
 
     const isDepositAgent =
       profile.membership_type === "deposit_discount" && Number(profile.deposit_amount || 0) > 0;
+    const isTryonAgent = profile.is_tryon_agent === true;
     const isCertified = profile.store_owner_certified === true;
 
     // 兜底生成推广码（首次进入工作台）：用 user_id 派生稳定码并写回
@@ -159,19 +160,28 @@ export async function GET(request: NextRequest) {
       bankCards = bc || [];
     } catch {}
 
+    // 998 虚拟试衣代理折扣档位：单件 3.3 折，单笔满 5 件 2.8 折，无退换额度
+    const agentTier = isTryonAgent ? "tryon_998" : isDepositAgent ? "deposit" : (isCertified ? "certified" : "none");
+    const tryonAgentDiscount = isTryonAgent && !isDepositAgent ? 0.33 : (profile.deposit_discount_rate || 1.0);
+
     return NextResponse.json({
-      active: isDepositAgent || isCertified || isAdmin,
+      active: isDepositAgent || isCertified || isAdmin || isTryonAgent,
       isDepositAgent,
+      isTryonAgent,
       isCertified,
       isAdmin,
       user_id: profile.id,
       membershipType: profile.membership_type || "none",
+      agentTier,
       fullName: profile.full_name || "",
       storeName: profile.full_name || "",
       certifiedStyle: profile.certified_style || "",
       depositAmount: profile.deposit_amount || 0,
-      discountRate: profile.deposit_discount_rate || 1.0,
-      returnRate: profile.deposit_return_rate || 0,
+      discountRate: tryonAgentDiscount,
+      singleDiscount: 0.33,
+      bulkDiscount: 0.28,
+      bulkThreshold: 5,
+      returnRate: isTryonAgent && !isDepositAgent ? 0 : (profile.deposit_return_rate || 0),
       inviteCode,
       walletBalance,
       frozenBalance,

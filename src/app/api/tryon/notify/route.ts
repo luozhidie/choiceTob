@@ -120,6 +120,24 @@ async function grantEntitlement(supabase: any, openid: string, package_id: strin
     updated_at: new Date().toISOString(),
   });
   console.log(`[试衣权益发放] 成功 schema=${schema}`, { openid, type, normalLeft, proLeft });
+
+  // 购买专业版 ¥998 → 永久成为虚拟试衣代理（与店主认证独立）
+  if (package_id === "tryon_pro_998") {
+    try {
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("wechat_openid", openid)
+        .maybeSingle();
+      const uid = p?.id || (await supabase.from("profiles").select("id").eq("wx_openid", openid).maybeSingle()).data?.id;
+      if (uid) {
+        await supabase.from("profiles").update({ is_tryon_agent: true, updated_at: new Date().toISOString() }).eq("id", uid);
+        console.log("[试衣代理] 已标记 is_tryon_agent=true", { openid, uid });
+      }
+    } catch (e) {
+      console.error("[试衣代理] 标记失败", e);
+    }
+  }
 }
 
 function buildXml(obj: Record<string, string>) {

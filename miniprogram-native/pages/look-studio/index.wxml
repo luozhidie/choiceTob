@@ -39,7 +39,8 @@
   <!-- ① 上传照片 -->
   <view class="card">
     <text class="ct">① 上传你的照片（第 1 件试穿对象）</text>
-    <text class="hint" style="margin-bottom:12rpx;">建议传「仅穿贴身内搭 / 低领」的正脸半身照：原衣领口、袖口残留会少很多；原图越清晰，叠穿也越不易丢细节。</text>
+    <text class="hint" style="margin-bottom:12rpx;">✅ 合格真人照标准：正面平视镜头、光线均匀、不侧脸、不低头/仰头、不戴墨镜/口罩/帽子等遮挡物，半身或全身清晰照。</text>
+    <text class="hint" style="margin-bottom:12rpx;color:#C9A24B;">⚠️ 照片不合格会导致：脸被 AI 修歪、头身比例失调、衣服穿不上身。请严格按上方标准上传。</text>
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>
@@ -98,7 +99,8 @@
           <text class="cloth-ph">上传\n衣服</text>
         </view>
         <view class="cloth-info">
-          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。</text>
+          <text class="hint">✅ 合格衣服图标准：平铺或挂拍、纯色背景（白底最佳）、正面拍摄、无模特、无人脸，高清（建议 1024×1024 以上）。</text>
+        <text class="hint" style="margin-top:6rpx;color:#C9A24B;">⚠️ 传"模特上身图"会导致 AI 误学模特身材，出现头身比例失调。请用无人的商品图。</text>
         <text class="hint" style="margin-top:6rpx;color:#aaa;">鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考。</text>
           <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
         </view>
@@ -156,7 +158,8 @@
           <text class="cloth-ph">上传\n衣服</text>
         </view>
         <view class="cloth-info">
-          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。</text>
+          <text class="hint">✅ 合格衣服图标准：平铺或挂拍、纯色背景（白底最佳）、正面拍摄、无模特、无人脸，高清（建议 1024×1024 以上）。</text>
+        <text class="hint" style="margin-top:6rpx;color:#C9A24B;">⚠️ 传"模特上身图"会导致 AI 误学模特身材，出现头身比例失调。请用无人的商品图。</text>
         <text class="hint" style="margin-top:6rpx;color:#aaa;">鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考。</text>
           <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
         </view>

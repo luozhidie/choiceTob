@@ -17,14 +17,29 @@ export async function resolveAgentByCode(
   if (!code || typeof code !== "string" || code.trim().length === 0) return null;
   const { data } = await supabase
     .from("profiles")
-    .select("id, membership_type, deposit_amount")
+    .select("id, membership_type, deposit_amount, is_tryon_agent")
     .eq("invite_code", code.trim().toUpperCase())
     .maybeSingle();
   if (!data) return null;
   const isAgent =
-    data.membership_type === "deposit_discount" &&
-    Number(data.deposit_amount || 0) > 0;
+    (data.membership_type === "deposit_discount" &&
+      Number(data.deposit_amount || 0) > 0) ||
+    data.is_tryon_agent === true;
   return isAgent ? (data.id as string) : null;
+}
+
+/**
+ * 代理批发折扣率：单件 3.3 折；单笔订单满 5 件 2.8 折。
+ * 现有预存货款用户仍用其 deposit_discount_rate（如 0.28）。
+ */
+export function agentDiscountRate(
+  agent: { deposit_discount_rate?: number | null; is_tryon_agent?: boolean | null } | null,
+  quantity: number
+): number {
+  if (agent?.is_tryon_agent && !agent?.deposit_discount_rate) {
+    return quantity >= 5 ? 0.28 : 0.33;
+  }
+  return Number(agent?.deposit_discount_rate || 1);
 }
 
 export interface AgentSettlementResult {
@@ -71,9 +86,9 @@ export async function settleAgentSale(
     .eq("id", ord.product_id)
     .maybeSingle();
 
-  const rate = Number(agent?.deposit_discount_rate || 1);
-  const retail = Number(prod?.price || 0);
   const qty = Math.max(1, Number(ord.quantity || 1));
+  const rate = agentDiscountRate(agent, qty);
+  const retail = Number(prod?.price || 0);
   const cost = Math.round(retail * rate * qty);
   const profit = Math.max(0, gross - cost);
 
