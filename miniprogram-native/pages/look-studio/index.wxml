@@ -149,6 +149,36 @@
       </scroll-view>
     </view>
 
+    <view class="card">
+      <text class="ct">上传我自己的衣服（直接叠上去）</text>
+      <view class="cloth-row">
+        <view class="cloth-pic" bindtap="chooseCloth">
+          <text class="cloth-ph">上传\n衣服</text>
+        </view>
+        <view class="cloth-info">
+          <text class="hint">上传你想试穿的衣服照片（正面平铺/挂拍效果最佳），尽量高清（建议 1024×1024 以上），分辨率太低会被 AI 拒绝。</text>
+        <text class="hint" style="margin-top:6rpx;color:#aaa;">鞋 · 包 · 配饰由 AI 创意合成，比例位置仅供参考。</text>
+          <text class="shop-entry" bindtap="openShopPick">从店铺挑选也行 ›</text>
+        </view>
+      </view>
+      <block wx:if="{{showShopPick}}">
+        <scroll-view scroll-x class="chips" show-scrollbar="{{false}}" wx:if="{{categories.length}}">
+          <text class="chip {{category===''?'on':''}}" data-c="" bindtap="setCategory">全部</text>
+          <text wx:for="{{categories}}" wx:key="code" class="chip {{category===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setCategory">{{item.name}}</text>
+        </scroll-view>
+        <view class="grid3">
+          <view wx:for="{{browseProducts}}" wx:key="id" class="pcard">
+            <image src="{{item.cover}}" mode="aspectFill" class="pimg"/>
+            <text class="ptitle">{{item.title}}</text>
+            <text class="pprice">¥{{item.price}}</text>
+            <text wx:if="{{item.category==='shoes'||item.category==='bag'||item.category==='accessory'}}" class="hint" style="color:#bbb;">AI 合成 · 比例仅供参考</text>
+            <text class="pbtn" data-id="{{item.id}}" bindtap="addOne">＋ 加这件</text>
+          </view>
+        </view>
+        <text class="close-shop" bindtap="closeShopPick">‹ 收起店铺挑选</text>
+      </block>
+    </view>
+
     <view class="tabs">
       <text class="tab {{mode==='browse'?'on':''}}" data-m="browse" bindtap="setMode">挑单品</text>
       <text class="tab {{mode==='manual'?'on':''}}" data-m="manual" bindtap="setMode">手工组合</text>

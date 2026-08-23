@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { enhancePipeline, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
+import { cropWatermark } from "@/lib/tryon/removeBg";
 
 const GENLOOK_BASE = "https://api.genlook.app";
 const BUCKET = "blocks-images";
@@ -58,7 +59,13 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
         const imgRes = await fetch(resultUrl);
         if (imgRes.ok) {
-          const imgBuf = Buffer.from(await imgRes.arrayBuffer());
+          let imgBuf: Buffer = Buffer.from(await imgRes.arrayBuffer());
+          // 去底部水印（Genlook 输出常带 "AI MODIFIED" 等水印条）
+          try {
+            imgBuf = (await cropWatermark(imgBuf)) as Buffer;
+          } catch (cwErr) {
+            console.warn("[tryon/generate/poll] 去水印失败，回退原图", (cwErr as Error)?.message);
+          }
           const outName = `tryon-result-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.jpg`;
           await supabase.storage.from(BUCKET).upload(outName, imgBuf, {
             contentType: "image/jpeg",

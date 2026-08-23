@@ -10,6 +10,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { Blob } from 'buffer';
 import { Canvas, loadImage, ImageData as NapiImageData } from '@napi-rs/canvas';
+import sharp from 'sharp';
 
 let polyfilled = false;
 function ensurePolyfills() {
@@ -171,4 +172,60 @@ function featherAlpha(data: Uint8ClampedArray, w: number, h: number, r: number) 
     const v = vb[i];
     data[i * 4 + 3] = v < 32 ? 0 : v;
   }
+}
+
+/**
+ * 去除生成图底部水印（Genlook 输出常带 "AI MODIFIED" 等底部水印条）。
+ * 策略：扫描底部 15% 区域，若检测到近白色/低对比度的可疑横带，则裁剪掉该区域。
+ * 非破坏性回退：检测失败或无可疑带时返回原图。
+ */
+export async function cropWatermark(input: Buffer): Promise<Buffer> {
+  try {
+    const meta = await sharp(input, { failOn: "none" }).metadata();
+    if (!meta.width || !meta.height) return input;
+    const W = meta.width;
+    const H = meta.height;
+    // 只检查底部 12% 区域
+    const bandH = Math.max(8, Math.round(H * 0.12));
+    const region = await sharp(input, { failOn: "none" })
+      .extract({ left: 0, top: H - bandH, width: W, height: bandH })
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const { data, info } = region;
+    const rowMeans: number[] = [];
+    for (let y = 0; y < info.height; y++) {
+      let sum = 0;
+      for (let x = 0; x < info.width; x++) sum += data[y * info.width + x];
+      rowMeans.push(sum / info.width);
+    }
+    // 找到从底部往上第一个"明显变暗"的行（水印带通常是近白、比主体亮或一致，但边缘突变）
+    // 简化：若底部整带平均亮度 > 200（近白），说明是水印留白带，裁剪
+    const bottomBright = rowMeans.reduce((a, b) => a + b, 0) / rowMeans.length;
+    if (bottomBright > 200) {
+      const croppedH = H - bandH;
+      if (croppedH > H * 0.5) {
+        return await sharp(input, { failOn: "none" })
+          .extract({ left: 0, top: 0, width: W, height: croppedH })
+          .jpeg({ quality: 92, mozjpeg: true })
+          .toBuffer();
+      }
+    }
+    return input;
+  } catch {
+    return input;
+  }
+}
+
+/**
+ * 轻量"是否含人脸"判断（用于衣服图校验：模特上身图应拒绝）。
+ * 直接用 sharp 检测不现实，这里改为基于尺寸/长宽比/常见模特图特征启发式：
+ * 若图片是竖长全身照且主体居中，提示用户确认。
+ * 更可靠方案是接阿里云人脸检测，但为降低复杂度，这里返回保守 false（不拦截），
+ * 仅通过前端文案引导。
+ * 返回 true 表示"疑似含人脸（模特图）"。
+ */
+export async function detectFaceInGarment(input: Buffer): Promise<boolean> {
+  // 暂用占位：后续可接阿里云 faceDetect。当前不主动拦截，避免误杀正常平铺图。
+  return false;
 }
