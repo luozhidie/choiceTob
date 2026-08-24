@@ -123,22 +123,43 @@ Page({
     function runBatch(batch) {
       return Promise.all(batch.map(function (g) {
         return new Promise(function (resolve) {
-          wx.uploadFile({
+          wx.request({
             url: BASE + '/api/tryon/generate',
-            filePath: t.data.personPath,
-            name: 'personImage',
-            formData: {
+            method: 'POST',
+            data: {
               personImageUrl: t.data.personUrl,
               garmentImageUrl: garmentUrl(g.path),
               userId: 'style-tryon-mini',
+              title: g.name,
             },
             success: function (res) {
-              var d; try { d = JSON.parse(res.data); } catch (e) { d = {}; }
-              var updated = { id: g.id, name: g.name, short: g.short, url: '', error: '' };
-              if (d.error) { updated.error = String(d.error).slice(0, 60); }
-              else { updated.url = rewriteSupabase(d.resultUrl); }
+              var d = res.data || {};
+              if (d.error) {
+                t.setData({
+                  results: t.data.results.map(function (r) { return r.id === g.id ? { id: g.id, name: g.name, short: g.short, url: '', error: String(d.error).slice(0, 60) } : r; }),
+                  doneCount: t.data.doneCount + 1,
+                });
+                resolve();
+                return;
+              }
+              if (d.generationId) {
+                t.setData({
+                  results: t.data.results.map(function (r) { return r.id === g.id ? { id: g.id, name: g.name, short: g.short, url: '', error: '', generationId: d.generationId } : r; }),
+                });
+                t.pollTryon(d.generationId, g, function (resultUrl, err) {
+                  var updated = { id: g.id, name: g.name, short: g.short, url: '', error: '', generationId: d.generationId };
+                  if (err) updated.error = err;
+                  else updated.url = rewriteSupabase(resultUrl);
+                  t.setData({
+                    results: t.data.results.map(function (r) { return r.id === g.id ? updated : r; }),
+                    doneCount: t.data.doneCount + 1,
+                  });
+                  resolve();
+                });
+                return;
+              }
               t.setData({
-                results: t.data.results.map(function (r) { return r.id === g.id ? updated : r; }),
+                results: t.data.results.map(function (r) { return r.id === g.id ? { id: g.id, name: g.name, short: g.short, url: '', error: '未返回任务ID' } : r; }),
                 doneCount: t.data.doneCount + 1,
               });
               resolve();
@@ -192,5 +213,53 @@ Page({
   preview: function (e) {
     var url = e.currentTarget.dataset.url;
     if (url) wx.previewImage({ urls: [url], current: url });
+  },
+
+  pollTryon: function (generationId, g, onDone) {
+    var t = this;
+    var attempts = 0;
+    var maxAttempts = 40;
+    var done = false;
+    var timer = null;
+    var poll = function () {
+      if (done) return;
+      attempts++;
+      wx.request({
+        url: BASE + '/api/tryon/generate/' + encodeURIComponent(generationId),
+        method: 'GET',
+        timeout: 60000,
+        success: function (res) {
+          if (done) return;
+          var d = res.data || {};
+          if (d.error) {
+            done = true;
+            if (timer) clearInterval(timer);
+            onDone('', String(d.error).slice(0, 60));
+            return;
+          }
+          if (d.status === 'COMPLETED' && d.resultUrl) {
+            done = true;
+            if (timer) clearInterval(timer);
+            onDone(d.resultUrl, '');
+            return;
+          }
+          if (attempts >= maxAttempts) {
+            done = true;
+            if (timer) clearInterval(timer);
+            onDone('', '生成超时');
+          }
+        },
+        fail: function () {
+          if (done) return;
+          if (attempts >= maxAttempts) {
+            done = true;
+            if (timer) clearInterval(timer);
+            onDone('', '网络错误');
+          }
+        }
+      });
+    };
+    poll();
+    timer = setInterval(poll, 5000);
   },
 });

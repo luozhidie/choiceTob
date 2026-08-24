@@ -140,7 +140,10 @@
   <!-- 专业版：形象 + tabs -->
   <block wx:if="{{proMode}}">
     <view class="card">
-      <text class="ct">我的形象（色彩季型 + 穿衣风格）</text>
+      <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12rpx;">
+        <text class="ct" style="margin:0;">我的形象（色彩季型 + 穿衣风格）</text>
+        <text style="font-size:22rpx;color:#C9A24B;font-weight:700;" bindtap="goDiagnosis">去女士风格测试 ›</text>
+      </view>
       <text class="lab">色彩季型</text>
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">
         <text wx:for="{{seasons}}" wx:key="code" class="chip {{mySeason===item.code?'on':''}}" data-c="{{item.code}}" bindtap="setMySeason">{{item.name_zh}}</text>

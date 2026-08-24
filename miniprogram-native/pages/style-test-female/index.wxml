@@ -1,0 +1,57 @@
+<view class="page">
+  <!-- 介绍页 -->
+  <view wx:if="{{!started && !showResult}}" class="intro">
+    <text class="intro-title">女士风格测试</text>
+    <text class="intro-sub">14 道题，约 2 分钟完成</text>
+    <text class="intro-desc">根据你的身形、气质、穿衣偏好，自动判断你属于哪种女士穿衣风格。结果可用于云衣橱专业版智能推荐。</text>
+    <text class="intro-btn" bindtap="start">开始测试</text>
+    <text class="intro-back" bindtap="goBack">‹ 返回</text>
+  </view>
+
+  <!-- 测试页 -->
+  <block wx:if="{{started && !showResult}}">
+    <view class="top-bar">
+      <text class="top-back" bindtap="goBack">‹</text>
+      <view class="progress-wrap">
+        <view class="progress-track">
+          <view class="progress-fill" style="width:{{progress}}%"></view>
+        </view>
+        <text class="progress-text">{{progress}}% · {{currentIndex+1}}/{{questions.length}}</text>
+      </view>
+    </view>
+
+    <scroll-view scroll-y class="question-list" scroll-into-view="{{scrollInto}}" scroll-with-animation>
+      <view wx:for="{{questions}}" wx:key="id" id="q-{{index}}" class="q-card {{answers[item.id]?'q-done':''}}">
+        <view class="q-head">
+          <text class="q-num">{{index+1}}</text>
+          <text class="q-text">{{item.text}}</text>
+        </view>
+        <view class="q-options">
+          <view wx:for="{{item.options}}" wx:for-item="opt" wx:key="v" class="opt {{answers[item.id]===opt.v?'opt-on':''}}" data-qid="{{item.id}}" data-val="{{opt.v}}" data-idx="{{index}}" bindtap="select">
+            <text class="opt-dot">{{answers[item.id]===opt.v?'✓':''}}</text>
+            <text class="opt-label">{{opt.l}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+
+    <view class="bottom-actions">
+      <text class="act-prev" bindtap="prev">上一题</text>
+      <text class="act-submit" bindtap="submit">提交看结果</text>
+    </view>
+  </block>
+
+  <!-- 结果页 -->
+  <view wx:if="{{showResult && result}}" class="result">
+    <text class="res-title">你的主风格</text>
+    <text class="res-name">{{result.detail.emoji}} {{result.name}}</text>
+    <text class="res-desc">{{result.detail.desc}}</text>
+    <view class="res-tags">
+      <text wx:for="{{result.detail.tags}}" wx:key="*this" class="res-tag">{{item}}</text>
+    </view>
+    <view class="res-actions">
+      <text class="res-btn" bindtap="retry">再测一次</text>
+      <text class="res-btn res-gold" bindtap="goTryon">去真人试穿八大风格 ›</text>
+    </view>
+  </view>
+</view>
