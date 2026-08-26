@@ -41,6 +41,7 @@ Page({
     concluded: false,
     proLeft: 0,
     checking: false,
+    checkError: false,
     /* 形象档案全身照 */
     profilePhotos: [],
     selectedProfileIndex: -1,
@@ -50,6 +51,11 @@ Page({
     this.setData({ results: emptyResults() });
     this.checkEntitlement();
     this.loadProfilePhotos();
+  },
+
+  onShow: function () {
+    // 从支付页返回或从其他页面切回时，重新检查权益
+    this.checkEntitlement();
   },
 
   /* ========== 读取形象档案全身照 ========== */
@@ -104,18 +110,27 @@ Page({
 
   checkEntitlement: function () {
     var t = this;
-    t.setData({ checking: true });
+    if (t.data.checking) return;
+    t.setData({ checking: true, checkError: false });
+    if (!app || !app.getOpenid) {
+      t.setData({ checking: false, checkError: true });
+      return;
+    }
     app.getOpenid().then(function (openid) {
       wx.request({
         url: BASE + '/api/tryon/entitlement?openid=' + encodeURIComponent(openid),
         method: 'GET',
         success: function (r) {
           var d = r.data || {};
-          t.setData({ proLeft: d.proLeft || 0, checking: false });
+          t.setData({ proLeft: d.proLeft || 0, checking: false, checkError: false });
         },
-        fail: function () { t.setData({ checking: false }); }
+        fail: function () { t.setData({ checking: false, checkError: true }); }
       });
-    }).catch(function () { t.setData({ checking: false }); });
+    }).catch(function () { t.setData({ checking: false, checkError: true }); });
+  },
+
+  retryCheckEntitlement: function () {
+    this.checkEntitlement();
   },
 
   buyPro: function () {
@@ -152,6 +167,10 @@ Page({
 
   startTryon: function () {
     var t = this;
+    if (t.data.checkError) {
+      t.retryCheckEntitlement();
+      return;
+    }
     if (t.data.proLeft <= 0) {
       wx.showModal({
         title: '需开通专业版',

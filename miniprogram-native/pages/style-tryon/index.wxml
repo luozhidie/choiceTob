@@ -48,10 +48,11 @@
   <view class="card">
     <text class="ct">② 开始 8 套试穿</text>
     <text class="hint" style="margin-bottom:12rpx;">每件风格衣调用一次试衣（约 15–40 秒），共 8 张，请保持页面打开。</text>
-    <view wx:if="{{!checking && proLeft <= 0}}" class="hint" style="color:#C9A24B;margin-bottom:12rpx;">你还没有专业版权益，开通 ¥998 专业版后即可试穿 8 大风格。</view>
+    <view wx:if="{{checkError}}" class="hint" style="color:#ff9aa2;margin-bottom:12rpx;">权益检查失败，请下拉刷新或点击重试。</view>
+    <view wx:elif="{{!checking && proLeft <= 0}}" class="hint" style="color:#C9A24B;margin-bottom:12rpx;">你还没有专业版权益，开通 ¥998 专业版后即可试穿 8 大风格。</view>
     <view wx:elif="{{proLeft > 0}}" class="hint" style="color:#C9A24B;margin-bottom:12rpx;">剩余专业次数：{{proLeft}} 次</view>
     <view class="btn {{running || checking ? 'disabled' : ''}}" bindtap="startTryon">
-      {{running ? ('试穿中 ' + doneCount + '/8…') : (checking ? '检查权益中…' : (proLeft <= 0 ? '开通专业版 ¥998' : (!personPath ? '请先上传真人照' : (uploading ? '白底处理中…' : (personUrl ? '开始 8 套风格试穿' : '处理白底后开始')))))}}
+      {{running ? ('试穿中 ' + doneCount + '/8…') : (checking ? '检查权益中…' : (checkError ? '点击重试' : (proLeft <= 0 ? '开通专业版 ¥998' : (!personPath ? '请先上传真人照' : (uploading ? '白底处理中…' : (personUrl ? '开始 8 套风格试穿' : '处理白底后开始'))))))}}
     </view>
   </view>
 
