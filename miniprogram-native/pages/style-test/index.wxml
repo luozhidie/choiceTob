@@ -4,28 +4,7 @@
     <text class="ht">色彩季型VS穿衣风格判断</text>
   </view>
 
-  <!-- 测试会员购买入口（付费风格测试） -->
-  <view wx:if="{{!isPersonal}}" class="member-card {{testMode==='male'?'mc-blue':''}}">
-    <view class="mc-left">
-      <view class="mc-title-row">
-        <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
-        <view class="mc-switch">
-          <view class="mc-si {{testMode==='female'?'mc-si-on':''}}" data-mode="female" bindtap="switchMode">女士</view>
-          <view class="mc-si {{testMode==='male'?'mc-si-on':''}}" data-mode="male" bindtap="switchMode">男士</view>
-        </view>
-      </view>
-      <text class="mc-desc">21 题自动诊断 · 八大风格真人试穿 · 100 次专业诊断</text>
-    </view>
-    <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
-    <view wx:else class="mc-btn mc-done">已开通 ✓</view>
-  </view>
-
-  <!-- 后台可配 Hero 大图 -->
-  <view wx:if="{{heroImage}}" class="hero-img-wrap">
-    <image src="{{heroImage}}" mode="widthFix" class="hero-img" />
-  </view>
-
-  <!-- 八大风格真人试穿入口 -->
+  <!-- 1. 八大风格真人试穿入口（最上） -->
   <view class="tryon-entry" bindtap="goTryon">
     <view class="te-left">
       <text class="te-title">八大风格 · 真人试穿</text>
@@ -34,8 +13,50 @@
     <text class="te-arrow">›</text>
   </view>
 
-  <!-- 后台可配满框图片模块 -->
+  <!-- 2. 风格测试会员开通卡片（男女同时开通） -->
+  <view class="member-card">
+    <view class="mc-left">
+      <view class="mc-title-row">
+        <text class="mc-title">风格测试会员 {{testFeeLabel}}</text>
+      </view>
+      <text class="mc-desc">14 题自动诊断 · 八大风格真人试穿 · 100 次专业诊断 · 女士男士同时开通</text>
+    </view>
+    <view wx:if="{{!isTestMember}}" class="mc-btn" bindtap="buyTestMember">立即开通</view>
+    <view wx:else class="mc-btn mc-done">已开通 ✓</view>
+  </view>
+
+  <!-- 3. 两个测试入口链接 -->
+  <view class="test-links">
+    <view class="test-card" bindtap="goFemale">
+      <view class="tc-left">
+        <text class="tc-icon">👗</text>
+        <view class="tc-info">
+          <text class="tc-title">女士风格测试</text>
+          <text class="tc-desc">14 道题 · 自动出主风格与穿搭建议</text>
+        </view>
+      </view>
+      <text class="tc-action {{isTestMember?'tc-on':'tc-lock'}}">{{isTestMember?'开始测试':'开通后可用'}} ›</text>
+    </view>
+
+    <view class="test-card" bindtap="goMale">
+      <view class="tc-left">
+        <text class="tc-icon">👔</text>
+        <view class="tc-info">
+          <text class="tc-title">男士风格测试</text>
+          <text class="tc-desc">18 道题 · 自动出主风格与穿搭建议</text>
+        </view>
+      </view>
+      <text class="tc-action {{isTestMember?'tc-on':'tc-lock'}}">{{isTestMember?'开始测试':'开通后可用'}} ›</text>
+    </view>
+  </view>
+
+  <!-- 4. 后台可配满框图片模块（在两个链接下方） -->
   <view wx:if="{{blocks.length > 0}}" class="blocks">
     <image wx:for="{{blocks}}" wx:key="*this" src="{{item}}" mode="widthFix" class="full-img" />
+  </view>
+
+  <!-- 后台可配 Hero 大图（可选，放最后） -->
+  <view wx:if="{{heroImage}}" class="hero-img-wrap">
+    <image src="{{heroImage}}" mode="widthFix" class="hero-img" />
   </view>
 </view>

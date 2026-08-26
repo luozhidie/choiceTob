@@ -936,7 +936,7 @@ Page({
     wx.navigateTo({ url: '/pages/style-profile/index' });
   },
   goDiagnosis: function () {
-    wx.navigateTo({ url: '/pages/style-test-gender/index' });
+    wx.navigateTo({ url: '/pages/style-test/index' });
   },
 
   // —— 搭配卡片（本人试穿图 + 单品拆解 + 分享/下载/下单）——

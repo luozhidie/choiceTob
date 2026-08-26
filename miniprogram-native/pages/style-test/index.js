@@ -2,11 +2,8 @@ var app = getApp();
 
 Page({
   data:{
-    /* 当前测试模式：female / male */
-    testMode:'female',
-    isPersonal:false,
-
-    /* 测试会员（付费风格测试 / 智能形象诊断） */
+    /* 测试会员（付费风格测试 / 智能形象诊断）
+       开通后女士测试、男士测试、真人试穿同时可用 */
     isTestMember:false,
     testFeeLabel:'¥998',
 
@@ -16,9 +13,6 @@ Page({
   },
 
   onLoad:function(options){
-    var isPersonal = options && options.scene === 'personal';
-    if(isPersonal){wx.setNavigationBarTitle({title:'VIP形象诊断'});}
-    this.setData({isPersonal:isPersonal, testMode:options.mode || 'female'});
     this.loadConfig();
     this.checkEntitlement();
   },
@@ -54,11 +48,32 @@ Page({
     wx.navigateTo({ url:'/pages/style-tryon/index' });
   },
 
-  /* ========== 切换男士/女士模式 ========== */
-  switchMode:function(e){
-    var mode = e.currentTarget.dataset.mode;
-    if(mode===this.data.testMode)return;
-    this.setData({testMode:mode, isTestMember:false});
+  /* ========== 进入女士风格测试 ========== */
+  goFemale:function(){
+    if(!this.data.isTestMember){
+      this.showBuyModal();
+      return;
+    }
+    wx.navigateTo({ url:'/pages/style-test-female/index' });
+  },
+
+  /* ========== 进入男士风格测试 ========== */
+  goMale:function(){
+    if(!this.data.isTestMember){
+      this.showBuyModal();
+      return;
+    }
+    wx.navigateTo({ url:'/pages/style-test-male/index' });
+  },
+
+  showBuyModal:function(){
+    wx.showModal({
+      title:'需开通风格测试会员',
+      content:'风格测试为专业诊断内容，开通 ¥998 会员后女士 / 男士测试与真人试穿同时可用。',
+      confirmText:'立即开通',
+      cancelText:'取消',
+      success:function(res){ if(res.confirm) wx.navigateTo({url:'/pages/tryon-pro/index'}); }
+    });
   },
 
   /* ========== 读取后台配置（Hero 大图 + 图片模块） ========== */
@@ -85,7 +100,7 @@ Page({
   },
 
   /* ========== 开通测试会员（¥998） ========== */
-  // 风格测试会员 = 专业版：100 次专业诊断 + 21 题风格测试 + 八大风格真人试穿
+  // 风格测试会员 = 专业版：100 次专业诊断 + 女士/男士风格测试 + 八大风格真人试穿
   buyTestMember:function(){
     var t=this;
     if(!app||!app.getOpenid){wx.showToast({title:'暂不支持',icon:'none'});return;}

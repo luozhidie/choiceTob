@@ -4,30 +4,7 @@ page{background: var(--bg);padding-bottom:calc(40rpx + env(safe-area-inset-botto
 .hd{text-align:center;padding:36rpx 24rpx 28rpx;}
 .ht{font-size:38rpx;font-weight:bold;color:#1a1a2e;display:block;letter-spacing:1rpx;}
 
-/* 测试会员购买卡片 */
-.member-card{display:flex;align-items:center;gap:18rpx;margin:0 28rpx 28rpx;padding:22rpx 24rpx;
-  border-radius:20rpx;background:linear-gradient(135deg,#fff0f5,#fce4ec);border:2rpx solid #f8bbd0;box-shadow:0 6rpx 20rpx rgba(233,30,99,.12);}
-.mc-blue{background:linear-gradient(135deg,#eaf4ff,#e3f2fd);border-color:#bbdefb;box-shadow:0 6rpx 20rpx rgba(25,118,210,.12);}
-.mc-left{flex:1;display:flex;flex-direction:column;gap:8rpx;min-width:0;}
-.mc-title-row{display:flex;align-items:center;justify-content:space-between;gap:12rpx;}
-.mc-title{font-size:28rpx;font-weight:bold;color:#4a3a4b;}
-.mc-blue .mc-title{color:#1565c0;}
-.mc-switch{display:flex;align-items:center;gap:6rpx;flex-shrink:0;}
-.mc-si{padding:8rpx 18rpx;border-radius:24rpx;font-size:22rpx;color:#4a3a4b;background:rgba(255,255,255,.6);border:2rpx solid rgba(233,30,99,.2);}
-.mc-blue .mc-si{color:#1565c0;background:rgba(255,255,255,.6);border-color:rgba(25,118,210,.2);}
-.mc-si-on{color:#fff;background:#4a3a4b;border-color:#4a3a4b;}
-.mc-blue .mc-si-on{color:#fff;background:#1565c0;border-color:#1565c0;}
-.mc-desc{font-size:20rpx;color:#888;line-height:1.5;}
-.mc-btn{flex-shrink:0;padding:18rpx 32rpx;border-radius:40rpx;background:linear-gradient(135deg,#2d1b2e,#d81b60);
-  color:#fff;font-size:26rpx;font-weight:bold;box-shadow:0 4rpx 12rpx rgba(233,30,99,.3);}
-.mc-blue .mc-btn{background:linear-gradient(135deg,#1976d2,#1565c0);box-shadow:0 4rpx 12rpx rgba(25,118,210,.3);}
-.mc-done{background:#bbb;color:#fff;box-shadow:none;}
-
-/* 后台可配 Hero 大图 */
-.hero-img-wrap{margin:0 28rpx 24rpx;border-radius:20rpx;overflow:hidden;background:#fff;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
-.hero-img{width:100%;display:block;}
-
-/* 八大风格真人试穿入口 */
+/* 1. 八大风格真人试穿入口 */
 .tryon-entry{display:flex;align-items:center;justify-content:space-between;margin:0 28rpx 24rpx;padding:24rpx;
   border-radius:20rpx;background:linear-gradient(135deg,#2d1b2e,#3a233a);border:2rpx solid rgba(201,162,75,.4);box-shadow:0 6rpx 18rpx rgba(45,27,46,.18);}
 .te-left{flex:1;display:flex;flex-direction:column;gap:8rpx;min-width:0;}
@@ -35,6 +12,34 @@ page{background: var(--bg);padding-bottom:calc(40rpx + env(safe-area-inset-botto
 .te-desc{font-size:20rpx;color:rgba(255,255,255,.7);line-height:1.5;}
 .te-arrow{font-size:44rpx;color:#C9A24B;margin-left:16rpx;}
 
-/* 后台可配满框图片模块 */
+/* 2. 测试会员购买卡片 */
+.member-card{display:flex;align-items:center;gap:18rpx;margin:0 28rpx 28rpx;padding:22rpx 24rpx;
+  border-radius:20rpx;background:linear-gradient(135deg,#fff0f5,#fce4ec);border:2rpx solid #f8bbd0;box-shadow:0 6rpx 20rpx rgba(233,30,99,.12);}
+.mc-left{flex:1;display:flex;flex-direction:column;gap:8rpx;min-width:0;}
+.mc-title-row{display:flex;align-items:center;justify-content:space-between;gap:12rpx;}
+.mc-title{font-size:28rpx;font-weight:bold;color:#4a3a4b;}
+.mc-desc{font-size:20rpx;color:#888;line-height:1.5;}
+.mc-btn{flex-shrink:0;padding:18rpx 32rpx;border-radius:40rpx;background:linear-gradient(135deg,#2d1b2e,#d81b60);
+  color:#fff;font-size:26rpx;font-weight:bold;box-shadow:0 4rpx 12rpx rgba(233,30,99,.3);}
+.mc-done{background:#bbb;color:#fff;box-shadow:none;}
+
+/* 3. 两个测试入口链接 */
+.test-links{display:flex;flex-direction:column;gap:18rpx;margin:0 28rpx 28rpx;}
+.test-card{display:flex;align-items:center;justify-content:space-between;padding:24rpx;border-radius:20rpx;
+  background:#fff;border:2rpx solid rgba(45,27,46,.08);box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
+.tc-left{display:flex;align-items:center;gap:18rpx;flex:1;min-width:0;}
+.tc-icon{font-size:48rpx;}
+.tc-info{display:flex;flex-direction:column;gap:6rpx;min-width:0;}
+.tc-title{font-size:28rpx;font-weight:bold;color:#2d1b2e;}
+.tc-desc{font-size:20rpx;color:#888;line-height:1.4;}
+.tc-action{font-size:24rpx;font-weight:bold;color:#C9A24B;flex-shrink:0;margin-left:16rpx;}
+.tc-lock{color:#bbb;}
+.tc-on{color:#C9A24B;}
+
+/* 4. 后台可配满框图片模块 */
 .blocks{display:flex;flex-direction:column;gap:0;margin:0 28rpx;}
-.full-img{width:100%;display:block;}
+.full-img{width:100%;display:block;border-radius:16rpx;margin-bottom:16rpx;}
+
+/* 后台可配 Hero 大图（可选） */
+.hero-img-wrap{margin:0 28rpx 24rpx;border-radius:20rpx;overflow:hidden;background:#fff;box-shadow:0 4rpx 14rpx rgba(0,0,0,.04);}
+.hero-img{width:100%;display:block;}
