@@ -142,7 +142,7 @@
     <view class="card">
       <view style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12rpx;">
         <text class="ct" style="margin:0;">我的形象（色彩季型 + 穿衣风格）</text>
-        <text style="font-size:22rpx;color:#C9A24B;font-weight:700;" bindtap="goDiagnosis">去女士风格测试 ›</text>
+        <text style="font-size:22rpx;color:#C9A24B;font-weight:700;" bindtap="goDiagnosis">去风格测试 ›</text>
       </view>
       <text class="lab">色彩季型</text>
       <scroll-view scroll-x class="chips" show-scrollbar="{{false}}">

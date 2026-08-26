@@ -409,7 +409,7 @@ Page({
     if (!this.data.proMode && this.data.proLeft <= 0) {
       wx.showModal({
         title: '专业风格顾问',
-        content: '专业版次数未开通：含 21 题穿衣风格诊断 + 按季型/风格智能推荐单品。普通版套餐不含专业版次数，需开通专业套餐。',
+        content: '专业版次数未开通：含男/女穿衣风格诊断 + 按季型/风格智能推荐单品。普通版套餐不含专业版次数，需开通专业套餐。',
         confirmText: '去开通', cancelText: '暂不需要',
         success: function (r) { if (r.confirm) self.openPackages(); }
       });
@@ -423,7 +423,7 @@ Page({
     if (this.data.proLeft <= 0) {
       wx.showModal({
         title: '专业版',
-        content: '专业版次数未开通。普通版套餐仅含普通试穿次数，专业版推荐 / 生成需开通专业套餐。',
+        content: '专业版次数未开通：含男/女穿衣风格诊断。普通版套餐仅含普通试穿次数，专业版推荐 / 生成需开通专业套餐。',
         confirmText: '去开通', cancelText: '暂不需要',
         success: function (r) { if (r.confirm) self.openPackages(); }
       });
@@ -936,7 +936,7 @@ Page({
     wx.navigateTo({ url: '/pages/style-profile/index' });
   },
   goDiagnosis: function () {
-    wx.navigateTo({ url: '/pages/style-test-female/index' });
+    wx.navigateTo({ url: '/pages/style-test-gender/index' });
   },
 
   // —— 搭配卡片（本人试穿图 + 单品拆解 + 分享/下载/下单）——

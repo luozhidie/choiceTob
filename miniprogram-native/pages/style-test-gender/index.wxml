@@ -1,0 +1,23 @@
+<view class="page">
+  <view class="hero">
+    <text class="ht">穿衣风格诊断</text>
+    <text class="hs">根据你的身形、气质与穿搭偏好，自动判断主风格，并给出穿搭建议。</text>
+  </view>
+
+  <view class="cards">
+    <view class="card" bindtap="goFemale">
+      <text class="icon">👗</text>
+      <text class="ct">女士风格测试</text>
+      <text class="cd">14 道题 · 自动出主风格</text>
+      <text class="go">开始测试 ›</text>
+    </view>
+    <view class="card" bindtap="goMale">
+      <text class="icon">👔</text>
+      <text class="ct">男士风格测试</text>
+      <text class="cd">18 道题 · 自动出主风格</text>
+      <text class="go">开始测试 ›</text>
+    </view>
+  </view>
+
+  <text class="note">注：结果仅作参考，精准诊断请联系骆芷蝶形象顾问。</text>
+</view>

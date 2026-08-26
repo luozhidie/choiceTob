@@ -1,0 +1,11 @@
+.page { min-height: 100vh; background: #1c111d; padding: 0 28rpx 60rpx; box-sizing: border-box; }
+.hero { padding: 40rpx 0 30rpx; text-align: center; }
+.ht { display: block; font-size: 44rpx; font-weight: 800; color: #f3ece9; margin-bottom: 16rpx; }
+.hs { display: block; font-size: 26rpx; color: #b9a7ad; line-height: 1.5; }
+.cards { margin-top: 20rpx; }
+.card { background: #2d1b2e; border: 1rpx solid #4a3840; border-radius: 18rpx; padding: 42rpx 32rpx; margin-bottom: 28rpx; display: flex; flex-direction: column; align-items: center; }
+.icon { font-size: 64rpx; margin-bottom: 18rpx; }
+.ct { font-size: 34rpx; font-weight: 700; color: #f3ece9; margin-bottom: 8rpx; }
+.cd { font-size: 26rpx; color: #b9a7ad; margin-bottom: 28rpx; }
+.go { font-size: 28rpx; color: #C9A24B; font-weight: 700; padding: 14rpx 36rpx; border: 1rpx solid #C9A24B; border-radius: 30rpx; }
+.note { display: block; text-align: center; font-size: 22rpx; color: #806e75; margin-top: 20rpx; line-height: 1.5; }
