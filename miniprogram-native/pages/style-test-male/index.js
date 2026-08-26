@@ -171,30 +171,35 @@ var QUESTIONS = [
 var RESULTS = {
   戏剧型: {
     emoji: '👑',
+    star: '周润发',
     desc: '服装选择上要质地硬挺，气派华丽，图案夸张，整体妆扮要对比鲜明大气。避免穿小气、古板、随意的东西。',
     tags: ['气场强大', '对比鲜明', '夸张大气', '存在感强'],
     image: BASE + '/style-test/male/dramatic.jpg',
   },
   自然型: {
     emoji: '🌿',
+    star: '黎明',
     desc: '着装选择上随意、洒脱，棉、麻面料。格子、条纹都是自然型人理想之选。回避光泽感强、小气、做作夸张的东西。',
     tags: ['随意洒脱', '棉麻亲和', '格子条纹', '自然舒适'],
     image: BASE + '/style-test/male/natural.jpg',
   },
   古典型: {
     emoji: '💼',
+    star: '陈道明',
     desc: '着装选择面料高档、上品，素色无图案，尽量回避前卫、时髦、古怪、随意夸张的东西。',
     tags: ['高档上品', '素色无图案', '正统得体', '精致合体'],
     image: BASE + '/style-test/male/classic.jpg',
   },
   浪漫型: {
     emoji: '🌹',
+    star: '梁朝伟',
     desc: '选择面料不能过于硬朗，要柔和、华丽，适合驾驭花朵的衣着。回避无修饰感、破烂、古板生硬的东西。',
     tags: ['柔和华丽', '有情调', '异性缘好', '不硬朗'],
     image: BASE + '/style-test/male/romantic.jpg',
   },
   时尚型: {
     emoji: '✨',
+    star: '谢霆锋',
     desc: '突出个性，紧跟时尚，多装饰，发光、金属面料都很适合。回避古板、过于气派的东西。',
     tags: ['个性独特', '紧跟时尚', '多装饰', '金属发光'],
     image: BASE + '/style-test/male/fashion.jpg',

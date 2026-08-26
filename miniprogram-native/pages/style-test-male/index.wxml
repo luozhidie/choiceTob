@@ -46,7 +46,10 @@
     <text class="res-title">你的主风格</text>
     <text class="res-name">{{result.detail.emoji}} {{result.name}}</text>
     <text class="res-sub">偏风格：{{result.subStyle}}</text>
-    <image class="res-img" src="{{result.detail.image}}" mode="widthFix" lazy-load/>
+    <view class="res-star">
+      <image class="res-star-img" src="{{result.detail.image}}" mode="aspectFill" lazy-load/>
+      <text class="res-star-label">参考人物：{{result.detail.star}}</text>
+    </view>
     <text class="res-desc">{{result.detail.desc}}</text>
     <view class="res-tags">
       <text wx:for="{{result.detail.tags}}" wx:key="*this" class="res-tag">{{item}}</text>

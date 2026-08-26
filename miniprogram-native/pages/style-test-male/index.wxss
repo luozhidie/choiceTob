@@ -33,7 +33,7 @@
 
 .result { min-height: 100vh; background: linear-gradient(180deg, #2d1b2e 0%, #1c111d 100%); padding: 80rpx 40rpx; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .res-title { font-size: 28rpx; color: #b9a7ad; margin-bottom: 20rpx; }
-.res-name { font-size: 52rpx; font-weight: 800; color: #C9A24B; margin-bottom: 16rpx; }
+.res-name { font-size: 52rpx; font-weight: 800; color: #C9A24B; margin-bottom: 10rpx; }
 .res-sub { font-size: 26rpx; color: #f3ece9; margin-bottom: 30rpx; opacity: .85; }
 .res-desc { font-size: 28rpx; color: #f3ece9; line-height: 1.7; margin-bottom: 40rpx; text-align: left; }
 .res-note { font-size: 22rpx; color: #b9a7ad; line-height: 1.7; margin-bottom: 50rpx; text-align: left; padding: 20rpx; background: rgba(255,255,255,.06); border-radius: 14rpx; }
@@ -42,4 +42,6 @@
 .res-actions { width: 100%; display: flex; flex-direction: column; gap: 20rpx; }
 .res-btn { text-align: center; padding: 28rpx 0; border-radius: 16rpx; border: 2rpx solid #C9A24B; color: #C9A24B; font-size: 28rpx; }
 .res-gold { background: #C9A24B; color: #1c111d; font-weight: 800; }
-.res-img { width: 100%; max-width: 560rpx; border-radius: 20rpx; margin-bottom: 30rpx; border: 2rpx solid rgba(201,162,75,.4); }
+.res-star { display: flex; flex-direction: column; align-items: center; margin-bottom: 30rpx; width: 100%; }
+.res-star-img { width: 240rpx; height: 320rpx; border-radius: 16rpx; border: 2rpx solid rgba(201,162,75,0.3); background: #2d1b2e; }
+.res-star-label { margin-top: 12rpx; font-size: 24rpx; color: #C9A24B; }
