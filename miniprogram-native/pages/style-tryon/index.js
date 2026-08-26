@@ -9,19 +9,22 @@ function rewriteSupabase(u) {
   return u;
 }
 function garmentUrl(path) {
+  // 以 / 开头 → 网站自身 CDN（public 目录），最稳定
+  if (path && path.charAt(0) === '/') return BASE + path;
   return rewriteSupabase(SUPABASE_PUBLIC + BUCKET + '/' + path);
 }
 
 // 8 件女士风格测试衣（与网站 style-tryon.ts 完全一致）
+// 路径指向 public/tryon-garments/（Vercel CDN），为 docx 解出的真实测试衣
 var GARMENTS = [
-  { id: 'shaonian', name: '少年型', path: 'style-test/shaonian.jpg', short: '帅气利落·中性直线' },
-  { id: 'shishang', name: '时尚型', path: 'style-test/shishang.jpg', short: '个性潮流·设计感' },
-  { id: 'gudian', name: '古典型', path: 'style-test/gudian.jpg', short: '端庄精致·上品严谨' },
-  { id: 'ziran', name: '自然型', path: 'style-test/ziran.jpg', short: '潇洒随意·亲切舒适' },
-  { id: 'xiju', name: '戏剧型', path: 'style-test/xiju.jpg', short: '大气夸张·强气场' },
-  { id: 'shaonv', name: '少女型', path: 'style-test/shaonv.jpg', short: '甜美圆润·活泼可爱' },
-  { id: 'youya', name: '优雅型', path: 'style-test/youya.jpg', short: '温柔柔美·女人味' },
-  { id: 'langman', name: '浪漫型', path: 'style-test/langman.jpg', short: '华丽妩媚·曲线性感' },
+  { id: 'shaonian', name: '少年型', path: '/tryon-garments/shaonian.png', short: '帅气利落·中性直线' },
+  { id: 'shishang', name: '时尚型', path: '/tryon-garments/shishang.png', short: '个性潮流·设计感' },
+  { id: 'gudian', name: '古典型', path: '/tryon-garments/gudian.png', short: '端庄精致·上品严谨' },
+  { id: 'ziran', name: '自然型', path: '/tryon-garments/ziran.png', short: '潇洒随意·亲切舒适' },
+  { id: 'xiju', name: '戏剧型', path: '/tryon-garments/xiju.png', short: '大气夸张·强气场' },
+  { id: 'shaonv', name: '少女型', path: '/tryon-garments/shaonv.png', short: '甜美圆润·活泼可爱' },
+  { id: 'youya', name: '优雅型', path: '/tryon-garments/youya.png', short: '温柔柔美·女人味' },
+  { id: 'langman', name: '浪漫型', path: '/tryon-garments/langman.png', short: '华丽妩媚·曲线性感' },
 ];
 
 function emptyResults() {

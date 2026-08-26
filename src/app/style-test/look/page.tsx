@@ -59,8 +59,13 @@ export default function StyleTryonPage() {
 
   const garments = sortByPredicted(STYLE_GARMENTS, predicted);
 
-  const getGarmentUrl = (path: string) =>
-    supabase.storage.from("blocks-images").getPublicUrl(path).data.publicUrl;
+  const getGarmentUrl = (path: string) => {
+    if (path.startsWith("/")) {
+      const origin = typeof window !== "undefined" ? window.location.origin : "https://colour-choice.art";
+      return origin + path;
+    }
+    return supabase.storage.from("blocks-images").getPublicUrl(path).data.publicUrl;
+  };
 
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];

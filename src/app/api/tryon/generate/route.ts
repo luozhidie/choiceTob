@@ -8,6 +8,8 @@ const GENLOOK_BASE = "https://api.genlook.app";
 // 这样前端/网站端无需关心图片源，只管传可能已被代理改写过的 URL 即可。
 function reverseProxy(u: string): string {
   if (typeof u !== "string") return u;
+  // 本站自身 CDN（public/tryon-garments/）的图，保留绝对地址直连即可
+  if (u.startsWith("/")) u = "https://colour-choice.art" + u;
   u = u.replace(/^https?:\/\/colour-choice\.art\/simg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
   u = u.replace(/^https?:\/\/colour-choice\.art\/sapimg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
   return u;
