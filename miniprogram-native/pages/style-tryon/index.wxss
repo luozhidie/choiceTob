@@ -18,6 +18,16 @@
 .me-ph { font-size: 22rpx; color: #8a7580; text-align: center; white-space: pre-line; }
 .me-info { flex: 1; }
 
+/* 形象档案照片选择 */
+.profile-box { margin-bottom: 20rpx; }
+.profile-t { display: block; font-size: 22rpx; color: #C9A24B; margin-bottom: 12rpx; }
+.profile-scroll { width: 100%; white-space: nowrap; }
+.profile-list { display: inline-flex; gap: 16rpx; }
+.profile-item { position: relative; width: 140rpx; height: 140rpx; border-radius: 16rpx; overflow: hidden; border: 3rpx solid rgba(255,255,255,.1); flex-shrink: 0; }
+.profile-item.on { border-color: #C9A24B; }
+.profile-img { width: 100%; height: 100%; }
+.profile-check { position: absolute; top: 6rpx; right: 6rpx; width: 32rpx; height: 32rpx; border-radius: 50%; background: #C9A24B; color: #1a1018; font-size: 20rpx; text-align: center; line-height: 32rpx; }
+
 .btn { display: block; text-align: center; padding: 24rpx 0; border-radius: 14rpx; background: linear-gradient(90deg, #C9A24B, #e0b85c); color: #1a1018; font-weight: 800; font-size: 28rpx; }
 .btn.disabled { opacity: .5; }
 

@@ -41,11 +41,65 @@ Page({
     concluded: false,
     proLeft: 0,
     checking: false,
+    /* 形象档案全身照 */
+    profilePhotos: [],
+    selectedProfileIndex: -1,
   },
 
   onLoad: function () {
     this.setData({ results: emptyResults() });
     this.checkEntitlement();
+    this.loadProfilePhotos();
+  },
+
+  /* ========== 读取形象档案全身照 ========== */
+  loadProfilePhotos: function () {
+    var t = this;
+    if (!app || !app.getOpenid) return;
+    app.getOpenid().then(function (openid) {
+      wx.request({
+        url: BASE + '/api/style-profile?openid=' + encodeURIComponent(openid),
+        method: 'GET',
+        success: function (r) {
+          var d = r.data || {};
+          var p = d.profile;
+          if (!p) return;
+          var photos = Array.isArray(p.full_body_photos) && p.full_body_photos.length
+            ? p.full_body_photos
+            : (p.full_body_photo ? [p.full_body_photo] : []);
+          var selectedIdx = typeof p.selected_photo_index === 'number' ? p.selected_photo_index : 0;
+          if (selectedIdx >= photos.length) selectedIdx = 0;
+          t.setData({ profilePhotos: photos, selectedProfileIndex: photos.length ? selectedIdx : -1 });
+        }
+      });
+    }).catch(function () {});
+  },
+
+  /* ========== 选择形象档案照片并自动处理白底 ========== */
+  selectProfilePhoto: function (e) {
+    var t = this;
+    var idx = e.currentTarget.dataset.index;
+    var url = t.data.profilePhotos[idx];
+    if (!url) return;
+    t.setData({ selectedProfileIndex: idx, uploading: true, personPath: url, personUrl: '', results: emptyResults(), selected: [], concluded: false, doneCount: 0 });
+    wx.request({
+      url: BASE + '/api/tryon/upload-person-url',
+      method: 'POST',
+      data: { imageUrl: url },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.error) {
+          wx.showToast({ title: '处理失败：' + d.error, icon: 'none' });
+          t.setData({ uploading: false });
+          return;
+        }
+        t.setData({ personUrl: rewriteSupabase(d.personImageUrl), uploading: false });
+      },
+      fail: function () {
+        wx.showToast({ title: '网络错误，请重试', icon: 'none' });
+        t.setData({ uploading: false });
+      }
+    });
   },
 
   checkEntitlement: function () {
@@ -75,7 +129,7 @@ Page({
       success: function (res) {
         var f = res.tempFiles && res.tempFiles[0];
         if (!f) return;
-        t.setData({ personPath: f.tempFilePath, personUrl: '', results: emptyResults(), selected: [], concluded: false, doneCount: 0 });
+        t.setData({ personPath: f.tempFilePath, personUrl: '', selectedProfileIndex: -1, results: emptyResults(), selected: [], concluded: false, doneCount: 0 });
         t.uploadPerson(f.tempFilePath);
       }
     });

@@ -19,13 +19,27 @@
   <!-- ① 上传真人照 -->
   <view class="card">
     <text class="ct">① 上传你的真人照</text>
+
+    <!-- 从形象档案选择已有全身照 -->
+    <view wx:if="{{profilePhotos.length > 0}}" class="profile-box">
+      <text class="profile-t">从形象档案选择全身照</text>
+      <scroll-view scroll-x class="profile-scroll" enhanced show-scrollbar="{{false}}">
+        <view class="profile-list">
+          <view wx:for="{{profilePhotos}}" wx:key="*this" class="profile-item {{selectedProfileIndex === index ? 'on' : ''}}" data-index="{{index}}" bindtap="selectProfilePhoto">
+            <image src="{{item}}" mode="aspectFill" class="profile-img"/>
+            <view wx:if="{{selectedProfileIndex === index}}" class="profile-check">✓</view>
+          </view>
+        </view>
+      </scroll-view>
+    </view>
+
     <view class="me-row">
       <view class="me-pic" bindtap="choosePerson">
         <image wx:if="{{personPath}}" src="{{personPath}}" mode="aspectFill" class="me-img"/>
         <text wx:else class="me-ph">上传\n照片</text>
       </view>
       <view class="me-info">
-        <text class="hint">{{uploading ? '自动处理白底中…' : (personUrl ? '已处理白底，可开始试穿' : '点击上传正面、光线良好的半身/全身照')}}</text>
+        <text class="hint">{{uploading ? '自动处理白底中…' : (personUrl ? '已处理白底，可开始试穿' : (profilePhotos.length ? '点击上方形象档案照片，或左侧重新上传' : '点击上传正面、光线良好的半身/全身照'))}}</text>
       </view>
     </view>
   </view>
