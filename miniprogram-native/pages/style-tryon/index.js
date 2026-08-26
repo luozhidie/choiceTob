@@ -76,6 +76,10 @@ Page({
           var selectedIdx = typeof p.selected_photo_index === 'number' ? p.selected_photo_index : 0;
           if (selectedIdx >= photos.length) selectedIdx = 0;
           t.setData({ profilePhotos: photos, selectedProfileIndex: photos.length ? selectedIdx : -1 });
+          /* 有档案照片时自动处理第一张为试衣人像，无需再上传 */
+          if (photos.length > 0) {
+            t.processProfilePhoto(photos[selectedIdx], selectedIdx);
+          }
         }
       });
     }).catch(function () {});
@@ -83,9 +87,14 @@ Page({
 
   /* ========== 选择形象档案照片并自动处理白底 ========== */
   selectProfilePhoto: function (e) {
-    var t = this;
     var idx = e.currentTarget.dataset.index;
-    var url = t.data.profilePhotos[idx];
+    var url = this.data.profilePhotos[idx];
+    this.processProfilePhoto(url, idx);
+  },
+
+  /* 处理形象档案照片为白底人像（自动选中 + 手动切换共用） */
+  processProfilePhoto: function (url, idx) {
+    var t = this;
     if (!url) return;
     t.setData({ selectedProfileIndex: idx, uploading: true, personPath: url, personUrl: '', results: emptyResults(), selected: [], concluded: false, doneCount: 0 });
     wx.request({

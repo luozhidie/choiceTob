@@ -39,7 +39,7 @@
         <text wx:else class="me-ph">上传\n照片</text>
       </view>
       <view class="me-info">
-        <text class="hint">{{uploading ? '自动处理白底中…' : (personUrl ? '已处理白底，可开始试穿' : (profilePhotos.length ? '点击上方形象档案照片，或左侧重新上传' : '点击上传正面、光线良好的半身/全身照'))}}</text>
+        <text class="hint">{{uploading ? '自动处理白底中…' : (personUrl ? '已从形象档案加载，可开始试穿' : (profilePhotos.length ? '已从形象档案加载全身照，处理中…' : '点击上传正面、光线良好的半身/全身照'))}}</text>
       </view>
     </view>
   </view>
