@@ -9,10 +9,11 @@
   <view class="tip-card">
     <text class="tip-t">拍照要求（直接影响试穿效果）</text>
     <text class="tip-li">· 正面站立，双腿自然伸直并拢，双手自然下垂（不要凹造型）</text>
-    <text class="tip-li">· 全身或至少膝盖以上入镜，衣服轮廓清楚</text>
+    <text class="tip-li" style="color:#C9A24B;font-weight:600;">· 必须拍到完整下装：必须穿裤子或裙子，不能只拍上半身，否则 AI 无法保留下半身</text>
+    <text class="tip-li">· 正面站立，双腿自然伸直并拢，全身入镜最佳</text>
     <text class="tip-li">· 面无表情，不要笑太用力（试衣会继承你的表情）</text>
     <text class="tip-li">· 自己的衣服自然垂落，不要扎进裤/裙腰；上衣扣子全扣好</text>
-    <text class="tip-li">· 不穿内搭、真空也可；下装保持原样，建议穿黑色短裙/黑裤拍摄</text>
+    <text class="tip-li">· 不穿内搭、真空也可；下装建议黑色短裙/黑裤，保持原样</text>
     <text class="tip-li">· 光线均匀，背景干净（白墙/纯色最佳）</text>
   </view>
 
@@ -23,6 +24,7 @@
     <!-- 从形象档案选择已有全身照 -->
     <view wx:if="{{profilePhotos.length > 0}}" class="profile-box">
       <text class="profile-t">从形象档案选择全身照</text>
+      <text style="display:block;color:#C9A24B;font-size:22rpx;margin:8rpx 0 12rpx;line-height:1.5;">⚠ 照片必须拍到裤子/裙子，只拍上半身会导致下半身被乱改</text>
       <scroll-view scroll-x class="profile-scroll" enhanced show-scrollbar="{{false}}">
         <view class="profile-list">
           <view wx:for="{{profilePhotos}}" wx:key="*this" class="profile-item {{selectedProfileIndex === index ? 'on' : ''}}" data-index="{{index}}" bindtap="selectProfilePhoto">
