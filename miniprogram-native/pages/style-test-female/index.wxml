@@ -45,10 +45,12 @@
   <view wx:if="{{showResult && result}}" class="result">
     <text class="res-title">你的主风格</text>
     <text class="res-name">{{result.detail.emoji}} {{result.name}}</text>
+    <text class="res-sub">偏风格：{{result.subStyle}}</text>
     <text class="res-desc">{{result.detail.desc}}</text>
     <view class="res-tags">
       <text wx:for="{{result.detail.tags}}" wx:key="*this" class="res-tag">{{item}}</text>
     </view>
+    <text class="res-note">注：通常一个人是「主风格 + 偏风格」的结合（直偏曲或曲偏直）。以上结果由 14 题自测得出，仅供参考。</text>
     <view class="res-actions">
       <text class="res-btn" bindtap="retry">再测一次</text>
       <text class="res-btn res-gold" bindtap="goTryon">去真人试穿八大风格 ›</text>
