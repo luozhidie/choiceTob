@@ -1,33 +1,18 @@
 // app/api/tryon/generate/route.ts
-// 创建虚拟试衣任务（异步）。接收人像 URL + 单品 URL，立即返回 generationId，由前端轮询 /api/tryon/generate/[generationId]。
+// 创建虚拟试衣任务（异步）。接收人像 URL + 单品(上装) URL，调用通义百炼 aitryon 创建异步任务，
+// 返回 task_id 作为 generationId，由前端轮询 /api/tryon/generate/[generationId]。
 import { NextRequest, NextResponse } from "next/server";
 
-const GENLOOK_BASE = "https://api.genlook.app";
+const DASHSCOPE_BASE = "https://dashscope.aliyuncs.com";
 
-// Genlook 在海外服务器直连图片源更稳；把本站代理域名反写为 Supabase 原始公共 URL，
-// 这样前端/网站端无需关心图片源，只管传可能已被代理改写过的 URL 即可。
-function reverseProxy(u: string): string {
+// 把本站 CDN（public/tryon-garments/）的相对路径补成绝对地址；把 /simg /sapimg 反写为 Supabase 原始 URL，
+// 以便通义服务器可直连拉取图片。
+function rewriteUrl(u: string): string {
   if (typeof u !== "string") return u;
-  // 本站自身 CDN（public/tryon-garments/）的图，保留绝对地址直连即可
   if (u.startsWith("/")) u = "https://colour-choice.art" + u;
   u = u.replace(/^https?:\/\/colour-choice\.art\/simg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
   u = u.replace(/^https?:\/\/colour-choice\.art\/sapimg\//i, "https://fxeknwkmytzedkhplozn.supabase.co/");
   return u;
-}
-
-function translateError(msg: string): string {
-  if (!msg) return "试衣失败";
-  const m = msg.toLowerCase();
-  if (m.includes("resolution") && m.includes("too low")) {
-    return "图片分辨率过低，请上传更清晰的单品图（建议 1024×1024 以上）";
-  }
-  if (m.includes("face") || m.includes("no person") || m.includes("person not found")) {
-    return "未检测到人物，请上传正面、光线良好的半身/全身照";
-  }
-  if (m.includes("garment")) {
-    return "衣服图识别失败，请换一张平铺/挂拍的清晰单品图";
-  }
-  return msg;
 }
 
 export async function POST(request: NextRequest) {
@@ -35,7 +20,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const personImageUrl = body.personImageUrl as string | undefined;
     const garmentImageUrl = body.garmentImageUrl as string | undefined;
-    const productTitle = body.title || "单品";
+    const productTitle = body.title || "风格测试衣";
     const userId = body.userId || "anonymous";
 
     if (!personImageUrl) {
@@ -45,55 +30,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "缺少衣服图片" }, { status: 400 });
     }
 
-    // 反写为 Supabase 原始公共 URL，确保 Genlook 服务器可直连拉取
-    const personUrl = reverseProxy(personImageUrl);
-    const garmentUrl = reverseProxy(garmentImageUrl);
+    const personUrl = rewriteUrl(personImageUrl);
+    const garmentUrl = rewriteUrl(garmentImageUrl);
 
-    const apiKey = process.env.GENLOOK_API_KEY;
+    const apiKey = process.env.DASHSCOPE_API_KEY;
     if (!apiKey) {
-      console.error("[tryon/generate] 未配置 GENLOOK_API_KEY");
+      console.error("[tryon/generate] 未配置 DASHSCOPE_API_KEY");
       return NextResponse.json({ error: "试衣服务未配置" }, { status: 500 });
     }
 
-    // 创建 Genlook 试衣任务
-    const externalId = `prod-${Date.now()}`;
-    const createRes = await fetch(`${GENLOOK_BASE}/tryon/v1/try-on`, {
+    // 调用通义百炼 aitryon 创建异步虚拟试衣任务（单件上装试穿，保留原脸与下半身）
+    const createRes = await fetch(`${DASHSCOPE_BASE}/api/v1/services/aigc/image2image/image-synthesis`, {
       method: "POST",
       headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "X-DashScope-Async": "enable",
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
       },
       body: JSON.stringify({
-        products: [
-          {
-            externalId,
-            title: productTitle,
-            images: [{ source: { url: garmentUrl } }],
-          },
-        ],
-        person: { image: { source: { url: personUrl } } },
-        externalUserId: userId,
-        output: { watermark: false },
+        model: "aitryon",
+        input: {
+          person_image_url: personUrl,
+          top_garment_url: garmentUrl,
+        },
+        parameters: { resolution: -1, restore_face: true },
       }),
     });
 
     const createData = await createRes.json().catch(() => ({}));
 
     if (!createRes.ok) {
-      const raw = createData.message || createData.error || "";
-      const statusHint = ` [状态码:${createRes.status}]`;
-      const msg = translateError(raw || `试衣任务创建失败${statusHint}`) + (raw ? statusHint : "");
-      console.error("[tryon/generate] Genlook 创建失败", createRes.status, createData);
-      return NextResponse.json({ error: msg, raw: createData }, { status: createRes.status });
+      const msg = createData.message || createData.error || `试衣任务创建失败（${createRes.status}）`;
+      console.error("[tryon/generate] 通义创建失败", createRes.status, createData);
+      return NextResponse.json({ error: msg }, { status: createRes.status });
     }
 
-    const generationId = createData.generationId;
+    const generationId = createData.output?.task_id || createData.task_id;
     if (!generationId) {
-      console.error("[tryon/generate] Genlook 未返回 generationId", createData);
+      console.error("[tryon/generate] 通义未返回 task_id", createData);
       return NextResponse.json({ error: "试衣任务ID缺失" }, { status: 500 });
     }
 
-    console.log("[tryon/generate] 任务已创建", generationId);
+    console.log("[tryon/generate] 通义任务已创建", generationId, "title=", productTitle, "user=", userId);
     return NextResponse.json({ ok: true, generationId, status: "PENDING" });
   } catch (err: any) {
     console.error("[tryon/generate] 异常", err);
