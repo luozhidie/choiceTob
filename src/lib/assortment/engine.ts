@@ -189,26 +189,38 @@ export async function computeAssortment(
   });
   stylePlanList.sort((a, b) => b.sku - a.sku);
 
-  // ---- 5. 选风情杆（按覆盖的 VIP 占比打分，取 top-K，且保证每个风格至少挂上 1 杆）----
+  // ---- 5. 选风情杆：以【店铺实际 VIP 风格构成】为主驱动，面积档位仅作软参考 ----
   const moodScore: Record<string, number> = {};
   mix.forEach((m) => {
     (styleMoods[m.style_code] || []).forEach((md) => {
       moodScore[md] = (moodScore[md] || 0) + (styleRatio[m.style_code] || 0);
     });
   });
+  // 候选风情 = 店铺实际风格所映射到的全部风情，按 VIP 占比从高到低
   const availableMoods = Object.keys(moodScore).sort((a, b) => moodScore[b] - moodScore[a]);
-  let K = Math.min(Math.max(availableMoods.length, moodMin), moodMax);
-  K = Math.min(K, availableMoods.length);
+  const storeStyleCount = mixStyles.size; // 店铺实际有 VIP 的风格数（主驱动）
+
+  // 面积档位的 mood_count_min/max 不是硬门槛，只是软参考：
+  //  - 优先按店铺真实 VIP 构成选杆（覆盖到的风情数）
+  //  - 仅当店铺跨的风格数超过档位软上限时，才以实际构成为准、允许突破上限
+  //  - 下限只在“自然需要 ≥ 下限”时生效，绝不为了凑数硬塞
+  const softMax = moodMax;
+  const naturalCount = availableMoods.length;
+  let K = Math.min(naturalCount, Math.max(moodMin, softMax));
+  if (storeStyleCount > softMax) {
+    K = Math.min(naturalCount, storeStyleCount); // 实际构成优先，突破软上限
+  }
+  K = Math.max(1, K);
   const selected = new Set<string>(availableMoods.slice(0, K));
 
-  // 兜底：未被任何选中杆覆盖的风格，把它的最高分风情补进来（不超过 moodMax）
+  // 兜底：未被任何选中杆覆盖的风格，把它的最高分风情补进来（最多补到全部候选，保证每个风格至少 1 杆）
   const coverCount: Record<string, number> = {};
   mix.forEach((m) => {
     coverCount[m.style_code] = (styleMoods[m.style_code] || []).filter((md) => selected.has(md)).length;
   });
   let guard = 0;
   mix.forEach((m) => {
-    while (coverCount[m.style_code] === 0 && selected.size < moodMax && guard < 100) {
+    while (coverCount[m.style_code] === 0 && selected.size < availableMoods.length && guard < 100) {
       const candidates = (styleMoods[m.style_code] || []).sort(
         (a, b) => (moodScore[b] || 0) - (moodScore[a] || 0)
       );
