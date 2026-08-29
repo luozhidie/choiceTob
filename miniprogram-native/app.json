@@ -56,6 +56,7 @@
     "pages/stall/subscribed/index",
     "pages/assortment/detail/index",
     "pages/fashion-stylist/index",
+    "pages/buyer-request/index",
     "pages/buyer-service/index",
     "pages/look-studio/index",
     "pages/outfit/index",

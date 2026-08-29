@@ -1,0 +1,79 @@
+<view class="page">
+  <!-- 头部 -->
+  <view class="hero">
+    <text class="hero-title">提交找货需求</text>
+    <text class="hero-sub">告诉买手你想找的款 / 风格 / 色系 / 孤品搭配，我们去给你配</text>
+  </view>
+
+  <!-- 已提交：成功卡 -->
+  <view wx:if="{{submitted}}" class="done-card">
+    <view class="done-icon">✓</view>
+    <text class="done-title">需求已提交</text>
+    <text class="done-desc">买手会尽快为你在货盘里匹配；也可扫码加企业微信，进私域一对一跟进。</text>
+    <view class="done-qr" wx:if="{{workQr}}">
+      <image class="qr-img" src="{{workQr}}" mode="aspectFit"></image>
+      <text class="qr-tip">长按识别 · 添加企业微信</text>
+    </view>
+    <view class="done-btn" bindtap="goBack">返回我的</view>
+  </view>
+
+  <!-- 表单 -->
+  <view wx:else class="form">
+    <view class="block">
+      <view class="block-title">想找什么品类</view>
+      <view class="chips">
+        <view wx:for="{{categoryOptions}}" wx:key="*this"
+              class="chip {{selectedCategory.indexOf(item)!==-1?'chip-on':''}}"
+              bindtap="toggleCat" data-v="{{item}}">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="block">
+      <view class="block-title">风格诉求</view>
+      <view class="chips">
+        <view wx:for="{{styleOptions}}" wx:key="*this"
+              class="chip {{selectedStyle.indexOf(item)!==-1?'chip-on':''}}"
+              bindtap="toggleStyle" data-v="{{item}}">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="block">
+      <view class="block-title">色系诉求</view>
+      <view class="chips">
+        <view wx:for="{{colorOptions}}" wx:key="*this"
+              class="chip {{selectedColor.indexOf(item)!==-1?'chip-on':''}}"
+              bindtap="toggleColor" data-v="{{item}}">{{item}}</view>
+      </view>
+    </view>
+
+    <view class="block">
+      <view class="row-between">
+        <view class="block-title">有孤品需要搭配</view>
+        <switch checked="{{hasOrphan}}" bindchange="onOrphan" color="#C9A24B"/>
+      </view>
+      <text class="block-hint">有单件孤品想找搭配（如：已有上衣，想配下装/外套）</text>
+    </view>
+
+    <view class="block">
+      <view class="block-title">预算区间（元，选填）</view>
+      <view class="budget-row">
+        <input class="budget-input" type="number" placeholder="最低" value="{{budgetMin}}" bindinput="onMin"/>
+        <text class="budget-sep">—</text>
+        <input class="budget-input" type="number" placeholder="最高" value="{{budgetMax}}" bindinput="onMax"/>
+      </view>
+    </view>
+
+    <view class="block">
+      <view class="block-title">详细说明</view>
+      <textarea class="textarea" placeholder="例如：想要显瘦的奶杏色针织开衫，价格别太贵，秋冬穿" value="{{note}}" bindinput="onNote" maxlength="500"/>
+    </view>
+
+    <view class="block">
+      <view class="block-title">联系方式（选填，便于私域跟进）</view>
+      <input class="input" placeholder="手机号 / 微信号 / 邮箱" value="{{contactInfo}}" bindinput="onContact"/>
+    </view>
+
+    <button class="submit-btn" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">提交需求</button>
+    <view class="foot-tip">提交后可在「我的」查看进度，或加企业微信进私域</view>
+  </view>
+</view>

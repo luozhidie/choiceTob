@@ -21,7 +21,7 @@ var RECHARGE_TIERS=[
 
 /* 一次性充值档位（用于进度条） */
 var DEPOSIT_TIERS=[
-  {amount:6000,text:'首充 ¥6,000 可享 2.8折'},
+  {amount:998,text:'¥998 专业版 · 做代理 · 一件代发 3.3 折'},
   {amount:50000,text:'充 ¥50,000 可享 2.8折 + 退换5%'},
   {amount:100000,text:'充 ¥100,000 可享 2.8折 + 退换10%'},
   {amount:300000,text:'充 ¥300,000 可享 2.6折 + 退换20%'}
@@ -303,6 +303,7 @@ Page({
   goStyleProfile:function(){wx.navigateTo({url:'/pages/style-profile/index'});},
   goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
   goBuyerService:function(e){var s=e?e.currentTarget.dataset.service:'buyer_group';wx.navigateTo({url:'/pages/buyer-service/index?service='+s});},
+  goBuyerRequest:function(){wx.navigateTo({url:'/pages/buyer-request/index'});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
   goGroupBuy:function(){wx.navigateTo({url:'/pages/group/index'});},
@@ -353,7 +354,7 @@ Page({
 
   goRules:function(){wx.showModal({
     title:'拿货会员权益规则',
-    content:'【认证店主·免费】认证后即解锁全部商品批发价查看权。\n\n【充值解锁·付费】一次性充值货款，同时获得拿货折扣 + 退换额度：\n· 首充¥6,000：拿货2.8折\n· 充¥50,000：拿货2.8折 + 退换5%\n· 充¥100,000：拿货2.8折 + 退换10%\n· 充¥300,000：拿货2.6折 + 退换20%\n\n退换额度在退货时按档位自动抵扣。',
+    content:'【认证店主·免费】认证后即解锁全部商品批发价查看权。\n\n【虚拟试衣代理·¥998】购买专业版 ¥998 即成为永久代理，无需预存货款：\n· 单件代发：3.3 折\n· 单笔满 5 件：2.8 折\n· 无退换额度\n\n【充值解锁·付费】一次性充值货款，同时获得拿货折扣 + 退换额度：\n· 首充¥6,000：拿货2.8折\n· 充¥50,000：拿货2.8折 + 退换5%\n· 充¥100,000：拿货2.8折 + 退换10%\n· 充¥300,000：拿货2.6折 + 退换20%\n\n退换额度在退货时按档位自动抵扣。',
     showCancel:false,confirmText:'知道了'
   });}
 });
