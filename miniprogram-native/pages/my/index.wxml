@@ -308,10 +308,18 @@
         <view class="sg-icon"><text>✏️</text></view>
         <text class="sg-label">服装设计</text>
       </view>
-      <view class="sg-item" bindtap="goBuyerRequest">
-        <view class="sg-icon"><text>📝</text></view>
-        <text class="sg-label">提交需求</text>
+    </view>
+
+    <!-- 提交找货需求：独立高亮入口 -->
+    <view class="buyer-request-bar" bindtap="goBuyerRequest">
+      <view class="br-left">
+        <text class="br-icon">📝</text>
+        <view class="br-text">
+          <text class="br-title">提交找货需求</text>
+          <text class="br-desc">想要什么款 / 风格 / 色系，一需求一方案</text>
+        </view>
       </view>
+      <text class="br-arrow">›</text>
     </view>
 
     <!-- AI 辅助工具 -->
