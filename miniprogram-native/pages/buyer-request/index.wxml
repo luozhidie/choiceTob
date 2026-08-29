@@ -29,7 +29,7 @@
     </view>
 
     <view class="block">
-      <view class="block-title">风格诉求</view>
+      <view class="block-title">风格 / 风情诉求</view>
       <view class="chips">
         <view wx:for="{{styleOptions}}" wx:key="*this"
               class="chip {{selectedStyle.indexOf(item)!==-1?'chip-on':''}}"
