@@ -2,12 +2,23 @@ var BASE = 'https://colour-choice.art';
 
 Page({
   data: {
-    categoryOptions: ['外套', '连衣裙', '套装', '裤装', '针织', '上衣', '半身裙', '鞋包配饰'],
-    styleOptions: ['简约风','复古风','新中式','韩系风','日系风','法式风','通勤风','街头风','老钱风','波西米亚风','运动休闲','文艺风','甜美风','辣妹风','中性风','轻奢风'],
-    colorOptions: ['奶杏', '黑白灰', '大地色', '莫兰迪', '亮彩色', '深色系', '浅色系'],
-    selectedCategory: [],
-    selectedStyle: [],
-    selectedColor: [],
+    categoryOptions: [
+      {name:'外套', selected:false},{name:'连衣裙', selected:false},{name:'套装', selected:false},{name:'裤装', selected:false},
+      {name:'针织', selected:false},{name:'上衣', selected:false},{name:'半身裙', selected:false},{name:'鞋包配饰', selected:false}
+    ],
+    styleOptions: [
+      {name:'简约风', selected:false},{name:'复古风', selected:false},{name:'新中式', selected:false},{name:'韩系风', selected:false},
+      {name:'日系风', selected:false},{name:'法式风', selected:false},{name:'通勤风', selected:false},{name:'街头风', selected:false},
+      {name:'老钱风', selected:false},{name:'波西米亚风', selected:false},{name:'运动休闲', selected:false},{name:'文艺风', selected:false},
+      {name:'甜美风', selected:false},{name:'辣妹风', selected:false},{name:'中性风', selected:false},{name:'轻奢风', selected:false}
+    ],
+    colorOptions: [
+      {name:'奶杏', selected:false},{name:'黑白灰', selected:false},{name:'大地色', selected:false},{name:'莫兰迪', selected:false},
+      {name:'亮彩色', selected:false},{name:'深色系', selected:false},{name:'浅色系', selected:false}
+    ],
+    customCategory: '',
+    customStyle: '',
+    customColor: '',
     hasOrphan: false,
     budgetMin: '',
     budgetMax: '',
@@ -31,35 +42,39 @@ Page({
   },
 
   toggleCat: function (e) {
-    var v = e.currentTarget.dataset.v;
-    var arr = this.data.selectedCategory.slice();
-    var i = arr.indexOf(v);
-    if (i === -1) arr.push(v); else arr.splice(i, 1);
-    this.setData({ selectedCategory: arr });
+    var idx = e.currentTarget.dataset.idx;
+    var key = 'categoryOptions[' + idx + '].selected';
+    this.setData({ [key]: !this.data.categoryOptions[idx].selected });
   },
   toggleStyle: function (e) {
-    var v = e.currentTarget.dataset.v;
-    var arr = this.data.selectedStyle.slice();
-    var i = arr.indexOf(v);
-    if (i === -1) arr.push(v); else arr.splice(i, 1);
-    this.setData({ selectedStyle: arr });
+    var idx = e.currentTarget.dataset.idx;
+    var key = 'styleOptions[' + idx + '].selected';
+    this.setData({ [key]: !this.data.styleOptions[idx].selected });
   },
   toggleColor: function (e) {
-    var v = e.currentTarget.dataset.v;
-    var arr = this.data.selectedColor.slice();
-    var i = arr.indexOf(v);
-    if (i === -1) arr.push(v); else arr.splice(i, 1);
-    this.setData({ selectedColor: arr });
+    var idx = e.currentTarget.dataset.idx;
+    var key = 'colorOptions[' + idx + '].selected';
+    this.setData({ [key]: !this.data.colorOptions[idx].selected });
   },
   onOrphan: function (e) { this.setData({ hasOrphan: e.detail.value }); },
   onMin: function (e) { this.setData({ budgetMin: e.detail.value }); },
   onMax: function (e) { this.setData({ budgetMax: e.detail.value }); },
   onNote: function (e) { this.setData({ note: e.detail.value }); },
   onContact: function (e) { this.setData({ contactInfo: e.detail.value }); },
+  onCustomCategory: function (e) { this.setData({ customCategory: e.detail.value }); },
+  onCustomStyle: function (e) { this.setData({ customStyle: e.detail.value }); },
+  onCustomColor: function (e) { this.setData({ customColor: e.detail.value }); },
 
   submit: function () {
     var d = this.data;
-    if (d.selectedCategory.length === 0 && d.selectedStyle.length === 0 && d.selectedColor.length === 0 && !d.note) {
+    var cats = d.categoryOptions.filter(function(x){return x.selected;}).map(function(x){return x.name;});
+    var styles = d.styleOptions.filter(function(x){return x.selected;}).map(function(x){return x.name;});
+    var colors = d.colorOptions.filter(function(x){return x.selected;}).map(function(x){return x.name;});
+    if (d.customCategory) cats.push(d.customCategory);
+    if (d.customStyle) styles.push(d.customStyle);
+    if (d.customColor) colors.push(d.customColor);
+
+    if (cats.length === 0 && styles.length === 0 && colors.length === 0 && !d.note) {
       wx.showToast({ title: '请至少填一项需求', icon: 'none' });
       return;
     }
@@ -78,9 +93,9 @@ Page({
         userId: userId,
         contact_name: '',
         contact_info: d.contactInfo,
-        category: d.selectedCategory.join('、'),
-        style: d.selectedStyle.join('、'),
-        color: d.selectedColor.join('、'),
+        category: cats.join('、'),
+        style: styles.join('、'),
+        color: colors.join('、'),
         has_orphan: d.hasOrphan,
         budget_min: d.budgetMin,
         budget_max: d.budgetMax,

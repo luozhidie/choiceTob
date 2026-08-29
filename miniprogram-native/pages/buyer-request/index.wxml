@@ -22,27 +22,39 @@
     <view class="block">
       <view class="block-title">想找什么品类</view>
       <view class="chips">
-        <view wx:for="{{categoryOptions}}" wx:key="*this"
-              class="chip {{selectedCategory.indexOf(item)!==-1?'chip-on':''}}"
-              bindtap="toggleCat" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{categoryOptions}}" wx:key="index" data-idx="{{index}}"
+              class="chip {{item.selected?'chip-on':''}}"
+              bindtap="toggleCat">{{item.name}}</view>
+      </view>
+      <view class="custom-row">
+        <text class="custom-label">其他品类</text>
+        <input class="custom-input" placeholder="没有想要的品类？手动输入" value="{{customCategory}}" bindinput="onCustomCategory"/>
       </view>
     </view>
 
     <view class="block">
       <view class="block-title">风格 / 风情诉求</view>
       <view class="chips">
-        <view wx:for="{{styleOptions}}" wx:key="*this"
-              class="chip {{selectedStyle.indexOf(item)!==-1?'chip-on':''}}"
-              bindtap="toggleStyle" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{styleOptions}}" wx:key="index" data-idx="{{index}}"
+              class="chip {{item.selected?'chip-on':''}}"
+              bindtap="toggleStyle">{{item.name}}</view>
+      </view>
+      <view class="custom-row">
+        <text class="custom-label">其他风格</text>
+        <input class="custom-input" placeholder="没有想要的风情？手动输入" value="{{customStyle}}" bindinput="onCustomStyle"/>
       </view>
     </view>
 
     <view class="block">
       <view class="block-title">色系诉求</view>
       <view class="chips">
-        <view wx:for="{{colorOptions}}" wx:key="*this"
-              class="chip {{selectedColor.indexOf(item)!==-1?'chip-on':''}}"
-              bindtap="toggleColor" data-v="{{item}}">{{item}}</view>
+        <view wx:for="{{colorOptions}}" wx:key="index" data-idx="{{index}}"
+              class="chip {{item.selected?'chip-on':''}}"
+              bindtap="toggleColor">{{item.name}}</view>
+      </view>
+      <view class="custom-row">
+        <text class="custom-label">其他色系</text>
+        <input class="custom-input" placeholder="没有想要的色系？手动输入" value="{{customColor}}" bindinput="onCustomColor"/>
       </view>
     </view>
 
