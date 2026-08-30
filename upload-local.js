@@ -4,16 +4,29 @@ const path = require('path');
 
 const appid = 'wxe0ffec0a398de8b7';
 const keyPath = path.resolve('./private.key');
+const srcPath = path.resolve('./miniprogram-native');
 const distPath = path.resolve('./dist-upload');
 
 if (!fs.existsSync(keyPath)) {
   console.error('ERROR: ./private.key 不存在');
   process.exit(1);
 }
-if (!fs.existsSync(distPath + '/app.json')) {
-  console.error('ERROR: app.json 不存在于 ' + distPath);
+if (!fs.existsSync(srcPath + '/app.json')) {
+  console.error('ERROR: app.json 不存在于 ' + srcPath);
   process.exit(1);
 }
+
+/* 关键：上传前强制把源码同步到构建目录。
+   历史教训：dist-upload 曾停留在旧快照，导致连续多次「UPLOAD SUCCESS」传的其实都是旧代码。 */
+if (fs.existsSync(distPath)) {
+  fs.rmSync(distPath, { recursive: true, force: true });
+}
+fs.cpSync(srcPath, distPath, { recursive: true });
+if (!fs.existsSync(distPath + '/app.json')) {
+  console.error('ERROR: 同步失败，app.json 不存在于 ' + distPath);
+  process.exit(1);
+}
+console.log('[sync] miniprogram-native -> dist-upload 同步完成');
 
 const project = new ci.Project({
   appid: appid,
