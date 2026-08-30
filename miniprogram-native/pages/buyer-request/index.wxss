@@ -24,6 +24,20 @@
 .textarea{width:100%;height:160rpx;background:#f6f4f5;border-radius:12rpx;padding:18rpx 20rpx;font-size:28rpx;box-sizing:border-box;}
 .input{width:100%;background:#f6f4f5;border-radius:12rpx;padding:20rpx;font-size:28rpx;box-sizing:border-box;}
 
+/* 孤品图片上传 */
+.orphan-uploader{margin-top:22rpx;padding-top:22rpx;border-top:1rpx solid #f0e6ea;}
+.uploader-title{display:block;font-size:26rpx;color:#666;margin-bottom:16rpx;}
+.img-grid{display:flex;flex-wrap:wrap;gap:16rpx;}
+.img-wrap{position:relative;width:160rpx;height:160rpx;border-radius:14rpx;overflow:hidden;background:#f6f4f5;}
+.u-img{width:100%;height:100%;}
+.img-del{position:absolute;top:4rpx;right:4rpx;width:40rpx;height:40rpx;border-radius:50%;background:rgba(45,27,46,.75);color:#fff;font-size:22rpx;display:flex;align-items:center;justify-content:center;}
+.upload-btn{width:160rpx;height:160rpx;border-radius:14rpx;border:2rpx dashed #d4c8cd;background:#faf7f8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8rpx;}
+.ub-icon{font-size:48rpx;color:#C9A24B;line-height:1;}
+.ub-text{font-size:22rpx;color:#888;}
+
+/* 联系方式加大 */
+.contact-input{width:100%;height:180rpx;background:#f6f4f5;border-radius:12rpx;padding:22rpx 20rpx;font-size:30rpx;box-sizing:border-box;line-height:1.6;}
+
 .submit-btn{margin-top:12rpx;background:linear-gradient(135deg,#C9A24B,#a8842f);color:#fff;font-size:32rpx;font-weight:700;border-radius:999rpx;padding:24rpx 0;border:none;}
 .submit-btn[disabled]{opacity:.6;}
 .foot-tip{text-align:center;font-size:22rpx;color:#aaa;margin-top:18rpx;}

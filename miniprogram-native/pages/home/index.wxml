@@ -198,8 +198,8 @@
               </view>
 
               <view wx:else>
-                <!-- category_nav -->
-                <view wx:if="{{item.type==='category_nav'}}" class="blk-cn">
+                <!-- category_nav：数据只用于驱动顶部 cat-sticky，避免在此处重复渲染标签行 -->
+                <view wx:if="{{item.type==='category_nav'}}" class="blk-cn" style="display:none;">
                   <scroll-view scroll-x show-scrollbar="{{false}}" class="cn-scroll">
                     <view class="cn-row">
                       <view wx:for="{{catNavItems}}" wx:key="label"

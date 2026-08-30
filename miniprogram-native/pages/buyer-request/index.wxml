@@ -64,6 +64,19 @@
         <switch checked="{{hasOrphan}}" bindchange="onOrphan" color="#C9A24B"/>
       </view>
       <text class="block-hint">有单件孤品想找搭配（如：已有上衣，想配下装/外套）</text>
+      <view wx:if="{{hasOrphan}}" class="orphan-uploader">
+        <text class="uploader-title">上传孤品图片（最多 6 张）</text>
+        <view class="img-grid">
+          <view wx:for="{{orphanImages}}" wx:key="index" class="img-wrap">
+            <image class="u-img" src="{{item}}" mode="aspectFill" bindtap="previewImg" data-idx="{{index}}"/>
+            <view class="img-del" data-idx="{{index}}" catchtap="delOrphanImg">✕</view>
+          </view>
+          <view wx:if="{{orphanImages.length<6}}" class="upload-btn" bindtap="chooseOrphanImg">
+            <text class="ub-icon">+</text>
+            <text class="ub-text">上传图片</text>
+          </view>
+        </view>
+      </view>
     </view>
 
     <view class="block">
@@ -81,8 +94,8 @@
     </view>
 
     <view class="block">
-      <view class="block-title">联系方式（选填，便于私域跟进）</view>
-      <input class="input" placeholder="手机号 / 微信号 / 邮箱" value="{{contactInfo}}" bindinput="onContact"/>
+      <view class="block-title">联系方式（必填，便于私域跟进）</view>
+      <textarea class="contact-input" placeholder="手机号 / 微信号 / 邮箱，至少填一项" value="{{contactInfo}}" bindinput="onContact" maxlength="200"/>
     </view>
 
     <button class="submit-btn" bindtap="submit" loading="{{submitting}}" disabled="{{submitting}}">提交需求</button>

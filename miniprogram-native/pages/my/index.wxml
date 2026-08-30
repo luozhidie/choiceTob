@@ -273,13 +273,13 @@
     </view>
   </view>
 
-  <!-- ========== 会员服务（所有登录用户可见，未认证显示锁定态） ========== -->
+  <!-- ========== 买手服务（所有登录用户可见，未认证显示锁定态） ========== -->
   <view class="section" wx:if="{{isLoggedIn}}">
     <view class="sec-header">
-      <text class="sec-title">会员服务</text>
+      <text class="sec-title">买手服务</text>
       <text wx:if="{{!isUnlocked}}" class="sec-lock">🔒 认证后解锁</text>
     </view>
-    <text class="sec-sub">AI 只是辅助工具，核心是完整的专业服务体系与培训课</text>
+    <text class="sec-sub">AI 只是辅助工具，核心是完整的买手服务体系与培训课</text>
     <view class="service-grid">
       <view class="sg-item {{isUnlocked?'':'sg-locked'}}" bindtap="goBuyerService" data-service="buyer_group">
         <view class="sg-icon"><text>🛒</text></view>
@@ -332,12 +332,12 @@
   <view class="section">
     <text class="sec-title">我的服务</text>
 
-    <!-- 专属搭配咨询：所有登录用户可见 -->
+    <!-- 专属组货咨询：所有登录用户可见 -->
     <view wx:if="{{isLoggedIn}}" class="buyer-request-bar" bindtap="goBuyerRequest">
       <view class="br-left">
         <text class="br-icon">💬</text>
         <view class="br-text">
-          <text class="br-title">专属搭配咨询</text>
+          <text class="br-title">专属组货咨询</text>
           <text class="br-desc">告诉我你想要的风格 / 色系 / 场合，一对一给你方案</text>
         </view>
       </view>

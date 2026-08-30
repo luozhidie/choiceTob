@@ -20,6 +20,7 @@ Page({
     customStyle: '',
     customColor: '',
     hasOrphan: false,
+    orphanImages: [],
     budgetMin: '',
     budgetMax: '',
     note: '',
@@ -65,6 +66,55 @@ Page({
   onCustomStyle: function (e) { this.setData({ customStyle: e.detail.value }); },
   onCustomColor: function (e) { this.setData({ customColor: e.detail.value }); },
 
+  /* 孤品图片上传 */
+  chooseOrphanImg: function () {
+    var t = this;
+    var remain = 6 - t.data.orphanImages.length;
+    if (remain <= 0) return;
+    wx.chooseMedia({
+      count: remain,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: function (r) {
+        var files = r.tempFiles || [];
+        if (files.length === 0) return;
+        var urls = t.data.orphanImages.slice();
+        var uploaded = 0;
+        wx.showLoading({ title: '上传中...', mask: true });
+        files.forEach(function (file) {
+          wx.uploadFile({
+            url: BASE + '/api/upload',
+            filePath: file.tempFilePath,
+            name: 'file',
+            success: function (res) {
+              try {
+                var data = JSON.parse(res.data);
+                if (data.success && data.url) urls.push(data.url);
+              } catch (e) {}
+            },
+            complete: function () {
+              uploaded++;
+              if (uploaded === files.length) {
+                wx.hideLoading();
+                t.setData({ orphanImages: urls });
+              }
+            }
+          });
+        });
+      }
+    });
+  },
+  delOrphanImg: function (e) {
+    var idx = e.currentTarget.dataset.idx;
+    var urls = this.data.orphanImages.slice();
+    urls.splice(idx, 1);
+    this.setData({ orphanImages: urls });
+  },
+  previewImg: function (e) {
+    var idx = e.currentTarget.dataset.idx;
+    wx.previewImage({ current: this.data.orphanImages[idx], urls: this.data.orphanImages });
+  },
+
   submit: function () {
     var d = this.data;
     var cats = d.categoryOptions.filter(function(x){return x.selected;}).map(function(x){return x.name;});
@@ -76,6 +126,10 @@ Page({
 
     if (cats.length === 0 && styles.length === 0 && colors.length === 0 && !d.note) {
       wx.showToast({ title: '请至少填一项需求', icon: 'none' });
+      return;
+    }
+    if (!d.contactInfo || !d.contactInfo.trim()) {
+      wx.showToast({ title: '请填写联系方式', icon: 'none' });
       return;
     }
     this.setData({ submitting: true });
@@ -99,7 +153,8 @@ Page({
         has_orphan: d.hasOrphan,
         budget_min: d.budgetMin,
         budget_max: d.budgetMax,
-        note: d.note
+        note: d.note,
+        images: d.orphanImages
       },
       success: function (r) {
         if (r.data && r.data.success) {
