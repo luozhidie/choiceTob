@@ -50,8 +50,8 @@
     </scroll-view>
   </view>
 
-  <!-- 两层联动筛选：风格（一级）→ 品类（二级），与分类页 buyer/index 同一套标准 -->
-  <view class="two-level-filter" style="background:{{homeBgColor||topBgColor}};">
+  <!-- 两层联动筛选：风格（一级）→ 品类（二级），与分类页 buyer/index 同一套标准；无风格数据时不渲染，避免只显示一个「全部」与 cat-sticky 重复 -->
+  <view class="two-level-filter" wx:if="{{homeStyleMap.styles.length>0}}" style="background:{{homeBgColor||topBgColor}};">
     <scroll-view class="subcat-scroll" scroll-x show-scrollbar="{{false}}">
       <view class="subcat-row">
         <view class="subcat-chip {{homeActiveStyle==='全部'?'subcat-on':''}}" bindtap="switchHomeStyle" data-name="全部">全部</view>
