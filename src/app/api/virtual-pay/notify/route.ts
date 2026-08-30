@@ -59,6 +59,11 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // 微信配置消息推送时会发 GET 校验：原样返回 echostr，否则后台保存不了 URL
+  const echostr = new URL(request.url).searchParams.get("echostr");
+  if (echostr) {
+    return new NextResponse(echostr, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+  }
   return NextResponse.json({ ok: true, service: "virtual-pay-notify" });
 }
