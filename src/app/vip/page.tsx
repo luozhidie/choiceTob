@@ -199,7 +199,7 @@ const plans: Plan[] = [
   {
     id: "daily_looks_yearly",
     name: "搭配灵感·年度会员",
-    price: 1198000,       // ¥11,980/年
+    price: 999900,        // ¥9,999/年
     originalPrice: 1198800,
     priceLabel: "¥11,980/年",
     discountLabel: "省¥199/年，超值！",

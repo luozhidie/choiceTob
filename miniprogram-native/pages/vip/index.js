@@ -18,6 +18,7 @@ Page({
     showTryonAgent:true,
     showPay:false,
     selectedPlan:null,
+    advisorWx:'luozhidie',
     /* 代理中心 */
     isAgent:false,
     agentStatus:{active:false,depositAmount:0,discountRate:1,returnRate:0},
@@ -141,10 +142,20 @@ Page({
     wx.navigateTo({ url: '/pages/look-studio/index?promo=1' });
   },
 
-  confirmPay:function(){
-    var plan=this.data.selectedPlan;
-    if(!plan)return;
-    this.doWechatPay(plan);
+  /* 预存货款属预付资金，小程序内不提供在线支付入口，改联系顾问线下入账 */
+  copyAdvisor:function(){
+    var t=this;
+    wx.setClipboardData({
+      data:t.data.advisorWx,
+      success:function(){
+        wx.showModal({
+          title:'已复制微信号',
+          content:'请在微信中搜索添加顾问 '+t.data.advisorWx+'，发送「充值 + 套餐名」，顾问确认到账后立即为你开通权益。',
+          showCancel:false,
+          confirmText:'知道了'
+        });
+      }
+    });
   },
 
   getFee:function(pid){

@@ -1,4 +1,5 @@
 var app = getApp();
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data:{
@@ -69,6 +70,17 @@ Page({
   doLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
 
   doPay:function(pid,fee,title){
+    var t=this;
+    vp.pay({
+      goodsKey:pid,
+      success:function(){wx.showToast({title:'订阅成功',icon:'success'});},
+      fail:function(){},
+      legacy:function(){t.legacyPay(pid,fee,title);}
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPay:function(pid,fee,title){
     app.getOpenid().then(function(openid){
       wx.showLoading({title:'调起支付...'});
       wx.request({

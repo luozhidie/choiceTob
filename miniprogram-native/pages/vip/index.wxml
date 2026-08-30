@@ -87,11 +87,12 @@
   <view class="modal-mask" wx:if="{{showPay}}" bindtap="closePay">
     <view class="modal" catchtap="noop">
       <view class="modal-close" bindtap="closePay">✕</view>
-      <text class="m-title">确认开通</text>
+      <text class="m-title">联系顾问充值</text>
       <text class="m-name">{{selectedPlan.name}}</text>
       <text class="m-price">{{selectedPlan.priceLabel}}</text>
-      <text class="m-tip">支付成功后即刻生效</text>
-      <view class="m-btn" bindtap="confirmPay">微信支付</view>
+      <text class="m-tip">预存货款为线下对公入账，由顾问确认后开通</text>
+      <view class="mwx"><text class="mwxl">顾问微信</text><text class="mwxv" user-select="true">{{advisorWx}}</text></view>
+      <view class="m-btn" bindtap="copyAdvisor">复制微信号</view>
     </view>
   </view>
 </view>

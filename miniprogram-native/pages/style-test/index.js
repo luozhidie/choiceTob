@@ -1,4 +1,5 @@
 var app = getApp();
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data:{
@@ -104,6 +105,17 @@ Page({
   buyTestMember:function(){
     var t=this;
     if(!app||!app.getOpenid){wx.showToast({title:'暂不支持',icon:'none'});return;}
+    vp.pay({
+      goodsKey:'tryon_pro_998',
+      success:function(){wx.showToast({title:'开通成功',icon:'success'});t.setData({isTestMember:true});},
+      fail:function(err){if(!(err&&err.errMsg&&String(err.errMsg).indexOf('cancel')>-1))wx.showToast({title:'支付失败',icon:'none'});},
+      legacy:function(){t.legacyBuyTestMember();}
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyBuyTestMember:function(){
+    var t=this;
     wx.showLoading({title:'调起支付...'});
     app.getOpenid().then(function(openid){
       wx.request({

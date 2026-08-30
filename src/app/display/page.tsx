@@ -208,7 +208,7 @@ export default function DisplayPage() {
     try {
       // 1. 创建订单
       const planName = selectedDailyPlan === "yearly" ? "每日搭配灵感·年度订阅" : "每日搭配灵感·月度订阅";
-      const planPrice = selectedDailyPlan === "yearly" ? 1198000 : 99900;
+      const planPrice = selectedDailyPlan === "yearly" ? 999900 : 99900;
       
       const { data: orderData, error } = await supabase.from("membership_orders").insert([{
         user_id: user.id,

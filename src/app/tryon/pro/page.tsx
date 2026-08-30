@@ -11,7 +11,7 @@ export default function TryonProPage() {
         <span className="text-sm text-gray-400">诊断 + 搭配</span>
       </div>
       <p className="text-sm text-gray-600 mt-2 mb-4">
-        在普通版基础上，加 21 题风格诊断与 AI 智能搭配。
+        在普通版基础上，加 14 题风格诊断与 AI 智能搭配。
       </p>
 
       <div className="bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white rounded-2xl shadow-sm p-5">
@@ -21,7 +21,7 @@ export default function TryonProPage() {
         <div className="space-y-1.5 text-sm mt-3">
           {[
             "普通版全部功能",
-            "21 题穿衣风格诊断",
+            "14 题穿衣风格诊断",
             "AI 按风格自动生成造型",
             "风格匹配 + 场合搭配建议",
           ].map((t) => (
@@ -34,7 +34,7 @@ export default function TryonProPage() {
         <div className="absolute top-0 right-0 bg-[#C9A24B] text-[#2d1b2e] text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">含风格测试</div>
         <div>
           <div className="text-lg font-extrabold">专业版</div>
-          <div className="text-xs text-white/70 mt-1">100 次专业诊断 · 含 21 题风格测试 / 八大风格真人试穿</div>
+          <div className="text-xs text-white/70 mt-1">100 次专业诊断 · 含 14 题风格测试 / 八大风格真人试穿</div>
         </div>
         <div className="text-2xl font-extrabold text-[#C9A24B]">¥998</div>
       </div>

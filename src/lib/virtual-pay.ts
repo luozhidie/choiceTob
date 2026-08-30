@@ -45,7 +45,7 @@ export const VIRTUAL_GOODS: Record<string, VirtualGoods> = {
 
   // —— 每日搭配灵感 ——
   daily_looks_monthly: { productId: "daily_looks_monthly", name: "搭配灵感·月度会员", priceFen: 99900 },
-  daily_looks_yearly: { productId: "daily_looks_yearly", name: "搭配灵感·年度会员", priceFen: 1198000 },
+  daily_looks_yearly: { productId: "daily_looks_yearly", name: "搭配灵感年度会员", priceFen: 999900 },
 
   // —— 时尚资讯 ——
   articles_monthly: { productId: "articles_monthly", name: "时尚资讯·月费订阅", priceFen: 13800 },

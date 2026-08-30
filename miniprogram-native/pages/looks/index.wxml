@@ -11,7 +11,7 @@
     <text class="vb-left"><text>🔒 每日搭配灵感 · 会员专享</text></text>
     <view class="vb-btns">
       <text class="vbm" bindtap="subMonthly">¥999/月 立即开通</text>
-      <text class="vby" bindtap="subYearly">¥11,980/年 立即开通</text>
+      <text class="vby" bindtap="subYearly">¥9,999/年 立即开通</text>
     </view>
   </view>
 

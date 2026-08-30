@@ -32,7 +32,7 @@ const FREE_LOOKS_LIMIT = 3;
 /* 套餐定义 */
 const PLANS = [
   { id: "daily_looks_monthly", name: "搭配灵感·月度会员", price: 99900, label: "¥999/月", desc: "30天" },
-  { id: "daily_looks_yearly", name: "搭配灵感·年度会员", price: 1198000, label: "¥11,980/年", desc: "365天（省¥199/年）" },
+  { id: "daily_looks_yearly", name: "搭配灵感·年度会员", price: 999900, label: "¥9,999/年", desc: "365天（省¥1,989/年）" },
 ];
 
 export default function DailyLooksPage() {

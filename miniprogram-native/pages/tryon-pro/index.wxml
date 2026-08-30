@@ -3,7 +3,7 @@
     <text class="h-title">专业版</text>
     <text class="h-sub">诊断 + 搭配</text>
   </view>
-  <view class="sub">在普通版基础上，加 21 题风格诊断与 AI 智能搭配。</view>
+  <view class="sub">在普通版基础上，加 14 题风格诊断与 AI 智能搭配。</view>
 
   <view class="pro-card">
     <text class="pro-tag">专业版</text>
@@ -13,7 +13,7 @@
   <view class="price-row gold" bindtap="buyPackage" data-id="tryon_pro_998">
     <view>
       <text class="pr-title">专业版</text>
-      <text class="pr-sub">100 次专业诊断 · 含 21 题风格测试 / 八大风格真人试穿</text>
+      <text class="pr-sub">100 次专业诊断 · 含 14 题风格测试 / 八大风格真人试穿</text>
     </view>
     <text class="pr-num">¥998</text>
   </view>

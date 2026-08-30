@@ -1,5 +1,6 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data: {
@@ -20,6 +21,27 @@ Page({
 
   buyPackage: function (e) {
     var id = e.currentTarget.dataset.id;
+    this.buyPackageById(id);
+  },
+
+  buyPackageById: function (id) {
+    var self = this;
+    vp.pay({
+      goodsKey: id,
+      success: function () {
+        wx.showToast({ title: '开通成功', icon: 'success' });
+        setTimeout(function () { wx.redirectTo({ url: '/pages/look-studio/index?promo=1' }); }, 900);
+      },
+      fail: function (err) {
+        if (err && err.errMsg && String(err.errMsg).indexOf('cancel') > -1) return;
+        self.showToast('支付失败，请重试');
+      },
+      legacy: function () { self.legacyPay(id); }
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPay: function (id) {
     var self = this;
     wx.showLoading({ title: '调起支付...' });
     app.getOpenid().then(function (openid) {

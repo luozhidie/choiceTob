@@ -1,9 +1,10 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data: {
-    include: ['普通版全部功能', '21 题穿衣风格诊断', 'AI 按风格自动生成造型', '风格匹配 + 场合搭配建议'],
+    include: ['普通版全部功能', '14 题穿衣风格诊断', 'AI 按风格自动生成造型', '风格匹配 + 场合搭配建议'],
     toast: '',
   },
 
@@ -19,6 +20,27 @@ Page({
 
   buyPackage: function (e) {
     var id = e.currentTarget.dataset.id;
+    this.buyPackageById(id);
+  },
+
+  buyPackageById: function (id) {
+    var self = this;
+    vp.pay({
+      goodsKey: id,
+      success: function () {
+        wx.showToast({ title: '开通成功', icon: 'success' });
+        setTimeout(function () { wx.redirectTo({ url: '/pages/look-studio/index?promo=1' }); }, 900);
+      },
+      fail: function (err) {
+        if (err && err.errMsg && String(err.errMsg).indexOf('cancel') > -1) return;
+        self.showToast('支付失败，请重试');
+      },
+      legacy: function () { self.legacyPay(id); }
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPay: function (id) {
     var self = this;
     wx.showLoading({ title: '调起支付...' });
     app.getOpenid().then(function (openid) {

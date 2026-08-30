@@ -1,5 +1,6 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var vp = require('../../utils/virtual-pay.js');
 
 // 与 /api/tryon/create 服务端定价保持一致
 var PACKAGES = [
@@ -61,12 +62,31 @@ Page({
     var pkg = findPkg(id);
     if (!pkg) return;
     var self = this;
+    vp.pay({
+      goodsKey: pkg.id,
+      success: function () {
+        wx.showToast({ title: '开通成功', icon: 'success' });
+        setTimeout(function () {
+          wx.redirectTo({ url: '/pages/look-studio/index?promo=1' });
+        }, 900);
+      },
+      fail: function (err) {
+        if (err && err.errMsg && String(err.errMsg).indexOf('cancel') > -1) return;
+        self.showToast('支付失败，请重试');
+      },
+      legacy: function () { self.legacyPay(pkg.id); }
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPay: function (pid) {
+    var self = this;
     wx.showLoading({ title: '调起支付...' });
     app.getOpenid().then(function (openid) {
       wx.request({
         url: BASE + '/api/tryon/create',
         method: 'POST',
-        data: { package_id: pkg.id, openid: openid },
+        data: { package_id: pid, openid: openid },
         success: function (r) {
           wx.hideLoading();
           var d = r.data || {};

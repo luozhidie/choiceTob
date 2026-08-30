@@ -1,4 +1,5 @@
 var app = getApp();
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data:{
@@ -77,9 +78,20 @@ Page({
   goVip:function(){wx.navigateTo({url:'/pages/vip/index'});},
 
   subMonthly:function(){this.doPay('daily_looks_monthly',99900,'搭配灵感·月度会员');},
-  subYearly:function(){this.doPay('daily_looks_yearly',1198000,'搭配灵感·年度会员');},
+  subYearly:function(){this.doPay('daily_looks_yearly',999900,'搭配灵感·年度会员');},
 
   doPay:function(pid,fee,title){
+    var t=this;
+    vp.pay({
+      goodsKey:pid,
+      success:function(){wx.showToast({title:'开通成功',icon:'success'});t.onShow&&t.onShow();},
+      fail:function(){},
+      legacy:function(){t.legacyPay(pid,fee,title);}
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPay:function(pid,fee,title){
     var t=this;
     app.getOpenid().then(function(openid){
       wx.showLoading({title:'调起支付...'});

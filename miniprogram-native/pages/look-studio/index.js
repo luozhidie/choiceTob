@@ -1,5 +1,6 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var vp = require('../../utils/virtual-pay.js');
 
 function rewriteSupabase(u) {
   if (typeof u !== 'string') return u;
@@ -773,6 +774,30 @@ Page({
   },
 
   payFor: function (pkg) {
+    var t = this;
+    vp.pay({
+      goodsKey: pkg.id,
+      success: function () {
+        var optimistic = {
+          active: true, type: pkg.type, daysLeft: pkg.days || 365,
+          normalLeft: pkg.normal, proLeft: pkg.pro, triesLeft: pkg.normal + pkg.pro
+        };
+        setCacheEnt(optimistic); t.applyEntitlement(optimistic);
+        t.setData({ showPackages: false, proMode: false });
+        wx.showToast({ title: '已开通，去试衣', icon: 'success' });
+        setTimeout(function () { t.syncEntitlement(); }, 4000);
+      },
+      fail: function (err) {
+        if (!(err && err.errMsg && String(err.errMsg).indexOf('cancel') > -1)) {
+          wx.showToast({ title: '支付失败', icon: 'none' });
+        }
+      },
+      legacy: function () { t.legacyPayFor(pkg); }
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyPayFor: function (pkg) {
     var t = this;
     wx.showLoading({ title: '调起支付...' });
     app.getOpenid().then(function (openid) {
