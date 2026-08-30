@@ -64,6 +64,9 @@ Page({
     /* ===== 代理状态 ===== */
     isAgent:false,
 
+    /* ===== 会员服务解锁态（认证会员/代理/管理员 = true）===== */
+    isUnlocked:false,
+
     /* ===== 统计 ===== */
     subCount:'--',
     favCount:'--',
@@ -163,7 +166,8 @@ Page({
     var certStyle=wx.getStorageSync('certified_style')||'';
     var token=wx.getStorageSync('token')||'';
     var isAdmin=!!wx.getStorageSync('is_admin');
-    t.setData({isAdmin:isAdmin});
+    var isAgentCache=!!wx.getStorageSync('is_agent');
+    t.setData({isAdmin:isAdmin,isUnlocked:!!(isCert||isAdmin||isAgentCache)});
 
     if(ui&&ui.nickName){
       /* 已登录 */
@@ -187,6 +191,7 @@ Page({
         avatarUrl:'',
         isCertified:false,
         isAgent:false,
+        isUnlocked:false,
         subCount:'--',favCount:'--',historyCount:'--',
         walletBalance:'--',couponCount:'--',redPackCount:'--'
       });
@@ -236,7 +241,8 @@ Page({
           roleText:isCert?'已认证会员':'未认证会员',
           depositAmountStr:depositInfo.depositAmountStr,
           depositProgress:depositInfo.depositProgress,
-          nextTierText:depositInfo.nextTierText
+          nextTierText:depositInfo.nextTierText,
+          isUnlocked:!!(isCert||t.data.isAgent||data.isAdmin)
         });
         wx.setStorageSync('is_certified_store_owner',isCert);
         wx.setStorageSync('certified_style',certStyle);
@@ -259,7 +265,7 @@ Page({
       success:function(r){
         var d=r.data;
         var isAgent=!!(d&&(d.active||d.isAdmin||d.valid));
-        t.setData({isAgent:isAgent});
+        t.setData({isAgent:isAgent,isUnlocked:!!(t.data.isCertified||isAgent||t.data.isAdmin)});
         wx.setStorageSync('is_agent',isAgent);
       },
       fail:function(){}
@@ -301,8 +307,26 @@ Page({
     wx.navigateTo({url:'/pages/tryon-promo/index?from=my'});
   },
   goStyleProfile:function(){wx.navigateTo({url:'/pages/style-profile/index'});},
-  goFashionStylist:function(e){var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});},
-  goBuyerService:function(e){var s=e?e.currentTarget.dataset.service:'buyer_group';wx.navigateTo({url:'/pages/buyer-service/index?service='+s});},
+  /* 会员服务门禁：未认证 → 弹窗引导去免费认证 */
+  guardUnlock:function(){
+    if(this.data.isUnlocked)return true;
+    wx.showModal({
+      title:'会员专享服务',
+      content:'完成免费会员认证后，即可解锁全部 7 项专业服务与 AI 辅助方案。现在去认证？',
+      confirmText:'去认证',
+      cancelText:'稍后',
+      success:function(res){ if(res.confirm){ wx.navigateTo({url:'/pages/certify/index'}); } }
+    });
+    return false;
+  },
+  goFashionStylist:function(e){
+    if(!this.guardUnlock())return;
+    var s=e?e.currentTarget.dataset.service:'outfit';wx.navigateTo({url:'/pages/fashion-stylist/index?service='+s});
+  },
+  goBuyerService:function(e){
+    if(!this.guardUnlock())return;
+    var s=e?e.currentTarget.dataset.service:'buyer_group';wx.navigateTo({url:'/pages/buyer-service/index?service='+s});
+  },
   goBuyerRequest:function(){wx.navigateTo({url:'/pages/buyer-request/index'});},
 
   goNewCustomer:function(){wx.showToast({title:'新客权益开发中',icon:'none'});},
@@ -345,7 +369,9 @@ Page({
           userId:'',
           roleText:'未认证会员',
           avatarUrl:'',
-          isCertified:false
+          isCertified:false,
+          isAgent:false,
+          isUnlocked:false
         });
         wx.showToast({title:'已退出登录',icon:'success'});
       }

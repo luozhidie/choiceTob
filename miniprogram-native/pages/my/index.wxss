@@ -297,6 +297,14 @@ page{background: var(--bg);}
 .sg-label{font-size:22rpx;color:#555;font-weight:500;}
 .sec-sub{font-size:24rpx;color:#888;display:block;margin:-8rpx 0 20rpx;}
 
+/* 会员服务：未认证锁定态 */
+.sg-item{position:relative;}
+.sg-locked .sg-icon{opacity:.45;}
+.sg-locked .sg-label{color:#b0aab5;}
+.sg-lock{position:absolute;top:2rpx;right:14rpx;font-size:20rpx;}
+.sec-lock{font-size:22rpx;color:#C9A24B;font-weight:600;}
+.ai-tool-locked{opacity:.62;}
+
 /* 提交找货需求：独立高亮入口 */
 .buyer-request-bar{display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(135deg,#2d1b2e 0%,#4a2748 100%);
