@@ -36,7 +36,7 @@ Page({
       {key:'now',label:'今日新款'},
       {key:'all',label:'看订阅风格'},
       {key:'price',label:'销量'},
-      {key:'filter',label:'批发价'},
+      {key:'filter',label:'会员价'},
       {key:'筛',label:'筛选'}
     ],
     styleChips:[],
@@ -100,7 +100,7 @@ Page({
       {key:'now',label:'今日新款'},
       {key:'all',label:'看订阅风格'},
       {key:'price',label:'销量'},
-      {key:'filter',label:'批发价'},
+      {key:'filter',label:'会员价'},
       {key:'筛',label:'筛选'}
     ];
     var raw=(c&&c.newSection&&c.newSection.tabs)||[];
@@ -149,10 +149,10 @@ Page({
               priceText='\u00A5'+(lb%1===0?lb:lb.toFixed(2)); priceHint='已开批量价';
             } else if(lhands>=W_PIECES){
               var lw=lwp>0?lwp:price;
-              priceText='\u00A5'+(lw%1===0?lw:lw.toFixed(2)); priceHint='已开拿货价';
+              priceText='\u00A5'+(lw%1===0?lw:lw.toFixed(2)); priceHint='已开会员价';
             } else {
               var lteaser=lwp>0?lwp:price;
-              if(lteaser>0){ var ls=String(lteaser); var lmask=new Array(Math.max(0,ls.length-1)+1).join('?'); priceText='\u00A5'+lmask+ls.slice(-1); priceHint='再集'+(W_PIECES-lhands)+'件开拿货价'; }
+              if(lteaser>0){ var ls=String(lteaser); var lmask=new Array(Math.max(0,ls.length-1)+1).join('?'); priceText='\u00A5'+lmask+ls.slice(-1); priceHint='再集'+(W_PIECES-lhands)+'件开会员价'; }
               else { priceText='价格待定'; priceHint='盲盒集单'; }
             }
           }
@@ -201,7 +201,7 @@ Page({
       // 销量：按销量降序
       list.sort(function(a,b){return (b.sales||0)-(a.sales||0);});
     } else if(tab==='filter'){
-      // 批发价：按拿货价升序（拿货价为空排末尾）
+      // 会员价：按会员价升序（会员价为空排末尾）
       list.sort(function(a,b){
         var wa=Number(a.wholesale_price)||0, wb=Number(b.wholesale_price)||0;
         if(wa===0&&wb===0) return 0;
@@ -270,7 +270,7 @@ Page({
     var fb=t.selectComponent('#lcFilter');
     if(fb && fb.openFilter){ fb.openFilter(); return; }
     wx.showActionSheet({
-      itemList:['新品优先','销量优先','批发价 低→高','批发价 高→低'],
+      itemList:['新品优先','销量优先','会员价 低→高','会员价 高→低'],
       success:function(res){
         var map=['newest','price','filter_asc','filter_desc'];
         t.applyFilterMode(map[res.tapIndex]);

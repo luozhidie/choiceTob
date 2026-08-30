@@ -44,7 +44,7 @@ Page({
         });
       }
     }else{
-      /* 格式化价格：会员（含认证店主）按批发价，否则零售价 */
+      /* 格式化价格：会员（含认证会员）按批发价，否则零售价 */
       var isPM = !!(app && app.globalData && app.globalData.isPriceMember) || !!wx.getStorageSync('is_certified_store_owner');
       items.forEach(function(i){
         var rp=Number(i.price)||0;

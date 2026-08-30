@@ -183,7 +183,7 @@ function buildFromConfig(cfg){
 
 /* 默认分类筛选配置（用于商品列表视图） */
 var DEFAULT_FILTER_CONFIG = {
-  sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'批发价'}],
+  sorts:[{key:'default',label:'综合'},{key:'sales',label:'销量'},{key:'newest',label:'上新'},{key:'price_asc',label:'会员价'}],
   quickFilters:[
     {key:'subscribed_stall',label:'订阅的风格',type:'toggle'},
     {key:'is_special',label:'特价',type:'toggle'},
@@ -555,10 +555,10 @@ Page({
         } else if(hands>=W_PIECES){
           var wShown=wp>0?wp:n;
           p.priceText='\u00A5'+(wShown%1===0?wShown:wShown.toFixed(2));
-          p.priceHint='已开拿货价';
+          p.priceHint='已开会员价';
         } else {
           var teaser=wp>0?wp:n;
-          if(teaser>0){ p.priceText=maskPrice(teaser); p.priceHint='再集'+(W_PIECES-hands)+'件开拿货价'; }
+          if(teaser>0){ p.priceText=maskPrice(teaser); p.priceHint='再集'+(W_PIECES-hands)+'件开会员价'; }
           else { p.priceText='价格待定'; p.priceHint='盲盒集单'; }
         }
         p.wholesalePriceText='';

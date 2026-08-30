@@ -267,7 +267,7 @@
   <view wx:if="{{canvasUrl}}" class="card" style="margin-top:12rpx;">
     <text class="pbtn" style="display:block;text-align:center;background:#C9A24B;color:#1c111d;padding:20rpx 0;border-radius:10rpx;" bindtap="saveResult">保存 / 查看最终造型大图</text>
     <text wx:if="{{stack.length>0}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="genCard">生成搭配卡片 / 分享给客户 ›</text>
-    <text wx:if="{{fromAgent && referralCode}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="goAgentShop">喜欢这套？去代理店铺购买 ›</text>
+    <text wx:if="{{fromAgent && referralCode}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="goAgentShop">喜欢这套？去专属店铺购买 ›</text>
   </view>
 
   <!-- 套餐面板 -->

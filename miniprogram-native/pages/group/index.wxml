@@ -1,8 +1,8 @@
 <view class="page">
   <!-- hero -->
   <view class="hero">
-    <view class="hero-title">一手店主官方福利群</view>
-    <view class="hero-sub">秋冬上新预告 · 专属批发价 · 退换额度 · 集财运任务</view>
+    <view class="hero-title">一手会员官方福利群</view>
+    <view class="hero-sub">秋冬上新预告 · 专属会员价 · 退换额度 · 集财运任务</view>
   </view>
 
   <!-- 二维码 -->

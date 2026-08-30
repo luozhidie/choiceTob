@@ -96,11 +96,11 @@
       </view>
     </scroll-view>
 
-    <!-- 认证店主入口 -->
+    <!-- 认证会员入口 -->
     <view class="cert-banner" wx:if="{{!isPriceMember}}" bindtap="goCertify">
       <text class="cb-icon">🛡️</text>
       <view class="cb-body">
-        <text class="cb-title">认证店主，免费看批发价</text>
+        <text class="cb-title">认证会员，免费看会员价</text>
         <text class="cb-desc">通过行业知识答题即可解锁</text>
       </view>
       <text class="cb-btn">去认证 →</text>
@@ -129,7 +129,7 @@
             <text class="cpri">{{item.priceText}}</text>
             <text class="cpri-hint" wx:if="{{item.priceHint}}">{{item.priceHint}}</text>
           </view>
-          <text class="cwpri" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
+          <text class="cwpri" wx:if="{{item.wholesalePriceText}}">会员价 {{item.wholesalePriceText}}</text>
           <view class="cbtn" catchtap="addToCart" data-product="{{item}}"><text>+加购</text></view>
         </view>
       </view>

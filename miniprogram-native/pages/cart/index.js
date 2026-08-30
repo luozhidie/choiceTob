@@ -87,7 +87,7 @@ Page({
     cart.forEach(function(item) {
       if (item.checked === undefined) item.checked = false;
       if (!item.quantity) item.quantity = 1;
-      /* 会员（含认证店主）按批发价展示，否则零售价 */
+      /* 会员（含认证会员）按批发价展示，否则零售价 */
       var rp = Number(item.price) || 0;
       var wp = Number(item.wholesale_price) || 0;
       var effCents = (isPriceMember && wp > 0) ? wp : rp;

@@ -12,7 +12,7 @@
     <view class="hero">
       <view class="hero-badge">JOIN AGENT</view>
       <view class="hero-title">成为销售代理</view>
-      <view class="hero-desc">共享时尚产业红利，预存货款拿批发价，邀好友再得返利</view>
+      <view class="hero-desc">共享时尚产业红利，预存货款享会员价，邀好友再得返利</view>
     </view>
 
     <!-- 加盟优势 -->
@@ -21,7 +21,7 @@
       <view class="adv-grid">
         <view class="adv-card"><text class="adv-icon">📈</text><text class="adv-title">数据驱动</text><text class="adv-desc">AI 选品 + 销售预测，降低压货风险</text></view>
         <view class="adv-card"><text class="adv-icon">🎨</text><text class="adv-title">设计支持</text><text class="adv-desc">专业设计团队，季度更新 300+ 款</text></view>
-        <view class="adv-card"><text class="adv-icon">📦</text><text class="adv-title">供应链</text><text class="adv-desc">广州/杭州直采，价格优势明显</text></view>
+        <view class="adv-card"><text class="adv-icon">📦</text><text class="adv-title">直采货源</text><text class="adv-desc">广州/杭州直采，价格优势明显</text></view>
         <view class="adv-card"><text class="adv-icon">🎓</text><text class="adv-title">培训体系</text><text class="adv-desc">从零到专业买手的全链路培训</text></view>
       </view>
     </view>

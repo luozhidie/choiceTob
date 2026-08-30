@@ -4,7 +4,7 @@ Page({
     results: [],
     loading: false,
     history: [],
-    hots: ['穿搭', '护肤', '连衣裙', '拿货', '新品'],
+    hots: ['穿搭', '护肤', '连衣裙', '新品好物', '新品'],
     isPriceMember: false,
   },
 
@@ -49,7 +49,7 @@ Page({
                  (p.title && p.title.toLowerCase().indexOf(k) >= 0) ||
                  (p.description && p.description.toLowerCase().indexOf(k) >= 0);
         });
-        // 格式化价格：会员（含认证店主）显示批发价，非会员显示零售价
+        // 格式化价格：会员（含认证会员）显示会员价，非会员显示零售价
         var isPriceMember = that.data.isPriceMember;
         var results = filtered.map(function (p) {
           var price = Number(p.price) || 0;

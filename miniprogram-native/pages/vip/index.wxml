@@ -3,7 +3,7 @@
   <view class="hero">
     <text class="h-icon">👑</text>
     <text class="h-title">骆芷蝶 · VIP会员</text>
-    <text class="h-desc">企划定品控方向，供应链稳货源</text>
+    <text class="h-desc">企划定品控方向，严选稳货源</text>
   </view>
 
   <!-- 当前会员状态 -->
@@ -15,38 +15,61 @@
     <view class="sc-badge">✓ 已开通</view>
   </view>
 
-  <!-- ═════ 充值解锁引导（折扣+退换额度） ══════ -->
+  <!-- ═════ 两条代理赛道 ══════ -->
   <view class="guide-section">
-    <text class="guide-title">充值解锁拿货折扣 + 退换额度</text>
-    <text class="guide-sub">认证店主可先看批发价；折扣与退换额度需一次性充值对应档位</text>
+    <text class="guide-title">两种会员方式</text>
+    <text class="guide-sub">认证会员可先看会员价；会员折扣与退换额度按所选赛道生效</text>
     <view class="guide-cards">
-      <!-- 直接充值（付费赛道） -->
-      <view class="gc-card gc-pay" bindtap="scrollToDeposit">
+      <!-- 998 虚拟试衣会员（新·低门槛） -->
+      <view class="gc-card gc-pay" bindtap="buyTryonAgent">
+        <view class="gc-icon"><text>试</text></view>
+        <text class="gc-name">虚拟试衣会员</text>
+        <text class="gc-sub">¥998 专业版 · 无需预存货款</text>
+        <view class="gc-features">
+          <text class="gc-f">✓ 单件发货 3.3 折</text><text class="gc-f">✓ 满 5 件 2.8 折</text><text class="gc-f">✓ 赠 100 次专业版</text>
+        </view>
+        <view class="gc-btn gc-btn-main">立即开通 ↓</view>
+      </view>
+      <!-- 直接充值（旧·预存货款） -->
+      <view class="gc-card gc-pay" bindtap="scrollToDeposit" style="margin-top:16rpx;background:rgba(201,162,75,.08);">
         <view class="gc-icon"><text>充</text></view>
-        <text class="gc-name">直接充值解锁</text>
+        <text class="gc-name">预存货款会员</text>
         <text class="gc-sub">充值即同时享折扣+退换额度</text>
         <view class="gc-features">
-          <text class="gc-f">✓ 退换额度</text><text class="gc-f">✓ 拿货折扣</text><text class="gc-f">✓ 优先发货</text>
+          <text class="gc-f">✓ 退换额度</text><text class="gc-f">✓ 会员折扣</text><text class="gc-f">✓ 优先发货</text>
         </view>
         <view class="gc-btn gc-btn-main">选套餐 ↓</view>
       </view>
     </view>
   </view>
 
-  <!-- 拿货升级进度（锚点 id="deposit"） -->
+  <!-- 会员升级进度（锚点 id="deposit"） -->
   <view id="deposit" class="plans">
     <!-- 代理中心入口 -->
     <view class="agent-center-card {{isAgent?'ace-active':''}}" bindtap="goAgentCenter">
       <view class="ace-left">
         <text class="ace-tag">AGENT</text>
-        <text class="ace-title">代理中心</text>
-        <text class="ace-desc">{{isAgent?'已开通代理店铺 · 设对客价 · 分享试衣卖货':'充值后自动开通代理店铺，设置卖价卖货赚差价'}}</text>
+        <text class="ace-title">权益中心</text>
+        <text class="ace-desc">{{isAgent?'已开通会员店铺 · 享专属价 · 分享搭配':'购买 ¥998 专业版或充值货款，即可开通会员店铺享专属价'}}</text>
       </view>
       <view class="ace-btn">{{isAgent?'进入 ›':'去开通 ›'}}</view>
     </view>
 
+    <!-- 998 虚拟试衣会员套餐 -->
+    <view class="deposit-header"><text class="dh-title">虚拟试衣会员</text><text class="dh-sub">¥998 开通 · 无需预存</text></view>
+    <view class="plan-card pc-hl" wx:if="{{tryonAgentPlan}}">
+      <view class="pc-tag">推荐</view>
+      <text class="pc-name">{{tryonAgentPlan.name}}</text>
+      <text class="pc-price">{{tryonAgentPlan.priceLabel}}</text>
+      <text class="pc-desc">{{tryonAgentPlan.discountLabel}}</text>
+      <view class="pc-features">
+        <text class="pc-f" wx:for="{{tryonAgentPlan.features}}" wx:key="*this" wx:for-item="feat">✓ {{feat}}</text>
+      </view>
+      <view class="pc-btn" bindtap="buyTryonAgent">立即开通</view>
+    </view>
+
     <!-- 充值会员套餐 -->
-    <view class="deposit-header"><text class="dh-title">充值会员套餐</text><text class="dh-sub">充值即得 折扣权 + 退换额度</text></view>
+    <view class="deposit-header" style="margin-top:24rpx;"><text class="dh-title">充值会员套餐</text><text class="dh-sub">充值即得 折扣权 + 退换额度</text></view>
 
     <view class="plan-card {{item.highlight?'pc-hl':''}}" wx:for="{{depositPlans}}" wx:key="id">
       <view class="pc-tag" wx:if="{{item.highlight}}">推荐</view>

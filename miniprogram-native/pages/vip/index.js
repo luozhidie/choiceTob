@@ -6,13 +6,16 @@ Page({
     isMember:false,
     memberLabel:'',
     expireDate:'',
-    /* 充值会员套餐（唯一赛道）*/
+    /* 充值会员套餐（预存货款赛道）*/
     depositPlans:[
-      {id:'wholesale_6k',name:'拿货会员·首充6000',priceLabel:'充值 ¥6,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','无退换额度','小批量试拿货'],highlight:false},
-      {id:'wholesale_5w',name:'充值会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度5%','优先发货权'],highlight:false},
-      {id:'wholesale_10w',name:'充值会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起批','拿货折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
-      {id:'wholesale_30w',name:'充值会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起批','拿货折扣2.6折','退换额度20%','优先发货权','专属配货师','账期支持30天'],highlight:true},
+      {id:'wholesale_6k',name:'会员·首充6000',priceLabel:'充值 ¥6,000',discountLabel:'2.8折',features:['同色同款三件起购','会员折扣2.8折','无退换额度','小批量试购'],highlight:false},
+      {id:'wholesale_5w',name:'充值会员·5万',priceLabel:'充值 ¥50,000',discountLabel:'2.8折',features:['同色同款三件起购','会员折扣2.8折','退换额度5%','优先发货权'],highlight:false},
+      {id:'wholesale_10w',name:'充值会员·10万',priceLabel:'充值 ¥100,000',discountLabel:'2.8折',features:['同色同款三件起购','会员折扣2.8折','退换额度10%','优先发货权','专属配货师'],highlight:true},
+      {id:'wholesale_30w',name:'充值会员·30万',priceLabel:'充值 ¥300,000',discountLabel:'2.6折',features:['同色同款三件起购','会员折扣2.6折','退换额度20%','优先发货权','专属配货师','专属服务支持'],highlight:true},
     ],
+    /* 998 虚拟试衣会员入口 */
+    tryonAgentPlan:{id:'tryon_pro_998',name:'虚拟试衣会员·¥998',priceLabel:'购买 ¥998',discountLabel:'3.3折起',features:['单件3.3折','满5件2.8折','赠专业版100次','无需预存'],highlight:true},
+    showTryonAgent:true,
     showPay:false,
     selectedPlan:null,
     /* 代理中心 */
@@ -132,6 +135,11 @@ Page({
   },
 
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
+
+  /* 998 虚拟试衣会员：跳转云衣橱专业版购买页 */
+  buyTryonAgent:function(){
+    wx.navigateTo({ url: '/pages/look-studio/index?promo=1' });
+  },
 
   confirmPay:function(){
     var plan=this.data.selectedPlan;

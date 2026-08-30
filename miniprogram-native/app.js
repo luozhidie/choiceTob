@@ -3,7 +3,7 @@ App({
     userInfo: null,
     isVip: false,
     isPriceMember: false,       // 价格会员（可查看批发价）
-    isCertifiedStoreOwner: false, // 认证店主
+    isCertifiedStoreOwner: false, // 认证会员
     isAdmin: false,             // 管理员预览模式（控制灰度功能是否可见）
   },
 
@@ -61,7 +61,7 @@ App({
     if (isPriceMember === true) {
       this.globalData.isPriceMember = true;
     }
-    // 恢复认证店主状态
+    // 恢复认证会员状态
     var isCertified = wx.getStorageSync('is_certified_store_owner');
     if (isCertified === true) {
       this.globalData.isCertifiedStoreOwner = true;

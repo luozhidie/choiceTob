@@ -11,7 +11,7 @@ var DEFAULT_FILTER_CONFIG = {
     { key: 'default', label: '综合' },
     { key: 'sales', label: '销量' },
     { key: 'newest', label: '上新' },
-    { key: 'price_asc', label: '批发价' }
+    { key: 'price_asc', label: '会员价' }
   ],
   quickFilters: [
     { key: 'subscribed_stall', label: '订阅的风格', type: 'toggle' },

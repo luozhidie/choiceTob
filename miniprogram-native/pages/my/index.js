@@ -5,7 +5,7 @@ var sub = require('../../utils/stallSubscribe.js');
 
 /* 未认证时显示的引导权益（同行截图1）*/
 var CERT_BENEFITS=[
-  {icon:'价',title:'批发价拿货'},
+  {icon:'价',title:'会员价选购'},
   {icon:'退',title:'无理由退'},
   {icon:'券',title:'运费券'},
   {icon:'新',title:'新款先看'}
@@ -21,7 +21,7 @@ var RECHARGE_TIERS=[
 
 /* 一次性充值档位（用于进度条） */
 var DEPOSIT_TIERS=[
-  {amount:998,text:'¥998 专业版 · 做代理 · 一件代发 3.3 折'},
+  {amount:998,text:'¥998 专业版 · 单件 3.3 折'},
   {amount:50000,text:'充 ¥50,000 可享 2.8折 + 退换5%'},
   {amount:100000,text:'充 ¥100,000 可享 2.8折 + 退换10%'},
   {amount:300000,text:'充 ¥300,000 可享 2.6折 + 退换20%'}
@@ -170,7 +170,7 @@ Page({
       t.setData({
         isLoggedIn:true,
         userId:ui.nickName||ui.openid||'用户',
-        roleText:isCert?'已认证店主':'未认证店主',
+        roleText:isCert?'已认证会员':'未认证会员',
         avatarUrl:ui.avatarUrl||'',
         isCertified:isCert,
         certifiedStyle:certStyle
@@ -233,7 +233,7 @@ Page({
           isAdmin:!!data.isAdmin,
           isCertified:isCert,
           certifiedStyle:certStyle,
-          roleText:isCert?'已认证店主':'未认证店主',
+          roleText:isCert?'已认证会员':'未认证会员',
           depositAmountStr:depositInfo.depositAmountStr,
           depositProgress:depositInfo.depositProgress,
           nextTierText:depositInfo.nextTierText
@@ -343,7 +343,7 @@ Page({
         t.setData({
           isLoggedIn:false,
           userId:'',
-          roleText:'未认证店主',
+          roleText:'未认证会员',
           avatarUrl:'',
           isCertified:false
         });
@@ -353,8 +353,8 @@ Page({
   },
 
   goRules:function(){wx.showModal({
-    title:'拿货会员权益规则',
-    content:'【认证店主·免费】认证后即解锁全部商品批发价查看权。\n\n【虚拟试衣代理·¥998】购买专业版 ¥998 即成为永久代理，无需预存货款：\n· 单件代发：3.3 折\n· 单笔满 5 件：2.8 折\n· 无退换额度\n\n【充值解锁·付费】一次性充值货款，同时获得拿货折扣 + 退换额度：\n· 首充¥6,000：拿货2.8折\n· 充¥50,000：拿货2.8折 + 退换5%\n· 充¥100,000：拿货2.8折 + 退换10%\n· 充¥300,000：拿货2.6折 + 退换20%\n\n退换额度在退货时按档位自动抵扣。',
+    title:'会员权益规则',
+    content:'【认证会员·免费】认证后即解锁全部商品会员价查看权。\n\n【虚拟试衣代理·¥998】购买专业版 ¥998 即成为永久代理，无需预存货款：\n· 单件代发：3.3 折\n· 单笔满 5 件：2.8 折\n· 无退换额度\n\n【充值解锁·付费】一次性充值货款，同时获得会员折扣 + 退换额度：\n· 首充¥6,000：选购2.8折\n· 充¥50,000：选购2.8折 + 退换5%\n· 充¥100,000：选购2.8折 + 退换10%\n· 充¥300,000：选购2.6折 + 退换20%\n\n退换额度在退货时按档位自动抵扣。',
     showCancel:false,confirmText:'知道了'
   });}
 });

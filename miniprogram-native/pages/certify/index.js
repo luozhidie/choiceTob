@@ -26,7 +26,7 @@ Page({
             '黑白灰极简','马卡龙/糖果色','撞色/对比色','韩系清新','法式优雅','其他'],
     frontPhotoPath:null,   // 门头照 temp path
     interiorPhotoPath:null, // 陈列照 temp path
-    purchaseOrderPath:null,// 拿货单 temp path（必填）
+    purchaseOrderPath:null,// 购物凭证 temp path（必填）
 
     /* ── 经营数据（选填） ── */
     monthlyRent:'',        // 月租金(元)
@@ -108,8 +108,8 @@ Page({
 
   goExtra:function(){
     var d=this.data;
-    if(!d.marketCheck.some(function(v){return v;})){wx.showToast({title:'请至少选择1个拿货市场',icon:'none'});return;}
-    if(d.freqIndex<0){wx.showToast({title:'请选择月均拿货频次',icon:'none'});return;}
+    if(!d.marketCheck.some(function(v){return v;})){wx.showToast({title:'请至少选择1个采购渠道',icon:'none'});return;}
+    if(d.freqIndex<0){wx.showToast({title:'请选择月均采购频次',icon:'none'});return;}
     if(!d.categoryCheck.some(function(v){return v;})){wx.showToast({title:'请至少选择1个主营品类',icon:'none'});return;}
     if(!d.styleCheck.some(function(v){return v;})){wx.showToast({title:'请至少选择1个风格偏好',icon:'none'});return;}
     if(d.priceIndex<0){wx.showToast({title:'请选择价格带',icon:'none'});return;}
@@ -175,12 +175,12 @@ Page({
     if(d.colorIndex<0){t.setData({submitting:false});wx.showToast({title:'请选择店铺主要色系',icon:'none'});return;}
     if(!d.frontPhotoPath){t.setData({submitting:false});wx.showToast({title:'请上传店铺门头照',icon:'none'});return;}
     if(!d.interiorPhotoPath){t.setData({submitting:false});wx.showToast({title:'请上传店内陈列照',icon:'none'});return;}
-    if(!d.purchaseOrderPath){t.setData({submitting:false});wx.showToast({title:'请上传拿货单',icon:'none'});return;}
+    if(!d.purchaseOrderPath){t.setData({submitting:false});wx.showToast({title:'请上传购物凭证',icon:'none'});return;}
 
     var token=wx.getStorageSync('token');
     if(!token){t.setData({submitting:false,needLogin:true});return;}
 
-    // 图片转 base64（门头照 + 陈列照 + 拿货单）
+    // 图片转 base64（门头照 + 陈列照 + 购物凭证）
     wx.showLoading({title:'正在提交...'});
     Promise.all([
       new Promise(function(resolve){wx.getFileSystemManager().readFile({
@@ -232,7 +232,7 @@ Page({
           notes:d.notes||null,
           front_photo_base64:imgResults[0],     // 门头照
           interior_photo_base64:imgResults[1],  // 陈列照
-          purchase_order_base64:imgResults[2],  // 拿货单
+          purchase_order_base64:imgResults[2],  // 购物凭证
           /* 经营数据（选填，有值才传） */
           monthly_rent:d.monthlyRent?Number(d.monthlyRent):null,
           break_even_point:d.breakEven?Number(d.breakEven):null,
@@ -267,7 +267,7 @@ Page({
           var app=getApp();
           if(app&&app.globalData)app.globalData.isCertifiedStoreOwner=true;
           t.setData({step:'done'});
-          wx.showToast({title:'认证成功！已开启批发价',icon:'success',duration:2000});
+          wx.showToast({title:'认证成功！已开启会员价',icon:'success',duration:2000});
         },
         fail:function(){
           wx.hideLoading();

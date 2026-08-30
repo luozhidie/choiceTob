@@ -3,13 +3,13 @@
   <view class="brand">
     <view class="logo">骆</view>
     <view class="b-name">骆芷蝶智选</view>
-    <view class="b-sub">女装供应链数字化选品平台</view>
+    <view class="b-sub">女装选品与搭配平台</view>
     <view class="b-ver">版本：{{version}}</view>
   </view>
 
   <!-- 平台介绍 -->
   <view class="card intro">
-    <view class="intro-p">骆芷蝶智选是一家专注于女装批发供应链的数字化选品平台，整合全国优质服装产业带资源，为全球实体店主、买手、电商卖家提供高品质、高性价比的女装货源与专业搭配服务。</view>
+    <view class="intro-p">骆芷蝶智选是一家专注于女装选品与搭配的数字化平台，整合全国优质服装产业带资源，为用户提供高品质、高性价比的女装好物与专业搭配服务。</view>
     <view class="intro-p">平台融合色彩季型理论与个人风格诊断，通过 AI 搭配、商品企划、心愿单聚合等创新工具，帮助用户精准选品、降低库存风险、提升终端销售转化。</view>
   </view>
 

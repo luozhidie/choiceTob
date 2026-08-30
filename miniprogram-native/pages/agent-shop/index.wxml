@@ -48,7 +48,7 @@ module.exports = {
       </view>
     </view>
 
-    <view class="tip">价格由代理设定，下单即归于该代理店铺</view>
+    <view class="tip">价格由店铺设定</view>
     <view class="sbtm"></view>
   </block>
 

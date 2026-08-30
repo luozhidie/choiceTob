@@ -10,7 +10,7 @@
 
     <!-- 大标题 + 副标题 -->
     <view class="header-titles">
-      <text class="ht-big">骆芷蝶·智选|供应链平台</text>
+      <text class="ht-big">骆芷蝶·智选｜品质女装</text>
       <text class="ht-sub">服装门店一站式赋能平台</text>
     </view>
 
@@ -266,7 +266,7 @@
                       <view class="spec-banner-tag">{{specMap[item.id].banner.tag||'限时采购'}}</view>
                       <view class="spec-banner-title">{{specMap[item.id].banner.headline||'SALE'}}</view>
                       <view class="spec-banner-sub">{{specMap[item.id].banner.subheadline||'季末·特价捡漏'}}</view>
-                      <view class="spec-banner-desc">{{specMap[item.id].banner.descriptor||'全国批发市场 · 优质大牌'}}</view>
+                      <view class="spec-banner-desc">{{specMap[item.id].banner.descriptor||'全国优选货源 · 品质好货'}}</view>
                     </view>
                   </view>
                   <view class="spec-tabs">
@@ -400,7 +400,7 @@
       <view wx:if="{{products.length===0}}" class="empty">
         <text class="ei">📦</text>
         <text class="et">该分类暂无选品</text>
-        <view class="eb" bindtap="goBuyer"><text>去拿货拼单 →</text></view>
+        <view class="eb" bindtap="goBuyer"><text>去选购拼单 →</text></view>
       </view>
 
       <!-- 列表 -->
@@ -415,7 +415,7 @@
           <view class="cnf">
             <text class="cnm">{{item.name||item.title||'商品'}}</text>
             <text class="cnp">{{item.priceText}}</text>
-            <text class="cwp" wx:if="{{item.wholesalePriceText}}">批发价 {{item.wholesalePriceText}}</text>
+            <text class="cwp" wx:if="{{item.wholesalePriceText}}">会员价 {{item.wholesalePriceText}}</text>
             <view class="cbn">下单</view>
           </view>
         </view>
@@ -428,7 +428,7 @@
     <view class="cbx">
       <view class="cbg"></view>
       <view class="cin">
-        <text class="ctt">爆款选品 · 拿货精选</text>
+        <text class="ctt">爆款推荐 · 精选好物</text>
         <text class="cts">骆芷蝶智选 · 专业推荐</text>
         <view class="cr">
           <view class="c1" bindtap="goBuyer"><text>全部商品</text></view>

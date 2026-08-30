@@ -197,7 +197,7 @@ Page({
               tag:ct.tag||'限时采购',
               headline:ct.headline||'SALE',
               subheadline:ct.subheadline||'季末·特价捡漏',
-              descriptor:ct.descriptor||'全国批发市场 · 优质大牌',
+              descriptor:ct.descriptor||'全国会员市场 · 优质大牌',
               link:ct.link||'#',
               shelfId:ct.shelfId||''
             };
@@ -421,7 +421,7 @@ Page({
             p.wholesalePriceText='';
           } else {
             p.priceText='\u00A5'+(price%1===0?price:price.toFixed(2));
-            if(wp>0)p.wholesalePriceText='批发价 \u00A5???';
+            if(wp>0)p.wholesalePriceText='会员价 \u00A5???';
             else p.wholesalePriceText='';
           }
           p.is_hot=p.is_hot||false;p.is_new=p.is_new||false;

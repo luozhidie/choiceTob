@@ -23,7 +23,7 @@ module.exports = {
   <view wx:elif="{{notAgent}}" class="empty">
     <text class="empty-emoji">🔒</text>
     <text class="empty-title">代理中心暂未开放</text>
-    <text class="empty-desc">本平台为服装批发供货，预存货款拿一手批发价、自设卖价转售赚差价。请先充值预存货款开通代理权限。</text>
+    <text class="empty-desc">本平台为服装供货，预存货款享一手会员价、自设卖价转售赚差价。请先充值预存货款开通代理权限。</text>
     <view class="btn-primary" bindtap="goVipDeposit">去充值预存货款开通</view>
   </view>
 
@@ -47,14 +47,14 @@ module.exports = {
           <view class="hero-meta">
             <text class="hero-name">{{storeName || fullName || '代理'}}</text>
             <view class="hero-tags">
-              <text wx:if="{{isCertified}}" class="tag tag-gold">认证店主</text>
+              <text wx:if="{{isCertified}}" class="tag tag-gold">认证会员</text>
               <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款代理</text>
               <text wx:if="{{isAdmin}}" class="tag tag-admin">管理员</text>
             </view>
           </view>
         </view>
         <view class="hero-stats">
-          <view class="hs"><text class="hs-num">{{f.discount(discountRate)}}</text><text class="hs-label">拿货折扣</text></view>
+          <view class="hs"><text class="hs-num">{{f.discount(discountRate)}}</text><text class="hs-label">会员折扣</text></view>
           <view class="hs"><text class="hs-num">{{f.rate(returnRate)}}</text><text class="hs-label">退换额度</text></view>
           <view class="hs"><text class="hs-num">¥{{f.yuan(depositAmount)}}</text><text class="hs-label">预存货款</text></view>
         </view>
@@ -62,7 +62,7 @@ module.exports = {
 
       <!-- 批发供货号 + 核心动作 -->
       <view class="card">
-        <view class="card-title">我的批发供货号</view>
+        <view class="card-title">我的专属供货号</view>
         <view class="code-row">
           <text class="code-text">{{inviteCode || '—'}}</text>
           <view class="code-copy" bindtap="copyCode">复制</view>
@@ -72,7 +72,7 @@ module.exports = {
           <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
           <button class="btn-share btn-tryon" open-type="share" data-share="tryon">分享试衣</button>
         </view>
-        <text class="code-tip">客户通过你的供货号进入，按批发价直接下单，你的拿货差价自动入账</text>
+        <text class="code-tip">客户通过你的供货号进入，按会员价直接下单，你的差价自动入账</text>
       </view>
 
       <!-- 业绩 -->
@@ -103,7 +103,7 @@ module.exports = {
             <text class="step-num">3</text>
             <view>
               <text class="step-t">差价自动入账</text>
-              <text class="step-d">客户付款后，你的拿货差价进入可提现余额</text>
+              <text class="step-d">客户付款后，你的差价进入可提现余额</text>
             </view>
           </view>
           <view class="btn-ghost" style="margin-top:20rpx;" bindtap="switchTab" data-tab="material">去挑素材 ›</view>
@@ -149,7 +149,7 @@ module.exports = {
       <!-- 十二位核心客户：每个色彩季型绑定一位（可折叠） -->
       <view class="card">
         <view class="card-title">我的十二位核心客户<text class="card-sub">十二季型各绑定一位</text></view>
-        <text class="style-tip">每位店主/代理维护 12 位分别对应十二个色彩季型的核心客户，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
+        <text class="style-tip">每位会员/代理维护 12 位分别对应十二个色彩季型的核心客户，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
         <view class="mat-parent-bar core-parent-bar">
           <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedCoreGroup===item?'on':''}}" bindtap="expandCoreGroup" data-group="{{item}}">{{item}}</view>
         </view>
@@ -226,7 +226,7 @@ module.exports = {
           <text class="ps-item">冻结中：¥{{f.yuan(frozenBalance)}}</text>
           <text class="ps-item ps-tip">发货后转可提现</text>
         </view>
-        <text class="profit-tip">佣金 = 客户付款 − 你的拿货成本，仅佣金可提现，预存货款不可提现</text>
+        <text class="profit-tip">佣金 = 客户付款 − 你的成本，仅佣金可提现，预存货款不可提现</text>
       </view>
 
       <!-- 资金概览 -->
@@ -254,7 +254,7 @@ module.exports = {
 
       <!-- 自定义卖价 -->
       <view class="card">
-        <view class="card-title">商品对客卖价<text class="card-sub">客户看不到批发价</text></view>
+        <view class="card-title">商品对客卖价<text class="card-sub">客户看不到会员价</text></view>
         <view wx:if="{{priceList.length===0}}" class="list-empty">暂无商品</view>
         <view wx:for="{{priceList}}" wx:key="product_id" class="price-item">
           <image class="pi-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
@@ -369,7 +369,7 @@ module.exports = {
       </view>
       <view wx:if="{{salesList.length===0}}" class="list-empty-box">
         <text class="list-empty">暂无收益明细</text>
-        <text class="list-empty-desc">客户付款后，你的拿货差价会在这里显示</text>
+        <text class="list-empty-desc">客户付款后，你的差价会在这里显示</text>
         <view class="btn-ghost" bindtap="enterWarehouse">去选品发给客户 ›</view>
       </view>
       <view wx:for="{{salesList}}" wx:key="order_no" class="sale-card">

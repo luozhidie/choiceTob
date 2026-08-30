@@ -1,7 +1,7 @@
 <view class="page">
   <view class="hd">
     <text class="ht">{{mode==='login'?'其它方式登录':'注册新账号'}}</text>
-    <text class="hs">{{mode==='login'?'使用邮箱密码登录':'创建账号后查看批发价与会员权益'}}</text>
+    <text class="hs">{{mode==='login'?'使用邮箱密码登录':'创建账号后查看会员价与会员权益'}}</text>
   </view>
 
   <view class="card">

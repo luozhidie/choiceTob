@@ -3,31 +3,31 @@ var app = getApp();
 // 会员等级 → 展示（与网页 MEMBER_TIERS 对应）
 var MEMBER_MAP = {
   none: null,
-  view_price: { icon: '👁️', label: '价格会员', desc: '已开通，可查看全部商品批发价' },
-  deposit_discount: { icon: '📦', label: '拿货会员', desc: '已开通，充值即享拿货折扣' },
+  view_price: { icon: '👁️', label: '价格会员', desc: '已开通，可查看全部商品会员价' },
+  deposit_discount: { icon: '📦', label: '会员', desc: '已开通，充值即享会员折扣' },
   basic: { icon: '⭐', label: '基础VIP', desc: '商品享9折' },
   pro: { icon: '💜', label: '进阶VIP', desc: '商品享8折 + 5%返利' },
   premium: { icon: '👑', label: '高阶VIP', desc: '商品享7折 + 8%返利' },
-  wholesale_5w: { icon: '📦', label: '拿货会员·充5万', desc: '2.8折拿货 · 退换5%' },
-  wholesale_10w: { icon: '📦', label: '拿货会员·充10万', desc: '2.8折拿货 · 退换10%' },
-  wholesale_30w: { icon: '📦', label: '拿货会员·充30万', desc: '2.6折拿货 · 退换20%' },
-  price_trial: { icon: '👁️', label: '价格会员·体验', desc: '14天查看批发价' },
-  price_1y: { icon: '👁️', label: '价格会员·年卡', desc: '查看批发价' },
-  price_2y: { icon: '👁️', label: '价格会员·两年卡', desc: '查看批发价' },
-  price_3y: { icon: '👁️', label: '价格会员·三年卡', desc: '查看批发价' },
+  wholesale_5w: { icon: '📦', label: '会员·充5万', desc: '2.8折选购 · 退换5%' },
+  wholesale_10w: { icon: '📦', label: '会员·充10万', desc: '2.8折选购 · 退换10%' },
+  wholesale_30w: { icon: '📦', label: '会员·充30万', desc: '2.6折选购 · 退换20%' },
+  price_trial: { icon: '👁️', label: '价格会员·体验', desc: '14天查看会员价' },
+  price_1y: { icon: '👁️', label: '价格会员·年卡', desc: '查看会员价' },
+  price_2y: { icon: '👁️', label: '价格会员·两年卡', desc: '查看会员价' },
+  price_3y: { icon: '👁️', label: '价格会员·三年卡', desc: '查看会员价' },
 };
 
-// 拿货指南 / 技巧（与网页一致）
+// 选购指南 / 技巧（与网页一致）
 var WHOLESALE_GUIDE = [
-  { title: '起批规则', desc: '同色同款 3 件起批，支持多色混批；拿货会员享 2.8 折专属拿货价。' },
+  { title: '购买规则', desc: '同色同款 3 件起购，支持多色混搭；会员享 2.8 折专属会员价。' },
   { title: '发货时效', desc: '现货 48 小时内发出，预售款按商品页标注天数发货；急单可联系客服备注。' },
   { title: '退换政策', desc: '非质量问题 7 天内可退换（吊牌完好、未水洗），质量问题运费由本店承担。' },
   { title: '物流与运费', desc: '默认发顺丰/京东，满额包邮；偏远地区补差价，大货可走物流专线。' },
 ];
 var WHOLESALE_TIPS = [
   { title: '选码技巧', desc: '版型偏大一码可拍小一码；模特身高 168 穿 M，微胖建议选 L。' },
-  { title: '拿货节奏', desc: '应季款提前 2-3 周上新拿货，换季清仓价最优但尺码易缺。' },
-  { title: '搭配拿货提升连带', desc: '按「一品三搭」思路同批次拿：上装+下装+配饰，客单价更高。' },
+  { title: '选购节奏', desc: '应季款提前 2-3 周上新选购，换季清仓价最优但尺码易缺。' },
+  { title: '搭配选购提升连带', desc: '按「一品三搭」思路同批次拿：上装+下装+配饰，客单价更高。' },
   { title: '质量把控', desc: '到货先抽检车工/走线/印花；首单小批量测款，数据好再追大货。' },
 ];
 
@@ -54,22 +54,22 @@ function wishPriceInfo(p, now) {
       shown = bulk > 0 ? bulk : (wholesale > 0 ? wholesale : yuan);
       priceText = shown > 0 ? ('¥' + shown) : '价格待定';
       tierLabel = '已开批量价';
-      progressText = '已达批量价 · 继续集单店主再让利';
+      progressText = '已达批量价 · 继续集单会员再让利';
     } else if (hands >= W_PIECES) {
       tier = 'wholesale';
       shown = wholesale > 0 ? wholesale : yuan;
       priceText = shown > 0 ? ('¥' + shown) : '价格待定';
-      tierLabel = '已开拿货价';
+      tierLabel = '已开会员价';
       progressText = '再集 ' + (B_PIECES - hands) + ' 件开批量价';
     } else {
       tier = 'blind';
       shown = teaser;
       if (teaser > 0) {
         priceText = maskPrice(teaser);
-        progressText = '再集 ' + (W_PIECES - hands) + ' 件开拿货价';
+        progressText = '再集 ' + (W_PIECES - hands) + ' 件开会员价';
       } else {
         priceText = '价格待定·盲盒集单';
-        progressText = '集齐 ' + W_PIECES + ' 件店主去拿货开价';
+        progressText = '集齐 ' + W_PIECES + ' 件会员去选购开价';
       }
     }
     return {
@@ -143,7 +143,7 @@ Page({
     // 相似推荐
     similarList: [],
     // 1:1 一手增强
-    estPriceText: '',          // 动力预估价（拿货会员价）
+    estPriceText: '',          // 动力预估价（会员价）
     tagList: [],               // 商品标签：会员 / 货源 / 新品 / 自定义
     sizeOptions: [],           // 可选尺码
     colorOptions: [],          // 可选颜色
@@ -235,7 +235,7 @@ Page({
         if (ori >= 100) ori = Math.round(ori / 100);
         var disc = '';
         if (ori > 0 && price > 0) disc = '省¥' + (ori - price);
-        /* 批发价（分单位，需/100展示） */
+        /* 会员价（分单位，需/100展示） */
         var isPriceMember = t.data.isPriceMember;
         var wholesaleText = '';
         var wp = Number(p.wholesale_price) || 0;
@@ -247,7 +247,7 @@ Page({
           }
         }
         // 1件起批 / ≥5件价格（用于下单详情弹窗）
-        // 会员（含认证店主）显示批发价；非会员显示零售价
+        // 会员（含认证会员）显示会员价；非会员显示零售价
         var priceValue, bulkPriceValue;
         if (isPriceMember && wp > 0) {
           priceValue = Math.round(wp / 100);
@@ -314,7 +314,7 @@ Page({
           while ((m = re.exec(html)) !== null) { detailImages.push(m[1]); }
         }
         p.detail_images = detailImages;
-        /* 动力预估价（拿货会员价） */
+        /* 动力预估价（会员价） */
         var estText = '';
         if (wp > 0) {
           estText = isPriceMember ? ('¥' + Math.round(wp / 100)) : '开通会员看预估价';
@@ -483,9 +483,9 @@ Page({
     var token = wx.getStorageSync('token') || '';
     var t = this;
     if (!token) {
-      // 未登录但本地已标记认证店主，仍展示会员权益
+      // 未登录但本地已标记认证会员，仍展示会员权益
       if (!!wx.getStorageSync('is_certified_store_owner')) {
-        t.setData({ memberTier: { icon: '👁️', label: '认证店主', desc: '已认证，可查看全部商品批发价' } });
+        t.setData({ memberTier: { icon: '👁️', label: '认证会员', desc: '已认证，可查看全部商品会员价' } });
       } else {
         t.setData({ memberTier: null });
       }
@@ -500,9 +500,9 @@ Page({
         var mt = (d.data && d.data.membershipType) || 'none';
         var isCert = !!(d.data && d.data.storeOwnerCertified);
         var tier = MEMBER_MAP[mt] || null;
-        // 认证店主等同于普通价格会员，展示会员权益
+        // 认证会员等同于普通价格会员，展示会员权益
         if (isCert && !tier) {
-          tier = { icon: '👁️', label: '认证店主', desc: '已认证，可查看全部商品批发价' };
+          tier = { icon: '👁️', label: '认证会员', desc: '已认证，可查看全部商品会员价' };
         }
         t.setData({ memberTier: tier });
       },
@@ -716,7 +716,7 @@ Page({
     var totalQty = 0;
     specs.forEach(function (sp) { totalQty += (sp.qty || 0); });
     if (totalQty <= 0) { wx.showToast({ title: '请选择数量', icon: 'none' }); return; }
-    // 取当前所选单价（分）：套装子项取子项批发价/批量价，普通商品取会员批发价/批量价/零售价
+    // 取当前所选单价（分）：套装子项取子项会员价/批量价，普通商品取会员会员价/批量价/零售价
     var unitCents = t.getUnitCents(totalQty);
     var totalFee = unitCents * totalQty;
     // 规格摘要（款式/颜色/尺码/数量），便于后续订单记录

@@ -1,7 +1,7 @@
 <view class="page">
   <!-- 标题区 -->
   <view class="header">
-    <view class="htitle"><text>📦 预存货款 · 折扣拿货</text></view>
+    <view class="htitle"><text>📦 预存货款 · 折扣选购</text></view>
     <text class="hdesc">预存越多，折扣越低。预存款可用于采购下单，随时退。</text>
   </view>
 
@@ -9,11 +9,11 @@
   <view class="status-bar {{agentStatus.active?'active':''}}">
     <block wx:if="{{agentStatus.active}}">
       <text class="st-main">已激活：预存 ¥{{agentStatus.depositText}}</text>
-      <text class="st-sub">拿货 {{agentStatus.discountText}} 折 · 可退 {{agentStatus.returnText}}%</text>
+      <text class="st-sub">选购 {{agentStatus.discountText}} 折 · 可退 {{agentStatus.returnText}}%</text>
     </block>
     <block wx:else>
       <text class="st-main">未开通预存货款会员</text>
-      <text class="st-sub">充值后即可享受批发折扣价</text>
+      <text class="st-sub">充值后即可享受会员折扣价</text>
     </block>
   </view>
 
@@ -21,7 +21,7 @@
   <view class="agent-center-entry {{agentStatus.active?'ace-active':''}}" bindtap="goAgentCenter">
     <view class="ace-left">
       <text class="ace-title">代理中心</text>
-      <text class="ace-desc">{{agentStatus.active?'已开通代理店铺 · 去设置对客卖价、分享试衣卖货':'充值后自动开通代理店铺，设置卖价卖货赚差价'}}</text>
+      <text class="ace-desc">{{agentStatus.active?'已开通会员店铺 · 去设置专属价、分享搭配':'充值后自动开通会员店铺，享专属价'}}</text>
     </view>
     <view class="ace-btn">{{agentStatus.active?'进入 ›':'去开通 ›'}}</view>
   </view>
@@ -41,7 +41,7 @@
   </view>
 
   <!-- 提示 -->
-  <view class="tip"><text>💡 预存货款仅用于本店拿货，不退现；已享折扣的已消费部分不退。详情请联系客服</text></view>
+  <view class="tip"><text>💡 预存货款仅用于本店选购，不退现；已享折扣的已消费部分不退。详情请联系客服</text></view>
   <view class="contact"><text>如有疑问或需要帮助，请 </text><text class="clink" bindtap="goContact">联系客服</text></view>
 
   <!-- 支付弹窗 -->

@@ -5,7 +5,7 @@ var DEFAULT_TASKS = [
   { key: 'know_activity', label: '平台活动提前知（秋款上新福利）', icon: '📣', type: 'once' },
   { key: 'subscribe_stall', label: '订阅档口领财富值', icon: '🔔', type: 'once' },
   { key: 'order_rebate', label: '下单返运费', icon: '🛒', type: 'daily' },
-  { key: 'official_group', label: '加入一手店主官方福利群', icon: '👥', type: 'once', nav: '/pages/group/index' },
+  { key: 'official_group', label: '加入一手会员官方福利群', icon: '👥', type: 'once', nav: '/pages/group/index' },
   { key: 'browse_spot', label: '浏览现货 15s', icon: '👀', type: 'daily' },
   { key: 'browse_hot', label: '浏览档口最爆款 15s', icon: '🔥', type: 'daily' },
   { key: 'market_new', label: '每日看市场新款', icon: '✨', type: 'daily' },
