@@ -11,7 +11,7 @@
     <!-- 大标题 + 副标题 -->
     <view class="header-titles">
       <text class="ht-big">骆芷蝶·智选｜品质女装</text>
-      <text class="ht-sub">服装门店一站式赋能平台</text>
+      <text class="ht-sub">严选好物·穿搭一站式服务平台</text>
     </view>
 
     <!-- 菜单按钮（搜索框上方） -->

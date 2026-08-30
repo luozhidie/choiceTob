@@ -60,7 +60,7 @@ Page({
           var price = Number(p.price) || 0;
           var wp = Number(p.wholesale_price) || 0;
           p.priceText = '¥' + (price ? (price / 100).toFixed(2) : '0');
-          p.wholesaleText = wp ? '批发 ¥' + (wp / 100).toFixed(2) : '';
+          p.wholesaleText = wp ? '会员价 ¥' + (wp / 100).toFixed(2) : '';
         });
         t.setData({ allProducts: l });
         t.filterProducts(l, t.data.activeCat);

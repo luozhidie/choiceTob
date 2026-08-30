@@ -15,9 +15,9 @@
       <view class="hero-desc">共享时尚产业红利，预存货款享会员价，邀好友再得返利</view>
     </view>
 
-    <!-- 加盟优势 -->
+    <!-- 权益优势 -->
     <view class="sec">
-      <view class="sec-head"><text class="sec-label">ADVANTAGES</text><text class="sec-title">加盟优势</text></view>
+      <view class="sec-head"><text class="sec-label">ADVANTAGES</text><text class="sec-title">权益优势</text></view>
       <view class="adv-grid">
         <view class="adv-card"><text class="adv-icon">📈</text><text class="adv-title">数据驱动</text><text class="adv-desc">AI 选品 + 销售预测，降低压货风险</text></view>
         <view class="adv-card"><text class="adv-icon">🎨</text><text class="adv-title">设计支持</text><text class="adv-desc">专业设计团队，季度更新 300+ 款</text></view>
@@ -26,14 +26,14 @@
       </view>
     </view>
 
-    <!-- 加盟条件 -->
+    <!-- 升级条件 -->
     <view class="sec">
-      <view class="sec-head"><text class="sec-label">CONDITIONS</text><text class="sec-title">加盟条件</text></view>
+      <view class="sec-head"><text class="sec-label">CONDITIONS</text><text class="sec-title">升级条件</text></view>
       <view class="cond-list">
         <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">认同品牌理念，遵纪守法</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">有实体门店或线上销售渠道</text></view>
+        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">有实体渠道或线上销售渠道</text></view>
         <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">具备一定资金实力与抗风险能力</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">愿接受总部统一管理及培训</text></view>
+        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">愿接受平台统一管理及培训</text></view>
         <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">有良好商业信誉与服务意识</text></view>
       </view>
     </view>
@@ -69,7 +69,7 @@
           </picker>
         </view>
         <view class="form-item">
-          <text class="form-label">预计门店数</text>
+          <text class="form-label">预计渠道数</text>
           <picker mode="selector" range="{{storeCountOptions}}" value="{{form.storeCount}}" bindchange="onStoreCount">
             <view class="form-picker"><text class="picker-text">{{storeCountOptions[form.storeCount]}}</text><text class="picker-arrow">▼</text></view>
           </picker>

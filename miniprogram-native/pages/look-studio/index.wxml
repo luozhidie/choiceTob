@@ -266,7 +266,7 @@
   <!-- 保存最终结果 -->
   <view wx:if="{{canvasUrl}}" class="card" style="margin-top:12rpx;">
     <text class="pbtn" style="display:block;text-align:center;background:#C9A24B;color:#1c111d;padding:20rpx 0;border-radius:10rpx;" bindtap="saveResult">保存 / 查看最终造型大图</text>
-    <text wx:if="{{stack.length>0}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="genCard">生成搭配卡片 / 分享给客户 ›</text>
+    <text wx:if="{{stack.length>0}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="genCard">生成搭配卡片 / 分享给会员 ›</text>
     <text wx:if="{{fromAgent && referralCode}}" class="pbtn" style="display:block;text-align:center;background:#2d1b2e;color:#C9A24B;padding:20rpx 0;border-radius:10rpx;margin-top:14rpx;" bindtap="goAgentShop">喜欢这套？去专属店铺购买 ›</text>
   </view>
 
@@ -304,7 +304,7 @@
       </view>
       <view class="cv-acts">
         <text class="cv-btn" bindtap="downloadAll">一键下载整套</text>
-        <button class="cv-btn cv-share" open-type="share">分享给客户</button>
+        <button class="cv-btn cv-share" open-type="share">分享给会员</button>
       </view>
     </view>
   </view>

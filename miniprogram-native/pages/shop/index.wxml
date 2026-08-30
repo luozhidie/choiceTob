@@ -245,7 +245,7 @@
       <view class="bar-icon" bindtap="goCart">
         <text class="ic">🛒</text>
         <text class="badge" wx:if="{{cartCount>0}}">{{cartCount}}</text>
-        <text class="lab">进货车</text>
+        <text class="lab">购物车</text>
       </view>
     </view>
     <view class="bar-right">
@@ -253,7 +253,7 @@
         <view class="btn-wish {{isWished?'wished':''}}" bindtap="toggleWish">{{isWished?'✓ 已加入心愿单':'♡ 加入心愿单 · 锁定心仪款'}}</view>
       </block>
       <block wx:else>
-        <view class="btn-cart" bindtap="addCart">加入进货车</view>
+        <view class="btn-cart" bindtap="addCart">加入购物车</view>
         <view class="btn-buy" bindtap="buyNow">立即购买</view>
       </block>
     </view>

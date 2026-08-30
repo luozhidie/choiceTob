@@ -2,7 +2,7 @@ var app = getApp();
 var BASE = 'https://colour-choice.art';
 
 // 色彩季型：六大固有色特征 -> 十二个色彩季型
-// 作为素材库主分类维度（替代风格），方便代理按客户肤色/用色精准选品
+// 作为素材库主分类维度（替代风格），方便代理按会员肤色/用色精准选品
 var COLOR_SEASONS = [
   { token: '深冷', group: '深' }, { token: '深暖', group: '深' },
   { token: '浅冷', group: '浅' }, { token: '浅暖', group: '浅' },
@@ -23,7 +23,7 @@ function buildSeasonLists(materialList) {
 var CORE_KEY = 'agent_core_clients';
 var MY_MATERIALS_KEY = 'agent_my_materials';
 
-// 穿衣风格客户盘：女士 8 主风格 × 8 偏风格 = 64；男士 5 主风格 × 5 偏风格 = 25
+// 穿衣风格会员盘：女士 8 主风格 × 8 偏风格 = 64；男士 5 主风格 × 5 偏风格 = 25
 // 数据来源：形象档案页面（女士8主风格 / 男士5主风格）
 var LADY_MAIN_STYLES = ['少女型', '优雅型', '浪漫型', '少年型', '时尚型', '古典型', '自然型', '戏剧型'];
 var MAN_MAIN_STYLES = ['戏剧型', '自然型', '古典型', '浪漫型', '时尚型'];
@@ -90,7 +90,7 @@ Page({
     profitSummary: { totalProfit: 0, settledProfit: 0, pendingProfit: 0 },
     // 自定义卖价
     priceList: [],
-    // 客户管理
+    // 会员管理
     customers: [],
     customerPage: 1,
     customerMore: true,
@@ -123,11 +123,11 @@ Page({
     showColorPicker: false,
     pickerProduct: null,
     pickerSeason: '',
-    // 核心客户（已同步后端 vip_customers，source='agent_core'，本地作兜底）
+    // 核心会员（已同步后端 vip_customers，source='agent_core'，本地作兜底）
     coreClients: {},
     coreEditIds: {},           // 季型 token -> 后端记录 id（用于 PUT 更新）
-    expandedCoreGroup: '',     // 核心客户 12 季型当前展开的固有色组
-    // 穿衣风格客户盘（女士 64 + 男士 25）
+    expandedCoreGroup: '',     // 核心会员 12 季型当前展开的固有色组
+    // 穿衣风格会员盘（女士 64 + 男士 25）
     ladyMainStyles: LADY_MAIN_STYLES,
     ladyStyleCombos: LADY_STYLE_COMBOS,
     manMainStyles: MAN_MAIN_STYLES,
@@ -159,7 +159,7 @@ Page({
     selectedBankIndex: 0,
     submittingWithdraw: false,
     withdrawals: [],
-    // VIP客户资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"）
+    // VIP会员资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"）
     vipCustomers: [],
     vipPage: 1,
     vipMore: true,
@@ -396,7 +396,7 @@ Page({
     if (id) wx.navigateTo({ url: '/pages/shop/index?id=' + id });
   },
 
-  // 分享给客户试衣
+  // 分享给会员试衣
   shareTryon: function () {
     var code = this.data.inviteCode || '';
     var name = this.data.storeName || this.data.fullName || '精选推荐';
@@ -406,7 +406,7 @@ Page({
     };
   },
 
-  // 客户管理
+  // 会员管理
   loadCustomers: function (reset) {
     var t = this;
     var page = reset ? 1 : t.data.customerPage;
@@ -731,7 +731,7 @@ Page({
     return (this.data.myMaterials || []).some(function (m) { return m.product_id === pid; });
   },
 
-  // 十二位核心客户：每个色彩季型绑定一位核心客户，数据同步到后端 vip_customers(source='agent_core')
+  // 十二位核心会员：每个色彩季型绑定一位核心会员，数据同步到后端 vip_customers(source='agent_core')
   loadCoreClients: function () {
     var t = this;
     // 本地兜底先渲染
@@ -758,7 +758,7 @@ Page({
       }
     });
   },
-  // 穿衣风格客户盘（女士 64 + 男士 25）
+  // 穿衣风格会员盘（女士 64 + 男士 25）
   loadStyleClients: function () {
     var arr;
     try { arr = wx.getStorageSync(STYLE_CLIENTS_KEY) || {}; } catch (e) { arr = {}; }
@@ -800,7 +800,7 @@ Page({
     if (prev.shares) cur.shares = prev.shares;
 
     if (t.isSeasonToken(token)) {
-      // 核心客户：同步到后端 vip_customers（source='agent_core'）
+      // 核心会员：同步到后端 vip_customers（source='agent_core'）
       var existingId = t.data.coreEditIds[token];
       var body = { name: name, source: 'agent_core', color_season: token, wechat: contact, notes: t.data.coreEditNote || '' };
       if (existingId) body.id = existingId;
@@ -830,7 +830,7 @@ Page({
       });
       return;
     }
-    // 风格客户盘：保持本地存储（本次未要求同步后端）
+    // 风格会员盘：保持本地存储（本次未要求同步后端）
     var styleClients = Object.assign({}, t.data.styleClients);
     styleClients[token] = cur;
     try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
@@ -844,7 +844,7 @@ Page({
     if (!existingId) return;
     wx.showModal({
       title: '删除确认',
-      content: '确定删除「' + token + '」的核心客户吗？',
+      content: '确定删除「' + token + '」的核心会员吗？',
       confirmText: '删除',
       success: function (res) {
         if (!res.confirm) return;
@@ -869,14 +869,14 @@ Page({
       }
     });
   },
-  // 点击某核心客户「去分享」：季型按素材库色彩季型过滤；风格暂按季型素材提示
+  // 点击某核心会员「去分享」：季型按素材库色彩季型过滤；风格暂按季型素材提示
   coreShare: function (e) {
     var token = e.currentTarget.dataset.token;
     var t = this;
     if (!t.isSeasonToken(token)) {
       wx.showModal({
         title: token,
-        content: '风格客户盘去分享功能开发中，可先按该客户的色彩季型去素材库分享。',
+        content: '风格会员盘去分享功能开发中，可先按该会员的色彩季型去素材库分享。',
         showCancel: false
       });
       return;
@@ -975,7 +975,7 @@ Page({
   },
   callConsult: function () { wx.makePhoneCall({ phoneNumber: '13925997776' }); },
 
-  // ========== VIP客户资料管理（连接后台 vip_customers，按代理隔离） ==========
+  // ========== VIP会员资料管理（连接后台 vip_customers，按代理隔离） ==========
   loadVipCustomers: function (reset) {
     var t = this;
     var page = reset ? 1 : t.data.vipPage;
@@ -1025,7 +1025,7 @@ Page({
     var t = this;
     if (t.data.savingVip) return;
     var f = t.data.vipForm;
-    if (!f.name || !f.name.trim()) { wx.showToast({ title: '请填写客户姓名', icon: 'none' }); return; }
+    if (!f.name || !f.name.trim()) { wx.showToast({ title: '请填写会员姓名', icon: 'none' }); return; }
     t.setData({ savingVip: true });
     var url = BASE + '/api/agent/vip-customers';
     var method = t.data.editingVipId ? 'PUT' : 'POST';
@@ -1071,7 +1071,7 @@ Page({
     var id = e.currentTarget.dataset.id;
     var t = this;
     wx.showModal({
-      title: '删除VIP客户', content: '确定删除该客户档案？', showCancel: true,
+      title: '删除VIP会员', content: '确定删除该会员档案？', showCancel: true,
       success: function (res) {
         if (!res.confirm) return;
         wx.request({

@@ -23,7 +23,7 @@ module.exports = {
   <view wx:elif="{{notAgent}}" class="empty">
     <text class="empty-emoji">🔒</text>
     <text class="empty-title">代理中心暂未开放</text>
-    <text class="empty-desc">本平台为服装供货，预存货款享一手会员价、自设卖价转售赚差价。请先充值预存货款开通代理权限。</text>
+    <text class="empty-desc">本平台为会员制严选平台，预存货款享一手会员价、分享好物赚差价。请先充值预存货款开通权益。</text>
     <view class="btn-primary" bindtap="goVipDeposit">去充值预存货款开通</view>
   </view>
 
@@ -31,7 +31,7 @@ module.exports = {
     <!-- Tab 导航 -->
     <view class="tabbar">
       <view class="tab {{tab==='home'?'active':''}}" data-tab="home" bindtap="switchTab">工作台</view>
-      <view class="tab {{tab==='customers'?'active':''}}" data-tab="customers" bindtap="switchTab">客户</view>
+      <view class="tab {{tab==='customers'?'active':''}}" data-tab="customers" bindtap="switchTab">会员</view>
       <view class="tab {{tab==='vip'?'active':''}}" data-tab="vip" bindtap="switchTab">VIP</view>
       <view class="tab {{tab==='sales'?'active':''}}" data-tab="sales" bindtap="switchTab">收益</view>
       <view class="tab {{tab==='orders'?'active':''}}" data-tab="orders" bindtap="switchTab">订单</view>
@@ -60,28 +60,28 @@ module.exports = {
         </view>
       </view>
 
-      <!-- 批发供货号 + 核心动作 -->
+      <!-- 邀请码 + 核心动作 -->
       <view class="card">
-        <view class="card-title">我的专属供货号</view>
+        <view class="card-title">我的专属邀请码</view>
         <view class="code-row">
           <text class="code-text">{{inviteCode || '—'}}</text>
           <view class="code-copy" bindtap="copyCode">复制</view>
         </view>
-        <button class="btn-share btn-share-main" open-type="share">发商品给客户</button>
+        <button class="btn-share btn-share-main" open-type="share">分享好物给好友</button>
         <view class="code-actions">
           <view class="btn-ghost" bindtap="previewShop">预览店铺 ›</view>
           <button class="btn-share btn-tryon" open-type="share" data-share="tryon">分享试衣</button>
         </view>
-        <text class="code-tip">客户通过你的供货号进入，按会员价直接下单，你的差价自动入账</text>
+        <text class="code-tip">好友通过你的邀请码进入，按会员价直接下单，你的差价自动入账</text>
       </view>
 
       <!-- 业绩 -->
       <view class="card">
-        <view class="card-title">供货业绩</view>
+        <view class="card-title">分享业绩</view>
         <view class="perf-row">
-          <view class="perf"><text class="perf-num">{{customerCount}}</text><text class="perf-label">合作客户</text></view>
-          <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">供货订单</text></view>
-          <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">客户GMV</text></view>
+          <view class="perf"><text class="perf-num">{{customerCount}}</text><text class="perf-label">合作会员</text></view>
+          <view class="perf"><text class="perf-num">{{orderCount}}</text><text class="perf-label">分享订单</text></view>
+          <view class="perf"><text class="perf-num">¥{{f.yuan(gmv)}}</text><text class="perf-label">会员GMV</text></view>
         </view>
         <!-- 0 业绩时给明确行动路径 -->
         <view wx:if="{{customerCount===0 && orderCount===0 && gmv===0}}" class="steps">
@@ -89,21 +89,21 @@ module.exports = {
             <text class="step-num">1</text>
             <view>
               <text class="step-t">去「素材」选品入库</text>
-              <text class="step-d">按客户色彩季型，把商品加入自己的素材库</text>
+              <text class="step-d">按会员色彩季型，把商品加入自己的素材库</text>
             </view>
           </view>
           <view class="step">
             <text class="step-num">2</text>
             <view>
-              <text class="step-t">点「发商品给客户」</text>
-              <text class="step-d">把对应色彩季型的商品转发给微信好友，客户直接下单</text>
+              <text class="step-t">点「发商品给会员」</text>
+              <text class="step-d">把对应色彩季型的商品转发给微信好友，会员直接下单</text>
             </view>
           </view>
           <view class="step">
             <text class="step-num">3</text>
             <view>
               <text class="step-t">差价自动入账</text>
-              <text class="step-d">客户付款后，你的差价进入可提现余额</text>
+              <text class="step-d">会员付款后，你的差价进入可提现余额</text>
             </view>
           </view>
           <view class="btn-ghost" style="margin-top:20rpx;" bindtap="switchTab" data-tab="material">去挑素材 ›</view>
@@ -114,14 +114,14 @@ module.exports = {
       <view class="card" wx:if="{{homeQuickPicks.length>0}}">
         <view class="card-title">
           今日可推
-          <text class="card-sub">点卡片直接发给客户</text>
+          <text class="card-sub">点卡片直接发给会员</text>
         </view>
         <view class="quick-grid">
           <view wx:for="{{homeQuickPicks}}" wx:key="product_id" class="quick-item">
             <image class="quick-img" src="{{item.cover_image}}" mode="aspectFill"/>
             <text class="quick-title">{{item.title}}</text>
             <text class="quick-price">{{item.custom_price ? '¥'+f.yuan(item.custom_price) : '卖价未设'}}</text>
-            <button class="quick-share" open-type="share" data-product-id="{{item.product_id}}" data-title="{{item.title}}" data-cover="{{item.cover_image}}">发客户</button>
+            <button class="quick-share" open-type="share" data-product-id="{{item.product_id}}" data-title="{{item.title}}" data-cover="{{item.cover_image}}">发会员</button>
           </view>
         </view>
         <view class="quick-more" bindtap="switchTab" data-tab="material">查看更多商品 ›</view>
@@ -129,8 +129,8 @@ module.exports = {
 
       <!-- 色彩季型选品：我的素材库按十二季型归类（可折叠，同素材 tab） -->
       <view class="card" wx:if="{{seasonList.length>0 || myMaterials.length>0}}">
-        <view class="card-title">我的素材库<text class="card-sub">按客户色彩季型归类</text></view>
-        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型。你入库的商品按季型分类，对准客户肤色/用色一键分享。</text>
+        <view class="card-title">我的素材库<text class="card-sub">按会员色彩季型归类</text></view>
+        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型。你入库的商品按季型分类，对准会员肤色/用色一键分享。</text>
         <view class="mat-parent-bar workshop-parent-bar">
           <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedWorkshopGroup===item?'on':''}}" bindtap="expandWorkshopGroup" data-group="{{item}}">{{item}}</view>
         </view>
@@ -146,10 +146,10 @@ module.exports = {
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
-      <!-- 十二位核心客户：每个色彩季型绑定一位（可折叠） -->
+      <!-- 十二位核心会员：每个色彩季型绑定一位（可折叠） -->
       <view class="card">
-        <view class="card-title">我的十二位核心客户<text class="card-sub">十二季型各绑定一位</text></view>
-        <text class="style-tip">每位会员/代理维护 12 位分别对应十二个色彩季型的核心客户，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
+        <view class="card-title">我的十二位核心会员<text class="card-sub">十二季型各绑定一位</text></view>
+        <text class="style-tip">每位会员/代理维护 12 位分别对应十二个色彩季型的核心会员，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
         <view class="mat-parent-bar core-parent-bar">
           <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedCoreGroup===item?'on':''}}" bindtap="expandCoreGroup" data-group="{{item}}">{{item}}</view>
         </view>
@@ -169,10 +169,10 @@ module.exports = {
         </view>
       </view>
 
-      <!-- 女士风格客户盘：8 主风格 × 8 偏风格 = 64（可折叠） -->
+      <!-- 女士风格会员盘：8 主风格 × 8 偏风格 = 64（可折叠） -->
       <view class="card">
-        <view class="card-title">女士风格客户盘<text class="card-sub">64 种风格组合</text></view>
-        <text class="style-tip">维护 64 种女士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">女士风格会员盘<text class="card-sub">64 种风格组合</text></view>
+        <text class="style-tip">维护 64 种女士穿衣风格组合会员，点击主风格展开查看所有偏风格组合。</text>
         <view class="mat-parent-bar style-parent-bar">
           <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{expandedLadyStyle===item?'on':''}}" bindtap="expandLadyStyle" data-main="{{item}}">{{item}}</view>
         </view>
@@ -191,10 +191,10 @@ module.exports = {
         </view>
       </view>
 
-      <!-- 男士风格客户盘：5 主风格 × 5 偏风格 = 25（可折叠） -->
+      <!-- 男士风格会员盘：5 主风格 × 5 偏风格 = 25（可折叠） -->
       <view class="card">
-        <view class="card-title">男士风格客户盘<text class="card-sub">25 种风格组合</text></view>
-        <text class="style-tip">维护 25 种男士穿衣风格组合客户，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">男士风格会员盘<text class="card-sub">25 种风格组合</text></view>
+        <text class="style-tip">维护 25 种男士穿衣风格组合会员，点击主风格展开查看所有偏风格组合。</text>
         <view class="mat-parent-bar style-parent-bar">
           <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{expandedManStyle===item?'on':''}}" bindtap="expandManStyle" data-main="{{item}}">{{item}}</view>
         </view>
@@ -226,7 +226,7 @@ module.exports = {
           <text class="ps-item">冻结中：¥{{f.yuan(frozenBalance)}}</text>
           <text class="ps-item ps-tip">发货后转可提现</text>
         </view>
-        <text class="profit-tip">佣金 = 客户付款 − 你的成本，仅佣金可提现，预存货款不可提现</text>
+        <text class="profit-tip">佣金 = 会员付款 − 你的成本，仅佣金可提现，预存货款不可提现</text>
       </view>
 
       <!-- 资金概览 -->
@@ -254,7 +254,7 @@ module.exports = {
 
       <!-- 自定义卖价 -->
       <view class="card">
-        <view class="card-title">商品对客卖价<text class="card-sub">客户看不到会员价</text></view>
+        <view class="card-title">商品对客卖价<text class="card-sub">会员看不到会员价</text></view>
         <view wx:if="{{priceList.length===0}}" class="list-empty">暂无商品</view>
         <view wx:for="{{priceList}}" wx:key="product_id" class="price-item">
           <image class="pi-img" src="{{item.cover_image}}" mode="aspectFill" wx:if="{{item.cover_image}}"/>
@@ -282,15 +282,15 @@ module.exports = {
         </view>
       </view>
 
-      <view class="consult" bindtap="callConsult">📞 供货咨询 13925997776</view>
-      <view class="sec-link" bindtap="goRecruit">了解供货合作方式 ›</view>
+      <view class="consult" bindtap="callConsult">📞 专属顾问 13925997776</view>
+      <view class="sec-link" bindtap="goRecruit">了解升级方式 ›</view>
     </view>
 
-    <!-- ========== 客户管理 ========== -->
+    <!-- ========== 会员管理 ========== -->
     <view wx:if="{{tab==='customers'}}" class="tab-page">
       <view wx:if="{{customers.length===0}}" class="list-empty-box">
-        <text class="list-empty">暂无客户</text>
-        <text class="list-empty-desc">把商品或试衣发给客户，他们首次访问后会出现在这里</text>
+        <text class="list-empty">暂无会员</text>
+        <text class="list-empty-desc">把商品或试衣发给会员，他们首次访问后会出现在这里</text>
         <button class="btn-primary" open-type="share">去发商品</button>
       </view>
       <view wx:for="{{customers}}" wx:key="userId" class="cus-card">
@@ -313,20 +313,20 @@ module.exports = {
       </view>
     </view>
 
-    <!-- ========== VIP客户资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"） ========== -->
+    <!-- ========== VIP会员资料管理（连接后台 vip_customers，按代理隔离；UI 不暴露"同步后台"） ========== -->
     <view wx:if="{{tab==='vip'}}" class="tab-page">
       <view class="vip-head">
         <view class="vip-head-l">
-          <text class="vip-title">VIP客户档案</text>
-          <text class="vip-sub">维护高价值客户资料，按色彩季型与风格精准配货</text>
+          <text class="vip-title">VIP会员档案</text>
+          <text class="vip-sub">维护高价值会员资料，按色彩季型与风格精准配货</text>
         </view>
         <view class="vip-new" bindtap="openVipForm">＋ 新建</view>
       </view>
 
       <view wx:if="{{vipCustomers.length===0 && !loading}}" class="list-empty-box">
-        <text class="list-empty">还没有VIP客户档案</text>
-        <text class="list-empty-desc">把核心客户的姓名、用色季型、风格与跟进记录建在这里，方便精准选品与配货</text>
-        <view class="btn-primary" bindtap="openVipForm">＋ 新建VIP客户</view>
+        <text class="list-empty">还没有VIP会员档案</text>
+        <text class="list-empty-desc">把核心会员的姓名、用色季型、风格与跟进记录建在这里，方便精准选品与配货</text>
+        <view class="btn-primary" bindtap="openVipForm">＋ 新建VIP会员</view>
       </view>
 
       <view wx:for="{{vipCustomers}}" wx:key="id" class="vip-card">
@@ -369,8 +369,8 @@ module.exports = {
       </view>
       <view wx:if="{{salesList.length===0}}" class="list-empty-box">
         <text class="list-empty">暂无收益明细</text>
-        <text class="list-empty-desc">客户付款后，你的差价会在这里显示</text>
-        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给客户 ›</view>
+        <text class="list-empty-desc">会员付款后，你的差价会在这里显示</text>
+        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给会员 ›</view>
       </view>
       <view wx:for="{{salesList}}" wx:key="order_no" class="sale-card">
         <view class="sale-row">
@@ -409,9 +409,9 @@ module.exports = {
         </view>
       </view>
       <view wx:if="{{orderList.length===0}}" class="list-empty-box">
-        <text class="list-empty">暂无供货订单</text>
-        <text class="list-empty-desc">客户通过你的供货号下单后，订单会同步到这里</text>
-        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给客户 ›</view>
+        <text class="list-empty">暂无分享订单</text>
+        <text class="list-empty-desc">会员通过你的邀请码下单后，订单会同步到这里</text>
+        <view class="btn-ghost" bindtap="enterWarehouse">去选品发给会员 ›</view>
       </view>
       <view wx:for="{{orderList}}" wx:key="order_no" class="order-card">
         <view class="order-head">
@@ -440,7 +440,7 @@ module.exports = {
       <view class="mat-header">
         <view>
           <text class="mat-header-title">{{warehouseMode ? '选品入库' : '我的素材库'}}</text>
-          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按客户色彩季型归类'}}</text>
+          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按会员色彩季型归类'}}</text>
         </view>
         <view wx:if="{{warehouseMode}}" class="mat-header-btn" bindtap="exitWarehouse">返回素材库</view>
         <view wx:else class="mat-header-btn" bindtap="enterWarehouse">去选品入库</view>
@@ -448,7 +448,7 @@ module.exports = {
 
       <!-- 色彩季型分类树：六大固有色 -> 十二季型（可折叠） -->
       <view wx:if="{{!warehouseMode && seasonList.length>0}}" class="mat-season-tree">
-        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型，按客户肤色/用色归类选品</text>
+        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型，按会员肤色/用色归类选品</text>
         <view class="mat-tree-all {{colorFilter===''?'on':''}}" bindtap="clearMaterialColor">全部 · {{myMaterials.length}} 款</view>
         <!-- 父级栏：点击展开对应子季型 -->
         <view class="mat-parent-bar">
@@ -480,7 +480,7 @@ module.exports = {
       <!-- 空状态 -->
       <view wx:if="{{filteredMaterial.length===0}}" class="list-empty-box">
         <text class="list-empty">{{warehouseMode ? '仓库暂时没有更多商品' : '素材库还是空的'}}</text>
-        <text class="list-empty-desc">{{warehouseMode ? '可以先去上传商品，再回来挑选' : '去选品入库，按你的客户群体色彩季型添加商品'}}</text>
+        <text class="list-empty-desc">{{warehouseMode ? '可以先去上传商品，再回来挑选' : '去选品入库，按你的会员群体色彩季型添加商品'}}</text>
         <view wx:if="{{!warehouseMode}}" class="btn-ghost" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
@@ -525,7 +525,7 @@ module.exports = {
       <text class="sheet-title">设置对客卖价</text>
       <text class="sheet-sub">{{editItem.title}}</text>
       <text class="sheet-retail">平台零售价：¥{{f.yuan(editItem.retail_price)}}</text>
-      <input class="sheet-input" type="digit" value="{{editPrice}}" bindinput="onEditPrice" placeholder="输入你给客户的卖价（元）"/>
+      <input class="sheet-input" type="digit" value="{{editPrice}}" bindinput="onEditPrice" placeholder="输入你给会员的卖价（元）"/>
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeEdit">取消</view>
         <view class="sheet-save" bindtap="savePrice">{{savingPrice ? '保存中…' : '保存'}}</view>
@@ -574,7 +574,7 @@ module.exports = {
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">加入素材库</text>
       <text class="sheet-sub">{{pickerProduct.title}}</text>
-      <text class="sheet-retail">选择该商品对应的客户色彩季型（六大固有色 → 十二季型）</text>
+      <text class="sheet-retail">选择该商品对应的会员色彩季型（六大固有色 → 十二季型）</text>
       <block wx:for="{{colorGroups}}" wx:key="*this">
         <view class="picker-section">{{item}}色组</view>
         <view class="picker-grid">
@@ -588,12 +588,12 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 核心客户编辑弹窗 -->
+  <!-- 核心会员编辑弹窗 -->
   <view wx:if="{{showCoreEdit}}" class="mask" bindtap="closeCoreEdit">
     <view class="sheet" catchtap="noop">
-      <text class="sheet-title">核心客户 · {{coreEditToken}}</text>
-      <text class="sheet-sub">绑定一位对应此色彩季型的客户</text>
-      <input class="sheet-input" value="{{coreEditName}}" bindinput="onCoreName" placeholder="客户称呼（如：李姐）"/>
+      <text class="sheet-title">核心会员 · {{coreEditToken}}</text>
+      <text class="sheet-sub">绑定一位对应此色彩季型的会员</text>
+      <input class="sheet-input" value="{{coreEditName}}" bindinput="onCoreName" placeholder="会员称呼（如：李姐）"/>
       <input class="sheet-input" value="{{coreEditContact}}" bindinput="onCoreContact" placeholder="微信 / 电话"/>
       <input class="sheet-input" value="{{coreEditNote}}" bindinput="onCoreNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
       <view class="sheet-btns">
@@ -604,13 +604,13 @@ module.exports = {
     </view>
   </view>
 
-  <!-- VIP客户资料：新建 / 编辑 表单弹窗 -->
+  <!-- VIP会员资料：新建 / 编辑 表单弹窗 -->
   <view wx:if="{{showVipForm}}" class="mask" bindtap="closeVipForm">
     <view class="sheet vip-sheet" catchtap="noop">
-      <text class="sheet-title">{{editingVipId ? '编辑VIP客户' : '新建VIP客户'}}</text>
-      <text class="sheet-sub">{{editingVipId ? '修改客户资料并保存' : '填写客户资料，建立你的VIP档案'}}</text>
+      <text class="sheet-title">{{editingVipId ? '编辑VIP会员' : '新建VIP会员'}}</text>
+      <text class="sheet-sub">{{editingVipId ? '修改会员资料并保存' : '填写会员资料，建立你的VIP档案'}}</text>
       <scroll-view scroll-y class="vip-form">
-        <view class="vfield"><text class="vlabel">姓名 <text class="vreq">*</text></text><input class="vinput" value="{{vipForm.name}}" bindinput="onVipInput" data-field="name" placeholder="客户称呼 / 姓名"/></view>
+        <view class="vfield"><text class="vlabel">姓名 <text class="vreq">*</text></text><input class="vinput" value="{{vipForm.name}}" bindinput="onVipInput" data-field="name" placeholder="会员称呼 / 姓名"/></view>
         <view class="vfield"><text class="vlabel">手机号</text><input class="vinput" value="{{vipForm.phone}}" bindinput="onVipInput" data-field="phone" placeholder="11 位手机号"/></view>
         <view class="vfield"><text class="vlabel">微信号</text><input class="vinput" value="{{vipForm.wechat}}" bindinput="onVipInput" data-field="wechat" placeholder="选填"/></view>
         <view class="vfield"><text class="vlabel">店铺 / 公司</text><input class="vinput" value="{{vipForm.company}}" bindinput="onVipInput" data-field="company" placeholder="选填"/></view>

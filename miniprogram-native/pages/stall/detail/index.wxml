@@ -44,7 +44,7 @@
   <!-- 评价 -->
   <view class="block">
     <view class="block-title-row">
-      <text class="block-title">客户评价（{{reviews.length}}）</text>
+      <text class="block-title">会员评价（{{reviews.length}}）</text>
       <view class="write-btn" bindtap="openReview">✍️ 写评价</view>
     </view>
     <view wx:if="{{reviews.length===0}}" class="no-review">暂无评价，快来抢沙发</view>
