@@ -13,16 +13,16 @@ module.exports = {
   <view wx:elif="{{!valid}}" class="empty">
     <text class="empty-emoji">🔗</text>
     <text class="empty-title">链接无效</text>
-    <text class="empty-desc">推广码不存在或代理未激活</text>
+    <text class="empty-desc">链接不存在或未激活</text>
     <view class="btn-primary" bindtap="goHome">回到首页</view>
   </view>
 
   <block wx:else>
-    <!-- 代理店铺头 -->
+    <!-- 专属店铺头 -->
     <view class="shop-head">
-      <view class="sh-badge">代理专属店</view>
+      <view class="sh-badge">专属精选店</view>
       <text class="sh-name">{{agentName}} 的精选店</text>
-      <text class="sh-desc">先试再买 · 由专属代理为你服务</text>
+      <text class="sh-desc">先试再买 · 由专属买手为你服务</text>
     </view>
 
     <!-- 虚拟试衣 CTA -->

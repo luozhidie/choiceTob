@@ -15,14 +15,14 @@ module.exports = {
   <view wx:if="{{notLogin}}" class="empty">
     <text class="empty-emoji">🔐</text>
     <text class="empty-title">请先登录</text>
-    <text class="empty-desc">登录后即可使用代理工作台</text>
+    <text class="empty-desc">登录后即可使用权益工作台</text>
     <view class="btn-primary" bindtap="goLogin">去登录</view>
   </view>
 
   <!-- 严格拦截：非管理员且非充值会员，整页拦截，不渲染任何代理功能 -->
   <view wx:elif="{{notAgent}}" class="empty">
     <text class="empty-emoji">🔒</text>
-    <text class="empty-title">代理中心暂未开放</text>
+    <text class="empty-title">权益中心暂未开放</text>
     <text class="empty-desc">本平台为会员制严选平台，预存货款享一手会员价、分享好物赚差价。请先充值预存货款开通权益。</text>
     <view class="btn-primary" bindtap="goVipDeposit">去充值预存货款开通</view>
   </view>
@@ -45,10 +45,10 @@ module.exports = {
         <view class="hero-top">
           <view class="hero-avatar">{{f.first(storeName || fullName)}}</view>
           <view class="hero-meta">
-            <text class="hero-name">{{storeName || fullName || '代理'}}</text>
+            <text class="hero-name">{{storeName || fullName || '会员'}}</text>
             <view class="hero-tags">
               <text wx:if="{{isCertified}}" class="tag tag-gold">认证会员</text>
-              <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款代理</text>
+              <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款会员</text>
               <text wx:if="{{isAdmin}}" class="tag tag-admin">管理员</text>
             </view>
           </view>
@@ -149,7 +149,7 @@ module.exports = {
       <!-- 十二位核心会员：每个色彩季型绑定一位（可折叠） -->
       <view class="card">
         <view class="card-title">我的十二位核心会员<text class="card-sub">十二季型各绑定一位</text></view>
-        <text class="style-tip">每位会员/代理维护 12 位分别对应十二个色彩季型的核心会员，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
+        <text class="style-tip">每位会员维护 12 位分别对应十二个色彩季型的核心会员，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
         <view class="mat-parent-bar core-parent-bar">
           <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedCoreGroup===item?'on':''}}" bindtap="expandCoreGroup" data-group="{{item}}">{{item}}</view>
         </view>
