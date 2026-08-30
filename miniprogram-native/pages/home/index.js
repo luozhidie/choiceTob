@@ -128,9 +128,9 @@ Page({
           var b=all[i];
           var ct=b.content||{};
 
-          /* 预处理分类导航 */
+          /* 预处理分类导航：直接使用后台配置的标签，不再手动追加「全部」，避免重复 */
           if(b.type==='category_nav'){
-            var items=[{label:'全部',link:''}];
+            var items=[];
             for(var j=0;j<=9;j++){
               var tab=ct['tab'+j];
               if(tab&&tab.label)items.push(tab);
