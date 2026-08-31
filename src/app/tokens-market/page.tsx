@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, CheckCircle2, Languages, CreditCard, ExternalLink, KeyRound, Copy, ArrowRight, Mail, MessageCircle, Sparkles, QrCode } from "lucide-react";
 
-const CONTACT = { name: "骆芷蝶", email: "luozhidie@live.cn", wechat: "luozhidie" };
+const CONTACT = { name: "骆芷蝶", email: "luozhidie@live.cn", wechat: "luozhidie666" };
 
 type Lang = "zh" | "en";
 const I18N: Record<Lang, any> = {

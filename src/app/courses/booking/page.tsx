@@ -19,7 +19,7 @@ const DEFAULT: BookingConfig = {
   subtitle: "一次诊断 终身受益",
   price: 190,
   desc: "专业形象顾问一对一定制，找准显白本命色，锁定高级风格，越穿越显贵。",
-  wechat: "luozhidie",
+  wechat: "luozhidie666",
   outline: ["风格诊断", "色彩诊断", "身材诊断", "生成报告"],
 };
 

@@ -141,7 +141,7 @@ Page({
   },
 
   applyRefund:function(e){
-    wx.showModal({title:'申请退换',content:'请联系客服处理退换货\n微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});
+    wx.showModal({title:'申请退换',content:'请联系客服处理退换货\n微信：luozhidie666\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});
   },
 
   goBuyer:function(){wx.switchTab({url:'/pages/buyer/index'});},

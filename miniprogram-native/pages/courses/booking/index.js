@@ -6,7 +6,7 @@ Page({
       subtitle: '一次诊断 终身受益',
       price: 190,
       desc: '专业形象顾问一对一定制，找准显白本命色，锁定高级风格，越穿越显贵。',
-      wechat: 'luozhidie',
+      wechat: 'luozhidie666',
       outline: ['风格诊断', '色彩诊断', '身材诊断', '生成报告']
     },
     booked: false
@@ -29,7 +29,7 @@ Page({
               var cfg = JSON.parse(d.data.diagnosis_booking);
               t.setData({ booking: Object.assign({
                 title: '整体形象诊断', subtitle: '一次诊断 终身受益', price: 190,
-                desc: '', wechat: 'luozhidie', outline: ['风格诊断', '色彩诊断', '身材诊断', '生成报告']
+                desc: '', wechat: 'luozhidie666', outline: ['风格诊断', '色彩诊断', '身材诊断', '生成报告']
               }, cfg) });
             } catch (e) {}
           }
@@ -38,7 +38,7 @@ Page({
     });
   },
   goBook: function () {
-    var wechat = this.data.booking.wechat || 'luozhidie';
+    var wechat = this.data.booking.wechat || 'luozhidie666';
     wx.showModal({
       title: '添加客服微信预约',
       content: '请添加客服微信：' + wechat + '\n备注「形象诊断」即可预约',

@@ -5,7 +5,7 @@
 //  2) 服务端返回 fallback=true 时（虚拟支付未开启/未配置），自动回退到原 JSAPI 支付，保证生意不停
 //  3) iOS 需微信 8.0.68+ 且该能力已额外开通；不支持时引导「联系顾问」
 var BASE = 'https://colour-choice.art';
-var ADVISOR_WX = 'luozhidie';
+var ADVISOR_WX = 'luozhidie666';
 
 function compareVersion(v1, v2) {
   if (typeof v1 !== 'string' || typeof v2 !== 'string') return 0;

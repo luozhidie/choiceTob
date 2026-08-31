@@ -10,7 +10,7 @@ Page({
     agreementText:'',
     agreementSigned:false,
     agentStatus:{ active:false, depositAmount:0, discountRate:1, returnRate:0 },
-    advisorWx:'luozhidie',
+    advisorWx:'luozhidie666',
     plans:[
       {id:'agent_test_cent',name:'链路测试',amount:'0.01',amountLabel:'¥0.01',discount:'2.8折',refund:5,example:'验证充值到账',isTest:true},
       {id:'wholesale_6k',name:'会员·首充6000',amount:'6000',amountLabel:'¥6,000',discount:'2.8折',refund:0,tryonTip:'充值¥6000将自动扣除¥998专业版试衣费，剩余¥5002计入预存货款（仅用于选购，不退现）',example:'原价¥100 → ¥28 + 赠专业试衣100次'},
@@ -169,6 +169,6 @@ Page({
     });
   },
 
-  goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
+  goContact:function(){wx.showModal({title:'联系客服',content:'微信：luozhidie666\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
   noop:function(){},
 });

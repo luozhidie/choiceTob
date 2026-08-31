@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       subtitle: config.subtitle || "一次诊断 终身受益",
       price: config.price ?? 190,
       desc: config.desc || "专业形象顾问一对一定制，找准显白本命色，锁定高级风格。",
-      wechat: config.wechat || "luozhidie",
+      wechat: config.wechat || "luozhidie666",
       outline: Array.isArray(config.outline)
         ? config.outline
         : ["风格诊断", "色彩诊断", "身材诊断", "生成报告"],
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       subtitle: String(body.subtitle ?? "一次诊断 终身受益").slice(0, 50),
       price: Number(body.price ?? 190) || 190,
       desc: String(body.desc ?? "").slice(0, 500),
-      wechat: String(body.wechat ?? "luozhidie").slice(0, 50),
+      wechat: String(body.wechat ?? "luozhidie666").slice(0, 50),
       outline: Array.isArray(body.outline)
         ? body.outline.map((x: any) => String(x).slice(0, 50)).slice(0, 20)
         : ["风格诊断", "色彩诊断", "身材诊断", "生成报告"],

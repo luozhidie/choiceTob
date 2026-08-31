@@ -56,7 +56,7 @@ Page({
   goBook: function () {
     wx.showModal({
       title: '预约课程',
-      content: '请添加客服微信：luozhidie\n备注「课程预约」即可锁定名额。',
+      content: '请添加客服微信：luozhidie666\n备注「课程预约」即可锁定名额。',
       showCancel: false,
       confirmText: '知道了'
     });

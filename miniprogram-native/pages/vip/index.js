@@ -18,7 +18,7 @@ Page({
     showTryonAgent:true,
     showPay:false,
     selectedPlan:null,
-    advisorWx:'luozhidie',
+    advisorWx:'luozhidie666',
     /* 代理中心 */
     isAgent:false,
     agentStatus:{active:false,depositAmount:0,discountRate:1,returnRate:0},

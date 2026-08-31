@@ -373,7 +373,7 @@ Page({
   goMy:function(){this.setData({mo:false});wx.switchTab({url:'/pages/my/index'});},
   goStyleTest:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/style-test/index'});},
   goArticles:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/articles/index'});},
-  goContact:function(){this.setData({mo:false});wx.showModal({title:'联系客服',content:'微信：luozhidie\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
+  goContact:function(){this.setData({mo:false});wx.showModal({title:'联系客服',content:'微信：luozhidie666\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
 
   /* ====== 数据加载 ====== */
   loadB:function(){

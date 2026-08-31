@@ -7,13 +7,19 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS is_tryon_agent boolean NOT NULL DEFAULT false;
 
 -- 为已购买过 tryon_pro_998 的用户补打标记（幂等，可重复执行）
+-- tryon_orders 以 openid 记录，需经 profiles.wechat_openid / wx_openid 反查 user_id
 UPDATE profiles
 SET is_tryon_agent = true
-WHERE id IN (
-  SELECT DISTINCT o.user_id
+WHERE (wechat_openid IN (
+  SELECT DISTINCT o.openid
   FROM tryon_orders o
   WHERE o.package_id = 'tryon_pro_998'
     AND o.status = 'paid'
-);
+) OR wx_openid IN (
+  SELECT DISTINCT o.openid
+  FROM tryon_orders o
+  WHERE o.package_id = 'tryon_pro_998'
+    AND o.status = 'paid'
+));
 
 COMMENT ON COLUMN profiles.is_tryon_agent IS '购买专业版¥998成为的虚拟试衣代理（永久），与店主认证独立';
