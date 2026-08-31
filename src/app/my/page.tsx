@@ -624,7 +624,8 @@ export default function MyPage() {
               </div>
             )}
 
-            {/* ===== VIP形象服务 ===== */}
+            {/* ===== VIP形象服务（认证店主/代理/管理员可见） ===== */}
+            {(profile?.store_owner_certified || profile?.role === "admin") && (
             <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
               <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                 <Crown className="w-5 h-5 text-[#C9A24B]" /> VIP形象服务
@@ -656,9 +657,10 @@ export default function MyPage() {
                 </Link>
               </div>
             </div>
+            )}
 
-            {/* ===== 时尚买手服务（仅管理员可见） ===== */}
-            {profile?.is_admin && (
+            {/* ===== 时尚买手服务（认证店主/代理/管理员可见） ===== */}
+            {(profile?.store_owner_certified || profile?.role === "admin") && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-[#C9A24B]" /> 时尚买手服务
@@ -688,8 +690,8 @@ export default function MyPage() {
               </div>
             )}
 
-            {/* ===== AI搭配 / AI企划（仅管理员可见） ===== */}
-            {profile?.is_admin && (
+            {/* ===== AI搭配 / AI企划（认证店主/代理/管理员可见） ===== */}
+            {(profile?.store_owner_certified || profile?.role === "admin") && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
                 <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
                   <Sparkles className="w-5 h-5 text-[#C9A24B]" /> AI搭配 / AI企划
