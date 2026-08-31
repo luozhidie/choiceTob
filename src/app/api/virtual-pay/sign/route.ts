@@ -2,7 +2,7 @@
 // 虚拟支付签名下发：服务端生成 signData / paySig / signature，客户端原样传给 wx.requestVirtualPayment
 // 关键点：signData 必须由服务端序列化成字符串并返回，客户端不得二次拼装，否则签名校验必失败。
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import {
   VIRTUAL_PAY_ENABLED,
   VIRTUAL_OFFER_ID,
@@ -59,11 +59,12 @@ export async function POST(request: NextRequest) {
     const signature = calcSignature(signData, sessionKey);
 
     // 3) 预建订单（pending），供回调 / 轮询对账
-    const supabase = await createClient();
+    const supabase = createServiceRoleClient();
     const { error: insErr } = await supabase.from("virtual_orders").insert({
       out_trade_no: outTradeNo,
       openid,
-      goods_key: goods.productId,
+      // 存内部 key，发货时才能命中 TRYON_PACKAGES / CONTENT_PLANS
+      goods_key: String(goodsKey),
       product_id: goods.productId,
       goods_name: goods.name,
       amount_cents: goods.priceFen * qty,

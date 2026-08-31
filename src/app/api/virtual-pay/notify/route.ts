@@ -1,62 +1,104 @@
 // app/api/virtual-pay/notify/route.ts
 // 微信虚拟支付「道具发货推送」回调：xpay_goods_deliver_notify
-// 配置路径：MP 后台 → 虚拟支付 → 基本配置 → 发货订阅，URL 填 https://colour-choice.art/api/virtual-pay/notify
-// 响应必须返回 ErrCode=0，否则微信最多重推 15 次
+// 配置路径：MP 后台 → 虚拟支付 → 基本配置 → 发货订阅
+//
+// 安全：本接口对外网开放，必须先调 /xpay/query_order 核实订单确实已支付，
+//       否则任何人拿到订单号就能白嫖权益。核实失败时不发货并让微信重推。
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { deliverVirtualGoods } from "@/lib/virtual-deliver";
+import { queryOrder } from "@/lib/virtual-pay";
 
-// 从 XML 中取字段值
 function xmlField(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
   if (!m) return "";
   return m[1].replace(/^<!\[CDATA\[/, "").replace(/\]\]>$/, "").trim();
 }
 
-function okJson() {
-  return NextResponse.json({ ErrCode: 0, ErrMsg: "success" });
+// 推送是 XML 就回 XML，是 JSON 就回 JSON
+function okResp(isXml: boolean, errCode = 0, errMsg = "success") {
+  if (isXml) {
+    return new NextResponse(
+      `<xml><ErrCode>${errCode}</ErrCode><ErrMsg><![CDATA[${errMsg}]]></ErrMsg></xml>`,
+      { headers: { "Content-Type": "application/xml; charset=utf-8" } }
+    );
+  }
+  return NextResponse.json({ ErrCode: errCode, ErrMsg: errMsg });
+}
+
+/** 调 query_order 核实订单确已支付 */
+async function verifyPaid(outTradeNo: string, openid: string, env: number): Promise<boolean> {
+  try {
+    const r: any = await queryOrder(outTradeNo, openid, env);
+    if (!r) return false;
+    if (r.errcode !== 0 && r.errCode !== 0) {
+      console.warn("[虚拟支付推送] query_order 返回错误", JSON.stringify(r).slice(0, 300));
+      return false;
+    }
+    const info = r.order_info || r.order || r;
+    const st = String(info.status ?? info.pay_status ?? info.order_status ?? "").toLowerCase();
+    // 明确处于未支付/已关闭/已退款 → 不发
+    if (["0", "wait", "unpay", "unpaid", "created", "close", "closed", "refund"].includes(st)) {
+      return false;
+    }
+    return true;
+  } catch (e: any) {
+    console.warn("[虚拟支付推送] query_order 异常", e?.message);
+    return false;
+  }
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const raw = await request.text();
-    let outTradeNo = "";
-    let openid = "";
-    let env = 0;
+  const raw = await request.text().catch(() => "");
+  const isXml = !raw.trim().startsWith("{");
 
-    if (raw.trim().startsWith("{")) {
+  let outTradeNo = "";
+  let openid = "";
+  let env = 0;
+
+  if (isXml) {
+    outTradeNo = xmlField(raw, "OutTradeNo");
+    openid = xmlField(raw, "OpenId");
+    env = Number(xmlField(raw, "Env") || 0);
+  } else {
+    try {
       const j = JSON.parse(raw);
       outTradeNo = String(j.OutTradeNo || j.out_trade_no || "");
       openid = String(j.OpenId || j.openid || "");
       env = Number(j.Env ?? j.env ?? 0);
-    } else {
-      outTradeNo = xmlField(raw, "OutTradeNo");
-      openid = xmlField(raw, "OpenId");
-      env = Number(xmlField(raw, "Env") || 0);
+    } catch (e) {
+      return okResp(isXml);
     }
-
-    console.log("[虚拟支付推送] 收到", { outTradeNo, openid, env, rawLen: raw.length });
-    if (!outTradeNo) return okJson();
-
-    const svc = createServiceRoleClient();
-    const { data: order } = await svc
-      .from("virtual_orders")
-      .select("out_trade_no, openid, goods_key, product_id, status")
-      .eq("out_trade_no", outTradeNo)
-      .maybeSingle();
-
-    if (!order) {
-      console.warn("[虚拟支付推送] 订单不存在", outTradeNo);
-      return okJson();
-    }
-
-    await deliverVirtualGoods(svc, order.openid, order.goods_key || order.product_id, outTradeNo);
-    return okJson();
-  } catch (err: any) {
-    console.error("[虚拟支付推送] 处理异常", err);
-    // 仍然返回成功，避免微信无限重推；实际发货由 /grant 兜底
-    return okJson();
   }
+
+  console.log("[虚拟支付推送] 收到", { outTradeNo, env, isXml, len: raw.length });
+  if (!outTradeNo) return okResp(isXml);
+
+  const svc = createServiceRoleClient();
+  const { data: order } = await svc
+    .from("virtual_orders")
+    .select("out_trade_no, openid, goods_key, product_id, env, status")
+    .eq("out_trade_no", outTradeNo)
+    .maybeSingle();
+
+  if (!order) {
+    console.warn("[虚拟支付推送] 订单不存在", outTradeNo);
+    return okResp(isXml); // 不是我们的单，直接成功避免重推
+  }
+  // 已由 /grant 发过货 → 直接成功
+  if (order.status === "paid") return okResp(isXml);
+
+  const orderEnv = Number(order.env ?? env) === 1 ? 1 : 0;
+  const paid = await verifyPaid(outTradeNo, order.openid, orderEnv);
+  if (!paid) {
+    // 未核实到支付：不发货，返回失败让微信重推（最多 15 次）
+    console.warn("[虚拟支付推送] 未核实到支付，暂不发货", outTradeNo);
+    return okResp(isXml, 1, "not verified");
+  }
+
+  await deliverVirtualGoods(svc, order.openid, order.goods_key || order.product_id, outTradeNo);
+  console.log("[虚拟支付推送] 发货完成", outTradeNo);
+  return okResp(isXml);
 }
 
 export async function GET(request: NextRequest) {

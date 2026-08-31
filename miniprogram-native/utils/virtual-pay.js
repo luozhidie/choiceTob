@@ -30,6 +30,14 @@ function supported() {
   var sys = getSys();
   var sdk = sys.SDKVersion || '';
   if (sdk && compareVersion(sdk, '2.19.2') < 0) return false;
+
+  // iOS 端需微信客户端 >= 8.0.68（低于此版本调起必失败，改为引导联系顾问）
+  var plat = String(sys.platform || '').toLowerCase();
+  var wxVer = sys.version || '';
+  if ((plat === 'ios' || plat === 'mac') && wxVer) {
+    if (compareVersion(wxVer, '8.0.68') < 0) return false;
+  }
+
   try {
     if (wx.canIUse && !wx.canIUse('requestVirtualPayment')) return false;
   } catch (e) { /* 忽略，按支持处理 */ }
