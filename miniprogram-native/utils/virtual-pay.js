@@ -141,13 +141,16 @@ function pay(opts) {
             fail: function (err) {
               var code = err && err.errCode;
               var msg = (err && err.errMsg) || '';
+              console.error('[虚拟支付] 调起失败', JSON.stringify(err));
               if (code === -2 || msg.indexOf('cancel') > -1) return; // 用户取消
               var tip = '支付未完成';
               if (code === -15010 || code === -15018) tip = '商品未上架，请联系顾问';
               else if (code === -15005 || code === -15006) tip = '签名校验失败，请联系顾问';
               else if (code === -15007) tip = '登录态过期，请退出重进';
               else if (code === -4) tip = '支付被风控拦截，请联系顾问';
-              wx.showModal({ title: tip, content: '错误码 ' + code + '，或联系顾问微信：' + ADVISOR_WX, showCancel: false });
+              else if (code === -15001) tip = '支付参数有误';
+              var detail = msg ? ('\n' + msg) : '';
+              wx.showModal({ title: tip, content: '错误码 ' + code + detail + '\n如无法解决，联系顾问微信：' + ADVISOR_WX, showCancel: false });
               opts.fail && opts.fail(err);
             }
           });
