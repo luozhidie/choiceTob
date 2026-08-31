@@ -41,7 +41,7 @@ export const VIRTUAL_GOODS: Record<string, VirtualGoods> = {
   tryon_normal_month_99: { productId: "tryon_normal_month_99", name: "试衣普通月卡", priceFen: 9900 },
   tryon_normal_month_299: { productId: "tryon_normal_month_299", name: "试衣普通月卡·续费", priceFen: 29900 },
   tryon_pro_998: { productId: "tryon_pro_998", name: "试衣专业版·100次", priceFen: 99800 },
-  tryon_test_cent: { productId: "tryon_test_cent", name: "试衣一分测试", priceFen: 1 },
+  tryon_test_cent: { productId: "tryon_test_cent", name: "试衣一分测试", priceFen: 10 },
 
   // —— 每日搭配灵感 ——
   daily_looks_monthly: { productId: "daily_looks_monthly", name: "搭配灵感·月度会员", priceFen: 99900 },

@@ -18,7 +18,7 @@ const PACKAGES: Record<string, { name: string; price: number; unit: string; type
   // 专业版（含 14 题风格测试 / 八大风格真人试穿）
   tryon_pro_998:         { name: "专业版",   price: 998,  unit: "次", type: "pro_pack",     days: 365, normal: 0,   pro: 100 },
   // 内部测试通道
-  tryon_test_cent:       { name: "一分测试", price: 0.01, unit: "次", type: "test",         days: 7,   normal: 1,   pro: 1 },
+  tryon_test_cent:       { name: "一分测试", price: 0.1, unit: "次", type: "test",         days: 7,   normal: 1,   pro: 1 },
   // 旧套餐兼容（已下线，仅用于历史订单回调/查单补发）
   tryon_normal_month_59: { name: "普通月卡(旧)", price: 59,  unit: "月", type: "normal_month", days: 30,  normal: 70,  pro: 0 },
   tryon_pro_month_199:   { name: "专业月卡(旧)", price: 199, unit: "月", type: "pro_month",    days: 30,  normal: 0,   pro: 200 },

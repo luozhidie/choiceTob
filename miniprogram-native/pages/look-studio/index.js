@@ -13,7 +13,7 @@ var PACKAGES = [
   { id: 'tryon_first_9_9',       name: '首单体验',  price: 9.9,  unit: '次', desc: '10 次普通试穿',               type: 'first',        days: 365, normal: 10,  pro: 0, highlight: true },
   { id: 'tryon_normal_month_99', name: '普通月卡',  price: 99,   unit: '月', desc: '30 天 100 次普通试穿',        type: 'normal_month', days: 30,  normal: 100, pro: 0 },
   { id: 'tryon_pro_998',         name: '专业版',    price: 998,  unit: '次', desc: '100 次专业诊断 · 含风格测试', type: 'pro_pack',     days: 365, normal: 0,   pro: 100, highlight: true },
-  { id: 'tryon_test_cent',       name: '测试通道',  price: 0.01, unit: '次', desc: '1 次普通 + 1 次专业（7 天）',  type: 'test',         days: 7,   normal: 1,   pro: 1, isTest: true },
+  { id: 'tryon_test_cent',       name: '测试通道',  price: 0.1, unit: '次', desc: '1 次普通 + 1 次专业（7 天）',  type: 'test',         days: 7,   normal: 1,   pro: 1, isTest: true },
 ];
 
 var CAT_NAMES = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋', accessory: '配饰' };
