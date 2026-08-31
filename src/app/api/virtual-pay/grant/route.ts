@@ -4,7 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { deliverVirtualGoods } from "@/lib/virtual-deliver";
-import { queryOrder, notifyProvideGoods, VIRTUAL_ENV } from "@/lib/virtual-pay";
+import { queryOrder, notifyProvideGoods, isPaidStatus, VIRTUAL_ENV } from "@/lib/virtual-pay";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,21 +25,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, granted: true, duplicate: true });
     }
 
-    // 1) 尽力核实：调 /xpay/query_order 确认真实支付（接口异常时放行，避免卡单）
+    // 1) 尽力核实：调 /xpay/query_order 确认真实支付
+    //    仅在「明确查到订单且状态不是已支付」时拒绝；接口异常/限频时放行，
+    //    因为客户端已拿到 wx.requestVirtualPayment 的 success 回调作为背书，
+    //    卡住真实付费用户比多放行一单更糟（且 notify 推送仍会兜底核对）。
     const env = Number(order.env ?? VIRTUAL_ENV) === 1 ? 1 : 0;
     let hardFail = false;
     try {
       const r: any = await queryOrder(outTradeNo, order.openid, env);
       if (r && (r.errcode === 0 || r.errCode === 0)) {
-        const info = r.order_info || r.order || r;
-        const st = String(info.status ?? info.pay_status ?? info.order_status ?? "").toLowerCase();
-        // 明确处于未支付/已关闭状态 → 拒绝发货
-        if (["0", "wait", "unpay", "unpaid", "created", "close", "closed", "refund"].includes(st)) {
+        const info = r.order || r.order_info || null;
+        if (info && !isPaidStatus(info.status)) {
+          console.warn("[虚拟支付] 订单状态不可发货", { outTradeNo, status: info.status });
           hardFail = true;
         }
-      } else if (r && typeof r.errcode === "number" && r.errcode !== 0) {
-        console.warn("[虚拟支付] query_order 返回错误", r);
-        hardFail = true;
+      } else {
+        console.warn("[虚拟支付] query_order 未成功，放行发货", JSON.stringify(r).slice(0, 200));
       }
     } catch (e: any) {
       console.warn("[虚拟支付] query_order 异常，放行发货", e?.message);
@@ -53,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     // 3) 通知平台已发货（失败可忽略，推送分支会兜底）
     try {
-      await notifyProvideGoods(outTradeNo, order.openid, env);
+      await notifyProvideGoods(outTradeNo, env);
     } catch (e: any) {
       console.warn("[虚拟支付] notifyProvideGoods 失败（可忽略）", e?.message);
     }

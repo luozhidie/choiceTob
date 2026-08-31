@@ -111,20 +111,42 @@ async function xpayPost(path: string, body: Record<string, any>, env: number) {
   return data;
 }
 
-/** 查询现金单（道具直购）——用于发货前核实是否真付款 */
+/* ===================== 订单状态 =====================
+ * 官方枚举（Res.order.status）：
+ *   0 订单初始化（未创建成功，不可用于支付）
+ *   1 订单创建成功（尚未支付）
+ *   2 订单已经支付，待发货   ← 仅从这里开始才能发货
+ *   3 订单发货中
+ *   4 订单已发货
+ *   5 订单已经退款
+ *   6 订单已经关闭（不可再使用）
+ *   7 订单退款失败
+ *   8 用户退款完成
+ *   9 回收广告金完成 / 10 分账回退完成
+ */
+export const PAID_STATUSES = [2, 3, 4];
+
+export function isPaidStatus(st: any): boolean {
+  const n = Number(st);
+  return Number.isFinite(n) && PAID_STATUSES.includes(n);
+}
+
+/** 查询现金单（道具直购）——用于发货前核实是否真付款
+ *  注意：官方字段名是 order_id（不是 out_trade_no），传错会返回 268490002
+ */
 export async function queryOrder(outTradeNo: string, openid: string, env: number) {
   return xpayPost(
     "/xpay/query_order",
-    { out_trade_no: outTradeNo, openid, env },
+    { openid, env, order_id: outTradeNo },
     env
   );
 }
 
 /** 通知平台已发货（现金单）；正常走推送返回成功后无需调用 */
-export async function notifyProvideGoods(outTradeNo: string, openid: string, env: number) {
+export async function notifyProvideGoods(outTradeNo: string, env: number) {
   return xpayPost(
     "/xpay/notify_provide_goods",
-    { out_trade_no: outTradeNo, openid, env },
+    { order_id: outTradeNo, env },
     env
   );
 }

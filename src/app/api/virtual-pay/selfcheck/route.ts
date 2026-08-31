@@ -20,7 +20,7 @@ async function probeKey(key: string, env: number, openid: string, outTradeNo: st
   try {
     const token = await getAccessToken();
     const path = "/xpay/query_order";
-    const body = JSON.stringify({ out_trade_no: outTradeNo, openid, env });
+    const body = JSON.stringify({ openid, env, order_id: outTradeNo });
     const paySig = hmacSha256Hex(key, path + "&" + body);
     const url = `https://api.weixin.qq.com${path}?access_token=${encodeURIComponent(token)}&pay_sig=${paySig}`;
     const res = await fetch(url, {

@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { deliverVirtualGoods } from "@/lib/virtual-deliver";
-import { queryOrder } from "@/lib/virtual-pay";
+import { queryOrder, isPaidStatus } from "@/lib/virtual-pay";
 
 function xmlField(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
@@ -26,7 +26,7 @@ function okResp(isXml: boolean, errCode = 0, errMsg = "success") {
   return NextResponse.json({ ErrCode: errCode, ErrMsg: errMsg });
 }
 
-/** 调 query_order 核实订单确已支付 */
+/** 调 query_order 核实订单确已支付（严格：查不到/状态不符一律不发，让微信重推） */
 async function verifyPaid(outTradeNo: string, openid: string, env: number): Promise<boolean> {
   try {
     const r: any = await queryOrder(outTradeNo, openid, env);
@@ -35,10 +35,15 @@ async function verifyPaid(outTradeNo: string, openid: string, env: number): Prom
       console.warn("[虚拟支付推送] query_order 返回错误", JSON.stringify(r).slice(0, 300));
       return false;
     }
-    const info = r.order_info || r.order || r;
-    const st = String(info.status ?? info.pay_status ?? info.order_status ?? "").toLowerCase();
-    // 明确处于未支付/已关闭/已退款 → 不发
-    if (["0", "wait", "unpay", "unpaid", "created", "close", "closed", "refund"].includes(st)) {
+    // 官方返回体是 { errcode, errmsg, order: { status, ... } }
+    const info = r.order || r.order_info || null;
+    if (!info) {
+      console.warn("[虚拟支付推送] query_order 无 order 数据", JSON.stringify(r).slice(0, 300));
+      return false;
+    }
+    // 仅 status ∈ {2 已支付待发货, 3 发货中, 4 已发货} 才发货
+    if (!isPaidStatus(info.status)) {
+      console.warn("[虚拟支付推送] 订单状态不可发货", { outTradeNo, status: info.status });
       return false;
     }
     return true;
