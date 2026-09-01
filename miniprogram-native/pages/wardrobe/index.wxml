@@ -70,7 +70,7 @@
         <text class="zone-name">🚪 我的单品</text>
         <text class="zone-count">{{selfItems.length}} 件</text>
       </view>
-      <view class="zone-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配与虚拟试衣。</view>
+      <view class="zone-tip">上传你自己的衣服 / 配饰 / 鞋 / 包，参与 AI 搭配。</view>
       <view wx:if="{{selfItems.length===0}}" class="zone-empty">衣橱空空，点右下角上传你的单品吧。</view>
       <view wx:else class="grid">
         <view wx:for="{{selfItems}}" wx:key="id" class="card" bindtap="preview" data-url="{{item.image_url}}">
@@ -90,7 +90,7 @@
   </block>
 
   <!-- 去虚拟试衣 -->
-  <view class="tryon-bar" bindtap="goTryon">去虚拟试衣试穿 ›</view>
+  <view class="tryon-bar" wx:if="{{showTryon}}" bindtap="goTryon">去虚拟试衣试穿 ›</view>
 
   <!-- 商城推荐商品 -->
   <view class="zone">

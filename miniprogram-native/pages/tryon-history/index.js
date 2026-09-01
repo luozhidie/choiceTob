@@ -1,7 +1,12 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 
 Page({
+  onLoad: function () {
+  if (!guard.guardAgentOnly()) return;
+  },
+
   data: { records: [], loading: true },
 
   onShow: function () { this.loadRecords(); },

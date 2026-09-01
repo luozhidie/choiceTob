@@ -21,7 +21,7 @@
     <text class="guide-sub">认证会员可先看会员价；会员折扣与退换额度按所选赛道生效</text>
     <view class="guide-cards">
       <!-- 998 虚拟试衣会员（新·低门槛） -->
-      <view class="gc-card gc-pay" bindtap="buyTryonAgent">
+      <view class="gc-card gc-pay" wx:if="{{showTryonAgent}}" bindtap="buyTryonAgent">
         <view class="gc-icon"><text>试</text></view>
         <text class="gc-name">虚拟试衣会员</text>
         <text class="gc-sub">¥998 专业版 · 无需预存货款</text>
@@ -56,6 +56,7 @@
     </view>
 
     <!-- 998 虚拟试衣会员套餐 -->
+    <block wx:if="{{showTryonAgent}}">
     <view class="deposit-header"><text class="dh-title">虚拟试衣会员</text><text class="dh-sub">¥998 开通 · 无需预存</text></view>
     <view class="plan-card pc-hl" wx:if="{{tryonAgentPlan}}">
       <view class="pc-tag">推荐</view>
@@ -67,6 +68,7 @@
       </view>
       <view class="pc-btn" bindtap="buyTryonAgent">立即开通</view>
     </view>
+    </block>
 
     <!-- 充值会员套餐 -->
     <view class="deposit-header" style="margin-top:24rpx;"><text class="dh-title">充值会员套餐</text><text class="dh-sub">充值即得 折扣权 + 退换额度</text></view>

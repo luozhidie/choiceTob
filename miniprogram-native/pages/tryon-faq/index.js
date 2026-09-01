@@ -1,4 +1,9 @@
+var guard = require('../../utils/agent-guard.js');
 Page({
+  onLoad: function () {
+  if (!guard.guardAgentOnly()) return;
+  },
+
   data: {
     faqs: [
       { q: '照片会被保存或公开吗？', a: '不会。照片仅用于本次 AI 试衣合成，处理后不保留、不公开。', open: false },

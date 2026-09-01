@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 
 function rewriteSupabase(u) {
@@ -64,6 +65,7 @@ Page({
   },
 
   showNeedPackage: function () {
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     wx.showModal({
       title: '未开通试衣套餐',
       content: '整体造型 · 一套上身需先开通试衣套餐并支付后才能使用。',
@@ -73,6 +75,7 @@ Page({
   },
 
   showNoLeft: function () {
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     wx.showModal({
       title: '普通版次数不足',
       content: '当前套餐普通试穿次数已用完，去开通或续费继续生成整体造型。',
@@ -177,6 +180,7 @@ Page({
   },
 
   continueStack: function () {
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     var url = this.data.resultUrl;
     if (!url) return;
     wx.navigateTo({ url: '/pages/look-studio/index?baseImageUrl=' + encodeURIComponent(url) });

@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 
 var CAT_NAMES = { top: '上装', bottom: '下装', shoes: '鞋履', bag: '包袋', accessory: '配饰' };
@@ -9,7 +10,12 @@ function rewriteSupabase(u) {
 }
 
 Page({
+  onLoad: function () {
+    this.setData({ showTryon: guard.isAllowed() });
+  },
+
   data: {
+    showTryon: false,
     activeTab: 'mine',          // 'mine' = 我的衣橱 / 'cloud' = 我的云衣橱
     selfItems: [],
     stylistItems: [],
@@ -105,6 +111,7 @@ Page({
 
   // 去虚拟试衣（与主试衣共用权益门禁）
   goTryon: function () {
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     var t = this;
     app.getOpenid().then(function (openid) {
       wx.request({

@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 var SUPABASE_PUBLIC = 'https://fxeknwkmytzedkhplozn.supabase.co/storage/v1/object/public/';
 var BUCKET = 'blocks-images';
@@ -51,6 +52,7 @@ Page({
   },
 
   onLoad: function () {
+  if (!guard.guardAgentOnly()) return;
     this.setData({ results: emptyResults() });
     this.checkEntitlement();
     this.loadProfilePhotos();

@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var vp = require('../../utils/virtual-pay.js');
 
 Page({
@@ -46,6 +47,7 @@ Page({
       });
       return;
     }
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     wx.navigateTo({ url:'/pages/style-tryon/index' });
   },
 
@@ -68,6 +70,7 @@ Page({
   },
 
   showBuyModal:function(){
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     wx.showModal({
       title:'需开通风格测试会员',
       content:'风格测试为专业诊断内容，开通 ¥998 会员后女士 / 男士测试与真人试穿同时可用。',

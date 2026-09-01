@@ -1,6 +1,11 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 
 Page({
+  onLoad: function () {
+  if (!guard.guardAgentOnly()) return;
+  },
+
   data: {
     steps: [
       { n: '1', t: '上传照片', d: '拍一张正面半身照。照片只用于本次 AI 合成，不会留存或公开。', tip: '光线均匀、背景干净，效果更准' },

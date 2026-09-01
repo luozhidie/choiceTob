@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 
 Page({
   data:{
@@ -15,7 +16,7 @@ Page({
     ],
     /* 998 虚拟试衣会员入口 */
     tryonAgentPlan:{id:'tryon_pro_998',name:'虚拟试衣会员·¥998',priceLabel:'购买 ¥998',discountLabel:'3.3折起',features:['单件3.3折','满5件2.8折','赠专业版100次','无需预存'],highlight:true},
-    showTryonAgent:true,
+    showTryonAgent:false,
     showPay:false,
     selectedPlan:null,
     advisorWx:'luozhidie666',
@@ -25,6 +26,7 @@ Page({
   },
 
   onLoad:function(options){
+    this.setData({showTryonAgent:guard.isAllowed()});
     if(options&&options.tab&&(options.tab==='price'||options.tab==='deposit')){
       this.setData({activeTab:options.tab});
     }
@@ -139,6 +141,7 @@ Page({
 
   /* 998 虚拟试衣会员：跳转云衣橱专业版购买页 */
   buyTryonAgent:function(){
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     wx.navigateTo({ url: '/pages/look-studio/index?promo=1' });
   },
 

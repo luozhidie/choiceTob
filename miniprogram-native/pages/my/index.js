@@ -1,3 +1,4 @@
+var guard = require('../../utils/agent-guard.js');
 /* ── 小程序「我的」页 — 三态：未登录 / 已登录未认证 / 已登录已认证 ── */
 
 /* 风格订阅：服务端（openid）持久化 + 本地兜底 */
@@ -300,6 +301,7 @@ Page({
   goStyleTest:function(){wx.navigateTo({url:'/pages/diagnosis-form/index'});},
   goLookStudio:function(){
     var t=this;
+    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
     if(!t.data.isLoggedIn){
       wx.navigateTo({url:'/pages/login/index?redirect='+encodeURIComponent('/pages/tryon-promo/index?from=my')});
       return;

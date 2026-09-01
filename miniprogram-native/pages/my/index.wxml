@@ -262,8 +262,8 @@
     </view>
   </view>
 
-  <!-- ========== AI 虚拟试衣：独立大入口 ========== -->
-  <view class="section" bindtap="goLookStudio">
+  <!-- ========== AI 虚拟试衣：独立大入口（仅代理/管理员可见） ========== -->
+  <view class="section" wx:if="{{isAgent || isAdmin}}" bindtap="goLookStudio">
     <view class="tryon-entry">
       <view class="te-left">
         <text class="te-title">云衣橱•AI虚拟试衣</text>

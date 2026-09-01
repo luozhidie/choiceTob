@@ -1,4 +1,5 @@
 var app = getApp();
+var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 var vp = require('../../utils/virtual-pay.js');
 
@@ -9,6 +10,7 @@ Page({
   },
 
   onLoad: function () {
+  if (!guard.guardAgentOnly()) return;
     app.getOpenid().catch(function () {});
   },
 
