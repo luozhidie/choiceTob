@@ -1,5 +1,6 @@
 var app = getApp();
 var guard = require('../../utils/agent-guard.js');
+var vp = require('../../utils/virtual-pay.js');
 
 Page({
   data:{
@@ -139,10 +140,55 @@ Page({
 
   closePay:function(){this.setData({showPay:false,selectedPlan:null});},
 
-  /* 998 虚拟试衣会员：跳转云衣橱专业版购买页 */
+  /* 998 合作代理开通：直接虚拟支付购买，成功后解锁试衣代理权 */
   buyTryonAgent:function(){
-    if (!guard.isAllowed()) { wx.showToast({ title: '该功能仅对合作代理开放', icon: 'none', duration: 2000 }); return; }
-    wx.navigateTo({ url: '/pages/look-studio/index?promo=1' });
+    var t=this;
+    vp.pay({
+      goodsKey:'tryon_pro_998',
+      success:function(){
+        wx.showToast({ title:'开通成功', icon:'success' });
+        wx.setStorageSync('is_agent', true);
+        t.setData({ isAgent:true, showTryonAgent:true });
+        setTimeout(function(){ t.loadAgentStatus(); }, 600);
+      },
+      fail:function(err){
+        if(err && err.errMsg && String(err.errMsg).indexOf('cancel') > -1) return;
+        wx.showToast({ title:'支付失败，请重试', icon:'none' });
+      },
+      legacy:function(){ t.legacyBuyTryonAgent(); }
+    });
+  },
+
+  /* 兜底：虚拟支付不可用时走原 JSAPI 通道 */
+  legacyBuyTryonAgent:function(){
+    var t=this;
+    wx.showLoading({ title:'调起支付...' });
+    app.getOpenid().then(function(openid){
+      wx.request({
+        url:'https://colour-choice.art/api/tryon/create',
+        method:'POST',
+        data:{ package_id:'tryon_pro_998', openid:openid },
+        success:function(r){
+          wx.hideLoading();
+          var d=r.data||{};
+          if(d.error){ wx.showModal({ title:'下单失败', content:d.error, showCancel:false }); return; }
+          wx.requestPayment({
+            timeStamp:d.timeStamp, nonceStr:d.nonceStr, package:d.package,
+            signType:d.signType||'MD5', paySign:d.paySign,
+            success:function(){
+              wx.showToast({ title:'开通成功', icon:'success' });
+              wx.setStorageSync('is_agent', true);
+              t.setData({ isAgent:true, showTryonAgent:true });
+            },
+            fail:function(err){
+              if(err && err.errMsg && err.errMsg.indexOf('cancel') > -1) return;
+              wx.showToast({ title:'支付失败', icon:'none' });
+            }
+          });
+        },
+        fail:function(){ wx.hideLoading(); wx.showToast({ title:'网络错误', icon:'none' }); }
+      });
+    });
   },
 
   /* 预存货款属预付资金，小程序内不提供在线支付入口，改联系顾问线下入账 */

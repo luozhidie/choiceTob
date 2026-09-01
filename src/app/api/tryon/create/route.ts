@@ -41,7 +41,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未知套餐" }, { status: 400 });
     }
     // 专业版尚未开放（试衣引擎升级打磨中），服务端一并拦截，防止绕过页面直接下单
-    if (pkg.type === "pro_pack" && !tryonProEnabled()) {
+    // 例外：tryon_pro_998 是「成为合作代理」激活套餐（购买即解锁代理身份），不属于向公众开放专业版试衣，放行
+    if (pkg.type === "pro_pack" && !tryonProEnabled() && package_id !== "tryon_pro_998") {
       return NextResponse.json({ error: "专业版升级打磨中，暂未开放购买" }, { status: 403 });
     }
 

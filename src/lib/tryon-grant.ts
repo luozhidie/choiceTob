@@ -74,4 +74,24 @@ export async function grantTryonEntitlement(
     updated_at: new Date().toISOString(),
   });
   console.log(`[试衣权益发放] 成功 schema=${schema}`, { openid, type, normalLeft, proLeft });
+
+  // 购买 998 专业版 → 永久成为虚拟试衣代理（与店主认证、货款会员独立）
+  // 覆盖小程序虚拟支付链路（网站微信支付回调 /api/tryon/notify 已标记，此处不冲突）
+  if (package_id === "tryon_pro_998") {
+    try {
+      const { data: p1 } = await svc.from("profiles").select("id").eq("wechat_openid", openid).maybeSingle();
+      const uid =
+        p1?.id ||
+        (await svc.from("profiles").select("id").eq("wx_openid", openid).maybeSingle()).data?.id;
+      if (uid) {
+        await svc
+          .from("profiles")
+          .update({ is_tryon_agent: true, updated_at: new Date().toISOString() })
+          .eq("id", uid);
+        console.log("[试衣代理] 已标记 is_tryon_agent=true (virtual-pay)", { openid, uid });
+      }
+    } catch (e) {
+      console.error("[试衣代理] 标记失败 (virtual-pay)", e);
+    }
+  }
 }
