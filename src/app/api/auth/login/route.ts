@@ -59,6 +59,15 @@ export async function POST(req: NextRequest) {
         membershipExpiresAt = profile.membership_expires_at;
         userRole = profile.role;
       }
+      // 回写最后登录时间（原来缺失，导致 profiles.last_login_at 长期为空）
+      try {
+        await serviceClient
+          .from("profiles")
+          .update({ last_login_at: new Date().toISOString() })
+          .eq("id", data.user!.id);
+      } catch (e) {
+        console.error("[Auth Login] 回写 last_login_at 失败:", e);
+      }
     } catch (e) {
       console.error("[Auth Login] 查会员信息失败:", e);
     }

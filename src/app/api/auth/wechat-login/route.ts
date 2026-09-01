@@ -65,13 +65,11 @@ export async function POST(req: NextRequest) {
     if (existingProfile) {
       // 已存在：更新昵称和头像（如果传了）
       userId = existingProfile.id;
-      const updateData: any = {};
+      const updateData: any = { last_login_at: new Date().toISOString() };
       if (nickName) updateData.full_name = nickName;
       if (avatarUrl) updateData.avatar_url = avatarUrl;
-      if (Object.keys(updateData).length > 0) {
-        await supabase.from("profiles").update(updateData).eq("id", userId);
-        profile = { ...existingProfile, ...updateData };
-      }
+      await supabase.from("profiles").update(updateData).eq("id", userId);
+      profile = { ...existingProfile, ...updateData };
     } else {
       // 不存在：新建 auth.users + profiles
       // 用微信 openid 生成唯一 email（Supabase Auth 要求 email 唯一）
@@ -102,6 +100,7 @@ export async function POST(req: NextRequest) {
           wx_openid: openid,
           role: "user",
           membership_type: "none",
+          last_login_at: new Date().toISOString(),
         })
         .select()
         .single();
