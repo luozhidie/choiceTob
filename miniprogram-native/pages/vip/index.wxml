@@ -24,9 +24,9 @@
       <view class="gc-card gc-pay" bindtap="buyTryonAgent">
         <view class="gc-icon"><text>{{showTryonAgent?'试':'代'}}</text></view>
         <text class="gc-name">{{showTryonAgent?'虚拟试衣会员':'成为合作代理'}}</text>
-        <text class="gc-sub">¥998 开通 · 享专属价与试衣权</text>
+        <text class="gc-sub">¥998 开通 · 享会员店铺专属价与权益</text>
         <view class="gc-features">
-          <text class="gc-f">✓ 单件发货 3.3 折</text><text class="gc-f">✓ 满 5 件 2.8 折</text><text class="gc-f">✓ 赠 100 次试衣额度</text>
+          <text class="gc-f">✓ 单件发货 3.3 折</text><text class="gc-f">✓ 满 5 件 2.8 折</text><text class="gc-f">✓ 赠 100 次专属额度</text>
         </view>
         <view class="gc-btn gc-btn-main">{{showTryonAgent?'继续使用 ›':'立即开通 ↓'}}</view>
       </view>
