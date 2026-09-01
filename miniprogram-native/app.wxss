@@ -106,3 +106,25 @@ page {
   color: var(--text);
 }
 .sec-sub { font-size: 23rpx; color: var(--text-4); }
+
+/* ===== AI 生成内容显著标识（合规要求：深度合成-AI创作）===== */
+.ai-gen-bar{
+  display:flex;align-items:center;gap:10rpx;
+  margin:16rpx 24rpx;padding:14rpx 16rpx;
+  background:#fff4e6;border:2rpx solid #ff9800;border-radius:12rpx;
+}
+.ai-gen-tag{
+  background:#ff9800;color:#fff;font-size:20rpx;font-weight:800;
+  padding:4rpx 14rpx;border-radius:6rpx;flex:0 0 auto;letter-spacing:1rpx;
+}
+.ai-gen-txt{
+  font-size:22rpx;color:#8a5a00;line-height:1.45;flex:1;
+}
+/* 图片上的角标 */
+.ai-gen-corner{
+  position:absolute;right:8rpx;bottom:8rpx;
+  background:rgba(255,152,0,.92);color:#fff;
+  font-size:18rpx;font-weight:700;padding:4rpx 12rpx;border-radius:6rpx;
+}
+
+.ai-img-wrap{position:relative;width:100%;}

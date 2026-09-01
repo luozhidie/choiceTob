@@ -118,10 +118,5 @@
       }
     ]
   },
-  "permission": {
-    "scope.userLocation": {
-      "desc": "用于推荐附近货源"
-    }
-  },
   "lazyCodeLoading": "requiredComponents"
 }

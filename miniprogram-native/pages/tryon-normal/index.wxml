@@ -1,4 +1,9 @@
 <view class="page">
+  <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
+  <view class="ai-gen-bar">
+    <text class="ai-gen-tag">AI生成</text>
+    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+  </view>
   <view class="head">
     <text class="h-title">普通版</text>
     <text class="h-sub">快速看上身 · 不想研究搭配选这个</text>

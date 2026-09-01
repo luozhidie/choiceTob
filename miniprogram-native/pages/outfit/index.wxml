@@ -1,4 +1,9 @@
 <view class="page">
+  <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
+  <view class="ai-gen-bar">
+    <text class="ai-gen-tag">AI生成</text>
+    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+  </view>
   <view class="title">整体造型 · 一套上身</view>
   <view class="sub">上传人物 + 上装 + 下装，一次生成完整套装（通义 OutfitAnyone，保留你的脸，无水印）。人物用全身正面照、光照良好、单人。</view>
 

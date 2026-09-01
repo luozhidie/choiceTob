@@ -1,4 +1,9 @@
 <view class="page">
+  <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
+  <view class="ai-gen-bar">
+    <text class="ai-gen-tag">AI生成</text>
+    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+  </view>
   <view class="tip">最近 7 天内的试衣记录，过期后自动清理。</view>
 
   <view wx:if="{{loading}}" class="empty">加载中…</view>
@@ -12,7 +17,10 @@
     <view class="r-imgs">
       <image wx:for="{{item.cloth_urls}}" wx:for-item="u" wx:key="*this" src="{{u}}" mode="aspectFill" class="c-img"/>
     </view>
-    <image wx:if="{{item.result_url}}" src="{{item.result_url}}" mode="widthFix" class="result-img" bindtap="preview" data-url="{{item.result_url}}"/>
+    <view wx:if="{{item.result_url}}" class="ai-img-wrap">
+      <image src="{{item.result_url}}" mode="widthFix" class="result-img" bindtap="preview" data-url="{{item.result_url}}"/>
+      <text class="ai-gen-corner">AI生成</text>
+    </view>
   </view>
 
   <view style="height: 40rpx;"></view>
