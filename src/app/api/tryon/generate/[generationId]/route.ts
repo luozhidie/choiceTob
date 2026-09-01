@@ -1,11 +1,12 @@
 // app/api/tryon/generate/[generationId]/route.ts
-// 轮询 Genlook 虚拟试衣任务状态；完成后自动把结果图转存到 Supabase 并做画质增强。
+// 轮询通义（aitryon）虚拟试衣任务状态；完成后自动把结果图转存到 Supabase 并做画质增强。
+// generationId 即 dashscope 的 task_id。
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { enhancePipeline, ALIYUN_VISION_ENABLED } from "@/lib/tryon/enhance";
+import { enhancePipeline } from "@/lib/tryon/enhance";
 import { cropWatermark } from "@/lib/tryon/removeBg";
 
-const GENLOOK_BASE = "https://api.genlook.app";
+const DASHSCOPE_BASE = "https://dashscope.aliyuncs.com";
 const BUCKET = "blocks-images";
 
 // 转存 + 画质增强可能耗时较长，放宽函数超时（Hobby 计划上限 60s，Pro 可达更高）
@@ -23,6 +24,22 @@ function getSupabase() {
   return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
 }
 
+// 通义 task_status → 前端约定状态（前端只认 COMPLETED / PENDING / error）
+function mapStatus(s: string): string {
+  switch (s) {
+    case "SUCCEEDED":
+      return "COMPLETED";
+    case "FAILED":
+      return "FAILED";
+    case "CANCELED":
+      return "CANCELED";
+    case "RUNNING":
+      return "RUNNING";
+    default:
+      return "PENDING";
+  }
+}
+
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ generationId: string }> }) {
   try {
     const { generationId } = await params;
@@ -35,24 +52,26 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ ok: true, status: "COMPLETED", resultUrl: cached.resultUrl });
     }
 
-    const apiKey = process.env.GENLOOK_API_KEY;
+    const apiKey = process.env.DASHSCOPE_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "试衣服务未配置" }, { status: 500 });
     }
 
-    const gRes = await fetch(`${GENLOOK_BASE}/tryon/v1/generations/${generationId}`, {
-      headers: { "x-api-key": apiKey },
+    const tRes = await fetch(`${DASHSCOPE_BASE}/api/v1/tasks/${generationId}`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
     });
-    const gData = await gRes.json().catch(() => ({}));
-    const status = gData.status;
+    const tData = await tRes.json().catch(() => ({}));
+    const out = tData.output || {};
+    const rawStatus = out.task_status || tData.task_status || "PENDING";
+    const status = mapStatus(rawStatus);
 
     if (status === "COMPLETED") {
-      let resultUrl = gData.resultImageUrl || "";
+      let resultUrl = out.image_url || out.results?.[0]?.url || out.result?.url || "";
       if (!resultUrl) {
         return NextResponse.json({ error: "任务完成但未返回图片地址", status }, { status: 500 });
       }
 
-      // 转存到自己的 Supabase（Genlook 返回的签名 URL 仅 7 天有效）
+      // 转存到自己的 Supabase（通义结果 URL 仅 24h 有效）
       try {
         const supabase = getSupabase();
         await supabase.storage.createBucket(BUCKET, { public: true });
@@ -60,7 +79,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         const imgRes = await fetch(resultUrl);
         if (imgRes.ok) {
           let imgBuf: Buffer = Buffer.from(await imgRes.arrayBuffer());
-          // 去底部水印（Genlook 输出常带 "AI MODIFIED" 等水印条）
+          // 去底部水印（部分模型输出带水印条）
           try {
             imgBuf = (await cropWatermark(imgBuf)) as Buffer;
           } catch (cwErr) {
@@ -102,17 +121,18 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     const FAILED_STATES = new Set(["FAILED", "ERROR", "CANCELED"]);
     if (FAILED_STATES.has(status)) {
-      const raw = gData.message || gData.error || "";
-      let msg = raw || `生成失败 [Genlook状态:${status}]`;
-      if (raw.toLowerCase().includes("resolution") && raw.toLowerCase().includes("too low")) {
+      const raw = out.message || out.code || tData.message || "";
+      let msg = raw || `生成失败 [通义状态:${rawStatus}]`;
+      const low = String(raw).toLowerCase();
+      if (low.includes("resolution") && low.includes("too low")) {
         msg = "图片分辨率过低，请上传更清晰的单品图（建议 1024×1024 以上）";
-      } else if (raw.toLowerCase().includes("face") || raw.toLowerCase().includes("no person")) {
+      } else if (low.includes("face") || low.includes("no person") || low.includes("person")) {
         msg = "未检测到人物，请上传正面、光线良好的半身/全身照";
-      } else if (raw.toLowerCase().includes("garment")) {
+      } else if (low.includes("garment")) {
         msg = "衣服图识别失败，请换一张平铺/挂拍的清晰单品图";
       }
-      console.error("[tryon/generate/poll] Genlook 任务失败", generationId, status, gData);
-      return NextResponse.json({ error: msg, raw: gData, status }, { status: 500 });
+      console.error("[tryon/generate/poll] 通义任务失败", generationId, rawStatus, tData);
+      return NextResponse.json({ error: msg, raw: tData, status }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, status: status || "PENDING" });

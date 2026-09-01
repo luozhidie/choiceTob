@@ -2,8 +2,34 @@
 
 import Link from "next/link";
 import TryonPayButton from "@/components/tryon/TryonPayButton";
+import { TRYON_PRO_ENABLED } from "@/lib/tryon/flags";
 
 export default function TryonProPage() {
+  if (!TRYON_PRO_ENABLED) {
+    return (
+      <main className="max-w-[720px] mx-auto min-h-screen bg-[#faf8f6] px-4 py-10 text-center">
+        <div className="text-4xl mb-3">✨</div>
+        <h1 className="text-xl font-extrabold text-[#2d1b2e]">专业版升级打磨中</h1>
+        <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+          正在接入更高精度的试衣引擎并做测试衣验收，
+          <br />
+          验收通过后开放购买。现在先用普通版，一样能看上身效果。
+        </p>
+        <Link
+          href="/tryon/normal"
+          className="inline-block mt-5 py-3 px-8 rounded-xl bg-[#2d1b2e] text-[#C9A24B] font-extrabold text-base no-underline"
+        >
+          去用普通版
+        </Link>
+        <Link
+          href="/tryon"
+          className="block mt-3 text-sm text-gray-400 no-underline"
+        >
+          返回试衣首页
+        </Link>
+      </main>
+    );
+  }
   return (
     <main className="max-w-[720px] mx-auto min-h-screen bg-[#faf8f6] px-4 py-6 pb-28">
       <div className="flex items-baseline gap-2">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import TryonPayButton from "@/components/tryon/TryonPayButton";
+import { TRYON_PRO_ENABLED } from "@/lib/tryon/flags";
 
 export default function TryonPromoPage() {
   return (
@@ -65,14 +66,22 @@ export default function TryonPromoPage() {
             <h3 className="font-bold text-[#2d1b2e]">普通版</h3>
             <p className="text-xs text-gray-500 mt-1">快速看上身 · ¥99/月 100 次</p>
           </Link>
-          <Link
-            href="/tryon/pro"
-            className="bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white rounded-2xl p-4 shadow-sm hover:opacity-95 transition block"
-          >
-            <div className="text-2xl mb-2">✨</div>
-            <h3 className="font-bold">专业版</h3>
-            <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥998/100 次</p>
-          </Link>
+          {TRYON_PRO_ENABLED ? (
+            <Link
+              href="/tryon/pro"
+              className="bg-gradient-to-br from-[#2d1b2e] to-[#4a3a5a] text-white rounded-2xl p-4 shadow-sm hover:opacity-95 transition block"
+            >
+              <div className="text-2xl mb-2">✨</div>
+              <h3 className="font-bold">专业版</h3>
+              <p className="text-xs text-white/80 mt-1">诊断+搭配 · ¥998/100 次</p>
+            </Link>
+          ) : (
+            <div className="bg-white/70 rounded-2xl p-4 border border-dashed border-gray-300 opacity-70">
+              <div className="text-2xl mb-2 grayscale">✨</div>
+              <h3 className="font-bold text-gray-500">专业版</h3>
+              <p className="text-xs text-gray-400 mt-1">升级打磨中 · 敬请期待</p>
+            </div>
+          )}
         </div>
       </section>
 

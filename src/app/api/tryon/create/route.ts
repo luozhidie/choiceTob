@@ -4,6 +4,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { unifiedOrder, generateJsapiPayParams } from "@/lib/wechat-pay";
+import { tryonProEnabled } from "@/lib/tryon/flags";
 import type { PayPlatform } from "@/lib/wechat-pay";
 
 // 与小程序端 PACKAGES 保持一致（服务端权威定价）
@@ -38,6 +39,10 @@ export async function POST(request: NextRequest) {
     const pkg = PACKAGES[package_id];
     if (!pkg) {
       return NextResponse.json({ error: "未知套餐" }, { status: 400 });
+    }
+    // 专业版尚未开放（试衣引擎升级打磨中），服务端一并拦截，防止绕过页面直接下单
+    if (pkg.type === "pro_pack" && !tryonProEnabled()) {
+      return NextResponse.json({ error: "专业版升级打磨中，暂未开放购买" }, { status: 403 });
     }
 
     const supabase = await createClient();
