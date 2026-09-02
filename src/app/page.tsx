@@ -585,12 +585,31 @@ export default function Home() {
   const [showPopup, setShowPopup] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [seriesPromos, setSeriesPromos] = useState<any[]>([]);
+  // 后台站点文案（首页/登录页标题），默认值兜底，后台修改后实时覆盖
+  const [homeCopy, setHomeCopy] = useState({
+    tagline: "数据趋动·智选未来",
+    title: "骆芷蝶·智选｜供应链管理平台",
+    subtitle: "服装门店线上服务平台",
+    taglineColor: "#C9A24B",
+    titleColor: "#2d1b2e",
+    subtitleColor: "#666666",
+  });
 
   // 读取当季系列/专题活动
   useEffect(() => {
     fetch("/api/public/promotions?type=series&limit=5")
       .then((r) => r.json())
       .then((j) => { if (j.success) setSeriesPromos(j.data || []); })
+      .catch(() => {});
+  }, []);
+
+  // 读取后台站点文案：首页/登录页标题
+  useEffect(() => {
+    fetch("/api/public/settings?keys=home_copy")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data?.home_copy) setHomeCopy((prev) => ({ ...prev, ...json.data.home_copy }));
+      })
       .catch(() => {});
   }, []);
 
@@ -1057,13 +1076,24 @@ export default function Home() {
       {/* 品牌标题区（移到圆型色彩模块上方） */}
       <section className="w-full bg-white border-b border-gray-100 pt-12">
         <div className="max-w-7xl mx-auto px-4 py-4 md:py-5">
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full mb-2 bg-primary/10 text-primary text-[10px] font-medium tracking-widest">
-            🏷 数据趋动·智选未来
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full mb-2 bg-primary/10 text-[10px] font-medium tracking-widest"
+            style={{ color: homeCopy.taglineColor }}
+          >
+            🏷 {homeCopy.tagline}
           </span>
-          <h1 className="font-black text-gray-900 leading-[1.15] tracking-tight" style={{ fontSize: "clamp(20px, 3.5vw, 32px)" }}>
-            骆芷蝶·智选<span className="text-[#e89aac] mx-1">|</span>供应链平台
+          <h1
+            className="font-black leading-[1.15] tracking-tight"
+            style={{ fontSize: "clamp(20px, 3.5vw, 32px)", color: homeCopy.titleColor }}
+          >
+            {homeCopy.title}
           </h1>
-          <p className="text-xs md:text-sm text-gray-500 font-light tracking-wide mt-1">服装门店一站式赋能平台</p>
+          <p
+            className="text-xs md:text-sm font-light tracking-wide mt-1"
+            style={{ color: homeCopy.subtitleColor }}
+          >
+            {homeCopy.subtitle}
+          </p>
         </div>
       </section>
 

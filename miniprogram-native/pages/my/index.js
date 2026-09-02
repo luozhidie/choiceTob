@@ -89,12 +89,28 @@ Page({
 
     /* 营销弹窗 */
     popupCfg:null,
-    popupVisible:false
+    popupVisible:false,
+
+    /* 后台站点文案：会员卡片（默认值兜底，后台修改后实时覆盖） */
+    memberCardCopy:{
+      desc:'认证即享会员价，购买专业版 ¥998 解锁更高会员折扣',
+      nextTierText:'¥998 专业版 · 一件代发',
+      footText:'专业版 ¥998 · 一件代发 · 批量拿货价格更低',
+      agentCtaText:'¥998 开通专业版，一件代发，批量拿货价格更低',
+      priceEntryText:'充值解锁退换额度 + 更高会员折扣',
+      benefits:[
+        {icon:'🏷️',label:'会员价'},
+        {icon:'🔄',label:'会员折扣'},
+        {icon:'🎟️',label:'新款抢先'},
+        {icon:'⚡',label:'精准推荐'}
+      ]
+    }
   },
 
   onShow:function(){
     this.initAll();
     this.loadPageBg();
+    this.loadMemberCardCopy();
     this.loadPopup();
   },
 
@@ -156,6 +172,25 @@ Page({
           ? ('background:'+(color||'#fff5f8')+';background-image:url(\''+img+'\');background-size:cover;background-position:center;')
           : (color ? ('background:'+color+';') : '');
         t.setData({ myHeaderColor:color, myHeaderImage:img, myHeaderStyle:style });
+      }
+    });
+  },
+
+  /* 后台站点文案：会员卡片（desc/进度条右侧/底部/代理入口/充值入口/四权益标签） */
+  loadMemberCardCopy:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/settings?keys=member_card_copy',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data||!d.data.member_card_copy)return;
+        var mc=d.data.member_card_copy;
+        var def=t.data.memberCardCopy;
+        var merged={};
+        for(var k in def){ if(def.hasOwnProperty(k)) merged[k]=(mc[k]!=null?mc[k]:def[k]); }
+        if(Array.isArray(mc.benefits)&&mc.benefits.length>0) merged.benefits=mc.benefits;
+        t.setData({memberCardCopy:merged});
       }
     });
   },

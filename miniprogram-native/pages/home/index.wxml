@@ -5,13 +5,13 @@
     <view wx:if="{{homeBgImage}}" class="hdr-mask"/>
     <!-- 顶部：小标题 -->
     <view class="header-top">
-      <text class="ht-small">数据趋动·智选未来</text>
+      <text class="ht-small" style="color:{{homeCopy.taglineColor}}">{{homeCopy.tagline}}</text>
     </view>
 
     <!-- 大标题 + 副标题 -->
     <view class="header-titles">
-      <text class="ht-big">骆芷蝶·智选｜品质女装</text>
-      <text class="ht-sub">服装门店线上服务平台</text>
+      <text class="ht-big" style="color:{{homeCopy.titleColor}}">{{homeCopy.title}}</text>
+      <text class="ht-sub" style="color:{{homeCopy.subtitleColor}}">{{homeCopy.subtitle}}</text>
     </view>
 
     <!-- 菜单按钮（搜索框上方） -->

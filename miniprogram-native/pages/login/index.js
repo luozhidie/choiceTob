@@ -2,13 +2,34 @@ Page({
   data:{
     _v:'20260707',
     agreed:false,
-    loading:false
+    loading:false,
+    /* 后台站点文案：登录页大标题（默认值兜底，后台修改后实时覆盖） */
+    homeCopy:{ tagline:'', title:'骆芷蝶·智选｜供应链管理平台', subtitle:'', taglineColor:'#C9A24B', titleColor:'#2d1b2e', subtitleColor:'#666666' }
   },
 
   onLoad:function(options){
     var redirect = (options && options.redirect) || '';
     this.setData({ redirect: redirect });
     console.log('[login] version:',this.data._v, 'redirect:', redirect);
+    this.loadHomeCopy();
+  },
+
+  /* 后台站点文案：首页/登录页标题 */
+  loadHomeCopy:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/settings?keys=home_copy',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data||!d.data.home_copy)return;
+        var hc=d.data.home_copy;
+        var merged={};
+        var def=t.data.homeCopy;
+        for(var k in def){ if(def.hasOwnProperty(k)) merged[k]=(hc[k]!=null?hc[k]:def[k]); }
+        t.setData({homeCopy:merged});
+      }
+    });
   },
 
   /* 勾选协议 */

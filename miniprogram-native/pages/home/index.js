@@ -62,6 +62,8 @@ Page({
     homePage:1,
     specTabs:['特价甄选','首次降价','3折以下','反季特价'],
     specMap:{},         // 特价货架：{ blockId: { mode, products, markets } }
+    /* 后台站点文案：首页/登录页标题（默认值兜底，后台修改后实时覆盖） */
+    homeCopy:{ tagline:'数据趋动·智选未来', title:'骆芷蝶·智选｜供应链管理平台', subtitle:'服装门店线上服务平台', taglineColor:'#C9A24B', titleColor:'#2d1b2e', subtitleColor:'#666666' },
   },
 
   onLoad:function(){
@@ -85,6 +87,7 @@ Page({
     this.loadCategories();  // 从后台读取分类标签
     this.loadBlocks();
     this.loadPageBg();      // 后台「页面背景」配置
+    this.loadHomeCopy();    // 后台站点文案（首页/登录页标题）
     this.chkLogin();
   },
   onShow:function(){
@@ -233,6 +236,24 @@ Page({
       }
     });
   },
+  /* ====== 后台站点文案：首页/登录页标题 ====== */
+  loadHomeCopy:function(){
+    var t=this;
+    wx.request({
+      url:'https://colour-choice.art/api/public/settings?keys=home_copy',
+      method:'GET',
+      success:function(r){
+        var d=r.data;
+        if(!d||!d.success||!d.data||!d.data.home_copy)return;
+        var hc=d.data.home_copy;
+        var merged={};
+        var def=t.data.homeCopy;
+        for(var k in def){ if(def.hasOwnProperty(k)) merged[k]=(hc[k]!=null?hc[k]:def[k]); }
+        t.setData({homeCopy:merged});
+      }
+    });
+  },
+
   /* 头部 + 整页最终背景样式：图片优先，否则用颜色（后台设置优先于首个区块 bgColor） */
   updateHeaderStyle:function(){
     var t=this;

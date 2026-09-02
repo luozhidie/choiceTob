@@ -59,9 +59,34 @@ export default function MyPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"overview" | "orders" | "cart">("overview");
   const [showRules, setShowRules] = useState(false);
+  // 后台站点文案（会员卡片），默认值兜底，后台修改后实时覆盖
+  const [memberCardCopy, setMemberCardCopy] = useState({
+    desc: "认证即享会员价，购买专业版 ¥998 解锁更高会员折扣",
+    nextTierText: "¥998 专业版 · 一件代发",
+    footText: "专业版 ¥998 · 一件代发 · 批量拿货价格更低",
+    agentCtaText: "¥998 开通专业版，一件代发，批量拿货价格更低",
+    priceEntryText: "充值解锁退换额度 + 更高会员折扣",
+    benefits: [
+      { icon: "🏷️", label: "会员价" },
+      { icon: "🔄", label: "会员折扣" },
+      { icon: "🎟️", label: "新款抢先" },
+      { icon: "⚡", label: "精准推荐" },
+    ],
+  });
 
   useEffect(() => {
     initUser();
+  }, []);
+
+  // 读取后台站点文案：会员卡片
+  useEffect(() => {
+    fetch("/api/public/settings?keys=member_card_copy")
+      .then((r) => r.json())
+      .then((json) => {
+        if (json?.data?.member_card_copy)
+          setMemberCardCopy((prev) => ({ ...prev, ...json.data.member_card_copy }));
+      })
+      .catch(() => {});
   }, []);
 
   const initUser = async () => {
@@ -462,7 +487,7 @@ export default function MyPage() {
                     查看权益
                   </Link>
                 </div>
-                <p className="text-white/70 text-sm mb-4">认证即享批发价，充值货款解锁拿货折扣 + 退换额度</p>
+                <p className="text-white/70 text-sm mb-4">{memberCardCopy.desc}</p>
 
                 {/* 进度条 */}
                 <div className="mb-2">
@@ -474,17 +499,12 @@ export default function MyPage() {
                   </div>
                 </div>
                 <p className="text-white/60 text-sm mb-5">
-                  已充值 <span className="text-amber-300 font-bold">¥{depositAmountYuan.toLocaleString()}</span>，{nextTierText}
+                  已充值 <span className="text-amber-300 font-bold">¥{depositAmountYuan.toLocaleString()}</span>，{memberCardCopy.nextTierText}
                 </p>
 
                 {/* 4个权益图标 */}
                 <div className="flex justify-around pt-4 border-t border-white/10">
-                  {[
-                    { icon: "🏷️", label: "批发价" },
-                    { icon: "🔄", label: "拿货折扣" },
-                    { icon: "🎟️", label: "新款抢先" },
-                    { icon: "⚡", label: "精准推荐" },
-                  ].map((item) => (
+                  {memberCardCopy.benefits.map((item) => (
                     <div key={item.label} className="flex flex-col items-center gap-1.5">
                       <div className="w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-lg">
                         {item.icon}
@@ -493,21 +513,21 @@ export default function MyPage() {
                     </div>
                   ))}
                 </div>
-                <p className="text-white/40 text-xs text-center mt-3">一次性充值解锁 · 更高档位享更高退换额度</p>
+                <p className="text-white/40 text-xs text-center mt-3">{memberCardCopy.footText}</p>
 
                 {/* 代理中心入口：6000 做代理享折扣 */}
                 <Link
                   href="/agent"
                   className="block text-center text-sm text-stone-900 font-bold hover:opacity-90 transition-opacity mt-3 py-3 rounded-xl bg-gradient-to-r from-amber-300 to-yellow-400 border border-amber-200 shadow-md shadow-amber-900/20"
                 >
-                  首充 ¥6,000 做代理 · 享 2.8 折拿货 →
+                  {memberCardCopy.agentCtaText} →
                 </Link>
 
                 <Link
                   href="/vip#deposit"
                   className="block text-center text-sm text-amber-300 hover:text-amber-200 transition-colors mt-3 py-3 rounded-xl bg-amber-400/10 border border-amber-400/20"
                 >
-                  充值解锁退换额度 + 拿货折扣 →
+                  {memberCardCopy.priceEntryText} →
                 </Link>
               </div>
             )}
