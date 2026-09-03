@@ -55,11 +55,11 @@ interface DepositCopy {
 const DEFAULT_VIP: VipCopy = {
   hero: { title: "骆芷蝶 · VIP会员", subtitle: "企划定品控方向，严选稳货源" },
   guideSection: { title: "两种会员方式", subtitle: "认证会员可先看会员价；会员折扣与退换额度按所选赛道生效" },
-  tryonCard: { icon: "试", inactiveIcon: "代", nameActive: "虚拟试衣会员", nameInactive: "成为合作代理", sub: "¥998 开通 · 享会员店铺专属价与权益", features: ["单件发货 3.3 折", "满 5 件 2.8 折", "赠 100 次专属额度"], btnActive: "继续使用 ›", btnInactive: "立即开通 ↓" },
+  tryonCard: { icon: "试", inactiveIcon: "代", nameActive: "虚拟试衣会员", nameInactive: "成为合作代理", sub: "¥998 开通 · 享一件代发与会员价查看", features: ["单件一件代发", "会员价拿货", "赠 100 次专属额度"], btnActive: "继续使用 ›", btnInactive: "立即开通 ↓" },
   depositCard: { icon: "充", name: "预存货款会员", sub: "充值即同时享折扣+退换额度", features: ["退换额度", "会员折扣", "优先发货"], btn: "选套餐 ↓" },
   agentCenter: { tag: "AGENT", title: "权益中心", descActive: "已开通会员店铺 · 享专属价 · 分享搭配", descInactive: "购买 ¥998 专业版或充值货款，即可开通会员店铺享专属价", btnActive: "进入 ›", btnInactive: "去开通 ›" },
   tryonHeader: { title: "虚拟试衣会员", sub: "¥998 开通 · 无需预存" },
-  tryonPlan: { id: "tryon_pro_998", name: "虚拟试衣会员·¥998", priceLabel: "购买 ¥998", discountLabel: "3.3折起", features: ["单件3.3折", "满5件2.8折", "赠专业版100次", "无需预存"], example: "", btn: "立即开通", highlight: true },
+  tryonPlan: { id: "tryon_pro_998", name: "虚拟试衣会员·¥998", priceLabel: "购买 ¥998", discountLabel: "会员价拿货", features: ["单件一件代发", "会员价拿货", "赠专业版100次", "无需预存"], example: "", btn: "立即开通", highlight: true },
   depositHeader: { title: "充值会员套餐", sub: "充值即得 折扣权 + 退换额度" },
   depositPlanBtn: "立即充值",
   depositPlans: [
