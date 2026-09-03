@@ -148,64 +148,100 @@ module.exports = {
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
-      <!-- 十二位核心会员：每个色彩季型绑定一位（平铺十二季型，一次看清） -->
+      <!-- 十二位核心会员：按色彩季型分组，每季型可挂任意多个客户 -->
       <view class="card">
-        <view class="card-title">我的十二位核心会员<text class="card-sub">十二季型各绑定一位</text></view>
-        <text class="style-tip">每位会员维护 12 位分别对应十二个色彩季型的核心会员，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
+        <view class="card-title">我的十二位核心会员<text class="card-sub">十二季型 · 每型不限人数</text></view>
+        <text class="style-tip">每个客户都有「色彩季型 + 风格」两个结论，挑衣要同时满足才好看。按季型归类客户，每个季型可开发多位作为兜底。</text>
         <view class="core-grid core-grid-flat">
-          <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+          <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" class="core-slot {{coreClients[s.token] && coreClients[s.token].length ? 'filled':''}}" bindtap="toggleCoreSeason" data-season="{{s.token}}">
             <text class="core-style">{{s.token}}</text>
-            <block wx:if="{{coreClients[s.token]}}">
-              <text class="core-name">{{coreClients[s.token].name}}</text>
-              <text class="core-sub" wx:if="{{coreClients[s.token].contact}}">{{coreClients[s.token].contact}}</text>
-              <view class="core-share" catchtap="coreShare" data-token="{{s.token}}">去分享 ›</view>
-            </block>
-            <text wx:else class="core-empty">＋ 待开发</text>
+            <text class="core-num">{{coreClients[s.token] ? coreClients[s.token].length : 0}} 人</text>
+            <text wx:if="{{expandedCoreSeason !== s.token}}" class="core-empty">＋ 展开</text>
+          </view>
+        </view>
+        <view wx:if="{{expandedCoreSeason}}" class="core-subtree">
+          <view class="style-group-label">{{expandedCoreSeason}} · {{coreClients[expandedCoreSeason] ? coreClients[expandedCoreSeason].length : 0}} 位客户</view>
+          <view class="client-list">
+            <view wx:for="{{coreClients[expandedCoreSeason]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-season="{{expandedCoreSeason}}" data-index="{{index}}">
+              <view class="client-main">
+                <text class="client-name">{{c.name}}</text>
+                <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
+              </view>
+              <text class="client-share" catchtap="coreShare" data-token="{{expandedCoreSeason}}">分享</text>
+            </view>
+            <view wx:if="{{!coreClients[expandedCoreSeason] || coreClients[expandedCoreSeason].length===0}}" class="list-empty-sm">该季型还没有客户，点击下方添加</view>
+            <view class="client-add" bindtap="openClientForm" data-season="{{expandedCoreSeason}}" data-index="-1">＋ 添加客户</view>
           </view>
         </view>
       </view>
 
-      <!-- 女士风格会员盘：8 主风格 × 8 偏风格 = 64（可折叠） -->
+      <!-- 女士风格会员盘：8 主风格 × 8 偏风格 = 64（可折叠，每风格不限人数） -->
       <view class="card">
-        <view class="card-title">女士风格会员盘<text class="card-sub">64 种风格组合</text></view>
-        <text class="style-tip">维护 64 种女士穿衣风格组合会员，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">女士风格会员盘<text class="card-sub">64 种风格组合 · 每型不限人数</text></view>
+        <text class="style-tip">维护 64 种女士穿衣风格组合会员，点击主风格展开所有偏风格组合，再点风格卡展开其客户列表。</text>
         <view class="mat-parent-bar style-parent-bar">
           <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{expandedLadyStyle===item?'on':''}}" bindtap="expandLadyStyle" data-main="{{item}}">{{item}}</view>
         </view>
         <view wx:if="{{expandedLadyStyle}}" class="core-subtree">
           <view class="style-group-label">{{expandedLadyStyle}}的偏风格（曲直 / 冷暖微调）· 8 种组合</view>
           <view class="core-grid style-core-grid">
-            <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.gkey]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}" data-gender="lady">
+            <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.gkey] && styleClients[s.gkey].length ? 'filled':''}}" bindtap="toggleStyleList" data-gkey="{{s.gkey}}" data-gender="lady" data-season="{{s.token}}">
               <text class="core-style">{{s.token}}</text>
-              <block wx:if="{{styleClients[s.gkey]}}">
-                <text class="core-name">{{styleClients[s.gkey].name}}</text>
-                <text class="core-sub" wx:if="{{styleClients[s.gkey].contact}}">{{styleClients[s.gkey].contact}}</text>
-              </block>
-              <text wx:else class="core-empty">＋ 待开发</text>
+              <text class="core-num">{{styleClients[s.gkey] ? styleClients[s.gkey].length : 0}} 人</text>
+              <text wx:if="{{expandedStyleKey !== s.gkey}}" class="core-empty">＋ 展开</text>
             </view>
           </view>
         </view>
       </view>
 
-      <!-- 男士风格会员盘：5 主风格 × 5 偏风格 = 25（可折叠） -->
+      <!-- 女士风格客户列表（展开某一风格时显示） -->
+      <view wx:if="{{expandedStyleKey && expandedStyleGender==='lady'}}" class="card client-card">
+        <view class="card-title">{{expandedStyleSeason}} · {{styleClients[expandedStyleKey] ? styleClients[expandedStyleKey].length : 0}} 位客户</view>
+        <view class="client-list">
+          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
+            <view class="client-main">
+              <text class="client-name">{{c.name}}</text>
+              <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
+            </view>
+            <text class="client-share" catchtap="coreShare" data-token="{{expandedStyleSeason}}">分享</text>
+          </view>
+          <view wx:if="{{!styleClients[expandedStyleKey] || styleClients[expandedStyleKey].length===0}}" class="list-empty-sm">该风格还没有客户，点击下方添加</view>
+          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="-1">＋ 添加客户</view>
+        </view>
+      </view>
+
+      <!-- 男士风格会员盘：5 主风格 × 5 偏风格 = 25（可折叠，每风格不限人数） -->
       <view class="card">
-        <view class="card-title">男士风格会员盘<text class="card-sub">25 种风格组合</text></view>
-        <text class="style-tip">维护 25 种男士穿衣风格组合会员，点击主风格展开查看所有偏风格组合。</text>
+        <view class="card-title">男士风格会员盘<text class="card-sub">25 种风格组合 · 每型不限人数</text></view>
+        <text class="style-tip">维护 25 种男士穿衣风格组合会员，点击主风格展开所有偏风格组合，再点风格卡展开其客户列表。</text>
         <view class="mat-parent-bar style-parent-bar">
           <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{expandedManStyle===item?'on':''}}" bindtap="expandManStyle" data-main="{{item}}">{{item}}</view>
         </view>
         <view wx:if="{{expandedManStyle}}" class="core-subtree">
           <view class="style-group-label">{{expandedManStyle}}的偏风格（可多选叠加）· 5 种组合</view>
           <view class="core-grid style-core-grid">
-            <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.gkey]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}" data-gender="man">
+            <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.gkey] && styleClients[s.gkey].length ? 'filled':''}}" bindtap="toggleStyleList" data-gkey="{{s.gkey}}" data-gender="man" data-season="{{s.token}}">
               <text class="core-style">{{s.token}}</text>
-              <block wx:if="{{styleClients[s.gkey]}}">
-                <text class="core-name">{{styleClients[s.gkey].name}}</text>
-                <text class="core-sub" wx:if="{{styleClients[s.gkey].contact}}">{{styleClients[s.gkey].contact}}</text>
-              </block>
-              <text wx:else class="core-empty">＋ 待开发</text>
+              <text class="core-num">{{styleClients[s.gkey] ? styleClients[s.gkey].length : 0}} 人</text>
+              <text wx:if="{{expandedStyleKey !== s.gkey}}" class="core-empty">＋ 展开</text>
             </view>
           </view>
+        </view>
+      </view>
+
+      <!-- 男士风格客户列表（展开某一风格时显示） -->
+      <view wx:if="{{expandedStyleKey && expandedStyleGender==='man'}}" class="card client-card">
+        <view class="card-title">{{expandedStyleSeason}} · {{styleClients[expandedStyleKey] ? styleClients[expandedStyleKey].length : 0}} 位客户</view>
+        <view class="client-list">
+          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
+            <view class="client-main">
+              <text class="client-name">{{c.name}}</text>
+              <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
+            </view>
+            <text class="client-share" catchtap="coreShare" data-token="{{expandedStyleSeason}}">分享</text>
+          </view>
+          <view wx:if="{{!styleClients[expandedStyleKey] || styleClients[expandedStyleKey].length===0}}" class="list-empty-sm">该风格还没有客户，点击下方添加</view>
+          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="-1">＋ 添加客户</view>
         </view>
       </view>
 
@@ -584,18 +620,18 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 核心会员编辑弹窗 -->
-  <view wx:if="{{showCoreEdit}}" class="mask" bindtap="closeCoreEdit">
+  <!-- 客户添加/编辑弹窗 -->
+  <view wx:if="{{showClientForm}}" class="mask" bindtap="closeClientForm">
     <view class="sheet" catchtap="noop">
-      <text class="sheet-title">核心会员 · {{coreEditToken}}</text>
-      <text class="sheet-sub">绑定一位对应此色彩季型的会员</text>
-      <input class="sheet-input" value="{{coreEditName}}" bindinput="onCoreName" placeholder="会员称呼（如：李姐）"/>
-      <input class="sheet-input" value="{{coreEditContact}}" bindinput="onCoreContact" placeholder="微信 / 电话"/>
-      <input class="sheet-input" value="{{coreEditNote}}" bindinput="onCoreNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
+      <text class="sheet-title">{{clientFormIndex >= 0 ? '编辑客户' : '添加客户'}} · {{clientFormSeason}}</text>
+      <text class="sheet-sub">{{clientFormGender === 'lady' ? '女士风格' : (clientFormGender === 'man' ? '男士风格' : '色彩季型')}}客户</text>
+      <input class="sheet-input" value="{{clientForm.name}}" bindinput="onClientName" placeholder="会员称呼（如：李姐）"/>
+      <input class="sheet-input" value="{{clientForm.contact}}" bindinput="onClientContact" placeholder="微信 / 电话"/>
+      <input class="sheet-input" value="{{clientForm.note}}" bindinput="onClientNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
       <view class="sheet-btns">
-        <view wx:if="{{coreEditIsSeason && coreEditIds[coreEditToken]}}" class="sheet-delete" bindtap="deleteCore">删除</view>
-        <view class="sheet-cancel" bindtap="closeCoreEdit">取消</view>
-        <view class="sheet-save" bindtap="saveCoreEdit">{{coreSaving ? '保存中…' : '保存'}}</view>
+        <view wx:if="{{clientFormIndex >= 0}}" class="sheet-delete" bindtap="deleteClient">删除</view>
+        <view class="sheet-cancel" bindtap="closeClientForm">取消</view>
+        <view class="sheet-save" bindtap="saveClient">保存</view>
       </view>
     </view>
   </view>

@@ -124,25 +124,26 @@ Page({
     showColorPicker: false,
     pickerProduct: null,
     pickerSeason: '',
-    // 核心会员（已同步后端 vip_customers，source='agent_core'，本地作兜底）
+    // 核心会员：按色彩季型分组，每季型可挂任意多个客户 { "深暖": [{name,contact,note}, ...] }
     coreClients: {},
-    coreEditIds: {},           // 季型 token -> 后端记录 id（用于 PUT 更新）
-    expandedCoreGroup: '',     // 核心会员 12 季型当前展开的固有色组
-    // 穿衣风格会员盘（女士 64 + 男士 25）
+    expandedCoreSeason: '',      // 当前展开的季型（显示其客户列表）
+    // 穿衣风格会员盘（女士 64 + 男士 25），每风格可挂任意多个客户，按性别前缀隔离
     ladyMainStyles: LADY_MAIN_STYLES,
     ladyStyleCombos: LADY_STYLE_COMBOS,
     manMainStyles: MAN_MAIN_STYLES,
     manStyleCombos: MAN_STYLE_COMBOS,
-    styleClients: {},
+    styleClients: {},            // { "lady:古典偏浪漫": [{name,contact,note}, ...] }
     expandedLadyStyle: '',
     expandedManStyle: '',
-    showCoreEdit: false,
-    coreEditToken: '',
-    coreEditGender: '',      // 'lady' / 'man' / ''（季型核心会员），用于风格盘按性别隔离存储
-    coreEditName: '',
-    coreEditContact: '',
-    coreEditNote: '',
-    coreSaving: false,
+    expandedStyleKey: '',        // 当前展开的风格 gkey（显示其客户列表）
+    expandedStyleGender: '',
+    expandedStyleSeason: '',
+    // 客户添加/编辑表单
+    showClientForm: false,
+    clientFormSeason: '',        // 季型 token 或风格 token
+    clientFormGender: '',        // 'lady' / 'man' / ''（季型）
+    clientFormIndex: -1,         // -1=新增；>=0=编辑数组索引
+    clientForm: { name: '', contact: '', note: '' },
     // 工作台快捷推荐
     homeQuickPicks: [],
     // 订单状态汇总
@@ -685,10 +686,6 @@ Page({
     var group = e.currentTarget.dataset.group;
     this.setData({ expandedGroup: this.data.expandedGroup === group ? '' : group });
   },
-  expandCoreGroup: function (e) {
-    var group = e.currentTarget.dataset.group;
-    this.setData({ expandedCoreGroup: this.data.expandedCoreGroup === group ? '' : group });
-  },
   expandWorkshopGroup: function (e) {
     var group = e.currentTarget.dataset.group;
     this.setData({ expandedWorkshopGroup: this.data.expandedWorkshopGroup === group ? '' : group });
@@ -750,34 +747,14 @@ Page({
     return (this.data.myMaterials || []).some(function (m) { return m.product_id === pid; });
   },
 
-  // 十二位核心会员：每个色彩季型绑定一位核心会员，数据同步到后端 vip_customers(source='agent_core')
+  // 十二位核心会员：按色彩季型分组，每季型可挂任意多个客户（本地存储，纯前端）
   loadCoreClients: function () {
-    var t = this;
-    // 本地兜底先渲染
     var arr;
     try { arr = wx.getStorageSync(CORE_KEY) || {}; } catch (e) { arr = {}; }
     if (!arr || typeof arr !== 'object') arr = {};
-    t.setData({ coreClients: arr });
-    // 后端加载（按 agent_id 隔离，仅本代理）
-    wx.request({
-      url: BASE + '/api/agent/vip-customers',
-      method: 'GET',
-      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
-      success: function (r) {
-        var d = r.data || {};
-        if (d.error) return;
-        var map = {}; var ids = {};
-        (d.customers || []).forEach(function (c) {
-          if (c.source !== 'agent_core' || !c.color_season) return;
-          map[c.color_season] = { name: c.name || '', contact: c.wechat || '', note: c.notes || '', shares: 0 };
-          ids[c.color_season] = c.id;
-        });
-        try { wx.setStorageSync(CORE_KEY, map); } catch (e) {}
-        t.setData({ coreClients: map, coreEditIds: ids });
-      }
-    });
+    this.setData({ coreClients: arr });
   },
-  // 穿衣风格会员盘（女士 64 + 男士 25）
+  // 穿衣风格会员盘（女士 64 + 男士 25）：每风格可挂任意多个客户，按性别前缀隔离
   loadStyleClients: function () {
     var arr;
     try { arr = wx.getStorageSync(STYLE_CLIENTS_KEY) || {}; } catch (e) { arr = {}; }
@@ -792,118 +769,101 @@ Page({
   },
   expandLadyStyle: function (e) {
     var main = e.currentTarget.dataset.main;
-    this.setData({ expandedLadyStyle: this.data.expandedLadyStyle === main ? '' : main });
+    // 切换主风格时收起风格客户列表
+    this.setData({ expandedLadyStyle: this.data.expandedLadyStyle === main ? '' : main, expandedStyleKey: '', expandedStyleGender: '', expandedStyleSeason: '' });
   },
   expandManStyle: function (e) {
     var main = e.currentTarget.dataset.main;
-    this.setData({ expandedManStyle: this.data.expandedManStyle === main ? '' : main });
+    this.setData({ expandedManStyle: this.data.expandedManStyle === main ? '' : main, expandedStyleKey: '', expandedStyleGender: '', expandedStyleSeason: '' });
+  },
+  // 展开/收起某季型的客户列表
+  toggleCoreSeason: function (e) {
+    var season = e.currentTarget.dataset.season;
+    this.setData({ expandedCoreSeason: this.data.expandedCoreSeason === season ? '' : season });
+  },
+  // 展开/收起某风格的客户列表
+  toggleStyleList: function (e) {
+    var ds = e.currentTarget.dataset;
+    var gkey = ds.gkey;
+    if (this.data.expandedStyleKey === gkey) {
+      this.setData({ expandedStyleKey: '', expandedStyleGender: '', expandedStyleSeason: '' });
+    } else {
+      this.setData({ expandedStyleKey: gkey, expandedStyleGender: ds.gender, expandedStyleSeason: ds.season });
+    }
   },
   isSeasonToken: function (token) {
     return COLOR_SEASONS.some(function (s) { return s.token === token; });
   },
-  openCoreEdit: function (e) {
+  // 打开客户表单：添加（index=-1）或编辑（数组索引）
+  openClientForm: function (e) {
     var ds = e.currentTarget.dataset;
-    var token = ds.token;
+    var season = ds.season;
     var gender = ds.gender || '';
-    var c;
-    if (this.isSeasonToken(token)) {
-      c = this.data.coreClients[token] || {};
-    } else {
-      // 风格盘：按性别前缀隔离，女士 lady: / 男士 man:
-      var key = (gender ? gender + ':' : '') + token;
-      c = this.data.styleClients[key] || {};
-    }
+    var index = ds.index === undefined ? -1 : parseInt(ds.index, 10);
+    var c = index >= 0 ? this._clientAt(season, gender, index) : {};
     this.setData({
-      showCoreEdit: true, coreEditToken: token, coreEditIsSeason: this.isSeasonToken(token),
-      coreEditGender: gender,
-      coreEditName: c.name || '', coreEditContact: c.contact || '', coreEditNote: c.note || ''
+      showClientForm: true, clientFormSeason: season, clientFormGender: gender, clientFormIndex: index,
+      clientForm: { name: c.name || '', contact: c.contact || '', note: c.note || '' }
     });
   },
-  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
-  onCoreName: function (e) { this.setData({ coreEditName: e.detail.value }); },
-  onCoreContact: function (e) { this.setData({ coreEditContact: e.detail.value }); },
-  onCoreNote: function (e) { this.setData({ coreEditNote: e.detail.value }); },
-  saveCoreEdit: function () {
+  closeClientForm: function () { this.setData({ showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } }); },
+  onClientName: function (e) { this.setData({ 'clientForm.name': e.detail.value }); },
+  onClientContact: function (e) { this.setData({ 'clientForm.contact': e.detail.value }); },
+  onClientNote: function (e) { this.setData({ 'clientForm.note': e.detail.value }); },
+  _clientAt: function (season, gender, index) {
+    var target = gender ? this.data.styleClients : this.data.coreClients;
+    var key = gender ? (gender + ':' + season) : season;
+    var arr = target[key] || [];
+    return arr[index] || {};
+  },
+  // 保存客户到对应类型（季型或风格）的客户数组，每类型不限人数
+  saveClient: function () {
     var t = this;
-    if (t.data.coreSaving) return;
-    var name = (t.data.coreEditName || '').trim();
-    var contact = (t.data.coreEditContact || '').trim();
+    var name = (t.data.clientForm.name || '').trim();
+    var contact = (t.data.clientForm.contact || '').trim();
     if (!name && !contact) { wx.showToast({ title: '至少填一项', icon: 'none' }); return; }
-    var token = t.data.coreEditToken;
-    var cur = { name: name, contact: contact, note: t.data.coreEditNote || '', shares: 0 };
-    var prevKey = t.isSeasonToken(token) ? token : ((t.data.coreEditGender ? t.data.coreEditGender + ':' : '') + token);
-    var prev = (t.data.coreClients[token] || t.data.styleClients[prevKey]) || {};
-    if (prev.shares) cur.shares = prev.shares;
-
-    if (t.isSeasonToken(token)) {
-      // 核心会员：同步到后端 vip_customers（source='agent_core'）
-      var existingId = t.data.coreEditIds[token];
-      var body = { name: name, source: 'agent_core', color_season: token, wechat: contact, notes: t.data.coreEditNote || '' };
-      if (existingId) body.id = existingId;
-      wx.request({
-        url: BASE + '/api/agent/vip-customers',
-        method: existingId ? 'PUT' : 'POST',
-        header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
-        data: body,
-        success: function (r) {
-          var d = r.data || {};
-          var clients = Object.assign({}, t.data.coreClients);
-          var ids = Object.assign({}, t.data.coreEditIds);
-          clients[token] = cur;
-          if (d.data && d.data.id) ids[token] = d.data.id;
-          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
-          wx.showToast({ title: '已保存', icon: 'success' });
-        },
-        fail: function () {
-          // 后端失败则存本地兜底
-          var clients = Object.assign({}, t.data.coreClients);
-          clients[token] = cur;
-          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-          t.setData({ coreClients: clients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
-          wx.showToast({ title: '已存本地', icon: 'none' });
-        }
-      });
-      return;
+    var season = t.data.clientFormSeason;
+    var gender = t.data.clientFormGender;
+    var key = gender ? (gender + ':' + season) : season;
+    var target = gender ? Object.assign({}, t.data.styleClients) : Object.assign({}, t.data.coreClients);
+    var arr = (target[key] || []).slice();
+    var cur = { id: '' + Date.now() + Math.floor(Math.random() * 999), name: name, contact: contact, note: t.data.clientForm.note || '' };
+    if (t.data.clientFormIndex >= 0) arr[t.data.clientFormIndex] = cur;
+    else arr.push(cur);
+    target[key] = arr;
+    if (gender) {
+      try { wx.setStorageSync(STYLE_CLIENTS_KEY, target); } catch (e) {}
+      t.setData({ styleClients: target, showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } });
+    } else {
+      try { wx.setStorageSync(CORE_KEY, target); } catch (e) {}
+      t.setData({ coreClients: target, showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } });
     }
-    // 风格会员盘：保持本地存储（按性别前缀隔离，女士 lady: / 男士 man:）
-    var gender = t.data.coreEditGender;
-    var key = (gender ? gender + ':' : '') + token;
-    var styleClients = Object.assign({}, t.data.styleClients);
-    styleClients[key] = cur;
-    try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
-    t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
     wx.showToast({ title: '已保存', icon: 'success' });
   },
-  deleteCore: function () {
+  // 删除客户（索引定位）
+  deleteClient: function () {
     var t = this;
-    var token = t.data.coreEditToken;
-    var existingId = (t.data.coreEditIds || {})[token];
-    if (!existingId) return;
+    var season = t.data.clientFormSeason;
+    var gender = t.data.clientFormGender;
+    var index = t.data.clientFormIndex;
+    if (index < 0) return;
     wx.showModal({
-      title: '删除确认',
-      content: '确定删除「' + token + '」的核心会员吗？',
-      confirmText: '删除',
+      title: '删除确认', content: '确定删除该客户吗？', confirmText: '删除',
       success: function (res) {
         if (!res.confirm) return;
-        function finish() {
-          var clients = Object.assign({}, t.data.coreClients);
-          var ids = Object.assign({}, t.data.coreEditIds);
-          delete clients[token];
-          delete ids[token];
-          try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
-          wx.showToast({ title: '已删除', icon: 'success' });
+        var key = gender ? (gender + ':' + season) : season;
+        var target = gender ? Object.assign({}, t.data.styleClients) : Object.assign({}, t.data.coreClients);
+        var arr = (target[key] || []).slice();
+        arr.splice(index, 1);
+        target[key] = arr;
+        if (gender) {
+          try { wx.setStorageSync(STYLE_CLIENTS_KEY, target); } catch (e) {}
+          t.setData({ styleClients: target, showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } });
+        } else {
+          try { wx.setStorageSync(CORE_KEY, target); } catch (e) {}
+          t.setData({ coreClients: target, showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } });
         }
-        wx.request({
-          url: BASE + '/api/agent/vip-customers?id=' + encodeURIComponent(existingId),
-          method: 'DELETE',
-          header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
-          success: function (r) { finish(); },
-          fail: function () {
-            wx.showModal({ title: '删除失败', content: '网络错误，已保留本地记录，请稍后重试。', showCancel: false });
-          }
-        });
+        wx.showToast({ title: '已删除', icon: 'success' });
       }
     });
   },
