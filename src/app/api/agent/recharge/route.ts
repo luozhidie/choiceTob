@@ -5,18 +5,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { unifiedOrder, generateJsapiPayParams } from "@/lib/wechat-pay";
+import { getWholesaleTier } from "@/lib/price-config";
 import type { PayPlatform } from "@/lib/wechat-pay";
 
 export const dynamic = "force-dynamic";
 
-const PLANS: Record<string, {
-  title: string;
-  totalFee: number;      // 分
-  depositAmount: number; // 分
-  discountRate: number;  // 0.28 = 2.8折
-  returnRate: number;    // 0.05 = 5%
-  isTest?: boolean;
-}> = {
+// 仅测试档硬编码；wholesale 档位金额/折扣/退换一律走后台配置（getWholesaleTier）
+const TEST_PLAN = {
   agent_test_cent: {
     title: "充值链路测试",
     totalFee: 1,
@@ -24,34 +19,6 @@ const PLANS: Record<string, {
     discountRate: 0.28,
     returnRate: 0.05,
     isTest: true,
-  },
-  wholesale_6k: {
-    title: "拿货会员·首充6000",
-    totalFee: 600000,
-    depositAmount: 600000,
-    discountRate: 0.28,
-    returnRate: 0,
-  },
-  wholesale_5w: {
-    title: "充值会员·5万",
-    totalFee: 5000000,
-    depositAmount: 5000000,
-    discountRate: 0.28,
-    returnRate: 0.05,
-  },
-  wholesale_10w: {
-    title: "充值会员·10万",
-    totalFee: 10000000,
-    depositAmount: 10000000,
-    discountRate: 0.28,
-    returnRate: 0.10,
-  },
-  wholesale_30w: {
-    title: "充值会员·30万",
-    totalFee: 30000000,
-    depositAmount: 30000000,
-    discountRate: 0.26,
-    returnRate: 0.20,
   },
 };
 
@@ -73,8 +40,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { plan_id, openid, platform = "mini" } = body || {};
 
-    const plan = PLANS[plan_id];
-    if (!plan) {
+    let plan: any;
+    if (plan_id === "agent_test_cent") {
+      plan = TEST_PLAN.agent_test_cent;
+    } else if (String(plan_id).startsWith("wholesale_")) {
+      const t = await getWholesaleTier(plan_id);
+      if (!t) return NextResponse.json({ error: "充值套餐未配置：" + plan_id }, { status: 400 });
+      plan = {
+        title: t.name,
+        totalFee: t.amountFen,
+        depositAmount: t.amountFen,
+        discountRate: t.discount,
+        returnRate: t.returnRate,
+        isTest: false,
+      };
+    } else {
       return NextResponse.json({ error: "无效的充值套餐" }, { status: 400 });
     }
     if (!openid) {

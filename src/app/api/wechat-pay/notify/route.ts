@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { parseXml, signMd5, buildXml } from "@/lib/wechat-pay";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { settleAgentSale } from "@/lib/agent-settlement";
+import { getWholesaleTier } from "@/lib/price-config";
 
 export const dynamic = "force-dynamic";
 
@@ -128,24 +129,20 @@ export async function POST(request: NextRequest) {
 async function autoActivateMembership(supabase: any, userId: string, productId: string, orderNo: string) {
   console.log('[自动开通会员]', { userId, productId, orderNo });
 
-  // 拿货会员充值（wholesale_5w/10w/30w）：走代理店铺自动开通逻辑
-  const WHOLESALE_PLANS: Record<string, { amount: number; discount: number; ret: number }> = {
-    wholesale_6k: { amount: 600000, discount: 0.28, ret: 0 },
-    wholesale_5w: { amount: 5000000, discount: 0.28, ret: 0.05 },
-    wholesale_10w: { amount: 10000000, discount: 0.28, ret: 0.10 },
-    wholesale_30w: { amount: 30000000, discount: 0.26, ret: 0.20 },
-  };
-  if (WHOLESALE_PLANS[productId]) {
-    const plan = WHOLESALE_PLANS[productId];
-    const svc = getServiceRoleClient();
-    await activateStoreForDepositAgent(svc, userId, {
-      deposit_amount: plan.amount,
-      discount_rate: plan.discount,
-      return_rate: plan.ret,
-      plan_id: productId,
-    });
-    console.log('[自动开通会员] wholesale 代理店铺已开通', { userId, productId });
-    return;
+  // 拿货会员充值（wholesale_*）：折扣与退换额度以「后台配置」为准（/admin/price-config 可改）
+  if (String(productId).startsWith("wholesale_")) {
+    const plan = await getWholesaleTier(productId);
+    if (plan) {
+      const svc = getServiceRoleClient();
+      await activateStoreForDepositAgent(svc, userId, {
+        deposit_amount: plan.amountFen,
+        discount_rate: plan.discount,
+        return_rate: plan.returnRate,
+        plan_id: productId,
+      });
+      console.log('[自动开通会员] wholesale 代理店铺已开通', { userId, productId });
+      return;
+    }
   }
 
   // 根据 productId/planId 判断会员类型和有效期
