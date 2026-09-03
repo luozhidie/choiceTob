@@ -1347,37 +1347,55 @@ Page({
     if (t.data.vipUploading) return;
     var vip = t.data.vipDetail;
     if (!vip || !vip.id) return;
+    var token = t.data.token || wx.getStorageSync('token') || '';
+    var getBase64 = function (filePath) {
+      return new Promise(function (resolve, reject) {
+        try {
+          var fsm = wx.getFileSystemManager();
+          fsm.readFile({
+            filePath: filePath,
+            encoding: 'base64',
+            success: function (r) { resolve(r.data); },
+            fail: function (e) { reject(e); },
+          });
+        } catch (e) { reject(e); }
+      });
+    };
     wx.chooseImage({
       count: 1,
       success: function (res) {
         var filePath = res.tempFilePaths[0];
         t.setData({ vipUploading: true });
-        wx.uploadFile({
-          url: BASE + '/api/mini/upload-avatar',
-          filePath: filePath,
-          name: 'file',
-          header: { 'Authorization': 'Bearer ' + (t.data.token || wx.getStorageSync('token') || '') },
-          success: function (up) {
-            var d = {};
-            try { d = JSON.parse(up.data); } catch (e) {}
-            var url = d.url || '';
-            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); t.setData({ vipUploading: false }); return; }
-            var h2 = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (t.data.token || wx.getStorageSync('token') || '') };
-            wx.request({
-              url: BASE + '/api/agent/vip-customers', method: 'PUT',
-              header: h2,
-              data: { id: vip.id, image_url: url },
-              success: function () {
-                var detail = Object.assign({}, t.data.vipDetail, { image_url: url });
-                t.setData({ vipDetail: detail, vipUploading: false });
-                t.loadVipCustomers(true);
-                wx.showToast({ title: '形象照已更新', icon: 'success' });
-              },
-              fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '同步失败', icon: 'none' }); }
-            });
-          },
-          fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '上传失败', icon: 'none' }); }
-        });
+        getBase64(filePath).then(function (b64) {
+          wx.request({
+            url: BASE + '/api/mini/upload-avatar',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            data: { image: 'data:image/jpeg;base64,' + b64, mime: 'image/jpeg' },
+            success: function (up) {
+              var d = up.data || {};
+              if (!d.success || !d.url) {
+                t.setData({ vipUploading: false });
+                wx.showToast({ title: '上传失败：' + (d.error || '请重试'), icon: 'none' });
+                return;
+              }
+              var url = d.url;
+              wx.request({
+                url: BASE + '/api/agent/vip-customers', method: 'PUT',
+                header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                data: { id: vip.id, image_url: url },
+                success: function () {
+                  var detail = Object.assign({}, t.data.vipDetail, { image_url: url });
+                  t.setData({ vipDetail: detail, vipUploading: false });
+                  t.loadVipCustomers(true);
+                  wx.showToast({ title: '形象照已更新', icon: 'success' });
+                },
+                fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '同步失败', icon: 'none' }); }
+              });
+            },
+            fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '上传失败', icon: 'none' }); }
+          });
+        }).catch(function () { t.setData({ vipUploading: false }); wx.showToast({ title: '读取图片失败', icon: 'none' }); });
       }
     });
   },
@@ -1385,25 +1403,42 @@ Page({
   // VIP表单内上传形象照（先存 URL 到 vipForm，提交时随档案保存）
   chooseVipFormPhoto: function () {
     var t = this;
+    var token = t.data.token || wx.getStorageSync('token') || '';
+    var getBase64 = function (filePath) {
+      return new Promise(function (resolve, reject) {
+        try {
+          var fsm = wx.getFileSystemManager();
+          fsm.readFile({
+            filePath: filePath,
+            encoding: 'base64',
+            success: function (r) { resolve(r.data); },
+            fail: function (e) { reject(e); },
+          });
+        } catch (e) { reject(e); }
+      });
+    };
     wx.chooseImage({
       count: 1,
       success: function (res) {
         var filePath = res.tempFilePaths[0];
-        wx.uploadFile({
-          url: BASE + '/api/mini/upload-avatar',
-          filePath: filePath,
-          name: 'file',
-          header: { 'Authorization': 'Bearer ' + (t.data.token || wx.getStorageSync('token') || '') },
-          success: function (up) {
-            var d = {};
-            try { d = JSON.parse(up.data); } catch (e) {}
-            var url = d.url || '';
-            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); return; }
-            t.setData({ 'vipForm.image_url': url });
-            wx.showToast({ title: '已选形象照', icon: 'success' });
-          },
-          fail: function () { wx.showToast({ title: '上传失败', icon: 'none' }); }
-        });
+        getBase64(filePath).then(function (b64) {
+          wx.request({
+            url: BASE + '/api/mini/upload-avatar',
+            method: 'POST',
+            header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+            data: { image: 'data:image/jpeg;base64,' + b64, mime: 'image/jpeg' },
+            success: function (up) {
+              var d = up.data || {};
+              if (!d.success || !d.url) {
+                wx.showToast({ title: '上传失败：' + (d.error || '请重试'), icon: 'none' });
+                return;
+              }
+              t.setData({ 'vipForm.image_url': d.url });
+              wx.showToast({ title: '已选形象照', icon: 'success' });
+            },
+            fail: function () { wx.showToast({ title: '上传失败', icon: 'none' }); }
+          });
+        }).catch(function () { wx.showToast({ title: '读取图片失败', icon: 'none' }); });
       }
     });
   },
