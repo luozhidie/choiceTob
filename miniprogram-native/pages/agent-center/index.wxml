@@ -170,7 +170,7 @@ module.exports = {
               <text class="client-share" catchtap="coreShare" data-token="{{expandedCoreSeason}}">分享</text>
             </view>
             <view wx:if="{{!coreClients[expandedCoreSeason] || coreClients[expandedCoreSeason].length===0}}" class="list-empty-sm">该季型还没有客户，点击下方添加</view>
-            <view class="client-add" bindtap="openClientForm" data-season="{{expandedCoreSeason}}" data-index="-1">＋ 添加客户</view>
+            <view class="client-add" bindtap="openClientForm" data-season="{{expandedCoreSeason}}">＋ 添加客户</view>
           </view>
         </view>
       </view>
@@ -206,7 +206,7 @@ module.exports = {
             <text class="client-share" catchtap="coreShare" data-token="{{expandedStyleSeason}}">分享</text>
           </view>
           <view wx:if="{{!styleClients[expandedStyleKey] || styleClients[expandedStyleKey].length===0}}" class="list-empty-sm">该风格还没有客户，点击下方添加</view>
-          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="-1">＋ 添加客户</view>
+          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}">＋ 添加客户</view>
         </view>
       </view>
 
@@ -241,7 +241,7 @@ module.exports = {
             <text class="client-share" catchtap="coreShare" data-token="{{expandedStyleSeason}}">分享</text>
           </view>
           <view wx:if="{{!styleClients[expandedStyleKey] || styleClients[expandedStyleKey].length===0}}" class="list-empty-sm">该风格还没有客户，点击下方添加</view>
-          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="-1">＋ 添加客户</view>
+          <view class="client-add" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}">＋ 添加客户</view>
         </view>
       </view>
 
@@ -686,13 +686,13 @@ module.exports = {
   <!-- 客户添加/编辑弹窗 -->
   <view wx:if="{{showClientForm}}" class="mask" bindtap="closeClientForm">
     <view class="sheet" catchtap="noop">
-      <text class="sheet-title">{{clientFormIndex >= 0 ? '编辑客户' : '添加客户'}} · {{clientFormSeason}}</text>
+      <text class="sheet-title">{{clientEditId ? '编辑客户' : '添加客户'}} · {{clientFormSeason}}</text>
       <text class="sheet-sub">{{clientFormGender === 'lady' ? '女士风格' : (clientFormGender === 'man' ? '男士风格' : '色彩季型')}}客户</text>
       <input class="sheet-input" value="{{clientForm.name}}" bindinput="onClientName" placeholder="会员称呼（如：李姐）"/>
       <input class="sheet-input" value="{{clientForm.contact}}" bindinput="onClientContact" placeholder="微信 / 电话"/>
       <input class="sheet-input" value="{{clientForm.note}}" bindinput="onClientNote" placeholder="备注（体型 / 喜好 / 尺码等）"/>
       <view class="sheet-btns">
-        <view wx:if="{{clientFormIndex >= 0}}" class="sheet-delete" bindtap="deleteClient">删除</view>
+        <view wx:if="{{clientEditId}}" class="sheet-delete" bindtap="deleteClient">删除</view>
         <view class="sheet-cancel" bindtap="closeClientForm">取消</view>
         <view class="sheet-save" bindtap="saveClient">保存</view>
       </view>
@@ -774,7 +774,7 @@ module.exports = {
       <text class="sheet-title">{{vipDetail.name || '客户详情'}}</text>
       <view class="vip-detail-head">
         <image wx:if="{{vipDetail.image_url}}" class="vip-detail-photo" src="{{vipDetail.image_url}}" mode="aspectFill"/>
-        <view wx:else class="vip-detail-photo vip-detail-photo-empty" bindtap="{{vipDetail._local ? 'chooseClientPhoto' : 'chooseVipPhoto'}}">＋ 上传形象照</view>
+        <view wx:else class="vip-detail-photo vip-detail-photo-empty" bindtap="chooseVipPhoto">＋ 上传形象照</view>
         <view class="vip-detail-meta">
           <text class="vip-detail-line">{{vipDetail.gender || '未填性别'}} · {{vipDetail.vip_level || 'V1'}}</text>
           <view class="vip-detail-tags">
@@ -782,7 +782,7 @@ module.exports = {
             <text wx:if="{{vipDetail.main_style}}" class="vtag">{{vipDetail.main_style}}</text>
             <text wx:if="{{vipDetail.sub_style}}" class="vtag">{{vipDetail.sub_style}}</text>
           </view>
-          <text wx:if="{{!vipDetail.image_url}}" class="vip-detail-tip" bindtap="{{vipDetail._local ? 'chooseClientPhoto' : 'chooseVipPhoto'}}">上传形象照后可用虚拟试衣 ›</text>
+          <text wx:if="{{!vipDetail.image_url}}" class="vip-detail-tip" bindtap="chooseVipPhoto">上传形象照后可用虚拟试衣 ›</text>
         </view>
       </view>
 
@@ -804,8 +804,10 @@ module.exports = {
 
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeVipDetail">关闭</view>
-        <view wx:if="{{vipDetail._local}}" class="sheet-delete" bindtap="deleteLocalClient">删除</view>
-        <view wx:if="{{vipDetail._local}}" class="sheet-edit" bindtap="editLocalClient">编辑资料</view>
+        <view wx:if="{{vipDetail._workbench}}" class="sheet-delete" bindtap="deleteLocalClient">删除</view>
+        <view wx:if="{{vipDetail._workbench}}" class="sheet-edit" bindtap="editLocalClient">编辑资料</view>
+        <view wx:if="{{!vipDetail._workbench}}" class="sheet-delete" bindtap="deleteVip" data-id="{{vipDetail.id}}">删除</view>
+        <view wx:if="{{!vipDetail._workbench}}" class="sheet-edit" bindtap="editVip" data-id="{{vipDetail.id}}">编辑资料</view>
         <view class="sheet-save" wx:if="{{vipDetail.image_url}}" bindtap="vipTryon" data-pid="">一键虚拟试衣</view>
       </view>
     </view>

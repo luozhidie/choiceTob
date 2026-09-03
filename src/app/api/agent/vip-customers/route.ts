@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "参数错误" }, { status: 400 });
   }
 
-  const allowedSources = ["manual", "agent", "import", "style_test", "agent_core", "profile"];
+  const allowedSources = ["manual", "agent", "import", "style_test", "agent_core", "agent_style", "profile"];
   const source = (body.source || "agent").trim();
   if (!allowedSources.includes(source)) return NextResponse.json({ error: "来源不合法" }, { status: 400 });
 
@@ -101,6 +101,27 @@ export async function POST(req: NextRequest) {
       source: "agent_core",
       gender: body.gender || null,
       color_season: colorSeason,
+      wechat: (body.wechat || body.contact || "").trim() || null,
+      image_url: (body.image_url || "").trim() || null,
+      notes: (body.notes || "").trim() || null,
+      vip_level: "V1",
+      is_active: true,
+    };
+  } else if (source === "agent_style") {
+    // 风格盘客户：按 agent_id 归属，性别 + 主/副风格 必填
+    if (!name) return NextResponse.json({ error: "请填写客户姓名" }, { status: 400 });
+    const gender = body.gender === "女" || body.gender === "男" ? body.gender : null;
+    const mainStyle = (body.main_style || "").trim();
+    const subStyle = (body.sub_style || "").trim();
+    if (!mainStyle) return NextResponse.json({ error: "请选择主风格" }, { status: 400 });
+    row = {
+      name,
+      owner_id: null,
+      agent_id: userId,
+      source: "agent_style",
+      gender,
+      main_style: mainStyle,
+      sub_style: subStyle,
       wechat: (body.wechat || body.contact || "").trim() || null,
       image_url: (body.image_url || "").trim() || null,
       notes: (body.notes || "").trim() || null,
