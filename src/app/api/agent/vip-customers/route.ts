@@ -40,12 +40,42 @@ async function resolveAgent(userId: string) {
     .select("membership_type, deposit_amount, store_owner_certified, role")
     .eq("id", userId)
     .single();
-  const isAdmin = profile?.role === "admin";
+
+  // 1) profile.role 判定 admin
+  let isAdmin = profile?.role === "admin";
+
+  // 2) auth email 白名单判定 admin（手机号/微信登录时 profile.role 可能仍是 user）
+  if (!isAdmin) {
+    try {
+      const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+      const adminEmails = (process.env.ADMIN_EMAILS || "luozhidie@live.cn")
+        .split(",")
+        .map((e) => e.trim().toLowerCase())
+        .filter(Boolean);
+      if (adminEmails.includes((authUser?.user?.email || "").toLowerCase())) {
+        isAdmin = true;
+      }
+    } catch {}
+  }
+
+  // 3) 认证店主表（store_owner_certifications）也视为代理
+  let isCertifiedStoreOwner = profile?.store_owner_certified === true;
+  if (!isCertifiedStoreOwner) {
+    try {
+      const { data: cert } = await supabase
+        .from("store_owner_certifications")
+        .select("id, quiz_passed")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (cert?.quiz_passed) isCertifiedStoreOwner = true;
+    } catch {}
+  }
+
   const isAgent =
     isAdmin ||
+    isCertifiedStoreOwner ||
     profile?.membership_type === "deposit_discount" ||
-    profile?.membership_type === "view_price" ||
-    profile?.store_owner_certified === true;
+    profile?.membership_type === "view_price";
   return { isAgent, isAdmin };
 }
 
