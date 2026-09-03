@@ -1,72 +1,58 @@
 <view class="page">
   <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
   <view class="ai-gen-bar">
-    <text class="ai-gen-tag">AI生成</text>
-    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+    <text class="ai-gen-tag">{{tryon.aiTag}}</text>
+    <text class="ai-gen-txt">{{tryon.aiText}}</text>
   </view>
   <!-- Hero：深色 + 金色，首单只放这里 -->
   <view class="hero">
-    <view class="hero-tag">骆芷蝶智选 · 云衣橱•AI虚拟试衣</view>
-    <text class="hero-title">先试再买\n穿上身再决定</text>
-    <text class="hero-sub">上传你的照片，AI 把衣服「穿」到你身上。好不好看，一眼就知道。</text>
+    <view class="hero-tag">{{tryon.promo.tag}}</view>
+    <text class="hero-title">{{tryon.promo.title}}</text>
+    <text class="hero-sub">{{tryon.promo.sub}}</text>
     <view class="hero-badges">
-      <text class="badge">9.9元首单</text>
-      <text class="badge">30 秒出图</text>
-      <text class="badge">隐私保护</text>
+      <text class="badge" wx:for="{{tryon.promo.badges}}" wx:key="*this">{{item}}</text>
     </view>
     <view class="hero-cta" bindtap="onFirstTry">
-      <text class="cta-main">新人首单 ¥9.9 试穿</text>
-      <text class="cta-sub">10 次普通试穿 · 限时</text>
+      <text class="cta-main">{{tryon.promo.ctaMain}}</text>
+      <text class="cta-sub">{{tryon.promo.ctaSub}}</text>
     </view>
   </view>
 
   <!-- 三步 -->
   <view class="section">
-    <text class="sec-title">三步，看见上身效果</text>
+    <text class="sec-title">{{tryon.promo.stepsTitle}}</text>
     <view class="steps">
-      <view class="step">
-        <view class="step-num">1</view>
-        <text class="step-t">上传照片</text>
-        <text class="step-d">正面半身照，仅用于本次合成</text>
-      </view>
-      <view class="step-arrow">→</view>
-      <view class="step">
-        <view class="step-num">2</view>
-        <text class="step-t">挑选衣服</text>
-        <text class="step-d">从店铺商品里选，或 AI 推荐</text>
-      </view>
-      <view class="step-arrow">→</view>
-      <view class="step">
-        <view class="step-num">3</view>
-        <text class="step-t">生成上身图</text>
-        <text class="step-d">AI 合成真实穿着效果</text>
+      <view class="step" wx:for="{{tryon.promo.steps}}" wx:key="t">
+        <view class="step-num">{{index + 1}}</view>
+        <text class="step-t">{{item.t}}</text>
+        <text class="step-d">{{item.d}}</text>
       </view>
     </view>
   </view>
 
   <!-- 4 入口卡 -->
   <view class="section">
-    <text class="sec-title">选择你的试衣方式</text>
+    <text class="sec-title">{{tryon.promo.entryTitle}}</text>
     <view class="entry-grid">
       <view class="entry" bindtap="goSub" data-page="tryon-normal">
-        <text class="entry-emoji">👕</text>
-        <text class="entry-name">普通版</text>
-        <text class="entry-sub">快速看上身 · ¥99/月 100 次</text>
+        <text class="entry-emoji">{{tryon.promo.entries[0].emoji}}</text>
+        <text class="entry-name">{{tryon.promo.entries[0].name}}</text>
+        <text class="entry-sub">{{tryon.promo.entries[0].sub}}</text>
       </view>
       <view class="entry pro" bindtap="goSub" data-page="tryon-pro">
-        <text class="entry-emoji">✨</text>
-        <text class="entry-name">专业版</text>
-        <text class="entry-sub">诊断+搭配 · ¥998/100 次</text>
+        <text class="entry-emoji">{{tryon.promo.entries[1].emoji}}</text>
+        <text class="entry-name">{{tryon.promo.entries[1].name}}</text>
+        <text class="entry-sub">{{tryon.promo.entries[1].sub}}</text>
       </view>
       <view class="entry" bindtap="goSub" data-page="tryon-guide">
-        <text class="entry-emoji">📖</text>
-        <text class="entry-name">怎么用</text>
-        <text class="entry-sub">一步步图文教程</text>
+        <text class="entry-emoji">{{tryon.promo.entries[2].emoji}}</text>
+        <text class="entry-name">{{tryon.promo.entries[2].name}}</text>
+        <text class="entry-sub">{{tryon.promo.entries[2].sub}}</text>
       </view>
       <view class="entry" bindtap="goSub" data-page="tryon-faq">
-        <text class="entry-emoji">❓</text>
-        <text class="entry-name">常见问题</text>
-        <text class="entry-sub">隐私/效果/退订</text>
+        <text class="entry-emoji">{{tryon.promo.entries[3].emoji}}</text>
+        <text class="entry-name">{{tryon.promo.entries[3].name}}</text>
+        <text class="entry-sub">{{tryon.promo.entries[3].sub}}</text>
       </view>
     </view>
   </view>

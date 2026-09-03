@@ -1,26 +1,26 @@
 <view class="page">
   <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
   <view class="ai-gen-bar">
-    <text class="ai-gen-tag">AI生成</text>
-    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+    <text class="ai-gen-tag">{{tryon.aiTag}}</text>
+    <text class="ai-gen-txt">{{tryon.aiText}}</text>
   </view>
   <view class="head">
-    <text class="h-title">专业版</text>
-    <text class="h-sub">诊断 + 搭配</text>
+    <text class="h-title">{{tryon.pro.title}}</text>
+    <text class="h-sub">{{tryon.pro.sub}}</text>
   </view>
-  <view class="sub">在普通版基础上，加 14 题风格诊断与 AI 智能搭配。</view>
+  <view class="sub">{{tryon.pro.sub2}}</view>
 
   <view class="pro-card">
-    <text class="pro-tag">专业版</text>
-    <view class="feat" wx:for="{{include}}" wx:key="*this">✓ {{item}}</view>
+    <text class="pro-tag">{{tryon.pro.title}}</text>
+    <view class="feat" wx:for="{{tryon.pro.features}}" wx:key="*this">✓ {{item}}</view>
   </view>
 
   <view class="price-row gold" bindtap="buyPackage" data-id="tryon_pro_998">
     <view>
-      <text class="pr-title">专业版</text>
-      <text class="pr-sub">100 次专业诊断 · 含 14 题风格测试 / 八大风格真人试穿</text>
+      <text class="pr-title">{{tryon.pro.pkgTitle}}</text>
+      <text class="pr-sub">{{tryon.pro.pkgSub}}</text>
     </view>
-    <text class="pr-num">¥998</text>
+    <text class="pr-num">{{tryon.pro.pkgPriceLabel}}</text>
   </view>
-  <view class="buy-btn gold" bindtap="buyPackage" data-id="tryon_pro_998">购买 ¥998</view>
+  <view class="buy-btn gold" bindtap="buyPackage" data-id="tryon_pro_998">{{tryon.pro.pkgBtn}}</view>
 </view>

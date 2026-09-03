@@ -2,6 +2,7 @@ var app = getApp();
 var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 var vp = require('../../utils/virtual-pay.js');
+var mp = require('../../utils/mp-page-copy.js');
 
 // 与 /api/tryon/create 服务端定价保持一致
 var PACKAGES = [
@@ -22,6 +23,7 @@ function findPkg(id) {
 Page({
   data: {
     packages: PACKAGES,
+    tryon: {},
     toast: '',
   },
 
@@ -29,6 +31,8 @@ Page({
   if (!guard.guardAgentOnly()) return;
     // 静默预热 openid，提升后续支付响应速度
     app.getOpenid().catch(function () {});
+    var self = this;
+    mp.loadMpSection('tryon', function (copy) { self.setData({ tryon: copy }); });
   },
 
   showToast: function (txt) {

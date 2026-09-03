@@ -2,17 +2,19 @@ var app = getApp();
 var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 var vp = require('../../utils/virtual-pay.js');
+var mp = require('../../utils/mp-page-copy.js');
 
 Page({
   data: {
-    include: ['上传自己的人像照片', '上传想试穿的衣服照片', '一键 AI 合成上身效果', '从店铺挑选商品试穿'],
-    exclude: ['风格诊断', 'AI 智能搭配 / 买手推荐'],
+    tryon: {},
     toast: '',
   },
 
   onLoad: function () {
   if (!guard.guardAgentOnly()) return;
     app.getOpenid().catch(function () {});
+    var self = this;
+    mp.loadMpSection('tryon', function (copy) { self.setData({ tryon: copy }); });
   },
 
   showToast: function (txt) {

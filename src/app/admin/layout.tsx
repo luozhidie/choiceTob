@@ -14,6 +14,7 @@ const menuGroups = [
     { label: "活动配置", href: "/admin/activity-config" },
     { label: "站点文案", href: "/admin/site-copy" },
     { label: "会员充值文案", href: "/admin/vip-copy" },
+    { label: "小程序页面文案", href: "/admin/page-copy" },
   ]},
 
   // ─── 代理管理 ───

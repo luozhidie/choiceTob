@@ -1,35 +1,35 @@
 <view class="page">
   <!-- AI生成显著标识（合规：深度合成-AI创作类目要求） -->
   <view class="ai-gen-bar">
-    <text class="ai-gen-tag">AI生成</text>
-    <text class="ai-gen-txt">本页内容由人工智能生成，仅供参考，请以实物与专业判断为准</text>
+    <text class="ai-gen-tag">{{tryon.aiTag}}</text>
+    <text class="ai-gen-txt">{{tryon.aiText}}</text>
   </view>
   <view class="head">
-    <text class="h-title">普通版</text>
-    <text class="h-sub">快速看上身 · 不想研究搭配选这个</text>
+    <text class="h-title">{{tryon.normal.title}}</text>
+    <text class="h-sub">{{tryon.normal.sub}}</text>
   </view>
   <view class="card">
-    <text class="c-h">包含</text>
-    <view class="feat ok" wx:for="{{include}}" wx:key="*this">✓ {{item}}</view>
-    <text class="c-h mt">不含</text>
-    <view class="feat no" wx:for="{{exclude}}" wx:key="*this">— {{item}}</view>
+    <text class="c-h">{{tryon.normal.includeTitle}}</text>
+    <view class="feat ok" wx:for="{{tryon.normal.include}}" wx:key="*this">✓ {{item}}</view>
+    <text class="c-h mt">{{tryon.normal.excludeTitle}}</text>
+    <view class="feat no" wx:for="{{tryon.normal.exclude}}" wx:key="*this">— {{item}}</view>
   </view>
 
   <view class="price-row" bindtap="buyPackage" data-id="tryon_first_9_9">
     <view>
-      <text class="pr-title">首单体验</text>
-      <text class="pr-sub">10 次普通试穿</text>
+      <text class="pr-title">{{tryon.normal.pkgFirstTitle}}</text>
+      <text class="pr-sub">{{tryon.normal.pkgFirstSub}}</text>
     </view>
-    <text class="pr-num">¥9.9</text>
+    <text class="pr-num">{{tryon.normal.pkgFirstPriceLabel}}</text>
   </view>
-  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_first_9_9">购买 ¥9.9</view>
+  <view class="buy-btn" bindtap="buyPackage" data-id="tryon_first_9_9">{{tryon.normal.pkgFirstBtn}}</view>
 
   <view class="price-row gold" bindtap="buyPackage" data-id="tryon_normal_month_99">
     <view>
-      <text class="pr-title">普通月卡</text>
-      <text class="pr-sub">30 天 100 次普通试穿</text>
+      <text class="pr-title">{{tryon.normal.pkgMonthTitle}}</text>
+      <text class="pr-sub">{{tryon.normal.pkgMonthSub}}</text>
     </view>
-    <text class="pr-num">¥99</text>
+    <text class="pr-num">{{tryon.normal.pkgMonthPriceLabel}}</text>
   </view>
-  <view class="buy-btn gold" bindtap="buyPackage" data-id="tryon_normal_month_99">购买 ¥99</view>
+  <view class="buy-btn gold" bindtap="buyPackage" data-id="tryon_normal_month_99">{{tryon.normal.pkgMonthBtn}}</view>
 </view>

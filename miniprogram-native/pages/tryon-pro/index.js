@@ -2,16 +2,19 @@ var app = getApp();
 var guard = require('../../utils/agent-guard.js');
 var BASE = 'https://colour-choice.art';
 var vp = require('../../utils/virtual-pay.js');
+var mp = require('../../utils/mp-page-copy.js');
 
 Page({
   data: {
-    include: ['普通版全部功能', '14 题穿衣风格诊断', 'AI 按风格自动生成造型', '风格匹配 + 场合搭配建议'],
+    tryon: {},
     toast: '',
   },
 
   onLoad: function () {
   if (!guard.guardAgentOnly()) return;
     app.getOpenid().catch(function () {});
+    var self = this;
+    mp.loadMpSection('tryon', function (copy) { self.setData({ tryon: copy }); });
   },
 
   showToast: function (txt) {
