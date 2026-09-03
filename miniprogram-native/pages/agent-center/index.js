@@ -763,6 +763,7 @@ Page({
   onPickerGender: function (e) { this.setData({ pickerGender: e.currentTarget.dataset.gender, pickerExpanded: '' }); },
   onPickerSeason: function (e) {
     var token = e.currentTarget.dataset.token;
+    if (!token) return;
     var arr = this.data.pickerSeasons.slice();
     var idx = arr.indexOf(token);
     if (idx >= 0) arr.splice(idx, 1);
@@ -777,6 +778,7 @@ Page({
   },
   onPickerStyle: function (e) {
     var gkey = e.currentTarget.dataset.gkey;
+    if (!gkey) return;
     var arr = this.data.pickerStyles.slice();
     var idx = arr.indexOf(gkey);
     if (idx >= 0) arr.splice(idx, 1);

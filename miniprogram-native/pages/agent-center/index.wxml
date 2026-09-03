@@ -6,7 +6,8 @@ module.exports = {
   first: function (s) { if (!s) return '代'; s = '' + s; return s.charAt(0); },
   date: function (s) { if (!s) return ''; var d = getDate(s); return (d.getMonth()+1) + '-' + d.getDate(); },
   status: function (s) { var map={'pending':'待结算','settled':'已结算','failed':'失败'}; return map[s]||s; },
-  stripPrefix: function (s) { if (!s) return ''; s = '' + s; if (s.indexOf('lady:') === 0) s = s.substring(5); else if (s.indexOf('man:') === 0) s = s.substring(4); return s; }
+  stripPrefix: function (s) { if (!s) return ''; s = '' + s; if (s.indexOf('lady:') === 0) s = s.substring(5); else if (s.indexOf('man:') === 0) s = s.substring(4); return s; },
+  inArray: function (arr, v) { if (!arr || !arr.indexOf) return false; return arr.indexOf(v) >= 0; }
 };
 </wxs>
 
@@ -633,7 +634,7 @@ module.exports = {
       <block wx:if="{{pickerStep==='season'}}">
         <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllSeasons">{{pickerSeasons.length===allSeasons.length?'取消全选':'全选 12 季型'}}</text></view>
         <view class="picker-grid picker-grid-3">
-          <view wx:for="{{allSeasons}}" wx:key="token" class="picker-tile {{pickerSeasons.indexOf(s.token)>=0?'on':''}}" bindtap="onPickerSeason" data-token="{{s.token}}">{{s.token}}</view>
+          <view wx:for="{{allSeasons}}" wx:for-item="s" wx:key="token" class="picker-tile {{f.inArray(pickerSeasons, s.token)?'on':''}}" bindtap="onPickerSeason" data-token="{{s.token}}">{{s.token}}</view>
         </view>
         <view class="sheet-btns">
           <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
@@ -654,7 +655,7 @@ module.exports = {
           <view class="style-group-label">{{pickerExpanded}}风格组合 · 点击多选</view>
           <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllStyleGroup">全选本组</text></view>
           <view class="picker-grid picker-grid-4">
-            <view wx:for="{{pickerGender==='lady' ? ladyStyleCombos : manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===pickerExpanded}}" class="picker-tile {{pickerStyles.indexOf(s.gkey)>=0?'on':''}}" bindtap="onPickerStyle" data-gkey="{{s.gkey}}">{{s.token}}</view>
+            <view wx:for="{{pickerGender==='lady' ? ladyStyleCombos : manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===pickerExpanded}}" class="picker-tile {{f.inArray(pickerStyles, s.gkey)?'on':''}}" bindtap="onPickerStyle" data-gkey="{{s.gkey}}">{{s.token}}</view>
           </view>
         </block>
         <view class="sheet-btns">
