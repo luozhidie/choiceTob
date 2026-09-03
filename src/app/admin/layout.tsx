@@ -13,6 +13,7 @@ const menuGroups = [
     { label: "页面背景", href: "/admin/page-background" },
     { label: "活动配置", href: "/admin/activity-config" },
     { label: "站点文案", href: "/admin/site-copy" },
+    { label: "会员充值文案", href: "/admin/vip-copy" },
   ]},
 
   // ─── 店铺管理 ───

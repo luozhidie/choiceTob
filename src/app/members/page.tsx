@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { useWebCopy } from "@/lib/web-copy";
 import {
   Crown, Sparkles, Package, Megaphone,
   Lock, CheckCircle2, ArrowRight, User, Shield, Star,
@@ -71,6 +72,7 @@ const MEMBER_FEATURES = [
 
 export default function MembersPage() {
   const router = useRouter();
+  const web = useWebCopy();
   const [checking, setChecking] = useState(true);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -164,9 +166,9 @@ export default function MembersPage() {
           <div className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-sm px-4 py-2 rounded-full text-sm mb-4 border border-white/20">
             <Shield className="w-4 h-4" /> 会员专享服务中心
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-3">骆芷蝶智选 · 会员中心</h1>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">{web.members.heroTitle}</h1>
           <p className="text-white/80 text-base max-w-xl mx-auto">
-            整合VIP服务、商品企划、爆款样衣、营销策划的一站式赋能平台
+            {web.members.heroSubtitle}
           </p>
 
           {/* 会员状态卡 */}
@@ -267,9 +269,9 @@ export default function MembersPage() {
             <section className="mt-10">
               <div className="bg-gradient-to-br from-accent/5 via-pink-50 to-accent/5 rounded-2xl p-6 border border-pink-100">
                 <h2 className="text-lg font-bold text-primary mb-2 flex items-center gap-2">
-                  <ShoppingBag className="w-5 h-5 text-accent" /> 预存货款 · 折扣拿货
+                  <ShoppingBag className="w-5 h-5 text-accent" /> {web.members.depositSectionTitle}
                 </h2>
-                <p className="text-xs text-gray-500 mb-4">预存越多，折扣越低。预存款可用于采购下单，随时退。</p>
+                <p className="text-xs text-gray-500 mb-4">{web.members.depositSectionSub}</p>
 
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   {[
@@ -302,7 +304,7 @@ export default function MembersPage() {
                 </div>
 
                 <p className="text-[11px] text-center text-gray-400 mt-4">
-                  💡 预存款支持全额退还（扣除已用部分），详情请联系客服
+                  {web.members.depositTip}
                 </p>
               </div>
             </section>

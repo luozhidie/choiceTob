@@ -1,29 +1,29 @@
 <view class="page">
   <!-- 标题区 -->
   <view class="header">
-    <view class="htitle"><text>📦 预存货款 · 折扣选购</text></view>
-    <text class="hdesc">预存越多，折扣越低。预存款可用于采购下单，随时退。</text>
+    <view class="htitle"><text>{{depositCopy.header.title}}</text></view>
+    <text class="hdesc">{{depositCopy.header.subtitle}}</text>
   </view>
 
   <!-- 当前权益 -->
   <view class="status-bar {{agentStatus.active?'active':''}}">
     <block wx:if="{{agentStatus.active}}">
-      <text class="st-main">已激活：预存 ¥{{agentStatus.depositText}}</text>
-      <text class="st-sub">选购 {{agentStatus.discountText}} 折 · 可退 {{agentStatus.returnText}}%</text>
+      <text class="st-main">{{statusMain}}</text>
+      <text class="st-sub">{{statusSub}}</text>
     </block>
     <block wx:else>
-      <text class="st-main">未开通预存货款会员</text>
-      <text class="st-sub">充值后即可享受会员折扣价</text>
+      <text class="st-main">{{statusMain}}</text>
+      <text class="st-sub">{{statusSub}}</text>
     </block>
   </view>
 
   <!-- 代理中心入口 -->
   <view class="agent-center-entry {{agentStatus.active?'ace-active':''}}" bindtap="goAgentCenter">
     <view class="ace-left">
-      <text class="ace-title">代理中心</text>
-      <text class="ace-desc">{{agentStatus.active?'已开通会员店铺 · 去设置专属价、分享搭配':'充值后自动开通会员店铺，享专属价'}}</text>
+      <text class="ace-title">{{depositCopy.agentEntry.title}}</text>
+      <text class="ace-desc">{{agentStatus.active?depositCopy.agentEntry.descActive:depositCopy.agentEntry.descInactive}}</text>
     </view>
-    <view class="ace-btn">{{agentStatus.active?'进入 ›':'去开通 ›'}}</view>
+    <view class="ace-btn">{{agentStatus.active?depositCopy.agentEntry.btnActive:depositCopy.agentEntry.btnInactive}}</view>
   </view>
 
   <!-- 套餐卡片 -->
@@ -32,41 +32,41 @@
       <view class="rec-tag" wx:if="{{item.isTest}}">测试</view>
       <view class="rec-tag" wx:if="{{item.id==='wholesale_6k'}}">首充推荐</view>
       <text class="camt">{{item.amount}}</text>
-      <text class="csub">{{item.isTest?'支付金额':'预存金额'}}</text>
+      <text class="csub">{{item.isTest?depositCopy.amountLabels.pay:depositCopy.amountLabels.deposit}}</text>
       <text class="cdisc">{{item.discount}}</text>
-      <text class="crefund">{{item.refund>0?('退'+item.refund+'%'):'不退现'}}</text>
+      <text class="crefund">{{item.refund>0?('退'+item.refund+'%'):depositCopy.amountLabels.noRefund}}</text>
       <view class="cexample"><text>{{item.example}}</text></view>
       <view class="tryon-tip" wx:if="{{item.tryonTip}}"><text>{{item.tryonTip}}</text></view>
     </view>
   </view>
 
   <!-- 提示 -->
-  <view class="tip"><text>💡 预存货款仅用于本店选购，不退现；已享折扣的已消费部分不退。详情请联系客服</text></view>
-  <view class="contact"><text>如有疑问或需要帮助，请 </text><text class="clink" bindtap="goContact">联系客服</text></view>
+  <view class="tip"><text>{{depositCopy.tips.tip}}</text></view>
+  <view class="contact"><text>{{depositCopy.tips.contactPrefix}} </text><text class="clink" bindtap="goContact">{{depositCopy.tips.contactLink}}</text></view>
 
   <!-- 支付弹窗 -->
   <view class="mask" wx:if="{{showPay}}" bindtap="closePay">
     <view class="modal" catchtap="noop">
-      <text class="mtit">联系顾问充值</text>
+      <text class="mtit">{{depositCopy.payModal.title}}</text>
       <text class="mname">{{selectedPlan.name}}</text>
       <text class="mpr">{{selectedPlan.amountLabel}}</text>
       <text class="mdesc">{{selectedPlan.discount}} · {{selectedPlan.refund>0?('退'+selectedPlan.refund+'%可退'):'货款不退现'}}</text>
       <view class="tryon-tip" wx:if="{{selectedPlan.tryonTip}}"><text>{{selectedPlan.tryonTip}}</text></view>
-      <view class="pay-tip"><text>预存货款为线下对公入账，需由顾问确认后开通。添加顾问微信后发送「充值 + 套餐名」，到账后 5 分钟内自动开通权益。</text></view>
-      <view class="mwx"><text class="mwxl">顾问微信</text><text class="mwxv" user-select="true">{{advisorWx}}</text></view>
-      <view class="mbtn" bindtap="copyAdvisor"><text>复制微信号</text></view>
+      <view class="pay-tip"><text>{{depositCopy.payModal.payTip}}</text></view>
+      <view class="mwx"><text class="mwxl">{{depositCopy.payModal.advisorLabel}}</text><text class="mwxv" user-select="true">{{advisorWx}}</text></view>
+      <view class="mbtn" bindtap="copyAdvisor"><text>{{depositCopy.payModal.copyBtn}}</text></view>
     </view>
   </view>
 
   <!-- 协议弹窗 -->
   <view class="mask" wx:if="{{showAgreement}}" bindtap="closeAgreement">
     <view class="modal agreement-modal" catchtap="noop">
-      <text class="mtit">请阅读并签署《预充货款协议》</text>
+      <text class="mtit">{{depositCopy.agreement.title}}</text>
       <scroll-view class="agreement-box" scroll-y="true">
         <text class="agreement-text" user-select="true">{{agreementText}}</text>
       </scroll-view>
-      <view class="mbtn" bindtap="signAgreement"><text>我已阅读并同意签署</text></view>
-      <view class="mcancel" bindtap="closeAgreement"><text>暂不开通</text></view>
+      <view class="mbtn" bindtap="signAgreement"><text>{{depositCopy.agreement.agreeBtn}}</text></view>
+      <view class="mcancel" bindtap="closeAgreement"><text>{{depositCopy.agreement.cancelBtn}}</text></view>
     </view>
   </view>
 </view>

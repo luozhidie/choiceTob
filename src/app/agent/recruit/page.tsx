@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Percent,
 } from "lucide-react";
+import { useWebCopy } from "@/lib/web-copy";
 
 const steps = [
   {
@@ -51,6 +52,7 @@ const faqs = [
 ];
 
 export default function AgentRecruitPage() {
+  const web = useWebCopy();
   return (
     <div className="min-h-screen bg-[#2d1b2e] text-white">
       {/* Hero */}
@@ -60,14 +62,13 @@ export default function AgentRecruitPage() {
         </div>
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:py-24 py-16 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#C9A24B]/50 text-[#C9A24B] text-sm font-medium">
-            <TrendingUp className="w-4 h-4" /> 代理方式
+            <TrendingUp className="w-4 h-4" /> {web.agent.heroTag}
           </div>
           <h1 className="mt-5 text-4xl sm:text-5xl font-bold leading-tight">
-            转发就能卖货，<span className="text-[#C9A24B]">差价自动到账</span>
+            {web.agent.heroTitleMain}<span className="text-[#C9A24B]">{web.agent.heroTitleAccent}</span>
           </h1>
           <p className="mt-4 text-white/65 max-w-2xl mx-auto text-lg">
-            你是我们的批发客户 / 认证店主。给商品设个卖价，把链接发给客户——客户看不到批发价，
-            每卖出一件，差价自动进你余额。
+            {web.agent.heroSub}
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -118,7 +119,7 @@ export default function AgentRecruitPage() {
 
       {/* 档级 */}
       <section className="mx-auto max-w-6xl px-4 sm:px-6 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-8">代理档级</h2>
+        <h2 className="text-2xl font-bold text-center mb-8">{web.agent.tierSectionTitle}</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {tiers.map((t) => (
             <div
@@ -152,7 +153,7 @@ export default function AgentRecruitPage() {
 
       {/* FAQ */}
       <section className="mx-auto max-w-3xl px-4 sm:px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-8">常见问题</h2>
+        <h2 className="text-2xl font-bold text-center mb-8">{web.agent.faqSectionTitle}</h2>
         <div className="space-y-3">
           {faqs.map((f) => (
             <div key={f.q} className="rounded-2xl bg-white/5 border border-[#C9A24B]/15 p-5">

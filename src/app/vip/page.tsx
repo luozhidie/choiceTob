@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import PaymentQRCode from "@/components/PaymentQRCode";
+import { useWebCopy } from "@/lib/web-copy";
 
 interface Plan {
   id: string;
@@ -262,6 +263,10 @@ export default function VIPPage() {
   const supabase = createClient();
   const router = useRouter();
   const { user, profile, loading: authLoading, isCertifiedStoreOwner } = useAuth();
+  const web = useWebCopy();
+
+  // 后台可配置套餐文案（仅覆盖展示字段，价格/会员类型保留代码值）
+  const displayPlans = plans.map((p) => ({ ...p, ...(web.vip.plans?.[p.id] || {}) }));
 
   const paidTierIndex = getPaidTierIndex(profile?.membership_type);
 
@@ -410,12 +415,12 @@ export default function VIPPage() {
           <div className="w-16 h-16 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-5">
             <Crown className="w-8 h-8 text-accent" />
           </div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">骆芷蝶 · VIP会员</h1>
+          <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">{web.vip.hero.title}</h1>
           <p className="text-white/80 text-sm md:text-base max-w-xl mx-auto mb-2">
-            企划定品控方向，供应链稳货源，落地赋能提业绩
+            {web.vip.hero.subtitle}
           </p>
           <p className="text-white/60 text-xs md:text-sm max-w-lg mx-auto">
-            一站式帮门店管好货、做好店、赚稳钱
+            {web.vip.hero.subtitle2}
           </p>
 
           {isCurrentlyMember && (
@@ -435,9 +440,9 @@ export default function VIPPage() {
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-primary" /> 充值解锁拿货折扣 + 退换额度
+              <Sparkles className="w-5 h-5 text-primary" /> {web.vip.guide.title}
             </h2>
-            <p className="text-xs text-gray-400 mb-4">认证店主可先看批发价；折扣与退换额度需一次性充值对应档位</p>
+            <p className="text-xs text-gray-400 mb-4">{web.vip.guide.subtitle}</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* 右：直接充值解锁（付费） */}
               <div className="rounded-2xl border border-amber-200 p-5 bg-gradient-to-br from-amber-50 to-orange-50 sm:col-span-2">
@@ -582,8 +587,8 @@ export default function VIPPage() {
                     <CreditCard className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-primary text-base">充值货款折扣会员</h3>
-                    <p className="text-sm text-gray-600 mt-0.5">预存货款享2.6-2.8折拿货 · 5万/10万/30万三档可选 · 充值后自动开通代理店铺</p>
+                    <h3 className="font-bold text-primary text-base">{web.vip.depositEntry.title}</h3>
+                    <p className="text-sm text-gray-600 mt-0.5">{web.vip.depositEntry.subtitle}</p>
                   </div>
                 </div>
                 <div className="hidden sm:flex items-center gap-2 text-accent font-semibold text-sm shrink-0">
@@ -599,7 +604,7 @@ export default function VIPPage() {
       <section id="plans" className="pb-12 md:pb-16 pt-2">
         <div className="container mx-auto px-4 max-w-5xl">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-6">
-            {plans.map((plan, idx) => (
+            {displayPlans.map((plan, idx) => (
               <motion.div
                 key={plan.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -619,7 +624,7 @@ export default function VIPPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-primary">{plan.name}</h3>
-                      <p className="text-xs text-muted-foreground">适合单店/连锁/品牌</p>
+                      <p className="text-xs text-muted-foreground">{plan.newCustomerLabel || web.vip.planSubtitle}</p>
                     </div>
                   </div>
 
@@ -713,8 +718,8 @@ export default function VIPPage() {
                     <div className={`w-14 h-14 rounded-full ${selectedPlan.highlight ? "bg-accent" : "bg-blue-500"} flex items-center justify-center mx-auto mb-4`}>
                       <selectedPlan.icon className="w-7 h-7 text-white" />
                     </div>
-                    <h3 className="text-xl font-bold text-primary">确认开通 {selectedPlan.name}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">开通后1年内有效，到期前可续费</p>
+                    <h3 className="text-xl font-bold text-primary">{web.vip.pay.confirmTitle.replace("{planName}", selectedPlan.name)}</h3>
+                    <p className="mt-2 text-sm text-muted-foreground">{web.vip.pay.confirmSub}</p>
                   </div>
 
                   <div className="bg-gray-50 rounded-xl p-4 mb-5">
