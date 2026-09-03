@@ -277,9 +277,36 @@
 .vip-actions { display: flex; align-items: center; gap: 24rpx; }
 .vip-act { font-size: 26rpx; color: #C9A24B; font-weight: 700; }
 .vip-act.vip-del { color: #c0392b; }
+.vip-act.vip-match { color: #2d1b2e; background: #f0e9e0; padding: 6rpx 18rpx; border-radius: 999rpx; }
 .vip-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 18rpx; }
 .vtag { font-size: 22rpx; color: #2d1b2e; background: #faf6ee; border: 1rpx solid #f0e6d2; border-radius: 999rpx; padding: 8rpx 18rpx; }
 .vip-row { font-size: 26rpx; color: #4a423d; margin-top: 12rpx; display: flex; }
+
+/* VIP表单：形象照 */
+.vphoto-row { display: flex; align-items: center; gap: 20rpx; margin-top: 14rpx; }
+.vphoto { width: 140rpx; height: 180rpx; border-radius: 16rpx; background: #f3eee7; }
+.vphoto-empty { display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #9a8f8a; border: 1rpx dashed #d8cdbe; }
+.vphoto-btn { font-size: 24rpx; color: #C9A24B; font-weight: 700; padding: 14rpx 24rpx; background: #faf6ee; border: 1rpx solid #f0e6d2; border-radius: 999rpx; }
+
+/* VIP客户详情弹窗 */
+.vip-detail { max-height: 84vh; display: flex; flex-direction: column; }
+.vip-detail-head { display: flex; gap: 24rpx; align-items: center; margin-top: 20rpx; }
+.vip-detail-photo { width: 160rpx; height: 200rpx; border-radius: 18rpx; background: #f3eee7; flex-shrink: 0; }
+.vip-detail-photo-empty { display: flex; align-items: center; justify-content: center; font-size: 24rpx; color: #9a8f8a; border: 1rpx dashed #d8cdbe; }
+.vip-detail-meta { flex: 1; display: flex; flex-direction: column; gap: 12rpx; }
+.vip-detail-line { font-size: 26rpx; color: #4a423d; font-weight: 700; }
+.vip-detail-tags { display: flex; flex-wrap: wrap; gap: 10rpx; }
+.vip-detail-tip { font-size: 22rpx; color: #C9A24B; }
+.vip-detail-section { margin-top: 28rpx; flex: 1; overflow-y: auto; }
+.vip-detail-sec-title { font-size: 28rpx; font-weight: 800; color: #2d1b2e; display: flex; align-items: baseline; gap: 12rpx; }
+.vip-detail-sec-sub { font-size: 22rpx; color: #9a8f8a; font-weight: 400; }
+.vip-detail-empty { font-size: 24rpx; color: #9a8f8a; margin-top: 20rpx; line-height: 1.6; }
+.vip-mat-card { display: flex; align-items: center; gap: 20rpx; padding: 18rpx 0; border-bottom: 1rpx solid #f3eee7; }
+.vip-mat-img { width: 120rpx; height: 150rpx; border-radius: 14rpx; background: #f3eee7; flex-shrink: 0; }
+.vip-mat-info { flex: 1; display: flex; flex-direction: column; gap: 12rpx; }
+.vip-mat-title { font-size: 26rpx; color: #2d1b2e; font-weight: 600; }
+.vip-mat-tags { display: flex; flex-wrap: wrap; gap: 8rpx; }
+.vip-mat-tryon { font-size: 26rpx; color: #fff; background: #C9A24B; font-weight: 700; padding: 14rpx 26rpx; border-radius: 999rpx; flex-shrink: 0; }
 .vip-k { color: #9a8f8a; width: 88rpx; flex-shrink: 0; }
 .vip-note { line-height: 1.5; }
 .vip-more { text-align: center; color: #C9A24B; font-size: 26rpx; padding: 28rpx 0; font-weight: 700; }

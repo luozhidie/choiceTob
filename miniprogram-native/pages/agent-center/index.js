@@ -177,9 +177,14 @@ Page({
     vipMore: true,
     showVipForm: false,
     editingVipId: '',
-    vipForm: { name: '', phone: '', wechat: '', company: '', gender: '', color_season: '', main_style: '', sub_style: '', vip_level: 'V1', notes: '' },
+    vipForm: { name: '', phone: '', wechat: '', company: '', gender: '', color_season: '', main_style: '', sub_style: '', image_url: '', vip_level: 'V1', notes: '' },
     savingVip: false,
     showVipSeason: false,
+    // VIP客户详情：展示形象照 + 专属匹配素材
+    showVipDetail: false,
+    vipDetail: null,
+    vipMatched: [],
+    vipUploading: false,
     // 代理人资料（可编辑）
     avatarUrl: '',
     nickname: '',
@@ -1161,6 +1166,7 @@ Page({
         color_season: item.color_season || '',
         main_style: item.main_style || '',
         sub_style: item.sub_style || '',
+        image_url: item.image_url || '',
         vip_level: item.vip_level || 'V1',
         notes: item.notes || ''
       }
@@ -1183,6 +1189,112 @@ Page({
             t.loadVipCustomers(true);
           },
           fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
+  // ===== VIP客户详情：形象照 + 专属匹配素材 =====
+  openVipDetail: function (e) {
+    var id = e.currentTarget.dataset.id;
+    var item = (this.data.vipCustomers || []).find(function (c) { return c.id === id; });
+    if (!item) return;
+    var matched = this.matchMaterialsForVip(item);
+    this.setData({ showVipDetail: true, vipDetail: item, vipMatched: matched });
+  },
+  closeVipDetail: function () { this.setData({ showVipDetail: false, vipDetail: null, vipMatched: [] }); },
+  // 按客户「色彩季型 + 风格」结论匹配已入库素材（季型必匹配，风格有则匹配对应性别风格前缀）
+  matchMaterialsForVip: function (vip) {
+    var t = this;
+    var season = (vip.color_season || '').trim();
+    var gender = (vip.gender === '男' || vip.gender === '女') ? vip.gender : '';
+    var mainStyle = (vip.main_style || '').trim();
+    var map = {};
+    (t.data.materialList || []).forEach(function (p) { map[p.product_id] = p; });
+    return (t.data.myMaterials || []).filter(function (m) {
+      var seasons = Array.isArray(m.seasons) ? m.seasons : (m.season ? [m.season] : []);
+      if (season && seasons.indexOf(season) < 0) return false;
+      if (mainStyle && gender) {
+        var prefix = (gender === '男' ? 'man' : 'lady') + ':';
+        var hit = (m.styles || []).some(function (gkey) { return gkey.indexOf(prefix + mainStyle) === 0; });
+        if (!hit) return false;
+      }
+      return true;
+    }).map(function (m) {
+      var p = map[m.product_id] || {};
+      return Object.assign({}, p, {
+        _libSeasons: Array.isArray(m.seasons) ? m.seasons : (m.season ? [m.season] : []),
+        _libStyleLabels: (m.styles || []).map(function (s) { return s.replace(/^[^:]+:/, ''); })
+      });
+    });
+  },
+  vipTryon: function (e) {
+    var vip = this.data.vipDetail;
+    if (!vip) return;
+    if (!vip.image_url) { wx.showToast({ title: '请先上传客户形象照', icon: 'none' }); return; }
+    var url = '/pages/look-studio/index?baseImageUrl=' + encodeURIComponent(vip.image_url);
+    wx.navigateTo({ url: url });
+  },
+  chooseVipPhoto: function () {
+    var t = this;
+    if (t.data.vipUploading) return;
+    var vip = t.data.vipDetail;
+    if (!vip || !vip.id) return;
+    wx.chooseImage({
+      count: 1,
+      success: function (res) {
+        var filePath = res.tempFilePaths[0];
+        t.setData({ vipUploading: true });
+        wx.uploadFile({
+          url: BASE + '/api/mini/upload-avatar',
+          filePath: filePath,
+          name: 'file',
+          header: { 'Authorization': 'Bearer ' + t.data.token },
+          success: function (up) {
+            var d = {};
+            try { d = JSON.parse(up.data); } catch (e) {}
+            var url = d.url || '';
+            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); t.setData({ vipUploading: false }); return; }
+            wx.request({
+              url: BASE + '/api/agent/vip-customers', method: 'PUT',
+              header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+              data: { id: vip.id, image_url: url },
+              success: function () {
+                var detail = Object.assign({}, t.data.vipDetail, { image_url: url });
+                var list = t.data.vipCustomers.map(function (c) { return c.id === vip.id ? Object.assign({}, c, { image_url: url }) : c; });
+                t.setData({ vipDetail: detail, vipCustomers: list, vipUploading: false });
+                wx.showToast({ title: '形象照已更新', icon: 'success' });
+              },
+              fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '同步失败', icon: 'none' }); }
+            });
+          },
+          fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '上传失败', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
+  // VIP表单内上传形象照（先存 URL 到 vipForm，提交时随档案保存）
+  chooseVipFormPhoto: function () {
+    var t = this;
+    wx.chooseImage({
+      count: 1,
+      success: function (res) {
+        var filePath = res.tempFilePaths[0];
+        wx.uploadFile({
+          url: BASE + '/api/mini/upload-avatar',
+          filePath: filePath,
+          name: 'file',
+          header: { 'Authorization': 'Bearer ' + t.data.token },
+          success: function (up) {
+            var d = {};
+            try { d = JSON.parse(up.data); } catch (e) {}
+            var url = d.url || '';
+            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); return; }
+            t.setData({ 'vipForm.image_url': url });
+            wx.showToast({ title: '已选形象照', icon: 'success' });
+          },
+          fail: function () { wx.showToast({ title: '上传失败', icon: 'none' }); }
         });
       }
     });
