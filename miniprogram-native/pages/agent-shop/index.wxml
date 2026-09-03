@@ -13,7 +13,7 @@ module.exports = {
   <view wx:elif="{{!valid}}" class="empty">
     <text class="empty-emoji">{{pageCopy.empty.emoji}}</text>
     <text class="empty-title">{{pageCopy.empty.title}}</text>
-    <text class="empty-desc">{{pageCopy.empty.desc}}</text>
+    <text class="empty-desc">{{ref ? pageCopy.empty.desc : '分享链接缺少推广码，请通过好友分享的小程序卡片进入'}}</text>
     <view class="btn-primary" bindtap="goHome">{{pageCopy.empty.btn}}</view>
   </view>
 

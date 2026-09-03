@@ -67,9 +67,13 @@ module.exports = {
       <!-- 邀请码 + 核心动作 -->
       <view class="card">
         <view class="card-title">我的专属邀请码</view>
-        <view class="code-row">
-          <text class="code-text">{{inviteCode || '—'}}</text>
+        <view class="code-row" wx:if="{{inviteCode}}">
+          <text class="code-text">{{inviteCode}}</text>
           <view class="code-copy" bindtap="copyCode">复制</view>
+        </view>
+        <view class="code-row code-row-empty" wx:else>
+          <text class="code-text code-empty">邀请码未生成</text>
+          <view class="code-copy code-retry" bindtap="reloadInviteCode">刷新</view>
         </view>
         <button class="btn-share btn-share-main" open-type="share">分享好物给好友</button>
         <view class="code-actions">

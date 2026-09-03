@@ -215,7 +215,7 @@ Page({
     t.loadAll();
   },
 
-  loadAll: function () {
+  loadAll: function (cb) {
     var t = this;
     var token = t.data.token;
     var h = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token };
@@ -226,12 +226,14 @@ Page({
         var d = r.data || {};
         if (d.error) {
           if (d.error.indexOf('未登录') >= 0) t.setData({ notLogin: true, loading: false });
+          if (cb) cb();
           return;
         }
         var isAdmin = t.data.isAdmin;
         if (!d.active && !d.isAdmin && !isAdmin) {
           // 严格拦截：非管理员且非充值会员，整页拦截，不渲染任何代理数据
           t.setData({ notAgent: true, loading: false });
+          if (cb) cb();
           return;
         }
         t.setData({
@@ -264,8 +266,9 @@ Page({
           bio: d.bio || ''
         });
         t.loadPriceAndWithdraw(token, h);
+        if (cb) cb();
       },
-      fail: function () { t.setData({ loading: false }); }
+      fail: function () { t.setData({ loading: false }); if (cb) cb(); }
     });
   },
 
@@ -337,6 +340,10 @@ Page({
   // 分享
   onShareAppMessage: function (res) {
     var code = this.data.inviteCode || '';
+    if (!code) {
+      wx.showToast({ title: '邀请码未生成，点邀请码区域刷新后再试', icon: 'none', duration: 2500 });
+      return { title: '骆芷蝶智选', path: 'pages/home/index' };
+    }
     var name = this.data.storeName || this.data.fullName || '精选推荐';
     // 优先从 button dataset 取（更可靠）
     var ds = (res && res.target && res.target.dataset) || {};
@@ -1162,6 +1169,15 @@ Page({
     var code = this.data.inviteCode || '';
     if (!code) return;
     wx.setClipboardData({ data: code, success: function () { wx.showToast({ title: '已复制推广码', icon: 'success' }); } });
+  },
+  reloadInviteCode: function () {
+    var t = this;
+    wx.showLoading({ title: '刷新中...' });
+    t.loadAllWithCallback(function () {
+      wx.hideLoading();
+      if (t.data.inviteCode) wx.showToast({ title: '邀请码已生成', icon: 'success' });
+      else wx.showToast({ title: '仍未生成，请检查网络', icon: 'none' });
+    });
   },
   callConsult: function () { wx.makePhoneCall({ phoneNumber: '13925997776' }); },
 
