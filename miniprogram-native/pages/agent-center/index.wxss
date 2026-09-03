@@ -311,3 +311,12 @@
 .wt-strong{font-size:28rpx;color:#2d1b2e;font-weight:700;margin-top:8rpx;}
 .wt-tip{display:block;font-size:20rpx;color:#bfa276;margin-top:10rpx;line-height:1.4;}
 .wd-arrival{display:block;font-size:22rpx;color:#999;margin:14rpx 0 6rpx;}
+
+/* 代理人资料编辑 */
+.hero-avatar-img{width:96rpx;height:96rpx;border-radius:50%;object-fit:cover;border:2rpx solid rgba(201,162,75,0.4);}
+.hero-edit{font-size:22rpx;color:#C9A24B;margin-top:6rpx;display:inline-block;}
+.profile-sheet{max-height:85vh;overflow-y:auto;}
+.avatar-edit{width:140rpx;height:140rpx;border-radius:50%;margin:20rpx auto;background:rgba(201,162,75,0.12);border:2rpx dashed rgba(201,162,75,0.5);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.avatar-edit-img{width:100%;height:100%;object-fit:cover;}
+.avatar-edit-ph{color:#C9A24B;font-size:26rpx;}
+.profile-sheet .varea{width:100%;min-height:120rpx;padding:20rpx;margin-top:20rpx;box-sizing:border-box;border:1rpx solid #e5e5e5;border-radius:12rpx;font-size:28rpx;}

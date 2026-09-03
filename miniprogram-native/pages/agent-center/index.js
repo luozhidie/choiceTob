@@ -167,7 +167,17 @@ Page({
     editingVipId: '',
     vipForm: { name: '', phone: '', wechat: '', company: '', gender: '', color_season: '', main_style: '', sub_style: '', vip_level: 'V1', notes: '' },
     savingVip: false,
-    showVipSeason: false
+    showVipSeason: false,
+    // 代理人资料（可编辑）
+    avatarUrl: '',
+    nickname: '',
+    agentStoreName: '',
+    phone: '',
+    wechat: '',
+    bio: '',
+    showProfileEdit: false,
+    profileSaving: false,
+    profileForm: { nickname: '', agentStoreName: '', phone: '', wechat: '', bio: '', avatarUrl: '' }
   },
 
   onShow: function () {
@@ -223,7 +233,14 @@ Page({
           paymentPasswordSet: !!d.paymentPasswordSet,
           bankCards: d.bankCards || [],
           tryon: d.tryon || { normalLeft: 0, proLeft: 0, daysLeft: 0 },
-          preDepositAgreed: !!d.preDepositAgreed
+          preDepositAgreed: !!d.preDepositAgreed,
+          // 代理人资料
+          avatarUrl: d.avatarUrl || '',
+          nickname: d.nickname || '',
+          agentStoreName: d.agentStoreName || '',
+          phone: d.phone || '',
+          wechat: d.wechat || '',
+          bio: d.bio || ''
         });
         t.loadPriceAndWithdraw(token, h);
       },
@@ -1086,6 +1103,97 @@ Page({
           fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); }
         });
       }
+    });
+  },
+
+  // ========== 代理人资料编辑 ==========
+  openProfileEdit: function () {
+    this.setData({
+      showProfileEdit: true,
+      profileForm: {
+        nickname: this.data.nickname || '',
+        agentStoreName: this.data.agentStoreName || '',
+        phone: this.data.phone || '',
+        wechat: this.data.wechat || '',
+        bio: this.data.bio || '',
+        avatarUrl: this.data.avatarUrl || ''
+      }
+    });
+  },
+  closeProfileEdit: function () { this.setData({ showProfileEdit: false }); },
+  onProfileInput: function (e) {
+    var f = Object.assign({}, this.data.profileForm);
+    f[e.currentTarget.dataset.field] = e.detail.value;
+    this.setData({ profileForm: f });
+  },
+  chooseAvatar: function () {
+    var t = this;
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sourceType: ['album', 'camera'], sizeType: ['compressed'],
+      success: function (res) {
+        var tmp = res.tempFiles[0].tempFilePath;
+        wx.showLoading({ title: '上传中', mask: true });
+        wx.getFileSystemManager().readFile({
+          filePath: tmp,
+          encoding: 'base64',
+          success: function (r) {
+            var base64 = 'data:image/jpeg;base64,' + r.data;
+            wx.request({
+              url: BASE + '/api/mini/upload-avatar',
+              method: 'POST',
+              header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+              data: { image: base64, mime: 'image/jpeg' },
+              success: function (r2) {
+                var d = r2.data || {};
+                if (d.url) {
+                  t.setData({ 'profileForm.avatarUrl': d.url });
+                  wx.showToast({ title: '头像已上传', icon: 'success' });
+                } else {
+                  wx.showModal({ title: '上传失败', content: d.error || '请重试', showCancel: false });
+                }
+              },
+              fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); },
+              complete: function () { wx.hideLoading(); }
+            });
+          },
+          fail: function () { wx.hideLoading(); wx.showToast({ title: '读取图片失败', icon: 'none' }); }
+        });
+      }
+    });
+  },
+  saveProfile: function () {
+    var t = this;
+    if (t.data.profileSaving) return;
+    var nick = (t.data.profileForm.nickname || '').trim();
+    if (!nick) { wx.showToast({ title: '昵称不能为空', icon: 'none' }); return; }
+    t.setData({ profileSaving: true });
+    wx.request({
+      url: BASE + '/api/agent/me', method: 'PUT',
+      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + t.data.token },
+      data: {
+        nickname: nick,
+        agent_store_name: t.data.profileForm.agentStoreName || '',
+        phone: t.data.profileForm.phone || '',
+        wechat: t.data.profileForm.wechat || '',
+        bio: t.data.profileForm.bio || '',
+        avatar_url: t.data.profileForm.avatarUrl || ''
+      },
+      success: function (r) {
+        var d = r.data || {};
+        if (d.error) { wx.showModal({ title: '保存失败', content: d.error, showCancel: false }); return; }
+        t.setData({
+          nickname: nick,
+          agentStoreName: t.data.profileForm.agentStoreName || '',
+          phone: t.data.profileForm.phone || '',
+          wechat: t.data.profileForm.wechat || '',
+          bio: t.data.profileForm.bio || '',
+          avatarUrl: t.data.profileForm.avatarUrl || '',
+          showProfileEdit: false
+        });
+        wx.showToast({ title: '已保存', icon: 'success' });
+      },
+      fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); },
+      complete: function () { t.setData({ profileSaving: false }); }
     });
   },
 

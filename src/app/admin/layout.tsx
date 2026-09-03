@@ -16,6 +16,11 @@ const menuGroups = [
     { label: "会员充值文案", href: "/admin/vip-copy" },
   ]},
 
+  // ─── 代理管理 ───
+  { label: "代理管理", items: [
+    { label: "代理人资料", href: "/admin/agent-profiles" },
+  ]},
+
   // ─── 店铺管理 ───
   { label: "店铺管理", items: [
     { label: "店铺列表", href: "/admin/stores" },

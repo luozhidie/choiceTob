@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, is_admin, wechat_openid, wx_openid, pre_deposit_agreed, payment_password_hash, is_tryon_agent"
+        "id, role, membership_type, deposit_amount, deposit_discount_rate, deposit_return_rate, invite_code, store_owner_certified, certified_style, full_name, nickname, agent_store_name, avatar_url, phone, wechat, bio, is_admin, wechat_openid, wx_openid, pre_deposit_agreed, payment_password_hash, is_tryon_agent"
       )
       .eq("id", uid)
       .maybeSingle();
@@ -174,7 +174,13 @@ export async function GET(request: NextRequest) {
       membershipType: profile.membership_type || "none",
       agentTier,
       fullName: profile.full_name || "",
-      storeName: profile.full_name || "",
+      nickname: profile.nickname || "",
+      agentStoreName: profile.agent_store_name || "",
+      storeName: profile.agent_store_name || profile.full_name || "",
+      avatarUrl: profile.avatar_url || "",
+      phone: profile.phone || "",
+      wechat: profile.wechat || "",
+      bio: profile.bio || "",
       certifiedStyle: profile.certified_style || "",
       depositAmount: profile.deposit_amount || 0,
       discountRate: tryonAgentDiscount,
@@ -193,6 +199,42 @@ export async function GET(request: NextRequest) {
     });
   } catch (err: any) {
     console.error("[agent/me]", err);
+    return NextResponse.json({ error: err.message || "系统错误" }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const supabase = getServiceRoleClient();
+    const uid = await resolveUid(request);
+    if (!uid) return NextResponse.json({ error: "未登录" }, { status: 401 });
+
+    const body = await request.json();
+
+    // 字段白名单：仅允许修改代理人展示资料，禁止越权改会员/资金字段
+    const allowed: Record<string, any> = {};
+    if (typeof body.nickname === "string") {
+      const v = body.nickname.trim();
+      if (v) allowed.nickname = v.slice(0, 30);
+    }
+    if (typeof body.agent_store_name === "string") allowed.agent_store_name = body.agent_store_name.trim().slice(0, 60);
+    if (typeof body.phone === "string") allowed.phone = body.phone.trim().slice(0, 20);
+    if (typeof body.wechat === "string") allowed.wechat = body.wechat.trim().slice(0, 40);
+    if (typeof body.bio === "string") allowed.bio = body.bio.trim().slice(0, 200);
+    if (typeof body.avatar_url === "string") allowed.avatar_url = body.avatar_url.trim().slice(0, 500);
+
+    if (Object.keys(allowed).length === 0) {
+      return NextResponse.json({ error: "无有效字段" }, { status: 400 });
+    }
+    if (!allowed.nickname && typeof body.nickname === "string") {
+      return NextResponse.json({ error: "昵称不能为空" }, { status: 400 });
+    }
+
+    const { error } = await supabase.from("profiles").update(allowed).eq("id", uid);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("[agent/me PUT]", err);
     return NextResponse.json({ error: err.message || "系统错误" }, { status: 500 });
   }
 }

@@ -42,11 +42,13 @@ module.exports = {
     <view wx:if="{{tab==='home'}}">
       <!-- 身份卡 -->
       <view class="hero">
-        <view class="hero-top">
-          <view class="hero-avatar">{{f.first(storeName || fullName)}}</view>
-          <view class="hero-meta">
-            <text class="hero-name">{{storeName || fullName || '会员'}}</text>
-            <view class="hero-tags">
+      <view class="hero-top">
+        <image wx:if="{{avatarUrl}}" class="hero-avatar-img" src="{{avatarUrl}}" mode="aspectFill" bindtap="openProfileEdit"/>
+        <view wx:else class="hero-avatar" bindtap="openProfileEdit">{{f.first(nickname || agentStoreName || storeName || fullName)}}</view>
+        <view class="hero-meta">
+          <text class="hero-name">{{nickname || agentStoreName || storeName || fullName || '会员'}}</text>
+          <view class="hero-edit" bindtap="openProfileEdit">编辑资料 ›</view>
+          <view class="hero-tags">
               <text wx:if="{{isCertified}}" class="tag tag-gold">认证会员</text>
               <text wx:if="{{isDepositAgent}}" class="tag tag-gold">预存货款会员</text>
               <text wx:if="{{isAdmin}}" class="tag tag-admin">管理员</text>
@@ -661,6 +663,26 @@ module.exports = {
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeVipSeason">取消</view>
         <view class="sheet-save" bindtap="closeVipSeason">确定</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 代理人资料编辑弹窗 -->
+  <view wx:if="{{showProfileEdit}}" class="mask" bindtap="closeProfileEdit">
+    <view class="sheet profile-sheet" catchtap="noop">
+      <text class="sheet-title">编辑我的资料</text>
+      <view class="avatar-edit" bindtap="chooseAvatar">
+        <image wx:if="{{profileForm.avatarUrl}}" src="{{profileForm.avatarUrl}}" mode="aspectFill" class="avatar-edit-img"/>
+        <view wx:else class="avatar-edit-ph">＋ 头像</view>
+      </view>
+      <input class="sheet-input" value="{{profileForm.nickname}}" bindinput="onProfileInput" data-field="nickname" placeholder="昵称（必填，展示用）"/>
+      <input class="sheet-input" value="{{profileForm.agentStoreName}}" bindinput="onProfileInput" data-field="agentStoreName" placeholder="店铺名"/>
+      <input class="sheet-input" value="{{profileForm.phone}}" bindinput="onProfileInput" data-field="phone" placeholder="手机号" type="number"/>
+      <input class="sheet-input" value="{{profileForm.wechat}}" bindinput="onProfileInput" data-field="wechat" placeholder="微信号"/>
+      <textarea class="varea" value="{{profileForm.bio}}" bindinput="onProfileInput" data-field="bio" placeholder="简介（选填）"/>
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeProfileEdit">取消</view>
+        <view class="sheet-save" bindtap="saveProfile">{{profileSaving ? '保存中…' : '保存'}}</view>
       </view>
     </view>
   </view>
