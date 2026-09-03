@@ -125,14 +125,14 @@ Page({
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
-    // 加入素材库弹窗（多选标签：色彩季型 + 女士/男士风格）
+    // 加入素材库弹窗（分步：① 季型 → ② 风格，每屏一屏放下，不依赖竖向滚动）
     showColorPicker: false,
     pickerProduct: null,
-    pickerTab: 'season',       // 'season' | 'lady' | 'man'
+    pickerStep: 'season',      // 'season' | 'style'
+    pickerGender: 'lady',      // 风格屏性别切换 'lady' | 'man'
     pickerSeasons: [],         // 已选季型 token 数组
     pickerStyles: [],          // 已选风格 gkey 数组（lady:xxx / man:xxx）
-    pickerExpandedLadyStyle: '',
-    pickerExpandedManStyle: '',
+    pickerExpanded: '',        // 风格屏当前展开的主风格
     // 核心会员：按色彩季型分组，每季型可挂任意多个客户 { "深暖": [{name,contact,note}, ...] }
     coreClients: {},
     expandedCoreSeason: '',      // 当前展开的季型（显示其客户列表）
@@ -750,17 +750,17 @@ Page({
     t.setData({
       showColorPicker: true,
       pickerProduct: product,
-      pickerTab: 'season',
+      pickerStep: 'season',
+      pickerGender: 'lady',
       pickerSeasons: [],
       pickerStyles: [],
-      pickerExpandedLadyStyle: '',
-      pickerExpandedManStyle: ''
+      pickerExpanded: ''
     });
   },
   closeColorPicker: function () {
-    this.setData({ showColorPicker: false, pickerProduct: null, pickerTab: 'season', pickerSeasons: [], pickerStyles: [], pickerExpandedLadyStyle: '', pickerExpandedManStyle: '' });
+    this.setData({ showColorPicker: false, pickerProduct: null, pickerStep: 'season', pickerGender: 'lady', pickerSeasons: [], pickerStyles: [], pickerExpanded: '' });
   },
-  onPickerTab: function (e) { this.setData({ pickerTab: e.currentTarget.dataset.tab }); },
+  onPickerGender: function (e) { this.setData({ pickerGender: e.currentTarget.dataset.gender, pickerExpanded: '' }); },
   onPickerSeason: function (e) {
     var token = e.currentTarget.dataset.token;
     var arr = this.data.pickerSeasons.slice();
@@ -783,23 +783,21 @@ Page({
     else arr.push(gkey);
     this.setData({ pickerStyles: arr });
   },
-  onPickerSelectAllStyleGroup: function (e) {
-    var gender = e.currentTarget.dataset.gender;
-    var expanded = gender === 'lady' ? this.data.pickerExpandedLadyStyle : this.data.pickerExpandedManStyle;
-    var combos = gender === 'lady' ? LADY_STYLE_COMBOS : MAN_STYLE_COMBOS;
+  onPickerSelectAllStyleGroup: function () {
+    var expanded = this.data.pickerExpanded;
+    if (!expanded) return;
+    var combos = LADY_STYLE_COMBOS.concat(MAN_STYLE_COMBOS);
     var groupKeys = combos.filter(function (s) { return s.main === expanded; }).map(function (s) { return s.gkey; });
     var arr = this.data.pickerStyles.slice();
     groupKeys.forEach(function (k) { if (arr.indexOf(k) < 0) arr.push(k); });
     this.setData({ pickerStyles: arr });
   },
-  expandPickerLadyStyle: function (e) {
+  expandPickerStyle: function (e) {
     var main = e.currentTarget.dataset.main;
-    this.setData({ pickerExpandedLadyStyle: this.data.pickerExpandedLadyStyle === main ? '' : main });
+    this.setData({ pickerExpanded: this.data.pickerExpanded === main ? '' : main });
   },
-  expandPickerManStyle: function (e) {
-    var main = e.currentTarget.dataset.main;
-    this.setData({ pickerExpandedManStyle: this.data.pickerExpandedManStyle === main ? '' : main });
-  },
+  goPickerStyle: function () { this.setData({ pickerStep: 'style' }); },
+  goPickerSeason: function () { this.setData({ pickerStep: 'season' }); },
   removePickerTag: function (e) {
     var ds = e.currentTarget.dataset;
     if (ds.type === 'season') {

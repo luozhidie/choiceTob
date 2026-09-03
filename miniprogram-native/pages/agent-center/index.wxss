@@ -231,12 +231,12 @@
 .mat-tag-style { color: #2d1b2e; background: #f0e9e0; border: 1rpx solid #e0d6c9; }
 .mat-btn-remove { color: #b8ada8; background: #f7f4f1; }
 
-/* 风格选择弹窗：整页一个 scroll-view，从标题到按钮全部可滚动 */
-.sheet-tall { height: 80vh; overflow: hidden; }
-.picker-scroll { width: 100%; height: 100%; box-sizing: border-box; }
-.picker-tabs { display: flex; gap: 16rpx; margin-top: 24rpx; border-bottom: 1rpx solid #f0e6d2; padding-bottom: 16rpx; }
-.picker-tab { flex: 1; text-align: center; font-size: 26rpx; color: #9a8f8a; padding: 16rpx 0; border-radius: 12rpx; background: #faf6ee; }
-.picker-tab.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+/* 风格选择弹窗：分步，每屏一屏内，不依赖竖向滚动 */
+.sheet-fixed { max-height: 86vh; display: flex; flex-direction: column; overflow: hidden; }
+.picker-tab2 { display: flex; gap: 16rpx; margin-top: 24rpx; }
+.picker-tab2-item { flex: 1; text-align: center; font-size: 28rpx; color: #9a8f8a; padding: 18rpx 0; border-radius: 12rpx; background: #faf6ee; }
+.picker-tab2-item.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
+.picker-grid-3 .picker-tile { width: calc((100% - 36rpx) / 3); font-size: 24rpx; padding: 18rpx 0; }
 /* 已选标签：横向一行，固定 64rpx 高，绝不撑爆弹窗 */
 .picker-tags-scroll { width: 100%; white-space: nowrap; margin-top: 16rpx; height: 64rpx; flex-shrink: 0; }
 .picker-tags-row { display: inline-flex; flex-direction: row; gap: 12rpx; align-items: center; }
