@@ -15,7 +15,11 @@ var COLOR_GROUPS = ['深', '浅', '冷', '暖', '净', '柔'];
 function buildSeasonLists(materialList) {
   var list = [];
   COLOR_SEASONS.forEach(function (s) {
-    var cnt = (materialList || []).filter(function (p) { return (p._libSeason || p.season) === s.token; }).length;
+    var cnt = 0;
+    (materialList || []).forEach(function (p) {
+      var seasons = p._libSeasons || (Array.isArray(p.seasons) ? p.seasons : (p.season ? [p.season] : []));
+      if (seasons.indexOf(s.token) >= 0) cnt++;
+    });
     list.push({ token: s.token, group: s.group, count: cnt });
   });
   return list;
@@ -106,24 +110,29 @@ Page({
     orderMore: true,
     // 商品素材：全店仓库 vs 我的素材库
     materialList: [],          // 全店有图商品（仓库）
-    filteredMaterial: [],      // 当前展示的列表（我的素材库按色彩季型过滤 或 仓库列表）
-    colorFilter: '',            // 当前选中的色彩季型
-    seasonList: [],            // 我的素材库十二季型统计（带 group）
+    filteredMaterial: [],      // 当前展示的列表（我的素材库按色彩季型/风格过滤 或 仓库列表）
+    colorFilter: '',            // 当前选中的季型或风格 token
+    seasonList: [],            // 我的素材库十二季型统计（带 group、按出现次数）
+    styleFilterList: [],       // 素材库中出现过的风格标签（用于快捷过滤）
     allSeasons: COLOR_SEASONS.map(function (s) { return { token: s.token, group: s.group }; }),
     colorGroups: COLOR_GROUPS,
     groupLabels: { 深: '深冷、深暖', 浅: '浅冷、浅暖', 冷: '冷亮、冷柔', 暖: '暖亮、暖柔', 净: '净冷、净暖', 柔: '柔冷、柔暖' },
     expandedGroup: '',         // 素材库分类树当前展开的固有色组
     expandedWorkshopGroup: '', // 工作台我的素材库卡片当前展开的固有色组
-    myMaterials: [],           // 我入库的素材 [{product_id, season, style(辅助), addedAt}]
+    myMaterials: [],           // 我入库的素材 [{product_id, seasons:[], styles:[], addedAt}]
     warehouseMode: false,      // 是否在选品入库模式
     shareProduct: null,
     batchDownloading: false,
     batchDone: 0,
     batchFailed: 0,
-    // 色彩季型选择弹窗（加入素材库时使用）
+    // 加入素材库弹窗（多选标签：色彩季型 + 女士/男士风格）
     showColorPicker: false,
     pickerProduct: null,
-    pickerSeason: '',
+    pickerTab: 'season',       // 'season' | 'lady' | 'man'
+    pickerSeasons: [],         // 已选季型 token 数组
+    pickerStyles: [],          // 已选风格 gkey 数组（lady:xxx / man:xxx）
+    pickerExpandedLadyStyle: '',
+    pickerExpandedManStyle: '',
     // 核心会员：按色彩季型分组，每季型可挂任意多个客户 { "深暖": [{name,contact,note}, ...] }
     coreClients: {},
     expandedCoreSeason: '',      // 当前展开的季型（显示其客户列表）
@@ -636,8 +645,13 @@ Page({
     var t = this;
     var arr = [];
     try { var raw = wx.getStorageSync(MY_MATERIALS_KEY); arr = (raw && Array.isArray(raw)) ? raw : []; } catch (e) { arr = []; }
-    // 兼容旧数据：以前用 style 字段作为主分类，现在主分类是 season（色彩季型）
-    arr.forEach(function (m) { if (!m.season && m.style) { m.season = m.style; } });
+    // 兼容旧数据：season 单字符串 -> seasons 数组；style 单字符串 -> styles 数组
+    arr.forEach(function (m) {
+      if (m.season && (!m.seasons || !Array.isArray(m.seasons))) m.seasons = [m.season];
+      if (!Array.isArray(m.seasons)) m.seasons = [];
+      if (m.style && (!m.styles || !Array.isArray(m.styles))) m.styles = m.style ? [m.style] : [];
+      if (!Array.isArray(m.styles)) m.styles = [];
+    });
     t.setData({ myMaterials: arr });
     t.applyColorFilter(true);
   },
@@ -645,18 +659,26 @@ Page({
     try { wx.setStorageSync(MY_MATERIALS_KEY, arr); } catch (e) {}
     this.setData({ myMaterials: arr }, cb);
   },
-  // 把 myMaterials 与商品信息合并，生成带 season 的商品列表（season 以代理入库时选的色彩季型为准）
+  // 把 myMaterials 与商品信息合并，生成带 seasons/styles 的商品列表
   buildMyMaterialList: function () {
     var t = this;
     var map = {};
     (t.data.materialList || []).forEach(function (p) { map[p.product_id] = p; });
     return (t.data.myMaterials || []).map(function (m) {
       var p = map[m.product_id] || {};
-      return Object.assign({}, p, { _libSeason: m.season, _libStyle: m.style, product_id: m.product_id, addedAt: m.addedAt });
+      var seasons = Array.isArray(m.seasons) ? m.seasons : (m.season ? [m.season] : []);
+      var styles = Array.isArray(m.styles) ? m.styles : (m.style ? [m.style] : []);
+      return Object.assign({}, p, {
+        _libSeasons: seasons,
+        _libStyles: styles,
+        _libStyleLabels: styles.map(function (s) { return s.replace(/^[^:]+:/, ''); }),
+        product_id: m.product_id,
+        addedAt: m.addedAt
+      });
     }).filter(function (x) { return x.product_id; });
   },
 
-  // 色彩季型过滤：默认过滤我的素材库；warehouseMode 下不过滤
+  // 按季型或风格过滤我的素材库；warehouseMode 下不过滤
   applyColorFilter: function (silent) {
     var t = this;
     if (t.data.warehouseMode) {
@@ -668,9 +690,20 @@ Page({
     }
     var myList = t.buildMyMaterialList();
     var f = t.data.colorFilter;
-    var filtered = f ? myList.filter(function (p) { return p._libSeason === f; }) : myList;
+    var filtered = f ? myList.filter(function (p) {
+      return (p._libSeasons || []).indexOf(f) >= 0 || (p._libStyles || []).indexOf(f) >= 0;
+    }) : myList;
     var seasonList = buildSeasonLists(myList);
-    var upd = { filteredMaterial: filtered, seasonList: seasonList };
+    // 从已入库素材中聚合出现过的风格标签，用作快捷过滤
+    var styleMap = {};
+    myList.forEach(function (p) {
+      (p._libStyles || []).forEach(function (gkey) {
+        var label = gkey.replace(/^[^:]+:/, '');
+        styleMap[gkey] = label;
+      });
+    });
+    var styleFilterList = Object.keys(styleMap).map(function (k) { return { gkey: k, label: styleMap[k] }; });
+    var upd = { filteredMaterial: filtered, seasonList: seasonList, styleFilterList: styleFilterList };
     if (silent === true) { t.setData(upd); } else { t.setData(upd); }
   },
   setMaterialColor: function (e) {
@@ -699,29 +732,94 @@ Page({
     this.setData({ warehouseMode: false });
     this.applyColorFilter();
   },
-  // 打开色彩季型选择弹窗
+  // 打开加入素材库弹窗（多选标签：色彩季型 + 风格）
   openColorPicker: function (e) {
     var pid = e.currentTarget.dataset.pid;
     var t = this;
     var product = (t.data.materialList || []).find(function (p) { return p.product_id === pid; });
     if (!product) return;
-    var defaultSeason = COLOR_SEASONS[0].token;
-    t.setData({ showColorPicker: true, pickerProduct: product, pickerSeason: defaultSeason });
+    t.setData({
+      showColorPicker: true,
+      pickerProduct: product,
+      pickerTab: 'season',
+      pickerSeasons: [],
+      pickerStyles: [],
+      pickerExpandedLadyStyle: '',
+      pickerExpandedManStyle: ''
+    });
   },
-  closeColorPicker: function () { this.setData({ showColorPicker: false, pickerProduct: null, pickerSeason: '' }); },
-  onPickerSeason: function (e) { this.setData({ pickerSeason: e.currentTarget.dataset.token }); },
+  closeColorPicker: function () {
+    this.setData({ showColorPicker: false, pickerProduct: null, pickerTab: 'season', pickerSeasons: [], pickerStyles: [], pickerExpandedLadyStyle: '', pickerExpandedManStyle: '' });
+  },
+  onPickerTab: function (e) { this.setData({ pickerTab: e.currentTarget.dataset.tab }); },
+  onPickerSeason: function (e) {
+    var token = e.currentTarget.dataset.token;
+    var arr = this.data.pickerSeasons.slice();
+    var idx = arr.indexOf(token);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(token);
+    this.setData({ pickerSeasons: arr });
+  },
+  onPickerSelectAllSeasons: function () {
+    var all = this.data.allSeasons.map(function (s) { return s.token; });
+    var cur = this.data.pickerSeasons;
+    if (cur.length === all.length) this.setData({ pickerSeasons: [] });
+    else this.setData({ pickerSeasons: all.slice() });
+  },
+  onPickerStyle: function (e) {
+    var gkey = e.currentTarget.dataset.gkey;
+    var arr = this.data.pickerStyles.slice();
+    var idx = arr.indexOf(gkey);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(gkey);
+    this.setData({ pickerStyles: arr });
+  },
+  onPickerSelectAllStyleGroup: function (e) {
+    var gender = e.currentTarget.dataset.gender;
+    var expanded = gender === 'lady' ? this.data.pickerExpandedLadyStyle : this.data.pickerExpandedManStyle;
+    var combos = gender === 'lady' ? LADY_STYLE_COMBOS : MAN_STYLE_COMBOS;
+    var groupKeys = combos.filter(function (s) { return s.main === expanded; }).map(function (s) { return s.gkey; });
+    var arr = this.data.pickerStyles.slice();
+    groupKeys.forEach(function (k) { if (arr.indexOf(k) < 0) arr.push(k); });
+    this.setData({ pickerStyles: arr });
+  },
+  expandPickerLadyStyle: function (e) {
+    var main = e.currentTarget.dataset.main;
+    this.setData({ pickerExpandedLadyStyle: this.data.pickerExpandedLadyStyle === main ? '' : main });
+  },
+  expandPickerManStyle: function (e) {
+    var main = e.currentTarget.dataset.main;
+    this.setData({ pickerExpandedManStyle: this.data.pickerExpandedManStyle === main ? '' : main });
+  },
+  removePickerTag: function (e) {
+    var ds = e.currentTarget.dataset;
+    if (ds.type === 'season') {
+      var arr = this.data.pickerSeasons.slice();
+      var idx = arr.indexOf(ds.value);
+      if (idx >= 0) { arr.splice(idx, 1); this.setData({ pickerSeasons: arr }); }
+    } else {
+      var arr = this.data.pickerStyles.slice();
+      var idx = arr.indexOf(ds.value);
+      if (idx >= 0) { arr.splice(idx, 1); this.setData({ pickerStyles: arr }); }
+    }
+  },
   confirmAddToLibrary: function () {
     var t = this;
     var p = t.data.pickerProduct;
-    var season = t.data.pickerSeason;
-    if (!p || !season) return;
+    var seasons = t.data.pickerSeasons || [];
+    var styles = t.data.pickerStyles || [];
+    if (!p) return;
+    if (seasons.length === 0 && styles.length === 0) {
+      wx.showToast({ title: '至少选一个标签', icon: 'none' });
+      return;
+    }
     var arr = (t.data.myMaterials || []).slice();
     if (arr.some(function (m) { return m.product_id === p.product_id; })) {
       wx.showToast({ title: '已在素材库中', icon: 'none' });
       t.closeColorPicker();
       return;
     }
-    arr.unshift({ product_id: p.product_id, season: season, style: p.style || '', addedAt: Date.now() });
+    arr.unshift({ product_id: p.product_id, seasons: seasons, styles: styles, addedAt: Date.now() });
     t.saveMyMaterials(arr, function () {
       t.closeColorPicker();
       t.applyColorFilter();
@@ -879,7 +977,10 @@ Page({
       });
       return;
     }
-    var has = (t.data.myMaterials || []).some(function (m) { return m.season === token; });
+    var has = (t.data.myMaterials || []).some(function (m) {
+      var seasons = Array.isArray(m.seasons) ? m.seasons : (m.season ? [m.season] : []);
+      return seasons.indexOf(token) >= 0;
+    });
     if (!has) {
       wx.showModal({
         title: token + ' · 素材库为空',

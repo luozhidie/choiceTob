@@ -131,8 +131,8 @@ module.exports = {
 
       <!-- 色彩季型选品：我的素材库按十二季型归类（可折叠，同素材 tab） -->
       <view class="card" wx:if="{{seasonList.length>0 || myMaterials.length>0}}">
-        <view class="card-title">我的素材库<text class="card-sub">按会员色彩季型归类</text></view>
-        <text class="style-tip">六大固有色特征：深、浅、冷、暖、净、柔 → 十二个色彩季型。你入库的商品按季型分类，对准会员肤色/用色一键分享。</text>
+        <view class="card-title">我的素材库<text class="card-sub">按会员色彩季型 / 风格归类</text></view>
+        <text class="style-tip">一件衣服可同时匹配多个色彩季型、多个风格。多选标签入库后，既能按季型找款，也能按风格找款，未来实现 96 型智能匹配。</text>
         <view class="mat-parent-bar workshop-parent-bar">
           <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedWorkshopGroup===item?'on':''}}" bindtap="expandWorkshopGroup" data-group="{{item}}">{{item}}</view>
         </view>
@@ -472,7 +472,7 @@ module.exports = {
       <view class="mat-header">
         <view>
           <text class="mat-header-title">{{warehouseMode ? '选品入库' : '我的素材库'}}</text>
-          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按会员色彩季型归类'}}</text>
+          <text class="mat-header-sub">{{warehouseMode ? '从全店商品挑选加入你的素材库' : '共 ' + myMaterials.length + ' 款 · 按会员色彩季型 / 风格归类'}}</text>
         </view>
         <view wx:if="{{warehouseMode}}" class="mat-header-btn" bindtap="exitWarehouse">返回素材库</view>
         <view wx:else class="mat-header-btn" bindtap="enterWarehouse">去选品入库</view>
@@ -496,6 +496,14 @@ module.exports = {
             </view>
           </view>
         </view>
+      </view>
+
+      <!-- 风格快捷筛选 -->
+      <view wx:if="{{!warehouseMode && styleFilterList.length>0}}" class="mat-stylebar">
+        <scroll-view scroll-x class="sb-scroll">
+          <text class="sb-chip {{colorFilter===''?'on':''}}" bindtap="clearMaterialColor">全部</text>
+          <text wx:for="{{styleFilterList}}" wx:key="gkey" class="sb-chip {{colorFilter===item.gkey?'on':''}}" bindtap="setMaterialColor" data-token="{{item.gkey}}">{{item.label}}</text>
+        </scroll-view>
       </view>
 
       <!-- 工具栏 -->
@@ -526,7 +534,10 @@ module.exports = {
               <text class="mat-price-retail">零售 ¥{{f.yuan(item.retail_price)}}</text>
               <text class="mat-price-custom">{{item.custom_price ? '卖价 ¥' + f.yuan(item.custom_price) : '卖价未设'}}</text>
             </view>
-            <text wx:if="{{!warehouseMode && item._libSeason}}" class="mat-lib-tag">{{item._libSeason}}</text>
+            <view wx:if="{{!warehouseMode && (item._libSeasons.length + item._libStyles.length > 0)}}" class="mat-tags">
+              <text wx:for="{{item._libSeasons}}" wx:key="*this" class="mat-tag mat-tag-season">{{item}}</text>
+              <text wx:for="{{item._libStyleLabels}}" wx:key="*this" class="mat-tag mat-tag-style">{{item}}</text>
+            </view>
           </view>
         </view>
         <view class="mat-actions" catchtap="noop">
@@ -601,18 +612,69 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 加入素材库：色彩季型选择弹窗 -->
+  <!-- 加入素材库：多选标签弹窗（色彩季型 + 女士/男士风格） -->
   <view wx:if="{{showColorPicker}}" class="mask" bindtap="closeColorPicker">
-    <view class="sheet" catchtap="noop">
+    <view class="sheet sheet-tall" catchtap="noop">
       <text class="sheet-title">加入素材库</text>
       <text class="sheet-sub">{{pickerProduct.title}}</text>
-      <text class="sheet-retail">选择该商品对应的会员色彩季型（六大固有色 → 十二季型）</text>
-      <block wx:for="{{colorGroups}}" wx:key="*this">
-        <view class="picker-section">{{item}}色组</view>
-        <view class="picker-grid">
-          <view wx:for="{{allSeasons}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="picker-tile {{pickerSeason===s.token?'on':''}}" bindtap="onPickerSeason" data-token="{{s.token}}">{{s.token}}</view>
-        </view>
-      </block>
+      <text class="sheet-retail">为该商品选择适配会员标签，可多选，后期实现 96 型智能匹配</text>
+
+      <!-- 已选标签 -->
+      <view class="picker-tags" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">
+        <view wx:for="{{pickerSeasons}}" wx:key="*this" class="picker-tag" bindtap="removePickerTag" data-type="season" data-value="{{item}}">{{item}} ✕</view>
+        <view wx:for="{{pickerStyles}}" wx:key="*this" class="picker-tag picker-tag-style" bindtap="removePickerTag" data-type="style" data-value="{{item}}">{{item.replace('lady:','').replace('man:','')}} ✕</view>
+      </view>
+
+      <!-- Tab -->
+      <view class="picker-tabs">
+        <view class="picker-tab {{pickerTab==='season'?'on':''}}" bindtap="onPickerTab" data-tab="season">色彩季型</view>
+        <view class="picker-tab {{pickerTab==='lady'?'on':''}}" bindtap="onPickerTab" data-tab="lady">女士风格</view>
+        <view class="picker-tab {{pickerTab==='man'?'on':''}}" bindtap="onPickerTab" data-tab="man">男士风格</view>
+      </view>
+
+      <scroll-view scroll-y class="picker-body">
+        <!-- 季型 -->
+        <block wx:if="{{pickerTab==='season'}}">
+          <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllSeasons">{{pickerSeasons.length===allSeasons.length?'取消全选':'全选 12 季型'}}</text></view>
+          <block wx:for="{{colorGroups}}" wx:key="*this">
+            <view class="picker-section">{{item}}色组</view>
+            <view class="picker-grid">
+              <view wx:for="{{allSeasons}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===item}}" class="picker-tile {{pickerSeasons.indexOf(s.token)>=0?'on':''}}" bindtap="onPickerSeason" data-token="{{s.token}}">{{s.token}}</view>
+            </view>
+          </block>
+        </block>
+
+        <!-- 女士风格 -->
+        <block wx:if="{{pickerTab==='lady'}}">
+          <text class="picker-hint">选择女士 64 种风格组合，可多选</text>
+          <view class="mat-parent-bar style-parent-bar">
+            <view wx:for="{{ladyMainStyles}}" wx:key="*this" class="mat-parent {{pickerExpandedLadyStyle===item?'on':''}}" bindtap="expandPickerLadyStyle" data-main="{{item}}">{{item}}</view>
+          </view>
+          <view wx:if="{{pickerExpandedLadyStyle}}" class="core-subtree">
+            <view class="style-group-label">{{pickerExpandedLadyStyle}}风格组合 · 点击多选</view>
+            <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllStyleGroup" data-gender="lady">全选本组</text></view>
+            <view class="picker-grid picker-grid-4">
+              <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===pickerExpandedLadyStyle}}" class="picker-tile {{pickerStyles.indexOf(s.gkey)>=0?'on':''}}" bindtap="onPickerStyle" data-gkey="{{s.gkey}}">{{s.token}}</view>
+            </view>
+          </view>
+        </block>
+
+        <!-- 男士风格 -->
+        <block wx:if="{{pickerTab==='man'}}">
+          <text class="picker-hint">选择男士 25 种风格组合，可多选</text>
+          <view class="mat-parent-bar style-parent-bar">
+            <view wx:for="{{manMainStyles}}" wx:key="*this" class="mat-parent {{pickerExpandedManStyle===item?'on':''}}" bindtap="expandPickerManStyle" data-main="{{item}}">{{item}}</view>
+          </view>
+          <view wx:if="{{pickerExpandedManStyle}}" class="core-subtree">
+            <view class="style-group-label">{{pickerExpandedManStyle}}风格组合 · 点击多选</view>
+            <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllStyleGroup" data-gender="man">全选本组</text></view>
+            <view class="picker-grid picker-grid-4">
+              <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===pickerExpandedManStyle}}" class="picker-tile {{pickerStyles.indexOf(s.gkey)>=0?'on':''}}" bindtap="onPickerStyle" data-gkey="{{s.gkey}}">{{s.token}}</view>
+            </view>
+          </view>
+        </block>
+      </scroll-view>
+
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
         <view class="sheet-save" bindtap="confirmAddToLibrary">确定加入</view>
