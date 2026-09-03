@@ -7,31 +7,31 @@ module.exports = {
 <view class="page">
 
   <!-- 加载 -->
-  <view wx:if="{{loading}}" class="loading">加载中…</view>
+  <view wx:if="{{loading}}" class="loading">{{pageCopy.loading}}</view>
 
   <!-- 无效码 -->
   <view wx:elif="{{!valid}}" class="empty">
-    <text class="empty-emoji">🔗</text>
-    <text class="empty-title">链接无效</text>
-    <text class="empty-desc">链接不存在或未激活</text>
-    <view class="btn-primary" bindtap="goHome">回到首页</view>
+    <text class="empty-emoji">{{pageCopy.empty.emoji}}</text>
+    <text class="empty-title">{{pageCopy.empty.title}}</text>
+    <text class="empty-desc">{{pageCopy.empty.desc}}</text>
+    <view class="btn-primary" bindtap="goHome">{{pageCopy.empty.btn}}</view>
   </view>
 
   <block wx:else>
     <!-- 专属店铺头 -->
     <view class="shop-head">
-      <view class="sh-badge">专属精选店</view>
-      <text class="sh-name">{{agentName}} 的精选店</text>
-      <text class="sh-desc">先试再买 · 由专属买手为你服务</text>
+      <view class="sh-badge">{{pageCopy.shopHead.badge}}</view>
+      <text class="sh-name">{{agentName}}{{pageCopy.shopHead.nameSuffix}}</text>
+      <text class="sh-desc">{{pageCopy.shopHead.desc}}</text>
     </view>
 
     <!-- 虚拟试衣 CTA -->
     <view class="try-bar" bindtap="goTry">
       <view class="tb-left">
-        <text class="tb-title">👗 云衣橱 · AI 虚拟试衣</text>
-        <text class="tb-desc">上传照片，先看上身效果再决定</text>
+        <text class="tb-title">{{pageCopy.tryBar.emoji}} {{pageCopy.tryBar.title}}</text>
+        <text class="tb-desc">{{pageCopy.tryBar.desc}}</text>
       </view>
-      <view class="tb-btn">去试衣 ›</view>
+      <view class="tb-btn">{{pageCopy.tryBar.btn}}</view>
     </view>
 
     <!-- 商品橱窗 -->
@@ -42,13 +42,13 @@ module.exports = {
         <text class="c-title">{{item.title}}</text>
         <view class="c-bottom">
           <text class="c-price">¥{{f.yuan(item.price)}}</text>
-          <view class="c-buy" bindtap="buy" data-index="{{index}}">立即买</view>
+          <view class="c-buy" bindtap="buy" data-index="{{index}}">{{pageCopy.product.buyBtn}}</view>
         </view>
-        <view class="c-try" bindtap="goTry">试穿 ›</view>
+        <view class="c-try" bindtap="goTry">{{pageCopy.product.tryBtn}}</view>
       </view>
     </view>
 
-    <view class="tip">价格由店铺设定</view>
+    <view class="tip">{{pageCopy.tip}}</view>
     <view class="sbtm"></view>
   </block>
 
@@ -65,9 +65,9 @@ module.exports = {
       </view>
       <view class="addr" bindtap="chooseAddr">
         <text wx:if="{{address}}" class="addr-has">{{address.name}} {{address.phone}}\n{{address.province}}{{address.city}}{{address.district}}{{address.detail}}</text>
-        <text wx:else class="addr-empty">＋ 选择收货地址</text>
+        <text wx:else class="addr-empty">{{pageCopy.paySheet.addrEmpty}}</text>
       </view>
-      <view class="sheet-save" bindtap="submitOrder">{{paying ? '支付中…' : '微信支付 ¥'+f.yuan(payItem.price)}}</view>
+      <view class="sheet-save" bindtap="submitOrder">{{paying ? '支付中…' : pageCopy.paySheet.payPrefix + f.yuan(payItem.price)}}</view>
     </view>
   </view>
 

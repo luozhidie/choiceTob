@@ -1,5 +1,6 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var mp = require('../../utils/mp-page-copy.js');
 
 var EXPERIENCE = ['无', '1年以下', '1-3年', '3-5年', '5年以上'];
 var STORE_COUNT = ['1-2家', '3-5家', '6-10家', '10家以上'];
@@ -11,6 +12,12 @@ Page({
     form: { name: '', phone: '', email: '', company: '', wechat: '', experience: 0, storeCount: 0, message: '' },
     submitting: false,
     submitted: false,
+    pageCopy: {},
+  },
+
+  onLoad: function () {
+    var t = this;
+    mp.loadMpSection('agent', function (c) { t.setData({ pageCopy: (c && c.recruit) || {} }); });
   },
 
   update: function (k, v) {

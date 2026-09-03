@@ -2,45 +2,38 @@
   <!-- 成功态 -->
   <view class="done" wx:if="{{submitted}}">
     <view class="done-icon">✅</view>
-    <view class="done-title">提交成功</view>
-    <view class="done-desc">我们已收到你的代理申请，专属顾问会在 1-2 个工作日内联系你</view>
-    <view class="done-btn" bindtap="goHome">返回首页</view>
+    <view class="done-title">{{pageCopy.done.title}}</view>
+    <view class="done-desc">{{pageCopy.done.desc}}</view>
+    <view class="done-btn" bindtap="goHome">{{pageCopy.done.btn}}</view>
   </view>
 
   <block wx:else>
     <!-- Hero -->
     <view class="hero">
-      <view class="hero-badge">JOIN AGENT</view>
-      <view class="hero-title">成为销售代理</view>
-      <view class="hero-desc">共享时尚产业红利，预存货款享会员价，邀好友再得返利</view>
+      <view class="hero-badge">{{pageCopy.hero.badge}}</view>
+      <view class="hero-title">{{pageCopy.hero.title}}</view>
+      <view class="hero-desc">{{pageCopy.hero.desc}}</view>
     </view>
 
     <!-- 权益优势 -->
     <view class="sec">
-      <view class="sec-head"><text class="sec-label">ADVANTAGES</text><text class="sec-title">权益优势</text></view>
+      <view class="sec-head"><text class="sec-label">{{pageCopy.advantages.label}}</text><text class="sec-title">{{pageCopy.advantages.title}}</text></view>
       <view class="adv-grid">
-        <view class="adv-card"><text class="adv-icon">📈</text><text class="adv-title">数据驱动</text><text class="adv-desc">AI 选品 + 销售预测，降低压货风险</text></view>
-        <view class="adv-card"><text class="adv-icon">🎨</text><text class="adv-title">设计支持</text><text class="adv-desc">专业设计团队，季度更新 300+ 款</text></view>
-        <view class="adv-card"><text class="adv-icon">📦</text><text class="adv-title">直采货源</text><text class="adv-desc">广州/杭州直采，价格优势明显</text></view>
-        <view class="adv-card"><text class="adv-icon">🎓</text><text class="adv-title">培训体系</text><text class="adv-desc">从零到专业买手的全链路培训</text></view>
+        <view class="adv-card" wx:for="{{pageCopy.advantages.cards}}" wx:key="title"><text class="adv-icon">{{item.icon}}</text><text class="adv-title">{{item.title}}</text><text class="adv-desc">{{item.desc}}</text></view>
       </view>
     </view>
 
     <!-- 升级条件 -->
     <view class="sec">
-      <view class="sec-head"><text class="sec-label">CONDITIONS</text><text class="sec-title">升级条件</text></view>
+      <view class="sec-head"><text class="sec-label">{{pageCopy.conditions.label}}</text><text class="sec-title">{{pageCopy.conditions.title}}</text></view>
       <view class="cond-list">
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">认同品牌理念，遵纪守法</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">有实体渠道或线上销售渠道</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">具备一定资金实力与抗风险能力</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">愿接受平台统一管理及培训</text></view>
-        <view class="cond-item"><text class="cond-check">✅</text><text class="cond-text">有良好商业信誉与服务意识</text></view>
+        <view class="cond-item" wx:for="{{pageCopy.conditions.items}}" wx:key="*this"><text class="cond-check">✅</text><text class="cond-text">{{item}}</text></view>
       </view>
     </view>
 
     <!-- 报名表单 -->
     <view class="sec">
-      <view class="sec-head"><text class="sec-label">APPLY NOW</text><text class="sec-title">立即报名</text></view>
+      <view class="sec-head"><text class="sec-label">{{pageCopy.apply.label}}</text><text class="sec-title">{{pageCopy.apply.title}}</text></view>
       <view class="form-card">
         <view class="form-item">
           <text class="form-label">姓名 <text class="req">*</text></text>
@@ -80,9 +73,9 @@
         </view>
 
         <view class="form-submit {{submitting?'disabled':''}}" bindtap="{{submitting?'noop':'submit'}}">
-          <text>{{submitting ? '提交中...' : '提交报名'}}</text>
+          <text>{{submitting ? pageCopy.apply.submittingText : pageCopy.apply.submitText}}</text>
         </view>
-        <view class="form-tip">提交即表示同意我们与你联系，信息仅用于代理审核</view>
+        <view class="form-tip">{{pageCopy.apply.tip}}</view>
       </view>
     </view>
   </block>

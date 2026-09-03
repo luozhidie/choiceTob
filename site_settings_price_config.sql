@@ -12,7 +12,7 @@
 -- 段A：插入（key 不存在才插入）
 insert into site_settings (key, value, updated_at) values (
   'wholesale_tiers',
-  $$json$$
+  $json$
 {
   "wholesale_6k": {
     "name": "会员·首充6000",
@@ -39,14 +39,14 @@ insert into site_settings (key, value, updated_at) values (
     "returnRate": 0.2
   }
 }
-  $$json$$::jsonb,
+  $json$::jsonb,
   now()
 )
 on conflict (key) do nothing;
 
 insert into site_settings (key, value, updated_at) values (
   'virtual_goods_prices',
-  $$json$$
+  $json$
 {
   "tryon_first_9_9": 990,
   "tryon_normal_99": 9900,
@@ -58,7 +58,7 @@ insert into site_settings (key, value, updated_at) values (
   "articles_monthly": 13800,
   "articles_yearly": 138000
 }
-  $$json$$::jsonb,
+  $json$::jsonb,
   now()
 )
 on conflict (key) do nothing;

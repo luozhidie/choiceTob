@@ -10,7 +10,7 @@
 insert into site_settings (key, value, updated_at) values
 (
   'mp_page_copy',
-  $$json$$
+  $json$
 {
   "member": {
     "badge": "🛡 会员专享服务中心",
@@ -253,7 +253,7 @@ insert into site_settings (key, value, updated_at) values
     }
   }
 }
-  $$json$$::jsonb,
+  $json$::jsonb,
   now()
 )
 on conflict (key) do nothing;

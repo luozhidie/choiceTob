@@ -1,5 +1,6 @@
 var app = getApp();
 var BASE = 'https://colour-choice.art';
+var mp = require('../../utils/mp-page-copy.js');
 
 function fmtYuan(cents) {
   if (cents == null) return '0';
@@ -23,12 +24,15 @@ Page({
     showPay: false,
     payItem: null,
     address: null,
-    paying: false
+    paying: false,
+    pageCopy: {}
   },
 
   onLoad: function (opt) {
+    var t = this;
     var ref = (opt && (opt.ref || opt.code)) || '';
     this.setData({ ref: ref });
+    mp.loadMpSection('agent', function (c) { t.setData({ pageCopy: (c && c.shop) || {} }); });
     if (!ref) { this.setData({ loading: false }); return; }
     this.loadLanding(ref);
   },

@@ -1,5 +1,8 @@
+var mp = require('../../utils/mp-page-copy.js');
+
 Page({
   data:{
+    pageCopy:{},
     step:'intro',
 
     /* ── Step 1: 店铺身份（全必填 *） ── */
@@ -47,11 +50,13 @@ Page({
   },
 
   onLoad:function(){
+    var t=this;
     var token=wx.getStorageSync('token');
     var info=wx.getStorageSync('user_info');
     if(!token && (!info || !info.nickName)){
       this.setData({needLogin:true});
     }
+    mp.loadMpSection('certify',function(c){ t.setData({pageCopy:c||{}}); });
   },
 
   goLogin:function(){wx.navigateTo({url:'/pages/login/index'});},
