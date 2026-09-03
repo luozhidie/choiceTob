@@ -41,7 +41,7 @@ const version = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + S
 ci.upload({
   project: project,
   version: version,
-  desc: '本地直传 站点文案后台可配置 ' + version,
+  desc: '本地直传 权益中心代理人资料编辑 ' + version,
   setting: { es6: true, es7: true, enhance: true, minify: false },
   robot: 1
 }).then(function() {
