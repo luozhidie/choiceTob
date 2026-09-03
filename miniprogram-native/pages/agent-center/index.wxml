@@ -614,27 +614,28 @@ module.exports = {
     </view>
   </view>
 
-  <!-- 加入素材库：多选标签弹窗（色彩季型 + 女士/男士风格） -->
+  <!-- 加入素材库：整个弹窗就是一个 scroll-view，手指从任何位置上下滑都能滚 -->
   <view wx:if="{{showColorPicker}}" class="mask" catchtouchmove="noop" bindtap="closeColorPicker">
     <view class="sheet sheet-tall" catchtap="noop">
-      <text class="sheet-title">加入素材库</text>
-      <text class="sheet-sub">{{pickerProduct.title}}</text>
-      <text class="sheet-retail">为该商品选择适配会员标签，可多选，后期实现 96 型智能匹配</text>
+      <scroll-view scroll-y class="picker-scroll" enhanced="true" show-scrollbar="false">
 
-      <!-- 已选标签 -->
-      <view class="picker-tags" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">
-        <view wx:for="{{pickerSeasons}}" wx:key="*this" class="picker-tag" bindtap="removePickerTag" data-type="season" data-value="{{item}}">{{item}} ✕</view>
-        <view wx:for="{{pickerStyles}}" wx:key="*this" class="picker-tag picker-tag-style" bindtap="removePickerTag" data-type="style" data-value="{{item}}">{{f.stripPrefix(item)}} ✕</view>
-      </view>
+        <text class="sheet-title">加入素材库</text>
+        <text class="sheet-sub">{{pickerProduct.title}}</text>
+        <text class="sheet-retail">为该商品选择适配会员标签，可多选，后期实现 96 型智能匹配</text>
 
-      <!-- Tab -->
-      <view class="picker-tabs">
-        <view class="picker-tab {{pickerTab==='season'?'on':''}}" bindtap="onPickerTab" data-tab="season">色彩季型</view>
-        <view class="picker-tab {{pickerTab==='lady'?'on':''}}" bindtap="onPickerTab" data-tab="lady">女士风格</view>
-        <view class="picker-tab {{pickerTab==='man'?'on':''}}" bindtap="onPickerTab" data-tab="man">男士风格</view>
-      </view>
+        <!-- 已选标签 -->
+        <view class="picker-tags" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">
+          <view wx:for="{{pickerSeasons}}" wx:key="*this" class="picker-tag" bindtap="removePickerTag" data-type="season" data-value="{{item}}">{{item}} ✕</view>
+          <view wx:for="{{pickerStyles}}" wx:key="*this" class="picker-tag picker-tag-style" bindtap="removePickerTag" data-type="style" data-value="{{item}}">{{f.stripPrefix(item)}} ✕</view>
+        </view>
 
-      <scroll-view scroll-y class="picker-body">
+        <!-- Tab -->
+        <view class="picker-tabs">
+          <view class="picker-tab {{pickerTab==='season'?'on':''}}" bindtap="onPickerTab" data-tab="season">色彩季型</view>
+          <view class="picker-tab {{pickerTab==='lady'?'on':''}}" bindtap="onPickerTab" data-tab="lady">女士风格</view>
+          <view class="picker-tab {{pickerTab==='man'?'on':''}}" bindtap="onPickerTab" data-tab="man">男士风格</view>
+        </view>
+
         <!-- 季型 -->
         <block wx:if="{{pickerTab==='season'}}">
           <view class="picker-all-row"><text class="picker-all-text" bindtap="onPickerSelectAllSeasons">{{pickerSeasons.length===allSeasons.length?'取消全选':'全选 12 季型'}}</text></view>
@@ -675,6 +676,9 @@ module.exports = {
             </view>
           </view>
         </block>
+
+        <!-- 底部留白防止按钮贴边 -->
+        <view style="height: 24rpx;"></view>
 
         <view class="sheet-btns picker-btns">
           <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
