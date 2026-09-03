@@ -675,12 +675,12 @@ module.exports = {
             </view>
           </view>
         </block>
-      </scroll-view>
 
-      <view class="sheet-btns">
-        <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
-        <view class="sheet-save" bindtap="confirmAddToLibrary">确定加入</view>
-      </view>
+        <view class="sheet-btns picker-btns">
+          <view class="sheet-cancel" bindtap="closeColorPicker">取消</view>
+          <view class="sheet-save" bindtap="confirmAddToLibrary">确定加入</view>
+        </view>
+      </scroll-view>
     </view>
   </view>
 

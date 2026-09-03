@@ -44,7 +44,8 @@ async function resolveAgent(userId: string) {
   const isAgent =
     isAdmin ||
     profile?.membership_type === "deposit_discount" ||
-    (profile?.store_owner_certified && (profile?.deposit_amount || 0) > 0);
+    profile?.membership_type === "view_price" ||
+    profile?.store_owner_certified === true;
   return { isAgent, isAdmin };
 }
 
