@@ -1,18 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
-// 解析当前用户 uid（小程序 token 或网站 admin cookie）
+// 解析当前用户 uid（小程序自定义 base64url token / Supabase JWT / admin cookie）
 async function resolveUserId(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (token) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser(token);
-    if (data?.user?.id) return data.user.id;
+  if (!token) {
+    const cookie = req.cookies.get("admin_user_id")?.value;
+    return cookie || null;
   }
+
+  // 1) 三段式 JWT：走 Supabase auth.getUser（网站/admin 登录态）
+  if (token.split(".").length === 3) {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase.auth.getUser(token);
+      if (data?.user?.id) return data.user.id;
+    } catch {}
+  }
+
+  // 2) 小程序自定义 token：base64url(JSON{uid, openid, exp})
+  try {
+    const payload = JSON.parse(Buffer.from(token, "base64url").toString("utf8"));
+    if (payload?.uid && payload.exp && payload.exp > Date.now()) {
+      return String(payload.uid);
+    }
+  } catch {}
+
+  // 3) fallback admin cookie
   const cookie = req.cookies.get("admin_user_id")?.value;
-  if (cookie) return cookie;
-  return null;
+  return cookie || null;
 }
 
 // 是否代理（与 agent/customers 保持一致）
