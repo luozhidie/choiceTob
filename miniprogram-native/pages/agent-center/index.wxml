@@ -148,25 +148,19 @@ module.exports = {
         <view class="quick-more" bindtap="enterWarehouse">去选品入库 ›</view>
       </view>
 
-      <!-- 十二位核心会员：每个色彩季型绑定一位（可折叠） -->
+      <!-- 十二位核心会员：每个色彩季型绑定一位（平铺十二季型，一次看清） -->
       <view class="card">
         <view class="card-title">我的十二位核心会员<text class="card-sub">十二季型各绑定一位</text></view>
         <text class="style-tip">每位会员维护 12 位分别对应十二个色彩季型的核心会员，找齐 12 人即可覆盖全部用色需求，支撑日常销售与分享。</text>
-        <view class="mat-parent-bar core-parent-bar">
-          <view wx:for="{{colorGroups}}" wx:key="*this" class="mat-parent {{expandedCoreGroup===item?'on':''}}" bindtap="expandCoreGroup" data-group="{{item}}">{{item}}</view>
-        </view>
-        <view wx:if="{{expandedCoreGroup}}" class="core-subtree">
-          <view class="style-group-label">{{expandedCoreGroup}}：{{groupLabels[expandedCoreGroup]}}</view>
-          <view class="core-grid">
-            <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" wx:if="{{s.group===expandedCoreGroup}}" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
-              <text class="core-style">{{s.token}}</text>
-              <block wx:if="{{coreClients[s.token]}}">
-                <text class="core-name">{{coreClients[s.token].name}}</text>
-                <text class="core-sub" wx:if="{{coreClients[s.token].contact}}">{{coreClients[s.token].contact}}</text>
-                <view class="core-share" catchtap="coreShare" data-token="{{s.token}}">去分享 ›</view>
-              </block>
-              <text wx:else class="core-empty">＋ 待开发</text>
-            </view>
+        <view class="core-grid core-grid-flat">
+          <view wx:for="{{seasonList}}" wx:for-item="s" wx:key="token" class="core-slot {{coreClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+            <text class="core-style">{{s.token}}</text>
+            <block wx:if="{{coreClients[s.token]}}">
+              <text class="core-name">{{coreClients[s.token].name}}</text>
+              <text class="core-sub" wx:if="{{coreClients[s.token].contact}}">{{coreClients[s.token].contact}}</text>
+              <view class="core-share" catchtap="coreShare" data-token="{{s.token}}">去分享 ›</view>
+            </block>
+            <text wx:else class="core-empty">＋ 待开发</text>
           </view>
         </view>
       </view>
@@ -181,11 +175,11 @@ module.exports = {
         <view wx:if="{{expandedLadyStyle}}" class="core-subtree">
           <view class="style-group-label">{{expandedLadyStyle}}的偏风格（曲直 / 冷暖微调）· 8 种组合</view>
           <view class="core-grid style-core-grid">
-            <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+            <view wx:for="{{ladyStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedLadyStyle}}" class="core-slot {{styleClients[s.gkey]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}" data-gender="lady">
               <text class="core-style">{{s.token}}</text>
-              <block wx:if="{{styleClients[s.token]}}">
-                <text class="core-name">{{styleClients[s.token].name}}</text>
-                <text class="core-sub" wx:if="{{styleClients[s.token].contact}}">{{styleClients[s.token].contact}}</text>
+              <block wx:if="{{styleClients[s.gkey]}}">
+                <text class="core-name">{{styleClients[s.gkey].name}}</text>
+                <text class="core-sub" wx:if="{{styleClients[s.gkey].contact}}">{{styleClients[s.gkey].contact}}</text>
               </block>
               <text wx:else class="core-empty">＋ 待开发</text>
             </view>
@@ -203,11 +197,11 @@ module.exports = {
         <view wx:if="{{expandedManStyle}}" class="core-subtree">
           <view class="style-group-label">{{expandedManStyle}}的偏风格（可多选叠加）· 5 种组合</view>
           <view class="core-grid style-core-grid">
-            <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.token]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}">
+            <view wx:for="{{manStyleCombos}}" wx:for-item="s" wx:key="token" wx:if="{{s.main===expandedManStyle}}" class="core-slot {{styleClients[s.gkey]?'filled':''}}" bindtap="openCoreEdit" data-token="{{s.token}}" data-gender="man">
               <text class="core-style">{{s.token}}</text>
-              <block wx:if="{{styleClients[s.token]}}">
-                <text class="core-name">{{styleClients[s.token].name}}</text>
-                <text class="core-sub" wx:if="{{styleClients[s.token].contact}}">{{styleClients[s.token].contact}}</text>
+              <block wx:if="{{styleClients[s.gkey]}}">
+                <text class="core-name">{{styleClients[s.gkey].name}}</text>
+                <text class="core-sub" wx:if="{{styleClients[s.gkey].contact}}">{{styleClients[s.gkey].contact}}</text>
               </block>
               <text wx:else class="core-empty">＋ 待开发</text>
             </view>

@@ -28,21 +28,22 @@ var MY_MATERIALS_KEY = 'agent_my_materials';
 var LADY_MAIN_STYLES = ['少女型', '优雅型', '浪漫型', '少年型', '时尚型', '古典型', '自然型', '戏剧型'];
 var MAN_MAIN_STYLES = ['戏剧型', '自然型', '古典型', '浪漫型', '时尚型'];
 var STYLE_CLIENTS_KEY = 'agent_style_clients';
-function buildStyleCombos(mains) {
+// prefix: 'lady'（女士）/ 'man'（男士）—— 作为本地存储 key 前缀，彻底隔离两性风格盘
+function buildStyleCombos(mains, prefix) {
   var list = [];
   mains.forEach(function (main) {
     // 主风格自身：纯X型
-    list.push({ token: '纯' + main, main: main, sub: main, pure: true });
+    list.push({ token: '纯' + main, main: main, sub: main, pure: true, gkey: prefix + ':' + '纯' + main });
     // 主风格偏其他风格
     mains.forEach(function (sub) {
       if (main === sub) return;
-      list.push({ token: main + '偏' + sub, main: main, sub: sub });
+      list.push({ token: main + '偏' + sub, main: main, sub: sub, gkey: prefix + ':' + main + '偏' + sub });
     });
   });
   return list;
 }
-var LADY_STYLE_COMBOS = buildStyleCombos(LADY_MAIN_STYLES);
-var MAN_STYLE_COMBOS = buildStyleCombos(MAN_MAIN_STYLES);
+var LADY_STYLE_COMBOS = buildStyleCombos(LADY_MAIN_STYLES, 'lady');
+var MAN_STYLE_COMBOS = buildStyleCombos(MAN_MAIN_STYLES, 'man');
 
 function fmtYuan(cents) {
   if (cents == null) return '0';
@@ -137,6 +138,7 @@ Page({
     expandedManStyle: '',
     showCoreEdit: false,
     coreEditToken: '',
+    coreEditGender: '',      // 'lady' / 'man' / ''（季型核心会员），用于风格盘按性别隔离存储
     coreEditName: '',
     coreEditContact: '',
     coreEditNote: '',
@@ -780,6 +782,12 @@ Page({
     var arr;
     try { arr = wx.getStorageSync(STYLE_CLIENTS_KEY) || {}; } catch (e) { arr = {}; }
     if (!arr || typeof arr !== 'object') arr = {};
+    // 清理旧版无前缀 key（女士/男士共用同一 key 导致串位），统一改为 lady:/man: 前缀存储
+    var dirty = Object.keys(arr).filter(function (k) { return k.indexOf(':') < 0; });
+    if (dirty.length) {
+      dirty.forEach(function (k) { delete arr[k]; });
+      try { wx.setStorageSync(STYLE_CLIENTS_KEY, arr); } catch (e) {}
+    }
     this.setData({ styleClients: arr });
   },
   expandLadyStyle: function (e) {
@@ -794,14 +802,24 @@ Page({
     return COLOR_SEASONS.some(function (s) { return s.token === token; });
   },
   openCoreEdit: function (e) {
-    var token = e.currentTarget.dataset.token;
-    var c = (this.data.coreClients[token] || this.data.styleClients[token]) || {};
+    var ds = e.currentTarget.dataset;
+    var token = ds.token;
+    var gender = ds.gender || '';
+    var c;
+    if (this.isSeasonToken(token)) {
+      c = this.data.coreClients[token] || {};
+    } else {
+      // 风格盘：按性别前缀隔离，女士 lady: / 男士 man:
+      var key = (gender ? gender + ':' : '') + token;
+      c = this.data.styleClients[key] || {};
+    }
     this.setData({
       showCoreEdit: true, coreEditToken: token, coreEditIsSeason: this.isSeasonToken(token),
+      coreEditGender: gender,
       coreEditName: c.name || '', coreEditContact: c.contact || '', coreEditNote: c.note || ''
     });
   },
-  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
+  closeCoreEdit: function () { this.setData({ showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' }); },
   onCoreName: function (e) { this.setData({ coreEditName: e.detail.value }); },
   onCoreContact: function (e) { this.setData({ coreEditContact: e.detail.value }); },
   onCoreNote: function (e) { this.setData({ coreEditNote: e.detail.value }); },
@@ -813,7 +831,8 @@ Page({
     if (!name && !contact) { wx.showToast({ title: '至少填一项', icon: 'none' }); return; }
     var token = t.data.coreEditToken;
     var cur = { name: name, contact: contact, note: t.data.coreEditNote || '', shares: 0 };
-    var prev = (t.data.coreClients[token] || t.data.styleClients[token]) || {};
+    var prevKey = t.isSeasonToken(token) ? token : ((t.data.coreEditGender ? t.data.coreEditGender + ':' : '') + token);
+    var prev = (t.data.coreClients[token] || t.data.styleClients[prevKey]) || {};
     if (prev.shares) cur.shares = prev.shares;
 
     if (t.isSeasonToken(token)) {
@@ -847,11 +866,13 @@ Page({
       });
       return;
     }
-    // 风格会员盘：保持本地存储（本次未要求同步后端）
+    // 风格会员盘：保持本地存储（按性别前缀隔离，女士 lady: / 男士 man:）
+    var gender = t.data.coreEditGender;
+    var key = (gender ? gender + ':' : '') + token;
     var styleClients = Object.assign({}, t.data.styleClients);
-    styleClients[token] = cur;
+    styleClients[key] = cur;
     try { wx.setStorageSync(STYLE_CLIENTS_KEY, styleClients); } catch (e) {}
-    t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
+    t.setData({ styleClients: styleClients, showCoreEdit: false, coreEditToken: '', coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
     wx.showToast({ title: '已保存', icon: 'success' });
   },
   deleteCore: function () {
@@ -871,7 +892,7 @@ Page({
           delete clients[token];
           delete ids[token];
           try { wx.setStorageSync(CORE_KEY, clients); } catch (e) {}
-          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditName: '', coreEditContact: '', coreEditNote: '' });
+          t.setData({ coreClients: clients, coreEditIds: ids, showCoreEdit: false, coreEditToken: '', coreEditIsSeason: false, coreEditGender: '', coreEditName: '', coreEditContact: '', coreEditNote: '' });
           wx.showToast({ title: '已删除', icon: 'success' });
         }
         wx.request({

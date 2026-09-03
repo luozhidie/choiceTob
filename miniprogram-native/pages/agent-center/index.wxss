@@ -189,6 +189,8 @@
 
 /* 十二位核心客户 */
 .core-grid { display: flex; flex-wrap: wrap; gap: 16rpx; margin-top: 20rpx; }
+.core-grid-flat { margin-top: 16rpx; }
+.core-grid-flat .core-slot { min-height: 108rpx; }
 .core-slot { width: calc((100% - 48rpx) / 4); box-sizing: border-box; background: #f7f4f9; border: 1rpx dashed #ddd0e0; border-radius: 16rpx; padding: 18rpx 10rpx; display: flex; flex-direction: column; align-items: center; min-height: 120rpx; justify-content: center; }
 .core-slot.filled { background: #fff; border: 1rpx solid #C9A24B; box-shadow: 0 4rpx 16rpx rgba(201,162,75,0.12); }
 .core-style { font-size: 26rpx; font-weight: 800; color: #2d1b2e; }
