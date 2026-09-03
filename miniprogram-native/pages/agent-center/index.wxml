@@ -684,6 +684,32 @@ module.exports = {
     </view>
   </view>
 
+  <!-- 从VIP档案选人归类（避免重复录入） -->
+  <view wx:if="{{showVipPicker}}" class="mask" bindtap="closeVipPicker">
+    <view class="sheet picker-sheet" catchtap="noop">
+      <text class="sheet-title">从档案选人</text>
+      <text class="sheet-sub">归类到：{{vipPickerSeason}}</text>
+      <text class="sheet-retail">选中后自动打上该标签，无需重复录入资料</text>
+
+      <scroll-view scroll-y class="vip-picker-body">
+        <view wx:for="{{vipCustomers}}" wx:key="id" class="vip-pick-row" bindtap="pickVipForCategory" data-id="{{item.id}}">
+          <view class="vip-pick-avatar">{{item.initial}}</view>
+          <view class="vip-pick-info">
+            <text class="vip-pick-name">{{item.name || '未命名'}}</text>
+            <text class="vip-pick-meta">{{item.phone || item.wechat || '无联系方式'}}</text>
+          </view>
+          <text class="vip-pick-add">归类</text>
+        </view>
+        <view wx:if="{{vipCustomers.length === 0}}" class="vip-pick-empty">档案里还没有客户</view>
+      </scroll-view>
+
+      <view class="sheet-btns">
+        <view class="sheet-cancel" bindtap="closeVipPicker">取消</view>
+        <view class="sheet-save" bindtap="showNewClientForm">＋ 新建客户</view>
+      </view>
+    </view>
+  </view>
+
   <!-- 客户添加/编辑弹窗 -->
   <view wx:if="{{showClientForm}}" class="mask" bindtap="closeClientForm">
     <view class="sheet" catchtap="noop">

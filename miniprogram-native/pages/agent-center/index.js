@@ -154,6 +154,10 @@ Page({
     clientEditId: '',            // 后端记录 id；空=新增
     savingClient: false,
     clientForm: { name: '', contact: '', note: '', image_url: '' },
+    // 从VIP档案选人归类（避免重复录入）
+    showVipPicker: false,
+    vipPickerSeason: '',
+    vipPickerGender: '',
     // 工作台快捷推荐
     homeQuickPicks: [],
     // 订单状态汇总
@@ -880,7 +884,7 @@ Page({
   isSeasonToken: function (token) {
     return COLOR_SEASONS.some(function (s) { return s.token === token; });
   },
-  // 打开客户表单：添加（无 id）或编辑（传后端记录 id）
+  // 打开客户表单：编辑（有 id）走表单；添加（无 id）优先弹「从档案选人」，避免重复录入
   openClientForm: function (e) {
     var t = this;
     var ds = e.currentTarget.dataset;
@@ -893,9 +897,61 @@ Page({
       var key = gender ? (gender + ':' + season) : season;
       c = (arr[key] || []).find(function (x) { return x.id === editId; }) || {};
     }
+    // 新增且档案里已有客户 → 弹选择器，选完直接打标签
+    if (!editId && (t.data.vipCustomers || []).length) {
+      t.setData({ showVipPicker: true, vipPickerSeason: season, vipPickerGender: gender });
+      return;
+    }
     t.setData({
       showClientForm: true, clientFormSeason: season, clientFormGender: gender, clientEditId: editId,
       clientForm: { name: c.name || '', contact: c.contact || '', note: c.note || '', image_url: (c.image_url && /^https?:/.test(c.image_url)) ? c.image_url : '' }
+    });
+  },
+  closeVipPicker: function () { this.setData({ showVipPicker: false, vipPickerSeason: '', vipPickerGender: '' }); },
+  // 从档案选人：直接给该客户打上当前季型/风格标签，不重复录入资料
+  pickVipForCategory: function (e) {
+    var t = this;
+    var id = e.currentTarget.dataset.id;
+    if (!id) return;
+    var season = t.data.vipPickerSeason;
+    var gender = t.data.vipPickerGender;
+    var patch = { id: id };
+    if (gender) {
+      patch.gender = gender === 'man' ? '男' : '女';
+      var token = season;
+      if (token.indexOf('纯') === 0) { patch.main_style = token.substring(1); patch.sub_style = patch.main_style; }
+      else { var p = token.indexOf('偏'); if (p > 0) { patch.main_style = token.substring(0, p); patch.sub_style = token.substring(p + 1); } }
+    } else {
+      patch.color_season = season;
+    }
+    wx.showLoading({ title: '归类…', mask: true });
+    wx.request({
+      url: BASE + '/api/agent/vip-customers',
+      method: 'PUT',
+      header: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (t.data.token || wx.getStorageSync('token') || '') },
+      data: patch,
+      success: function (r) {
+        wx.hideLoading();
+        var d = r.data || {};
+        if (d.error) { wx.showModal({ title: '归类失败', content: d.error, showCancel: false }); return; }
+        wx.showToast({ title: '已归类', icon: 'success' });
+        t.setData({ showVipPicker: false, vipPickerSeason: '', vipPickerGender: '' });
+        t.loadVipCustomers(false);
+      },
+      fail: function () { wx.hideLoading(); wx.showToast({ title: '网络错误', icon: 'none' }); }
+    });
+  },
+  // 选择器里没有要找的人 → 走原表单新建
+  showNewClientForm: function () {
+    var t = this;
+    t.setData({
+      showVipPicker: false,
+      showClientForm: true,
+      clientFormSeason: t.data.vipPickerSeason,
+      clientFormGender: t.data.vipPickerGender,
+      clientEditId: '',
+      clientForm: { name: '', contact: '', note: '', image_url: '' },
+      vipPickerSeason: '', vipPickerGender: ''
     });
   },
   closeClientForm: function () { this.setData({ showClientForm: false, clientFormSeason: '', clientFormGender: '', clientEditId: '', clientForm: { name: '', contact: '', note: '', image_url: '' } }); },
@@ -1141,21 +1197,25 @@ Page({
       fail: function () { wx.showToast({ title: '网络错误', icon: 'none' }); }
     });
   },
-  // 从全量客户派生工作台分组：季型核心会员 + 风格盘（与本地结构保持一致，WXML 不变）
+  // 从全量客户派生工作台分组：按「字段」而非 source 分组
+  // 只要客户填了 color_season 就进季型盘，填了 main_style 就进风格盘
+  // 这样 VIP 档案里的人填了结论就会自动出现，不必在工作台重复录入
   deriveWorkbench: function (all) {
     var core = {};
     var style = {};
     (all || []).forEach(function (c) {
-      if (c.source === 'agent_core') {
-        var cs = c.color_season || '未归类';
-        var item = { id: c.id, name: c.name, contact: c.wechat, note: c.notes, image_url: c.image_url, gender: c.gender || '', color_season: c.color_season, main_style: '', sub_style: '' };
-        (core[cs] = core[cs] || []).push(item);
-      } else if (c.source === 'agent_style') {
+      var base = { id: c.id, name: c.name, contact: c.wechat, note: c.notes, image_url: c.image_url, gender: c.gender || '', color_season: c.color_season || '', main_style: c.main_style || '', sub_style: c.sub_style || '' };
+      // 季型盘：有色彩季型结论
+      if (c.color_season) {
+        var cs = c.color_season;
+        (core[cs] = core[cs] || []).push(Object.assign({}, base, { main_style: '', sub_style: '' }));
+      }
+      // 风格盘：有风格结论，按性别分男女盘
+      if (c.main_style) {
         var gender = c.gender === '男' ? 'man' : 'lady';
         var token = c.sub_style ? (c.main_style + '偏' + c.sub_style) : ('纯' + c.main_style);
         var gkey = gender + ':' + token;
-        var item2 = { id: c.id, name: c.name, contact: c.wechat, note: c.notes, image_url: c.image_url, gender: c.gender || '', color_season: '', main_style: c.main_style, sub_style: c.sub_style };
-        (style[gkey] = style[gkey] || []).push(item2);
+        (style[gkey] = style[gkey] || []).push(Object.assign({}, base));
       }
     });
     return { core: core, style: style };

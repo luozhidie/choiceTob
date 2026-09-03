@@ -377,3 +377,14 @@
 .avatar-edit-img{width:100%;height:100%;object-fit:cover;}
 .avatar-edit-ph{color:#C9A24B;font-size:26rpx;}
 .profile-sheet .varea{width:100%;min-height:120rpx;padding:20rpx;margin-top:20rpx;box-sizing:border-box;border:1rpx solid #e5e5e5;border-radius:12rpx;font-size:28rpx;}
+
+/* 从VIP档案选人归类 */
+.picker-sheet{max-height:80vh;display:flex;flex-direction:column;overflow:hidden;}
+.vip-picker-body{flex:1;min-height:0;margin-top:20rpx;}
+.vip-pick-row{display:flex;align-items:center;gap:20rpx;padding:20rpx 4rpx;border-bottom:1rpx solid #f3eee7;}
+.vip-pick-avatar{width:72rpx;height:72rpx;border-radius:50%;background:#2d1b2e;color:#C9A24B;font-size:30rpx;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.vip-pick-info{flex:1;display:flex;flex-direction:column;}
+.vip-pick-name{font-size:28rpx;color:#2d1b2e;font-weight:700;}
+.vip-pick-meta{font-size:22rpx;color:#9a8f8a;margin-top:4rpx;}
+.vip-pick-add{font-size:24rpx;color:#C9A24B;font-weight:700;padding:10rpx 24rpx;background:#faf6ee;border:1rpx solid #f0e6d2;border-radius:999rpx;flex-shrink:0;}
+.vip-pick-empty{font-size:24rpx;color:#b8ada8;text-align:center;padding:60rpx 0;}
