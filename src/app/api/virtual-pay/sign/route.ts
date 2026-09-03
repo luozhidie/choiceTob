@@ -14,6 +14,7 @@ import {
   code2Session,
   configError,
 } from "@/lib/virtual-pay";
+import { getVirtualGoodsPriceFen } from "@/lib/price-config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
     const goods = getGoods(String(goodsKey || ""));
     if (!goods) return NextResponse.json({ error: "未知商品: " + goodsKey, fallback: true }, { status: 400 });
 
+    // 实际计费金额以「后端配置价」为准（后台 /admin/price-config 可改），回退硬编码
+    const priceFen = (await getVirtualGoodsPriceFen(goods.productId)) ?? goods.priceFen;
+
     // 1) code 换 openid + session_key
     const { openid, sessionKey } = await code2Session(code);
     if (!sessionKey) {
@@ -50,7 +54,7 @@ export async function POST(request: NextRequest) {
       env: VIRTUAL_ENV,
       currencyType: "CNY",
       productId: goods.productId,
-      goodsPrice: goods.priceFen,
+      goodsPrice: priceFen,
       outTradeNo,
       attach: attachStr,
     });
@@ -67,7 +71,7 @@ export async function POST(request: NextRequest) {
       goods_key: String(goodsKey),
       product_id: goods.productId,
       goods_name: goods.name,
-      amount_cents: goods.priceFen * qty,
+      amount_cents: priceFen * qty,
       quantity: qty,
       env: VIRTUAL_ENV,
       attach: attachStr,
@@ -91,7 +95,7 @@ export async function POST(request: NextRequest) {
       env: VIRTUAL_ENV,
       openid,
       productId: goods.productId,
-      goodsPrice: goods.priceFen,
+      goodsPrice: priceFen,
     });
   } catch (err: any) {
     console.error("[虚拟支付签名] 异常", err);

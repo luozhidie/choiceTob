@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unifiedOrder, generateJsapiPayParams } from "@/lib/wechat-pay";
 import type { PayPlatform } from "@/lib/wechat-pay";
+import { getWholesalePriceFen } from "@/lib/price-config";
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,11 +22,20 @@ export async function POST(request: NextRequest) {
 
     // 不再检查环境变量（wechat-pay.ts 里已有 fallback）
 
-    const qty = Math.max(1, quantity || 1);
-    const pricePerItem = Math.round(Number(total_fee) / qty);
+    const qty = Math.max(1, Math.floor(quantity || 1));
 
-    if (!product_id || !total_fee || pricePerItem <= 0) {
-      return NextResponse.json({ error: '缺少必要参数: product_id 或 total_fee' }, { status: 400 });
+    // 充值档位（wholesale_xxx）：金额以服务端权威价为准，忽略前端传值，防止改价漏洞
+    let finalTotalFee = Math.round(Number(total_fee) || 0);
+    if (String(product_id).startsWith("wholesale_")) {
+      const serverFee = await getWholesalePriceFen(String(product_id));
+      if (!serverFee || serverFee <= 0) {
+        return NextResponse.json({ error: '充值档位价格未配置，请联系管理员', fallback: false }, { status: 500 });
+      }
+      finalTotalFee = serverFee * Math.min(1, qty); // 充值档位每次仅 1 份
+    }
+
+    if (!product_id || finalTotalFee <= 0) {
+      return NextResponse.json({ error: '缺少必要参数: product_id 或价格未配置' }, { status: 400 });
     }
 
     // 生成订单号：优先复用传入的 out_trade_no（小程序建单后传入），否则新生成
@@ -37,7 +47,7 @@ export async function POST(request: NextRequest) {
     const wxResult = await unifiedOrder({
       out_trade_no: order_no,
       body: product_title || `色彩智选-商品${product_id}`,
-      total_fee: Math.round(Number(total_fee)),
+      total_fee: finalTotalFee,
       openid: body.openid || undefined,
       platform: platform as PayPlatform,
     });

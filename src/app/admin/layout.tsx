@@ -54,6 +54,7 @@ const menuGroups = [
   // ─── 充值管理（保留） ───
   { label: "充值管理", items: [
     { label: "充值订单", href: "/admin/charge-orders" },
+    { label: "价格配置", href: "/admin/price-config" },
   ]},
 
   // ─── 商品&企划 ───
