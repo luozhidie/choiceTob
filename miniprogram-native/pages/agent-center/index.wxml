@@ -565,7 +565,7 @@ module.exports = {
   </block>
 
   <!-- 编辑卖价弹窗 -->
-  <view wx:if="{{showEdit}}" class="mask" bindtap="closeEdit">
+  <view wx:if="{{showEdit}}" class="mask" catchtouchmove="noop" bindtap="closeEdit">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">设置对客卖价</text>
       <text class="sheet-sub">{{editItem.title}}</text>
@@ -579,7 +579,7 @@ module.exports = {
   </view>
 
   <!-- 提现弹窗 -->
-  <view wx:if="{{showWithdraw}}" class="mask" bindtap="closeWithdraw">
+  <view wx:if="{{showWithdraw}}" class="mask" catchtouchmove="noop" bindtap="closeWithdraw">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">申请提现（仅佣金）</text>
       <text class="sheet-retail">可提现佣金：¥{{f.yuan(walletBalance)}}</text>
@@ -615,7 +615,7 @@ module.exports = {
   </view>
 
   <!-- 加入素材库：多选标签弹窗（色彩季型 + 女士/男士风格） -->
-  <view wx:if="{{showColorPicker}}" class="mask" bindtap="closeColorPicker">
+  <view wx:if="{{showColorPicker}}" class="mask" catchtouchmove="noop" bindtap="closeColorPicker">
     <view class="sheet sheet-tall" catchtap="noop">
       <text class="sheet-title">加入素材库</text>
       <text class="sheet-sub">{{pickerProduct.title}}</text>
@@ -685,7 +685,7 @@ module.exports = {
   </view>
 
   <!-- 从VIP档案选人归类（避免重复录入） -->
-  <view wx:if="{{showVipPicker}}" class="mask" bindtap="closeVipPicker">
+  <view wx:if="{{showVipPicker}}" class="mask" catchtouchmove="noop" bindtap="closeVipPicker">
     <view class="sheet picker-sheet" catchtap="noop">
       <text class="sheet-title">从档案选人</text>
       <text class="sheet-sub">归类到：{{vipPickerSeason}}</text>
@@ -711,7 +711,7 @@ module.exports = {
   </view>
 
   <!-- 客户添加/编辑弹窗 -->
-  <view wx:if="{{showClientForm}}" class="mask" bindtap="closeClientForm">
+  <view wx:if="{{showClientForm}}" class="mask" catchtouchmove="noop" bindtap="closeClientForm">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">{{clientEditId ? '编辑客户' : '添加客户'}} · {{clientFormSeason}}</text>
       <text class="sheet-sub">{{clientFormGender === 'lady' ? '女士风格' : (clientFormGender === 'man' ? '男士风格' : '色彩季型')}}客户</text>
@@ -727,7 +727,7 @@ module.exports = {
   </view>
 
   <!-- VIP会员资料：新建 / 编辑 表单弹窗 -->
-  <view wx:if="{{showVipForm}}" class="mask" bindtap="closeVipForm">
+  <view wx:if="{{showVipForm}}" class="mask" catchtouchmove="noop" bindtap="closeVipForm">
     <view class="sheet vip-sheet" catchtap="noop">
       <text class="sheet-title">{{editingVipId ? '编辑VIP会员' : '新建VIP会员'}}</text>
       <text class="sheet-sub">{{editingVipId ? '修改会员资料并保存' : '填写会员资料，建立你的VIP档案'}}</text>
@@ -778,7 +778,7 @@ module.exports = {
   </view>
 
   <!-- VIP资料：色彩季型选择弹窗 -->
-  <view wx:if="{{showVipSeason}}" class="mask" bindtap="closeVipSeason">
+  <view wx:if="{{showVipSeason}}" class="mask" catchtouchmove="noop" bindtap="closeVipSeason">
     <view class="sheet" catchtap="noop">
       <text class="sheet-title">选择色彩季型</text>
       <text class="sheet-sub">六大固有色特征 → 十二个色彩季型</text>
@@ -796,7 +796,7 @@ module.exports = {
   </view>
 
   <!-- VIP客户详情：形象照 + 专属匹配素材（按季型+风格同步） -->
-  <view wx:if="{{showVipDetail}}" class="mask" bindtap="closeVipDetail">
+  <view wx:if="{{showVipDetail}}" class="mask" catchtouchmove="noop" bindtap="closeVipDetail">
     <view class="sheet sheet-tall vip-detail" catchtap="noop">
       <text class="sheet-title">{{vipDetail.name || '客户详情'}}</text>
       <view class="vip-detail-head">
@@ -841,7 +841,7 @@ module.exports = {
   </view>
 
   <!-- 代理人资料编辑弹窗 -->
-  <view wx:if="{{showProfileEdit}}" class="mask" bindtap="closeProfileEdit">
+  <view wx:if="{{showProfileEdit}}" class="mask" catchtouchmove="noop" bindtap="closeProfileEdit">
     <view class="sheet profile-sheet" catchtap="noop">
       <text class="sheet-title">编辑我的资料</text>
       <view class="avatar-edit" bindtap="chooseAvatar">
