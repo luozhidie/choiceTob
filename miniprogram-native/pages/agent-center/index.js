@@ -152,7 +152,7 @@ Page({
     clientFormSeason: '',        // 季型 token 或风格 token
     clientFormGender: '',        // 'lady' / 'man' / ''（季型）
     clientFormIndex: -1,         // -1=新增；>=0=编辑数组索引
-    clientForm: { name: '', contact: '', note: '' },
+    clientForm: { name: '', contact: '', note: '', image_url: '' },
     // 工作台快捷推荐
     homeQuickPicks: [],
     // 订单状态汇总
@@ -906,7 +906,7 @@ Page({
     var c = index >= 0 ? this._clientAt(season, gender, index) : {};
     this.setData({
       showClientForm: true, clientFormSeason: season, clientFormGender: gender, clientFormIndex: index,
-      clientForm: { name: c.name || '', contact: c.contact || '', note: c.note || '' }
+      clientForm: { name: c.name || '', contact: c.contact || '', note: c.note || '', image_url: c.image_url || '' }
     });
   },
   closeClientForm: function () { this.setData({ showClientForm: false, clientFormSeason: '', clientFormGender: '', clientFormIndex: -1, clientForm: { name: '', contact: '', note: '' } }); },
@@ -930,7 +930,8 @@ Page({
     var key = gender ? (gender + ':' + season) : season;
     var target = gender ? Object.assign({}, t.data.styleClients) : Object.assign({}, t.data.coreClients);
     var arr = (target[key] || []).slice();
-    var cur = { id: '' + Date.now() + Math.floor(Math.random() * 999), name: name, contact: contact, note: t.data.clientForm.note || '' };
+    var prevImg = (t.data.clientFormIndex >= 0 && arr[t.data.clientFormIndex]) ? arr[t.data.clientFormIndex].image_url : '';
+    var cur = { id: '' + Date.now() + Math.floor(Math.random() * 999), name: name, contact: contact, note: t.data.clientForm.note || '', image_url: t.data.clientForm.image_url || prevImg || '' };
     if (t.data.clientFormIndex >= 0) arr[t.data.clientFormIndex] = cur;
     else arr.push(cur);
     target[key] = arr;
@@ -969,6 +970,28 @@ Page({
         wx.showToast({ title: '已删除', icon: 'success' });
       }
     });
+  },
+  // 工作台客户（核心会员 / 风格盘）打开专属卡片：复用 VIP 详情弹窗（形象照 + 专属素材 + 试衣），归属同一闭环
+  openClientCard: function (e) {
+    var ds = e.currentTarget.dataset;
+    var season = ds.season;
+    var gender = ds.gender || '';
+    var index = parseInt(ds.index, 10);
+    var c = this._clientAt(season, gender, index);
+    if (!c) return;
+    var vip = {
+      _local: true,
+      _localKey: gender ? (gender + ':' + season) : season,
+      _localIndex: index,
+      name: c.name || '客户',
+      gender: gender === 'lady' ? '女' : (gender === 'man' ? '男' : (c.gender || '')),
+      color_season: gender ? '' : season,
+      main_style: gender ? season : (c.main_style || ''),
+      image_url: c.image_url || '',
+      vip_level: 'V1'
+    };
+    var matched = this.matchMaterialsForVip(vip);
+    this.setData({ showVipDetail: true, vipDetail: vip, vipMatched: matched });
   },
   // 点击某核心会员「去分享」：季型按素材库色彩季型过滤；风格暂按季型素材提示
   coreShare: function (e) {
@@ -1296,6 +1319,96 @@ Page({
           },
           fail: function () { wx.showToast({ title: '上传失败', icon: 'none' }); }
         });
+      }
+    });
+  },
+
+  // 工作台本地客户的形象照上传（upload-avatar 后存回本地 coreClients / styleClients）
+  chooseClientPhoto: function () {
+    var t = this;
+    var vip = t.data.vipDetail;
+    if (!vip || !vip._local) return;
+    if (t.data.vipUploading) return;
+    wx.chooseImage({
+      count: 1,
+      success: function (res) {
+        var filePath = res.tempFilePaths[0];
+        t.setData({ vipUploading: true });
+        wx.uploadFile({
+          url: BASE + '/api/mini/upload-avatar',
+          filePath: filePath,
+          name: 'file',
+          header: { 'Authorization': 'Bearer ' + t.data.token },
+          success: function (up) {
+            var d = {};
+            try { d = JSON.parse(up.data); } catch (e) {}
+            var url = d.url || '';
+            if (!url) { wx.showToast({ title: '上传失败', icon: 'none' }); t.setData({ vipUploading: false }); return; }
+            var key = vip._localKey;
+            var sep = key.indexOf(':');
+            if (sep >= 0) {
+              var target = Object.assign({}, t.data.styleClients);
+              var arr = (target[key] || []).slice();
+              if (arr[vip._localIndex]) arr[vip._localIndex].image_url = url;
+              target[key] = arr;
+              try { wx.setStorageSync(STYLE_CLIENTS_KEY, target); } catch (e) {}
+              t.setData({ styleClients: target });
+            } else {
+              var target2 = Object.assign({}, t.data.coreClients);
+              var arr2 = (target2[key] || []).slice();
+              if (arr2[vip._localIndex]) arr2[vip._localIndex].image_url = url;
+              target2[key] = arr2;
+              try { wx.setStorageSync(CORE_KEY, target2); } catch (e) {}
+              t.setData({ coreClients: target2 });
+            }
+            var detail = Object.assign({}, t.data.vipDetail, { image_url: url });
+            t.setData({ vipDetail: detail, vipUploading: false });
+            wx.showToast({ title: '形象照已更新', icon: 'success' });
+          },
+          fail: function () { t.setData({ vipUploading: false }); wx.showToast({ title: '上传失败', icon: 'none' }); }
+        });
+      }
+    });
+  },
+
+  // 工作台本地客户：从卡片进入编辑资料
+  editLocalClient: function () {
+    var vip = this.data.vipDetail;
+    if (!vip || !vip._local) return;
+    var key = vip._localKey;
+    var sep = key.indexOf(':');
+    var gender = sep >= 0 ? key.split(':')[0] : '';
+    var season = sep >= 0 ? key.split(':')[1] : key;
+    this.setData({ showVipDetail: false, vipDetail: null, vipMatched: [] });
+    this.openClientForm({ currentTarget: { dataset: { season: season, gender: gender, index: vip._localIndex } } });
+  },
+  // 工作台本地客户：删除
+  deleteLocalClient: function () {
+    var t = this;
+    var vip = t.data.vipDetail;
+    if (!vip || !vip._local) return;
+    wx.showModal({
+      title: '删除确认', content: '确定删除该客户吗？', confirmText: '删除',
+      success: function (res) {
+        if (!res.confirm) return;
+        var key = vip._localKey;
+        var sep = key.indexOf(':');
+        if (sep >= 0) {
+          var target = Object.assign({}, t.data.styleClients);
+          var arr = (target[key] || []).slice();
+          arr.splice(vip._localIndex, 1);
+          target[key] = arr;
+          try { wx.setStorageSync(STYLE_CLIENTS_KEY, target); } catch (e) {}
+          t.setData({ styleClients: target, showVipDetail: false, vipDetail: null, vipMatched: [] });
+        } else {
+          var target2 = Object.assign({}, t.data.coreClients);
+          var arr2 = (target2[key] || []).slice();
+          arr2.splice(vip._localIndex, 1);
+          target2[key] = arr2;
+          try { wx.setStorageSync(CORE_KEY, target2); } catch (e) {}
+          t.setData({ coreClients: target2, showVipDetail: false, vipDetail: null, vipMatched: [] });
+        }
+        wx.showToast({ title: '已删除', icon: 'success' });
       }
     });
   },

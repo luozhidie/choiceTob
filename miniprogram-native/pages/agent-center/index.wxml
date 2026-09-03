@@ -162,7 +162,7 @@ module.exports = {
         <view wx:if="{{expandedCoreSeason}}" class="core-subtree">
           <view class="style-group-label">{{expandedCoreSeason}} · {{coreClients[expandedCoreSeason] ? coreClients[expandedCoreSeason].length : 0}} 位客户</view>
           <view class="client-list">
-            <view wx:for="{{coreClients[expandedCoreSeason]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-season="{{expandedCoreSeason}}" data-index="{{index}}">
+            <view wx:for="{{coreClients[expandedCoreSeason]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientCard" data-season="{{expandedCoreSeason}}" data-index="{{index}}">
               <view class="client-main">
                 <text class="client-name">{{c.name}}</text>
                 <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
@@ -198,7 +198,7 @@ module.exports = {
       <view wx:if="{{expandedStyleKey && expandedStyleGender==='lady'}}" class="card client-card">
         <view class="card-title">{{expandedStyleSeason}} · {{styleClients[expandedStyleKey] ? styleClients[expandedStyleKey].length : 0}} 位客户</view>
         <view class="client-list">
-          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
+          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientCard" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
             <view class="client-main">
               <text class="client-name">{{c.name}}</text>
               <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
@@ -233,7 +233,7 @@ module.exports = {
       <view wx:if="{{expandedStyleKey && expandedStyleGender==='man'}}" class="card client-card">
         <view class="card-title">{{expandedStyleSeason}} · {{styleClients[expandedStyleKey] ? styleClients[expandedStyleKey].length : 0}} 位客户</view>
         <view class="client-list">
-          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientForm" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
+          <view wx:for="{{styleClients[expandedStyleKey]}}" wx:for-item="c" wx:key="id" class="client-chip" bindtap="openClientCard" data-gender="{{expandedStyleGender}}" data-season="{{expandedStyleSeason}}" data-index="{{index}}">
             <view class="client-main">
               <text class="client-name">{{c.name}}</text>
               <text wx:if="{{c.contact}}" class="client-contact">{{c.contact}}</text>
@@ -774,7 +774,7 @@ module.exports = {
       <text class="sheet-title">{{vipDetail.name || '客户详情'}}</text>
       <view class="vip-detail-head">
         <image wx:if="{{vipDetail.image_url}}" class="vip-detail-photo" src="{{vipDetail.image_url}}" mode="aspectFill"/>
-        <view wx:else class="vip-detail-photo vip-detail-photo-empty" bindtap="chooseVipPhoto">＋ 上传形象照</view>
+        <view wx:else class="vip-detail-photo vip-detail-photo-empty" bindtap="{{vipDetail._local ? 'chooseClientPhoto' : 'chooseVipPhoto'}}">＋ 上传形象照</view>
         <view class="vip-detail-meta">
           <text class="vip-detail-line">{{vipDetail.gender || '未填性别'}} · {{vipDetail.vip_level || 'V1'}}</text>
           <view class="vip-detail-tags">
@@ -782,7 +782,7 @@ module.exports = {
             <text wx:if="{{vipDetail.main_style}}" class="vtag">{{vipDetail.main_style}}</text>
             <text wx:if="{{vipDetail.sub_style}}" class="vtag">{{vipDetail.sub_style}}</text>
           </view>
-          <text wx:if="{{!vipDetail.image_url}}" class="vip-detail-tip" bindtap="chooseVipPhoto">上传形象照后可用虚拟试衣 ›</text>
+          <text wx:if="{{!vipDetail.image_url}}" class="vip-detail-tip" bindtap="{{vipDetail._local ? 'chooseClientPhoto' : 'chooseVipPhoto'}}">上传形象照后可用虚拟试衣 ›</text>
         </view>
       </view>
 
@@ -804,6 +804,8 @@ module.exports = {
 
       <view class="sheet-btns">
         <view class="sheet-cancel" bindtap="closeVipDetail">关闭</view>
+        <view wx:if="{{vipDetail._local}}" class="sheet-delete" bindtap="deleteLocalClient">删除</view>
+        <view wx:if="{{vipDetail._local}}" class="sheet-edit" bindtap="editLocalClient">编辑资料</view>
         <view class="sheet-save" wx:if="{{vipDetail.image_url}}" bindtap="vipTryon" data-pid="">一键虚拟试衣</view>
       </view>
     </view>
