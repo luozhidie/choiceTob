@@ -621,13 +621,15 @@ module.exports = {
 
         <text class="sheet-title">加入素材库</text>
         <text class="sheet-sub">{{pickerProduct.title}}</text>
-        <text class="sheet-retail">为该商品选择适配会员标签，可多选，后期实现 96 型智能匹配</text>
 
-        <!-- 已选标签 -->
-        <view class="picker-tags" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">
-          <view wx:for="{{pickerSeasons}}" wx:key="*this" class="picker-tag" bindtap="removePickerTag" data-type="season" data-value="{{item}}">{{item}} ✕</view>
-          <view wx:for="{{pickerStyles}}" wx:key="*this" class="picker-tag picker-tag-style" bindtap="removePickerTag" data-type="style" data-value="{{item}}">{{f.stripPrefix(item)}} ✕</view>
-        </view>
+        <!-- 已选标签：横向一行滚动，不占垂直空间 -->
+        <scroll-view scroll-x class="picker-tags-scroll" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">
+          <view class="picker-tags-row">
+            <view wx:for="{{pickerSeasons}}" wx:key="*this" class="picker-tag" bindtap="removePickerTag" data-type="season" data-value="{{item}}">{{item}} ✕</view>
+            <view wx:for="{{pickerStyles}}" wx:key="*this" class="picker-tag picker-tag-style" bindtap="removePickerTag" data-type="style" data-value="{{item}}">{{f.stripPrefix(item)}} ✕</view>
+          </view>
+        </scroll-view>
+        <text class="picker-count" wx:if="{{pickerSeasons.length + pickerStyles.length > 0}}">已选 {{pickerSeasons.length + pickerStyles.length}} 个 · 左滑查看全部</text>
 
         <!-- Tab -->
         <view class="picker-tabs">

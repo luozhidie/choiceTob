@@ -237,8 +237,11 @@
 .picker-tabs { display: flex; gap: 16rpx; margin-top: 24rpx; border-bottom: 1rpx solid #f0e6d2; padding-bottom: 16rpx; }
 .picker-tab { flex: 1; text-align: center; font-size: 26rpx; color: #9a8f8a; padding: 16rpx 0; border-radius: 12rpx; background: #faf6ee; }
 .picker-tab.on { background: #2d1b2e; color: #C9A24B; font-weight: 700; }
-.picker-tags { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 16rpx; }
-.picker-tag { display: inline-block; font-size: 22rpx; color: #2d1b2e; background: #f7f4f1; border: 1rpx solid #e0d6c9; border-radius: 999rpx; padding: 10rpx 20rpx; }
+/* 已选标签：横向一行，固定 64rpx 高，绝不撑爆弹窗 */
+.picker-tags-scroll { width: 100%; white-space: nowrap; margin-top: 16rpx; height: 64rpx; flex-shrink: 0; }
+.picker-tags-row { display: inline-flex; flex-direction: row; gap: 12rpx; align-items: center; }
+.picker-count { display: block; font-size: 20rpx; color: #b8ada8; margin-top: 6rpx; }
+.picker-tag { display: inline-block; font-size: 22rpx; color: #2d1b2e; background: #f7f4f1; border: 1rpx solid #e0d6c9; border-radius: 999rpx; padding: 10rpx 20rpx; white-space: nowrap; flex-shrink: 0; }
 .picker-tag-style { color: #2d1b2e; background: #f0e9e0; border-color: #e0d6c9; }
 .picker-btns { margin-top: 16rpx; margin-bottom: 8rpx; }
 .picker-all-row { margin: 20rpx 0 12rpx; }
