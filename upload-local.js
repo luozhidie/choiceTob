@@ -41,7 +41,7 @@ const version = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + S
 ci.upload({
   project: project,
   version: version,
-  desc: '本地直传 套餐价格后台可配 + 权益中心资料编辑 ' + version,
+  desc: '本地直传 小程序文案后台化批次1(会员中心/新客页/虚拟试衣) ' + version,
   setting: { es6: true, es7: true, enhance: true, minify: false },
   robot: 1
 }).then(function() {
