@@ -37,12 +37,12 @@ async function resolveAgent(userId: string) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("membership_type, deposit_amount, store_owner_certified, role")
+    .select("membership_type, deposit_amount, store_owner_certified, role, is_tryon_agent, is_admin")
     .eq("id", userId)
     .single();
 
-  // 1) profile.role 判定 admin
-  let isAdmin = profile?.role === "admin";
+  // 1) profile.role / is_admin 判定 admin
+  let isAdmin = profile?.role === "admin" || profile?.is_admin === true;
 
   // 2) auth email 白名单判定 admin（手机号/微信登录时 profile.role 可能仍是 user）
   if (!isAdmin) {
@@ -58,24 +58,11 @@ async function resolveAgent(userId: string) {
     } catch {}
   }
 
-  // 3) 认证店主表（store_owner_certifications）也视为代理
-  let isCertifiedStoreOwner = profile?.store_owner_certified === true;
-  if (!isCertifiedStoreOwner) {
-    try {
-      const { data: cert } = await supabase
-        .from("store_owner_certifications")
-        .select("id, quiz_passed")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (cert?.quiz_passed) isCertifiedStoreOwner = true;
-    } catch {}
-  }
+  // 2) 购买 998 开通的代理才能录客户（与"看代理店"权限对齐）
+  //    店主认证只是来商城拿货、不算代理；价格会员/充值会员均非代理，均无录客户权限
+  const isTryonAgent = profile?.is_tryon_agent === true;
 
-  const isAgent =
-    isAdmin ||
-    isCertifiedStoreOwner ||
-    profile?.membership_type === "deposit_discount" ||
-    profile?.membership_type === "view_price";
+  const isAgent = isAdmin || isTryonAgent;
   return { isAgent, isAdmin };
 }
 
