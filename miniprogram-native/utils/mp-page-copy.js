@@ -23,15 +23,37 @@ function merge(base, ext) {
   return out;
 }
 
+// 试衣次数后台可配：用 tryon_packages 配置覆盖文案里的次数数字（与后端发放保持一致）
+function applyTryonPackages(copy, pkgs) {
+  if (!isObj(copy) || !isObj(pkgs)) return copy;
+  var num = function (id, field, fb) {
+    var v = pkgs[id] && pkgs[id][field];
+    return typeof v === "number" ? v : fb;
+  };
+  var first = num("tryon_first_9_9", "normal", 12);
+  var month = num("tryon_normal_month_99", "normal", 120);
+  if (typeof copy.ctaSub === "string") copy.ctaSub = first + " 次普通试穿 · 限时";
+  if (copy.entries && copy.entries[0]) copy.entries[0].sub = "快速看上身 · ¥99/月 " + month + " 次";
+  if (isObj(copy.promo)) {
+    if (typeof copy.promo.pkgFirstSub === "string") copy.promo.pkgFirstSub = first + " 次普通试穿";
+    if (typeof copy.promo.pkgMonthSub === "string") copy.promo.pkgMonthSub = "30 天 " + month + " 次普通试穿";
+  }
+  return copy;
+}
+
 // 加载某一页的文案配置，回调返回合并后的对象
 function loadMpSection(key, cb) {
   var def = DEFAULTS[key] || {};
   wx.request({
-    url: BASE + '/api/public/settings?keys=mp_page_copy',
+    url: BASE + '/api/public/settings?keys=mp_page_copy,tryon_packages',
     method: 'GET',
     success: function (res) {
-      var data = res.data && res.data.data && res.data.data.mp_page_copy;
-      cb(merge(def, data ? data[key] : undefined));
+      var d = res.data && res.data.data;
+      var data = d && d.mp_page_copy;
+      var merged = merge(def, data ? data[key] : undefined);
+      var pkgs = d && d.tryon_packages;
+      if (key === "tryon" && isObj(pkgs)) merged = applyTryonPackages(merged, pkgs);
+      cb(merged);
     },
     fail: function () {
       cb(def);

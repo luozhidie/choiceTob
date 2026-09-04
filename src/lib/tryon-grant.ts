@@ -22,11 +22,30 @@ export async function grantTryonEntitlement(
   openid: string,
   package_id: string
 ) {
-  const pkg = TRYON_PACKAGES[package_id];
-  if (!pkg) {
+  const fbPkg = TRYON_PACKAGES[package_id];
+  if (!fbPkg) {
     console.warn("[试衣权益] 未知套餐", package_id);
     return;
   }
+  // 次数后台可配：site_settings.tryon_packages 覆盖 normal/pro，未配置则用字典兜底
+  let overrideMap: any = null;
+  try {
+    const { data: ovRow } = await svc
+      .from("site_settings")
+      .select("value")
+      .eq("key", "tryon_packages")
+      .maybeSingle();
+    overrideMap = (ovRow && ovRow.value) || null;
+  } catch (e) {
+    // 读取失败则使用兜底，不影响发放
+  }
+  const ov = (overrideMap && overrideMap[package_id]) || {};
+  const pkg = {
+    type: fbPkg.type,
+    days: fbPkg.days,
+    normal: typeof ov.normal === "number" ? ov.normal : fbPkg.normal,
+    pro: typeof ov.pro === "number" ? ov.pro : fbPkg.pro,
+  };
   const now = Date.now();
   const windowMs = pkg.days * 86400000;
   const computedExpires = now + windowMs;
