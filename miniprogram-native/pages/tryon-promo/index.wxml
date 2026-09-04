@@ -43,6 +43,7 @@
         <text class="entry-emoji">{{tryon.promo.entries[1].emoji}}</text>
         <text class="entry-name">{{tryon.promo.entries[1].name}}</text>
         <text class="entry-sub">{{tryon.promo.entries[1].sub}}</text>
+        <text wx:if="{{tryon.promo.entries[1].bonusText}}" class="entry-bonus">{{tryon.promo.entries[1].bonusText}}</text>
       </view>
       <view class="entry" bindtap="goSub" data-page="tryon-guide">
         <text class="entry-emoji">{{tryon.promo.entries[2].emoji}}</text>

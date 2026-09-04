@@ -33,6 +33,7 @@
 .entry.pro .entry-name { color: #fff; }
 .entry-sub { display: block; font-size: 21rpx; color: #999; margin-top: 6rpx; line-height: 1.4; }
 .entry.pro .entry-sub { color: rgba(255,255,255,.8); }
+.entry-bonus { display: inline-block; margin-top: 12rpx; padding: 4rpx 16rpx; font-size: 21rpx; font-weight: 800; color: #2d1b2e; background: linear-gradient(90deg, #C9A24B, #dab860); border-radius: 999rpx; }
 
 /* ---------- Bottom bar ---------- */
 .bottom-pad { height: 170rpx; }

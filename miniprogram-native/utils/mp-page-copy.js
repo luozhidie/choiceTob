@@ -24,19 +24,34 @@ function merge(base, ext) {
 }
 
 // 试衣次数后台可配：用 tryon_packages 配置覆盖文案里的次数数字（与后端发放保持一致）
+// 专业版次数同样随后台，且每个套餐可附 bonusText 赠送文案（如「原100次，加送20次」）
 function applyTryonPackages(copy, pkgs) {
   if (!isObj(copy) || !isObj(pkgs)) return copy;
   var num = function (id, field, fb) {
     var v = pkgs[id] && pkgs[id][field];
     return typeof v === "number" ? v : fb;
   };
+  var str = function (id, field) {
+    var v = pkgs[id] && pkgs[id][field];
+    return typeof v === "string" ? v : "";
+  };
   var first = num("tryon_first_9_9", "normal", 12);
   var month = num("tryon_normal_month_99", "normal", 120);
+  var pro = num("tryon_pro_998", "pro", 100);
+  var bonusPro = str("tryon_pro_998", "bonusText");
   if (typeof copy.ctaSub === "string") copy.ctaSub = first + " 次普通试穿 · 限时";
   if (copy.entries && copy.entries[0]) copy.entries[0].sub = "快速看上身 · ¥99/月 " + month + " 次";
+  if (copy.entries && copy.entries[1]) {
+    copy.entries[1].sub = "诊断+搭配 · ¥998/" + pro + " 次";
+    if (bonusPro) copy.entries[1].bonusText = bonusPro;
+  }
   if (isObj(copy.promo)) {
     if (typeof copy.promo.pkgFirstSub === "string") copy.promo.pkgFirstSub = first + " 次普通试穿";
     if (typeof copy.promo.pkgMonthSub === "string") copy.promo.pkgMonthSub = "30 天 " + month + " 次普通试穿";
+  }
+  if (isObj(copy.pro)) {
+    if (typeof copy.pro.pkgSub === "string") copy.pro.pkgSub = pro + " 次专业诊断 · 含 14 题风格测试 / 八大风格真人试穿";
+    if (bonusPro) copy.pro.bonusText = bonusPro;
   }
   return copy;
 }

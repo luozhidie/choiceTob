@@ -36,7 +36,7 @@ const PRODUCT_LABELS: Record<string, string> = {
 
 // 虚拟试衣次数兜底（与 src/lib/tryon-grant.ts 的 TRYON_PACKAGES 一致）
 // 后台保存的 tryon_packages 会按 package_id 覆盖 normal / pro，未配置则用此兜底
-const DEFAULT_TRYON_PACKAGES: Record<string, { normal: number; pro: number }> = {
+const DEFAULT_TRYON_PACKAGES: Record<string, { normal: number; pro: number; bonusText?: string }> = {
   tryon_first_9_9: { normal: 12, pro: 0 },
   tryon_normal_month_99: { normal: 120, pro: 0 },
   tryon_normal_month_299: { normal: 0, pro: 100 },
@@ -82,12 +82,13 @@ export default function PriceConfigPage() {
         if (d.wholesale_tiers) setTiers({ ...DEFAULT_TIERS, ...d.wholesale_tiers });
         if (d.virtual_goods_prices) setVirtual({ ...DEFAULT_VIRTUAL, ...d.virtual_goods_prices });
         if (d.tryon_packages) {
-          const merged: Record<string, { normal: number; pro: number }> = {};
+          const merged: Record<string, { normal: number; pro: number; bonusText?: string }> = {};
           for (const [id, fb] of Object.entries(DEFAULT_TRYON_PACKAGES)) {
-            const ov = (d.tryon_packages[id] as { normal?: number; pro?: number }) || {};
+            const ov = (d.tryon_packages[id] as { normal?: number; pro?: number; bonusText?: string }) || {};
             merged[id] = {
               normal: typeof ov.normal === "number" ? ov.normal : fb.normal,
               pro: typeof ov.pro === "number" ? ov.pro : fb.pro,
+              bonusText: typeof ov.bonusText === "string" ? ov.bonusText : "",
             };
           }
           setTryonPackages(merged);
@@ -146,6 +147,9 @@ export default function PriceConfigPage() {
   function setTryonCount(id: string, kind: "normal" | "pro", str: string) {
     const v = Math.max(0, Number(str) || 0);
     setTryonPackages((prev) => ({ ...prev, [id]: { ...prev[id], [kind]: v } }));
+  }
+  function setTryonBonus(id: string, str: string) {
+    setTryonPackages((prev) => ({ ...prev, [id]: { ...prev[id], bonusText: str } }));
   }
 
   if (loading)
@@ -326,6 +330,20 @@ export default function PriceConfigPage() {
                       value={p.pro}
                       onChange={(e) => setTryonCount(id, "pro", e.target.value)}
                     />
+                  </td>
+                </tr>
+                <tr key={id + "-bonus"} className="border-b border-border last:border-0">
+                  <td colSpan={3} className="py-1.5 pb-3">
+                    <label className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 shrink-0">赠送文案(可选)</span>
+                      <input
+                        type="text"
+                        className="flex-1 px-3 py-1.5 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/40"
+                        placeholder="例如：原100次，又送20次"
+                        value={p.bonusText || ""}
+                        onChange={(e) => setTryonBonus(id, e.target.value)}
+                      />
+                    </label>
                   </td>
                 </tr>
               ))}

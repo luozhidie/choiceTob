@@ -19,6 +19,7 @@
     <view>
       <text class="pr-title">{{tryon.pro.pkgTitle}}</text>
       <text class="pr-sub">{{tryon.pro.pkgSub}}</text>
+      <text wx:if="{{tryon.pro.bonusText}}" class="pr-bonus">{{tryon.pro.bonusText}}</text>
     </view>
     <text class="pr-num">{{tryon.pro.pkgPriceLabel}}</text>
   </view>

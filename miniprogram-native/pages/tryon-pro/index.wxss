@@ -16,6 +16,7 @@
 .price-row.gold { border: 2rpx solid var(--gold); }
 .pr-title { display: block; font-size: 30rpx; font-weight: 800; color: var(--text); }
 .pr-sub { display: block; font-size: 22rpx; color: var(--text-3); margin-top: 6rpx; }
+.pr-bonus { display: inline-block; margin-top: 12rpx; padding: 4rpx 16rpx; font-size: 22rpx; font-weight: 800; color: #2d1b2e; background: linear-gradient(90deg, #C9A24B, #dab860); border-radius: 999rpx; }
 .pr-num { font-size: 42rpx; font-weight: 800; color: var(--gold); }
 .buy-btn { margin: 18rpx 28rpx 0; background: linear-gradient(135deg, #2d1b2e, #4a3a5a); color: var(--gold); font-size: 32rpx; font-weight: 800; text-align: center; padding: 28rpx 0; border-radius: 16rpx; }
 .buy-btn.gold { background: linear-gradient(90deg, #C9A24B, #dab860); color: #2d1b2e; box-shadow: 0 12rpx 30rpx rgba(201,162,75,.4); }
