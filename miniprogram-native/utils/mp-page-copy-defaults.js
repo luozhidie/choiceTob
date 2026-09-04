@@ -57,7 +57,7 @@ module.exports = {
       sub: "上传你的照片，AI 把衣服「穿」到你身上。好不好看，一眼就知道。",
       badges: ["9.9元首单", "30 秒出图", "隐私保护"],
       ctaMain: "新人首单 ¥9.9 试穿",
-      ctaSub: "10 次普通试穿 · 限时",
+      ctaSub: "12 次普通试穿 · 限时",
       stepsTitle: "三步，看见上身效果",
       steps: [
         { t: "上传照片", d: "正面半身照，仅用于本次合成" },
@@ -66,7 +66,7 @@ module.exports = {
       ],
       entryTitle: "选择你的试衣方式",
       entries: [
-        { emoji: "👕", name: "普通版", sub: "快速看上身 · ¥99/月 100 次" },
+        { emoji: "👕", name: "普通版", sub: "快速看上身 · ¥99/月 120 次" },
         { emoji: "✨", name: "专业版", sub: "诊断+搭配 · ¥998/100 次" },
         { emoji: "📖", name: "怎么用", sub: "一步步图文教程" },
         { emoji: "❓", name: "常见问题", sub: "隐私/效果/退订" }
@@ -102,11 +102,11 @@ module.exports = {
       include: ["上传自己的人像照片", "上传想试穿的衣服照片", "一键 AI 合成上身效果", "从店铺挑选商品试穿"],
       exclude: ["风格诊断", "AI 智能搭配 / 买手推荐"],
       pkgFirstTitle: "首单体验",
-      pkgFirstSub: "10 次普通试穿",
+      pkgFirstSub: "12 次普通试穿",
       pkgFirstPriceLabel: "¥9.9",
       pkgFirstBtn: "购买 ¥9.9",
       pkgMonthTitle: "普通月卡",
-      pkgMonthSub: "30 天 100 次普通试穿",
+      pkgMonthSub: "30 天 120 次普通试穿",
       pkgMonthPriceLabel: "¥99",
       pkgMonthBtn: "购买 ¥99"
     },
