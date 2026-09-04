@@ -202,13 +202,35 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <main className="max-w-[720px] mx-auto px-4 py-12 text-center">
-        <h1 className="text-xl font-bold text-[#2d1b2e] mb-2">请先登录</h1>
-        <p className="text-sm text-gray-500 mb-6">形象档案属于个人数据，登录后才能保存与查看。</p>
+        <h1 className="text-xl font-bold text-[#2d1b2e] mb-2">形象档案在小程序里</h1>
+        <p className="text-sm text-gray-500 mb-6">
+          形象档案属于个人数据，请在「骆芷蝶智选」小程序中查看与填写。
+        </p>
+
+        <div className="bg-white rounded-2xl p-6 shadow-sm max-w-[360px] mx-auto mb-6">
+          <img
+            src="/tryon-garments/miniprogram-style-profile-qr.png"
+            alt="骆芷蝶智选小程序码"
+            width={220}
+            height={220}
+            className="w-[220px] h-[220px] mx-auto"
+          />
+          <p className="text-sm font-semibold text-[#2d1b2e] mt-4">
+            微信扫一扫，进入小程序
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
+            进入后点「我的 → 形象档案」即可查看
+          </p>
+          <p className="text-xs text-[#a08f74] mt-3">
+            长按保存图片 → 打开微信扫一扫 → 选择相册图片
+          </p>
+        </div>
+
         <button
           onClick={() => router.push("/login")}
-          className="px-6 py-2.5 rounded-xl bg-[#2d1b2e] text-white text-sm font-semibold"
+          className="text-xs text-gray-400 underline hover:text-[#2d1b2e]"
         >
-          去登录 ›
+          已有网站账号？去登录
         </button>
       </main>
     );
