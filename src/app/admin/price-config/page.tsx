@@ -34,6 +34,31 @@ const PRODUCT_LABELS: Record<string, string> = {
   articles_yearly: "时尚资讯 · 年1380",
 };
 
+// 虚拟试衣次数兜底（与 src/lib/tryon-grant.ts 的 TRYON_PACKAGES 一致）
+// 后台保存的 tryon_packages 会按 package_id 覆盖 normal / pro，未配置则用此兜底
+const DEFAULT_TRYON_PACKAGES: Record<string, { normal: number; pro: number }> = {
+  tryon_first_9_9: { normal: 12, pro: 0 },
+  tryon_normal_month_99: { normal: 120, pro: 0 },
+  tryon_normal_month_299: { normal: 0, pro: 100 },
+  tryon_pro_refill_299: { normal: 0, pro: 100 },
+  tryon_pro_998: { normal: 0, pro: 100 },
+  tryon_test_cent: { normal: 1, pro: 1 },
+  tryon_normal_month_59: { normal: 70, pro: 0 },
+  tryon_pro_month_199: { normal: 0, pro: 200 },
+  tryon_pro_year_999: { normal: 0, pro: 1000 },
+};
+const TRYON_LABELS: Record<string, string> = {
+  tryon_first_9_9: "试衣 · 首单9.9",
+  tryon_normal_month_99: "试衣 · 标准月99",
+  tryon_normal_month_299: "试衣 · 高级月299（专业）",
+  tryon_pro_refill_299: "试衣 · 专业补299",
+  tryon_pro_998: "虚拟试衣会员 · 998",
+  tryon_test_cent: "链路测试 0.01",
+  tryon_normal_month_59: "试衣 · 月59",
+  tryon_pro_month_199: "试衣 · 专业月199",
+  tryon_pro_year_999: "试衣 · 专业年999",
+};
+
 function yuan(fen: number) {
   return (fen / 100).toFixed(2).replace(/\.00$/, "");
 }
@@ -41,6 +66,9 @@ function yuan(fen: number) {
 export default function PriceConfigPage() {
   const [tiers, setTiers] = useState<Record<string, WholesaleTier>>(DEFAULT_TIERS);
   const [virtual, setVirtual] = useState<Record<string, number>>(DEFAULT_VIRTUAL);
+  const [tryonPackages, setTryonPackages] = useState<Record<string, { normal: number; pro: number }>>(
+    DEFAULT_TRYON_PACKAGES
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -48,11 +76,22 @@ export default function PriceConfigPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/public/settings?keys=wholesale_tiers,virtual_goods_prices");
+        const res = await fetch("/api/public/settings?keys=wholesale_tiers,virtual_goods_prices,tryon_packages");
         const json = await res.json();
         const d = json.data || {};
         if (d.wholesale_tiers) setTiers({ ...DEFAULT_TIERS, ...d.wholesale_tiers });
         if (d.virtual_goods_prices) setVirtual({ ...DEFAULT_VIRTUAL, ...d.virtual_goods_prices });
+        if (d.tryon_packages) {
+          const merged: Record<string, { normal: number; pro: number }> = {};
+          for (const [id, fb] of Object.entries(DEFAULT_TRYON_PACKAGES)) {
+            const ov = (d.tryon_packages[id] as { normal?: number; pro?: number }) || {};
+            merged[id] = {
+              normal: typeof ov.normal === "number" ? ov.normal : fb.normal,
+              pro: typeof ov.pro === "number" ? ov.pro : fb.pro,
+            };
+          }
+          setTryonPackages(merged);
+        }
       } catch (e) {
         // 读取失败则用默认值
       } finally {
@@ -75,7 +114,8 @@ export default function PriceConfigPage() {
     try {
       await saveOne("wholesale_tiers", tiers);
       await saveOne("virtual_goods_prices", virtual);
-      setToast({ type: "success", message: "价格与折扣已保存，立即生效（前端展示文案请在「会员充值文案」页同步）" });
+      await saveOne("tryon_packages", tryonPackages);
+      setToast({ type: "success", message: "价格、折扣与试衣次数已保存，立即生效（前端展示文案请在「会员充值文案」页同步）" });
     } catch (e: any) {
       setToast({ type: "error", message: "保存失败：" + e.message });
     } finally {
@@ -102,6 +142,10 @@ export default function PriceConfigPage() {
   function setVirtualYuan(id: string, yuanStr: string) {
     const yuan = Math.max(0, Number(yuanStr) || 0);
     setVirtual((prev) => ({ ...prev, [id]: Math.round(yuan * 100) }));
+  }
+  function setTryonCount(id: string, kind: "normal" | "pro", str: string) {
+    const v = Math.max(0, Number(str) || 0);
+    setTryonPackages((prev) => ({ ...prev, [id]: { ...prev[id], [kind]: v } }));
   }
 
   if (loading)
@@ -234,6 +278,59 @@ export default function PriceConfigPage() {
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* 虚拟试衣次数 */}
+      <section className="bg-white rounded-xl border border-border p-5 mb-5">
+        <h2 className="font-bold text-primary mb-1 flex items-center gap-2">
+          <Package className="w-4 h-4 text-accent" /> 虚拟试衣次数（普通版 / 专业版）
+        </h2>
+        <div className="flex items-start gap-2 mb-4 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            每个套餐可单独设置<strong>普通版次数</strong>与<strong>专业版次数</strong>，保存即覆盖代码兜底默认值，无需改代码 / 部署。
+            修改仅对<strong>此后新购买</strong>该套餐的用户生效，已发放权益不受影响。
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-gray-400 text-xs border-b border-border">
+                <th className="text-left py-2 font-medium">套餐</th>
+                <th className="text-right py-2 font-medium pr-3">普通版次数</th>
+                <th className="text-right py-2 font-medium">专业版次数</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(tryonPackages).map(([id, p]) => (
+                <tr key={id} className="border-b border-border last:border-0">
+                  <td className="py-2.5 pr-3">
+                    <div className="text-sm text-gray-700">{TRYON_LABELS[id] || id}</div>
+                    <div className="text-xs text-gray-400">{id}</div>
+                  </td>
+                  <td className="py-2.5 text-right pr-3">
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-24 px-2 py-1.5 border border-border rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      value={p.normal}
+                      onChange={(e) => setTryonCount(id, "normal", e.target.value)}
+                    />
+                  </td>
+                  <td className="py-2.5 text-right">
+                    <input
+                      type="number"
+                      min="0"
+                      className="w-24 px-2 py-1.5 border border-border rounded-lg text-sm text-right focus:outline-none focus:ring-2 focus:ring-accent/40"
+                      value={p.pro}
+                      onChange={(e) => setTryonCount(id, "pro", e.target.value)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
