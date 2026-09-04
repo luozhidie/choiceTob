@@ -4,8 +4,9 @@ page { background: var(--bg); }
 /* 自定义顶部导航（透明浮层） */
 .custom-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: transparent; pointer-events: none; }
 .nav-bar { height: 88rpx; display: flex; align-items: center; justify-content: space-between; padding: 0 20rpx; pointer-events: auto; }
-.nav-back, .nav-fav { width: 64rpx; height: 64rpx; background: rgba(0,0,0,.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; color: #fff; }
+.nav-back, .nav-fav, .nav-dl { width: 64rpx; height: 64rpx; background: rgba(0,0,0,.35); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 36rpx; color: #fff; }
 .nav-back { font-size: 44rpx; line-height: 1; padding-bottom: 6rpx; }
+.nav-actions { display: flex; align-items: center; gap: 14rpx; }
 .nav-fav.fav-on { color: #2d1b2e; background: rgba(233,30,99,.15); }
 
 /* 商品/风格/详情 吸顶切换：单一白底顶部栏（含返回键 + 居中页签 + 分享键） */
@@ -18,6 +19,8 @@ page { background: var(--bg); }
 .section-tab.active { color: #e4393c; font-weight: 600; }
 .section-tab.active::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 56rpx; height: 5rpx; background: #e4393c; border-radius: 4rpx; }
 .st-share { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; font-size: 34rpx; line-height: 1; color: #333; padding: 0; margin: 0; background: transparent; border: none; }
+.st-actions { display: flex; align-items: center; gap: 6rpx; }
+.st-dl { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; font-size: 34rpx; line-height: 1; color: #333; }
 
 /* 视频 */
 .vid { width: 100%; height: 750rpx; background: #000; display: block; }
@@ -363,3 +366,10 @@ page { background: var(--bg); }
 .sizechart-panel { background: #fff; border-radius: 32rpx 32rpx 0 0; max-height: 80vh; display: flex; flex-direction: column; }
 .sizechart-body { flex: 1; padding: 24rpx; }
 .sizechart-img { width: 100%; display: block; }
+
+/* ==================== 下载图片风险提示 ==================== */
+.dl-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.55); z-index: 300; display: flex; align-items: center; justify-content: center; }
+.dl-card { width: 76%; max-width: 540rpx; background: #fff; border-radius: 24rpx; padding: 48rpx 36rpx 40rpx; display: flex; flex-direction: column; align-items: center; }
+.dl-title { font-size: 34rpx; font-weight: 700; color: #1a1a2e; }
+.dl-body { margin-top: 28rpx; font-size: 28rpx; color: #666; line-height: 1.7; text-align: center; }
+.dl-btn { margin-top: 36rpx; width: 100%; background: #2d1b2e; color: #fff; font-size: 30rpx; font-weight: 600; text-align: center; padding: 22rpx 0; border-radius: 40rpx; }

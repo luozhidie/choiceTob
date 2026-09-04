@@ -162,6 +162,7 @@ Page({
     skuMode: 'cart',             // 面板用途：cart=加购物车 / buy=立即购买并支付
     showCouponPanel: false,      // 优惠明细弹窗
     showSizeChart: false,        // 尺码图弹窗
+    showDownloadWarning: false,  // 下载图片风险提示弹窗
     priceValue: 0,               // 1件起批价格（数值）
     bulkPriceValue: 0,           // ≥5件价格（数值）
     skuPriceValue: 0,            // 面板实时单价（随所选款式变化）
@@ -869,6 +870,71 @@ Page({
     var tabIdx = Number(e.currentTarget.dataset.index);
     var start = this.data.mediaTabs[tabIdx].start;
     this.setData({ mediaIndex: start, mediaTabIndex: tabIdx });
+  },
+
+  // 下载当前媒体图片：先弹淘宝原图风险提示，确认后再保存到相册
+  onDownloadMedia: function () {
+    var t = this;
+    var item = t.data.mediaList[t.data.mediaIndex] || {};
+    if (!item.src || (item.type !== 'model' && item.type !== 'photo')) {
+      wx.showToast({ title: '当前不是图片，无法下载', icon: 'none' });
+      return;
+    }
+    t.setData({ showDownloadWarning: true });
+  },
+  closeDownloadWarning: function () {
+    this.setData({ showDownloadWarning: false });
+  },
+  preventCloseDownloadWarning: function () { },
+  confirmDownload: function () {
+    var t = this;
+    t.setData({ showDownloadWarning: false });
+    t.saveCurrentMediaImage();
+  },
+  saveCurrentMediaImage: function () {
+    var t = this;
+    var item = t.data.mediaList[t.data.mediaIndex] || {};
+    var url = item.src;
+    if (!url) { wx.showToast({ title: '图片地址为空', icon: 'none' }); return; }
+    wx.showLoading({ title: '保存中…' });
+    function doSave(filePath) {
+      wx.saveImageToPhotosAlbum({
+        filePath: filePath,
+        success: function () { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
+        fail: function (err) {
+          if (err && err.errMsg && err.errMsg.indexOf('auth deny') > -1) {
+            wx.showModal({ title: '需要相册权限', content: '请允许保存图片到相册', showCancel: false });
+          } else if (err && err.errMsg && err.errMsg.indexOf('cancel') > -1) {
+            // 用户取消，不提示
+          } else {
+            wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' });
+          }
+        }
+      });
+    }
+    wx.downloadFile({
+      url: url,
+      success: function (res) {
+        wx.hideLoading();
+        if (res.statusCode === 200) { doSave(res.tempFilePath); }
+        else {
+          // 下载失败，尝试用缓存信息兜底
+          wx.getImageInfo({
+            src: url,
+            success: function (info) { doSave(info.path); },
+            fail: function () { wx.showToast({ title: '保存失败', icon: 'none' }); }
+          });
+        }
+      },
+      fail: function () {
+        wx.hideLoading();
+        wx.getImageInfo({
+          src: url,
+          success: function (info) { doSave(info.path); },
+          fail: function () { wx.showToast({ title: '保存失败', icon: 'none' }); }
+        });
+      }
+    });
   },
 
   // 系列切换：最新款 / 最爆款

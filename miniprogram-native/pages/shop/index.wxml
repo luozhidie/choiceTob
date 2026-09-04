@@ -3,21 +3,27 @@
   <view class="custom-nav" style="padding-top:{{statusBarHeight}}px;" wx:if="{{!showSectionTabs}}">
     <view class="nav-bar">
       <view class="nav-back" bindtap="goBack">‹</view>
-      <view class="nav-fav {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
+      <view class="nav-actions">
+        <view class="nav-fav {{isFav?'fav-on':''}}" bindtap="toggleFav">♥</view>
+        <view class="nav-dl" bindtap="onDownloadMedia">↓</view>
+      </view>
     </view>
   </view>
 
   <!-- 商品/风格/详情 吸顶切换（上拉出现）：单一白底顶部栏，含返回键 + 居中页签 + 分享键 -->
   <view class="section-tabs {{showSectionTabs?'show':''}}" style="padding-top:{{statusBarHeight}}px;">
-    <view class="section-tabs-inner">
-      <view class="st-back" bindtap="goBack">‹</view>
-      <view class="st-tabs">
-        <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
-        <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">风格</view>
-        <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
+      <view class="section-tabs-inner">
+        <view class="st-back" bindtap="goBack">‹</view>
+        <view class="st-tabs">
+          <view class="section-tab {{sectionActive==='product'?'active':''}}" data-section="product" bindtap="scrollToSection">商品</view>
+          <view class="section-tab {{sectionActive==='shop'?'active':''}}" data-section="shop" bindtap="scrollToSection">风格</view>
+          <view class="section-tab {{sectionActive==='detail'?'active':''}}" data-section="detail" bindtap="scrollToSection">详情</view>
+        </view>
+        <view class="st-actions">
+          <button class="st-share" open-type="share">↗</button>
+          <view class="st-dl" bindtap="onDownloadMedia">↓</view>
+        </view>
       </view>
-      <button class="st-share" open-type="share">↗</button>
-    </view>
   </view>
 
   <!-- 媒体轮播：视频 → 模特图 → 实拍图 → 尺码 平铺为统一 swiper，左右滑动切换（对标一手） -->
@@ -379,6 +385,15 @@
       <image src="{{tryonResult}}" mode="widthFix" class="tryon-img"/>
       <view class="tryon-tip" wx:if="{{tryonIsDemo}}">演示效果（示意合成），接入真实引擎后变为真人试穿</view>
       <view class="tryon-close" bindtap="closeTryon">关闭</view>
+    </view>
+  </view>
+
+  <!-- 下载图片风险提示 -->
+  <view class="dl-mask" wx:if="{{showDownloadWarning}}" bindtap="closeDownloadWarning">
+    <view class="dl-card" catchtap="preventCloseDownloadWarning">
+      <view class="dl-title">温馨提示</view>
+      <view class="dl-body">应【淘宝原图】保护政策，从本程序下载的图片直接上传淘宝存在被原图作者投诉的风险，请店主宝宝知晓（保护政策详情咨询淘宝平台）</view>
+      <view class="dl-btn" bindtap="confirmDownload">我知道了</view>
     </view>
   </view>
 </view>
