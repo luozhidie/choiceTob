@@ -77,7 +77,19 @@ export default function LookStudioClient({ data }: Props) {
 
   // 试衣权益门禁
   const [webOpenid, setWebOpenid] = useState<string>("");
-  const [ent, setEnt] = useState<{ active: boolean; normalLeft: number; proLeft: number; triesLeft: number } | null>(null);
+  // 双轨权益：normal(普通版) / pro(专业版) 各自 left 与 daysLeft；旧接口无明细时回落兼容字段
+  type Track = { active: boolean; left: number; daysLeft: number; type?: string | null };
+  const [ent, setEnt] = useState<
+    | {
+        active: boolean;
+        normalLeft: number;
+        proLeft: number;
+        triesLeft: number;
+        normal?: Track;
+        pro?: Track;
+      }
+    | null
+  >(null);
   const [entLoading, setEntLoading] = useState(true);
   const [paywall, setPaywall] = useState<"need" | "noleft" | null>(null);
 
@@ -96,8 +108,35 @@ export default function LookStudioClient({ data }: Props) {
       .finally(() => setEntLoading(false));
   }, []);
 
-  const leftForEdition = () => (edition === "pro" ? ent?.proLeft || 0 : ent?.normalLeft || 0);
-  const canTry = () => !!ent?.active && leftForEdition() > 0;
+  // 按当前版本取对应轨道（双轨；旧接口无明细时回落旧字段）
+  const trackForEdition = (): Track | null => {
+    const t = edition === "pro" ? ent?.pro : ent?.normal;
+    if (t) return t;
+    return null;
+  };
+  const leftForEdition = () => {
+    const t = trackForEdition();
+    if (t) return t.left || 0;
+    return edition === "pro" ? ent?.proLeft || 0 : ent?.normalLeft || 0;
+  };
+  // 双轨：只看当前版本对应轨道是否可用，不再用总体 active（避免专业有效却放行普通）
+  const canTry = () => {
+    const t = trackForEdition();
+    if (t) return !!t.active && (t.left || 0) > 0;
+    return !!ent?.active && leftForEdition() > 0;
+  };
+  // 双轨并列的权益文案：普通 X 次 / Y 天 · 专业 Z 次 / W 天
+  const entText = (): string => {
+    const n = ent?.normal;
+    const p = ent?.pro;
+    if (!n && !p) {
+      return ent?.active ? `剩余 ${ent?.triesLeft ?? 0} 次` : "未开通";
+    }
+    const parts: string[] = [];
+    if (n && n.active && (n.left || 0) > 0) parts.push(`普通 ${n.left} 次 / ${n.daysLeft || 0} 天`);
+    if (p && p.active && (p.left || 0) > 0) parts.push(`专业 ${p.left} 次 / ${p.daysLeft || 0} 天`);
+    return parts.length ? parts.join(" · ") : "未开通";
+  };
   const ensureEnt = () => {
     if (entLoading) return false;
     if (!ent?.active) { setPaywall("need"); return false; }
@@ -265,6 +304,9 @@ export default function LookStudioClient({ data }: Props) {
         <div style={{ background: "rgba(201,162,75,.15)", border: "1px solid #C9A24B", borderRadius: 12, padding: 14, margin: "12px 0" }}>
           <div style={{ fontSize: 14, fontWeight: 700, color: GOLD }}>{ent?.active ? "次数不足" : "未开通试衣套餐"}</div>
           <div style={{ fontSize: 12, color: "#d8c3c9", marginTop: 4, lineHeight: 1.5 }}>
+            {entText() !== "未开通" && (
+              <div style={{ color: GOLD, marginBottom: 4 }}>当前额度：{entText()}</div>
+            )}
             {ent?.active
               ? `当前${edition === "pro" ? "专业版" : "普通版"}次数已用完，需续费后继续试穿。`
               : "上传照片、挑选单品、AI 试穿均需先付费开通套餐。"}

@@ -282,7 +282,7 @@ export default function AgentWorkbenchPage() {
           <StatCard icon={Coins} label="预存货款" value={fmtYuan(me?.depositAmount)} hint="货款余额" />
           <StatCard icon={Wallet} label="可提现" value={fmtYuan(me?.walletBalance)} hint="差价收益" />
           <StatCard icon={TrendingUp} label="冻结中" value={fmtYuan(me?.frozenBalance)} hint="发货后解锁" />
-          <StatCard icon={ShoppingBag} label="专业试衣" value={`${me?.tryon?.proLeft || 0}次`} hint="剩余额度" />
+          <StatCard icon={ShoppingBag} label="专业试衣" value={`${me?.tryon?.proLeft || 0}次`} hint={`剩余额度 · ${me?.tryon?.pro?.daysLeft || 0} 天`} />
         </motion.div>
 
         <div className="grid lg:grid-cols-3 gap-6">

@@ -128,25 +128,56 @@ export async function GET(request: NextRequest) {
       // user_wallet 尚未建：余额 0
     }
 
-    // 试衣剩余次数（按 openid）
-    let tryon = { normalLeft: 0, proLeft: 0, daysLeft: 0 };
+    // 试衣剩余次数（按 openid）：普通版 / 专业版 双轨独立
+    let tryon: any = {
+      normalLeft: 0,
+      proLeft: 0,
+      daysLeft: 0,
+      normal: { left: 0, daysLeft: 0 },
+      pro: { left: 0, daysLeft: 0 },
+    };
     const tryonOpenid = profile.wechat_openid || profile.wx_openid;
     if (tryonOpenid) {
+      let te: any = null;
       try {
-        const { data: te } = await supabase
+        // 优先读双轨字段
+        const r = await supabase
           .from("tryon_entitlements")
-          .select("normal_left, pro_left, expires_at")
+          .select("normal_left, pro_left, normal_expires_at, pro_expires_at, expires_at")
           .eq("openid", tryonOpenid)
           .maybeSingle();
-        if (te) {
-          const days = Math.max(0, Math.ceil((new Date(te.expires_at).getTime() - Date.now()) / 86400000));
-          tryon = {
-            normalLeft: Number(te.normal_left || 0),
-            proLeft: Number(te.pro_left || 0),
-            daysLeft: days,
-          };
-        }
-      } catch {}
+        te = r.data;
+      } catch {
+        // 双轨列尚未迁移 → 回落到单行字段
+        try {
+          const r2 = await supabase
+            .from("tryon_entitlements")
+            .select("normal_left, pro_left, expires_at")
+            .eq("openid", tryonOpenid)
+            .maybeSingle();
+          te = r2.data;
+        } catch {}
+      }
+      if (te) {
+        const now = Date.now();
+        const daysOf = (exp: any) => {
+          if (!exp) return 0;
+          const t = new Date(exp).getTime();
+          return t > now ? Math.max(0, Math.ceil((t - now) / 86400000)) : 0;
+        };
+        // 双轨列为空时回落单行 expires_at
+        const nExp = te.normal_expires_at || te.expires_at;
+        const pExp = te.pro_expires_at || te.expires_at;
+        const nLeft = Number(te.normal_left || 0);
+        const pLeft = Number(te.pro_left || 0);
+        tryon = {
+          normalLeft: nLeft,
+          proLeft: pLeft,
+          daysLeft: Math.max(daysOf(nExp), daysOf(pExp)),
+          normal: { left: nLeft, daysLeft: daysOf(nExp) },
+          pro: { left: pLeft, daysLeft: daysOf(pExp) },
+        };
+      }
     }
 
     // 银行卡（脱敏）
