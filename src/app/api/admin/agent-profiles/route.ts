@@ -85,3 +85,41 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: err.message || "系统错误" }, { status: 500 });
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    if (!checkAdmin(request)) {
+      return NextResponse.json({ error: "未授权" }, { status: 401 });
+    }
+    const supabase = getServiceRoleClient();
+    const { searchParams } = request.nextUrl;
+    const id = searchParams.get("id") || "";
+    if (!id) return NextResponse.json({ error: "缺少 id" }, { status: 400 });
+
+    // 禁止删除管理员自身（避免把自己锁在后台外）
+    const { data: target } = await supabase
+      .from("profiles")
+      .select("role, email")
+      .eq("id", id)
+      .maybeSingle();
+    if (target?.role === "admin" || target?.email === "luozhidie@live.cn") {
+      return NextResponse.json({ error: "不能删除管理员账号" }, { status: 403 });
+    }
+
+    // 同步删除 profiles 行与 auth 用户
+    const { error: profileError } = await supabase.from("profiles").delete().eq("id", id);
+    if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 });
+
+    const { error: authError } = await supabase.auth.admin.deleteUser(id);
+    if (authError) {
+      console.error("[admin/agent-profiles DELETE] auth delete failed", authError);
+      // profile 已删，auth 失败也返回成功但提示
+      return NextResponse.json({ success: true, warning: "资料已删除，但 Auth 用户未清理" });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error("[admin/agent-profiles DELETE]", err);
+    return NextResponse.json({ error: err.message || "系统错误" }, { status: 500 });
+  }
+}

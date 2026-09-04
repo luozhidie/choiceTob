@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Loader2, Save, RefreshCw, Search, User, X } from "lucide-react";
+import { Loader2, Save, RefreshCw, Search, User, X, Trash2 } from "lucide-react";
 
 interface AgentProfile {
   id: string;
@@ -30,6 +30,7 @@ const DEFAULT_EDIT: Partial<AgentProfile> = {
 export default function AgentProfilesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [q, setQ] = useState("");
   const [list, setList] = useState<AgentProfile[]>([]);
   const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -110,6 +111,25 @@ export default function AgentProfilesPage() {
       showToast("error", "保存失败：" + e.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const del = async (item: AgentProfile) => {
+    if (!window.confirm(`确定删除「${item.nickname || item.phone || "未命名"}」的代理人资料？删除后不可恢复。`)) return;
+    setDeletingId(item.id);
+    try {
+      const res = await fetch(`/api/admin/agent-profiles?id=${encodeURIComponent(item.id)}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "删除失败");
+      showToast("success", "已删除");
+      load();
+    } catch (e: any) {
+      showToast("error", "删除失败：" + e.message);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -199,12 +219,22 @@ export default function AgentProfilesPage() {
                   {item.bio || "—"}
                 </div>
               </div>
-              <button
-                onClick={() => openEdit(item)}
-                className="px-4 py-2 text-sm font-medium text-accent border border-accent rounded-lg hover:bg-accent/5 flex-shrink-0"
-              >
-                编辑
-              </button>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => openEdit(item)}
+                  className="px-4 py-2 text-sm font-medium text-accent border border-accent rounded-lg hover:bg-accent/5"
+                >
+                  编辑
+                </button>
+                <button
+                  onClick={() => del(item)}
+                  disabled={deletingId === item.id}
+                  className="px-3 py-2 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 inline-flex items-center gap-1"
+                >
+                  {deletingId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  删除
+                </button>
+              </div>
             </div>
           ))}
         </div>
