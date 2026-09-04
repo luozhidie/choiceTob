@@ -78,6 +78,39 @@ Page({
   onLoad: function (options) {
   if (!guard.guardAgentOnly()) return;
     var self = this;
+    // 登录隔离：未登录用户不允许进入云衣橱（试衣为付费诊断，未登录会泄漏代理推广记录与下单链路）
+    var token = '';
+    try { token = wx.getStorageSync('token') || ''; } catch (e) {}
+    if (!token) {
+      var back = '/pages/look-studio/index';
+      try {
+        if (options) {
+          var qs = [];
+          for (var k in options) { if (Object.prototype.hasOwnProperty.call(options, k)) qs.push(encodeURIComponent(k) + '=' + encodeURIComponent(options[k])); }
+          if (qs.length) back += '?' + qs.join('&');
+        }
+      } catch (e) {}
+      wx.showModal({
+        title: '请先登录',
+        content: '云衣橱·AI 虚拟试衣为付费诊断内容，登录后才能使用。',
+        confirmText: '去登录',
+        cancelText: '返回',
+        success: function (res) {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/login/index?redirect=' + encodeURIComponent(back) });
+          } else {
+            try {
+              var pages = getCurrentPages();
+              if (pages && pages.length > 1) wx.navigateBack({ delta: 1 });
+              else wx.switchTab({ url: '/pages/home/index' });
+            } catch (e) {
+              wx.switchTab({ url: '/pages/home/index' });
+            }
+          }
+        }
+      });
+      return;
+    }
     var upd = { agreedAuth: getAuth() };
     if (options && options.promo) { upd.promo = true; upd.showPackages = true; }
     if (options && options.baseImageUrl) {
