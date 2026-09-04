@@ -392,7 +392,17 @@ Page({
   goVipPage:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/vip/index'});},
   goMember:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/member/index'});},
   goMy:function(){this.setData({mo:false});wx.switchTab({url:'/pages/my/index'});},
-  goStyleTest:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/style-test/index'});},
+  goStyleTest:function(){
+    // 登录隔离：未登录先去登录，登录后回跳风格测试
+    var token = '';
+    try { token = wx.getStorageSync('token') || ''; } catch (e) {}
+    this.setData({mo:false});
+    if (!token) {
+      wx.navigateTo({ url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/style-test/index') });
+      return;
+    }
+    wx.navigateTo({url:'/pages/style-test/index'});
+  },
   goArticles:function(){this.setData({mo:false});wx.navigateTo({url:'/pages/articles/index'});},
   goContact:function(){this.setData({mo:false});wx.showModal({title:'联系客服',content:'微信：luozhidie666\n工作时间 9:00-18:00',showCancel:false,confirmText:'知道了'});},
 

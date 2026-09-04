@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     // 解析有效代理（预存货款 + 充值，或认证店主/管理员均可预览/开通店铺）
     const { data: agent } = await supabase
       .from("profiles")
-      .select("id, full_name, membership_type, deposit_amount, is_admin, store_owner_certified, role, is_tryon_agent")
+      .select("id, full_name, agent_store_name, nickname, membership_type, deposit_amount, is_admin, store_owner_certified, role, is_tryon_agent")
       .eq("invite_code", ref)
       .maybeSingle();
     const isDepositAgent =
@@ -56,9 +56,13 @@ export async function GET(request: NextRequest) {
       price: map.has(p.id) ? map.get(p.id) : p.price,
     }));
 
+    // 对客展示：优先用店铺名，其次昵称，最后姓名兜底
+    const agentStoreName = agent.agent_store_name || "";
+    const agentName = agent.agent_store_name || agent.nickname || agent.full_name || "精选推荐";
     return NextResponse.json({
       valid: true,
-      agentName: agent.full_name || "精选推荐",
+      agentName,
+      agentStoreName,
       inviteCode: ref,
       products: list,
     });

@@ -21,7 +21,7 @@ module.exports = {
     <!-- 专属店铺头 -->
     <view class="shop-head">
       <view class="sh-badge">{{pageCopy.shopHead.badge}}</view>
-      <text class="sh-name">{{agentName}}{{pageCopy.shopHead.nameSuffix}}</text>
+      <text class="sh-name">{{shopTitle}}</text>
       <text class="sh-desc">{{pageCopy.shopHead.desc}}</text>
     </view>
 

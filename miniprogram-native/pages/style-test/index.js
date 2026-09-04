@@ -15,6 +15,32 @@ Page({
   },
 
   onLoad:function(options){
+    // 登录隔离：未登录用户不允许进入风格测试（含其销售页与两个测试入口）
+    var token = '';
+    try { token = wx.getStorageSync('token') || ''; } catch (e) {}
+    if (!token) {
+      var back = '/pages/style-test/index';
+      wx.showModal({
+        title: '请先登录',
+        content: '风格测试为付费诊断内容，登录后才能查看与使用。',
+        confirmText: '去登录',
+        cancelText: '返回',
+        success: function (res) {
+          if (res.confirm) {
+            wx.navigateTo({ url: '/pages/login/index?redirect=' + encodeURIComponent(back) });
+          } else {
+            try {
+              var pages = getCurrentPages();
+              if (pages && pages.length > 1) wx.navigateBack({ delta: 1 });
+              else wx.switchTab({ url: '/pages/home/index' });
+            } catch (e) {
+              wx.switchTab({ url: '/pages/home/index' });
+            }
+          }
+        }
+      });
+      return;
+    }
     this.loadConfig();
     this.checkEntitlement();
   },

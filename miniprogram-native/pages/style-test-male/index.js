@@ -248,6 +248,13 @@ Page({
   },
 
   onLoad: function () {
+    // 登录隔离：未登录不允许直接进入男士风格测试
+    var token = '';
+    try { token = wx.getStorageSync('token') || ''; } catch (e) {}
+    if (!token) {
+      wx.navigateTo({ url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/style-test-male/index') });
+      return;
+    }
     wx.setNavigationBarTitle({ title: '男士风格测试' });
   },
 

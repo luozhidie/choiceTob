@@ -19,6 +19,8 @@ Page({
     loading: true,
     valid: false,
     agentName: '',
+    agentStoreName: '',
+    shopTitle: '',
     products: [],
     // 下单
     showPay: false,
@@ -54,7 +56,13 @@ Page({
             price_yuan: fmtYuan(p.price)
           };
         });
-        t.setData({ loading: false, valid: true, agentName: d.agentName || '', products: list });
+        // 对客展示店铺名：有店铺名直接用，否则「姓名 + 的精选店」
+        var storeName = d.agentStoreName || '';
+        var name = d.agentName || '';
+        var suffix = (t.data.pageCopy && t.data.pageCopy.shopHead && t.data.pageCopy.shopHead.nameSuffix) || ' 的精选店';
+        var title = storeName || (name ? name + suffix : '');
+        t.setData({ loading: false, valid: true, agentName: name, agentStoreName: storeName, shopTitle: title, products: list });
+        if (title) wx.setNavigationBarTitle({ title: storeName || title });
       },
       fail: function () { t.setData({ loading: false, valid: false }); }
     });

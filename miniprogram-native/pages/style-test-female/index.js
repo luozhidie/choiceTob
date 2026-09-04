@@ -222,6 +222,13 @@ Page({
   },
 
   onLoad: function () {
+    // 登录隔离：未登录不允许直接进入女士风格测试
+    var token = '';
+    try { token = wx.getStorageSync('token') || ''; } catch (e) {}
+    if (!token) {
+      wx.navigateTo({ url: '/pages/login/index?redirect=' + encodeURIComponent('/pages/style-test-female/index') });
+      return;
+    }
     wx.setNavigationBarTitle({ title: '女士风格测试' });
   },
 
