@@ -39,15 +39,18 @@ function applyTryonPackages(copy, pkgs) {
   var month = num("tryon_normal_month_99", "normal", 120);
   var pro = num("tryon_pro_998", "pro", 100);
   var bonusPro = str("tryon_pro_998", "bonusText");
-  if (typeof copy.ctaSub === "string") copy.ctaSub = first + " 次普通试穿 · 限时";
-  if (copy.entries && copy.entries[0]) copy.entries[0].sub = "快速看上身 · ¥99/月 " + month + " 次";
-  if (copy.entries && copy.entries[1]) {
-    copy.entries[1].sub = "诊断+搭配 · ¥998/" + pro + " 次";
-    if (bonusPro) copy.entries[1].bonusText = bonusPro;
-  }
+  // 注意字段真实路径：ctaSub / entries 在 copy.promo 下，pkgFirstSub / pkgMonthSub 在 copy.normal 下
   if (isObj(copy.promo)) {
-    if (typeof copy.promo.pkgFirstSub === "string") copy.promo.pkgFirstSub = first + " 次普通试穿";
-    if (typeof copy.promo.pkgMonthSub === "string") copy.promo.pkgMonthSub = "30 天 " + month + " 次普通试穿";
+    if (typeof copy.promo.ctaSub === "string") copy.promo.ctaSub = first + " 次普通试穿 · 限时";
+    if (copy.promo.entries && copy.promo.entries[0]) copy.promo.entries[0].sub = "快速看上身 · ¥99/月 " + month + " 次";
+    if (copy.promo.entries && copy.promo.entries[1]) {
+      copy.promo.entries[1].sub = "诊断+搭配 · ¥998/" + pro + " 次";
+      if (bonusPro) copy.promo.entries[1].bonusText = bonusPro;
+    }
+  }
+  if (isObj(copy.normal)) {
+    if (typeof copy.normal.pkgFirstSub === "string") copy.normal.pkgFirstSub = first + " 次普通试穿";
+    if (typeof copy.normal.pkgMonthSub === "string") copy.normal.pkgMonthSub = "30 天 " + month + " 次普通试穿";
   }
   if (isObj(copy.pro)) {
     if (typeof copy.pro.pkgSub === "string") copy.pro.pkgSub = pro + " 次专业诊断 · 含 14 题风格测试 / 八大风格真人试穿";
