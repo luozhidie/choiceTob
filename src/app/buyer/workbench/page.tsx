@@ -189,13 +189,11 @@ export default function BuyerWorkbenchPage() {
             <ShieldCheck className="w-5 h-5" />
             <span className="text-xs font-medium">店主认证</span>
           </Link>
-          <Link
-            href="/tryon/profile"
-            className="flex flex-col items-center gap-1.5 py-4 rounded-xl bg-white border border-primary/15 text-primary hover:bg-primary/5 transition"
-          >
+          <div className="flex flex-col items-center gap-1.5 py-4 rounded-xl bg-white/60 border border-primary/10 text-primary/60">
             <UserCircle2 className="w-5 h-5" />
             <span className="text-xs font-medium">形象管理</span>
-          </Link>
+            <span className="text-[10px] text-primary/40">请去小程序</span>
+          </div>
         </div>
 
         {/* 我的订单 */}

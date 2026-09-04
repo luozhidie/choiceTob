@@ -12,6 +12,8 @@ const ADMIN_PREVIEW_ROUTES = [
   "/style-test",     // 风格测试
   "/personal-image", // VIP形象服务
   "/booking",        // 预约陪购
+  "/tryon",          // AI虚拟试衣（小程序为主入口，网页版仅管理员预览）
+  "/look-studio",    // 云衣橱/AI试衣间（同上）
 ];
 
 function isAdminPreviewRoute(pathname: string) {
@@ -43,13 +45,6 @@ export async function updateSession(request: NextRequest) {
   const isImgProxy = pathname.startsWith("/simg") || pathname.startsWith("/sapimg");
   const isComingSoon = pathname === "/coming-soon";
   const isRootTxt = pathname === "/root.txt";
-  // 虚拟试衣推广页：扫码即用、不依赖登录，绕过内测锁对访客公开
-  const isTryon =
-    pathname === "/tryon" ||
-    pathname.startsWith("/tryon/") ||
-    pathname === "/look-studio" ||
-    pathname.startsWith("/look-studio/");
-
   // admin 区：独立 cookie 校验（保持原逻辑）
   if (isAdmin) {
     if (pathname === "/admin/login") {
@@ -62,8 +57,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 接口 / 图片代理 / 占位页 / 验证文件 / 虚拟试衣推广页：始终放行
-  if (isApi || isImgProxy || isComingSoon || isRootTxt || isTryon) {
+  // 接口 / 图片代理 / 占位页 / 验证文件：始终放行
+  if (isApi || isImgProxy || isComingSoon || isRootTxt) {
     return NextResponse.next();
   }
 
