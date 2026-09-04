@@ -393,7 +393,10 @@
     <view class="dl-card" catchtap="preventCloseDownloadWarning">
       <view class="dl-title">温馨提示</view>
       <view class="dl-body">应【淘宝原图】保护政策，从本程序下载的图片直接上传淘宝存在被原图作者投诉的风险，请店主宝宝知晓（保护政策详情咨询淘宝平台）</view>
-      <view class="dl-btn" bindtap="confirmDownload">我知道了</view>
+      <view class="dl-btns">
+        <view class="dl-btn dl-btn-ghost" bindtap="confirmDownloadCurrent">保存当前图片</view>
+        <view class="dl-btn" bindtap="confirmDownloadAll">保存全部图片</view>
+      </view>
     </view>
   </view>
 </view>

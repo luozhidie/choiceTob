@@ -872,6 +872,16 @@ Page({
     this.setData({ mediaIndex: start, mediaTabIndex: tabIdx });
   },
 
+  // 把 Supabase 等外链图转成本站 /simg 代理，绕开小程序 downloadFile 域名白名单限制
+  toDownloadUrl: function (url) {
+    if (!url) return url;
+    var m = url.match(/^https?:\/\/([^\/]+)\/(.*)$/);
+    if (m && m[1].indexOf('supabase.co') > -1) {
+      return 'https://colour-choice.art/simg/' + m[2];
+    }
+    return url;
+  },
+
   // 下载当前媒体图片：先弹淘宝原图风险提示，确认后再保存到相册
   onDownloadMedia: function () {
     var t = this;
@@ -886,52 +896,70 @@ Page({
     this.setData({ showDownloadWarning: false });
   },
   preventCloseDownloadWarning: function () { },
-  confirmDownload: function () {
+  confirmDownloadCurrent: function () {
     var t = this;
     t.setData({ showDownloadWarning: false });
-    t.saveCurrentMediaImage();
+    var url = t.toDownloadUrl((t.data.mediaList[t.data.mediaIndex] || {}).src);
+    t.saveOneImage(url);
   },
-  saveCurrentMediaImage: function () {
+  confirmDownloadAll: function () {
     var t = this;
-    var item = t.data.mediaList[t.data.mediaIndex] || {};
-    var url = item.src;
-    if (!url) { wx.showToast({ title: '图片地址为空', icon: 'none' }); return; }
-    wx.showLoading({ title: '保存中…' });
-    function doSave(filePath) {
+    t.setData({ showDownloadWarning: false });
+    var imgs = t.data.mediaList
+      .filter(function (it) { return it.src && (it.type === 'model' || it.type === 'photo'); })
+      .map(function (it) { return t.toDownloadUrl(it.src); });
+    t.saveImagesSequential(imgs, 0);
+  },
+  // 依次保存多张（用于"保存全部图片"）
+  saveImagesSequential: function (urls, idx) {
+    var t = this;
+    if (!urls || idx >= urls.length) {
+      wx.hideLoading();
+      wx.showToast({ title: '已全部保存到相册', icon: 'success' });
+      return;
+    }
+    wx.showLoading({ title: '保存 ' + (idx + 1) + '/' + urls.length });
+    t.saveOneImage(urls[idx], function () { t.saveImagesSequential(urls, idx + 1); });
+  },
+  // 单张：downloadFile → saveImageToPhotosAlbum，失败兜底 getImageInfo
+  saveOneImage: function (url, done) {
+    var t = this;
+    if (!url) { if (done) done(); return; }
+    function doSave(filePath, cb) {
       wx.saveImageToPhotosAlbum({
         filePath: filePath,
-        success: function () { wx.showToast({ title: '已保存到相册', icon: 'success' }); },
+        success: function () { if (cb) cb(); },
         fail: function (err) {
           if (err && err.errMsg && err.errMsg.indexOf('auth deny') > -1) {
+            wx.hideLoading();
             wx.showModal({ title: '需要相册权限', content: '请允许保存图片到相册', showCancel: false });
           } else if (err && err.errMsg && err.errMsg.indexOf('cancel') > -1) {
-            // 用户取消，不提示
+            // 用户取消
           } else {
+            wx.hideLoading();
             wx.showToast({ title: '保存失败，请长按图片保存', icon: 'none' });
           }
+          if (cb) cb();
         }
       });
     }
     wx.downloadFile({
       url: url,
       success: function (res) {
-        wx.hideLoading();
-        if (res.statusCode === 200) { doSave(res.tempFilePath); }
+        if (res.statusCode === 200) { doSave(res.tempFilePath, done); }
         else {
-          // 下载失败，尝试用缓存信息兜底
           wx.getImageInfo({
             src: url,
-            success: function (info) { doSave(info.path); },
-            fail: function () { wx.showToast({ title: '保存失败', icon: 'none' }); }
+            success: function (info) { doSave(info.path, done); },
+            fail: function () { wx.hideLoading(); wx.showToast({ title: '保存失败', icon: 'none' }); if (done) done(); }
           });
         }
       },
       fail: function () {
-        wx.hideLoading();
         wx.getImageInfo({
           src: url,
-          success: function (info) { doSave(info.path); },
-          fail: function () { wx.showToast({ title: '保存失败', icon: 'none' }); }
+          success: function (info) { doSave(info.path, done); },
+          fail: function () { wx.hideLoading(); wx.showToast({ title: '保存失败', icon: 'none' }); if (done) done(); }
         });
       }
     });
