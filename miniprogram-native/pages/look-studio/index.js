@@ -64,6 +64,8 @@ Page({
     isPass: false,
     normalLeft: 0,
     proLeft: 0,
+    normalDays: 0,
+    proDays: 0,
     passText: '未开通 · 首单 ¥9.9 体验',
     agreedAuth: false,
     showShopPick: false,
@@ -192,22 +194,27 @@ Page({
   },
 
   applyEntitlement: function (d) {
-    var txt;
-    var typeLabels = { first: '首单体验', normal_month: '普通月卡', pro_pack: '专业版', test: '测试套餐' };
-    if (!d.active) {
-      txt = '未开通 · 首单 ¥9.9 体验';
-    } else if (d.type === 'first') {
-      txt = '首单体验 · 普通 ' + (d.normalLeft || 0) + ' 次 / 专业 ' + (d.proLeft || 0) + ' 次';
-    } else {
-      var days = d.daysLeft || 0;
-      var label = typeLabels[d.type] || '套餐';
-      if (d.type && d.type.indexOf('pro') > -1) {
-        txt = label + '剩余 ' + days + ' 天 · 专业 ' + (d.proLeft || 0) + ' 次';
-      } else {
-        txt = label + '剩余 ' + days + ' 天 · 普通 ' + (d.normalLeft || 0) + ' 次';
-      }
+    // 双轨独立：普通版 / 专业版 各自显示「剩余次数 / 剩余天数」，互不混用
+    var normal = d.normal || { active: false, left: d.normalLeft || 0, daysLeft: 0 };
+    var pro = d.pro || { active: false, left: d.proLeft || 0, daysLeft: 0 };
+    // 兼容旧接口（无双轨明细时按 type 推断）
+    if (!d.normal && !d.pro && d.active) {
+      var isPro = d.type && String(d.type).indexOf('pro') > -1;
+      if (isPro) pro = { active: true, left: d.proLeft || 0, daysLeft: d.daysLeft || 0 };
+      else normal = { active: true, left: d.normalLeft || 0, daysLeft: d.daysLeft || 0 };
     }
-    this.setData({ passText: txt, isPass: d.active, normalLeft: d.normalLeft || 0, proLeft: d.proLeft || 0 });
+    var parts = [];
+    if (normal.active && normal.left > 0) parts.push('普通 ' + normal.left + ' 次 / ' + (normal.daysLeft || 0) + ' 天');
+    if (pro.active && pro.left > 0) parts.push('专业 ' + pro.left + ' 次 / ' + (pro.daysLeft || 0) + ' 天');
+    var txt = parts.length ? parts.join(' · ') : '未开通 · 首单 ¥9.9 体验';
+    this.setData({
+      passText: txt,
+      isPass: !!(normal.active || pro.active),
+      normalLeft: normal.left || 0,
+      proLeft: pro.left || 0,
+      normalDays: normal.daysLeft || 0,
+      proDays: pro.daysLeft || 0
+    });
   },
 
   loadData: function () {

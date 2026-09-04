@@ -32,36 +32,27 @@ export async function POST(request: NextRequest) {
     if (!row) return NextResponse.json({ active: false, normalLeft: 0, proLeft: 0, triesLeft: 0 });
 
     const now = Date.now();
-    const expired = new Date(row.expires_at).getTime() <= now;
-    let col = tier === "pro" ? "pro_left" : "normal_left";
-    let cur = (row[col] || 0) as number;
+    // 双轨独立：专业版只扣专业次数，普通版只扣普通次数（次数不共用，取消跨轨兜底）
+    const key = tier === "pro" ? "pro" : "normal";
+    const leftKey = key + "_left";
+    const expKey = key + "_expires_at";
 
-    // 专业版次数用完时，可用普通版次数兜底（新套餐均为通用次数）
-    if (tier === "pro" && (cur <= 0 || expired)) {
-      const normalCur = (row.normal_left || 0) as number;
-      if (normalCur > 0 && !expired) {
-        col = "normal_left";
-        cur = normalCur;
-      }
-    }
+    // 该轨道到期时间；旧数据回落单行 expires_at
+    let exp = row[expKey] ? new Date(row[expKey]).getTime() : 0;
+    if (!exp && row.expires_at) exp = new Date(row.expires_at).getTime();
 
-    // 对应档位次数用完或已过期，直接返回失效
+    const expired = !exp || exp <= now;
+    let cur = (row[leftKey] || 0) as number;
+
+    // 本轨道次数用完或已过期 → 不可扣减，直接返回当前状态
     if (cur <= 0 || expired) {
-      return NextResponse.json({
-        active: false,
-        type: row.type,
-        daysLeft: 0,
-        normalLeft: row.normal_left || 0,
-        proLeft: row.pro_left || 0,
-        triesLeft: (row.normal_left || 0) + (row.pro_left || 0),
-        expires: row.expires_at,
-      });
+      return NextResponse.json(shapeEntitlement(row));
     }
 
-    // 按档位扣减 1 次
+    // 按轨道扣减 1 次
     const { error } = await supabase
       .from("tryon_entitlements")
-      .update({ [col]: cur - 1, updated_at: new Date().toISOString() })
+      .update({ [leftKey]: cur - 1, updated_at: new Date().toISOString() })
       .eq("openid", openid);
     if (error) console.error("[试衣扣减] 失败", error);
     const { data: updated } = await supabase.from("tryon_entitlements").select("*").eq("openid", openid).single();
