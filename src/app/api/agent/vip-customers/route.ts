@@ -186,6 +186,38 @@ export async function POST(req: NextRequest) {
   }
 
   const supabase = await createClient();
+
+  // 同代理同名客户合并：已存在则只补本次带值的字段（色彩季型/风格作为两条结论叠加到同一档案），不再新建重复记录
+  if (name && source !== "profile") {
+    const { data: existing } = await supabase
+      .from("vip_customers")
+      .select("id")
+      .eq("agent_id", userId)
+      .eq("name", name)
+      .eq("is_active", true)
+      .maybeSingle();
+    if (existing?.id) {
+      const patch: any = { updated_at: new Date().toISOString() };
+      Object.keys(row).forEach((k) => {
+        // 不覆盖归属、来源、激活态、会员等级，且只补非空字段
+        if (k === "agent_id" || k === "owner_id" || k === "source" || k === "is_active" || k === "vip_level") return;
+        const v = row[k];
+        if (v !== null && v !== undefined && v !== "") patch[k] = v;
+      });
+      const { data, error } = await supabase
+        .from("vip_customers")
+        .update(patch)
+        .eq("id", existing.id)
+        .select()
+        .single();
+      if (error) {
+        console.error("agent/vip-customers POST merge error:", error);
+        return NextResponse.json({ error: "更新失败：" + (error.message || error.code || JSON.stringify(error).slice(0, 200)) }, { status: 500 });
+      }
+      return NextResponse.json({ success: true, data, merged: true });
+    }
+  }
+
   const { data, error } = await supabase
     .from("vip_customers")
     .insert([row])
