@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Loader2, Save, DollarSign, Package, AlertTriangle } from "lucide-react";
 
 // 默认值（与 src/lib/price-config.ts 兜底一致）
@@ -308,6 +308,7 @@ export default function PriceConfigPage() {
             </thead>
             <tbody>
               {Object.entries(tryonPackages).map(([id, p]) => (
+                <Fragment key={id}>
                 <tr key={id} className="border-b border-border last:border-0">
                   <td className="py-2.5 pr-3">
                     <div className="text-sm text-gray-700">{TRYON_LABELS[id] || id}</div>
@@ -346,6 +347,7 @@ export default function PriceConfigPage() {
                     </label>
                   </td>
                 </tr>
+                </Fragment>
               ))}
             </tbody>
           </table>

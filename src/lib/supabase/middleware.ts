@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
+ * 公开路由：即使网站处于内测锁（SITE_LOCKED=true）也允许访客直接访问。
+ * 用于把虚拟试衣作为独立应用推广，同时保持其余站点处于内测。
+ */
+const PUBLIC_ROUTES = [
+  "/tryon",       // AI 虚拟试衣推广落地页
+  "/look-studio", // 云衣橱 / AI 试衣间
+];
+
+function isPublicRoute(pathname: string) {
+  return PUBLIC_ROUTES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/")
+  );
+}
+
+/**
  * 管理员预览/灰度模块：即使 SITE_LOCKED=false 也仅对 admin_logged_in 开放。
  * 按路由前缀匹配（例如 /style-test 会同时覆盖 /style-test/male、/style-test/female）。
  */
@@ -12,8 +27,6 @@ const ADMIN_PREVIEW_ROUTES = [
   "/style-test",     // 风格测试
   "/personal-image", // VIP形象服务
   "/booking",        // 预约陪购
-  "/tryon",          // AI虚拟试衣（小程序为主入口，网页版仅管理员预览）
-  "/look-studio",    // 云衣橱/AI试衣间（同上）
 ];
 
 function isAdminPreviewRoute(pathname: string) {
@@ -57,8 +70,10 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 接口 / 图片代理 / 占位页 / 验证文件：始终放行
-  if (isApi || isImgProxy || isComingSoon || isRootTxt) {
+  const isPublic = isPublicRoute(pathname);
+
+  // 接口 / 图片代理 / 占位页 / 验证文件 / 公开推广页：始终放行
+  if (isApi || isImgProxy || isComingSoon || isRootTxt || isPublic) {
     return NextResponse.next();
   }
 
